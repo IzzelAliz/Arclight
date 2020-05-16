@@ -1,0 +1,12 @@
+version: '{branch}-{build}'
+environment:
+  JAVA_HOME: C:\Program Files\Java\jdk1.8.0
+cache:
+  - C:/Users/appveyor/.gradle
+  - ./.gradle
+build_script:
+  - cmd: gradlew clean build --no-daemon -i
+test: off
+artifacts:
+  - path: ./arclight-coremod/libs/*.*
+    name: .
