@@ -126,4 +126,5 @@ mixin {
 
 compileJava {
     options.compilerArgs << '-XDignore.symbol.file' << '-XDenableSunApiLintControl'
+    options.encoding = 'UTF-8'
 }

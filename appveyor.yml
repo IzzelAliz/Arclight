@@ -8,5 +8,5 @@ build_script:
   - cmd: gradlew clean build --no-daemon -i
 test: off
 artifacts:
-  - path: ./arclight-coremod/libs/*.*
+  - path: ./arclight-coremod/build/libs/*.*
     name: .
