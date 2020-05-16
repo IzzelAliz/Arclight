@@ -6,6 +6,7 @@ import io.izzel.arclight.bridge.entity.EntityBridge;
 import io.izzel.arclight.bridge.entity.InternalEntityBridge;
 import io.izzel.arclight.bridge.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.bridge.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.bridge.util.FoodStatsBridge;
 import io.izzel.arclight.bridge.world.WorldBridge;
 import io.izzel.arclight.bridge.world.server.ServerWorldBridge;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -131,6 +132,7 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(World worldIn, GameProfile gameProfileIn, CallbackInfo ci) {
         oldLevel = -1;
+        ((FoodStatsBridge) this.foodStats).bridge$setEntityHuman((PlayerEntity) (Object) this);
     }
 
     @Override
