@@ -13,6 +13,12 @@ A Bukkit server implementation utilizing Mixin.
 3. Keep forge jar name as `forge-1.14.4-28.2.0.jar`
 4. Launch with command `java -jar arclight-coremod-xxx.jar`
 
+## Support
+
+Discord server https://discord.gg/ZvTY5SC
+
+QQ Group chat 3556966
+
 ## Contributing
 
 To setup development workspace, clone this repository and import the project.
