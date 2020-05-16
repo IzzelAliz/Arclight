@@ -1,0 +1,129 @@
+buildscript {
+    repositories {
+        maven { url = 'https://files.minecraftforge.net/maven' }
+        maven { url = 'https://repo.spongepowered.org/maven' }
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'java'
+
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+
+configurations {
+    embed
+    embedJar
+    compile.extendsFrom(embed, embedJar)
+}
+
+minecraft {
+    mappings channel: 'stable', version: '58-1.14.4'
+    accessTransformer = project.file('src/main/resources/META-INF/accesstransformer.cfg')
+    runs {
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                arclight {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+repositories {
+    jcenter()
+    maven {
+        name = 'sponge-repo'
+        url = 'https://repo.spongepowered.org/maven'
+    }
+    maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
+    maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
+    maven { url = 'https://repo.codemc.io/repository/nms/' }
+    maven { url = 'https://files.minecraftforge.net/maven/' }
+}
+
+def embedLibs = ['org.spongepowered:mixin:0.8', 'org.ow2.asm:asm-util:6.2',
+                 'org.ow2.asm:asm-analysis:6.2', 'org.yaml:snakeyaml:1.23',
+                 'net.md-5:bungeecord-chat:1.13-SNAPSHOT', 'org.xerial:sqlite-jdbc:3.28.0',
+                 'mysql:mysql-connector-java:5.1.47', 'commons-lang:commons-lang:2.6',
+                 'jline:jline:2.12.1', 'com.googlecode.json-simple:json-simple:1.1.1',
+                 'org.apache.logging.log4j:log4j-jul:2.11.2', 'net.md-5:SpecialSource:1.8.6',
+                 'net.minecraftforge:eventbus:2.0.0-milestone.1:service']
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.14.4-28.2.0'
+    compile group: 'org.jetbrains', name: 'annotations', version: '19.0.0'
+    for (def lib : embedLibs) {
+        embedJar "$lib@jar"
+    }
+    embed 'org.spigotmc:spigot-api:1.14.4-R0.1-SNAPSHOT@jar'
+    embed files("$projectDir/libs/spigot-1.14.4-mapped-deobf.jar")
+}
+
+def getGitHash = { ->
+    def stdout = new ByteArrayOutputStream()
+    exec {
+        commandLine 'git', 'rev-parse', '--short', 'HEAD'
+        standardOutput = stdout
+    }
+    return stdout.toString().trim()
+}
+
+processResources {
+    filesNotMatching("**/accesstransformer.cfg") {
+        expand 'version': "1.14.4-${project.version}-${getGitHash()}"
+    }
+}
+
+def classpath = {
+    "libraries/org/ow2/asm/asm/6.2/asm-6.2.jar libraries/org/ow2/asm/asm-commons/6.2/asm-commons-6.2.jar libraries/org/ow2/asm/asm-tree/6.2/asm-tree-6.2.jar libraries/cpw/mods/modlauncher/4.1.0/modlauncher-4.1.0.jar libraries/cpw/mods/grossjava9hacks/1.1.0/grossjava9hacks-1.1.0.jar libraries/net/minecraftforge/accesstransformers/1.0.1-milestone.0.1+94458e7-shadowed/accesstransformers-1.0.1-milestone.0.1+94458e7-shadowed.jar libraries/net/minecraftforge/forgespi/1.5.0/forgespi-1.5.0.jar libraries/net/minecraftforge/coremods/1.0.0/coremods-1.0.0.jar libraries/net/minecraftforge/unsafe/0.2.0/unsafe-0.2.0.jar libraries/com/electronwill/night-config/core/3.6.0/core-3.6.0.jar libraries/com/electronwill/night-config/toml/3.6.0/toml-3.6.0.jar libraries/org/jline/jline/3.12.1/jline-3.12.1.jar libraries/org/apache/maven/maven-artifact/3.6.0/maven-artifact-3.6.0.jar libraries/net/jodah/typetools/0.6.0/typetools-0.6.0.jar libraries/java3d/vecmath/1.5.2/vecmath-1.5.2.jar libraries/org/apache/logging/log4j/log4j-api/2.11.2/log4j-api-2.11.2.jar libraries/org/apache/logging/log4j/log4j-core/2.11.2/log4j-core-2.11.2.jar libraries/net/minecrell/terminalconsoleappender/1.2.0/terminalconsoleappender-1.2.0.jar libraries/net/sf/jopt-simple/jopt-simple/5.0.4/jopt-simple-5.0.4.jar libraries/net/minecraft/server/1.14.4/server-1.14.4-extra-stable.jar " +
+            embedLibs.collect {
+                def arr = it.split(':')
+                if (arr.length == 3) {
+                    return "libraries/${arr[0].replace('.', '/')}/${arr[1]}/${arr[2]}/${arr[1]}-${arr[2]}.jar"
+                } else if (arr.length == 4) {
+                    return "libraries/${arr[0].replace('.', '/')}/${arr[1]}/${arr[2]}/${arr[1]}-${arr[2]}-${arr[3]}.jar"
+                } else return ""
+            }.join(' ') + " forge-1.14.4-28.2.0.jar"
+}
+
+jar {
+    manifest.attributes 'MixinConnector': 'io.izzel.arclight.mod.ArclightConnector'
+    manifest.attributes 'Main-Class': 'io.izzel.arclight.server.Main'
+    manifest.attributes 'Class-Path': classpath()
+    manifest.attributes 'Implementation-Title': 'Arclight'
+    manifest.attributes 'Implementation-Version': "arclight-${project.version}-${getGitHash()}"
+    manifest.attributes 'Implementation-Vendor': 'Arclight Team'
+    from(configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }) {
+        exclude "META-INF/MANIFEST.MF"
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+        exclude "LICENSE.txt"
+    }
+    into('libs') {
+        from(configurations.embedJar.collect())
+    }
+    into('META-INF') {
+        from(files("${project(':scripts').projectDir}/bukkit_srg.srg"))
+        from(files("${project(':scripts').projectDir}/resources/inheritanceMap.txt"))
+    }
+}
+
+mixin {
+    add sourceSets.main, 'mixins.arclight.refmap.json'
+}
+
+compileJava {
+    options.compilerArgs << '-XDignore.symbol.file' << '-XDenableSunApiLintControl'
+}

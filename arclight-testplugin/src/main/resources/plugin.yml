@@ -1,0 +1,6 @@
+name: ArclightTestPlugin
+main: io.izzel.test.TestPlugin
+version: '1.0'
+load: STARTUP
+commands:
+  test:

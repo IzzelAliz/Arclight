@@ -1,0 +1,4 @@
+allprojects {
+    group 'io.izzel.arclight'
+    version '1.0.0-SNAPSHOT'
+}

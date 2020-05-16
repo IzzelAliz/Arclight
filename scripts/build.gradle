@@ -1,0 +1,20 @@
+plugins {
+    id 'scala'
+}
+
+sourceCompatibility = 1.8
+
+sourceSets {
+    main {
+        scala.srcDir 'src/'
+        resources.srcDir 'resources/'
+    }
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    implementation 'org.scala-lang:scala-library:2.13.1'
+}

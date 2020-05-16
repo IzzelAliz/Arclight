@@ -1,0 +1,11 @@
+{
+  "minVersion": "0.8",
+  "package": "io.izzel.arclight.mixin.optimization",
+  "target": "@env(DEFAULT)",
+  "refmap": "mixins.arclight.refmap.json",
+  "plugin": "io.izzel.arclight.mod.ArclightMixinPlugin",
+  "mixins": [
+    "IndirectMergerMixin",
+    "VoxelShapesMixin"
+  ]
+}

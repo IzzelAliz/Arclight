@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "io.izzel.arclight.mixin.forge",
+  "target": "@env(DEFAULT)",
+  "refmap": "mixins.arclight.refmap.json",
+  "setSourceFile": true,
+  "mixins": [
+    "ForgeEventFactoryMixin",
+    "ForgeHooksMixin"
+  ]
+}

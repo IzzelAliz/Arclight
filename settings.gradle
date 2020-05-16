@@ -1,0 +1,5 @@
+rootProject.name = 'arclight'
+include 'arclight-coremod'
+include 'scripts'
+include 'arclight-testplugin'
+
