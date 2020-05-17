@@ -11,6 +11,9 @@ public class EntityPotionEffectEventDispatcher {
     // todo 再检查一遍
     @SubscribeEvent(receiveCanceled = true)
     public void onPotionRemove(PotionEvent.PotionRemoveEvent event) {
+        if (event.getPotionEffect() == null) {
+            return;
+        }
         EntityPotionEffectEvent.Cause cause = ((LivingEntityBridge) event.getEntityLiving()).bridge$getEffectCause().orElse(EntityPotionEffectEvent.Cause.UNKNOWN);
         EntityPotionEffectEvent.Action action = ((LivingEntityBridge) event.getEntityLiving()).bridge$getAndResetAction();
         EntityPotionEffectEvent bukkitEvent = CraftEventFactory.callEntityPotionEffectChangeEvent(event.getEntityLiving(), event.getPotionEffect(), null, cause, action);
