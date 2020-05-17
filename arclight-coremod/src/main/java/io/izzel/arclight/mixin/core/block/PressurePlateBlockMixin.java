@@ -36,7 +36,7 @@ public abstract class PressurePlateBlockMixin extends AbstractPressurePlateBlock
      */
     @Overwrite
     protected int computeRedstoneStrength(World worldIn, BlockPos pos) {
-        AxisAlignedBB axisalignedbb = getPressureAABB().offset(pos);
+        AxisAlignedBB axisalignedbb = PRESSURE_AABB.offset(pos);
         List<? extends Entity> list;
         switch (this.sensitivity) {
             case EVERYTHING:

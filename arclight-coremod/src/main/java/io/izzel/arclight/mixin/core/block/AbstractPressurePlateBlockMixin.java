@@ -8,9 +8,9 @@ import net.minecraft.world.World;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v1_14_R1.block.CraftBlock;
 import org.bukkit.event.block.BlockRedstoneEvent;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
@@ -18,8 +18,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public abstract class AbstractPressurePlateBlockMixin {
 
     // @formatter:off
-    @Accessor("PRESSURE_AABB") public static AxisAlignedBB getPressureAABB() { return null; }
     @Shadow protected abstract int computeRedstoneStrength(World worldIn, BlockPos pos);
+    @Shadow @Final protected static AxisAlignedBB PRESSURE_AABB;
     // @formatter:on
 
     @Redirect(method = "updateState", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/AbstractPressurePlateBlock;computeRedstoneStrength(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)I"))
