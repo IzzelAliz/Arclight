@@ -6,7 +6,7 @@ cache:
   - ./.gradle
 build_script:
   - cmd: |
-      gradlew clean genIntellijRuns --no-daemon -i
+      gradlew clean genIntellijRuns idea --no-daemon -i
       gradlew build --no-daemon -i
 test: off
 artifacts:
