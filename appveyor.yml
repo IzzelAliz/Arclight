@@ -4,6 +4,7 @@ environment:
 cache:
   - C:/Users/appveyor/.gradle
   - ./.gradle
+  - ./arclight-coremod/build
 build_script:
   - cmd: |
       IF EXIST arclight-coremod\build\libs ( del /S /Q arclight-coremod\build\libs )
