@@ -39,6 +39,6 @@ public class ArclightLocator extends AbstractJarFileLocator {
 
     @Override
     public void initArguments(Map<String, ?> arguments) {
-        LOGGER.info("Arclight locator initialized.");
+        LOGGER.info("Arclight locator loaded.");
     }
 }

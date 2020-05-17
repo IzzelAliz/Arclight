@@ -8,7 +8,7 @@ cache:
 build_script:
   - cmd: |
       IF EXIST arclight-coremod\build\libs ( del /S /Q arclight-coremod\build\libs )
-      gradlew build --no-daemon -i
+      gradlew idea build --no-daemon -i
 test: off
 artifacts:
   - path: ./arclight-coremod/build/libs/*.*
