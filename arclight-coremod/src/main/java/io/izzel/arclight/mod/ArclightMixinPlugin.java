@@ -29,7 +29,9 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
         ImmutableMap.<String, Map.Entry<List<FieldNode>, List<MethodNode>>>builder()
             .put("net.minecraft.server.MinecraftServer",
                 Maps.immutableEntry(
-                    ImmutableList.of(),
+                    ImmutableList.of(
+                        new FieldNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "currentTick", "I", null, null)
+                    ),
                     ImmutableList.of(
                         new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "getServer", "()Lnet/minecraft/server/MinecraftServer;", null, null)
                     )
