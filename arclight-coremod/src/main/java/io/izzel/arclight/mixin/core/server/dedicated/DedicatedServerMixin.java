@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(DedicatedServer.class)
-public class DedicatedServerMixin extends MinecraftServerMixin {
+public abstract class DedicatedServerMixin extends MinecraftServerMixin {
 
     // @formatter:off
     @Shadow @Final public RConConsoleSource rconConsoleSource;
