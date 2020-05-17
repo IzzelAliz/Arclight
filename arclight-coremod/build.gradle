@@ -63,7 +63,6 @@ def embedLibs = ['org.spongepowered:mixin:0.8', 'org.ow2.asm:asm-util:6.2',
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.14.4-28.2.0'
-    annotationProcessor 'org.spongepowered:mixin:0.8'
     compile group: 'org.jetbrains', name: 'annotations', version: '19.0.0'
     for (def lib : embedLibs) {
         embedJar "$lib@jar"

@@ -59,6 +59,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SharedConstants;
+import net.minecraft.util.StringUtils;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.MathHelper;
@@ -1619,11 +1620,11 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     private void arclight$customPayload(CCustomPayloadPacket packet, CallbackInfo ci) {
         if (packet.channel.equals(CUSTOM_REGISTER)) {
             try {
-                final String channels = packet.data.toString(Charsets.UTF_8);
-                String[] split;
-                for (int length = (split = channels.split("\u0000")).length, i = 0; i < length; ++i) {
-                    final String channel = split[i];
-                    this.getPlayer().addChannel(channel);
+                String channels = packet.data.toString(Charsets.UTF_8);
+                for (String channel :channels.split("\0")){
+                    if (!StringUtils.isNullOrEmpty(channel)) {
+                        this.getPlayer().addChannel(channel);
+                    }
                 }
             } catch (Exception ex) {
                 LOGGER.error("Couldn't register custom payload", ex);
@@ -1632,10 +1633,10 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         } else if (packet.channel.equals(CUSTOM_UNREGISTER)) {
             try {
                 final String channels = packet.data.toString(Charsets.UTF_8);
-                String[] split2;
-                for (int length2 = (split2 = channels.split("\u0000")).length, j = 0; j < length2; ++j) {
-                    final String channel = split2[j];
-                    this.getPlayer().removeChannel(channel);
+                for (String channel :channels.split("\0")){
+                    if (!StringUtils.isNullOrEmpty(channel)) {
+                        this.getPlayer().removeChannel(channel);
+                    }
                 }
             } catch (Exception ex) {
                 LOGGER.error("Couldn't unregister custom payload", ex);
