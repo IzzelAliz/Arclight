@@ -82,6 +82,16 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
                         new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "calculateBoundingBox", "(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/util/Direction;II)Lnet/minecraft/util/math/AxisAlignedBB;", null, null)
                     )
                 ))
+            .put("net.minecraft.tileentity.SkullTileEntity",
+                Maps.immutableEntry(
+                    ImmutableList.of(
+                        new FieldNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "executor", "Ljava/util/concurrent/ExecutorService;", null, null),
+                        new FieldNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "skinCache", "Lcom/google/common/cache/LoadingCache;", null, null)
+                    ),
+                    ImmutableList.of(
+                        new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "b", "(Lcom/mojang/authlib/GameProfile;Lcom/google/common/base/Predicate;Z)Ljava/util/concurrent/Future;", null, null)
+                    )
+                ))
             .build();
 
     private final Set<String> modifyConstructor = ImmutableSet.<String>builder()

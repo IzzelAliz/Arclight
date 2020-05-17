@@ -339,6 +339,7 @@
     "tileentity.LockableTileEntityMixin",
     "tileentity.ShulkerBoxTileEntityMixin",
     "tileentity.SignTileEntityMixin",
+    "tileentity.SkullTileEntityMixin",
     "tileentity.TileEntityMixin",
     "util.BootstrapMixin",
     "util.DamageSourceMixin",

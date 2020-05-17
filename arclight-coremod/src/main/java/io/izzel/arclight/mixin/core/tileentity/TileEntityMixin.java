@@ -29,6 +29,7 @@ public abstract class TileEntityMixin implements TileEntityBridge {
     @Shadow @Nullable protected World world;
     @Shadow protected BlockPos pos;
     @Shadow public abstract BlockState getBlockState();
+    @Shadow public abstract void markDirty();
     // @formatter:on
 
     @Inject(method = "read", at = @At("RETURN"))
