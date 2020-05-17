@@ -64,7 +64,7 @@ public abstract class HopperTileEntityMixin extends LockableTileEntityMixin {
         if (destination instanceof DoubleSidedInventory) {
             destinationInventory = new CraftInventoryDoubleChest(((DoubleSidedInventory) destination));
         } else {
-            destinationInventory = ((IInventoryBridge) destination).bridge$getOwner().getInventory();
+            destinationInventory = ((IInventoryBridge) destination).getOwner().getInventory();
         }
 
         InventoryMoveItemEvent event = new InventoryMoveItemEvent(this.getOwner().getInventory(), original.clone(), destinationInventory, true);
@@ -94,10 +94,10 @@ public abstract class HopperTileEntityMixin extends LockableTileEntityMixin {
         if (source instanceof DoubleSidedInventory) {
             sourceInventory = new CraftInventoryDoubleChest(((DoubleSidedInventory) source));
         } else {
-            sourceInventory = ((IInventoryBridge) source).bridge$getOwner().getInventory();
+            sourceInventory = ((IInventoryBridge) source).getOwner().getInventory();
         }
 
-        InventoryMoveItemEvent event = new InventoryMoveItemEvent(sourceInventory, original.clone(), ((IInventoryBridge) destination).bridge$getOwner().getInventory(), false);
+        InventoryMoveItemEvent event = new InventoryMoveItemEvent(sourceInventory, original.clone(), ((IInventoryBridge) destination).getOwner().getInventory(), false);
         Bukkit.getPluginManager().callEvent(event);
         if (arclight$moveItem = event.isCancelled()) {
             if (destination instanceof HopperTileEntity) {
@@ -112,7 +112,7 @@ public abstract class HopperTileEntityMixin extends LockableTileEntityMixin {
 
     @Inject(method = "captureItem", cancellable = true, at = @At("HEAD"))
     private static void arclight$pickupItem(IInventory inventory, ItemEntity itemEntity, CallbackInfoReturnable<Boolean> cir) {
-        InventoryPickupItemEvent event = new InventoryPickupItemEvent(((IInventoryBridge) inventory).bridge$getOwner().getInventory(), (Item) ((EntityBridge) itemEntity).bridge$getBukkitEntity());
+        InventoryPickupItemEvent event = new InventoryPickupItemEvent(((IInventoryBridge) inventory).getOwner().getInventory(), (Item) ((EntityBridge) itemEntity).bridge$getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             cir.setReturnValue(false);
@@ -120,27 +120,27 @@ public abstract class HopperTileEntityMixin extends LockableTileEntityMixin {
     }
 
     @Override
-    public List<ItemStack> bridge$getContents() {
+    public List<ItemStack> getContents() {
         return this.inventory;
     }
 
     @Override
-    public void bridge$onOpen(CraftHumanEntity who) {
+    public void onOpen(CraftHumanEntity who) {
         transaction.add(who);
     }
 
     @Override
-    public void bridge$onClose(CraftHumanEntity who) {
+    public void onClose(CraftHumanEntity who) {
         transaction.remove(who);
     }
 
     @Override
-    public List<HumanEntity> bridge$getViewers() {
+    public List<HumanEntity> getViewers() {
         return transaction;
     }
 
     @Override
-    public void bridge$setOwner(InventoryHolder owner) {
+    public void setOwner(InventoryHolder owner) {
     }
 
     @Override
@@ -150,7 +150,7 @@ public abstract class HopperTileEntityMixin extends LockableTileEntityMixin {
     }
 
     @Override
-    public void bridge$setMaxStackSize(int size) {
+    public void setMaxStackSize(int size) {
         this.maxStack = size;
     }
 }

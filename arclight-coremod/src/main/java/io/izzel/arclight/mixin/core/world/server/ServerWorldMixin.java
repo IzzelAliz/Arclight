@@ -122,7 +122,7 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
     public void arclight$closeOnChunkUnloading(Chunk chunkIn, CallbackInfo ci) {
         for (TileEntity tileentity : chunkIn.getTileEntityMap().values()) {
             if (tileentity instanceof IInventory) {
-                for (HumanEntity h : Lists.newArrayList(((IInventoryBridge) tileentity).bridge$getViewers())) {
+                for (HumanEntity h : Lists.newArrayList(((IInventoryBridge) tileentity).getViewers())) {
                     if (h instanceof CraftHumanEntity) {
                         ((CraftHumanEntity) h).getHandle().closeScreen();
                     }

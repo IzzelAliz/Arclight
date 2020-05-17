@@ -24,7 +24,7 @@ public abstract class DoubleSidedInventoryMixin implements IInventoryBridge, IIn
     private List<HumanEntity> transactions = new ArrayList<>();
 
     @Override
-    public List<ItemStack> bridge$getContents() {
+    public List<ItemStack> getContents() {
         int size = this.getSizeInventory();
         List<ItemStack> ret = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
@@ -34,29 +34,29 @@ public abstract class DoubleSidedInventoryMixin implements IInventoryBridge, IIn
     }
 
     @Override
-    public void bridge$onOpen(CraftHumanEntity who) {
-        ((IInventoryBridge) this.field_70477_b).bridge$onOpen(who);
-        ((IInventoryBridge) this.field_70478_c).bridge$onOpen(who);
+    public void onOpen(CraftHumanEntity who) {
+        ((IInventoryBridge) this.field_70477_b).onOpen(who);
+        ((IInventoryBridge) this.field_70478_c).onOpen(who);
         this.transactions.add(who);
     }
 
     @Override
-    public void bridge$onClose(CraftHumanEntity who) {
-        ((IInventoryBridge) this.field_70477_b).bridge$onClose(who);
-        ((IInventoryBridge) this.field_70478_c).bridge$onClose(who);
+    public void onClose(CraftHumanEntity who) {
+        ((IInventoryBridge) this.field_70477_b).onClose(who);
+        ((IInventoryBridge) this.field_70478_c).onClose(who);
         this.transactions.remove(who);
     }
 
     @Override
-    public List<HumanEntity> bridge$getViewers() {
+    public List<HumanEntity> getViewers() {
         return transactions;
     }
 
     @Override
-    public InventoryHolder bridge$getOwner() { return null; }
+    public InventoryHolder getOwner() { return null; }
 
     @Override
-    public void bridge$setOwner(InventoryHolder owner) { }
+    public void setOwner(InventoryHolder owner) { }
 
     @Override
     public int getInventoryStackLimit() {
@@ -64,19 +64,19 @@ public abstract class DoubleSidedInventoryMixin implements IInventoryBridge, IIn
     }
 
     @Override
-    public void bridge$setMaxStackSize(int size) {
-        ((IInventoryBridge) this.field_70477_b).bridge$setMaxStackSize(size);
-        ((IInventoryBridge) this.field_70478_c).bridge$setMaxStackSize(size);
+    public void setMaxStackSize(int size) {
+        ((IInventoryBridge) this.field_70477_b).setMaxStackSize(size);
+        ((IInventoryBridge) this.field_70478_c).setMaxStackSize(size);
     }
 
     @Override
-    public Location bridge$getLocation() {
-        return ((IInventoryBridge) this.field_70477_b).bridge$getLocation();
+    public Location getLocation() {
+        return ((IInventoryBridge) this.field_70477_b).getLocation();
     }
 
     @Override
-    public IRecipe<?> bridge$getCurrentRecipe() { return null; }
+    public IRecipe<?> getCurrentRecipe() { return null; }
 
     @Override
-    public void bridge$setCurrentRecipe(IRecipe<?> recipe) { }
+    public void setCurrentRecipe(IRecipe<?> recipe) { }
 }

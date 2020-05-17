@@ -25,10 +25,10 @@ public abstract class ContainerMixin implements ContainerBridge {
     public void transferTo(Container other, CraftHumanEntity player) {
         InventoryView source = this.getBukkitView();
         InventoryView destination = ((ContainerBridge) other).bridge$getBukkitView();
-        ((IInventoryBridge) ((CraftInventory) source.getTopInventory()).getInventory()).bridge$onClose(player);
-        ((IInventoryBridge) ((CraftInventory) source.getBottomInventory()).getInventory()).bridge$onClose(player);
-        ((IInventoryBridge) ((CraftInventory) destination.getTopInventory()).getInventory()).bridge$onClose(player);
-        ((IInventoryBridge) ((CraftInventory) destination.getBottomInventory()).getInventory()).bridge$onClose(player);
+        ((IInventoryBridge) ((CraftInventory) source.getTopInventory()).getInventory()).onClose(player);
+        ((IInventoryBridge) ((CraftInventory) source.getBottomInventory()).getInventory()).onClose(player);
+        ((IInventoryBridge) ((CraftInventory) destination.getTopInventory()).getInventory()).onClose(player);
+        ((IInventoryBridge) ((CraftInventory) destination.getBottomInventory()).getInventory()).onClose(player);
     }
 
     private ITextComponent title;

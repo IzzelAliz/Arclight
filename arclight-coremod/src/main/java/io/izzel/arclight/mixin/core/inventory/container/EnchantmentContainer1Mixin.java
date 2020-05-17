@@ -14,7 +14,7 @@ public abstract class EnchantmentContainer1Mixin extends InventoryMixin {
     @Shadow(aliases = {"this$0", "field_70484_a"}, remap = false) private EnchantmentContainer outerThis;
 
     @Override
-    public Location bridge$getLocation() {
+    public Location getLocation() {
         return ((IWorldPosCallableBridge) ((EnchantmentContainerBridge) outerThis).bridge$getContainerAccess()).bridge$getLocation();
     }
 }

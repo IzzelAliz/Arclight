@@ -14,7 +14,7 @@ public abstract class CartographyContainer2Mixin implements IInventoryBridge {
     @Shadow(aliases = {"this$0", "field_213924_a"}, remap = false) private CartographyContainer outerThis;
 
     @Override
-    public Location bridge$getLocation() {
+    public Location getLocation() {
         return ((IWorldPosCallableBridge) ((CartographyContainerBridge) outerThis).bridge$getContainerAccess()).bridge$getLocation();
     }
 }

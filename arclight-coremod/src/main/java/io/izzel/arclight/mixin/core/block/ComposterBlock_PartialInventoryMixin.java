@@ -15,6 +15,6 @@ public abstract class ComposterBlock_PartialInventoryMixin extends InventoryMixi
 
     @Inject(method = "<init>(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;)V", at = @At("RETURN"))
     public void arclight$setOwner(BlockState blockState, IWorld world, BlockPos blockPos, CallbackInfo ci) {
-        this.bridge$setOwner(new CraftBlockInventoryHolder(world, blockPos, this));
+        this.setOwner(new CraftBlockInventoryHolder(world, blockPos, this));
     }
 }

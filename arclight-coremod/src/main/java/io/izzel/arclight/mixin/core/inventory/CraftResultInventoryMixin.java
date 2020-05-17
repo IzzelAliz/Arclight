@@ -27,26 +27,26 @@ public abstract class CraftResultInventoryMixin implements IInventoryBridge, IIn
     private int maxStack = MAX_STACK;
 
     @Override
-    public List<ItemStack> bridge$getContents() {
+    public List<ItemStack> getContents() {
         return this.stackResult;
     }
 
     @Override
-    public void bridge$onOpen(CraftHumanEntity who) { }
+    public void onOpen(CraftHumanEntity who) { }
 
     @Override
-    public void bridge$onClose(CraftHumanEntity who) { }
+    public void onClose(CraftHumanEntity who) { }
 
     @Override
-    public List<HumanEntity> bridge$getViewers() {
+    public List<HumanEntity> getViewers() {
         return new ArrayList<>();
     }
 
     @Override
-    public InventoryHolder bridge$getOwner() { return null; }
+    public InventoryHolder getOwner() { return null; }
 
     @Override
-    public void bridge$setOwner(InventoryHolder owner) { }
+    public void setOwner(InventoryHolder owner) { }
 
     @Override
     public int getInventoryStackLimit() {
@@ -55,16 +55,16 @@ public abstract class CraftResultInventoryMixin implements IInventoryBridge, IIn
     }
 
     @Override
-    public void bridge$setMaxStackSize(int size) {
+    public void setMaxStackSize(int size) {
         this.maxStack = size;
     }
 
     @Override
-    public Location bridge$getLocation() { return null; }
+    public Location getLocation() { return null; }
 
     @Override
-    public IRecipe<?> bridge$getCurrentRecipe() { return null; }
+    public IRecipe<?> getCurrentRecipe() { return null; }
 
     @Override
-    public void bridge$setCurrentRecipe(IRecipe<?> recipe) { }
+    public void setCurrentRecipe(IRecipe<?> recipe) { }
 }

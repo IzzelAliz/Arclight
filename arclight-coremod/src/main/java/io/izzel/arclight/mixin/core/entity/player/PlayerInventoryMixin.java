@@ -77,7 +77,7 @@ public abstract class PlayerInventoryMixin implements IInventory, IInventoryBrid
     }
 
     @Override
-    public List<ItemStack> bridge$getContents() {
+    public List<ItemStack> getContents() {
         List<ItemStack> combined = new ArrayList<>(mainInventory.size() + offHandInventory.size() + armorInventory.size());
         for (List<ItemStack> sub : this.allInventories) {
             combined.addAll(sub);
@@ -86,27 +86,27 @@ public abstract class PlayerInventoryMixin implements IInventory, IInventoryBrid
     }
 
     @Override
-    public void bridge$onOpen(CraftHumanEntity who) {
+    public void onOpen(CraftHumanEntity who) {
         transactions.add(who);
     }
 
     @Override
-    public void bridge$onClose(CraftHumanEntity who) {
+    public void onClose(CraftHumanEntity who) {
         transactions.remove(who);
     }
 
     @Override
-    public List<HumanEntity> bridge$getViewers() {
+    public List<HumanEntity> getViewers() {
         return transactions;
     }
 
     @Override
-    public InventoryHolder bridge$getOwner() {
+    public InventoryHolder getOwner() {
         return ((PlayerEntityBridge) this.player).bridge$getBukkitEntity();
     }
 
     @Override
-    public void bridge$setOwner(InventoryHolder owner) { }
+    public void setOwner(InventoryHolder owner) { }
 
     @Override
     public int getInventoryStackLimit() {
@@ -115,18 +115,18 @@ public abstract class PlayerInventoryMixin implements IInventory, IInventoryBrid
     }
 
     @Override
-    public void bridge$setMaxStackSize(int size) {
+    public void setMaxStackSize(int size) {
         maxStack = size;
     }
 
     @Override
-    public Location bridge$getLocation() {
+    public Location getLocation() {
         return ((PlayerEntityBridge) this.player).bridge$getBukkitEntity().getLocation();
     }
 
     @Override
-    public IRecipe<?> bridge$getCurrentRecipe() { return null; }
+    public IRecipe<?> getCurrentRecipe() { return null; }
 
     @Override
-    public void bridge$setCurrentRecipe(IRecipe<?> recipe) { }
+    public void setCurrentRecipe(IRecipe<?> recipe) { }
 }

@@ -33,33 +33,33 @@ public abstract class MerchantInventoryMixin implements IInventoryBridge, IInven
     private int maxStack = MAX_STACK;
 
     @Override
-    public List<ItemStack> bridge$getContents() {
+    public List<ItemStack> getContents() {
         return this.slots;
     }
 
     @Override
-    public void bridge$onOpen(CraftHumanEntity who) {
+    public void onOpen(CraftHumanEntity who) {
         transactions.add(who);
     }
 
     @Override
-    public void bridge$onClose(CraftHumanEntity who) {
+    public void onClose(CraftHumanEntity who) {
         transactions.remove(who);
         this.merchant.setCustomer(null);
     }
 
     @Override
-    public List<HumanEntity> bridge$getViewers() {
+    public List<HumanEntity> getViewers() {
         return transactions;
     }
 
     @Override
-    public InventoryHolder bridge$getOwner() {
+    public InventoryHolder getOwner() {
         return this.merchant instanceof AbstractVillagerEntity ? ((CraftAbstractVillager) ((EntityBridge) this.merchant).bridge$getBukkitEntity()) : null;
     }
 
     @Override
-    public void bridge$setOwner(InventoryHolder owner) { }
+    public void setOwner(InventoryHolder owner) { }
 
     @Override
     public int getInventoryStackLimit() {
@@ -68,19 +68,19 @@ public abstract class MerchantInventoryMixin implements IInventoryBridge, IInven
     }
 
     @Override
-    public void bridge$setMaxStackSize(int size) {
+    public void setMaxStackSize(int size) {
         this.maxStack = size;
     }
 
     @Override
-    public Location bridge$getLocation() {
+    public Location getLocation() {
         return this.merchant instanceof AbstractVillagerEntity ? ((EntityBridge) this.merchant).bridge$getBukkitEntity().getLocation() : null;
     }
 
     @Override
-    public IRecipe<?> bridge$getCurrentRecipe() { return null; }
+    public IRecipe<?> getCurrentRecipe() { return null; }
 
     @Override
-    public void bridge$setCurrentRecipe(IRecipe<?> recipe) {
+    public void setCurrentRecipe(IRecipe<?> recipe) {
     }
 }

@@ -60,9 +60,4 @@ public abstract class TileEntityMixin implements TileEntityBridge {
         if (state instanceof InventoryHolder) return (InventoryHolder) state;
         return null;
     }
-
-    @Override
-    public InventoryHolder bridge$getOwner() {
-        return getOwner();
-    }
 }

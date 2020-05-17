@@ -44,34 +44,34 @@ public abstract class ContainerMinecartEntityMixin extends AbstractMinecartEntit
     private int maxStack;
 
     @Override
-    public List<ItemStack> bridge$getContents() {
+    public List<ItemStack> getContents() {
         return this.minecartContainerItems;
     }
 
     @Override
-    public void bridge$onOpen(CraftHumanEntity who) {
+    public void onOpen(CraftHumanEntity who) {
         transaction.add(who);
     }
 
     @Override
-    public void bridge$onClose(CraftHumanEntity who) {
+    public void onClose(CraftHumanEntity who) {
         transaction.remove(who);
     }
 
     @Override
-    public List<HumanEntity> bridge$getViewers() {
+    public List<HumanEntity> getViewers() {
         return transaction;
     }
 
     @Override
-    public InventoryHolder bridge$getOwner() {
+    public InventoryHolder getOwner() {
         org.bukkit.entity.Entity cart = getBukkitEntity();
         if (cart instanceof InventoryHolder) return (InventoryHolder) cart;
         return null;
     }
 
     @Override
-    public void bridge$setOwner(InventoryHolder owner) {
+    public void setOwner(InventoryHolder owner) {
 
     }
 
@@ -82,22 +82,22 @@ public abstract class ContainerMinecartEntityMixin extends AbstractMinecartEntit
     }
 
     @Override
-    public void bridge$setMaxStackSize(int size) {
+    public void setMaxStackSize(int size) {
         maxStack = size;
     }
 
     @Override
-    public Location bridge$getLocation() {
+    public Location getLocation() {
         return getBukkitEntity().getLocation();
     }
 
     @Override
-    public IRecipe<?> bridge$getCurrentRecipe() {
+    public IRecipe<?> getCurrentRecipe() {
         return null;
     }
 
     @Override
-    public void bridge$setCurrentRecipe(IRecipe<?> recipe) {
+    public void setCurrentRecipe(IRecipe<?> recipe) {
 
     }
 }

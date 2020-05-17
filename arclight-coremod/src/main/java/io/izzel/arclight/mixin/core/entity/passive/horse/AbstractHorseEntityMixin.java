@@ -34,7 +34,7 @@ public abstract class AbstractHorseEntityMixin extends AnimalEntityMixin {
     @Redirect(method = "initHorseChest", at = @At(value = "NEW", target = "net/minecraft/inventory/Inventory"))
     private Inventory arclight$createInv(int slots) {
         Inventory inventory = new Inventory(slots);
-        ((IInventoryBridge) inventory).bridge$setOwner((InventoryHolder) this.getBukkitEntity());
+        ((IInventoryBridge) inventory).setOwner((InventoryHolder) this.getBukkitEntity());
         return inventory;
     }
 

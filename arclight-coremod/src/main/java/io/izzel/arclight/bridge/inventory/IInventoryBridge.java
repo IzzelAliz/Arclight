@@ -13,23 +13,23 @@ public interface IInventoryBridge {
 
     int MAX_STACK = 64;
 
-    List<ItemStack> bridge$getContents();
+    List<ItemStack> getContents();
 
-    void bridge$onOpen(CraftHumanEntity who);
+    void onOpen(CraftHumanEntity who);
 
-    void bridge$onClose(CraftHumanEntity who);
+    void onClose(CraftHumanEntity who);
 
-    List<HumanEntity> bridge$getViewers();
+    List<HumanEntity> getViewers();
 
-    InventoryHolder bridge$getOwner();
+    InventoryHolder getOwner();
 
-    void bridge$setOwner(InventoryHolder owner);
+    void setOwner(InventoryHolder owner);
 
-    void bridge$setMaxStackSize(int size);
+    void setMaxStackSize(int size);
 
-    Location bridge$getLocation();
+    Location getLocation();
 
-    IRecipe<?> bridge$getCurrentRecipe();
+    IRecipe<?> getCurrentRecipe();
 
-    void bridge$setCurrentRecipe(IRecipe<?> recipe);
+    void setCurrentRecipe(IRecipe<?> recipe);
 }

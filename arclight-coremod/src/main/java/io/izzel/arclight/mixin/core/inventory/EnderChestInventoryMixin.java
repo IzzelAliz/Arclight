@@ -35,12 +35,12 @@ public abstract class EnderChestInventoryMixin extends InventoryMixin implements
     }
 
     @Override
-    public InventoryHolder bridge$getOwner() {
+    public InventoryHolder getOwner() {
         return ((PlayerEntityBridge) owner).bridge$getBukkitEntity();
     }
 
     @Override
-    public Location bridge$getLocation() {
+    public Location getLocation() {
         return CraftBlock.at(this.associatedChest.getWorld(), this.associatedChest.getPos()).getLocation();
     }
 }

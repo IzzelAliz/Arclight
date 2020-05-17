@@ -12,16 +12,16 @@ import org.spongepowered.asm.mixin.Mixin;
 public abstract class LockableTileEntityMixin extends TileEntityMixin implements IInventoryBridge, IInventory {
 
     @Override
-    public Location bridge$getLocation() {
+    public Location getLocation() {
         return CraftBlock.at(this.world, this.pos).getLocation();
     }
 
     @Override
-    public IRecipe<?> bridge$getCurrentRecipe() {
+    public IRecipe<?> getCurrentRecipe() {
         return null;
     }
 
     @Override
-    public void bridge$setCurrentRecipe(IRecipe<?> recipe) {
+    public void setCurrentRecipe(IRecipe<?> recipe) {
     }
 }

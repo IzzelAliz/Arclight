@@ -10,44 +10,50 @@ import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
 import org.spongepowered.asm.mixin.Mixin;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(IInventory.class)
 public interface IInventoryMixin extends IInventoryBridge {
 
+    @Override
     default List<ItemStack> getContents() {
-        return bridge$getContents();
+        return new ArrayList<>();
     }
 
+    @Override
     default void onOpen(CraftHumanEntity who) {
-        bridge$onClose(who);
     }
 
+    @Override
     default void onClose(CraftHumanEntity who) {
-        bridge$onClose(who);
     }
 
+    @Override
     default List<HumanEntity> getViewers() {
-        return bridge$getViewers();
+        return new ArrayList<>();
     }
 
+    @Override
     default InventoryHolder getOwner() {
-        return bridge$getOwner();
+        return null;
     }
 
+    @Override
     default void setMaxStackSize(int size) {
-        bridge$setMaxStackSize(size);
     }
 
+    @Override
     default Location getLocation() {
-        return bridge$getLocation();
+        return null;
     }
 
+    @Override
     default IRecipe<?> getCurrentRecipe() {
-        return bridge$getCurrentRecipe();
+        return null;
     }
 
+    @Override
     default void setCurrentRecipe(IRecipe<?> recipe) {
-        bridge$setCurrentRecipe(recipe);
     }
 }

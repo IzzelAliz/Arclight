@@ -60,27 +60,27 @@ public abstract class ChestTileEntityMixin extends LockableTileEntityMixin {
     }
 
     @Override
-    public List<ItemStack> bridge$getContents() {
+    public List<ItemStack> getContents() {
         return this.chestContents;
     }
 
     @Override
-    public void bridge$onOpen(CraftHumanEntity who) {
+    public void onOpen(CraftHumanEntity who) {
         transaction.add(who);
     }
 
     @Override
-    public void bridge$onClose(CraftHumanEntity who) {
+    public void onClose(CraftHumanEntity who) {
         transaction.remove(who);
     }
 
     @Override
-    public List<HumanEntity> bridge$getViewers() {
+    public List<HumanEntity> getViewers() {
         return transaction;
     }
 
     @Override
-    public void bridge$setOwner(InventoryHolder owner) {
+    public void setOwner(InventoryHolder owner) {
     }
 
     @Override
@@ -90,7 +90,7 @@ public abstract class ChestTileEntityMixin extends LockableTileEntityMixin {
     }
 
     @Override
-    public void bridge$setMaxStackSize(int size) {
+    public void setMaxStackSize(int size) {
         this.maxStack = size;
     }
 

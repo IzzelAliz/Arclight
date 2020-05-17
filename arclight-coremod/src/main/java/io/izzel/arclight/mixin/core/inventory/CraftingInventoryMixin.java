@@ -64,27 +64,27 @@ public abstract class CraftingInventoryMixin implements CraftingInventoryBridge,
     }
 
     @Override
-    public List<ItemStack> bridge$getContents() {
+    public List<ItemStack> getContents() {
         return this.stackList;
     }
 
     @Override
-    public void bridge$onOpen(CraftHumanEntity who) {
+    public void onOpen(CraftHumanEntity who) {
         this.transaction.add(who);
     }
 
     @Override
-    public void bridge$onClose(CraftHumanEntity who) {
+    public void onClose(CraftHumanEntity who) {
         this.transaction.remove(who);
     }
 
     @Override
-    public List<HumanEntity> bridge$getViewers() {
+    public List<HumanEntity> getViewers() {
         return transaction;
     }
 
     @Override
-    public InventoryHolder bridge$getOwner() {
+    public InventoryHolder getOwner() {
         if (bukkitOwner == null) {
             bukkitOwner = owner == null ? null : ((PlayerEntityBridge) owner).bridge$getBukkitEntity();
         }
@@ -92,7 +92,7 @@ public abstract class CraftingInventoryMixin implements CraftingInventoryBridge,
     }
 
     @Override
-    public void bridge$setOwner(InventoryHolder owner) {
+    public void setOwner(InventoryHolder owner) {
         this.bukkitOwner = owner;
     }
 
@@ -103,25 +103,25 @@ public abstract class CraftingInventoryMixin implements CraftingInventoryBridge,
     }
 
     @Override
-    public void bridge$setMaxStackSize(int size) {
+    public void setMaxStackSize(int size) {
         this.maxStack = size;
-        ((IInventoryBridge) this.resultInventory).bridge$setMaxStackSize(size);
+        ((IInventoryBridge) this.resultInventory).setMaxStackSize(size);
     }
 
     @Override
-    public Location bridge$getLocation() {
+    public Location getLocation() {
         return this.field_70465_c instanceof WorkbenchContainer
             ? ((IWorldPosCallableBridge) ((WorkbenchContainerBridge) field_70465_c).bridge$getContainerAccess()).bridge$getLocation()
             : ((PlayerEntityBridge) owner).bridge$getBukkitEntity().getLocation();
     }
 
     @Override
-    public IRecipe<?> bridge$getCurrentRecipe() {
+    public IRecipe<?> getCurrentRecipe() {
         return this.currentRecipe;
     }
 
     @Override
-    public void bridge$setCurrentRecipe(IRecipe<?> recipe) {
+    public void setCurrentRecipe(IRecipe<?> recipe) {
         this.currentRecipe = recipe;
     }
 }

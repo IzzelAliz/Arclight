@@ -45,11 +45,14 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin {
 
     @Inject(method = "systemExitNow", at = @At("RETURN"))
     public void arclight$exitNow(CallbackInfo ci) {
-        try {
-            Thread.sleep(10000);
-            Runtime.getRuntime().halt(0);
-            // todo halt 太暴力了
-        } catch (Exception ignored) {
-        }
+        new Thread(() -> {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException ignored) {
+            } finally {
+                Runtime.getRuntime().halt(0);
+            }
+        }, "Exit Thread").start();
+        System.exit(0);
     }
 }

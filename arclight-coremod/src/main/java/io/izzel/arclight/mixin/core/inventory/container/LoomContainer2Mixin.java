@@ -14,7 +14,7 @@ public abstract class LoomContainer2Mixin extends InventoryMixin {
     @Shadow(aliases = {"this$0", "field_213914_a"}, remap = false) private LoomContainer outerThis;
 
     @Override
-    public Location bridge$getLocation() {
+    public Location getLocation() {
         return ((IWorldPosCallableBridge) ((LoomContainerBridge) outerThis).bridge$getWorldPos()).bridge$getLocation();
     }
 }

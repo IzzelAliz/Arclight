@@ -84,6 +84,7 @@ public abstract class AbstractMinecartEntityMixin extends EntityMixin {
 
     /**
      * @author IzzelAliz
+     * @reason
      */
     @Overwrite
     public boolean attackEntityFrom(DamageSource source, float amount) {

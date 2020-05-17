@@ -84,7 +84,7 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
         Optional<T> optional = this.getRecipes(recipeTypeIn).values().stream().flatMap((p_215372_3_) -> {
             return Util.streamOptional(recipeTypeIn.matches(p_215372_3_, worldIn, inventoryIn));
         }).findFirst();
-        ((IInventoryBridge) inventoryIn).bridge$setCurrentRecipe(optional.orElse(null));
+        ((IInventoryBridge) inventoryIn).setCurrentRecipe(optional.orElse(null));
         return optional;
     }
 

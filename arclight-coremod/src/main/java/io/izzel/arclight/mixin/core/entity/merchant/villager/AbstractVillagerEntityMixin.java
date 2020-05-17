@@ -31,7 +31,7 @@ public abstract class AbstractVillagerEntityMixin extends CreatureEntityMixin im
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(EntityType<? extends AbstractVillagerEntity> type, World worldIn, CallbackInfo ci) {
-        ((IInventoryBridge) this.villagerInventory).bridge$setOwner((InventoryHolder) this.getBukkitEntity());
+        ((IInventoryBridge) this.villagerInventory).setOwner((InventoryHolder) this.getBukkitEntity());
     }
 
     private CraftMerchant craftMerchant;

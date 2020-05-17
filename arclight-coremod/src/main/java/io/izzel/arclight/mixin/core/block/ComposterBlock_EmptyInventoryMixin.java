@@ -16,6 +16,6 @@ public abstract class ComposterBlock_EmptyInventoryMixin extends InventoryMixin 
 
     public void arclight$constructor(IWorld world, BlockPos blockPos) {
         arclight$constructor();
-        this.bridge$setOwner(new CraftBlockInventoryHolder(world, blockPos, this));
+        this.setOwner(new CraftBlockInventoryHolder(world, blockPos, this));
     }
 }

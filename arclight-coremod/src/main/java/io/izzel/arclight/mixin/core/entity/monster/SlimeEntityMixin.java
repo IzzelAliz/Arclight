@@ -29,6 +29,7 @@ public abstract class SlimeEntityMixin extends MobEntityMixin {
 
     /**
      * @author IzzelAliz
+     * @reason
      */
     @Overwrite(remap = false)
     @Override

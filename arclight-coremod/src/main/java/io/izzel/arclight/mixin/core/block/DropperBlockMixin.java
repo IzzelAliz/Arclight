@@ -55,9 +55,9 @@ public class DropperBlockMixin {
                     if (iinventory instanceof DoubleSidedInventory) {
                         destinationInventory = new CraftInventoryDoubleChest((DoubleSidedInventory) iinventory);
                     } else {
-                        destinationInventory = ((IInventoryBridge) iinventory).bridge$getOwner().getInventory();
+                        destinationInventory = ((IInventoryBridge) iinventory).getOwner().getInventory();
                     }
-                    InventoryMoveItemEvent event = new InventoryMoveItemEvent(((IInventoryBridge) dispensertileentity).bridge$getOwner().getInventory(), craftItemStack, destinationInventory, true);
+                    InventoryMoveItemEvent event = new InventoryMoveItemEvent(((IInventoryBridge) dispensertileentity).getOwner().getInventory(), craftItemStack, destinationInventory, true);
                     Bukkit.getPluginManager().callEvent(event);
                     if (event.isCancelled()) {
                         return;

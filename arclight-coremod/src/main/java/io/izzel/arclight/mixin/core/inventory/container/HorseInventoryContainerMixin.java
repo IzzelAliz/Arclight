@@ -37,6 +37,6 @@ public class HorseInventoryContainerMixin extends ContainerMixin {
             return bukkitEntity;
         }
         return bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) player.player).bridge$getBukkitEntity(),
-            ((IInventoryBridge) this.horseInventory).bridge$getOwner().getInventory(), (Container) (Object) this);
+            ((IInventoryBridge) this.horseInventory).getOwner().getInventory(), (Container) (Object) this);
     }
 }

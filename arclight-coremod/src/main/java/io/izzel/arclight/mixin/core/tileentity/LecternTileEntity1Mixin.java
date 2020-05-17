@@ -38,32 +38,32 @@ public abstract class LecternTileEntity1Mixin implements IInventoryBridge, IInve
     }
 
     @Override
-    public List<ItemStack> bridge$getContents() {
+    public List<ItemStack> getContents() {
         return Collections.singletonList(outerThis.getBook());
     }
 
     @Override
-    public void bridge$onOpen(CraftHumanEntity who) {
+    public void onOpen(CraftHumanEntity who) {
         transaction.add(who);
     }
 
     @Override
-    public void bridge$onClose(CraftHumanEntity who) {
+    public void onClose(CraftHumanEntity who) {
         transaction.remove(who);
     }
 
     @Override
-    public List<HumanEntity> bridge$getViewers() {
+    public List<HumanEntity> getViewers() {
         return transaction;
     }
 
     @Override
-    public InventoryHolder bridge$getOwner() {
+    public InventoryHolder getOwner() {
         return ((TileEntityBridge) outerThis).bridge$getOwner();
     }
 
     @Override
-    public void bridge$setOwner(InventoryHolder owner) {
+    public void setOwner(InventoryHolder owner) {
     }
 
     @Override
@@ -73,21 +73,21 @@ public abstract class LecternTileEntity1Mixin implements IInventoryBridge, IInve
     }
 
     @Override
-    public void bridge$setMaxStackSize(int size) {
+    public void setMaxStackSize(int size) {
         this.maxStack = size;
     }
 
     @Override
-    public Location bridge$getLocation() {
+    public Location getLocation() {
         return new Location(((WorldBridge) outerThis.getWorld()).bridge$getWorld(), outerThis.getPos().getX(), outerThis.getPos().getY(), outerThis.getPos().getZ());
     }
 
     @Override
-    public IRecipe<?> bridge$getCurrentRecipe() {
+    public IRecipe<?> getCurrentRecipe() {
         return null;
     }
 
     @Override
-    public void bridge$setCurrentRecipe(IRecipe<?> recipe) {
+    public void setCurrentRecipe(IRecipe<?> recipe) {
     }
 }

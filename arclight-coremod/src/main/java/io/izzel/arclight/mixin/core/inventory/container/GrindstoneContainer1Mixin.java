@@ -14,7 +14,7 @@ public abstract class GrindstoneContainer1Mixin extends InventoryMixin {
     @Shadow(aliases = {"this$0", "field_213912_a"}, remap = false) private GrindstoneContainer outerThis;
 
     @Override
-    public Location bridge$getLocation() {
+    public Location getLocation() {
         return ((IWorldPosCallableBridge) ((GrindstoneContainerBridge) outerThis).bridge$getContainerAccess()).bridge$getLocation();
     }
 }
