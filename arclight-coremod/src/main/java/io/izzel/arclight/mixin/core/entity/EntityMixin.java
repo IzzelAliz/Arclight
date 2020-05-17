@@ -291,9 +291,13 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         this.persist = persist;
     }
 
+    public boolean isValid() {
+        return valid;
+    }
+
     @Override
     public boolean bridge$isValid() {
-        return valid;
+        return isValid();
     }
 
     @Override
