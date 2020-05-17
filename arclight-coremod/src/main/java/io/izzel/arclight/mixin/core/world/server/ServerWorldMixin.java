@@ -86,6 +86,16 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         bridge$getWorld();
     }
 
+    @Inject(method = "onEntityAdded", at = @At("RETURN"))
+    private void arclight$validEntity(Entity entityIn, CallbackInfo ci) {
+        ((EntityBridge) entityIn).bridge$setValid(true);
+    }
+
+    @Inject(method = "removeEntityComplete", at = @At("RETURN"))
+    private void arclight$invalidEntity(Entity entityIn, boolean keepData, CallbackInfo ci) {
+        ((EntityBridge) entityIn).bridge$setValid(false);
+    }
+
     @Inject(method = "tickEnvironment", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;addEntity(Lnet/minecraft/entity/Entity;)Z"))
     public void arclight$thunder(Chunk chunkIn, int randomTickSpeed, CallbackInfo ci) {
         bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.LIGHTNING);
