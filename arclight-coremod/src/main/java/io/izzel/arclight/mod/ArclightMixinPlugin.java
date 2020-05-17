@@ -109,6 +109,7 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
         .add("net.minecraft.inventory.container.LecternContainer")
         .add("net.minecraft.world.TrackedEntity")
         .add("net.minecraft.util.math.shapes.IndirectMerger")
+        .add("net.minecraft.network.play.client.CCloseWindowPacket")
         .build();
 
     @Override

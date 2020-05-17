@@ -310,6 +310,7 @@
     "network.datasync.EntityDataManagerMixin",
     "network.login.ServerLoginNetHandler1Mixin",
     "network.play.ServerPlayNetHandlerMixin",
+    "network.play.client.CCloseWindowPacketMixin",
     "network.play.server.SChatPacketMixin",
     "network.rcon.RConConsoleSourceMixin",
     "potion.EffectMixin",
