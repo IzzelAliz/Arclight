@@ -5,7 +5,7 @@ cache:
   - C:/Users/appveyor/.gradle
   - ./.gradle
 build_script:
-  - cmd: gradlew clean prepareRuns build --no-daemon -i
+  - cmd: gradlew clean genEclipseRuns build --no-daemon -i
 test: off
 artifacts:
   - path: ./arclight-coremod/build/libs/*.*
