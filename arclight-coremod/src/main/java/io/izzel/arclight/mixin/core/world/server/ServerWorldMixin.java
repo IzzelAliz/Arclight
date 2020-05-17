@@ -91,7 +91,7 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         ((EntityBridge) entityIn).bridge$setValid(true);
     }
 
-    @Inject(method = "removeEntityComplete", at = @At("RETURN"))
+    @Inject(method = "removeEntityComplete", remap = false, at = @At("RETURN"))
     private void arclight$invalidEntity(Entity entityIn, boolean keepData, CallbackInfo ci) {
         ((EntityBridge) entityIn).bridge$setValid(false);
     }
