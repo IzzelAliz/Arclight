@@ -66,7 +66,7 @@ public class ArclightReflectionHandler {
 
     // srg -> bukkit
     public static String redirectFieldGetName(Field field) {
-        return remapper.tryMapFieldToBukkit(field.getDeclaringClass(), field.getName());
+        return remapper.tryMapFieldToBukkit(field.getDeclaringClass(), field.getName(), field);
     }
 
     // bukkit -> srg

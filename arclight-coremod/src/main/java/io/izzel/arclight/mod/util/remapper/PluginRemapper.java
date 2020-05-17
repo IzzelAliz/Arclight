@@ -81,7 +81,7 @@ public class PluginRemapper extends JarRemapper {
     }
 
     // BiMap: srg -> bukkit
-    private final Map<String, BiMap<String, String>> cacheFields = new ConcurrentHashMap<>();
+    private final Map<String, BiMap<WrappedField, String>> cacheFields = new ConcurrentHashMap<>();
     private final Map<String, Map.Entry<Map<Method, String>, Map<WrappedMethod, Method>>> cacheMethods = new ConcurrentHashMap<>();
     private final Map<String, Boolean> cacheRemap = new ConcurrentHashMap<>();
 
@@ -114,19 +114,19 @@ public class PluginRemapper extends JarRemapper {
         }
     }
 
-    private BiMap<String, String> getFields(Class<?> cl, String internalName) {
+    private BiMap<WrappedField, String> getFields(Class<?> cl, String internalName) {
         return cacheFields.computeIfAbsent(internalName, k -> this.tryGetFields(cl, k));
     }
 
-    private BiMap<String, String> tryGetFields(Class<?> cl, String internalName) {
+    private BiMap<WrappedField, String> tryGetFields(Class<?> cl, String internalName) {
         try {
-            HashBiMap<String, String> map = HashBiMap.create();
+            HashBiMap<WrappedField, String> map = HashBiMap.create();
             ArclightReflectionHandler.remapper = this;
             for (Field field : cl.getFields()) {
-                map.put(field.getName(), mapField(field));
+                map.put(WrappedField.of(field), mapField(field));
             }
             for (Field field : cl.getDeclaredFields()) {
-                map.put(field.getName(), mapField(field));
+                map.put(WrappedField.of(field), mapField(field));
             }
             ArclightReflectionHandler.remapper = null;
             return map;
@@ -165,21 +165,24 @@ public class PluginRemapper extends JarRemapper {
     public String tryMapDecFieldToSrg(Class<?> cl, String bukkitName) {
         String internalName = Type.getInternalName(cl);
         if (internalName.startsWith(PREFIX)) {
-            return getFields(cl, internalName).inverse().getOrDefault(bukkitName, bukkitName);
+            WrappedField field = getFields(cl, internalName).inverse().get(bukkitName);
+            return field == null ? bukkitName : field.name;
         } else return bukkitName;
     }
 
     public String tryMapFieldToSrg(Class<?> cl, String bukkitName) {
         String internalName = Type.getInternalName(cl);
         if (shouldRemap(internalName)) {
-            return getFields(cl, internalName).inverse().getOrDefault(bukkitName, bukkitName);
+            WrappedField field = getFields(cl, internalName).inverse().get(bukkitName);
+            return field == null ? bukkitName : field.name;
         } else return bukkitName;
     }
 
-    public String tryMapFieldToBukkit(Class<?> cl, String srgName) {
+    public String tryMapFieldToBukkit(Class<?> cl, String srgName, Field field) {
         String internalName = Type.getInternalName(cl);
         if (internalName.startsWith(PREFIX)) {
-            return getFields(cl, internalName).getOrDefault(srgName, srgName);
+            BiMap<WrappedField, String> fields = getFields(cl, internalName);
+            return fields.getOrDefault(WrappedField.of(field), srgName);
         } else return srgName;
     }
 
@@ -335,6 +338,38 @@ public class PluginRemapper extends JarRemapper {
             return node.superName;
         }
 
+    }
+
+    private static class WrappedField {
+
+        private final Class<?> owner;
+        private final String name;
+        private final Class<?> type;
+
+        private WrappedField(Class<?> owner, String name, Class<?> type) {
+            this.owner = owner;
+            this.name = name;
+            this.type = type;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            WrappedField that = (WrappedField) o;
+            return Objects.equals(owner, that.owner) &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(type, that.type);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(owner, name, type);
+        }
+
+        private static WrappedField of(Field field) {
+            return new WrappedField(field.getDeclaringClass(), field.getName(), field.getType());
+        }
     }
 
     private static class WrappedMethod {
