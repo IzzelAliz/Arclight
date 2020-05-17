@@ -110,6 +110,7 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
         .add("net.minecraft.world.TrackedEntity")
         .add("net.minecraft.util.math.shapes.IndirectMerger")
         .add("net.minecraft.network.play.client.CCloseWindowPacket")
+        .add("net.minecraft.world.dimension.DimensionType")
         .build();
 
     @Override

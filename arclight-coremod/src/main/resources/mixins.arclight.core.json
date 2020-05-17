@@ -359,6 +359,7 @@
     "world.chunk.ChunkMixin",
     "world.chunk.storage.RegionFileCacheMixin",
     "world.dimension.DimensionMixin",
+    "world.dimension.DimensionTypeMixin",
     "world.gen.WorldGenRegionMixin",
     "world.gen.feature.structure.SwampHutPieceMixin",
     "world.raid.RaidManagerMixin",
