@@ -6,7 +6,7 @@ cache:
   - ./.gradle
 build_script:
   - cmd: |
-      gradlew clean genIntellijRuns idea --no-daemon -i
+      del /S /Q arclight-coremod\build\libs
       gradlew build --no-daemon -i
 test: off
 artifacts:
