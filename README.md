@@ -9,9 +9,7 @@ A Bukkit server implementation utilizing Mixin.
 ## Installing
 
 1. Download the jar from [release page](https://github.com/IzzelAliz/Arclight/releases) or [build server](https://ci.appveyor.com/project/IzzelAliz/arclight/build/artifacts).
-2. Install [Forge 28.2.0](http://files.minecraftforge.net/maven/net/minecraftforge/forge/index_1.14.4.html) in the folder.
-3. Keep forge jar name as `forge-1.14.4-28.2.0.jar`
-4. Launch with command `java -jar arclight-coremod-xxx.jar`
+2. Launch with command `java -jar arclight-coremod-xxx.jar`
 
 ## Support
 
