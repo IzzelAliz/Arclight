@@ -10,17 +10,12 @@ import net.minecraftforge.server.ServerMain;
 import org.apache.logging.log4j.LogManager;
 import org.fusesource.jansi.AnsiConsole;
 
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Objects;
 
 public class Main {
 
     public static void main(String[] args) throws Throwable {
         ForgeInstaller.install();
-        for (URL url : ((URLClassLoader) Main.class.getClassLoader()).getURLs()) {
-            System.out.println(url);
-        }
         try { // Java 9 & Java 兼容性
             int javaVersion = (int) Float.parseFloat(System.getProperty("java.class.version"));
             if (javaVersion == 53) {
