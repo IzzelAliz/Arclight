@@ -61,7 +61,7 @@ public class SharedClassRepo implements ClassRepo {
             try (InputStream inputStream = connection.getInputStream()) {
                 ClassReader reader = new ClassReader(inputStream);
                 ClassNode classNode = new ClassNode();
-                reader.accept(classNode, 0);
+                reader.accept(classNode, ClassReader.SKIP_CODE);
                 return classNode;
             }
         } catch (IOException ignored) {

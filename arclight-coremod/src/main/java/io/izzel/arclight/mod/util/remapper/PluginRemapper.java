@@ -22,6 +22,7 @@ import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
+import org.spongepowered.asm.service.MixinService;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -259,7 +260,7 @@ public class PluginRemapper extends JarRemapper {
     private byte[] remapClassFile(ClassReader reader, final ClassRepo repo) {
         ClassNode node = new ClassNode();
         RemappingClassAdapter mapper = new RemappingClassAdapter(node, this, repo);
-        reader.accept(mapper, 0);
+        reader.accept(mapper, ClassReader.SKIP_FRAMES);
 
         ArclightRedirectAdapter.redirect(node, generatedHandler);
         ArclightInterfaceInvokerGen.generate(node, this.classRepo, this, this.inheritanceProvider);
@@ -274,22 +275,23 @@ public class PluginRemapper extends JarRemapper {
     private static AtomicInteger atomicInteger = new AtomicInteger();
 
     private String generateReflectionHandler() {
-        ClassNode node = classRepo.findClass(Type.getInternalName(ArclightReflectionHandler.class));
-        Preconditions.checkNotNull(node, "node");
-        ClassWriter writer = new ClassWriter(0);
-        String name = Type.getInternalName(ArclightReflectionHandler.class) + "_" + atomicInteger.getAndIncrement();
-        ClassVisitor visitor = new ClassRemapper(writer, new NameRemapper(name));
-        node.accept(visitor);
-        byte[] bytes = writer.toByteArray();
-        Class<?> cl = Unsafe.defineClass(name.replace('/', '.'), bytes, 0, bytes.length, getClass().getClassLoader(), getClass().getProtectionDomain());
-        Unsafe.ensureClassInitialized(cl);
         try {
+            ClassNode node = MixinService.getService().getBytecodeProvider().getClassNode(Type.getInternalName(ArclightReflectionHandler.class));
+            Preconditions.checkNotNull(node, "node");
+            ClassWriter writer = new ClassWriter(0);
+            String name = Type.getInternalName(ArclightReflectionHandler.class) + "_" + atomicInteger.getAndIncrement();
+            ClassVisitor visitor = new ClassRemapper(writer, new NameRemapper(name));
+            node.accept(visitor);
+            byte[] bytes = writer.toByteArray();
+            Class<?> cl = Unsafe.defineClass(name.replace('/', '.'), bytes, 0, bytes.length, getClass().getClassLoader(), getClass().getProtectionDomain());
+            Unsafe.ensureClassInitialized(cl);
+
             Field remapper = cl.getField("remapper");
             remapper.set(null, this);
+            return name;
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-        return name;
     }
 
     private static class NameRemapper extends Remapper {
