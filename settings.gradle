@@ -2,4 +2,7 @@ rootProject.name = 'arclight'
 include 'arclight-coremod'
 include 'scripts'
 include 'arclight-testplugin'
+include 'arclight-common'
+include 'forge-installer'
+include 'arclight-api'
 

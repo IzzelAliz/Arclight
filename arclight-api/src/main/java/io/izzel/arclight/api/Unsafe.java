@@ -1,4 +1,4 @@
-package io.izzel.arclight.util;
+package io.izzel.arclight.api;
 
 import sun.reflect.CallerSensitive;
 

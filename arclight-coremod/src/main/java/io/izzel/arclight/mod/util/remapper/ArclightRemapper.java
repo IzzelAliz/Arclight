@@ -2,7 +2,7 @@ package io.izzel.arclight.mod.util.remapper;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import io.izzel.arclight.util.Unsafe;
+import io.izzel.arclight.api.Unsafe;
 import net.md_5.specialsource.InheritanceMap;
 import net.md_5.specialsource.JarMapping;
 import net.md_5.specialsource.provider.ClassLoaderProvider;

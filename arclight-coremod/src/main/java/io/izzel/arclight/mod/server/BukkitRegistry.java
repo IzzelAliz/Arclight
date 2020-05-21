@@ -19,7 +19,7 @@ import io.izzel.arclight.bridge.bukkit.MaterialBridge;
 import io.izzel.arclight.mod.ArclightMod;
 import io.izzel.arclight.mod.util.potion.ArclightPotionEffect;
 import io.izzel.arclight.util.EnumHelper;
-import io.izzel.arclight.util.Unsafe;
+import io.izzel.arclight.api.Unsafe;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;

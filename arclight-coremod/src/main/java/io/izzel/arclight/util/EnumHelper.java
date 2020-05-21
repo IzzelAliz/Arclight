@@ -1,6 +1,7 @@
 package io.izzel.arclight.util;
 
 import com.google.common.collect.ImmutableList;
+import io.izzel.arclight.api.Unsafe;
 import org.bukkit.Material;
 
 import java.lang.invoke.MethodHandle;

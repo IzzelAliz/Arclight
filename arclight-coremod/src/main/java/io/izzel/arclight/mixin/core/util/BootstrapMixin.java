@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import io.izzel.arclight.util.Unsafe;
+import io.izzel.arclight.api.Unsafe;
 
 import java.lang.reflect.Field;
 import java.util.HashSet;

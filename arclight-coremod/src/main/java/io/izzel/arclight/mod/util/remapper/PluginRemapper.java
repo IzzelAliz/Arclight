@@ -5,7 +5,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
 import io.izzel.arclight.mod.util.remapper.generated.ArclightReflectionHandler;
-import io.izzel.arclight.util.Unsafe;
+import io.izzel.arclight.api.Unsafe;
 import net.md_5.specialsource.JarMapping;
 import net.md_5.specialsource.JarRemapper;
 import net.md_5.specialsource.RemappingClassAdapter;
