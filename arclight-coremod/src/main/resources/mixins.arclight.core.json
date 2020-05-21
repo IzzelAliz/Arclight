@@ -321,7 +321,6 @@
     "server.management.PlayerInteractionManagerMixin",
     "server.management.PlayerListMixin",
     "server.management.UserListMixin",
-    "state.EnumPropertyMixin",
     "state.IntegerPropertyMixin",
     "stats.StatisticsManagerMixin",
     "tags.NetworkTagCollectionMixin",
