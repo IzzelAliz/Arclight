@@ -34,15 +34,15 @@ public class ArclightRemapper {
         this.toBukkitMapping = new JarMapping();
         this.inheritanceMap = new InheritanceMap();
         this.toNmsMapping.loadMappings(
-            new BufferedReader(new InputStreamReader(ArclightRemapper.class.getResourceAsStream("/META-INF/bukkit_srg.srg"))),
+            new BufferedReader(new InputStreamReader(ArclightRemapper.class.getResourceAsStream("/bukkit_srg.srg"))),
             null, null, false
         );
         this.toBukkitMapping.loadMappings(
-            new BufferedReader(new InputStreamReader(ArclightRemapper.class.getResourceAsStream("/META-INF/bukkit_srg.srg"))),
+            new BufferedReader(new InputStreamReader(ArclightRemapper.class.getResourceAsStream("/bukkit_srg.srg"))),
             null, null, true
         );
         BiMap<String, String> inverseClassMap = HashBiMap.create(toNmsMapping.classes).inverse();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(ArclightRemapper.class.getResourceAsStream("/META-INF/inheritanceMap.txt")))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(ArclightRemapper.class.getResourceAsStream("/inheritanceMap.txt")))) {
             inheritanceMap.load(reader, inverseClassMap);
         }
         JointProvider inheritanceProvider = new JointProvider();

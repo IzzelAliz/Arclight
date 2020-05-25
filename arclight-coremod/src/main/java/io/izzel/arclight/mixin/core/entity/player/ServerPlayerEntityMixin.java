@@ -8,10 +8,10 @@ import io.izzel.arclight.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.bridge.inventory.container.ContainerBridge;
 import io.izzel.arclight.bridge.util.FoodStatsBridge;
 import io.izzel.arclight.bridge.world.WorldBridge;
+import io.izzel.arclight.mod.util.ChestBlockDoubleInventoryHacks;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.MuteError;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.boss.WitherEntity;
@@ -19,7 +19,6 @@ import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.passive.horse.AbstractHorseEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.DoubleSidedInventory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.HorseInventoryContainer;
@@ -112,7 +111,6 @@ import java.util.List;
 import java.util.OptionalInt;
 import java.util.Random;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Mixin(ServerPlayerEntity.class)
 public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implements ServerPlayerEntityBridge {
@@ -565,8 +563,8 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
             if (container == null && !cancelled) {
                 if (itileinventory instanceof IInventory) {
                     ((IInventory) itileinventory).closeInventory((ServerPlayerEntity) (Object) this);
-                } else if (MuteError.class.getSuperclass().isInstance(itileinventory)) {
-                    ((Supplier<DoubleSidedInventory>) itileinventory).get().closeInventory((ServerPlayerEntity) (Object) this);
+                } else if (ChestBlockDoubleInventoryHacks.isInstance(itileinventory)) {
+                    ChestBlockDoubleInventoryHacks.get(itileinventory).closeInventory((ServerPlayerEntity) (Object) this);
                 }
                 cir.setReturnValue(OptionalInt.empty());
             }

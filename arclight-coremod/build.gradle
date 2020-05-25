@@ -4,10 +4,12 @@ buildscript {
         maven { url = 'https://repo.spongepowered.org/maven' }
         jcenter()
         mavenCentral()
+        maven { url = 'https://jitpack.io' }
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
         classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+        classpath 'com.github.IzzelAliz:arclight-gradle-plugin:1.1'
     }
 }
 
@@ -15,37 +17,29 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'java'
 apply plugin: 'idea'
+apply plugin: 'io.izzel.arclight'
 
 ext {
     minecraftVersion = '1.14.4'
     forgeVersion = '28.2.0'
-    installerInfoDir = file("$buildDir/installer-info")
-    installerInfo = file("$installerInfoDir/META-INF/installer.json")
+}
+
+arclight {
+    mcVersion = minecraftVersion
+    forgeVersion = project.ext.forgeVersion
+    bukkitVersion = 'v1_14_R1'
 }
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
 
 configurations {
     embed
-    embedJar
-    compile.extendsFrom(embed, embedJar)
+    compile.extendsFrom(embed)
 }
 
 minecraft {
     mappings channel: 'stable', version: "58-$minecraftVersion"
     accessTransformer = project.file('src/main/resources/META-INF/accesstransformer.cfg')
-    runs {
-        server {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'debug'
-            mods {
-                arclight {
-                    source sourceSets.main
-                }
-            }
-        }
-    }
 }
 
 repositories {
@@ -73,11 +67,10 @@ dependencies {
     embed project(':arclight-common')
     embed project(':forge-installer')
     for (def lib : embedLibs) {
-        embedJar "$lib@jar"
+        arclight lib
     }
     embed 'net.md-5:bungeecord-chat:1.13-SNAPSHOT@jar'
     embed "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
-    embed files("$projectDir/libs/spigot-1.14.4-mapped-deobf.jar")
 }
 
 def getGitHash = { ->
@@ -108,21 +101,11 @@ jar {
         exclude "META-INF/*.RSA"
         exclude "LICENSE.txt"
     }
-    into('META-INF') {
-        from(files("${project(':scripts').projectDir}/bukkit_srg.srg"))
-        from(files("${project(':scripts').projectDir}/resources/inheritanceMap.txt"))
-    }
 }
 
-task generateInstallerInfo {
-    def output = [installer: [minecraft: minecraftVersion, forge: forgeVersion], libraries: embedLibs]
-    outputs.file(installerInfo)
-    doLast {
-        installerInfo.text = groovy.json.JsonOutput.toJson(output)
-    }
+remapSpigotJar {
+    includes.add('net/minecraft/block/ChestBlock$DoubleInventory')
 }
-
-sourceSets.main.output.dir installerInfoDir, builtBy: generateInstallerInfo
 
 mixin {
     add sourceSets.main, 'mixins.arclight.refmap.json'
