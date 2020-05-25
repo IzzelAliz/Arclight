@@ -39,8 +39,10 @@ jobs:
       run: yes | rm -rf ./arclight-coremod/build/libs
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-    - name: Build with Gradle
-      run: ./gradlew idea build --no-daemon -i
+    - name: Setup workspace
+      run: ./gradlew idea remapSpigotJar --no-daemon -i
+    - name: Build
+      run: ./gradlew build --no-daemon -i
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:

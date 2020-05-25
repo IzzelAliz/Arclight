@@ -8,7 +8,8 @@ cache:
 build_script:
   - cmd: |
       IF EXIST arclight-coremod\build\libs ( del /S /Q arclight-coremod\build\libs )
-      gradlew idea build --no-daemon -i
+      gradlew idea remapSpigotJar --no-daemon -i
+      gradlew build --no-daemon -i
 test: off
 artifacts:
   - path: ./arclight-coremod/build/libs/*.*
