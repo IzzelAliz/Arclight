@@ -1,11 +1,14 @@
 package io.izzel.arclight.mod.server.event;
 
 import com.google.common.collect.Lists;
+import io.izzel.arclight.mod.util.ArclightCaptures;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraftforge.event.entity.EntityStruckByLightningEvent;
 import net.minecraftforge.event.entity.living.AnimalTameEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftItemStack;
@@ -40,5 +43,10 @@ public class EntityEventDispatcher {
     @SubscribeEvent
     public void onEntityTame(AnimalTameEvent event) {
         event.setCanceled(CraftEventFactory.callEntityTameEvent(event.getAnimal(), event.getTamer()).isCancelled());
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void onLightningBolt(EntityStruckByLightningEvent event) {
+        ArclightCaptures.captureDamageEventEntity(event.getLightning());
     }
 }

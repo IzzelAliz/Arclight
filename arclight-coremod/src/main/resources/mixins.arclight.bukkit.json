@@ -12,6 +12,7 @@
     "CraftBlockStateMixin",
     "CraftChunkMixin",
     "CraftConsoleCommandSenderMixin",
+    "CraftEventFactoryMixin",
     "CraftMagicNumbersMixin",
     "CraftServerMixin",
     "JavaPluginLoaderMixin",

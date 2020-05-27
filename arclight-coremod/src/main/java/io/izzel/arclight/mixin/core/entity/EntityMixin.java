@@ -9,6 +9,7 @@ import io.izzel.arclight.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.bridge.world.WorldBridge;
 import io.izzel.arclight.bridge.world.server.ServerWorldBridge;
 import io.izzel.arclight.bridge.world.storage.SaveHandlerBridge;
+import io.izzel.arclight.mod.util.ArclightCaptures;
 import net.minecraft.block.pattern.BlockPattern;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.Entity;
@@ -72,6 +73,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -379,6 +381,17 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Override
     public void bridge$setOnFire(int tick, boolean callEvent) {
         setOnFire(tick, callEvent);
+    }
+
+    @ModifyArg(method = "move", index = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;onEntityWalk(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/Entity;)V"))
+    private BlockPos arclight$captureBlockWalk(BlockPos pos) {
+        ArclightCaptures.captureDamageEventBlock(pos);
+        return pos;
+    }
+
+    @Inject(method = "move", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/block/Block;onEntityWalk(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/Entity;)V"))
+    private void arclight$resetBlockWalk(MoverType typeIn, Vec3d pos, CallbackInfo ci) {
+        ArclightCaptures.captureDamageEventBlock(null);
     }
 
     @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;canTriggerWalking()Z"))

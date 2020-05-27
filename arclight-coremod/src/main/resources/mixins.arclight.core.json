@@ -17,6 +17,7 @@
     "block.BambooBlockMixin",
     "block.BambooSaplingBlockMixin",
     "block.BlockMixin",
+    "block.BlockStateMixin",
     "block.BushBlockMixin",
     "block.CactusBlockMixin",
     "block.CakeBlockMixin",

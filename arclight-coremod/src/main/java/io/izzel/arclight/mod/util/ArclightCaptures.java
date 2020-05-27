@@ -1,14 +1,15 @@
 package io.izzel.arclight.mod.util;
 
+import io.izzel.arclight.mod.ArclightConstants;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
 import org.bukkit.TreeType;
 import org.bukkit.block.BlockState;
 import org.bukkit.event.block.BlockBreakEvent;
-import io.izzel.arclight.mod.ArclightConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -148,6 +149,34 @@ public class ArclightCaptures {
             return arclight$capturedContainer;
         } finally {
             arclight$capturedContainer = null;
+        }
+    }
+
+    private static transient Entity damageEventEntity;
+
+    public static void captureDamageEventEntity(Entity entity) {
+        damageEventEntity = entity;
+    }
+
+    public static Entity getDamageEventEntity() {
+        try {
+            return damageEventEntity;
+        } finally {
+            damageEventEntity = null;
+        }
+    }
+
+    private static transient BlockPos damageEventBlock;
+
+    public static void captureDamageEventBlock(BlockPos blockState) {
+        damageEventBlock = blockState;
+    }
+
+    public static BlockPos getDamageEventBlock() {
+        try {
+            return damageEventBlock;
+        } finally {
+            damageEventBlock = null;
         }
     }
 
