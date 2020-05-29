@@ -57,9 +57,11 @@ repositories {
 def embedLibs = ['org.spongepowered:mixin:0.8', 'org.ow2.asm:asm-util:6.2',
                  'org.ow2.asm:asm-analysis:6.2', 'org.yaml:snakeyaml:1.23',
                  'org.xerial:sqlite-jdbc:3.28.0', 'mysql:mysql-connector-java:5.1.47',
-                 'commons-lang:commons-lang:2.6', 'jline:jline:2.12.1',
-                 'com.googlecode.json-simple:json-simple:1.1.1', 'org.apache.logging.log4j:log4j-jul:2.11.2',
-                 'net.md-5:SpecialSource:1.8.6', 'net.minecraftforge:eventbus:2.0.0-milestone.1:service']
+                 'commons-lang:commons-lang:2.6', 'com.googlecode.json-simple:json-simple:1.1.1',
+                 'org.apache.logging.log4j:log4j-jul:2.11.2', 'net.md-5:SpecialSource:1.8.6',
+                 'net.minecraftforge:eventbus:2.0.0-milestone.1:service', 'org.jline:jline-terminal-jansi:3.12.1',
+                 'org.fusesource.jansi:jansi:1.18', 'org.jline:jline-terminal:3.12.1',
+                 'org.jline:jline-reader:3.12.1', 'jline:jline:2.12.1']
 
 dependencies {
     minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
@@ -83,7 +85,7 @@ def getGitHash = { ->
 }
 
 processResources {
-    filesNotMatching("**/accesstransformer.cfg") {
+    filesMatching("**/mods.toml") {
         expand 'version': "$minecraftVersion-${project.version}-${getGitHash()}"
     }
 }
