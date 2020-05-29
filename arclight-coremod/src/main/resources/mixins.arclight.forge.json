@@ -6,6 +6,7 @@
   "refmap": "mixins.arclight.refmap.json",
   "setSourceFile": true,
   "mixins": [
+    "DimensionManagerMixin",
     "ForgeEventFactoryMixin",
     "ForgeHooksMixin"
   ]
