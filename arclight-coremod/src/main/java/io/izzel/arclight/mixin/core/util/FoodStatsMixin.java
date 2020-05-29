@@ -10,7 +10,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.SUpdateHealthPacket;
 import net.minecraft.util.FoodStats;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.spongepowered.asm.mixin.Mixin;

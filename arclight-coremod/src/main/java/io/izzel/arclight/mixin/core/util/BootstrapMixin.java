@@ -1,7 +1,7 @@
 package io.izzel.arclight.mixin.core.util;
 
 import net.minecraft.util.registry.Bootstrap;
-import org.bukkit.craftbukkit.v1_14_R1.util.CraftLegacy;
+import org.bukkit.craftbukkit.v.util.CraftLegacy;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -19,7 +19,7 @@ public class BootstrapMixin {
     private static void arclight$replaceWhitelist(CallbackInfo ci) {
         // 噢，天哪，看着肮脏的 hack，我i了
         // 我简直是 fucking genius
-        if (new LinkageError().getStackTrace()[2].toString().contains("org.bukkit.craftbukkit.v1_14_R1.util.CraftLegacy")) {
+        if (new LinkageError().getStackTrace()[2].toString().contains("util.CraftLegacy")) {
             try {
                 Field field = CraftLegacy.class.getDeclaredField("whitelistedStates");
                 Object base = Unsafe.staticFieldBase(field);

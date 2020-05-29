@@ -9,7 +9,7 @@ buildscript {
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
         classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
-        classpath 'com.github.IzzelAliz:arclight-gradle-plugin:1.1'
+        classpath 'com.github.IzzelAliz:arclight-gradle-plugin:1.2'
     }
 }
 
@@ -28,6 +28,8 @@ arclight {
     mcVersion = minecraftVersion
     forgeVersion = project.ext.forgeVersion
     bukkitVersion = 'v1_14_R1'
+    wipeVersion = true
+    reobfVersion = true
 }
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'

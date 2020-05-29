@@ -6,7 +6,7 @@ import net.minecraft.entity.passive.MooshroomEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorld;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
 import org.spongepowered.asm.mixin.Mixin;

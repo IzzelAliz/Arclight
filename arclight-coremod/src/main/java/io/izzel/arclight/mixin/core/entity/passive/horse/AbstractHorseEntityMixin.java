@@ -9,7 +9,7 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.world.World;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.HorseJumpEvent;
 import org.bukkit.inventory.InventoryHolder;

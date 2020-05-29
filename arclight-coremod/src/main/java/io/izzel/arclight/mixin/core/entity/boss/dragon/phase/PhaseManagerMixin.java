@@ -7,7 +7,7 @@ import net.minecraft.entity.boss.dragon.phase.PhaseManager;
 import net.minecraft.entity.boss.dragon.phase.PhaseType;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftEnderDragon;
+import org.bukkit.craftbukkit.v.entity.CraftEnderDragon;
 import org.bukkit.event.entity.EnderDragonChangePhaseEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

@@ -9,7 +9,7 @@ import net.minecraft.entity.passive.FoxEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.GameRules;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityBreedEvent;
 import org.spongepowered.asm.mixin.Mixin;

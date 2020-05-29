@@ -5,7 +5,7 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.ServerRecipeBook;
 import net.minecraft.network.play.server.SRecipeBookPacket;
 import net.minecraft.util.ResourceLocation;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

@@ -7,10 +7,10 @@ import net.minecraft.item.crafting.CampfireCookingRecipe;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.ResourceLocation;
-import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftCampfireRecipe;
-import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftRecipe;
-import org.bukkit.craftbukkit.v1_14_R1.util.CraftNamespacedKey;
+import org.bukkit.craftbukkit.v.inventory.CraftCampfireRecipe;
+import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
+import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.inventory.Recipe;
 import org.spongepowered.asm.mixin.Mixin;
 

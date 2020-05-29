@@ -4,7 +4,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.BlockSnapshot;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_14_R1.block.*;
+import org.bukkit.craftbukkit.v.block.*;
 
 public class ArclightBlockSnapshot extends CraftBlock {
 

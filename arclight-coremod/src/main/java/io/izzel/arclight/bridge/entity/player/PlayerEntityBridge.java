@@ -4,7 +4,7 @@ import com.mojang.datafixers.util.Either;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Unit;
 import net.minecraft.util.math.BlockPos;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import io.izzel.arclight.bridge.entity.LivingEntityBridge;
 
 public interface PlayerEntityBridge extends LivingEntityBridge {

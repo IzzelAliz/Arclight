@@ -9,7 +9,7 @@ import net.minecraftforge.fml.network.FMLNetworkConstants;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bukkit.craftbukkit.v1_14_R1.CraftCrashReport;
+import org.bukkit.craftbukkit.v.CraftCrashReport;
 
 @Mod("arclight")
 public class ArclightMod {

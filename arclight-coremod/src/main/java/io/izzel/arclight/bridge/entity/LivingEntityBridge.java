@@ -2,7 +2,7 @@ package io.izzel.arclight.bridge.entity;
 
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 

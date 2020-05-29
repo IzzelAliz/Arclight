@@ -14,7 +14,7 @@ import net.minecraft.world.World;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.craftbukkit.v1_14_R1.block.CraftBlock;
+import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.entity.Hanging;
 import org.bukkit.entity.Player;
 import org.bukkit.event.hanging.HangingPlaceEvent;

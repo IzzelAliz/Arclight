@@ -54,7 +54,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityDispatcher;
 import net.minecraftforge.common.capabilities.CapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
-import org.bukkit.craftbukkit.v1_14_R1.util.BlockStateListPopulator;
+import org.bukkit.craftbukkit.v.util.BlockStateListPopulator;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

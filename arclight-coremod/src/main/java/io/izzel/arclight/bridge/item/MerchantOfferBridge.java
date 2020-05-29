@@ -1,6 +1,6 @@
 package io.izzel.arclight.bridge.item;
 
-import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftMerchantRecipe;
+import org.bukkit.craftbukkit.v.inventory.CraftMerchantRecipe;
 
 public interface MerchantOfferBridge {
 

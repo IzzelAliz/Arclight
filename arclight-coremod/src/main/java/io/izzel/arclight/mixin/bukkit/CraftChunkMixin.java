@@ -3,7 +3,7 @@ package io.izzel.arclight.mixin.bukkit;
 import io.izzel.arclight.bridge.entity.EntityBridge;
 import net.minecraft.world.chunk.Chunk;
 import org.bukkit.World;
-import org.bukkit.craftbukkit.v1_14_R1.CraftChunk;
+import org.bukkit.craftbukkit.v.CraftChunk;
 import org.bukkit.entity.Entity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

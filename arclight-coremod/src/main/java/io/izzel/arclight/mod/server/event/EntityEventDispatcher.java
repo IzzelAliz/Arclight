@@ -10,8 +10,8 @@ import net.minecraftforge.event.entity.living.AnimalTameEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;

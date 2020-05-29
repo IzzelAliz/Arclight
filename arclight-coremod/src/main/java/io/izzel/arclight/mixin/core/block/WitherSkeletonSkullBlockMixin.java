@@ -8,7 +8,7 @@ import net.minecraft.tileentity.SkullTileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
-import org.bukkit.craftbukkit.v1_14_R1.util.BlockStateListPopulator;
+import org.bukkit.craftbukkit.v.util.BlockStateListPopulator;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

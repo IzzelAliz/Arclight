@@ -15,7 +15,7 @@ import net.minecraft.world.Explosion;
 import net.minecraft.world.ServerBossInfo;
 import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;

@@ -11,7 +11,7 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.World;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v1_14_R1.block.CraftBlock;
+import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.spongepowered.asm.mixin.Mixin;

@@ -13,7 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.NonNullList;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.InventoryHolder;

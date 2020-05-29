@@ -4,7 +4,7 @@ import io.izzel.arclight.bridge.entity.LivingEntityBridge;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.potion.EffectInstance;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.Event;
 import org.bukkit.event.entity.EntityDeathEvent;

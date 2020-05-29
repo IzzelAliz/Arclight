@@ -9,7 +9,7 @@ import com.mojang.authlib.properties.Property;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.SkullTileEntity;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_14_R1.CraftServer;
+import org.bukkit.craftbukkit.v.CraftServer;
 
 import java.util.UUID;
 

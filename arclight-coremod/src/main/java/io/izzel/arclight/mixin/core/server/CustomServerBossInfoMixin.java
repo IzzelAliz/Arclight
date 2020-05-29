@@ -3,7 +3,7 @@ package io.izzel.arclight.mixin.core.server;
 import io.izzel.arclight.bridge.server.CustomServerBossInfoBridge;
 import net.minecraft.server.CustomServerBossInfo;
 import org.bukkit.boss.KeyedBossBar;
-import org.bukkit.craftbukkit.v1_14_R1.boss.CraftKeyedBossbar;
+import org.bukkit.craftbukkit.v.boss.CraftKeyedBossbar;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(CustomServerBossInfo.class)

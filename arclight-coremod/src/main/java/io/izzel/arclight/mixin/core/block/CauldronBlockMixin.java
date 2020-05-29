@@ -16,7 +16,7 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_14_R1.block.CraftBlock;
+import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.event.block.CauldronLevelChangeEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

@@ -3,7 +3,7 @@ package io.izzel.arclight.mixin.core.entity.projectile;
 import io.izzel.arclight.mixin.core.entity.EntityMixin;
 import net.minecraft.entity.projectile.LlamaSpitEntity;
 import net.minecraft.util.math.RayTraceResult;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

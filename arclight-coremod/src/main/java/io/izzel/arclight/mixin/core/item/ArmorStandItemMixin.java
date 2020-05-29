@@ -4,7 +4,7 @@ import net.minecraft.entity.item.ArmorStandEntity;
 import net.minecraft.item.ArmorStandItem;
 import net.minecraft.item.ItemUseContext;
 import net.minecraft.util.ActionResultType;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

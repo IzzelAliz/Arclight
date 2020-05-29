@@ -4,7 +4,7 @@ import io.izzel.arclight.bridge.item.ItemStackBridge;
 import net.minecraft.item.ItemStack;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bukkit.craftbukkit.v1_14_R1.util.CraftMagicNumbers;
+import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(ItemStack.class)

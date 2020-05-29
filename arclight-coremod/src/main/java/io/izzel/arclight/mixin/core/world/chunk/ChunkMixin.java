@@ -15,7 +15,7 @@ import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.UpgradeData;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_14_R1.CraftChunk;
+import org.bukkit.craftbukkit.v.CraftChunk;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

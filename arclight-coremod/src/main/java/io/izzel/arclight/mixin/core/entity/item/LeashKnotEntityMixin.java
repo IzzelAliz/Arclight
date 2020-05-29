@@ -7,7 +7,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.play.server.SMountEntityPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.AxisAlignedBB;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.injection.At;

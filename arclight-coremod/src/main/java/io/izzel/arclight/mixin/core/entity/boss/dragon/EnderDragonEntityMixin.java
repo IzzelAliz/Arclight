@@ -18,7 +18,7 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.loot.LootContext;
 import net.minecraft.world.storage.loot.LootParameters;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_14_R1.block.CraftBlock;
+import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.spongepowered.asm.mixin.Mixin;

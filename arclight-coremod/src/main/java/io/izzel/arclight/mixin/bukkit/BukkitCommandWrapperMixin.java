@@ -1,7 +1,7 @@
 package io.izzel.arclight.mixin.bukkit;
 
 import com.mojang.brigadier.context.CommandContext;
-import org.bukkit.craftbukkit.v1_14_R1.command.BukkitCommandWrapper;
+import org.bukkit.craftbukkit.v.command.BukkitCommandWrapper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;

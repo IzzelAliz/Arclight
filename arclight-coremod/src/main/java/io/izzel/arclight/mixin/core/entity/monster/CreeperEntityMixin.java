@@ -10,7 +10,7 @@ import net.minecraft.potion.EffectInstance;
 import net.minecraft.world.Explosion;
 import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreeperPowerEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;

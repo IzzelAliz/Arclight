@@ -3,7 +3,7 @@ package io.izzel.arclight.mixin.core.stats;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.stats.Stat;
 import net.minecraft.stats.StatisticsManager;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.Cancellable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

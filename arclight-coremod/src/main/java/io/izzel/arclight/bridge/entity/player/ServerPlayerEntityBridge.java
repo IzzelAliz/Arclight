@@ -6,7 +6,7 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
 public interface ServerPlayerEntityBridge extends PlayerEntityBridge {

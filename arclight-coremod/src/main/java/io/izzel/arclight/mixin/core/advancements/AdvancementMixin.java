@@ -1,7 +1,7 @@
 package io.izzel.arclight.mixin.core.advancements;
 
 import net.minecraft.advancements.Advancement;
-import org.bukkit.craftbukkit.v1_14_R1.advancement.CraftAdvancement;
+import org.bukkit.craftbukkit.v.advancement.CraftAdvancement;
 import org.spongepowered.asm.mixin.Mixin;
 import io.izzel.arclight.bridge.advancement.AdvancementBridge;
 

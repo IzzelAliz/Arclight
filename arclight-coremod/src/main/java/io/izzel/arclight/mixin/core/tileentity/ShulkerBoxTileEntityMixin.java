@@ -3,7 +3,7 @@ package io.izzel.arclight.mixin.core.tileentity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.ShulkerBoxTileEntity;
 import net.minecraft.util.NonNullList;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
 import org.spongepowered.asm.mixin.Mixin;

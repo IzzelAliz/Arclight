@@ -5,11 +5,11 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.item.crafting.SpecialRecipe;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_14_R1.CraftServer;
-import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftRecipe;
-import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftShapedRecipe;
-import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftShapelessRecipe;
-import org.bukkit.craftbukkit.v1_14_R1.util.CraftNamespacedKey;
+import org.bukkit.craftbukkit.v.CraftServer;
+import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
+import org.bukkit.craftbukkit.v.inventory.CraftShapedRecipe;
+import org.bukkit.craftbukkit.v.inventory.CraftShapelessRecipe;
+import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.RecipeChoice;
 

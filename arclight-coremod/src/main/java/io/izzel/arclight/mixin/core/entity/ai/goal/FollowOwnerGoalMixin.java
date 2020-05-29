@@ -5,7 +5,7 @@ import net.minecraft.entity.ai.goal.FollowOwnerGoal;
 import net.minecraft.entity.passive.TameableEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.event.entity.EntityTeleportEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

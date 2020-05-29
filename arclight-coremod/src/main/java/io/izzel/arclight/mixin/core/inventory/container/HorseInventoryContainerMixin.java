@@ -7,7 +7,7 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.HorseInventoryContainer;
-import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftInventoryView;
+import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
 import org.bukkit.inventory.InventoryView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

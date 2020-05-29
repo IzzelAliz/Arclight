@@ -4,7 +4,7 @@ import io.izzel.arclight.bridge.world.WorldBridge;
 import net.minecraft.entity.effect.LightningBoltEntity;
 import net.minecraft.entity.monster.ZombiePigmanEntity;
 import net.minecraft.entity.passive.PigEntity;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

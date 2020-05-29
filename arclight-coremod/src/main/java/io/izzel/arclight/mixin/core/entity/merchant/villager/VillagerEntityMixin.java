@@ -7,7 +7,7 @@ import net.minecraft.entity.monster.WitchEntity;
 import net.minecraft.entity.passive.IronGolemEntity;
 import net.minecraft.item.MerchantOffer;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;

@@ -2,7 +2,7 @@ package io.izzel.arclight.mixin.core.item;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.MerchantOffer;
-import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftMerchantRecipe;
+import org.bukkit.craftbukkit.v.inventory.CraftMerchantRecipe;
 import org.spongepowered.asm.mixin.Mixin;
 import io.izzel.arclight.bridge.item.MerchantOfferBridge;
 

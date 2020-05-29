@@ -1,7 +1,7 @@
 package io.izzel.arclight.bridge.server.management;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
-import org.bukkit.craftbukkit.v1_14_R1.CraftServer;
+import org.bukkit.craftbukkit.v.CraftServer;
 
 import java.util.List;
 

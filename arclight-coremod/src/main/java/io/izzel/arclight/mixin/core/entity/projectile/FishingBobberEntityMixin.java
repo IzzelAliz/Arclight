@@ -24,7 +24,7 @@ import net.minecraft.world.storage.loot.LootTables;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.ItemFishedEvent;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.entity.FishHook;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.spongepowered.asm.mixin.Final;

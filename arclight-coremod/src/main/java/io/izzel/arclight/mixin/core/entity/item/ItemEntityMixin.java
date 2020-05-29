@@ -13,7 +13,7 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.DamageSource;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.entity.Item;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;

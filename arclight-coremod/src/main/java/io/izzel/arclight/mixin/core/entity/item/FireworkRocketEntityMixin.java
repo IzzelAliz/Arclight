@@ -2,7 +2,7 @@ package io.izzel.arclight.mixin.core.entity.item;
 
 import io.izzel.arclight.mixin.core.entity.EntityMixin;
 import net.minecraft.entity.item.FireworkRocketEntity;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

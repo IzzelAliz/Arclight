@@ -19,7 +19,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.server.ServerWorld;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v1_14_R1.command.CraftBlockCommandSender;
+import org.bukkit.craftbukkit.v.command.CraftBlockCommandSender;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;

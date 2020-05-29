@@ -4,7 +4,7 @@ import io.izzel.arclight.bridge.command.ICommandSourceBridge;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.dimension.DimensionType;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.List;

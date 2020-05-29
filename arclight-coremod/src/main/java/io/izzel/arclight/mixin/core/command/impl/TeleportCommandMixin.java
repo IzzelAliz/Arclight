@@ -16,7 +16,7 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.server.TicketType;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_14_R1.CraftWorld;
+import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.spongepowered.asm.mixin.Mixin;

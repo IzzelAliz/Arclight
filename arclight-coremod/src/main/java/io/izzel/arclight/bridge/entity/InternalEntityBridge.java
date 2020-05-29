@@ -1,6 +1,6 @@
 package io.izzel.arclight.bridge.entity;
 
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v.entity.CraftEntity;
 
 public interface InternalEntityBridge {
 

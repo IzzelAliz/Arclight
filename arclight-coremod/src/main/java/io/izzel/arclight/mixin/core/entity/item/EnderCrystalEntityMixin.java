@@ -7,7 +7,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

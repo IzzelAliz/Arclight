@@ -3,7 +3,7 @@ package io.izzel.arclight.mixin.core.entity.passive;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.passive.FoxEntity;
 import net.minecraft.item.ItemStack;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;

@@ -9,7 +9,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.TridentItem;
 import net.minecraft.world.World;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.event.player.PlayerRiptideEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

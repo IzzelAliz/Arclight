@@ -2,7 +2,7 @@ package io.izzel.arclight.mixin.bukkit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bukkit.craftbukkit.v1_14_R1.command.ColouredConsoleSender;
+import org.bukkit.craftbukkit.v.command.ColouredConsoleSender;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 

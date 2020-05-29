@@ -3,7 +3,7 @@ package io.izzel.arclight.mixin.core.entity.passive;
 import io.izzel.arclight.bridge.entity.passive.TurtleEntityBridge;
 import net.minecraft.entity.effect.LightningBoltEntity;
 import net.minecraft.entity.passive.TurtleEntity;
-import org.bukkit.craftbukkit.v1_14_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;

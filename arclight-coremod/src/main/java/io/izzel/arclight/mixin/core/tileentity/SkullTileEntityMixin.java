@@ -13,7 +13,7 @@ import io.izzel.arclight.bridge.server.MinecraftServerBridge;
 import io.izzel.arclight.mod.util.ArclightHeadLoader;
 import net.minecraft.tileentity.SkullTileEntity;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_14_R1.CraftServer;
+import org.bukkit.craftbukkit.v.CraftServer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;

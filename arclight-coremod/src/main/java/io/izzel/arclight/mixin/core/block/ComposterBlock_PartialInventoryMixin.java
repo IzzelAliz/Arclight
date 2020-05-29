@@ -4,7 +4,7 @@ import io.izzel.arclight.mixin.core.inventory.InventoryMixin;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorld;
-import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftBlockInventoryHolder;
+import org.bukkit.craftbukkit.v.inventory.CraftBlockInventoryHolder;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

@@ -8,8 +8,8 @@ import net.minecraftforge.event.entity.living.EnderTeleportEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v.entity.CraftEntity;
+import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 

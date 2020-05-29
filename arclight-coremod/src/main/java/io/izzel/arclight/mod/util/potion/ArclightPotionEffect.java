@@ -1,7 +1,7 @@
 package io.izzel.arclight.mod.util.potion;
 
 import net.minecraft.potion.Effect;
-import org.bukkit.craftbukkit.v1_14_R1.potion.CraftPotionEffectType;
+import org.bukkit.craftbukkit.v.potion.CraftPotionEffectType;
 
 public class ArclightPotionEffect extends CraftPotionEffectType {
 
