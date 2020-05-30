@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(ChangeJobTask.class)
 public class ChangeJobTaskMixin {
 
-    @Redirect(method = "func_212831_a_", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/merchant/villager/VillagerEntity;setVillagerData(Lnet/minecraft/entity/merchant/villager/VillagerData;)V"))
+    @Redirect(method = "startExecuting", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/merchant/villager/VillagerEntity;setVillagerData(Lnet/minecraft/entity/merchant/villager/VillagerData;)V"))
     private void arclight$careerChangeHook(VillagerEntity villagerEntity, VillagerData villagerData) {
         VillagerCareerChangeEvent event = CraftEventFactory.callVillagerCareerChangeEvent(villagerEntity,
             CraftVillager.nmsToBukkitProfession(VillagerProfession.NONE),

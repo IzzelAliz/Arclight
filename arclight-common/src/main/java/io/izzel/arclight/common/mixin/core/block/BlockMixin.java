@@ -61,8 +61,8 @@ public abstract class BlockMixin implements BlockBridge {
      * @author IzzelAliz
      * @reason
      */
-    @Overwrite
-    public static List<ItemStack> func_220077_a(BlockState state, ServerWorld worldIn, BlockPos pos, @Nullable TileEntity tileEntityIn, Entity entityIn, ItemStack stack) {
+    @Overwrite(aliases = {"func_220077_a"})
+    public static List<ItemStack> getDrops(BlockState state, ServerWorld worldIn, BlockPos pos, @Nullable TileEntity tileEntityIn, Entity entityIn, ItemStack stack) {
         LootContext.Builder lootcontext$builder = (new LootContext.Builder(worldIn)).withRandom(worldIn.rand).withParameter(LootParameters.POSITION, pos).withParameter(LootParameters.TOOL, stack).withNullableParameter(LootParameters.THIS_ENTITY, entityIn).withNullableParameter(LootParameters.BLOCK_ENTITY, tileEntityIn);
         return state.getDrops(lootcontext$builder);
     }

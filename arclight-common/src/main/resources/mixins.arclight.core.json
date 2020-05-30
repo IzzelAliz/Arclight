@@ -7,7 +7,8 @@
   "setSourceFile": true,
   "plugin": "io.izzel.arclight.common.mod.ArclightMixinPlugin",
   "injectors": {
-    "maxShiftBy": 2
+    "maxShiftBy": 2,
+    "defaultRequire": 1
   },
   "mixins": [
     "advancements.AdvancementMixin",
@@ -91,6 +92,7 @@
     "block.WitherSkeletonSkullBlockMixin",
     "command.CommandSourceMixin",
     "command.ICommandSourceMixin",
+    "command.arguments.BlockStateParserMixin",
     "command.arguments.EntityArgumentMixin",
     "command.arguments.EntitySelectorMixin",
     "command.arguments.EntitySelectorParserMixin",
@@ -106,7 +108,8 @@
     "entity.EntityTypeMixin",
     "entity.LivingEntityMixin",
     "entity.MobEntityMixin",
-    "entity.ai.attributes.RangedAttributeMixin_Accessor",
+    "entity.ai.attributes.RangedAttributeMixin",
+    "entity.ai.brain.BrainUtilMixin",
     "entity.ai.brain.task.AssignProfessionTaskMixin",
     "entity.ai.brain.task.ChangeJobTaskMixin",
     "entity.ai.brain.task.CreateBabyVillagerTaskMixin",
