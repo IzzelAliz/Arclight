@@ -4,13 +4,13 @@ environment:
 cache:
   - C:/Users/appveyor/.gradle
   - ./.gradle
-  - ./arclight-coremod/build
 build_script:
   - cmd: |
-      IF EXIST arclight-coremod\build\libs ( del /S /Q arclight-coremod\build\libs )
-      gradlew idea remapSpigotJar --no-daemon -i
-      gradlew build --no-daemon -i
+      gradlew cleanBuild idea remapSpigotJar --no-daemon -i --stacktrace
+      gradlew build --no-daemon -i --stacktrace
+      rem Due to a MixinGradle bug, we need to build it twice
+      gradlew build collect --no-daemon -i --stacktrace
 test: off
 artifacts:
-  - path: ./arclight-coremod/build/libs/*.*
+  - path: ./build/libs/*.jar
     name: .

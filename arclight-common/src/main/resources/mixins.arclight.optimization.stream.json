@@ -1,0 +1,11 @@
+{
+  "minVersion": "0.8",
+  "package": "io.izzel.arclight.common.mixin.optimization.stream",
+  "target": "@env(DEFAULT)",
+  "refmap": "mixins.arclight.refmap.json",
+  "mixins": [
+    "GoalSelectorMixin",
+    "IWorldReaderMixin",
+    "PathFinderMixin"
+  ]
+}

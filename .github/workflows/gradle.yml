@@ -30,22 +30,16 @@ jobs:
       with:
         path: ./.gradle
         key: ${{ runner.os }}-gradle-file
-    - name: Cache FG
-      uses: actions/cache@v1
-      with:
-        path: ./arclight-coremod/build
-        key: ${{ runner.os }}-fg
-    - name: Clean
-      run: yes | rm -rf ./arclight-coremod/build/libs
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-    - name: Setup workspace
-      run: ./gradlew idea remapSpigotJar --no-daemon -i
     - name: Build
-      run: ./gradlew build --no-daemon -i
+      run: |
+        ./gradlew cleanBuild idea remapSpigotJar --no-daemon -i --stacktrace
+        ./gradlew build --no-daemon -i --stacktrace
+        ./gradlew build collect --no-daemon -i --stacktrace
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
         name: Arclight 
-        path: ./arclight-coremod/build/libs/*.*
+        path: ./build/libs/*.jar
 

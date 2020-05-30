@@ -1,11 +1,82 @@
-plugins {
-    id 'java'
+buildscript {
+    repositories {
+        maven { url = 'https://files.minecraftforge.net/maven' }
+        maven { url = 'https://repo.spongepowered.org/maven' }
+        jcenter()
+        mavenCentral()
+        maven { url = 'https://jitpack.io' }
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+        classpath 'com.github.IzzelAliz:arclight-gradle-plugin:1.3'
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'io.izzel.arclight'
+
+ext {
+    minecraftVersion = '1.14.4'
+    forgeVersion = '28.2.0'
+}
+
+arclight {
+    mcVersion = minecraftVersion
+    forgeVersion = project.ext.forgeVersion
+    bukkitVersion = 'v1_14_R1'
+    wipeVersion = true
+    reobfVersion = false
+}
+
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+
+minecraft {
+    mappings channel: 'stable', version: "58-$minecraftVersion"
+    accessTransformer = project.file('src/main/resources/META-INF/accesstransformer.cfg')
 }
 
 repositories {
-    mavenCentral()
+    jcenter()
+    maven { url = 'https://repo.spongepowered.org/maven' }
+    maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
+    maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
+    maven { url = 'https://repo.codemc.io/repository/nms/' }
+    maven { url = 'https://files.minecraftforge.net/maven/' }
 }
 
 dependencies {
+    minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
+    compile "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
+    compile 'org.jetbrains:annotations:19.0.0'
+    compile 'org.spongepowered:mixin:0.8'
+    compile 'jline:jline:2.12.1'
+    compile 'net.md-5:SpecialSource:1.8.6'
+    compile 'org.apache.logging.log4j:log4j-jul:2.11.2'
+    compile 'net.md-5:bungeecord-chat:1.13-SNAPSHOT'
+    compile 'mysql:mysql-connector-java:5.1.47'
+    compile 'org.yaml:snakeyaml:1.23'
     compile project(':arclight-api')
+}
+
+remapSpigotJar {
+    includes.add('net/minecraft/block/ChestBlock$DoubleInventory')
+}
+
+generateArclightMeta {
+    doFirst {
+        throw new StopExecutionException()
+    }
+}
+
+mixin {
+    add sourceSets.main, 'mixins.arclight.refmap.json'
+}
+
+compileJava {
+    options.compilerArgs << '-XDignore.symbol.file' << '-XDenableSunApiLintControl'
+    options.encoding = 'UTF-8'
 }
