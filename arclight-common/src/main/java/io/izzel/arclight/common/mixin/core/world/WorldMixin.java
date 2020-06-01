@@ -147,6 +147,15 @@ public abstract class WorldMixin implements WorldBridge {
         return this.world;
     }
 
+    public TileEntity getTileEntity(BlockPos pos, boolean validate) {
+        return getTileEntity(pos);
+    }
+
+    @Override
+    public TileEntity bridge$getTileEntity(BlockPos pos, boolean validate) {
+        return getTileEntity(pos, validate);
+    }
+
     @Override
     public CraftServer bridge$getServer() {
         return (CraftServer) Bukkit.getServer();

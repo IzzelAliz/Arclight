@@ -15,11 +15,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(CropsBlock.class)
 public class CropsBlockMixin {
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
-    public boolean arclight$blockGrowTick(World world, BlockPos pos, BlockState newState, int flags) {
-        return CraftEventFactory.handleBlockGrowEvent(world, pos, newState, flags);
-    }
-
     @Redirect(method = "grow(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
     public boolean arclight$blockGrowGrow(World world, BlockPos pos, BlockState newState, int flags) {

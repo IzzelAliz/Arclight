@@ -10,7 +10,6 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
@@ -26,7 +25,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.List;
-import java.util.Random;
 
 @Mixin(AbstractButtonBlock.class)
 public class AbstractButtonBlockMixin {
@@ -49,31 +47,6 @@ public class AbstractButtonBlockMixin {
             if ((event.getNewCurrent() > 0) == (powered)) {
                 cir.setReturnValue(true);
             }
-        }
-    }
-
-    @SuppressWarnings({"UnresolvedMixinReference", "UnnecessaryQualifiedMemberReference"})
-    @Inject(method = "Lnet/minecraft/block/AbstractButtonBlock;func_196267_b(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Ljava/util/Random;)V", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;func_180501_a(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"), require = 0)
-    public void arclight$blockRedstone2_1_14(BlockState state, World worldIn, BlockPos pos, Random random, CallbackInfo ci) {
-        Block block = CraftBlock.at(worldIn, pos);
-
-        BlockRedstoneEvent event = new BlockRedstoneEvent(block, 15, 0);
-        Bukkit.getPluginManager().callEvent(event);
-
-        if (event.getNewCurrent() > 0) {
-            ci.cancel();
-        }
-    }
-
-    @Inject(method = "tick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"), require = 0)
-    private void arclight$blockRedstone2_1_15(BlockState state, ServerWorld worldIn, BlockPos pos, Random rand, CallbackInfo ci) {
-        Block block = CraftBlock.at(worldIn, pos);
-
-        BlockRedstoneEvent event = new BlockRedstoneEvent(block, 15, 0);
-        Bukkit.getPluginManager().callEvent(event);
-
-        if (event.getNewCurrent() > 0) {
-            ci.cancel();
         }
     }
 

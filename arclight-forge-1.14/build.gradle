@@ -68,7 +68,9 @@ def embedLibs = ['org.spongepowered:mixin:0.8', 'org.ow2.asm:asm-util:6.2',
 dependencies {
     minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
     compile group: 'org.jetbrains', name: 'annotations', version: '19.0.0'
-    compile project(':arclight-common')
+    compile(project(':arclight-common')) {
+        exclude module: 'forge'
+    }
     embed project(':forge-installer')
     for (def lib : embedLibs) {
         arclight lib
@@ -113,7 +115,7 @@ remapSpigotJar {
 }
 
 mixin {
-    //add sourceSets.main, 'mixins.arclight.refmap.json'
+    add sourceSets.main, 'mixins.arclight.impl.refmap.json'
 }
 
 compileJava {
