@@ -85,6 +85,7 @@ public class TeleportCommandMixin {
                 entityIn.setLocationAndAngles(x, y, z, f1, f);
                 entityIn.setRotationYawHead(f1);
                 worldIn.func_217460_e(entityIn);
+                entity.removed = true;
             }
         }
 
