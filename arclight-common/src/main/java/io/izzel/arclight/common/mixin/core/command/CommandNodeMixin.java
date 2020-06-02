@@ -1,8 +1,9 @@
-package io.izzel.arclight.common.mixin.bukkit;
+package io.izzel.arclight.common.mixin.core.command;
 
 import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import io.izzel.arclight.common.bridge.command.CommandNodeBridge;
 import io.izzel.arclight.common.bridge.command.CommandSourceBridge;
 import net.minecraft.command.CommandSource;
 import org.spongepowered.asm.mixin.Final;
@@ -15,14 +16,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Map;
 import java.util.function.Predicate;
 
-@Mixin(CommandNode.class)
-public class CommandNodeMixin<S> {
+@Mixin(value = CommandNode.class, remap = false)
+public class CommandNodeMixin<S> implements CommandNodeBridge {
 
     // @formatter:off
-    @Shadow(remap = false) private Map<String, CommandNode<S>> children;
-    @Shadow(remap = false) private Map<String, LiteralCommandNode<S>> literals;
-    @Shadow(remap = false) private Map<String, ArgumentCommandNode<S, ?>> arguments;
-    @Shadow(remap = false) @Final private Predicate<S> requirement;
+    @Shadow private Map<String, CommandNode<S>> children;
+    @Shadow private Map<String, LiteralCommandNode<S>> literals;
+    @Shadow private Map<String, ArgumentCommandNode<S, ?>> arguments;
+    @Shadow @Final private Predicate<S> requirement;
     // @formatter:on
 
     public void removeCommand(String name) {
@@ -31,7 +32,12 @@ public class CommandNodeMixin<S> {
         arguments.remove(name);
     }
 
-    @Inject(method = "canUse", remap = false, cancellable = true, at = @At("HEAD"))
+    @Override
+    public void bridge$removeCommand(String name) {
+        removeCommand(name);
+    }
+
+    @Inject(method = "canUse", cancellable = true, at = @At("HEAD"))
     public void on(S source, CallbackInfoReturnable<Boolean> cir) {
         if (source instanceof CommandSource) {
             try {

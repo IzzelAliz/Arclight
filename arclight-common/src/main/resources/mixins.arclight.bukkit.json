@@ -8,7 +8,6 @@
   "mixins": [
     "BukkitCommandWrapperMixin",
     "ColouredConsoleSenderMixin",
-    "CommandNodeMixin",
     "CraftBlockStateMixin",
     "CraftChunkMixin",
     "CraftConsoleCommandSenderMixin",

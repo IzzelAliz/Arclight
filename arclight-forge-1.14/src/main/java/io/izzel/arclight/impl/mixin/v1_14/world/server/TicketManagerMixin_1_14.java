@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.core.world.server;
+package io.izzel.arclight.impl.mixin.v1_14.world.server;
 
 import io.izzel.arclight.common.bridge.world.server.TicketManagerBridge;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -12,22 +12,20 @@ import net.minecraft.world.server.TicketType;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 import java.util.Iterator;
 
 @Mixin(TicketManager.class)
-public abstract class TicketManagerMixin implements TicketManagerBridge {
+public abstract class TicketManagerMixin_1_14 implements TicketManagerBridge {
 
     // @formatter:off
-    @Shadow @Final private Long2ObjectOpenHashMap<ObjectSortedSet<Ticket<?>>> tickets;
+    @Shadow @Final public Long2ObjectOpenHashMap<ObjectSortedSet<Ticket<?>>> tickets;
     @Shadow private long currentTime;
     @Shadow protected abstract ObjectSortedSet<Ticket<?>> getTickets(long chunkPosIn);
     @Shadow @Final private TicketManager.ChunkTicketTracker ticketTracker;
     @Shadow protected abstract int getChunkLevel(ObjectSortedSet<Ticket<?>> ticketsIn);
     @Invoker("tick") public abstract void bridge$tick();
-    @Accessor("tickets") public abstract Long2ObjectOpenHashMap<ObjectSortedSet<Ticket<?>>> bridge$getTickets();
     // @formatter:on
 
     @SuppressWarnings("unused") // mock

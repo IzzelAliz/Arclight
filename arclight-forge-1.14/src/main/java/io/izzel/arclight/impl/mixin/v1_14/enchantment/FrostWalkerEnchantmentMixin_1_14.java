@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.core.enchantment;
+package io.izzel.arclight.impl.mixin.v1_14.enchantment;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 @Mixin(FrostWalkerEnchantment.class)
-public class FrostWalkerEnchantmentMixin {
+public class FrostWalkerEnchantmentMixin_1_14 {
 
     /**
      * @author IzzelAliz

@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ChestContainer.class)
-public class ChestContainerMixin extends ContainerMixin {
+public abstract class ChestContainerMixin extends ContainerMixin {
 
     // @formatter:off
     @Shadow @Final private IInventory lowerChestInventory;

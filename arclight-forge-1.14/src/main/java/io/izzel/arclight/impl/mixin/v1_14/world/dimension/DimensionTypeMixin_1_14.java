@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.core.world.dimension;
+package io.izzel.arclight.impl.mixin.v1_14.world.dimension;
 
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.Dimension;
@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import java.util.function.BiFunction;
 
 @Mixin(DimensionType.class)
-public class DimensionTypeMixin {
+public class DimensionTypeMixin_1_14 {
 
     protected void arclight$constructor(int idIn, String suffixIn, String directoryIn, BiFunction<World, DimensionType, ? extends Dimension> p_i49935_4_, boolean p_i49935_5_) {
         throw new RuntimeException();

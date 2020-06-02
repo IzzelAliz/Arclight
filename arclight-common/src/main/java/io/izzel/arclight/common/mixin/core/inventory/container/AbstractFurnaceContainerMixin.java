@@ -22,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AbstractFurnaceContainer.class)
-public class AbstractFurnaceContainerMixin extends ContainerMixin {
+public abstract class AbstractFurnaceContainerMixin extends ContainerMixin {
 
     // @formatter:off
     @Shadow @Final private IInventory furnaceInventory;

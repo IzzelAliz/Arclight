@@ -44,6 +44,12 @@
     "block.SugarCaneBlockMixin_1_14",
     "block.SweetBerryBushBlockMixin_1_14",
     "block.TurtleEggBlockMixin_1_14",
-    "block.VineBlockMixin_1_14"
+    "block.VineBlockMixin_1_14",
+    "command.impl.TeleportCommandMixin_1_14",
+    "enchantment.FrostWalkerEnchantmentMixin_1_14",
+    "entity.EntityMixin_1_14",
+    "world.chunk.ChunkMixin_1_14",
+    "world.dimension.DimensionTypeMixin_1_14",
+    "world.server.TicketManagerMixin_1_14"
   ]
 }

@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BrewingStandContainer.class)
-public class BrewingStandContainerMixin extends ContainerMixin {
+public abstract class BrewingStandContainerMixin extends ContainerMixin {
 
     // @formatter:off
     @Shadow @Final private IInventory tileBrewingStand;

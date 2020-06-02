@@ -36,7 +36,7 @@ import java.util.Map;
 public abstract class RepairContainerMixin extends ContainerMixin {
 
     // @formatter:off
-    @Shadow @Final private IWorldPosCallable field_216980_g;
+    @Shadow @Final private IWorldPosCallable worldPosCallable;
     @Shadow @Final private IInventory inputSlots;
     @Shadow @Final private IInventory outputSlot;
     @Shadow @Final private PlayerEntity player;
@@ -249,7 +249,7 @@ public abstract class RepairContainerMixin extends ContainerMixin {
         }
 
         CraftInventory inventory = new CraftInventoryAnvil(
-            ((IWorldPosCallableBridge) this.field_216980_g).bridge$getLocation(), this.inputSlots, this.outputSlot, (RepairContainer) (Object) this);
+            ((IWorldPosCallableBridge) this.worldPosCallable).bridge$getLocation(), this.inputSlots, this.outputSlot, (RepairContainer) (Object) this);
         bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
         return bukkitEntity;
     }

@@ -2,20 +2,13 @@ package io.izzel.arclight.common.mixin.core.world.chunk;
 
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.bridge.world.chunk.ChunkBridge;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.fluid.Fluid;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.ITickList;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkPrimer;
-import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.chunk.UpgradeData;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.CraftChunk;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,7 +20,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
-import java.util.function.Consumer;
 
 @Mixin(Chunk.class)
 public abstract class ChunkMixin implements ChunkBridge {
@@ -134,12 +126,6 @@ public abstract class ChunkMixin implements ChunkBridge {
         server.getPluginManager().callEvent(unloadEvent);
         // note: saving can be prevented, but not forced if no saving is actually required
         this.mustNotSave = !unloadEvent.isSaveChunk();
-    }
-
-    @Inject(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/util/math/ChunkPos;[Lnet/minecraft/world/biome/Biome;Lnet/minecraft/world/chunk/UpgradeData;Lnet/minecraft/world/ITickList;Lnet/minecraft/world/ITickList;J[Lnet/minecraft/world/chunk/ChunkSection;Ljava/util/function/Consumer;)V",
-        at = @At("RETURN"))
-    public void arclight$setBukkitChunk(World worldIn, ChunkPos p_i49946_2_, Biome[] p_i49946_3_, UpgradeData p_i49946_4_, ITickList<Block> p_i49946_5_, ITickList<Fluid> p_i49946_6_, long p_i49946_7_, ChunkSection[] p_i49946_9_, Consumer<Chunk> p_i49946_10_, CallbackInfo ci) {
-        this.bukkitChunk = new CraftChunk((Chunk) (Object) this);
     }
 
     @Inject(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/world/chunk/ChunkPrimer;)V",

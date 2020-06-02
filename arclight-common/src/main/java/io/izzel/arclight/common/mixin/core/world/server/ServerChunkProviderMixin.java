@@ -41,6 +41,7 @@ public abstract class ServerChunkProviderMixin implements ServerChunkProviderBri
     @Shadow protected abstract void invalidateCaches();
     @Shadow @Nullable protected abstract ChunkHolder func_217213_a(long chunkPosIn);
     @Shadow protected abstract boolean func_217235_l();
+    @Shadow protected abstract boolean func_217224_a(@Nullable ChunkHolder chunkHolderIn, int p_217224_2_);
     @Invoker("func_217235_l") public abstract boolean bridge$tickDistanceManager();
     @Accessor("lightManager") public abstract ServerWorldLightManager bridge$getLightManager();
     // @formatter:on
@@ -57,12 +58,12 @@ public abstract class ServerChunkProviderMixin implements ServerChunkProviderBri
         ChunkHolder chunkholder = this.func_217213_a(i);
         boolean unloading = false;
         if (chunkholder != null) {
-            ChunkHolder.LocationType chunkStatus = ChunkHolder.func_219286_c(((ChunkHolderBridge) chunkholder).bridge$getOldTicketLevel());
-            ChunkHolder.LocationType currentStatus = ChunkHolder.func_219286_c(chunkholder.func_219299_i());
-            unloading = chunkStatus.func_219065_a(ChunkHolder.LocationType.BORDER) && !currentStatus.func_219065_a(ChunkHolder.LocationType.BORDER);
+            ChunkHolder.LocationType chunkStatus = ChunkHolder.getLocationTypeFromLevel(((ChunkHolderBridge) chunkholder).bridge$getOldTicketLevel());
+            ChunkHolder.LocationType currentStatus = ChunkHolder.getLocationTypeFromLevel(chunkholder.getChunkLevel());
+            unloading = chunkStatus.isAtLeast(ChunkHolder.LocationType.BORDER) && !currentStatus.isAtLeast(ChunkHolder.LocationType.BORDER);
         }
         if (load && !unloading) {
-            this.ticketManager.func_219356_a(TicketType.UNKNOWN, chunkpos, j, chunkpos);
+            this.ticketManager.registerWithLevel(TicketType.UNKNOWN, chunkpos, j, chunkpos);
             if (this.func_217224_a(chunkholder, j)) {
                 IProfiler iprofiler = this.world.getProfiler();
                 iprofiler.startSection("chunkLoad");
@@ -76,15 +77,6 @@ public abstract class ServerChunkProviderMixin implements ServerChunkProviderBri
         }
 
         return this.func_217224_a(chunkholder, j) ? ChunkHolder.MISSING_CHUNK_FUTURE : chunkholder.func_219276_a(requiredStatus, this.chunkManager);
-    }
-
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    private boolean func_217224_a(@Nullable ChunkHolder chunkHolderIn, int p_217224_2_) {
-        return chunkHolderIn == null || ((ChunkHolderBridge) chunkHolderIn).bridge$getOldTicketLevel() > p_217224_2_;
     }
 
     public void close(boolean save) throws IOException {
@@ -115,7 +107,7 @@ public abstract class ServerChunkProviderMixin implements ServerChunkProviderBri
         this.purgeUnload();
     }
 
-    @Redirect(method = "func_217224_a", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ChunkHolder;func_219299_i()I"))
+    @Redirect(method = "func_217224_a", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ChunkHolder;getChunkLevel()I"))
     public int arclight$useOldTicketLevel(ChunkHolder chunkHolder) {
         return ((ChunkHolderBridge) chunkHolder).bridge$getOldTicketLevel();
     }

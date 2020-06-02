@@ -2,18 +2,23 @@ package io.izzel.arclight.common.mixin.core.server.dedicated;
 
 import io.izzel.arclight.common.mixin.core.server.MinecraftServerMixin;
 import io.izzel.arclight.common.mod.server.BukkitRegistry;
+import net.minecraft.command.CommandSource;
+import net.minecraft.command.Commands;
 import net.minecraft.network.rcon.RConConsoleSource;
 import net.minecraft.server.dedicated.DedicatedServer;
-import net.minecraft.util.text.ITextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.command.CraftRemoteConsoleCommandSender;
+import org.bukkit.event.server.RemoteServerCommandEvent;
+import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.plugin.PluginLoadOrder;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -23,6 +28,10 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin {
     // @formatter:off
     @Shadow @Final public RConConsoleSource rconConsoleSource;
     // @formatter:on
+
+    public DedicatedServerMixin(String name) {
+        super(name);
+    }
 
     @Inject(method = "init", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/dedicated/DedicatedServer;setPlayerList(Lnet/minecraft/server/management/PlayerList;)V"))
     public void arclight$loadPlugins(CallbackInfoReturnable<Boolean> cir) {
@@ -37,10 +46,37 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin {
         this.remoteConsole = new CraftRemoteConsoleCommandSender(this.rconConsoleSource);
     }
 
-    @Inject(method = "sendMessage", cancellable = true, at = @At("HEAD"))
-    public void arclight$consoleLog(ITextComponent message, CallbackInfo ci) {
-        Bukkit.getConsoleSender().sendMessage(message.getFormattedText());
-        ci.cancel();
+    @Redirect(method = "executePendingCommands", at = @At(value = "INVOKE", target = "Lnet/minecraft/command/Commands;handleCommand(Lnet/minecraft/command/CommandSource;Ljava/lang/String;)I"))
+    private int arclight$serverCommandEvent(Commands commands, CommandSource source, String command) {
+        ServerCommandEvent event = new ServerCommandEvent(console, command);
+        Bukkit.getPluginManager().callEvent(event);
+        if (!event.isCancelled()) {
+            return commands.handleCommand(source, event.getCommand());
+        }
+        return 0;
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    public String handleRConCommand(String command) {
+        this.rconConsoleSource.resetLog();
+        this.runImmediately(() -> {
+            RemoteServerCommandEvent event = new RemoteServerCommandEvent(remoteConsole, command);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                return;
+            }
+            ServerCommandEvent event2 = new ServerCommandEvent(console, event.getCommand());
+            Bukkit.getPluginManager().callEvent(event2);
+            if (event2.isCancelled()) {
+                return;
+            }
+            this.getCommandManager().handleCommand(this.rconConsoleSource.getCommandSource(), event2.getCommand());
+        });
+        return this.rconConsoleSource.getLogContents();
     }
 
     @Inject(method = "systemExitNow", at = @At("RETURN"))

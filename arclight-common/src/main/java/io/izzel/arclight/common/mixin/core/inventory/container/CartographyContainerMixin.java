@@ -21,11 +21,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(CartographyContainer.class)
-public class CartographyContainerMixin extends ContainerMixin implements CartographyContainerBridge {
+public abstract class CartographyContainerMixin extends ContainerMixin implements CartographyContainerBridge {
 
     // @formatter:off
-    @Shadow @Final private IWorldPosCallable field_216999_d;
-    @Shadow @Final public IInventory field_216998_c;
+    @Shadow @Final private IWorldPosCallable worldPosCallable;
+    @Shadow @Final public IInventory tableInventory;
     @Shadow @Final private CraftResultInventory field_217001_f;
     // @formatter:on
 
@@ -48,13 +48,13 @@ public class CartographyContainerMixin extends ContainerMixin implements Cartogr
             return bukkitEntity;
         }
 
-        CraftInventoryCartography inventory = new CraftInventoryCartography(this.field_216998_c, this.field_217001_f);
+        CraftInventoryCartography inventory = new CraftInventoryCartography(this.tableInventory, this.field_217001_f);
         bukkitEntity = new CraftInventoryView(this.player, inventory, (Container) (Object) this);
         return bukkitEntity;
     }
 
     @Override
     public IWorldPosCallable bridge$getContainerAccess() {
-        return this.field_216999_d;
+        return this.worldPosCallable;
     }
 }

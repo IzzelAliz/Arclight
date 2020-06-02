@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.core.command.impl;
+package io.izzel.arclight.common.mixin.v1_15.command.impl;
 
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.network.play.ServerPlayNetHandlerBridge;
@@ -26,27 +26,27 @@ import javax.annotation.Nullable;
 import java.util.Set;
 
 @Mixin(TeleportCommand.class)
-public class TeleportCommandMixin {
+public class TeleportCommandMixin_1_15 {
 
     /**
      * @author IzzelAliz
      * @reason
      */
     @Overwrite
-    private static void func_201127_a(CommandSource source, Entity entityIn, ServerWorld worldIn, double x, double y, double z, Set<SPlayerPositionLookPacket.Flags> relativeList, float yaw, float pitch, @Nullable TeleportCommand.Facing facing) {
+    private static void teleport(CommandSource source, Entity entityIn, ServerWorld worldIn, double x, double y, double z, Set<SPlayerPositionLookPacket.Flags> relativeList, float yaw, float pitch, @Nullable TeleportCommand.Facing facing) {
         if (entityIn instanceof ServerPlayerEntity) {
             ChunkPos chunkpos = new ChunkPos(new BlockPos(x, y, z));
-            worldIn.getChunkProvider().func_217228_a(TicketType.POST_TELEPORT, chunkpos, 1, entityIn.getEntityId());
+            worldIn.getChunkProvider().registerTicket(TicketType.POST_TELEPORT, chunkpos, 1, entityIn.getEntityId());
             entityIn.stopRiding();
             if (((ServerPlayerEntity) entityIn).isSleeping()) {
-                ((ServerPlayerEntity) entityIn).wakeUpPlayer(true, true, false);
+                ((ServerPlayerEntity) entityIn).stopSleepInBed(true, true);
             }
 
             ((ServerPlayNetHandlerBridge) ((ServerPlayerEntity) entityIn).connection).bridge$pushTeleportCause(PlayerTeleportEvent.TeleportCause.COMMAND);
             if (worldIn == entityIn.world) {
                 ((ServerPlayerEntity) entityIn).connection.setPlayerLocation(x, y, z, yaw, pitch, relativeList);
             } else {
-                ((ServerPlayerEntity) entityIn).func_200619_a(worldIn, x, y, z, yaw, pitch);
+                ((ServerPlayerEntity) entityIn).teleport(worldIn, x, y, z, yaw, pitch);
             }
 
             entityIn.setRotationYawHead(yaw);
@@ -84,7 +84,8 @@ public class TeleportCommandMixin {
                 entityIn.copyDataFromOld(entity);
                 entityIn.setLocationAndAngles(x, y, z, f1, f);
                 entityIn.setRotationYawHead(f1);
-                worldIn.func_217460_e(entityIn);
+                worldIn.addFromAnotherDimension(entityIn);
+                entity.removed = true;
             }
         }
 

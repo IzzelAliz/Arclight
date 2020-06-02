@@ -45,7 +45,13 @@
     "block.TurtleEggBlockMixin_1_15",
     "block.VineBlockMixin_1_15",
     "block.WitherRoseBlockMixin",
-    "io.izzel.arclight.impl.mixin.v1_14.block.FarmlandBlockMixin_1_14",
-    "world.biome.BiomeContainerMixin"
+    "command.impl.TeleportCommandMixin_1_15",
+    "command.impl.TimeCommandMixin",
+    "enchantment.FrostWalkerEnchantmentMixin_1_15",
+    "entity.EntityMixin_1_15",
+    "world.biome.BiomeContainerMixin",
+    "world.chunk.ChunkMixin_1_15",
+    "world.dimension.DimensionTypeMixin_1_15",
+    "world.server.TicketManagerMixin_1_15"
   ]
 }
