@@ -61,9 +61,9 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
     @Shadow protected abstract GameProfile getOfflineProfile(GameProfile original);
     @Shadow public abstract void disconnect(ITextComponent reason);
     @Shadow public abstract String getConnectionInfo();
+    @Shadow private ServerPlayerEntity player;
     // @formatter:on
 
-    @Shadow private ServerPlayerEntity player;
     public String hostname;
 
     @Override
