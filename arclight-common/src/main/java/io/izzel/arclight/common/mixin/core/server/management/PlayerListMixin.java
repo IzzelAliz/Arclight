@@ -4,14 +4,19 @@ import com.google.common.collect.Lists;
 import com.mojang.authlib.GameProfile;
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.network.NetworkManagerBridge;
+import io.izzel.arclight.common.bridge.network.login.ServerLoginNetHandlerBridge;
 import io.izzel.arclight.common.bridge.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.server.management.PlayerListBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.server.BukkitRegistry;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.IPacket;
 import net.minecraft.network.NetworkManager;
+import net.minecraft.network.login.ServerLoginNetHandler;
 import net.minecraft.network.play.server.SChangeGameStatePacket;
 import net.minecraft.network.play.server.SChatPacket;
 import net.minecraft.network.play.server.SEntityStatusPacket;
@@ -55,6 +60,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.spigotmc.SpigotConfig;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -64,11 +70,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import io.izzel.arclight.common.mod.ArclightMod;
-import io.izzel.arclight.common.mod.util.ArclightCaptures;
 
-import javax.annotation.Nullable;
 import java.io.File;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.text.SimpleDateFormat;
@@ -150,16 +154,11 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         }
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    @Nullable
-    public ITextComponent canPlayerLogin(SocketAddress socketAddress, GameProfile gameProfile) {
-        final UUID uuid = PlayerEntity.getUUID(gameProfile);
-        final List<ServerPlayerEntity> list = Lists.newArrayList();
-        for (final ServerPlayerEntity entityplayer : this.players) {
+    @Override
+    public ServerPlayerEntity bridge$canPlayerLogin(SocketAddress socketAddress, GameProfile gameProfile, ServerLoginNetHandler handler) {
+        UUID uuid = PlayerEntity.getUUID(gameProfile);
+        List<ServerPlayerEntity> list = Lists.newArrayList();
+        for (ServerPlayerEntity entityplayer : this.players) {
             if (entityplayer.getUniqueID().equals(uuid)) {
                 list.add(entityplayer);
             }
@@ -168,36 +167,40 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             this.writePlayerData(entityplayer);
             entityplayer.connection.disconnect(new TranslationTextComponent("multiplayer.disconnect.duplicate_login"));
         }
-        final ServerPlayerEntity entity = new ServerPlayerEntity(this.server, this.server.func_71218_a(DimensionType.OVERWORLD), gameProfile, new PlayerInteractionManager(this.server.func_71218_a(DimensionType.OVERWORLD)));
-        final Player player = ((ServerPlayerEntityBridge) entity).bridge$getBukkitEntity();
-        // todo hostname
-        final PlayerLoginEvent event = new PlayerLoginEvent(player, "", ((InetSocketAddress) socketAddress).getAddress());
+        ServerPlayerEntity entity = new ServerPlayerEntity(this.server, this.server.func_71218_a(DimensionType.OVERWORLD), gameProfile, new PlayerInteractionManager(this.server.func_71218_a(DimensionType.OVERWORLD)));
+        Player player = ((ServerPlayerEntityBridge) entity).bridge$getBukkitEntity();
+
+        String hostname = handler == null ? "" : ((ServerLoginNetHandlerBridge) handler).bridge$getHostname();
+        InetAddress realAddress = handler == null ? ((InetSocketAddress) socketAddress).getAddress() : ((InetSocketAddress) ((NetworkManagerBridge) handler.networkManager).bridge$getRawAddress()).getAddress();
+
+        PlayerLoginEvent event = new PlayerLoginEvent(player, hostname, ((InetSocketAddress) socketAddress).getAddress(), realAddress);
         if (this.getBannedPlayers().isBanned(gameProfile) && !this.getBannedPlayers().getEntry(gameProfile).hasBanExpired()) {
-            final ProfileBanEntry gameprofilebanentry = this.bannedPlayers.getEntry(gameProfile);
-            final TranslationTextComponent chatmessage = new TranslationTextComponent("multiplayer.disconnect.banned.reason", gameprofilebanentry.getBanReason());
+            ProfileBanEntry gameprofilebanentry = this.bannedPlayers.getEntry(gameProfile);
+            TranslationTextComponent chatmessage = new TranslationTextComponent("multiplayer.disconnect.banned.reason", gameprofilebanentry.getBanReason());
             if (gameprofilebanentry.getBanEndDate() != null) {
                 chatmessage.appendSibling(new TranslationTextComponent("multiplayer.disconnect.banned.expiration", DATE_FORMAT.format(gameprofilebanentry.getBanEndDate())));
             }
             event.disallow(PlayerLoginEvent.Result.KICK_BANNED, CraftChatMessage.fromComponent(chatmessage));
         } else if (!this.canJoin(gameProfile)) {
-            final TranslationTextComponent chatmessage = new TranslationTextComponent("multiplayer.disconnect.not_whitelisted");
-            event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, CraftChatMessage.fromComponent(chatmessage));
+            event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, SpigotConfig.whitelistMessage);
         } else if (this.getBannedIPs().isBanned(socketAddress) && !this.getBannedIPs().getBanEntry(socketAddress).hasBanExpired()) {
-            final IPBanEntry ipbanentry = this.bannedIPs.getBanEntry(socketAddress);
-            final TranslationTextComponent chatmessage = new TranslationTextComponent("multiplayer.disconnect.banned_ip.reason", ipbanentry.getBanReason());
+            IPBanEntry ipbanentry = this.bannedIPs.getBanEntry(socketAddress);
+            TranslationTextComponent chatmessage = new TranslationTextComponent("multiplayer.disconnect.banned_ip.reason", ipbanentry.getBanReason());
             if (ipbanentry.getBanEndDate() != null) {
                 chatmessage.appendSibling(new TranslationTextComponent("multiplayer.disconnect.banned_ip.expiration", DATE_FORMAT.format(ipbanentry.getBanEndDate())));
             }
             event.disallow(PlayerLoginEvent.Result.KICK_BANNED, CraftChatMessage.fromComponent(chatmessage));
         } else if (this.players.size() >= this.maxPlayers && !this.bypassesPlayerLimit(gameProfile)) {
-            event.disallow(PlayerLoginEvent.Result.KICK_FULL, "The server is full");
+            event.disallow(PlayerLoginEvent.Result.KICK_FULL, SpigotConfig.serverFullMessage);
         }
         this.cserver.getPluginManager().callEvent(event);
         if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
-            return CraftChatMessage.fromStringOrNull(event.getKickMessage());
-        } else {
+            if (handler != null) {
+                handler.disconnect(CraftChatMessage.fromStringOrNull(event.getKickMessage()));
+            }
             return null;
         }
+        return entity;
     }
 
     public ServerPlayerEntity moveToWorld(ServerPlayerEntity playerIn, DimensionType dimension, boolean conqueredEnd, Location location, boolean avoidSuffocation) {
@@ -385,7 +388,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
     @Inject(method = "playerLoggedOut", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/management/PlayerList;writePlayerData(Lnet/minecraft/entity/player/ServerPlayerEntity;)V"))
     public void arclight$playerQuitPre(ServerPlayerEntity playerIn, CallbackInfo ci) {
         CraftEventFactory.handleInventoryCloseEvent(playerIn);
-        PlayerQuitEvent playerQuitEvent = new PlayerQuitEvent(cserver.getPlayer(playerIn), "\u00A7e" + playerIn.getName() + " left the game");
+        PlayerQuitEvent playerQuitEvent = new PlayerQuitEvent(cserver.getPlayer(playerIn), "\u00A7e" + playerIn.getName().getFormattedText() + " left the game");
         cserver.getPluginManager().callEvent(playerQuitEvent);
         ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().disconnect(playerQuitEvent.getQuitMessage());
         playerIn.playerTick();

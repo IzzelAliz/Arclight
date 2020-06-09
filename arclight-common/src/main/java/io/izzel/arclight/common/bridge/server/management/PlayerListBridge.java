@@ -1,8 +1,11 @@
 package io.izzel.arclight.common.bridge.server.management;
 
+import com.mojang.authlib.GameProfile;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.network.login.ServerLoginNetHandler;
 import org.bukkit.craftbukkit.v.CraftServer;
 
+import java.net.SocketAddress;
 import java.util.List;
 
 public interface PlayerListBridge {
@@ -12,4 +15,6 @@ public interface PlayerListBridge {
     List<ServerPlayerEntity> bridge$getPlayers();
 
     CraftServer bridge$getCraftServer();
+
+    ServerPlayerEntity bridge$canPlayerLogin(SocketAddress socketAddress, GameProfile gameProfile, ServerLoginNetHandler handler);
 }
