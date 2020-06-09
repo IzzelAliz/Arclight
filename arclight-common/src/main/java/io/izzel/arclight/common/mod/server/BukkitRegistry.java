@@ -2,6 +2,11 @@ package io.izzel.arclight.common.mod.server;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import io.izzel.arclight.api.EnumHelper;
+import io.izzel.arclight.api.Unsafe;
+import io.izzel.arclight.common.bridge.bukkit.MaterialBridge;
+import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.common.mod.util.potion.ArclightPotionEffect;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.potion.Effect;
@@ -15,11 +20,6 @@ import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.potion.PotionEffectType;
-import io.izzel.arclight.common.bridge.bukkit.MaterialBridge;
-import io.izzel.arclight.common.mod.ArclightMod;
-import io.izzel.arclight.common.mod.util.potion.ArclightPotionEffect;
-import io.izzel.arclight.api.EnumHelper;
-import io.izzel.arclight.api.Unsafe;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -31,12 +31,12 @@ import java.util.Set;
 @SuppressWarnings({"unchecked", "ConstantConditions"})
 public class BukkitRegistry {
 
-    private static List<Class<?>> MAT_CTOR = ImmutableList.of(int.class, int.class, int.class);
-    private static Map<String, Material> BY_NAME = getStatic(Material.class, "BY_NAME");
-    private static Map<Block, Material> BLOCK_MATERIAL = getStatic(CraftMagicNumbers.class, "BLOCK_MATERIAL");
-    private static Map<Item, Material> ITEM_MATERIAL = getStatic(CraftMagicNumbers.class, "ITEM_MATERIAL");
-    private static Map<Material, Item> MATERIAL_ITEM = getStatic(CraftMagicNumbers.class, "MATERIAL_ITEM");
-    private static Map<Material, Block> MATERIAL_BLOCK = getStatic(CraftMagicNumbers.class, "MATERIAL_BLOCK");
+    private static final List<Class<?>> MAT_CTOR = ImmutableList.of(int.class, int.class, int.class);
+    private static final Map<String, Material> BY_NAME = getStatic(Material.class, "BY_NAME");
+    private static final Map<Block, Material> BLOCK_MATERIAL = getStatic(CraftMagicNumbers.class, "BLOCK_MATERIAL");
+    private static final Map<Item, Material> ITEM_MATERIAL = getStatic(CraftMagicNumbers.class, "ITEM_MATERIAL");
+    private static final Map<Material, Item> MATERIAL_ITEM = getStatic(CraftMagicNumbers.class, "MATERIAL_ITEM");
+    private static final Map<Material, Block> MATERIAL_BLOCK = getStatic(CraftMagicNumbers.class, "MATERIAL_BLOCK");
 
     public static void registerAll() {
         loadMaterials();
@@ -52,7 +52,7 @@ public class BukkitRegistry {
             Enchantment.registerEnchantment(new CraftEnchantment(entry.getValue()));
         }
         Enchantment.stopAcceptingRegistrations();
-        ArclightMod.LOGGER.info("Registered {} new enchantments", size - origin);
+        ArclightMod.LOGGER.info("registry.enchantment", size - origin);
     }
 
     private static void loadPotions() {
@@ -68,7 +68,7 @@ public class BukkitRegistry {
             ArclightMod.LOGGER.debug("Registered {}: {} as potion", entry.getKey(), effect);
         }
         PotionEffectType.stopAcceptingRegistrations();
-        ArclightMod.LOGGER.info("Registered {} new potion effect types", size - origin);
+        ArclightMod.LOGGER.info("registry.potion", size - origin);
     }
 
     private static void loadMaterials() {
@@ -122,7 +122,7 @@ public class BukkitRegistry {
             ITEM_MATERIAL.put(item, material);
             MATERIAL_ITEM.put(material, item);
         }
-        ArclightMod.LOGGER.info("Registered {} new materials, with {} blocks and {} items", i - origin, blocks, items);
+        ArclightMod.LOGGER.info("registry.material", i - origin, blocks, items);
     }
 
     private static String toName(ResourceLocation location) {

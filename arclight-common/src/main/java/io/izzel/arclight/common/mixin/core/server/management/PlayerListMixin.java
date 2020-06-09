@@ -128,10 +128,10 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             t.printStackTrace();
         }
         try {
-            ArclightMod.LOGGER.info("Registering for bukkit... ");
+            ArclightMod.LOGGER.info("registry.begin");
             BukkitRegistry.registerAll();
         } catch (Throwable t) {
-            ArclightMod.LOGGER.error("Error handling Forge registries ", t);
+            ArclightMod.LOGGER.error("registry.error", t);
         }
     }
 

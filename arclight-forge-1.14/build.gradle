@@ -69,6 +69,7 @@ dependencies {
     minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
     compile group: 'org.jetbrains', name: 'annotations', version: '19.0.0'
     compile project(':arclight-common')
+    embed project(':i18n-config')
     embed project(':forge-installer')
     for (def lib : embedLibs) {
         arclight lib

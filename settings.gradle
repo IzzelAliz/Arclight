@@ -4,4 +4,5 @@ include 'arclight-testplugin'
 include 'arclight-common'
 include 'forge-installer'
 include 'arclight-api'
+include 'i18n-config'
 

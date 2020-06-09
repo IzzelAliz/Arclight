@@ -60,6 +60,7 @@ dependencies {
     compile 'mysql:mysql-connector-java:5.1.47'
     compile 'org.yaml:snakeyaml:1.23'
     compile project(':arclight-api')
+    compile project(':i18n-config')
 }
 
 remapSpigotJar {

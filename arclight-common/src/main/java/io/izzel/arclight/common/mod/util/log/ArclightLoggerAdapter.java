@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mod.util;
+package io.izzel.arclight.common.mod.util.log;
 
 import org.apache.logging.log4j.jul.ApiLogger;
 import org.apache.logging.log4j.jul.CoreLoggerAdapter;
