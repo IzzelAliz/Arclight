@@ -36,10 +36,8 @@ public abstract class PlayerEntityMixin_1_15 extends LivingEntityMixin_1_15 impl
     @Shadow public abstract void startSleeping(BlockPos p_213342_1_);
     @Shadow public int sleepTimer;
     @Shadow @Final public PlayerAbilities abilities;
+    @Shadow public abstract void addStat(ResourceLocation stat);
     // @formatter:on
-
-    @Shadow
-    public abstract void addStat(ResourceLocation stat);
 
     @Override
     public CraftHumanEntity bridge$getBukkitEntity() {

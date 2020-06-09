@@ -2,6 +2,7 @@ package io.izzel.arclight.impl;
 
 import io.izzel.arclight.common.mod.ArclightConnector;
 
+@SuppressWarnings("unused")
 public class ArclightConnector_1_15 extends ArclightConnector {
 
     @Override
@@ -13,6 +14,6 @@ public class ArclightConnector_1_15 extends ArclightConnector {
         if (ArclightConfig.INSTANCE.optimizations.removeStreams) {
             Mixins.addConfiguration("mixins.arclight.optimization.stream.1_14.json");
         }*/
-        LOGGER.info("Arclight optimization mixin added.");
+        // LOGGER.info("Arclight optimization mixin added.");
     }
 }

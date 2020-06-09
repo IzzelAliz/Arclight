@@ -453,6 +453,10 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
         }).orElse(true);
     }
 
+    public CraftHumanEntity getBukkitEntity() {
+        return (CraftHumanEntity) ((InternalEntityBridge) this).internal$getBukkitEntity();
+    }
+
     @Override
     public CraftHumanEntity bridge$getBukkitEntity() {
         return (CraftHumanEntity) ((InternalEntityBridge) this).internal$getBukkitEntity();
