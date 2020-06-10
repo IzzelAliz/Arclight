@@ -10,7 +10,10 @@ import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.arclight.i18n.ArclightLocale;
 import net.minecraftforge.server.ServerMain;
 
+import java.io.InputStream;
 import java.util.Objects;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 public class Main {
 
@@ -31,12 +34,23 @@ public class Main {
             return;
         }
         try {
+            printLogo();
             ArclightI18nLogger.getLogger("Arclight").info("loading-mapping");
             Objects.requireNonNull(ArclightRemapper.INSTANCE);
             ServerMain.main(args);
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("Fail to launch Arclight.");
+        }
+    }
+
+    private static void printLogo() throws Exception {
+        try (InputStream stream = Main.class.getResourceAsStream("/META-INF/MANIFEST.MF")) {
+            Manifest manifest = new Manifest(stream);
+            Attributes attributes = manifest.getMainAttributes();
+            String version = attributes.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+            String buildTime = attributes.getValue("Implementation-Timestamp");
+            ArclightI18nLogger.getLogger("Arclight").info("logo", version, buildTime);
         }
     }
 }
