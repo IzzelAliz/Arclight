@@ -13,8 +13,12 @@ public abstract class MinecartCommandBlockEntity_MinecartCommandLogicMixin imple
 
     @Shadow(aliases = {"this$0", "field_210168_a"}) private MinecartCommandBlockEntity outerThis;
 
+    public CommandSender getBukkitSender(CommandSource wrapper) {
+        return ((EntityBridge) outerThis).bridge$getBukkitEntity();
+    }
+
     @Override
     public CommandSender bridge$getBukkitSender(CommandSource wrapper) {
-        return ((EntityBridge) outerThis).bridge$getBukkitEntity();
+        return getBukkitSender(wrapper);
     }
 }

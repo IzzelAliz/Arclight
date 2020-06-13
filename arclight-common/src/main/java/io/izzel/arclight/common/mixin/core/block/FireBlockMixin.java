@@ -55,25 +55,6 @@ public abstract class FireBlockMixin {
         }
     }
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
-    public boolean arclight$fireSpread(World world, BlockPos mutablePos, BlockState newState, int flags,
-                                       BlockState state, World worldIn, BlockPos pos) {
-        if (world.getBlockState(mutablePos).getBlock() != Blocks.FIRE) {
-            if (!CraftEventFactory.callBlockIgniteEvent(world, mutablePos, pos).isCancelled()) {
-                return CraftEventFactory.handleBlockSpreadEvent(world, pos, mutablePos, newState, flags);
-            }
-        }
-        return false;
-    }
-
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;removeBlock(Lnet/minecraft/util/math/BlockPos;Z)Z"))
-    public boolean arclight$extinguish1(World world, BlockPos pos, boolean isMoving) {
-        if (!CraftEventFactory.callBlockFadeEvent(world, pos, Blocks.AIR.getDefaultState()).isCancelled()) {
-            world.removeBlock(pos, isMoving);
-        }
-        return false;
-    }
-
     @Redirect(method = "onBlockAdded", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;removeBlock(Lnet/minecraft/util/math/BlockPos;Z)Z"))
     public boolean arclight$extinguish2(World world, BlockPos pos, boolean isMoving) {
         if (!CraftEventFactory.callBlockFadeEvent(world, pos, Blocks.AIR.getDefaultState()).isCancelled()) {

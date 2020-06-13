@@ -153,7 +153,7 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
     @Overwrite
     @Nullable
     public MapData getMapData(String mapName) {
-        return this.shadow$getServer().func_71218_a(DimensionType.OVERWORLD).getSavedData().get(() -> {
+        return this.shadow$getServer().getWorld(DimensionType.OVERWORLD).getSavedData().get(() -> {
             MapData newMap = new MapData(mapName);
             MapInitializeEvent event = new MapInitializeEvent(((MapDataBridge) newMap).bridge$getMapView());
             Bukkit.getServer().getPluginManager().callEvent(event);
@@ -273,8 +273,13 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
 
     @Override
     public TileEntity getTileEntity(BlockPos pos) {
+        return getTileEntity(pos, true);
+    }
+
+    @Override
+    public TileEntity getTileEntity(BlockPos pos, boolean validate) {
         TileEntity result = super.getTileEntity(pos);
-        if (Thread.currentThread() != arclight$getMainThread()) {
+        if (!validate || Thread.currentThread() != arclight$getMainThread()) {
             return result;
         }
 
@@ -301,7 +306,7 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         if (type.hasTileEntity(state)) {
             TileEntity replacement = type.createTileEntity(state, (IBlockReader) this);
             if (replacement == null) return found;
-            replacement.setWorld((World) (Object) this);
+            replacement.world = ((World) (Object) this);
             this.setTileEntity(pos, replacement);
             return replacement;
         } else {

@@ -17,6 +17,6 @@ public class SummonCommandMixin {
 
     @Inject(method = "summonEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;addLightningBolt(Lnet/minecraft/entity/effect/LightningBoltEntity;)V"))
     private static void arclight$strikeReason(CommandSource source, ResourceLocation type, Vec3d pos, CompoundNBT nbt, boolean randomizeProperties, CallbackInfoReturnable<Integer> cir) {
-        ((ServerWorldBridge) source.func_197023_e()).bridge$pushStrikeLightningCause(LightningStrikeEvent.Cause.COMMAND);
+        ((ServerWorldBridge) source.getWorld()).bridge$pushStrikeLightningCause(LightningStrikeEvent.Cause.COMMAND);
     }
 }

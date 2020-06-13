@@ -40,9 +40,9 @@ import java.util.Optional;
 public abstract class WorkbenchContainerMixin extends ContainerMixin implements WorkbenchContainerBridge {
 
     // @formatter:off
-    @Mutable @Shadow @Final private CraftingInventory field_75162_e;
-    @Shadow @Final private CraftResultInventory field_75160_f;
-    @Accessor("field_217070_e") public abstract IWorldPosCallable bridge$getContainerAccess();
+    @Mutable @Shadow @Final private CraftingInventory craftMatrix;
+    @Shadow @Final private CraftResultInventory craftResult;
+    @Accessor("worldPosCallable") public abstract IWorldPosCallable bridge$getContainerAccess();
     // @formatter:on
 
     private CraftInventoryView bukkitEntity;
@@ -55,7 +55,7 @@ public abstract class WorkbenchContainerMixin extends ContainerMixin implements 
 
     private static void a(int p_217066_0_, World p_217066_1_, PlayerEntity p_217066_2_, CraftingInventory p_217066_3_, CraftResultInventory p_217066_4_, Container container) {
         ArclightCaptures.captureWorkbenchContainer(container);
-        func_217066_a(p_217066_0_, p_217066_1_, p_217066_2_, p_217066_3_, p_217066_4_);
+        updateCraftingResult(p_217066_0_, p_217066_1_, p_217066_2_, p_217066_3_, p_217066_4_);
     }
 
     @Inject(method = "onCraftMatrixChanged", at = @At("HEAD"))
@@ -68,7 +68,7 @@ public abstract class WorkbenchContainerMixin extends ContainerMixin implements 
      * @reason
      */
     @Overwrite
-    protected static void func_217066_a(int i, World world, PlayerEntity playerEntity, CraftingInventory inventory, CraftResultInventory resultInventory) {
+    protected static void updateCraftingResult(int i, World world, PlayerEntity playerEntity, CraftingInventory inventory, CraftResultInventory resultInventory) {
         Container container = ArclightCaptures.getWorkbenchContainer();
         if (!world.isRemote) {
             ServerPlayerEntity serverplayerentity = (ServerPlayerEntity) playerEntity;
@@ -90,8 +90,8 @@ public abstract class WorkbenchContainerMixin extends ContainerMixin implements 
 
     @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/util/IWorldPosCallable;)V", at = @At("RETURN"))
     public void arclight$init(int i, PlayerInventory playerInventory, IWorldPosCallable callable, CallbackInfo ci) {
-        ((CraftingInventoryBridge) this.field_75162_e).bridge$setOwner(playerInventory.player);
-        ((CraftingInventoryBridge) this.field_75162_e).bridge$setResultInventory(this.field_75160_f);
+        ((CraftingInventoryBridge) this.craftMatrix).bridge$setOwner(playerInventory.player);
+        ((CraftingInventoryBridge) this.craftMatrix).bridge$setResultInventory(this.craftResult);
         this.player = playerInventory;
     }
 
@@ -101,7 +101,7 @@ public abstract class WorkbenchContainerMixin extends ContainerMixin implements 
             return bukkitEntity;
         }
 
-        CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.field_75162_e, this.field_75160_f);
+        CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftMatrix, this.craftResult);
         bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.player.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
         return bukkitEntity;
     }

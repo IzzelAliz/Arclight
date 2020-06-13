@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MerchantContainer.class)
-public class MerchantContainerMixin extends ContainerMixin {
+public abstract class MerchantContainerMixin extends ContainerMixin {
 
     // @formatter:off
     @Shadow @Final private IMerchant merchant;

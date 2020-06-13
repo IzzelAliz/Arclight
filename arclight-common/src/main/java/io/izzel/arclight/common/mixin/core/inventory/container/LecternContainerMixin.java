@@ -21,10 +21,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LecternContainer.class)
-public class LecternContainerMixin extends ContainerMixin implements LecternContainerBridge {
+public abstract class LecternContainerMixin extends ContainerMixin implements LecternContainerBridge {
 
     // @formatter:off
-    @Shadow @Final private IInventory field_217018_c;
+    @Shadow @Final private IInventory lecternInventory;
     // @formatter:on
 
     private CraftInventoryView bukkitEntity;
@@ -67,7 +67,7 @@ public class LecternContainerMixin extends ContainerMixin implements LecternCont
         if (bukkitEntity != null) {
             return bukkitEntity;
         }
-        CraftInventoryLectern inventory = new CraftInventoryLectern(this.field_217018_c);
+        CraftInventoryLectern inventory = new CraftInventoryLectern(this.lecternInventory);
         bukkitEntity = new CraftInventoryView(this.player, inventory, (Container) (Object) this);
         return bukkitEntity;
     }

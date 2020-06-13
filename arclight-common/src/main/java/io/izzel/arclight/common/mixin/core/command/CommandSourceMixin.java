@@ -22,7 +22,7 @@ public abstract class CommandSourceMixin implements CommandSourceBridge {
 
     // @formatter:off
     @Shadow @Final public ICommandSource source;
-    @Shadow public abstract ServerWorld func_197023_e();
+    @Shadow public abstract ServerWorld getWorld();
     @Shadow @Final private int permissionLevel;
     // @formatter:on
 
@@ -37,7 +37,7 @@ public abstract class CommandSourceMixin implements CommandSourceBridge {
 
     public boolean hasPermission(int i, String bukkitPermission) {
         // World is null when loading functions
-        return ((func_197023_e() == null || !((CraftServer) Bukkit.getServer()).ignoreVanillaPermissions) && this.permissionLevel >= i) || getBukkitSender().hasPermission(bukkitPermission);
+        return ((getWorld() == null || !((CraftServer) Bukkit.getServer()).ignoreVanillaPermissions) && this.permissionLevel >= i) || getBukkitSender().hasPermission(bukkitPermission);
     }
 
     @Override
@@ -57,5 +57,10 @@ public abstract class CommandSourceMixin implements CommandSourceBridge {
 
     public CommandSender getBukkitSender() {
         return ((ICommandSourceBridge) this.source).bridge$getBukkitSender((CommandSource) (Object) this);
+    }
+
+    @Override
+    public CommandSender bridge$getBukkitSender() {
+        return getBukkitSender();
     }
 }

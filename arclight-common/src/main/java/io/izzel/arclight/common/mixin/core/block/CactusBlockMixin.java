@@ -10,16 +10,10 @@ import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(CactusBlock.class)
 public class CactusBlockMixin {
-
-    @Redirect(method = "tick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Z"))
-    public boolean arclight$blockGrow(World world, BlockPos pos, BlockState state) {
-        return CraftEventFactory.handleBlockGrowEvent(world, pos, state);
-    }
 
     @Inject(method = "onEntityCollision", at = @At("HEAD"))
     private void arclight$cactusDamage1(BlockState state, World worldIn, BlockPos pos, Entity entityIn, CallbackInfo ci) {

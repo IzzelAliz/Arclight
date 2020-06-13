@@ -9,16 +9,10 @@ import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(FarmlandBlock.class)
 public abstract class FarmlandBlockMixin extends BlockMixin {
-
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
-    public boolean arclight$moistureChange(World world, BlockPos pos, BlockState newState, int flags) {
-        return CraftEventFactory.handleMoistureChangeEvent(world, pos, newState, flags);
-    }
 
     @Inject(method = "turnToDirt", cancellable = true, at = @At("HEAD"))
     private static void arclight$blockFade(BlockState state, World worldIn, BlockPos pos, CallbackInfo ci) {

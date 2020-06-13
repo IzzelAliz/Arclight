@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(StonecutterContainer.class)
-public class StonecutterContainerMixin extends ContainerMixin {
+public abstract class StonecutterContainerMixin extends ContainerMixin {
 
     // @formatter:off
     @Shadow @Final public IInventory inputInventory;

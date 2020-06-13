@@ -1,5 +1,7 @@
 package io.izzel.arclight.common.bridge.world;
 
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.generator.ChunkGenerator;
@@ -19,4 +21,6 @@ public interface WorldBridge extends IWorldWriterBridge {
     void bridge$setPopulating(boolean populating);
 
     ChunkGenerator bridge$getGenerator();
+
+    TileEntity bridge$getTileEntity(BlockPos pos, boolean validate);
 }

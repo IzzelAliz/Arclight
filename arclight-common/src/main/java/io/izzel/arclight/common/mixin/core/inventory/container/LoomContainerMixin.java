@@ -21,11 +21,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import io.izzel.arclight.common.bridge.inventory.container.LoomContainerBridge;
 
 @Mixin(LoomContainer.class)
-public class LoomContainerMixin extends ContainerMixin implements LoomContainerBridge {
+public abstract class LoomContainerMixin extends ContainerMixin implements LoomContainerBridge {
 
     // @formatter:off
-    @Shadow @Final private IInventory field_217040_j; // crafting
-    @Shadow @Final private IInventory field_217041_k; // result
+    @Shadow @Final private IInventory inputInventory;
+    @Shadow @Final private IInventory outputInventory;
     @Shadow @Final private IWorldPosCallable worldPos;
     // @formatter:on
 
@@ -50,7 +50,7 @@ public class LoomContainerMixin extends ContainerMixin implements LoomContainerB
             return bukkitEntity;
         }
 
-        CraftInventoryLoom inventory = new CraftInventoryLoom(this.field_217040_j, this.field_217041_k);
+        CraftInventoryLoom inventory = new CraftInventoryLoom(this.inputInventory, this.outputInventory);
         bukkitEntity = new CraftInventoryView(this.player, inventory, (Container) (Object) this);
         return bukkitEntity;
     }

@@ -63,8 +63,12 @@ public abstract class SignTileEntityMixin extends TileEntityMixin implements Sig
         return false;
     }
 
+    public CommandSender getBukkitSender(CommandSource wrapper) {
+        return wrapper.getEntity() != null ? ((EntityBridge) wrapper.getEntity()).bridge$getBukkitSender(wrapper) : new CraftBlockCommandSender(wrapper, (TileEntity) (Object) this);
+    }
+
     @Override
     public CommandSender bridge$getBukkitSender(CommandSource wrapper) {
-        return wrapper.getEntity() != null ? ((EntityBridge) wrapper.getEntity()).bridge$getBukkitSender(wrapper) : new CraftBlockCommandSender(wrapper, (TileEntity) (Object) this);
+        return getBukkitSender(wrapper);
     }
 }

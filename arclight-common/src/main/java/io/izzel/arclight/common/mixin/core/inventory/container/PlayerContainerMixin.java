@@ -22,11 +22,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PlayerContainer.class)
-public class PlayerContainerMixin extends ContainerMixin {
+public abstract class PlayerContainerMixin extends ContainerMixin {
 
     // @formatter:off
-    @Shadow @Final private CraftingInventory field_75181_e;
-    @Shadow @Final private CraftResultInventory field_75179_f;
+    @Shadow @Final private CraftingInventory craftMatrix;
+    @Shadow @Final private CraftResultInventory craftResult;
     // @formatter:on
 
     private CraftInventoryView bukkitEntity;
@@ -35,8 +35,8 @@ public class PlayerContainerMixin extends ContainerMixin {
     @Inject(method = "<init>", at = @At("RETURN"))
     public void arclight$init(PlayerInventory playerInventory, boolean localWorld, PlayerEntity playerIn, CallbackInfo ci) {
         this.player = playerInventory;
-        ((CraftingInventoryBridge) this.field_75181_e).bridge$setOwner(playerInventory.player);
-        ((CraftingInventoryBridge) this.field_75181_e).bridge$setResultInventory(this.field_75179_f);
+        ((CraftingInventoryBridge) this.craftMatrix).bridge$setOwner(playerInventory.player);
+        ((CraftingInventoryBridge) this.craftMatrix).bridge$setResultInventory(this.craftResult);
         this.setTitle(new TranslationTextComponent("container.crafting"));
     }
 
@@ -51,7 +51,7 @@ public class PlayerContainerMixin extends ContainerMixin {
             return bukkitEntity;
         }
 
-        CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.field_75181_e, this.field_75179_f);
+        CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftMatrix, this.craftResult);
         bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.player.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
         return bukkitEntity;
     }

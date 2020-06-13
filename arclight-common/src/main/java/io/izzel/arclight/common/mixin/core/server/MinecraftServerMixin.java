@@ -24,6 +24,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerProfileCache;
 import net.minecraft.util.SharedConstants;
 import net.minecraft.util.Util;
+import net.minecraft.util.concurrent.RecursiveEventLoop;
+import net.minecraft.util.concurrent.TickDelayedTask;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
@@ -65,7 +67,7 @@ import java.util.Date;
 import java.util.function.BooleanSupplier;
 
 @Mixin(MinecraftServer.class)
-public abstract class MinecraftServerMixin implements MinecraftServerBridge, ICommandSourceBridge {
+public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelayedTask> implements MinecraftServerBridge, ICommandSourceBridge {
 
     // @formatter:off
     @Shadow private int tickCounter;
@@ -91,7 +93,12 @@ public abstract class MinecraftServerMixin implements MinecraftServerBridge, ICo
     @Shadow private boolean serverStopped;
     @Shadow protected abstract void stopServer();
     @Shadow protected abstract void systemExitNow();
+    @Shadow public abstract Commands getCommandManager();
     // @formatter:on
+
+    public MinecraftServerMixin(String name) {
+        super(name);
+    }
 
     public CraftServer server;
     public OptionSet options;
@@ -169,7 +176,7 @@ public abstract class MinecraftServerMixin implements MinecraftServerBridge, ICo
                     this.serverTime += 50L;
                     if (this.startProfiling) {
                         this.startProfiling = false;
-                        this.profiler.func_219899_d().func_219939_d();
+                        this.profiler.getFixedProfiler().enable();
                     }
 
                     this.profiler.startTick();
@@ -319,9 +326,13 @@ public abstract class MinecraftServerMixin implements MinecraftServerBridge, ICo
         processQueue.add(runnable);
     }
 
+    public CommandSender getBukkitSender(CommandSource wrapper) {
+        return console;
+    }
+
     @Override
     public CommandSender bridge$getBukkitSender(CommandSource wrapper) {
-        return console;
+        return getBukkitSender(wrapper);
     }
 
     private static MinecraftServer getServer() {

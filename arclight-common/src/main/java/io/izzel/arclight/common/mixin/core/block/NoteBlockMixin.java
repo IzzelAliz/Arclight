@@ -22,22 +22,22 @@ public abstract class NoteBlockMixin {
 
     @Redirect(method = "neighborChanged", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/NoteBlock;triggerNote(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V"))
     public void arclight$callNote1(NoteBlock noteBlock, World worldIn, BlockPos pos, BlockState blockState) {
-        this.triggerNote(worldIn, pos, blockState);
+        this.play(worldIn, pos, blockState);
     }
 
     @Redirect(method = "onBlockActivated", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/NoteBlock;triggerNote(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V"))
     public void arclight$callNote2(NoteBlock noteBlock, World worldIn, BlockPos pos, BlockState blockState) {
-        this.triggerNote(worldIn, pos, blockState);
+        this.play(worldIn, pos, blockState);
     }
 
     @Redirect(method = "onBlockClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/NoteBlock;triggerNote(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V"))
     public void arclight$callNote3(NoteBlock noteBlock, World worldIn, BlockPos pos, BlockState blockState) {
-        this.triggerNote(worldIn, pos, blockState);
+        this.play(worldIn, pos, blockState);
     }
 
     private transient BlockState arclight$state;
 
-    private void triggerNote(World worldIn, BlockPos pos, BlockState state) {
+    private void play(World worldIn, BlockPos pos, BlockState state) {
         arclight$state = state;
         this.triggerNote(worldIn, pos);
         arclight$state = null;

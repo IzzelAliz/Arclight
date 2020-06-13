@@ -54,7 +54,7 @@ public abstract class EnchantmentContainerMixin extends ContainerMixin implement
 
     // @formatter:off
     @Shadow @Final private IInventory tableInventory;
-    @Shadow @Final private IWorldPosCallable field_217006_g;
+    @Shadow @Final private IWorldPosCallable worldPosCallable;
     @Shadow protected abstract float getPower(World world, BlockPos pos);
     @Shadow @Final private Random rand;
     @Shadow @Final private IntReferenceHolder xpSeed;
@@ -86,7 +86,7 @@ public abstract class EnchantmentContainerMixin extends ContainerMixin implement
         if (inventoryIn == this.tableInventory) {
             ItemStack itemstack = inventoryIn.getStackInSlot(0);
             if (!itemstack.isEmpty()) {
-                this.field_217006_g.consume((p_217002_2_, p_217002_3_) -> {
+                this.worldPosCallable.consume((p_217002_2_, p_217002_3_) -> {
                     float power = 0;
 
                     for (int k = -1; k <= 1; ++k) {
@@ -136,7 +136,7 @@ public abstract class EnchantmentContainerMixin extends ContainerMixin implement
                         offers[j] = (enchantment != null) ? new EnchantmentOffer(enchantment, this.worldClue[j], this.enchantLevels[j]) : null;
                     }
 
-                    PrepareItemEnchantEvent event = new PrepareItemEnchantEvent(player, this.getBukkitView(), ((IWorldPosCallableBridge) this.field_217006_g).bridge$getLocation().getBlock(), item, offers, (int) power);
+                    PrepareItemEnchantEvent event = new PrepareItemEnchantEvent(player, this.getBukkitView(), ((IWorldPosCallableBridge) this.worldPosCallable).bridge$getLocation().getBlock(), item, offers, (int) power);
                     event.setCancelled(!itemstack.isEnchantable());
                     Bukkit.getPluginManager().callEvent(event);
 
@@ -189,7 +189,7 @@ public abstract class EnchantmentContainerMixin extends ContainerMixin implement
         } else if (this.enchantLevels[id] <= 0 || itemstack.isEmpty() || (playerIn.experienceLevel < i || playerIn.experienceLevel < this.enchantLevels[id]) && !playerIn.abilities.isCreativeMode) {
             return false;
         } else {
-            this.field_217006_g.consume((p_217003_6_, p_217003_7_) -> {
+            this.worldPosCallable.consume((p_217003_6_, p_217003_7_) -> {
                 ItemStack itemstack2 = itemstack;
                 List<EnchantmentData> list = this.getEnchantmentList(itemstack, id, this.enchantLevels[id]);
                 if (true || !list.isEmpty()) {
@@ -202,7 +202,7 @@ public abstract class EnchantmentContainerMixin extends ContainerMixin implement
                     }
                     CraftItemStack item = CraftItemStack.asCraftMirror(itemstack2);
 
-                    EnchantItemEvent event = new EnchantItemEvent(((Player) ((PlayerEntityBridge) playerIn).bridge$getBukkitEntity()), this.getBukkitView(), ((IWorldPosCallableBridge) this.field_217006_g).bridge$getLocation().getBlock(), item, this.enchantLevels[i], enchants, i);
+                    EnchantItemEvent event = new EnchantItemEvent(((Player) ((PlayerEntityBridge) playerIn).bridge$getBukkitEntity()), this.getBukkitView(), ((IWorldPosCallableBridge) this.worldPosCallable).bridge$getLocation().getBlock(), item, this.enchantLevels[i], enchants, i);
                     Bukkit.getPluginManager().callEvent(event);
 
                     int level = event.getExpLevelCost();
@@ -271,6 +271,6 @@ public abstract class EnchantmentContainerMixin extends ContainerMixin implement
 
     @Override
     public IWorldPosCallable bridge$getContainerAccess() {
-        return this.field_217006_g;
+        return this.worldPosCallable;
     }
 }

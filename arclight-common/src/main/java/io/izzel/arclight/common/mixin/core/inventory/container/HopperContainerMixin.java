@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(HopperContainer.class)
-public class HopperContainerMixin extends ContainerMixin {
+public abstract class HopperContainerMixin extends ContainerMixin {
 
     // @formatter:off
     @Shadow @Final private IInventory hopperInventory;

@@ -49,6 +49,10 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
         this.someRecipesErrored = false;
         Map<IRecipeType<?>, Object2ObjectLinkedOpenHashMap<ResourceLocation, IRecipe<?>>> map = Maps.newHashMap();
 
+        for (IRecipeType<?> type : Registry.RECIPE_TYPE) {
+            map.put(type, new Object2ObjectLinkedOpenHashMap<>());
+        }
+
         for (Map.Entry<ResourceLocation, JsonObject> entry : splashList.entrySet()) {
             ResourceLocation resourcelocation = entry.getKey();
             if (resourcelocation.getPath().startsWith("_"))

@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import io.izzel.arclight.common.bridge.inventory.container.GrindstoneContainerBridge;
 
 @Mixin(GrindstoneContainer.class)
-public class GrindstoneContainerMixin extends ContainerMixin implements GrindstoneContainerBridge {
+public abstract class GrindstoneContainerMixin extends ContainerMixin implements GrindstoneContainerBridge {
 
     @Shadow @Final private IInventory inputInventory;
     @Shadow @Final private IInventory outputInventory;

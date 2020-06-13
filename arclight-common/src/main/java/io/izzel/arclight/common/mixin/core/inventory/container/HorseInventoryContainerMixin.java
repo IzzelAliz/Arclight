@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(HorseInventoryContainer.class)
-public class HorseInventoryContainerMixin extends ContainerMixin {
+public abstract class HorseInventoryContainerMixin extends ContainerMixin {
 
     // @formatter:off
     @Shadow @Final private IInventory horseInventory;

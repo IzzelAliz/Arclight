@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ShulkerBoxContainer.class)
-public class ShulkerBoxContainerMixin extends ContainerMixin {
+public abstract class ShulkerBoxContainerMixin extends ContainerMixin {
 
     // @formatter:off
     @Shadow @Final private IInventory inventory;

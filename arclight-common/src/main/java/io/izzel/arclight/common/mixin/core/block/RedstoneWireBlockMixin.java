@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(RedstoneWireBlock.class)
 public class RedstoneWireBlockMixin {
 
-    @ModifyVariable(method = "func_212568_b", name = "l", index = 8, at = @At(value = "JUMP", ordinal = 0, opcode = Opcodes.IF_ICMPEQ))
+    @ModifyVariable(method = "updatePower", name = "l", index = 8, at = @At(value = "JUMP", ordinal = 0, opcode = Opcodes.IF_ICMPEQ))
     public int arclight$blockRedstone(int l, World world, BlockPos pos, BlockState state) {
         int i = state.get(RedstoneWireBlock.POWER);
         if (i != l) {

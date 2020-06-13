@@ -13,8 +13,12 @@ public class CommandBlockTileEntity1Mixin implements ICommandSourceBridge {
 
     @Shadow(aliases = {"this$0", "field_145767_a"}, remap = false) private CommandBlockTileEntity outerThis;
 
+    public CommandSender getBukkitSender(CommandSource wrapper) {
+        return new CraftBlockCommandSender(wrapper, outerThis);
+    }
+
     @Override
     public CommandSender bridge$getBukkitSender(CommandSource wrapper) {
-        return new CraftBlockCommandSender(wrapper, outerThis);
+        return getBukkitSender(wrapper);
     }
 }

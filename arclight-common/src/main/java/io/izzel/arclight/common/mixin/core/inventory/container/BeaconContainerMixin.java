@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BeaconContainer.class)
-public class BeaconContainerMixin extends ContainerMixin {
+public abstract class BeaconContainerMixin extends ContainerMixin {
 
     // @formatter:off
     @Shadow @Final private IInventory tileBeacon;

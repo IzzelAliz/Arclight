@@ -12,7 +12,7 @@ import io.izzel.arclight.common.mod.util.ArclightCaptures;
 @Mixin(FarmTask.class)
 public abstract class FarmTaskMixin {
 
-    @Inject(method = "func_212833_d_", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+    @Inject(method = "updateTask", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
     private void on(ServerWorld worldIn, VillagerEntity owner, long gameTime, CallbackInfo ci) {
         ArclightCaptures.captureEntityChangeBlock(owner);
     }
