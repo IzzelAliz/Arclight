@@ -26,7 +26,7 @@ public class BreedGoalMixin {
 
     // @formatter:off
     @Shadow @Final protected AnimalEntity animal;
-    @Shadow protected AnimalEntity field_75391_e;
+    @Shadow protected AnimalEntity targetMate;
     @Shadow @Final protected World world;
     // @formatter:on
 
@@ -39,11 +39,11 @@ public class BreedGoalMixin {
             ((LivingEntityBridge) ageableEntity).bridge$setPersist(true);
         }
         ServerPlayerEntity playerEntity = this.animal.getLoveCause();
-        if (playerEntity == null && this.field_75391_e.getLoveCause() != null) {
-            playerEntity = this.field_75391_e.getLoveCause();
+        if (playerEntity == null && this.targetMate.getLoveCause() != null) {
+            playerEntity = this.targetMate.getLoveCause();
         }
         arclight$exp = this.animal.getRNG().nextInt(7) + 1;
-        EntityBreedEvent event = CraftEventFactory.callEntityBreedEvent(ageableEntity, this.animal, this.field_75391_e, playerEntity, ((AnimalEntityBridge) this.animal).bridge$getBreedItem(), arclight$exp);
+        EntityBreedEvent event = CraftEventFactory.callEntityBreedEvent(ageableEntity, this.animal, this.targetMate, playerEntity, ((AnimalEntityBridge) this.animal).bridge$getBreedItem(), arclight$exp);
         if (event.isCancelled()) {
             ci.cancel();
             return;

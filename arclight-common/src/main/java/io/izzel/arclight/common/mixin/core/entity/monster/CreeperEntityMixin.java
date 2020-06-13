@@ -31,7 +31,6 @@ public abstract class CreeperEntityMixin extends CreatureEntityMixin implements 
 
     // @formatter:off
     @Shadow @Final private static DataParameter<Boolean> POWERED;
-    @Shadow public abstract boolean getPowered();
     @Shadow public int explosionRadius;
     @Shadow protected abstract void spawnLingeringCloud();
     @Shadow private int timeSinceIgnited;
@@ -52,7 +51,7 @@ public abstract class CreeperEntityMixin extends CreatureEntityMixin implements 
     public void explode() {
         if (!this.world.isRemote) {
             Explosion.Mode explosion_effect = ForgeEventFactory.getMobGriefingEvent(this.world, (CreeperEntity) (Object) this) ? Explosion.Mode.DESTROY : Explosion.Mode.NONE;
-            final float f = this.getPowered() ? 2.0f : 1.0f;
+            final float f = this.dataManager.get(POWERED) ? 2.0f : 1.0f;
             final ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), this.explosionRadius * f, false);
             Bukkit.getPluginManager().callEvent(event);
             if (!event.isCancelled()) {
