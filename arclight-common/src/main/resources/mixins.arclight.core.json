@@ -197,6 +197,7 @@
     "entity.player.PlayerInventoryMixin",
     "entity.player.ServerPlayerEntityMixin",
     "entity.projectile.AbstractArrowEntityMixin",
+    "entity.projectile.AbstractFireballEntityMixin",
     "entity.projectile.ArrowEntityMixin",
     "entity.projectile.DamagingProjectileEntityMixin",
     "entity.projectile.EggEntityMixin",

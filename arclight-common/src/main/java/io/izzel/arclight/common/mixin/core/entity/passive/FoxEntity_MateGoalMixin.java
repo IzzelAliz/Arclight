@@ -25,10 +25,10 @@ public class FoxEntity_MateGoalMixin extends BreedGoalMixin {
      */
     @Overwrite
     protected void spawnBaby() {
-        FoxEntity foxentity = (FoxEntity) this.animal.createChild(this.field_75391_e);
+        FoxEntity foxentity = (FoxEntity) this.animal.createChild(this.targetMate);
         if (foxentity != null) {
             ServerPlayerEntity serverplayerentity = this.animal.getLoveCause();
-            ServerPlayerEntity serverplayerentity1 = this.field_75391_e.getLoveCause();
+            ServerPlayerEntity serverplayerentity1 = this.targetMate.getLoveCause();
             ServerPlayerEntity serverplayerentity2 = serverplayerentity;
             if (serverplayerentity != null) {
                 ((FoxEntityBridge) foxentity).bridge$addTrustedUUID(serverplayerentity.getUniqueID());
@@ -40,21 +40,21 @@ public class FoxEntity_MateGoalMixin extends BreedGoalMixin {
                 ((FoxEntityBridge) foxentity).bridge$addTrustedUUID(serverplayerentity1.getUniqueID());
             }
             int experience = this.animal.getRNG().nextInt(7) + 1;
-            final EntityBreedEvent entityBreedEvent = CraftEventFactory.callEntityBreedEvent(foxentity, this.animal, this.field_75391_e, serverplayerentity, ((AnimalEntityBridge) this.animal).bridge$getBreedItem(), experience);
+            final EntityBreedEvent entityBreedEvent = CraftEventFactory.callEntityBreedEvent(foxentity, this.animal, this.targetMate, serverplayerentity, ((AnimalEntityBridge) this.animal).bridge$getBreedItem(), experience);
             if (entityBreedEvent.isCancelled()) {
                 return;
             }
             experience = entityBreedEvent.getExperience();
             if (serverplayerentity2 != null) {
                 serverplayerentity2.addStat(Stats.ANIMALS_BRED);
-                CriteriaTriggers.BRED_ANIMALS.trigger(serverplayerentity2, this.animal, this.field_75391_e, foxentity);
+                CriteriaTriggers.BRED_ANIMALS.trigger(serverplayerentity2, this.animal, this.targetMate, foxentity);
             }
 
             int i = 6000;
             this.animal.setGrowingAge(6000);
-            this.field_75391_e.setGrowingAge(6000);
+            this.targetMate.setGrowingAge(6000);
             this.animal.resetInLove();
-            this.field_75391_e.resetInLove();
+            this.targetMate.resetInLove();
             foxentity.setGrowingAge(-24000);
             foxentity.setLocationAndAngles(this.animal.posX, this.animal.posY, this.animal.posZ, 0.0F, 0.0F);
             ((WorldBridge) this.world).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.BREEDING);

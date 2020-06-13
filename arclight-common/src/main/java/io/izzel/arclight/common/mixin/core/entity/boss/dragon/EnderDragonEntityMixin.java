@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.entity.boss.dragon;
 
 import io.izzel.arclight.common.mixin.core.entity.MobEntityMixin;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
@@ -98,7 +99,7 @@ public abstract class EnderDragonEntityMixin extends MobEntityMixin {
         } else {
             for (final org.bukkit.block.Block block2 : event.blockList()) {
                 final org.bukkit.Material blockId = block2.getType();
-                if (blockId == org.bukkit.Material.AIR) {
+                if (blockId.isAir()) {
                     continue;
                 }
                 final CraftBlock craftBlock = (CraftBlock) block2;
@@ -107,7 +108,11 @@ public abstract class EnderDragonEntityMixin extends MobEntityMixin {
                 if (nmsBlock.canDropFromExplosion(this.explosionSource)) {
                     final TileEntity tileentity = nmsBlock.hasTileEntity() ? this.world.getTileEntity(blockposition2) : null;
                     final LootContext.Builder loottableinfo_builder = new LootContext.Builder((ServerWorld) this.world).withRandom(this.world.rand).withParameter(LootParameters.POSITION, blockposition2).withParameter(LootParameters.TOOL, ItemStack.EMPTY).withParameter(LootParameters.EXPLOSION_RADIUS, 1.0f / event.getYield()).withNullableParameter(LootParameters.BLOCK_ENTITY, tileentity);
-                    net.minecraft.block.Block.spawnDrops(craftBlock.getNMS(), loottableinfo_builder);
+                    for (ItemStack stack : craftBlock.getNMS().getDrops(loottableinfo_builder)) {
+                        Block.spawnAsEntity(this.world, blockposition2, stack);
+                    }
+                    craftBlock.getNMS().spawnAdditionalDrops(this.world, blockposition2, ItemStack.EMPTY);
+                    // net.minecraft.block.Block.spawnDrops(craftBlock.getNMS(), loottableinfo_builder);
                 }
                 nmsBlock.onExplosionDestroy(this.world, blockposition2, this.explosionSource);
                 this.world.removeBlock(blockposition2, false);

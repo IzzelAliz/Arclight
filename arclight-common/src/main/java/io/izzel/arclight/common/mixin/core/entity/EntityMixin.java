@@ -168,6 +168,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow protected abstract void applyEnchantments(LivingEntity entityLivingBaseIn, Entity entityIn);
     @Shadow public abstract float getEyeHeight();
     @Shadow @Nullable public abstract Entity changeDimension(DimensionType destination);
+    @Shadow public abstract boolean isRidingSameEntity(Entity entityIn);
     // @formatter:on
 
     private static final int CURRENT_LEVEL = 2;

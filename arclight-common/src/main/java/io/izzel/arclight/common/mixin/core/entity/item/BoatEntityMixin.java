@@ -67,11 +67,13 @@ public abstract class BoatEntityMixin extends EntityMixin {
 
     @Inject(method = "applyEntityCollision", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;applyEntityCollision(Lnet/minecraft/entity/Entity;)V"))
     private void arclight$collideVehicle(Entity entityIn, CallbackInfo ci) {
-        VehicleEntityCollisionEvent event = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), ((EntityBridge) entityIn).bridge$getBukkitEntity());
-        Bukkit.getPluginManager().callEvent(event);
+        if (isRidingSameEntity(entityIn)) {
+            VehicleEntityCollisionEvent event = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), ((EntityBridge) entityIn).bridge$getBukkitEntity());
+            Bukkit.getPluginManager().callEvent(event);
 
-        if (event.isCancelled()) {
-            ci.cancel();
+            if (event.isCancelled()) {
+                ci.cancel();
+            }
         }
     }
 
@@ -91,7 +93,7 @@ public abstract class BoatEntityMixin extends EntityMixin {
     @Redirect(method = "updateFallState", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/item/BoatEntity;removed:Z"))
     private boolean arclight$breakVehicle(BoatEntity boatEntity) {
         if (!boatEntity.removed) {
-            final Vehicle vehicle = (Vehicle)this.getBukkitEntity();
+            final Vehicle vehicle = (Vehicle) this.getBukkitEntity();
             final VehicleDestroyEvent event = new VehicleDestroyEvent(vehicle, null);
             Bukkit.getPluginManager().callEvent(event);
             return event.isCancelled();

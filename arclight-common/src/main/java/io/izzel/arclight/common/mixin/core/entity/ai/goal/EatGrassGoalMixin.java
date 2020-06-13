@@ -24,6 +24,7 @@ public class EatGrassGoalMixin {
     public void arclight$capturePos1(CallbackInfo ci, BlockPos pos) {
         arclight$pos = pos;
     }
+
     @Inject(method = "tick", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraftforge/event/ForgeEventFactory;getMobGriefingEvent(Lnet/minecraft/world/World;Lnet/minecraft/entity/Entity;)Z"))
     public void arclight$capturePos2(CallbackInfo ci, BlockPos pos) {
         arclight$pos = pos.down();

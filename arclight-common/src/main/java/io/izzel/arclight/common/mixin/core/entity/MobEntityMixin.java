@@ -63,6 +63,7 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
     @Shadow @Nullable public abstract Entity getLeashHolder();
     @Shadow public abstract boolean isNoDespawnRequired();
     @Shadow protected void updateAITasks() { }
+    @Shadow public abstract boolean isAIDisabled();
     // @formatter:on
 
     @Inject(method = "setCanPickUpLoot", at = @At("HEAD"))
