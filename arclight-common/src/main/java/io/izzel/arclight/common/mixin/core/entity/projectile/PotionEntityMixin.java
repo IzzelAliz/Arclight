@@ -2,6 +2,9 @@ package io.izzel.arclight.common.mixin.core.entity.projectile;
 
 import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.CampfireBlock;
 import net.minecraft.entity.AreaEffectCloudEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -11,7 +14,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Potion;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
@@ -102,6 +107,20 @@ public abstract class PotionEntityMixin extends ThrowableEntityMixin {
         if (event.isCancelled() || entity.removed) {
             ci.cancel();
             entity.remove();
+        }
+    }
+
+    @Inject(method = "extinguishFires", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;extinguishFire(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/util/Direction;)Z"))
+    private void arclight$entityChangeBlock(BlockPos pos, Direction direction, CallbackInfo ci) {
+        if (CraftEventFactory.callEntityChangeBlockEvent((PotionEntity) (Object) this, pos.offset(direction), Blocks.AIR.getDefaultState()).isCancelled()) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "extinguishFires", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playEvent(Lnet/minecraft/entity/player/PlayerEntity;ILnet/minecraft/util/math/BlockPos;I)V"))
+    private void arclight$entityChangeBlock2(BlockPos pos, Direction p_184542_2_, CallbackInfo ci, BlockState state) {
+        if (CraftEventFactory.callEntityChangeBlockEvent((PotionEntity) (Object) this, pos, state.with(CampfireBlock.LIT, false)).isCancelled()) {
+            ci.cancel();
         }
     }
 }

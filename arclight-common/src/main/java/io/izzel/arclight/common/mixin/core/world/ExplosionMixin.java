@@ -5,9 +5,7 @@ import com.google.common.collect.Sets;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.world.ExplosionBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.enchantment.ProtectionEnchantment;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -16,27 +14,17 @@ import net.minecraft.entity.item.TNTEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.DamagingProjectileEntity;
 import net.minecraft.fluid.IFluidState;
-import net.minecraft.item.ItemStack;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.loot.LootContext;
-import net.minecraft.world.storage.loot.LootParameters;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.block.BlockExplodeEvent;
-import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -51,7 +39,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 @Mixin(Explosion.class)
@@ -65,8 +52,6 @@ public abstract class ExplosionMixin implements ExplosionBridge {
     @Shadow @Final private double x;
     @Shadow @Final private double y;
     @Shadow @Final private double z;
-    @Shadow @Final private boolean causesFire;
-    @Shadow @Final private Random random;
     @Shadow @Final public Entity exploder;
     @Shadow public abstract DamageSource getDamageSource();
     @Shadow @Final private Map<PlayerEntity, Vec3d> playerKnockbackMap;
@@ -75,8 +60,6 @@ public abstract class ExplosionMixin implements ExplosionBridge {
     @Accessor("size") public abstract void bridge$setSize(float size);
     @Accessor("mode") public abstract Explosion.Mode bridge$getMode();
     // @formatter:on
-
-    public boolean wasCanceled = false;
 
     @Inject(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/entity/Entity;DDDFZLnet/minecraft/world/Explosion$Mode;)V",
         at = @At("RETURN"))
@@ -147,13 +130,12 @@ public abstract class ExplosionMixin implements ExplosionBridge {
         net.minecraftforge.event.ForgeEventFactory.onExplosionDetonate(this.world, (Explosion) (Object) this, list, f3);
         Vec3d vec3d = new Vec3d(this.x, this.y, this.z);
 
-        for (int k2 = 0; k2 < list.size(); ++k2) {
-            Entity entity = list.get(k2);
+        for (Entity entity : list) {
             if (!entity.isImmuneToExplosions()) {
-                double d12 = MathHelper.sqrt(entity.getDistanceSq(new Vec3d(this.x, this.y, this.z))) / f3;
+                double d12 = MathHelper.sqrt(entity.getDistanceSq(vec3d)) / f3;
                 if (d12 <= 1.0D) {
                     double d5 = entity.posX - this.x;
-                    double d7 = entity.posY + (double) entity.getEyeHeight() - this.y;
+                    double d7 = ((EntityBridge) entity).bridge$getEyeHeight() - this.y;
                     double d9 = entity.posZ - this.z;
                     double d13 = MathHelper.sqrt(d5 * d5 + d7 * d7 + d9 * d9);
                     if (d13 != 0.0D) {
@@ -190,81 +172,8 @@ public abstract class ExplosionMixin implements ExplosionBridge {
 
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    public void doExplosionB(boolean spawnParticles) {
-        this.world.playSound(null, this.x, this.y, this.z, SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS, 4.0F, (1.0F + (this.world.rand.nextFloat() - this.world.rand.nextFloat()) * 0.2F) * 0.7F);
-        boolean flag = this.mode != Explosion.Mode.NONE;
-        if (!(this.size < 2.0F) && flag) {
-            this.world.addParticle(ParticleTypes.EXPLOSION_EMITTER, this.x, this.y, this.z, 1.0D, 0.0D, 0.0D);
-        } else {
-            this.world.addParticle(ParticleTypes.EXPLOSION, this.x, this.y, this.z, 1.0D, 0.0D, 0.0D);
-        }
-
-        if (flag) {
-
-            float yield = arclight$callBlockExplodeEvent();
-
-            if (Float.isNaN(yield)) {
-                this.wasCanceled = true;
-                return;
-            }
-
-            for (BlockPos blockpos : this.affectedBlockPositions) {
-                BlockState blockstate = this.world.getBlockState(blockpos);
-                Block block = blockstate.getBlock();
-                if (spawnParticles) {
-                    double d0 = ((float) blockpos.getX() + this.world.rand.nextFloat());
-                    double d1 = ((float) blockpos.getY() + this.world.rand.nextFloat());
-                    double d2 = ((float) blockpos.getZ() + this.world.rand.nextFloat());
-                    double d3 = d0 - this.x;
-                    double d4 = d1 - this.y;
-                    double d5 = d2 - this.z;
-                    double d6 = MathHelper.sqrt(d3 * d3 + d4 * d4 + d5 * d5);
-                    d3 = d3 / d6;
-                    d4 = d4 / d6;
-                    d5 = d5 / d6;
-                    double d7 = 0.5D / (d6 / (double) this.size + 0.1D);
-                    d7 = d7 * (double) (this.world.rand.nextFloat() * this.world.rand.nextFloat() + 0.3F);
-                    d3 = d3 * d7;
-                    d4 = d4 * d7;
-                    d5 = d5 * d7;
-                    this.world.addParticle(ParticleTypes.POOF, (d0 + this.x) / 2.0D, (d1 + this.y) / 2.0D, (d2 + this.z) / 2.0D, d3, d4, d5);
-                    this.world.addParticle(ParticleTypes.SMOKE, d0, d1, d2, d3, d4, d5);
-                }
-
-                if (!blockstate.isAir(this.world, blockpos)) {
-                    if (this.world instanceof ServerWorld && blockstate.canDropFromExplosion(this.world, blockpos, (Explosion) (Object) this)) {
-                        TileEntity tileentity = blockstate.hasTileEntity() ? this.world.getTileEntity(blockpos) : null;
-                        LootContext.Builder lootcontext$builder = (new LootContext.Builder((ServerWorld) this.world)).withRandom(this.world.rand).withParameter(LootParameters.POSITION, blockpos).withParameter(LootParameters.TOOL, ItemStack.EMPTY).withNullableParameter(LootParameters.BLOCK_ENTITY, tileentity);
-                        if (this.mode == Explosion.Mode.DESTROY || yield < 1.0F) {
-                            lootcontext$builder.withParameter(LootParameters.EXPLOSION_RADIUS, 1.0F / yield);
-                        }
-
-                        Block.spawnDrops(blockstate, lootcontext$builder);
-                    }
-
-                    blockstate.onBlockExploded(this.world, blockpos, (Explosion) (Object) this);
-                }
-            }
-        }
-
-        if (this.causesFire) {
-            for (BlockPos blockPos : this.affectedBlockPositions) {
-                if (this.world.getBlockState(blockPos).isAir(world, blockPos) && this.world.getBlockState(blockPos.down()).isOpaqueCube(this.world, blockPos.down()) && this.random.nextInt(3) == 0) {
-                    BlockIgniteEvent event = CraftEventFactory.callBlockIgniteEvent(this.world, blockPos.getX(), blockPos.getY(), blockPos.getZ(), (Explosion) (Object) this);
-                    if (!event.isCancelled()) {
-                        this.world.setBlockState(blockPos, Blocks.FIRE.getDefaultState());
-                    }
-                }
-            }
-        }
-    }
-
-    private float arclight$callBlockExplodeEvent() {
+    @Override
+    public float bridge$callBlockExplodeEvent() {
         org.bukkit.World world = ((WorldBridge) this.world).bridge$getWorld();
         org.bukkit.entity.Entity exploder = this.exploder == null ? null : ((EntityBridge) this.exploder).bridge$getBukkitEntity();
         Location location = new Location(world, this.x, this.y, this.z);
@@ -272,7 +181,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
         for (int i = this.affectedBlockPositions.size() - 1; i >= 0; i--) {
             BlockPos blockPos = this.affectedBlockPositions.get(i);
             org.bukkit.block.Block block = world.getBlockAt(blockPos.getX(), blockPos.getY(), blockPos.getZ());
-            if (block.getType() != Material.AIR && block.getType() != Material.CAVE_AIR && block.getType() != Material.VOID_AIR) {
+            if (!block.getType().isAir()) {
                 blockList.add(block);
             }
         }
@@ -322,10 +231,5 @@ public abstract class ExplosionMixin implements ExplosionBridge {
         } else {
             return null;
         }
-    }
-
-    @Override
-    public boolean bridge$wasCancelled() {
-        return wasCanceled;
     }
 }

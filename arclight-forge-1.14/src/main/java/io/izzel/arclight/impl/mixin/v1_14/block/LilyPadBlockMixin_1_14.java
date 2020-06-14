@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.core.block;
+package io.izzel.arclight.impl.mixin.v1_14.block;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LilyPadBlock.class)
-public class LilyPadBlockMixin {
+public class LilyPadBlockMixin_1_14 {
 
     @Inject(method = "onEntityCollision", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;destroyBlock(Lnet/minecraft/util/math/BlockPos;Z)Z"))
     public void arclight$entityChangeBlock(BlockState state, World worldIn, BlockPos pos, Entity entityIn, CallbackInfo ci) {

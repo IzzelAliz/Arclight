@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.entity;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.entity.MobEntityBridge;
+import io.izzel.arclight.common.mod.ArclightMod;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -37,7 +38,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import io.izzel.arclight.common.mod.ArclightMod;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -66,6 +66,13 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
     @Shadow public abstract boolean isAIDisabled();
     // @formatter:on
 
+    public boolean aware;
+
+    @Override
+    public void bridge$setAware(boolean aware) {
+        this.aware = aware;
+    }
+
     @Inject(method = "setCanPickUpLoot", at = @At("HEAD"))
     public void arclight$setPickupLoot(boolean canPickup, CallbackInfo ci) {
         super.canPickUpLoot = canPickup;
@@ -83,6 +90,7 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(EntityType<? extends MobEntity> type, World worldIn, CallbackInfo ci) {
         this.persistenceRequired = !this.canDespawn(0.0);
+        this.aware = true;
     }
 
     private transient AtomicBoolean arclight$targetSuccess;
@@ -155,6 +163,18 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
         arclight$fireEvent = fireEvent;
     }
 
+    @Inject(method = "writeAdditional", at = @At("HEAD"))
+    private void arclight$setAware(CompoundNBT compound, CallbackInfo ci) {
+        compound.putBoolean("Bukkit.Aware", this.aware);
+    }
+
+    @Inject(method = "readAdditional", at = @At("HEAD"))
+    private void arclight$readAware(CompoundNBT compound, CallbackInfo ci) {
+        if (compound.contains("Bukkit.Aware")) {
+            this.aware = compound.getBoolean("Bukkit.Aware");
+        }
+    }
+
     @Redirect(method = "readAdditional", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/MobEntity;setCanPickUpLoot(Z)V"))
     public void arclight$setIfTrue(MobEntity mobEntity, boolean canPickup) {
         if (canPickup) mobEntity.setCanPickUpLoot(true);
@@ -163,6 +183,14 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
     @Redirect(method = "readAdditional", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/nbt/CompoundNBT;getBoolean(Ljava/lang/String;)Z"))
     public boolean arclight$setIfTrue(CompoundNBT nbt, String key) {
         return nbt.getBoolean(key) || this.persistenceRequired;
+    }
+
+    @Inject(method = "updateEntityActionState", cancellable = true, at = @At("HEAD"))
+    private void arclight$unaware(CallbackInfo ci) {
+        if (!this.aware) {
+            ++this.idleTime;
+            ci.cancel();
+        }
     }
 
     /**

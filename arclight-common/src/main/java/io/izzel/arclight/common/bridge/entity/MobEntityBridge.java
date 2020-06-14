@@ -16,6 +16,8 @@ public interface MobEntityBridge extends LivingEntityBridge {
 
     void bridge$setPersistenceRequired(boolean value);
 
+    void bridge$setAware(boolean aware);
+
     interface Hack {
 
         ResourceLocation getLootTable();

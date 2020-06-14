@@ -8,6 +8,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
@@ -21,14 +22,16 @@ import net.minecraftforge.common.ForgeHooks;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.event.entity.EntityPortalEvent;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import javax.annotation.Nullable;
+import java.util.Random;
 
 @Mixin(Entity.class)
-public abstract class EntityMixin_1_14 {
+public abstract class EntityMixin_1_14 implements EntityBridge {
 
     // @formatter:off
     @Shadow public World world;
@@ -45,6 +48,12 @@ public abstract class EntityMixin_1_14 {
     @Shadow public abstract void detach();
     @Shadow public abstract EntityType<?> getType();
     @Shadow public abstract void remove(boolean keepData);
+    @Shadow @Final protected EntityDataManager dataManager;
+    @Shadow public abstract boolean isInvisible();
+    @Shadow @Final protected Random rand;
+    @Shadow public abstract float getWidth();
+    @Shadow public abstract float getHeight();
+    @Shadow public abstract float getEyeHeight();
     // @formatter:on
 
     /**
@@ -142,5 +151,10 @@ public abstract class EntityMixin_1_14 {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public double bridge$getEyeHeight() {
+        return this.posY + (double) this.getEyeHeight();
     }
 }

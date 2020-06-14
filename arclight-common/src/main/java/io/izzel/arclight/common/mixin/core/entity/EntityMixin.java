@@ -169,6 +169,13 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow public abstract float getEyeHeight();
     @Shadow @Nullable public abstract Entity changeDimension(DimensionType destination);
     @Shadow public abstract boolean isRidingSameEntity(Entity entityIn);
+    @Shadow public boolean noClip;
+    @Shadow public abstract double getPosX();
+    @Shadow public abstract double getPosY();
+    @Shadow public abstract double getPosZ();
+    @Shadow(remap = false) public abstract void revive();
+    @Shadow public abstract Vec3d getPositionVec();
+    @Shadow public abstract boolean isInvulnerable();
     // @formatter:on
 
     private static final int CURRENT_LEVEL = 2;

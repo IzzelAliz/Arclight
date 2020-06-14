@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.entity.projectile;
 
+import io.izzel.arclight.common.bridge.entity.projectile.DamagingProjectileEntityBridge;
 import io.izzel.arclight.common.mixin.core.entity.EntityMixin;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -16,7 +17,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-import io.izzel.arclight.common.bridge.entity.projectile.DamagingProjectileEntityBridge;
 
 @Mixin(DamagingProjectileEntity.class)
 public abstract class DamagingProjectileEntityMixin extends EntityMixin implements DamagingProjectileEntityBridge {
@@ -26,6 +26,7 @@ public abstract class DamagingProjectileEntityMixin extends EntityMixin implemen
     @Shadow public double accelerationY;
     @Shadow public double accelerationZ;
     @Shadow public LivingEntity shootingEntity;
+    @Shadow protected void onImpact(RayTraceResult result) {}
     // @formatter:on
 
     public float bukkitYield;

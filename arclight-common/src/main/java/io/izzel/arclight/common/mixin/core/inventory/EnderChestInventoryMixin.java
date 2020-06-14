@@ -8,6 +8,8 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.tileentity.EnderChestTileEntity;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
+import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -37,6 +39,13 @@ public abstract class EnderChestInventoryMixin extends InventoryMixin implements
     @Override
     public InventoryHolder getOwner() {
         return ((PlayerEntityBridge) owner).bridge$getBukkitEntity();
+    }
+
+    @Override
+    public void setOwner(InventoryHolder owner) {
+        if (owner instanceof HumanEntity) {
+            this.owner = ((CraftHumanEntity) owner).getHandle();
+        }
     }
 
     @Override

@@ -4,8 +4,10 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.fluid.IFluidState;
 import net.minecraft.fluid.LavaFluid;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraftforge.event.ForgeEventFactory;
@@ -13,6 +15,10 @@ import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Random;
 
@@ -76,5 +82,17 @@ public abstract class LavaFluidMixin {
             }
 
         }
+    }
+
+    @Inject(method = "flowInto", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/IWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+    private void arclight$returnIfFail(IWorld worldIn, BlockPos pos, BlockState blockStateIn, Direction direction, IFluidState fluidStateIn, CallbackInfo ci) {
+        if (!arclight$success) ci.cancel();
+    }
+
+    private transient boolean arclight$success;
+
+    @Redirect(method = "flowInto", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/IWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+    private boolean arclight$blockFromTo(IWorld iWorld, BlockPos pos, BlockState newState, int flags) {
+        return arclight$success = CraftEventFactory.handleBlockFormEvent(iWorld.getWorld(), pos, newState, flags);
     }
 }

@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.entity.projectile;
 
+import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
@@ -39,6 +40,9 @@ public abstract class SmallFireballEntityMixin extends DamagingProjectileEntityM
      */
     @Overwrite
     protected void onImpact(RayTraceResult result) {
+        if (ArclightVersion.atLeast(ArclightVersion.v1_15)) {
+            super.onImpact(result);
+        }
         if (!this.world.isRemote) {
             if (result.getType() == RayTraceResult.Type.ENTITY) {
                 Entity entity = ((EntityRayTraceResult) result).getEntity();

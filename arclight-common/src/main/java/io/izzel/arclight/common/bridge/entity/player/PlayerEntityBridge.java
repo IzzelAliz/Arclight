@@ -1,17 +1,19 @@
 package io.izzel.arclight.common.bridge.entity.player;
 
 import com.mojang.datafixers.util.Either;
+import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Unit;
 import net.minecraft.util.math.BlockPos;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
-import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
 
 public interface PlayerEntityBridge extends LivingEntityBridge {
 
     boolean bridge$isFauxSleeping();
 
     String bridge$getSpawnWorld();
+
+    void bridge$setSpawnWorld(String world);
 
     @Override
     CraftHumanEntity bridge$getBukkitEntity();

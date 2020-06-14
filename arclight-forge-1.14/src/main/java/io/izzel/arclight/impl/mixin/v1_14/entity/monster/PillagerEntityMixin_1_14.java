@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.core.entity.monster;
+package io.izzel.arclight.impl.mixin.v1_14.entity.monster;
 
 import io.izzel.arclight.common.mixin.core.entity.CreatureEntityMixin;
 import net.minecraft.entity.monster.PillagerEntity;
@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PillagerEntity.class)
-public abstract class PillagerEntityMixin extends CreatureEntityMixin {
+public abstract class PillagerEntityMixin_1_14 extends CreatureEntityMixin {
 
     // @formatter:off
     @Shadow public abstract Inventory getInventory();

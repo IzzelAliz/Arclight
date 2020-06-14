@@ -15,7 +15,7 @@ import java.util.function.Predicate;
 @Mixin(PandaEntity.class)
 public abstract class PandaEntityMixin extends AnimalEntityMixin {
 
-    @Shadow @Final private static Predicate<ItemEntity> field_213607_bQ;
+    @Shadow @Final private static Predicate<ItemEntity> PANDA_ITEMS;
 
     /**
      * @author IzzelAliz
@@ -23,7 +23,7 @@ public abstract class PandaEntityMixin extends AnimalEntityMixin {
      */
     @Overwrite
     protected void updateEquipmentIfNeeded(ItemEntity itemEntity) {
-        boolean cancel = this.getItemStackFromSlot(EquipmentSlotType.MAINHAND).isEmpty() && field_213607_bQ.test(itemEntity);
+        boolean cancel = this.getItemStackFromSlot(EquipmentSlotType.MAINHAND).isEmpty() && PANDA_ITEMS.test(itemEntity);
         if (CraftEventFactory.callEntityPickupItemEvent((PandaEntity) (Object) this, itemEntity, 0, cancel).isCancelled()) {
             ItemStack itemstack = itemEntity.getItem();
             this.setItemStackToSlot(EquipmentSlotType.MAINHAND, itemstack);

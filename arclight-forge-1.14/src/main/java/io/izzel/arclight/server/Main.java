@@ -1,9 +1,10 @@
 package io.izzel.arclight.server;
 
-import io.izzel.arclight.api.Unsafe;
-import io.izzel.arclight.forgeinstaller.ForgeInstaller;
-import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
+import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.api.EnumHelper;
+import io.izzel.arclight.api.Unsafe;
+import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
+import io.izzel.arclight.forgeinstaller.ForgeInstaller;
 import net.minecraftforge.server.ServerMain;
 import org.apache.logging.log4j.LogManager;
 
@@ -29,6 +30,7 @@ public class Main {
             System.setProperty("log4j.jul.LoggerAdapter", "io.izzel.arclight.common.mod.util.ArclightLoggerAdapter");
             LogManager.getLogger("Arclight").info("Loading mappings ...");
             Objects.requireNonNull(ArclightRemapper.INSTANCE);
+            ArclightVersion.setVersion(ArclightVersion.v1_14);
             ServerMain.main(args);
         } catch (Exception e) {
             e.printStackTrace();

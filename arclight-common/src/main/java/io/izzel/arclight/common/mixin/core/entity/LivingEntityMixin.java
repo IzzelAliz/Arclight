@@ -1,9 +1,6 @@
 package io.izzel.arclight.common.mixin.core.entity;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.mojang.datafixers.util.Either;
 import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
@@ -15,7 +12,6 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AbstractAttributeMap;
 import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
-import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.TameableEntity;
@@ -29,7 +25,6 @@ import net.minecraft.nbt.FloatNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.IntNBT;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
@@ -39,13 +34,12 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.Hand;
 import net.minecraft.util.SoundEvent;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeHooks;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeEventFactory;
-import net.minecraftforge.event.entity.living.PotionEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.attribute.CraftAttributeMap;
@@ -73,10 +67,6 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.ConcurrentModificationException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 
@@ -99,18 +89,9 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow protected boolean dead;
     @Shadow public void remove(boolean keepData) { }
     @Shadow public abstract IAttributeInstance getAttribute(IAttribute attribute);
-    @Shadow @Final public Map<Effect, EffectInstance> activePotionsMap;
-    @Shadow protected abstract void onFinishedPotionEffect(EffectInstance effect);
-    @Shadow protected abstract void onChangedPotionEffect(EffectInstance id, boolean reapply);
     @Shadow public boolean potionsNeedUpdate;
-    @Shadow protected abstract void updatePotionMetadata();
-    @Shadow @Final private static DataParameter<Integer> POTION_EFFECTS;
-    @Shadow @Final private static DataParameter<Boolean> HIDE_PARTICLES;
     @Shadow public abstract boolean removePotionEffect(Effect effectIn);
-    @Shadow public abstract boolean isPotionApplicable(EffectInstance potioneffectIn);
-    @Shadow protected abstract void onNewPotionEffect(EffectInstance id);
     @Shadow public abstract boolean clearActivePotions();
-    @Shadow @Nullable public abstract EffectInstance removeActivePotionEffect(@Nullable Effect potioneffectin);
     @Shadow @Final public static DataParameter<Float> HEALTH;
     @Shadow public abstract boolean isPotionActive(Effect potionIn);
     @Shadow public abstract boolean isSleeping();
@@ -162,6 +143,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public CombatTracker combatTracker;
     @Shadow public abstract ItemStack getHeldItemOffhand();
     @Shadow public abstract Random getRNG();
+    @Shadow public abstract Optional<BlockPos> getBedPosition();
+    @Shadow public abstract boolean addPotionEffect(EffectInstance effectInstanceIn);
     // @formatter:on
 
     public int expToDrop;
@@ -198,8 +181,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     }
 
     public int getExpReward() {
-        int exp = this.getExperiencePoints(this.attackingPlayer);
         if (!this.world.isRemote && (this.recentlyHit > 0 || this.isPlayer()) && this.canDropLoot() && this.world.getGameRules().getBoolean(GameRules.DO_MOB_LOOT)) {
+            int exp = this.getExperiencePoints(this.attackingPlayer);
             return ForgeEventFactory.getExperienceDrop((LivingEntity) (Object) this, this.attackingPlayer, exp);
         } else {
             return 0;
@@ -217,37 +200,13 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     }
 
     @Override
-    public boolean bridge$isForceDrops() {
-        return forceDrops;
+    public int bridge$getExpToDrop() {
+        return this.expToDrop;
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    protected void onDeathUpdate() {
-        ++this.deathTime;
-        if (this.deathTime >= 20 && !this.removed) {
-            if (!this.world.isRemote && (this.isPlayer() || this.recentlyHit > 0 && this.canDropLoot() && this.world.getGameRules().getBoolean(GameRules.DO_MOB_LOOT))) {
-                int i = this.expToDrop;
-                while (i > 0) {
-                    int j = ExperienceOrbEntity.getXPSplit(i);
-                    i -= j;
-                    this.world.addEntity(new ExperienceOrbEntity(this.world, this.posX, this.posY, this.posZ, j));
-                }
-                this.expToDrop = 0;
-            }
-
-            this.remove((Object) this instanceof ServerPlayerEntity); //Forge keep data until we revive player
-
-            for (int k = 0; k < 20; ++k) {
-                double d2 = this.rand.nextGaussian() * 0.02D;
-                double d0 = this.rand.nextGaussian() * 0.02D;
-                double d1 = this.rand.nextGaussian() * 0.02D;
-                this.world.addParticle(ParticleTypes.POOF, this.posX + (double) (this.rand.nextFloat() * this.getWidth() * 2.0F) - (double) this.getWidth(), this.posY + (double) (this.rand.nextFloat() * this.getHeight()), this.posZ + (double) (this.rand.nextFloat() * this.getWidth() * 2.0F) - (double) this.getWidth(), d2, d0, d1);
-            }
-        }
+    @Override
+    public boolean bridge$isForceDrops() {
+        return forceDrops;
     }
 
     @Inject(method = "readAdditional", at = @At("HEAD"))
@@ -262,158 +221,9 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         }
     }
 
-    private boolean isTickingEffects = false;
-    private List<Map.Entry<Either<EffectInstance, Effect>, EntityPotionEffectEvent.Cause>> effectsToProcess = Lists.newArrayList();
-
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    protected void updatePotionEffects() {
-        this.isTickingEffects = true;
-        Iterator<Effect> iterator = this.activePotionsMap.keySet().iterator();
-
-        try {
-            while (iterator.hasNext()) {
-                Effect effect = iterator.next();
-                EffectInstance effectinstance = this.activePotionsMap.get(effect);
-                if (!effectinstance.tick((LivingEntity) (Object) this)) {
-                    if (!this.world.isRemote && !MinecraftForge.EVENT_BUS.post(new PotionEvent.PotionExpiryEvent((LivingEntity) (Object) this, effectinstance))) {
-
-                        EntityPotionEffectEvent event = CraftEventFactory.callEntityPotionEffectChangeEvent((LivingEntity) (Object) this, effectinstance, null, org.bukkit.event.entity.EntityPotionEffectEvent.Cause.EXPIRATION);
-                        if (event.isCancelled()) {
-                            continue;
-                        }
-
-                        iterator.remove();
-                        this.onFinishedPotionEffect(effectinstance);
-                    }
-                } else if (effectinstance.getDuration() % 600 == 0) {
-                    this.onChangedPotionEffect(effectinstance, false);
-                }
-            }
-        } catch (ConcurrentModificationException ignored) {
-        }
-
-        isTickingEffects = false;
-        for (Map.Entry<Either<EffectInstance, Effect>, EntityPotionEffectEvent.Cause> e : effectsToProcess) {
-            Either<EffectInstance, Effect> either = e.getKey();
-            EntityPotionEffectEvent.Cause cause = e.getValue();
-            bridge$pushEffectCause(cause);
-            if (either.left().isPresent()) {
-                addPotionEffect(either.left().get());
-            } else {
-                removePotionEffect(either.right().get());
-            }
-        }
-        effectsToProcess.clear();
-
-        if (this.potionsNeedUpdate) {
-            if (!this.world.isRemote) {
-                this.updatePotionMetadata();
-            }
-
-            this.potionsNeedUpdate = false;
-        }
-
-        int i = this.dataManager.get(POTION_EFFECTS);
-        boolean flag1 = this.dataManager.get(HIDE_PARTICLES);
-        if (i > 0) {
-            boolean flag;
-            if (this.isInvisible()) {
-                flag = this.rand.nextInt(15) == 0;
-            } else {
-                flag = this.rand.nextBoolean();
-            }
-
-            if (flag1) {
-                flag &= this.rand.nextInt(5) == 0;
-            }
-
-            if (flag && i > 0) {
-                double d0 = (double) (i >> 16 & 255) / 255.0D;
-                double d1 = (double) (i >> 8 & 255) / 255.0D;
-                double d2 = (double) (i >> 0 & 255) / 255.0D;
-                this.world.addParticle(flag1 ? ParticleTypes.AMBIENT_ENTITY_EFFECT : ParticleTypes.ENTITY_EFFECT, this.posX + (this.rand.nextDouble() - 0.5D) * (double) this.getWidth(), this.posY + this.rand.nextDouble() * (double) this.getHeight(), this.posZ + (this.rand.nextDouble() - 0.5D) * (double) this.getWidth(), d0, d1, d2);
-            }
-        }
-    }
-
     @Inject(method = "clearActivePotions", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/eventbus/api/IEventBus;post(Lnet/minecraftforge/eventbus/api/Event;)Z"))
     public void arclight$clearReason(CallbackInfoReturnable<Boolean> cir) {
         arclight$action = EntityPotionEffectEvent.Action.CLEARED;
-    }
-
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    public boolean addPotionEffect(EffectInstance effectInstanceIn) {
-        EntityPotionEffectEvent.Cause cause = arclight$cause == null ? EntityPotionEffectEvent.Cause.UNKNOWN : arclight$cause;
-        arclight$cause = null;
-        if (isTickingEffects) {
-            effectsToProcess.add(Maps.immutableEntry(Either.left(effectInstanceIn), cause));
-            return true;
-        }
-
-        if (!this.isPotionApplicable(effectInstanceIn)) {
-            return false;
-        } else {
-            EffectInstance effectinstance = this.activePotionsMap.get(effectInstanceIn.getPotion());
-
-            boolean override = false;
-            if (effectinstance != null) {
-                override = new EffectInstance(effectinstance).combine(effectInstanceIn);
-            }
-
-            EntityPotionEffectEvent event = CraftEventFactory.callEntityPotionEffectChangeEvent((LivingEntity) (Object) this, effectinstance, effectInstanceIn, cause, override);
-            if (event.isCancelled()) {
-                return false;
-            }
-
-            MinecraftForge.EVENT_BUS.post(new PotionEvent.PotionAddedEvent((LivingEntity) (Object) this, effectinstance, effectInstanceIn));
-            if (effectinstance == null) {
-                this.activePotionsMap.put(effectInstanceIn.getPotion(), effectInstanceIn);
-                this.onNewPotionEffect(effectInstanceIn);
-                return true;
-            } else if (event.isOverride()) {
-                effectinstance.combine(effectInstanceIn);
-                this.onChangedPotionEffect(effectinstance, true);
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
-
-    @SuppressWarnings("unused") // mock
-    public EffectInstance c(@Nullable Effect potioneffectin, EntityPotionEffectEvent.Cause cause) {
-        bridge$pushEffectCause(cause);
-        return removeActivePotionEffect(potioneffectin);
-    }
-
-    @Inject(method = "removeActivePotionEffect", at = @At("HEAD"))
-    public void arclight$clearActive(Effect effect, CallbackInfoReturnable<EffectInstance> cir) {
-        EntityPotionEffectEvent.Cause cause = arclight$cause == null ? EntityPotionEffectEvent.Cause.UNKNOWN : arclight$cause;
-        arclight$cause = null;
-        if (isTickingEffects) {
-            effectsToProcess.add(Maps.immutableEntry(Either.right(effect), cause));
-            cir.setReturnValue(null);
-            return;
-        }
-
-        EffectInstance effectInstance = this.activePotionsMap.get(effect);
-        if (effectInstance == null) {
-            cir.setReturnValue(null);
-            return;
-        }
-
-        EntityPotionEffectEvent event = CraftEventFactory.callEntityPotionEffectChangeEvent((LivingEntity) (Object) this, effectInstance, null, cause);
-        if (event.isCancelled()) {
-            cir.setReturnValue(null);
-        }
     }
 
     private transient EntityPotionEffectEvent.Action arclight$action;
@@ -669,6 +479,11 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             float absorptionModifier = absorption.apply((double) f).floatValue();
 
             EntityDamageEvent event = CraftEventFactory.handleLivingEntityDamageEvent((LivingEntity) (Object) this, damagesource, originalDamage, hardHatModifier, blockingModifier, armorModifier, resistanceModifier, magicModifier, absorptionModifier, hardHat, blocking, armor, resistance, magic, absorption);
+
+            if (damagesource.getTrueSource() instanceof PlayerEntity) {
+                ((PlayerEntity) damagesource.getTrueSource()).resetCooldown();
+            }
+
             if (event.isCancelled()) {
                 return false;
             }
@@ -875,20 +690,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             }
             return !event.isCancelled();
         }
-    }
-
-    private transient boolean arclight$fallSuccess;
-
-    @Inject(method = "fall", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/entity/LivingEntity;attackEntityFrom(Lnet/minecraft/util/DamageSource;F)Z"))
-    public void arclight$fall(float distance, float damageMultiplier, CallbackInfo ci) {
-        if (!arclight$fallSuccess) {
-            ci.cancel();
-        }
-    }
-
-    @Redirect(method = "fall", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;attackEntityFrom(Lnet/minecraft/util/DamageSource;F)Z"))
-    public boolean arclight$fall(LivingEntity livingEntity, DamageSource source, float amount) {
-        return arclight$fallSuccess = livingEntity.attackEntityFrom(source, amount);
     }
 
     @Redirect(method = "applyArmorCalculations", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;damageArmor(F)V"))

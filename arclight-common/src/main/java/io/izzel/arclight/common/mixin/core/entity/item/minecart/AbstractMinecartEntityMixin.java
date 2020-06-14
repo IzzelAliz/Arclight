@@ -160,9 +160,11 @@ public abstract class AbstractMinecartEntityMixin extends EntityMixin {
                 this.setRotation(this.rotationYaw, this.rotationPitch);
             }
         } else {
+            /*
             this.prevPosX = this.posX;
             this.prevPosY = this.posY;
             this.prevPosZ = this.posZ;
+             */
             if (!this.hasNoGravity()) {
                 this.setMotion(this.getMotion().add(0.0, -0.04, 0.0));
             }
@@ -217,11 +219,14 @@ public abstract class AbstractMinecartEntityMixin extends EntityMixin {
                                 entity.startRiding((AbstractMinecartEntity) (Object) this);
                             }
                         } else {
-                            VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent(vehicle, ((EntityBridge) entity).bridge$getBukkitEntity());
-                            Bukkit.getPluginManager().callEvent(collisionEvent);
-                            if (!collisionEvent.isCancelled()) {
-                                entity.applyEntityCollision((AbstractMinecartEntity) (Object) this);
+                            if (!isRidingSameEntity(entity)) {
+                                VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent(vehicle, ((EntityBridge) entity).bridge$getBukkitEntity());
+                                Bukkit.getPluginManager().callEvent(collisionEvent);
+                                if (collisionEvent.isCancelled()) {
+                                    continue;
+                                }
                             }
+                            entity.applyEntityCollision((AbstractMinecartEntity) (Object) this);
                         }
                     }
                 }
@@ -273,12 +278,14 @@ public abstract class AbstractMinecartEntityMixin extends EntityMixin {
         return this.isBeingRidden() || !this.slowWhenEmpty;
     }
 
-    @Inject(method = "applyEntityCollision", at = @At(value = "FIELD", ordinal = 0, target = "Lnet/minecraft/entity/Entity;posX:D"))
+    @Inject(method = "applyEntityCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/item/minecart/AbstractMinecartEntity;isPassenger(Lnet/minecraft/entity/Entity;)Z"))
     private void arclight$vehicleCollide(Entity entityIn, CallbackInfo ci) {
-        VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), ((EntityBridge) entityIn).bridge$getBukkitEntity());
-        Bukkit.getPluginManager().callEvent(collisionEvent);
-        if (collisionEvent.isCancelled()) {
-            ci.cancel();
+        if (!this.isPassenger(entityIn)) {
+            VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), ((EntityBridge) entityIn).bridge$getBukkitEntity());
+            Bukkit.getPluginManager().callEvent(collisionEvent);
+            if (collisionEvent.isCancelled()) {
+                ci.cancel();
+            }
         }
     }
 

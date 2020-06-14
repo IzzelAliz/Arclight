@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.core.entity.boss;
+package io.izzel.arclight.impl.mixin.v1_14.entity.boss;
 
 import io.izzel.arclight.common.mixin.core.entity.CreatureEntityMixin;
 import net.minecraft.block.BlockState;
@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.List;
 
 @Mixin(WitherEntity.class)
-public abstract class WitherEntityMixin extends CreatureEntityMixin {
+public abstract class WitherEntityMixin_1_14 extends CreatureEntityMixin {
 
     // @formatter:off
     @Shadow public abstract int getInvulTime();

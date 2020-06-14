@@ -1,5 +1,6 @@
 package io.izzel.arclight.impl.mixin.v1_14.world.dimension;
 
+import io.izzel.arclight.common.bridge.world.dimension.DimensionTypeBridge;
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.Dimension;
 import net.minecraft.world.dimension.DimensionType;
@@ -8,7 +9,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import java.util.function.BiFunction;
 
 @Mixin(DimensionType.class)
-public class DimensionTypeMixin_1_14 {
+public class DimensionTypeMixin_1_14 implements DimensionTypeBridge {
 
     protected void arclight$constructor(int idIn, String suffixIn, String directoryIn, BiFunction<World, DimensionType, ? extends Dimension> p_i49935_4_, boolean p_i49935_5_) {
         throw new RuntimeException();
@@ -23,5 +24,10 @@ public class DimensionTypeMixin_1_14 {
 
     public DimensionType getType() {
         return (type == null) ? (DimensionType) (Object) this : type;
+    }
+
+    @Override
+    public DimensionType bridge$getType() {
+        return getType();
     }
 }

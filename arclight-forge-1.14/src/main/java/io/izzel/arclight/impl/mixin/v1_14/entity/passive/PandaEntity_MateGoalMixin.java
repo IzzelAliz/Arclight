@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.core.entity.passive;
+package io.izzel.arclight.impl.mixin.v1_14.entity.passive;
 
 import io.izzel.arclight.common.bridge.entity.MobEntityBridge;
 import net.minecraft.entity.passive.PandaEntity;

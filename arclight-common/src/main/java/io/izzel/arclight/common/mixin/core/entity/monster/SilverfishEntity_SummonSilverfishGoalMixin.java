@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.entity.monster;
 
+import io.izzel.arclight.api.ArclightVersion;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -46,7 +47,11 @@ public abstract class SilverfishEntity_SummonSilverfishGoalMixin extends Goal {
                                 continue;
                             }
                             if (ForgeEventFactory.getMobGriefingEvent(world, this.silverfish)) {
-                                world.destroyBlock(blockpos1, true);
+                                if (ArclightVersion.atLeast(ArclightVersion.v1_15)) {
+                                    world.destroyBlock(blockpos1, true, this.silverfish);
+                                } else {
+                                    world.destroyBlock(blockpos1, true);
+                                }
                             } else {
                                 world.setBlockState(blockpos1, ((SilverfishBlock) block).getMimickedBlock().getDefaultState(), 3);
                             }

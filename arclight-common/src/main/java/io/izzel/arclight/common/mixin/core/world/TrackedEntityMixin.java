@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world;
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.attributes.AttributeMap;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.item.ItemFrameEntity;
@@ -20,6 +21,7 @@ import net.minecraft.network.play.server.SEntityPacket;
 import net.minecraft.network.play.server.SEntityPropertiesPacket;
 import net.minecraft.network.play.server.SEntityTeleportPacket;
 import net.minecraft.network.play.server.SEntityVelocityPacket;
+import net.minecraft.network.play.server.SMountEntityPacket;
 import net.minecraft.network.play.server.SPlayEntityEffectPacket;
 import net.minecraft.network.play.server.SSetPassengersPacket;
 import net.minecraft.network.play.server.SSpawnMobPacket;
@@ -29,7 +31,6 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.TrackedEntity;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.MapData;
-import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerVelocityEvent;
@@ -76,7 +77,6 @@ public abstract class TrackedEntityMixin {
     @Shadow protected abstract void sendPacket(IPacket<?> p_219451_1_);
     // @formatter:on
 
-    @Shadow @Final private static Logger LOGGER;
     private Set<ServerPlayerEntity> trackedPlayers;
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -136,7 +136,7 @@ public abstract class TrackedEntityMixin {
                 ++this.ticksSinceAbsoluteTeleport;
                 int i = MathHelper.floor(this.trackedEntity.rotationYaw * 256.0f / 360.0f);
                 int j = MathHelper.floor(this.trackedEntity.rotationPitch * 256.0f / 360.0f);
-                Vec3d vec3d = new Vec3d(this.trackedEntity.posX, this.trackedEntity.posY, this.trackedEntity.posZ).subtract(SEntityPacket.func_218744_a(this.encodedPosX, this.encodedPosY, this.encodedPosZ));
+                Vec3d vec3d = this.trackedEntity.getPositionVec().subtract(SEntityPacket.func_218744_a(this.encodedPosX, this.encodedPosY, this.encodedPosZ));
                 boolean flag2 = vec3d.lengthSquared() >= 7.62939453125E-6;
                 IPacket<?> packet2 = null;
                 boolean flag3 = flag2 || this.updateCounter % 60 == 0;
@@ -265,6 +265,12 @@ public abstract class TrackedEntityMixin {
         }
         if (this.trackedEntity.isPassenger()) {
             consumer.accept(new SSetPassengersPacket(this.trackedEntity.getRidingEntity()));
+        }
+        if (this.trackedEntity instanceof MobEntity) {
+            MobEntity mobentity = (MobEntity) this.trackedEntity;
+            if (mobentity.getLeashed()) {
+                consumer.accept(new SMountEntityPacket(mobentity, mobentity.getLeashHolder()));
+            }
         }
     }
 

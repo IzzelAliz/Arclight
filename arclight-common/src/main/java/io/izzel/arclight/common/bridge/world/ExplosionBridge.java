@@ -14,4 +14,6 @@ public interface ExplosionBridge {
     Explosion.Mode bridge$getMode();
 
     boolean bridge$wasCancelled();
+
+    float bridge$callBlockExplodeEvent();
 }

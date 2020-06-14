@@ -55,6 +55,7 @@ public abstract class SlimeEntityMixin extends MobEntityMixin {
                 if (this.isNoDespawnRequired()) {
                     entityslime.enablePersistence();
                 }
+                entityslime.setInvulnerable(this.isInvulnerable());
                 entityslime.setSlimeSize(i / 2, true);
                 entityslime.setLocationAndAngles(this.posX + f, this.posY + 0.5, this.posZ + f2, this.rand.nextFloat() * 360.0f, 0.0f);
                 slimes.add(entityslime);

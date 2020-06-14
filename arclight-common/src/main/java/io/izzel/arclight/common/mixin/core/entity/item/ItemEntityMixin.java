@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.entity.item;
 import com.google.common.base.Preconditions;
 import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
+import io.izzel.arclight.common.bridge.entity.player.PlayerInventoryBridge;
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.network.datasync.EntityDataManagerBridge;
 import io.izzel.arclight.common.mixin.core.entity.EntityMixin;
@@ -23,10 +24,8 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import io.izzel.arclight.common.bridge.entity.player.PlayerInventoryBridge;
 
 import java.util.UUID;
 
@@ -38,20 +37,12 @@ public abstract class ItemEntityMixin extends EntityMixin {
     @Shadow public int pickupDelay;
     @Shadow public abstract ItemStack getItem();
     @Shadow private UUID owner;
-    @Shadow public int age;
     // @formatter:on
 
     @Inject(method = "func_213858_a", cancellable = true, at = @At("HEAD"))
     private static void arclight$itemMerge(ItemEntity from, ItemStack p_213858_1_, ItemEntity to, ItemStack p_213858_3_, CallbackInfo ci) {
         if (CraftEventFactory.callItemMergeEvent(to, from).isCancelled()) {
             ci.cancel();
-        }
-    }
-
-    @Redirect(method = "func_213858_a", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/entity/item/ItemEntity;setItem(Lnet/minecraft/item/ItemStack;)V"))
-    private static void arclight$setNonEmpty(ItemEntity itemEntity, ItemStack stack) {
-        if (!stack.isEmpty()) {
-            itemEntity.setItem(stack);
         }
     }
 
@@ -109,7 +100,7 @@ public abstract class ItemEntityMixin extends EntityMixin {
             } else if (this.pickupDelay == 0) {
                 this.pickupDelay = -1;
             }
-            if (this.pickupDelay == 0 && (this.owner == null || 6000 - this.age <= 200 || this.owner.equals(entity.getUniqueID())) && entity.inventory.addItemStackToInventory(itemstack)) {
+            if (this.pickupDelay == 0 && (this.owner == null /*|| 6000 - this.age <= 200*/ || this.owner.equals(entity.getUniqueID())) && entity.inventory.addItemStackToInventory(itemstack)) {
                 entity.onItemPickup((ItemEntity) (Object) this, i);
                 if (itemstack.isEmpty()) {
                     this.remove();

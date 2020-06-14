@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.core.entity.monster;
+package io.izzel.arclight.impl.mixin.v1_14.entity.monster;
 
 import io.izzel.arclight.common.mixin.core.entity.CreatureEntityMixin;
 import net.minecraft.entity.monster.ShulkerEntity;
@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ShulkerEntity.class)
-public abstract class ShulkerEntityMixin extends CreatureEntityMixin {
+public abstract class ShulkerEntityMixin_1_14 extends CreatureEntityMixin {
 
     @Inject(method = "notifyDataManagerChange", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/monster/ShulkerEntity;prevPosX:D"))
     private void arclight$chunkCheck(DataParameter<?> key, CallbackInfo ci) {

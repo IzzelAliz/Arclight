@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.bridge.entity;
 
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
@@ -17,6 +18,12 @@ public interface LivingEntityBridge extends EntityBridge {
     int bridge$getExpReward();
 
     void bridge$setExpToDrop(int amount);
+
+    int bridge$getExpToDrop();
+
+    void bridge$dropExperience();
+
+    void bridge$createWitherRose(LivingEntity entity);
 
     void bridge$pushHealReason(EntityRegainHealthEvent.RegainReason regainReason);
 

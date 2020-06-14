@@ -26,14 +26,14 @@ public interface IBlockReaderMixin extends IBlockReaderBridge {
     default BlockRayTraceResult rayTraceBlock(RayTraceContext context, BlockPos pos) {
         BlockState blockstate = this.getBlockState(pos);
         IFluidState ifluidstate = this.getFluidState(pos);
-        Vec3d vec3d = context.func_222253_b();
-        Vec3d vec3d1 = context.func_222250_a();
+        Vec3d vec3d = context.getStartVec();
+        Vec3d vec3d1 = context.getStartVec();
         VoxelShape voxelshape = context.getBlockShape(blockstate, (IBlockReader) this, pos);
         BlockRayTraceResult blockraytraceresult = this.rayTraceBlocks(vec3d, vec3d1, pos, voxelshape, blockstate);
         VoxelShape voxelshape1 = context.getFluidShape(ifluidstate, (IBlockReader) this, pos);
         BlockRayTraceResult blockraytraceresult1 = voxelshape1.rayTrace(vec3d, vec3d1, pos);
-        double d0 = blockraytraceresult == null ? Double.MAX_VALUE : context.func_222253_b().squareDistanceTo(blockraytraceresult.getHitVec());
-        double d1 = blockraytraceresult1 == null ? Double.MAX_VALUE : context.func_222253_b().squareDistanceTo(blockraytraceresult1.getHitVec());
+        double d0 = blockraytraceresult == null ? Double.MAX_VALUE : context.getStartVec().squareDistanceTo(blockraytraceresult.getHitVec());
+        double d1 = blockraytraceresult1 == null ? Double.MAX_VALUE : context.getStartVec().squareDistanceTo(blockraytraceresult1.getHitVec());
         return d0 <= d1 ? blockraytraceresult : blockraytraceresult1;
     }
 

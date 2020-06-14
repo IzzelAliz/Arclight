@@ -19,11 +19,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(WolfEntity.class)
 public abstract class WolfEntityMixin extends TameableEntityMixin {
 
-    @Shadow
-    public abstract void setAngry(boolean angry);
-
-    @Shadow
-    public abstract boolean isAngry();
+    // @formatter:off
+    @Shadow public abstract void setAngry(boolean angry);
+    @Shadow public abstract boolean isAngry();
+    // @formatter:on
 
     @Override
     public boolean setGoalTarget(LivingEntity entityliving, EntityTargetEvent.TargetReason reason, boolean fire) {
@@ -52,6 +51,11 @@ public abstract class WolfEntityMixin extends TameableEntityMixin {
 
     @Redirect(method = "attackEntityFrom", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ai/goal/SitGoal;setSitting(Z)V"))
     private void arclight$handledBy(SitGoal sitGoal, boolean sitting) {
+    }
+
+    @Redirect(method = "setTamed", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/WolfEntity;setHealth(F)V"))
+    private void arclight$healToMax(WolfEntity wolfEntity, float health) {
+        wolfEntity.setHealth(wolfEntity.getMaxHealth());
     }
 
     @Inject(method = "processInteract", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/WolfEntity;heal(F)V"))

@@ -33,11 +33,11 @@ public abstract class ZombieVillagerEntityMixin extends ZombieEntityMixin {
         bridge$pushEffectCause(EntityPotionEffectEvent.Cause.CONVERSION);
     }
 
-    @Redirect(method = "func_213791_a", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/monster/ZombieVillagerEntity;remove()V"))
+    @Redirect(method = "cureZombie", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/monster/ZombieVillagerEntity;remove()V"))
     private void arclight$transformPre(ZombieVillagerEntity zombieVillagerEntity) {
     }
 
-    @Inject(method = "func_213791_a", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;addEntity(Lnet/minecraft/entity/Entity;)Z"))
+    @Inject(method = "cureZombie", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;addEntity(Lnet/minecraft/entity/Entity;)Z"))
     private void arclight$transform(ServerWorld world, CallbackInfo ci, VillagerEntity villagerEntity) {
         if (CraftEventFactory.callEntityTransformEvent((ZombieVillagerEntity)(Object)this, villagerEntity, EntityTransformEvent.TransformReason.CURED).isCancelled()) {
             ((ZombieVillager) getBukkitEntity()).setConversionTime(-1);

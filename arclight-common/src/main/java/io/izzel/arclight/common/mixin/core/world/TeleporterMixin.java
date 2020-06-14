@@ -1,9 +1,11 @@
 package io.izzel.arclight.common.mixin.core.world;
 
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.world.TeleporterBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.mod.util.ArclightBlockPopulator;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.pattern.BlockPattern;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Teleporter;
@@ -21,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 @Mixin(Teleporter.class)
-public class TeleporterMixin {
+public class TeleporterMixin implements TeleporterBridge {
 
     // @formatter:off
     @Shadow @Final protected ServerWorld world;
@@ -55,5 +57,17 @@ public class TeleporterMixin {
             arclight$populator.updateList();
         }
         arclight$populator = null;
+    }
+
+    @Override
+    public boolean bridge$makePortal(Entity entityIn, BlockPos pos, int createRadius) {
+        // todo
+        return false;
+    }
+
+    @Override
+    public BlockPattern.PortalInfo bridge$placeInPortal(Entity p_222268_1_, BlockPos pos, float p_222268_2_, int searchRadius, boolean searchOnly) {
+        // todo
+        return null;
     }
 }
