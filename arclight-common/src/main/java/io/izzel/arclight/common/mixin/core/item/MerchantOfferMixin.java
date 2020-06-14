@@ -1,13 +1,21 @@
 package io.izzel.arclight.common.mixin.core.item;
 
+import io.izzel.arclight.common.bridge.item.MerchantOfferBridge;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.MerchantOffer;
 import org.bukkit.craftbukkit.v.inventory.CraftMerchantRecipe;
 import org.spongepowered.asm.mixin.Mixin;
-import io.izzel.arclight.common.bridge.item.MerchantOfferBridge;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(MerchantOffer.class)
 public class MerchantOfferMixin implements MerchantOfferBridge {
+
+    // @formatter:off
+    @Shadow public ItemStack buyingStackFirst;
+    // @formatter:on
 
     private CraftMerchantRecipe bukkitHandle;
 
@@ -27,5 +35,12 @@ public class MerchantOfferMixin implements MerchantOfferBridge {
     @Override
     public CraftMerchantRecipe bridge$asBukkit() {
         return asBukkit();
+    }
+
+    @Inject(method = "func_222205_b", at = @At("HEAD"))
+    private void arclight$fix(CallbackInfoReturnable<ItemStack> cir) {
+        if (this.buyingStackFirst.getCount() <= 0) {
+            cir.setReturnValue(ItemStack.EMPTY);
+        }
     }
 }

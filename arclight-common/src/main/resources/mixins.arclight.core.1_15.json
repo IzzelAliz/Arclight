@@ -51,8 +51,10 @@
     "enchantment.FrostWalkerEnchantmentMixin_1_15",
     "entity.EntityMixin_1_15",
     "entity.LivingEntityMixin_1_15",
+    "entity.ai.goal.FollowOwnerGoalMixin_1_15",
     "entity.boss.WitherEntityMixin_1_15",
     "entity.item.ArmorStandEntityMixin_1_15",
+    "entity.item.FallingBlockEntityMixin_1_15",
     "entity.item.ItemEntityMixin_1_15",
     "entity.monster.AbstractRaiderEntityMixin",
     "entity.monster.RavagerEntityMixin_1_15",
@@ -62,11 +64,14 @@
     "entity.passive.BeeEntityMixin",
     "entity.player.PlayerEntityMixin_1_15",
     "entity.player.ServerPlayerEntityMixin_1_15",
+    "item.LeadItemMixin_1_15",
     "item.crafting.SpecialRecipeMixin",
     "world.ExplosionMixin_1_15",
     "world.biome.BiomeContainerMixin",
     "world.chunk.ChunkMixin_1_15",
     "world.dimension.DimensionTypeMixin_1_15",
-    "world.server.TicketManagerMixin_1_15"
+    "world.server.TicketManagerMixin_1_15",
+    "world.storage.loot.LootTableManagerMixin",
+    "world.storage.loot.LootTableMixin"
   ]
 }

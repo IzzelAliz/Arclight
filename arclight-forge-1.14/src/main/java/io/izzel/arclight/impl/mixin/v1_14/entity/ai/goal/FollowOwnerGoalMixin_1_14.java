@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.core.entity.ai.goal;
+package io.izzel.arclight.impl.mixin.v1_14.entity.ai.goal;
 
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import net.minecraft.entity.ai.goal.FollowOwnerGoal;
@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(FollowOwnerGoal.class)
-public class FollowOwnerGoalMixin {
+public class FollowOwnerGoalMixin_1_14 {
 
     // @formatter:off
     @Shadow @Final protected TameableEntity tameable;

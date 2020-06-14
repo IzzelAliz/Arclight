@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.core.entity.item;
+package io.izzel.arclight.impl.mixin.v1_14.entity.item;
 
 import io.izzel.arclight.common.mixin.core.entity.EntityMixin;
 import net.minecraft.block.Block;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(FallingBlockEntity.class)
-public abstract class FallingBlockEntityMixin extends EntityMixin {
+public abstract class FallingBlockEntityMixin_1_14 extends EntityMixin {
 
     @Shadow private BlockState fallTile;
 

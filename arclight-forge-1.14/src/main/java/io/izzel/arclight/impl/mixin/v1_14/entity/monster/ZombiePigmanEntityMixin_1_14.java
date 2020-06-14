@@ -10,6 +10,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.PigZombie;
 import org.bukkit.event.entity.PigZombieAngerEvent;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,6 +25,11 @@ public abstract class ZombiePigmanEntityMixin_1_14 extends ZombieEntityMixin {
     @Shadow protected abstract int func_223336_ef();
     // @formatter:on
 
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
     public boolean attackEntityFrom(DamageSource damagesource, float f) {
         if (this.isInvulnerableTo(damagesource)) {
             return false;

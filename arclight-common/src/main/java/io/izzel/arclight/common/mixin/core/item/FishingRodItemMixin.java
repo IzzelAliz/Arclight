@@ -62,7 +62,7 @@ public class FishingRodItemMixin extends Item {
                 worldIn.addEntity(new FishingBobberEntity(playerIn, worldIn, j, k));
             }
 
-            playerIn.swingArm(handIn);
+            // playerIn.swingArm(handIn);
             playerIn.addStat(Stats.ITEM_USED.get(this));
         }
 

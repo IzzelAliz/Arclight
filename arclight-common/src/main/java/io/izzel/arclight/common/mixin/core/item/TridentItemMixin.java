@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.item;
 
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.entity.projectile.TridentEntityBridge;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -24,7 +25,8 @@ public class TridentItemMixin {
 
     @Redirect(method = "onPlayerStoppedUsing", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;damageItem(ILnet/minecraft/entity/LivingEntity;Ljava/util/function/Consumer;)V"))
     public void arclight$muteDamage(ItemStack stack, int amount, LivingEntity entityIn, Consumer<LivingEntity> onBroken) {
-        // do nothing
+        int j = EnchantmentHelper.getRiptideModifier(stack);
+        if (j != 0) stack.damageItem(amount, entityIn, onBroken);
     }
 
     private transient boolean arclight$success;

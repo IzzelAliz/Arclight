@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.core.item;
+package io.izzel.arclight.impl.mixin.v1_14.entity.item;
 
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 @Mixin(LeadItem.class)
-public class LeadItemMixin {
+public class LeadItemMixin_1_14 {
 
     /**
      * @author IzzelAliz
