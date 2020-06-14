@@ -21,7 +21,7 @@ import java.util.Map;
 public class RaidManagerMixin {
 
     // @formatter:off
-    @Shadow @Final private Map<Integer, Raid> byId;
+    @Shadow @Final public Map<Integer, Raid> byId;
     // @formatter:on
 
     @Inject(method = "badOmenTick", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/raid/Raid;increaseLevel(Lnet/minecraft/entity/player/PlayerEntity;)V"))

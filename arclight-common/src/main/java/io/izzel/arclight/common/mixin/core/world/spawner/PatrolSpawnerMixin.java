@@ -15,7 +15,7 @@ import java.util.Random;
 @Mixin(PatrolSpawner.class)
 public class PatrolSpawnerMixin {
 
-    @Inject(method = "func_222695_a", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
+    @Inject(method = "spawnPatroller", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
     public void arclight$spawnReanson(World worldIn, BlockPos p_222695_2_, Random random, boolean p_222695_4_, CallbackInfoReturnable<Boolean> cir) {
         ((WorldBridge) worldIn).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.PATROL);
     }

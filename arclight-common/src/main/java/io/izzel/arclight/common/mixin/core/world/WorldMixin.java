@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world;
 
 import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.world.border.WorldBorderBridge;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
@@ -34,7 +36,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-import io.izzel.arclight.common.mod.util.ArclightCaptures;
 
 import javax.annotation.Nullable;
 import java.util.function.BiFunction;
@@ -52,6 +53,7 @@ public abstract class WorldMixin implements WorldBridge {
     @Shadow public abstract long getSeed();
     @Shadow @Final public WorldInfo worldInfo;
     @Shadow public abstract WorldBorder getWorldBorder();
+    @Shadow@Final private WorldBorder worldBorder;
     @Accessor("mainThread") public abstract Thread arclight$getMainThread();
     // @formatter:on
 
@@ -66,6 +68,7 @@ public abstract class WorldMixin implements WorldBridge {
     @Inject(method = "<init>(Lnet/minecraft/world/storage/WorldInfo;Lnet/minecraft/world/dimension/DimensionType;Ljava/util/function/BiFunction;Lnet/minecraft/profiler/IProfiler;Z)V", at = @At("RETURN"))
     private void arclight$init(WorldInfo info, DimensionType dimType, BiFunction<World, Dimension, AbstractChunkProvider> provider, IProfiler profilerIn, boolean remote, CallbackInfo ci) {
         spigotConfig = new SpigotWorldConfig(worldInfo.getWorldName());
+        ((WorldBorderBridge) this.worldBorder).bridge$setWorld((ServerWorld) (Object) this);
     }
 
     public void arclight$constructor(WorldInfo info, DimensionType dimType, BiFunction<World, Dimension, AbstractChunkProvider> provider, IProfiler profilerIn, boolean remote) {
@@ -77,6 +80,11 @@ public abstract class WorldMixin implements WorldBridge {
         this.generator = gen;
         this.environment = env;
         bridge$getWorld();
+    }
+
+    @Override
+    public SpigotWorldConfig bridge$spigotConfig() {
+        return this.spigotConfig;
     }
 
     @Inject(method = "setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z",

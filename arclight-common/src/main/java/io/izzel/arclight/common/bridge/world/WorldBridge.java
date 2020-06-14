@@ -5,6 +5,7 @@ import net.minecraft.util.math.BlockPos;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.generator.ChunkGenerator;
+import org.spigotmc.SpigotWorldConfig;
 
 public interface WorldBridge extends IWorldWriterBridge {
 
@@ -23,4 +24,6 @@ public interface WorldBridge extends IWorldWriterBridge {
     ChunkGenerator bridge$getGenerator();
 
     TileEntity bridge$getTileEntity(BlockPos pos, boolean validate);
+
+    SpigotWorldConfig bridge$spigotConfig();
 }

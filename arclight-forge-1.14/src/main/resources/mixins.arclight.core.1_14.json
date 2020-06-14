@@ -67,6 +67,7 @@
     "world.ExplosionMixin_1_14",
     "world.chunk.ChunkMixin_1_14",
     "world.dimension.DimensionTypeMixin_1_14",
-    "world.server.TicketManagerMixin_1_14"
+    "world.server.TicketManagerMixin_1_14",
+    "world.spawner.WorldEntitySpawnerMixin_1_14"
   ]
 }

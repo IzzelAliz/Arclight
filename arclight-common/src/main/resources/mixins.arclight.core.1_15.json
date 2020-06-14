@@ -71,6 +71,7 @@
     "world.chunk.ChunkMixin_1_15",
     "world.dimension.DimensionTypeMixin_1_15",
     "world.server.TicketManagerMixin_1_15",
+    "world.spawner.WorldEntitySpawnerMixin_1_15",
     "world.storage.loot.LootTableManagerMixin",
     "world.storage.loot.LootTableMixin"
   ]

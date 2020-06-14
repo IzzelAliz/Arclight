@@ -31,9 +31,10 @@ import java.util.Set;
 @Mixin(Raid.class)
 public class RaidMixin implements RaidBridge {
 
+    // @formatter:off
     @Shadow @Final private Map<Integer, Set<AbstractRaiderEntity>> raiders;
-
     @Shadow @Final private ServerWorld world;
+    // @formatter:on
 
     @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/raid/Raid;stop()V"))
     public void arclight$stopPeace(CallbackInfo ci) {
@@ -93,9 +94,9 @@ public class RaidMixin implements RaidBridge {
         arclight$leader = entity;
     }
 
-    @Redirect(method = "spawnNextWave", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/raid/Raid;func_221317_a(ILnet/minecraft/entity/monster/AbstractRaiderEntity;Lnet/minecraft/util/math/BlockPos;Z)V"))
+    @Redirect(method = "spawnNextWave", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/raid/Raid;joinRaid(ILnet/minecraft/entity/monster/AbstractRaiderEntity;Lnet/minecraft/util/math/BlockPos;Z)V"))
     public void arclight$captureRaider(Raid raid, int wave, AbstractRaiderEntity entity, BlockPos pos, boolean flag) {
-        raid.func_221317_a(wave, entity, pos, flag);
+        raid.joinRaid(wave, entity, pos, flag);
         if (arclight$raiders == null) {
             arclight$raiders = new ArrayList<>();
         }
@@ -107,7 +108,7 @@ public class RaidMixin implements RaidBridge {
         CraftEventFactory.callRaidSpawnWaveEvent((Raid) (Object) this, arclight$leader, arclight$raiders);
     }
 
-    @Inject(method = "func_221317_a", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;addEntity(Lnet/minecraft/entity/Entity;)Z"))
+    @Inject(method = "joinRaid(ILnet/minecraft/entity/monster/AbstractRaiderEntity;Lnet/minecraft/util/math/BlockPos;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;addEntity(Lnet/minecraft/entity/Entity;)Z"))
     public void arclight$addEntity(int wave, AbstractRaiderEntity p_221317_2_, BlockPos p_221317_3_, boolean p_221317_4_, CallbackInfo ci) {
         ((WorldBridge) this.world).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.RAID);
     }

@@ -4,12 +4,15 @@ import com.mojang.datafixers.util.Either;
 import io.izzel.arclight.common.bridge.world.chunk.ChunkBridge;
 import io.izzel.arclight.common.bridge.world.server.ChunkHolderBridge;
 import io.izzel.arclight.common.bridge.world.server.ChunkManagerBridge;
+import io.izzel.arclight.common.mod.ArclightMod;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -24,13 +27,14 @@ import java.util.concurrent.CompletableFuture;
 public abstract class ChunkHolderMixin implements ChunkHolderBridge {
 
     // @formatter:off
-    @Shadow public int field_219316_k;
+    @Shadow public int prevChunkLevel;
     @Shadow public abstract CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> func_219301_a(ChunkStatus p_219301_1_);
-    @Override @Accessor("field_219316_k") public abstract int bridge$getOldTicketLevel();
+    @Shadow @Final private ChunkPos pos;
+    @Override @Accessor("prevChunkLevel") public abstract int bridge$getOldTicketLevel();
     // @formatter:on
 
     public Chunk getFullChunk() {
-        if (!ChunkHolder.func_219286_c(this.field_219316_k).func_219065_a(ChunkHolder.LocationType.BORDER)) {
+        if (!ChunkHolder.getLocationTypeFromLevel(this.prevChunkLevel).isAtLeast(ChunkHolder.LocationType.BORDER)) {
             return null; // note: using oldTicketLevel for isLoaded checks
         }
         CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> statusFuture = this.func_219301_a(ChunkStatus.FULL);
@@ -43,39 +47,48 @@ public abstract class ChunkHolderMixin implements ChunkHolderBridge {
         return this.getFullChunk();
     }
 
-    @Inject(method = "func_219291_a", at = @At(value = "JUMP", opcode = Opcodes.IFEQ, ordinal = 0),
+    @Inject(method = "processUpdates", at = @At(value = "JUMP", opcode = Opcodes.IFEQ, ordinal = 0),
         locals = LocalCapture.CAPTURE_FAILHARD)
     public void arclight$onChunkUnload(ChunkManager chunkManager, CallbackInfo ci, ChunkStatus chunkStatus,
                                        ChunkStatus chunkStatus1, boolean flag, boolean flag1,
                                        ChunkHolder.LocationType locationType, ChunkHolder.LocationType locationType1) {
-        if (locationType.func_219065_a(ChunkHolder.LocationType.BORDER) && !locationType1.func_219065_a(ChunkHolder.LocationType.BORDER)) {
-            this.func_219301_a(ChunkStatus.FULL).thenAcceptAsync((either) -> {
-                either.ifLeft((chunkAccess) -> {
-                    Chunk chunk = (Chunk) chunkAccess;
-                    // Minecraft will apply the chunks tick lists to the world once the chunk got loaded, and then store the tick
-                    // lists again inside the chunk once the chunk becomes inaccessible and set the chunk's needsSaving flag.
-                    // These actions may however happen deferred, so we manually set the needsSaving flag already here.
-                    chunk.setModified(true);
-                    ((ChunkBridge) chunk).bridge$unloadCallback();
-                });
-            }, ((ChunkManagerBridge) chunkManager).bridge$getCallbackExecutor());
+        if (locationType.isAtLeast(ChunkHolder.LocationType.BORDER) && !locationType1.isAtLeast(ChunkHolder.LocationType.BORDER)) {
+            this.func_219301_a(ChunkStatus.FULL).thenAccept((either) -> {
+                Chunk chunk = (Chunk) either.left().orElse(null);
+                if (chunk != null) {
+                    ((ChunkManagerBridge) chunkManager).bridge$getCallbackExecutor().execute(() -> {
+                        chunk.setModified(true);
+                        ((ChunkBridge) chunk).bridge$unloadCallback();
+                    });
+                }
+            }).exceptionally((throwable) -> {
+                // ensure exceptions are printed, by default this is not the case
+                ArclightMod.LOGGER.fatal("Failed to schedule unload callback for chunk " + this.pos, throwable);
+                return null;
+            });
 
             // Run callback right away if the future was already done
             ((ChunkManagerBridge) chunkManager).bridge$getCallbackExecutor().run();
         }
     }
 
-    @Inject(method = "func_219291_a", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
+    @Inject(method = "processUpdates", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
     public void arclight$onChunkLoad(ChunkManager chunkManager, CallbackInfo ci, ChunkStatus chunkStatus,
                                      ChunkStatus chunkStatus1, boolean flag, boolean flag1,
                                      ChunkHolder.LocationType locationType, ChunkHolder.LocationType locationType1) {
-        if (!locationType.func_219065_a(ChunkHolder.LocationType.BORDER) && locationType1.func_219065_a(ChunkHolder.LocationType.BORDER)) {
-            this.func_219301_a(ChunkStatus.FULL).thenAcceptAsync((either) -> {
-                either.ifLeft((chunkAccess) -> {
-                    Chunk chunk = (Chunk) chunkAccess;
-                    ((ChunkBridge) chunk).bridge$loadCallback();
-                });
-            }, ((ChunkManagerBridge) chunkManager).bridge$getCallbackExecutor());
+        if (!locationType.isAtLeast(ChunkHolder.LocationType.BORDER) && locationType1.isAtLeast(ChunkHolder.LocationType.BORDER)) {
+            this.func_219301_a(ChunkStatus.FULL).thenAccept((either) -> {
+                Chunk chunk = (Chunk) either.left().orElse(null);
+                if (chunk != null) {
+                    ((ChunkManagerBridge) chunkManager).bridge$getCallbackExecutor().execute(
+                        ((ChunkBridge) chunk)::bridge$loadCallback
+                    );
+                }
+            }).exceptionally((throwable) -> {
+                // ensure exceptions are printed, by default this is not the case
+                ArclightMod.LOGGER.fatal("Failed to schedule load callback for chunk " + this.pos, throwable);
+                return null;
+            });
 
             ((ChunkManagerBridge) chunkManager).bridge$getCallbackExecutor().run();
         }
