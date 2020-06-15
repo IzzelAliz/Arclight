@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.tileentity;
 
 import io.izzel.arclight.common.bridge.command.ICommandSourceBridge;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.inventory.container.LecternContainerBridge;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.ICommandSource;
 import net.minecraft.entity.Entity;
@@ -26,7 +27,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import io.izzel.arclight.common.bridge.inventory.container.LecternContainerBridge;
 
 import javax.annotation.Nullable;
 
@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
 public abstract class LecternTileEntityMixin extends TileEntityMixin implements ICommandSource, ICommandSourceBridge {
 
     // @formatter:off
-    @Shadow @Final public IInventory field_214048_a;
+    @Shadow @Final public IInventory inventory;
     @Shadow @Final private IIntArray field_214049_b;
     // @formatter:on
 
@@ -49,7 +49,7 @@ public abstract class LecternTileEntityMixin extends TileEntityMixin implements 
      */
     @Overwrite
     public Container createMenu(int i, PlayerInventory playerInventory, PlayerEntity entity) {
-        LecternContainer container = new LecternContainer(i, this.field_214048_a, this.field_214049_b);
+        LecternContainer container = new LecternContainer(i, this.inventory, this.field_214049_b);
         ((LecternContainerBridge) container).bridge$setPlayerInventory(playerInventory);
         return container;
     }

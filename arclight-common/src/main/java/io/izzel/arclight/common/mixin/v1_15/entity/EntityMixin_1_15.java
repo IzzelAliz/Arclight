@@ -2,10 +2,12 @@ package io.izzel.arclight.common.mixin.v1_15.entity;
 
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.entity.InternalEntityBridge;
+import io.izzel.arclight.common.bridge.world.WorldBridge;
 import net.minecraft.block.pattern.BlockPattern;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.MoverType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.server.MinecraftServer;
@@ -19,13 +21,20 @@ import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.util.ITeleporter;
+import org.bukkit.Bukkit;
+import org.bukkit.block.BlockFace;
 import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.entity.Vehicle;
 import org.bukkit.event.entity.EntityPortalEvent;
+import org.bukkit.event.vehicle.VehicleBlockCollisionEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
 import java.util.Random;
@@ -42,7 +51,7 @@ public abstract class EntityMixin_1_15 implements EntityBridge {
     @Shadow public float rotationYaw;
     @Shadow public float rotationPitch;
     @Shadow public abstract void setMotion(Vec3d motionIn);
-    @Shadow public abstract void remove(boolean keepData);
+    @Shadow(remap = false) public abstract void remove(boolean keepData);
     @Shadow public abstract Vec3d getMotion();
     @Shadow public abstract double getPosX();
     @Shadow public abstract double getPosZ();
@@ -56,13 +65,44 @@ public abstract class EntityMixin_1_15 implements EntityBridge {
     @Shadow public abstract float getWidth();
     @Shadow public abstract float getHeight();
     @Shadow public abstract double getPosYEye();
+    @Shadow public abstract void setFlag(int flag, boolean set);
+    @Shadow public abstract Vec3d getPositionVec();
+    @Shadow(remap = false) public abstract void revive();
+    @Shadow public abstract void setWorld(World worldIn);
+    @Shadow public abstract int getEntityId();
+    @Shadow @Nullable public abstract Entity changeDimension(DimensionType destination);
+    @Shadow public boolean collidedHorizontally;
+    @Shadow protected abstract Vec3d getAllowedMovement(Vec3d vec);
     // @formatter:on
+
+    @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;canTriggerWalking()Z"))
+    private void arclight$move$blockCollide(MoverType typeIn, Vec3d pos, CallbackInfo ci) {
+        if (collidedHorizontally && this.bridge$getBukkitEntity() instanceof Vehicle) {
+            Vehicle vehicle = (Vehicle) this.bridge$getBukkitEntity();
+            org.bukkit.block.Block block = ((WorldBridge) this.world).bridge$getWorld().getBlockAt(MathHelper.floor(this.getPosX()), MathHelper.floor(this.getPosY()), MathHelper.floor(this.getPosZ()));
+            Vec3d vec3d = this.getAllowedMovement(pos);
+            if (pos.x > vec3d.x) {
+                block = block.getRelative(BlockFace.EAST);
+            } else if (vec3d.x < vec3d.x) {
+                block = block.getRelative(BlockFace.WEST);
+            } else if (pos.z > vec3d.z) {
+                block = block.getRelative(BlockFace.SOUTH);
+            } else if (pos.z < vec3d.z) {
+                block = block.getRelative(BlockFace.NORTH);
+            }
+
+            if (block.getType() != org.bukkit.Material.AIR) {
+                VehicleBlockCollisionEvent event = new VehicleBlockCollisionEvent(vehicle, block);
+                Bukkit.getPluginManager().callEvent(event);
+            }
+        }
+    }
 
     /**
      * @author IzzelAliz
      * @reason
      */
-    @Overwrite
+    @Overwrite(remap = false)
     @Nullable
     public Entity changeDimension(DimensionType destination, ITeleporter teleporter) {
         BlockPos location = ((InternalEntityBridge) this).internal$capturedPos();

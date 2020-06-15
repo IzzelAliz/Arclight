@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(targets = "net.minecraft.entity.passive.FoxEntity.RevengeGoal")
 public class FoxEntity_RevengeGoalMixin {
 
-    @Shadow(aliases = {"this$0", "field_220785_i"}) private FoxEntity outerThis;
+    @Shadow(aliases = {"this$0", "field_220785_i"}, remap = false) private FoxEntity outerThis;
 
     @Inject(method = "startExecuting", at = @At("HEAD"))
     private void arclight$reason(CallbackInfo ci) {

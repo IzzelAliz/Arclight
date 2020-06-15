@@ -4,11 +4,8 @@ import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import net.minecraft.block.AbstractButtonBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.state.BooleanProperty;
-import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.World;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
@@ -21,7 +18,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.List;
@@ -32,23 +28,6 @@ public class AbstractButtonBlockMixin {
     // @formatter:off
     @Shadow @Final public static BooleanProperty POWERED;
     // @formatter:on
-
-    @Inject(method = "onBlockActivated", cancellable = true, at = @At(value = "HEAD"))
-    public void arclight$blockRedstone1(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit, CallbackInfoReturnable<Boolean> cir) {
-        if (!state.get(POWERED)) {
-            boolean powered = state.get(POWERED);
-            Block block = CraftBlock.at(worldIn, pos);
-            int old = (powered) ? 15 : 0;
-            int current = (!powered) ? 15 : 0;
-
-            BlockRedstoneEvent event = new BlockRedstoneEvent(block, old, current);
-            Bukkit.getPluginManager().callEvent(event);
-
-            if ((event.getNewCurrent() > 0) == (powered)) {
-                cir.setReturnValue(true);
-            }
-        }
-    }
 
     @Inject(method = "checkPressed", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;get(Lnet/minecraft/state/IProperty;)Ljava/lang/Comparable;"))

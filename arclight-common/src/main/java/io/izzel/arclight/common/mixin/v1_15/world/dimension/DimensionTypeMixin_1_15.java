@@ -28,6 +28,11 @@ public class DimensionTypeMixin_1_15 implements DimensionTypeBridge {
     }
 
     @Override
+    public void bridge$setType(DimensionType type) {
+        this.type = type;
+    }
+
+    @Override
     public DimensionType bridge$getType() {
         return getType();
     }

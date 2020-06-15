@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.tileentity;
 
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.tileentity.AbstractFurnaceTileEntityBridge;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -27,7 +28,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import io.izzel.arclight.common.bridge.tileentity.AbstractFurnaceTileEntityBridge;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -80,7 +80,7 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
      * @reason
      */
     @Overwrite
-    private void func_214007_c(@Nullable IRecipe<?> p_214007_1_) {
+    private void smelt(@Nullable IRecipe<?> p_214007_1_) {
         if (p_214007_1_ != null && this.canSmelt(p_214007_1_)) {
             ItemStack itemstack = this.items.get(0);
             ItemStack itemstack1 = p_214007_1_.getRecipeOutput();
@@ -145,7 +145,7 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
      * @reason
      */
     @Overwrite
-    private static void func_214003_a(PlayerEntity entity, int ex, float f) {
+    private static void spawnExpOrbs(PlayerEntity entity, int ex, float f) {
         if (f == 0.0F) {
             ex = 0;
         } else if (f < 1.0F) {

@@ -54,6 +54,7 @@ public abstract class WorldMixin implements WorldBridge {
     @Shadow @Final public WorldInfo worldInfo;
     @Shadow public abstract WorldBorder getWorldBorder();
     @Shadow@Final private WorldBorder worldBorder;
+    @Shadow public abstract long getDayTime();
     @Accessor("mainThread") public abstract Thread arclight$getMainThread();
     // @formatter:on
 

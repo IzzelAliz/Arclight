@@ -33,7 +33,7 @@ public abstract class BowItemMixin extends ShootableItem {
     // @formatter:off
     @Shadow public abstract int getUseDuration(ItemStack stack);
     @Shadow public static float getArrowVelocity(int charge) { return 0; }
-    @Shadow public abstract AbstractArrowEntity customeArrow(AbstractArrowEntity arrow);
+    @Shadow(remap = false) public abstract AbstractArrowEntity customeArrow(AbstractArrowEntity arrow);
     // @formatter:on
 
     /**

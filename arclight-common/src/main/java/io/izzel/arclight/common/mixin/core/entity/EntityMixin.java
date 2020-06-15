@@ -30,7 +30,6 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
@@ -38,7 +37,6 @@ import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
-import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
@@ -55,7 +53,6 @@ import org.bukkit.event.entity.EntityDropItemEvent;
 import org.bukkit.event.entity.EntityPoseChangeEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.event.vehicle.VehicleBlockCollisionEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.plugin.PluginManager;
@@ -114,7 +111,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow @Nullable public abstract MinecraftServer getServer();
     @Shadow public abstract Vec3d getMotion();
     @Shadow public abstract EntityType<?> getType();
-    @Shadow public abstract void remove(boolean keepData);
+    @Shadow(remap = false) public abstract void remove(boolean keepData);
     @Shadow @Final protected Random rand;
     @Shadow public abstract float getWidth();
     @Shadow public abstract float getHeight();
@@ -128,7 +125,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow public void tick() {}
     @Shadow public abstract AxisAlignedBB getBoundingBox();
     @Shadow(remap = false) public abstract Collection<ItemEntity> captureDrops();
-    @Shadow public abstract Collection<ItemEntity> captureDrops(Collection<ItemEntity> value);
+    @Shadow(remap = false) public abstract Collection<ItemEntity> captureDrops(Collection<ItemEntity> value);
     @Shadow public abstract BlockPos getPosition();
     @Shadow public boolean onGround;
     @Shadow public abstract boolean isInWater();
@@ -166,15 +163,8 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow public abstract int getEntityId();
     @Shadow @Nullable public abstract ITextComponent getCustomName();
     @Shadow protected abstract void applyEnchantments(LivingEntity entityLivingBaseIn, Entity entityIn);
-    @Shadow public abstract float getEyeHeight();
     @Shadow @Nullable public abstract Entity changeDimension(DimensionType destination);
     @Shadow public abstract boolean isRidingSameEntity(Entity entityIn);
-    @Shadow public boolean noClip;
-    @Shadow public abstract double getPosX();
-    @Shadow public abstract double getPosY();
-    @Shadow public abstract double getPosZ();
-    @Shadow(remap = false) public abstract void revive();
-    @Shadow public abstract Vec3d getPositionVec();
     @Shadow public abstract boolean isInvulnerable();
     // @formatter:on
 
@@ -391,29 +381,6 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         ArclightCaptures.captureDamageEventBlock(null);
     }
 
-    @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;canTriggerWalking()Z"))
-    public void arclight$move$VehicleBlockCollisionEvent(MoverType typeIn, Vec3d pos, CallbackInfo ci) {
-        if (collidedHorizontally && getBukkitEntity() instanceof Vehicle) {
-            Vehicle vehicle = (Vehicle) this.getBukkitEntity();
-            org.bukkit.block.Block block = ((WorldBridge) this.world).bridge$getWorld().getBlockAt(MathHelper.floor(this.posX), MathHelper.floor(this.posY), MathHelper.floor(this.posZ));
-            Vec3d vec3d = this.getAllowedMovement(pos);
-            if (pos.x > vec3d.x) {
-                block = block.getRelative(BlockFace.EAST);
-            } else if (vec3d.x < vec3d.x) {
-                block = block.getRelative(BlockFace.WEST);
-            } else if (pos.z > vec3d.z) {
-                block = block.getRelative(BlockFace.SOUTH);
-            } else if (pos.z < vec3d.z) {
-                block = block.getRelative(BlockFace.NORTH);
-            }
-
-            if (block.getType() != org.bukkit.Material.AIR) {
-                VehicleBlockCollisionEvent event = new VehicleBlockCollisionEvent(vehicle, block);
-                Bukkit.getPluginManager().callEvent(event);
-            }
-        }
-    }
-
     @Redirect(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;setFire(I)V"))
     public void arclight$move$EntityCombustEvent(Entity entity, int seconds) {
         EntityCombustEvent event = new EntityCombustByBlockEvent(null, getBukkitEntity(), 8);
@@ -543,7 +510,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Inject(method = "entityDropItem(Lnet/minecraft/item/ItemStack;F)Lnet/minecraft/entity/item/ItemEntity;",
         cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
-    public void arclight$entityDropItem$EntityDropItemEvent(ItemStack stack, float offsetY, CallbackInfoReturnable<ItemEntity> cir, ItemEntity itementity) {
+    public void arclight$entityDropItem(ItemStack stack, float offsetY, CallbackInfoReturnable<ItemEntity> cir, ItemEntity itementity) {
         EntityDropItemEvent event = new EntityDropItemEvent(this.getBukkitEntity(), (org.bukkit.entity.Item) ((EntityBridge) itementity).bridge$getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {

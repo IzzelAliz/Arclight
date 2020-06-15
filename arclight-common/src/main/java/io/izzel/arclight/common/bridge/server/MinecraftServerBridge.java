@@ -18,4 +18,6 @@ public interface MinecraftServerBridge {
 
     // todo
     void bridge$queuedProcess(Runnable runnable);
+
+    boolean bridge$hasStopped();
 }

@@ -13,8 +13,8 @@ import java.util.Comparator;
 
 public class ArclightConstants {
 
-    public static final TicketType<Unit> PLUGIN = TicketType.func_219484_a("plugin", (a, b) -> 0);
-    public static final TicketType<Plugin> PLUGIN_TICKET = TicketType.func_219484_a("plugin_ticket", Comparator.comparing(it -> it.getClass().getName()));
+    public static final TicketType<Unit> PLUGIN = TicketType.create("plugin", (a, b) -> 0);
+    public static final TicketType<Plugin> PLUGIN_TICKET = TicketType.create("plugin_ticket", Comparator.comparing(it -> it.getClass().getName()));
 
     public static final TreeType MOD = EnumHelper.addEnum(TreeType.class, "MOD", ImmutableList.of(), ImmutableList.of());
 

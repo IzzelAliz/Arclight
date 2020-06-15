@@ -19,8 +19,8 @@ import java.util.List;
 @Mixin(DoubleSidedInventory.class)
 public abstract class DoubleSidedInventoryMixin implements IInventoryBridge, IInventory {
 
-    @Shadow @Final public IInventory field_70477_b;
-    @Shadow @Final public IInventory field_70478_c;
+    @Shadow @Final public IInventory upperChest;
+    @Shadow @Final public IInventory lowerChest;
     private List<HumanEntity> transactions = new ArrayList<>();
 
     @Override
@@ -35,15 +35,15 @@ public abstract class DoubleSidedInventoryMixin implements IInventoryBridge, IIn
 
     @Override
     public void onOpen(CraftHumanEntity who) {
-        ((IInventoryBridge) this.field_70477_b).onOpen(who);
-        ((IInventoryBridge) this.field_70478_c).onOpen(who);
+        ((IInventoryBridge) this.upperChest).onOpen(who);
+        ((IInventoryBridge) this.lowerChest).onOpen(who);
         this.transactions.add(who);
     }
 
     @Override
     public void onClose(CraftHumanEntity who) {
-        ((IInventoryBridge) this.field_70477_b).onClose(who);
-        ((IInventoryBridge) this.field_70478_c).onClose(who);
+        ((IInventoryBridge) this.upperChest).onClose(who);
+        ((IInventoryBridge) this.lowerChest).onClose(who);
         this.transactions.remove(who);
     }
 
@@ -60,18 +60,18 @@ public abstract class DoubleSidedInventoryMixin implements IInventoryBridge, IIn
 
     @Override
     public int getInventoryStackLimit() {
-        return Math.min(this.field_70477_b.getInventoryStackLimit(), this.field_70478_c.getInventoryStackLimit());
+        return Math.min(this.upperChest.getInventoryStackLimit(), this.lowerChest.getInventoryStackLimit());
     }
 
     @Override
     public void setMaxStackSize(int size) {
-        ((IInventoryBridge) this.field_70477_b).setMaxStackSize(size);
-        ((IInventoryBridge) this.field_70478_c).setMaxStackSize(size);
+        ((IInventoryBridge) this.upperChest).setMaxStackSize(size);
+        ((IInventoryBridge) this.lowerChest).setMaxStackSize(size);
     }
 
     @Override
     public Location getLocation() {
-        return ((IInventoryBridge) this.field_70477_b).getLocation();
+        return ((IInventoryBridge) this.upperChest).getLocation();
     }
 
     @Override

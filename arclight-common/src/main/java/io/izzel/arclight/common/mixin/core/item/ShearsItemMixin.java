@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ShearsItem.class)
 public class ShearsItemMixin {
 
-    @Inject(method = "itemInteractionForEntity", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraftforge/common/IShearable;isShearable(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/IWorldReader;Lnet/minecraft/util/math/BlockPos;)Z"))
+    @Inject(method = "itemInteractionForEntity", cancellable = true, at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/common/IShearable;isShearable(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/IWorldReader;Lnet/minecraft/util/math/BlockPos;)Z"))
     private void arclight$onShear(ItemStack stack, PlayerEntity playerIn, LivingEntity entity, Hand hand, CallbackInfoReturnable<Boolean> cir) {
         if (playerIn instanceof ServerPlayerEntityBridge) {
             PlayerShearEntityEvent event = new PlayerShearEntityEvent(((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity(), ((EntityBridge) entity).bridge$getBukkitEntity());

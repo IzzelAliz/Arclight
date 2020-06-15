@@ -51,12 +51,12 @@ public class RaidMixin implements RaidBridge {
         CraftEventFactory.callRaidStopEvent((Raid) (Object) this, RaidStopEvent.Reason.TIMEOUT);
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 4, target = "Lnet/minecraft/world/raid/Raid;stop()V"))
+    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 3, target = "Lnet/minecraft/world/raid/Raid;stop()V"))
     public void arclight$stopUnspawnable(CallbackInfo ci) {
         CraftEventFactory.callRaidStopEvent((Raid) (Object) this, RaidStopEvent.Reason.UNSPAWNABLE);
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 5, target = "Lnet/minecraft/world/raid/Raid;stop()V"))
+    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 4, target = "Lnet/minecraft/world/raid/Raid;stop()V"))
     public void arclight$stopFinish(CallbackInfo ci) {
         CraftEventFactory.callRaidStopEvent((Raid) (Object) this, RaidStopEvent.Reason.FINISHED);
     }
@@ -79,10 +79,9 @@ public class RaidMixin implements RaidBridge {
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/raid/Raid;markDirty()V"))
     public void arclight$finish(CallbackInfo ci) {
-        if (arclight$winners != null) {
-            CraftEventFactory.callRaidFinishEvent((Raid) (Object) this, arclight$winners);
-            arclight$winners = null;
-        }
+        List<Player> winners = this.arclight$winners == null ? new ArrayList<>() : this.arclight$winners;
+        this.arclight$winners = null;
+        CraftEventFactory.callRaidFinishEvent((Raid) (Object) this, winners);
     }
 
     private transient AbstractRaiderEntity arclight$leader;

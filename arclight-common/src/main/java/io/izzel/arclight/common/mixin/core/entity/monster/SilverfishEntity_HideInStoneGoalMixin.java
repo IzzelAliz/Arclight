@@ -5,14 +5,13 @@ import net.minecraft.block.SilverfishBlock;
 import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.ai.goal.RandomWalkingGoal;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IWorld;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-
-import java.util.Random;
 
 @Mixin(targets = "net.minecraft.entity.monster.SilverfishEntity.HideInStoneGoal")
 public abstract class SilverfishEntity_HideInStoneGoalMixin extends RandomWalkingGoal {
@@ -22,7 +21,7 @@ public abstract class SilverfishEntity_HideInStoneGoalMixin extends RandomWalkin
     }
 
     @Inject(method = "startExecuting", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/IWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
-    private void arclight$entityChangeBlock(CallbackInfo ci, Random random, BlockPos blockPos, BlockState blockState) {
+    private void arclight$entityChangeBlock(CallbackInfo ci, IWorld world, BlockPos blockPos, BlockState blockState) {
         if (CraftEventFactory.callEntityChangeBlockEvent(this.creature, blockPos, SilverfishBlock.infest(blockState.getBlock())).isCancelled()) {
             ci.cancel();
         }

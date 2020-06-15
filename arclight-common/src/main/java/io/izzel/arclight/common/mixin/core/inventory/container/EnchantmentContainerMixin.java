@@ -55,7 +55,7 @@ public abstract class EnchantmentContainerMixin extends ContainerMixin implement
     // @formatter:off
     @Shadow @Final private IInventory tableInventory;
     @Shadow @Final private IWorldPosCallable worldPosCallable;
-    @Shadow protected abstract float getPower(World world, BlockPos pos);
+    @Shadow(remap = false) protected abstract float getPower(World world, BlockPos pos);
     @Shadow @Final private Random rand;
     @Shadow @Final private IntReferenceHolder xpSeed;
     @Shadow @Final public int[] enchantLevels;

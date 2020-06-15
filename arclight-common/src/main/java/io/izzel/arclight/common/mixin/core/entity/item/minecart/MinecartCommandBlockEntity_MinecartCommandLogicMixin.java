@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(MinecartCommandBlockEntity.MinecartCommandLogic.class)
 public abstract class MinecartCommandBlockEntity_MinecartCommandLogicMixin implements ICommandSourceBridge {
 
-    @Shadow(aliases = {"this$0", "field_210168_a"}) private MinecartCommandBlockEntity outerThis;
+    @Shadow(aliases = {"this$0", "field_210168_a"}, remap = false) private MinecartCommandBlockEntity outerThis;
 
     public CommandSender getBukkitSender(CommandSource wrapper) {
         return ((EntityBridge) outerThis).bridge$getBukkitEntity();

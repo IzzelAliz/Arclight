@@ -1,6 +1,11 @@
 package io.izzel.arclight.common.mixin.core.world.storage;
 
 import io.izzel.arclight.common.bridge.world.storage.WorldInfoBridge;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.play.server.SServerDifficultyPacket;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.World;
 import net.minecraft.world.storage.WorldInfo;
 import org.bukkit.Bukkit;
@@ -19,9 +24,15 @@ public abstract class WorldInfoMixin implements WorldInfoBridge {
     @Shadow private boolean raining;
     @Shadow private boolean thundering;
     @Shadow public abstract String getWorldName();
+    @Shadow public abstract boolean isDifficultyLocked();
     // @formatter:on
 
     public World world;
+
+    @Inject(method = "updateTagCompound", at = @At("RETURN"))
+    private void arclight$writeArclight(CompoundNBT nbt, CompoundNBT playerNbt, CallbackInfo ci) {
+        nbt.putString("Bukkit.Version", Bukkit.getName() + "/" + Bukkit.getVersion() + "/" + Bukkit.getBukkitVersion());
+    }
 
     @Inject(method = "setThundering", cancellable = true, at = @At("HEAD"))
     public void arclight$thunder(boolean thunderingIn, CallbackInfo ci) {
@@ -54,6 +65,14 @@ public abstract class WorldInfoMixin implements WorldInfoBridge {
             if (event.isCancelled()) {
                 ci.cancel();
             }
+        }
+    }
+
+    @Inject(method = "setDifficulty", at = @At("RETURN"))
+    private void arclight$sendDiffChange(Difficulty newDifficulty, CallbackInfo ci) {
+        SServerDifficultyPacket packet = new SServerDifficultyPacket(newDifficulty, this.isDifficultyLocked());
+        for (PlayerEntity player : this.world.getPlayers()) {
+            ((ServerPlayerEntity) player).connection.sendPacket(packet);
         }
     }
 

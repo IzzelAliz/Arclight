@@ -87,7 +87,7 @@ public abstract class ServerPlayerEntityMixin_1_15 extends PlayerEntityMixin_1_1
      * @author IzzelAliz
      * @reason
      */
-    @Overwrite
+    @Overwrite(remap = false)
     @Nullable
     public Entity changeDimension(DimensionType dim, ITeleporter teleporter) {
         final DimensionType[] destination = {dim};
@@ -152,9 +152,9 @@ public abstract class ServerPlayerEntityMixin_1_15 extends PlayerEntityMixin_1_1
                     }
                 }
 
-                Location enter = this.getBukkitEntity().getLocation();
+                Location enter = this.bridge$getBukkitEntity().getLocation();
                 Location exit = (serverworld1[0] == null) ? null : new Location(((ServerWorldBridge) serverworld1[0]).bridge$getWorld(), d0, d1, d2, f1, f);
-                PlayerPortalEvent event = new PlayerPortalEvent((Player) this.getBukkitEntity(), enter, exit, cause, 128, true, ((DimensionTypeBridge) destination[0]).bridge$getType() == DimensionType.THE_END ? 0 : 16);
+                PlayerPortalEvent event = new PlayerPortalEvent((Player) this.bridge$getBukkitEntity(), enter, exit, cause, 128, true, ((DimensionTypeBridge) destination[0]).bridge$getType() == DimensionType.THE_END ? 0 : 16);
                 Bukkit.getServer().getPluginManager().callEvent(event);
                 if (event.isCancelled() || event.getTo() == null) {
                     return null;
@@ -205,7 +205,7 @@ public abstract class ServerPlayerEntityMixin_1_15 extends PlayerEntityMixin_1_1
                         }
 
                         org.bukkit.World bworld = ((ServerWorldBridge) serverworld1[0]).bridge$getWorld();
-                        PortalCreateEvent portalEvent = new PortalCreateEvent((List<BlockState>) (List) blockList.getList(), bworld, this.getBukkitEntity(), PortalCreateEvent.CreateReason.END_PLATFORM);
+                        PortalCreateEvent portalEvent = new PortalCreateEvent((List<BlockState>) (List) blockList.getList(), bworld, this.bridge$getBukkitEntity(), PortalCreateEvent.CreateReason.END_PLATFORM);
 
                         Bukkit.getPluginManager().callEvent(portalEvent);
                         if (!portalEvent.isCancelled()) {
@@ -240,7 +240,7 @@ public abstract class ServerPlayerEntityMixin_1_15 extends PlayerEntityMixin_1_1
 
                 serverworld.getProfiler().endSection();
 
-                final PlayerTeleportEvent tpEvent = new PlayerTeleportEvent((Player) this.getBukkitEntity(), enter, exit, cause);
+                final PlayerTeleportEvent tpEvent = new PlayerTeleportEvent((Player) this.bridge$getBukkitEntity(), enter, exit, cause);
                 Bukkit.getServer().getPluginManager().callEvent(tpEvent);
                 if (tpEvent.isCancelled() || tpEvent.getTo() == null) {
                     return null;
@@ -295,7 +295,7 @@ public abstract class ServerPlayerEntityMixin_1_15 extends PlayerEntityMixin_1_1
             this.lastFoodLevel = -1;
             BasicEventHooks.firePlayerChangedDimensionEvent((ServerPlayerEntity) (Object) this, dimensiontype, destination[0]);
 
-            PlayerChangedWorldEvent changeEvent = new PlayerChangedWorldEvent((Player) this.getBukkitEntity(), ((WorldBridge) serverworld).bridge$getWorld());
+            PlayerChangedWorldEvent changeEvent = new PlayerChangedWorldEvent((Player) this.bridge$getBukkitEntity(), ((WorldBridge) serverworld).bridge$getWorld());
             Bukkit.getPluginManager().callEvent(changeEvent);
             return (ServerPlayerEntity) (Object) this;
         }

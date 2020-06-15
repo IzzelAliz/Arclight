@@ -87,7 +87,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public PlayerEntity attackingPlayer;
     @Shadow public int deathTime;
     @Shadow protected boolean dead;
-    @Shadow public void remove(boolean keepData) { }
+    @Shadow(remap = false) public void remove(boolean keepData) { }
     @Shadow public abstract IAttributeInstance getAttribute(IAttribute attribute);
     @Shadow public boolean potionsNeedUpdate;
     @Shadow public abstract boolean removePotionEffect(Effect effectIn);
@@ -783,7 +783,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         }
     }
 
-    @Redirect(method = "spawnDrops", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/entity/LivingEntity;captureDrops(Ljava/util/Collection;)Ljava/util/Collection;"))
+    @Redirect(method = "spawnDrops", at = @At(value = "INVOKE", ordinal = 0, remap = false, target = "Lnet/minecraft/entity/LivingEntity;captureDrops(Ljava/util/Collection;)Ljava/util/Collection;"))
     private Collection<ItemEntity> arclight$captureIfNeed(LivingEntity livingEntity, Collection<ItemEntity> value) {
         Collection<ItemEntity> drops = livingEntity.captureDrops();
         // todo this instanceof ArmorStandEntity

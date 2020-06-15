@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(targets = "net.minecraft.entity.monster.IllusionerEntity.MirrorSpellGoal")
 public class IllusionerEntity_MirrorSpellGoalMixin {
 
-    @Shadow(aliases = {"this$0", "field_210767_a"}) private IllusionerEntity outerThis;
+    @Shadow(aliases = {"this$0", "field_210767_a"}, remap = false) private IllusionerEntity outerThis;
 
     @Inject(method = "castSpell", at = @At("HEAD"))
     private void arclight$reason(CallbackInfo ci) {

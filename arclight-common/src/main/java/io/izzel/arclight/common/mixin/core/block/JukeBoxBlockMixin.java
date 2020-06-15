@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 @Mixin(JukeboxBlock.class)
 public class JukeBoxBlockMixin {
 
-    @ModifyArg(method = "insertRecord", index = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/tileentity/JukeboxTileEntity;setRecord(Lnet/minecraft/item/ItemStack;)V"))
+    @ModifyArg(method = "insertRecord", index = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/tileentity/JukeboxTileEntity;setRecord(Lnet/minecraft/item/ItemStack;)V"))
     private ItemStack arclight$oneItem(ItemStack stack) {
         if (!stack.isEmpty()) {
             stack.setCount(1);

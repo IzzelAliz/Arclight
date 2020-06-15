@@ -122,6 +122,11 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
         }
     }
 
+    @Override
+    public boolean bridge$hasStopped() {
+        return this.hasStopped();
+    }
+
     @Inject(method = "<init>", at = @At("RETURN"))
     public void arclight$loadOptions(File file, Proxy proxy, DataFixer dataFixerIn, Commands commands, YggdrasilAuthenticationService authenticationService, MinecraftSessionService sessionService, GameProfileRepository profileRepository, PlayerProfileCache playerProfileCache, IChunkStatusListenerFactory listenerFactory, String string, CallbackInfo ci) {
         String[] arguments = ManagementFactory.getRuntimeMXBean().getInputArguments().toArray(new String[0]);

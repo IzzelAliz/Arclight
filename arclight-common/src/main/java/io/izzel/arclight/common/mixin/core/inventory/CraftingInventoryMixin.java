@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.inventory;
 
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
+import io.izzel.arclight.common.bridge.inventory.CraftingInventoryBridge;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.inventory.container.WorkbenchContainerBridge;
 import io.izzel.arclight.common.bridge.util.IWorldPosCallableBridge;
@@ -20,7 +21,6 @@ import org.bukkit.inventory.InventoryHolder;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import io.izzel.arclight.common.bridge.inventory.CraftingInventoryBridge;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +30,7 @@ public abstract class CraftingInventoryMixin implements CraftingInventoryBridge,
 
     // @formatter:off
     @Shadow @Final private NonNullList<ItemStack> stackList;
-    @Shadow @Final public Container field_70465_c;
+    @Shadow @Final public Container eventHandler;
     // @formatter:on
 
     public List<HumanEntity> transaction = new ArrayList<>();
@@ -110,8 +110,8 @@ public abstract class CraftingInventoryMixin implements CraftingInventoryBridge,
 
     @Override
     public Location getLocation() {
-        return this.field_70465_c instanceof WorkbenchContainer
-            ? ((IWorldPosCallableBridge) ((WorkbenchContainerBridge) field_70465_c).bridge$getContainerAccess()).bridge$getLocation()
+        return this.eventHandler instanceof WorkbenchContainer
+            ? ((IWorldPosCallableBridge) ((WorkbenchContainerBridge) eventHandler).bridge$getContainerAccess()).bridge$getLocation()
             : ((PlayerEntityBridge) owner).bridge$getBukkitEntity().getLocation();
     }
 

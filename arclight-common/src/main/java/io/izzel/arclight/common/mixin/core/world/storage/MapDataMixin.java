@@ -1,5 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.storage;
 
+import io.izzel.arclight.common.bridge.world.dimension.DimensionTypeBridge;
+import io.izzel.arclight.common.bridge.world.storage.MapDataBridge;
+import io.izzel.arclight.common.mod.ArclightConstants;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.dimension.OverworldDimension;
@@ -15,13 +18,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import io.izzel.arclight.common.bridge.world.storage.MapDataBridge;
-import io.izzel.arclight.common.mod.ArclightConstants;
 
 import java.util.UUID;
 
 @Mixin(MapData.class)
-public class MapDataMixin implements MapDataBridge {
+public abstract class MapDataMixin implements MapDataBridge {
 
     // @formatter:off
     @Shadow public DimensionType dimension;
@@ -53,7 +54,8 @@ public class MapDataMixin implements MapDataBridge {
                 if (type == null) {
                     /* All Maps which do not have their valid world loaded are set to a dimension which hopefully won't be reached.
                        This is to prevent them being corrupted with the wrong map data. */
-                    type = new DimensionType(ArclightConstants.ARCLIGHT_DIMENSION, "", "", OverworldDimension::new, false, null, null);
+                    type = this.bridge$dimension(ArclightConstants.ARCLIGHT_DIMENSION, "", "", OverworldDimension::new, false);
+                    ((DimensionTypeBridge) type).bridge$setType(DimensionType.OVERWORLD);
 
                 }
             } else {

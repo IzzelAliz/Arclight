@@ -2,12 +2,17 @@ package io.izzel.arclight.common.mixin.core.server.management;
 
 import com.google.common.collect.Lists;
 import com.mojang.authlib.GameProfile;
+import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.network.play.ServerPlayNetHandlerBridge;
 import io.izzel.arclight.common.bridge.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.server.management.PlayerListBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.world.dimension.DimensionTypeBridge;
+import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.server.BukkitRegistry;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.IPacket;
@@ -15,10 +20,10 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SChangeGameStatePacket;
 import net.minecraft.network.play.server.SChatPacket;
 import net.minecraft.network.play.server.SEntityStatusPacket;
-import net.minecraft.network.play.server.SRespawnPacket;
 import net.minecraft.network.play.server.SServerDifficultyPacket;
 import net.minecraft.network.play.server.SSetExperiencePacket;
 import net.minecraft.network.play.server.SSpawnPositionPacket;
+import net.minecraft.network.play.server.SUpdateViewDistancePacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.management.BanList;
@@ -57,6 +62,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -64,8 +70,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import io.izzel.arclight.common.mod.ArclightMod;
-import io.izzel.arclight.common.mod.util.ArclightCaptures;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -81,7 +85,7 @@ import java.util.UUID;
 public abstract class PlayerListMixin implements PlayerListBridge {
 
     // @formatter:off
-    @Override @Accessor("players") public abstract void bridge$setPlayers(List<ServerPlayerEntity> players);
+    @Override @Accessor("players") @Mutable public abstract void bridge$setPlayers(List<ServerPlayerEntity> players);
     @Override @Accessor("players") public abstract List<ServerPlayerEntity> bridge$getPlayers();
     @Shadow public abstract void sendMessage(ITextComponent component, boolean isSystem);
     @Shadow public IPlayerFileData playerDataManager;
@@ -96,11 +100,11 @@ public abstract class PlayerListMixin implements PlayerListBridge {
     @Shadow @Final private MinecraftServer server;
     @Shadow public abstract BanList getBannedPlayers();
     @Shadow public abstract IPBanList getBannedIPs();
-    @Shadow public abstract boolean removePlayer(ServerPlayerEntity player);
+    @Shadow(remap = false) public abstract boolean removePlayer(ServerPlayerEntity player);
     @Shadow protected abstract void setPlayerGameTypeBasedOnOther(ServerPlayerEntity target, ServerPlayerEntity source, IWorld worldIn);
-    @Shadow public abstract void func_72354_b(ServerPlayerEntity playerIn, ServerWorld worldIn);
+    @Shadow public abstract void sendWorldInfo(ServerPlayerEntity playerIn, ServerWorld worldIn);
     @Shadow public abstract void updatePermissionLevel(ServerPlayerEntity player);
-    @Shadow public abstract boolean addPlayer(ServerPlayerEntity player);
+    @Shadow(remap = false) public abstract boolean addPlayer(ServerPlayerEntity player);
     @Shadow @Final private Map<UUID, ServerPlayerEntity> uuidToPlayerMap;
     // @formatter:on
 
@@ -168,7 +172,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             this.writePlayerData(entityplayer);
             entityplayer.connection.disconnect(new TranslationTextComponent("multiplayer.disconnect.duplicate_login"));
         }
-        final ServerPlayerEntity entity = new ServerPlayerEntity(this.server, this.server.func_71218_a(DimensionType.OVERWORLD), gameProfile, new PlayerInteractionManager(this.server.func_71218_a(DimensionType.OVERWORLD)));
+        final ServerPlayerEntity entity = new ServerPlayerEntity(this.server, this.server.getWorld(DimensionType.OVERWORLD), gameProfile, new PlayerInteractionManager(this.server.getWorld(DimensionType.OVERWORLD)));
         final Player player = ((ServerPlayerEntityBridge) entity).bridge$getBukkitEntity();
         // todo hostname
         final PlayerLoginEvent event = new PlayerLoginEvent(player, "", ((InetSocketAddress) socketAddress).getAddress());
@@ -222,29 +226,29 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         playerIn.stopRiding();
         org.bukkit.World fromWorld = ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().getWorld();
 
-        ServerWorld world = server.func_71218_a(dimension);
+        ServerWorld world = server.getWorld(dimension);
         if (world == null)
             dimension = playerIn.getSpawnDimension();
         else if (!world.getDimension().canRespawnHere())
             dimension = world.getDimension().getRespawnDimension(playerIn);
-        if (server.func_71218_a(dimension) == null)
+        if (server.getWorld(dimension) == null)
             dimension = DimensionType.OVERWORLD;
 
         this.removePlayer(playerIn);
-        playerIn.func_71121_q().removePlayer(playerIn, true); // Forge: keep data until copyFrom called
+        playerIn.getServerWorld().removePlayer(playerIn, true); // Forge: keep data until copyFrom called
         BlockPos blockpos = playerIn.getBedLocation(dimension);
         boolean flag = playerIn.isSpawnForced(dimension);
         playerIn.dimension = dimension;
         PlayerInteractionManager playerinteractionmanager;
         if (this.server.isDemo()) {
-            playerinteractionmanager = new DemoPlayerInteractionManager(this.server.func_71218_a(playerIn.dimension));
+            playerinteractionmanager = new DemoPlayerInteractionManager(this.server.getWorld(playerIn.dimension));
         } else {
-            playerinteractionmanager = new PlayerInteractionManager(this.server.func_71218_a(playerIn.dimension));
+            playerinteractionmanager = new PlayerInteractionManager(this.server.getWorld(playerIn.dimension));
         }
 
         playerIn.queuedEndExit = false;
 
-        ServerPlayerEntity serverplayerentity = new ServerPlayerEntity(this.server, this.server.func_71218_a(playerIn.dimension), playerIn.getGameProfile(), playerinteractionmanager);
+        ServerPlayerEntity serverplayerentity = new ServerPlayerEntity(this.server, this.server.getWorld(playerIn.dimension), playerIn.getGameProfile(), playerinteractionmanager);
         serverplayerentity.connection = playerIn.connection;
         serverplayerentity.copyFrom(playerIn, conqueredEnd);
         playerIn.remove(false); // Forge: clone event had a chance to see old data, now discard it
@@ -260,13 +264,13 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             boolean isBedSpawn = false;
             CraftWorld cworld = (CraftWorld) Bukkit.getWorld(((PlayerEntityBridge) playerIn).bridge$getSpawnWorld());
             if (cworld != null && blockpos != null) {
-                Optional<Vec3d> optional = PlayerEntity.func_213822_a(cworld.getHandle(), blockpos, flag);
+                Optional<Vec3d> optional = PlayerEntity.checkBedValidRespawnPosition(cworld.getHandle(), blockpos, flag);
                 if (optional.isPresent()) {
                     Vec3d vec3d = optional.get();
                     isBedSpawn = true;
                     location = new Location(cworld, vec3d.x, vec3d.y, vec3d.z);
                 } else {
-                    serverplayerentity.setSpawnPoint(null, true);
+                    this.bridge$setSpawnPoint(serverplayerentity, null, true, serverplayerentity.dimension, false);
                     serverplayerentity.connection.sendPacket(new SChangeGameStatePacket(0, 0.0f));
                 }
             }
@@ -278,12 +282,15 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             Player respawnPlayer = this.cserver.getPlayer(serverplayerentity);
             PlayerRespawnEvent respawnEvent = new PlayerRespawnEvent(respawnPlayer, location, isBedSpawn);
             this.cserver.getPluginManager().callEvent(respawnEvent);
+            if (((ServerPlayNetHandlerBridge) playerIn.connection).bridge$isDisconnected()) {
+                return playerIn;
+            }
             location = respawnEvent.getRespawnLocation();
             if (!flag) {
                 ((ServerPlayerEntityBridge) playerIn).bridge$reset();
             }
         } else {
-            location.setWorld(((WorldBridge) this.server.func_71218_a(dimension)).bridge$getWorld());
+            location.setWorld(((WorldBridge) this.server.getWorld(dimension)).bridge$getWorld());
         }
 
         ServerWorld serverworld = ((CraftWorld) location.getWorld()).getHandle();
@@ -292,29 +299,34 @@ public abstract class PlayerListMixin implements PlayerListBridge {
 
         this.setPlayerGameTypeBasedOnOther(serverplayerentity, playerIn, serverworld);
         if (blockpos != null) {
-            Optional<Vec3d> optional = PlayerEntity.func_213822_a(this.server.func_71218_a(playerIn.dimension), blockpos, flag);
+            Optional<Vec3d> optional = PlayerEntity.checkBedValidRespawnPosition(this.server.getWorld(playerIn.dimension), blockpos, flag);
             if (optional.isPresent()) {
                 Vec3d vec3d = optional.get();
                 serverplayerentity.setLocationAndAngles(vec3d.x, vec3d.y, vec3d.z, 0.0F, 0.0F);
-                serverplayerentity.setSpawnPoint(blockpos, flag, dimension);
+                this.bridge$setSpawnPoint(serverplayerentity, blockpos, flag, dimension, false);
             } else {
                 serverplayerentity.connection.sendPacket(new SChangeGameStatePacket(0, 0.0F));
             }
         }
 
-        while (avoidSuffocation && !serverworld.areCollisionShapesEmpty(serverplayerentity) && serverplayerentity.posY < 256.0D) {
+        while (avoidSuffocation && !this.bridge$worldNoCollision(serverworld, serverplayerentity) && serverplayerentity.posY < 256.0D) {
             serverplayerentity.setPosition(serverplayerentity.posX, serverplayerentity.posY + 1.0D, serverplayerentity.posZ);
+        }
+
+        if (fromWorld.getEnvironment() == ((WorldBridge) serverworld).bridge$getWorld().getEnvironment()) {
+            serverplayerentity.connection.sendPacket(this.bridge$respawnPacket((((DimensionTypeBridge) serverplayerentity.dimension).bridge$getType().getId() >= 0) ? DimensionType.THE_NETHER : DimensionType.OVERWORLD, WorldInfo.byHashing(serverworld.getWorldInfo().getSeed()), serverworld.getWorldInfo().getGenerator(), playerIn.interactionManager.getGameType()));
         }
 
         WorldInfo worldinfo = serverplayerentity.world.getWorldInfo();
         NetworkHooks.sendDimensionDataPacket(serverplayerentity.connection.netManager, serverplayerentity);
-        serverplayerentity.connection.sendPacket(new SRespawnPacket(serverplayerentity.dimension, worldinfo.getGenerator(), serverplayerentity.interactionManager.getGameType()));
+        serverplayerentity.connection.sendPacket(this.bridge$respawnPacket(((DimensionTypeBridge) serverplayerentity.dimension).bridge$getType(), WorldInfo.byHashing(worldinfo.getSeed()), worldinfo.getGenerator(), serverplayerentity.interactionManager.getGameType()));
+        serverplayerentity.connection.sendPacket(new SUpdateViewDistancePacket(((WorldBridge) serverworld).bridge$spigotConfig().viewDistance));
         BlockPos blockpos1 = serverworld.getSpawnPoint();
         serverplayerentity.connection.setPlayerLocation(serverplayerentity.posX, serverplayerentity.posY, serverplayerentity.posZ, serverplayerentity.rotationYaw, serverplayerentity.rotationPitch);
         serverplayerentity.connection.sendPacket(new SSpawnPositionPacket(blockpos1));
         serverplayerentity.connection.sendPacket(new SServerDifficultyPacket(worldinfo.getDifficulty(), worldinfo.isDifficultyLocked()));
         serverplayerentity.connection.sendPacket(new SSetExperiencePacket(serverplayerentity.experience, serverplayerentity.experienceTotal, serverplayerentity.experienceLevel));
-        this.func_72354_b(serverplayerentity, serverworld);
+        this.sendWorldInfo(serverplayerentity, serverworld);
         this.updatePermissionLevel(serverplayerentity);
         serverworld.addRespawnedPlayer(serverplayerentity);
         this.addPlayer(serverplayerentity);
@@ -355,6 +367,10 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         ((ServerPlayerEntityBridge) playerEntity).bridge$getBukkitEntity().updateScaledHealth();
         int i = playerEntity.world.getGameRules().getBoolean(GameRules.REDUCED_DEBUG_INFO) ? 22 : 23;
         playerEntity.connection.sendPacket(new SEntityStatusPacket(playerEntity, (byte) i));
+        if (ArclightVersion.atLeast(ArclightVersion.v1_15)) {
+            float immediateRespawn = playerEntity.world.getGameRules().getBoolean(GameRules.DO_IMMEDIATE_RESPAWN) ? 1.0f : 0.0f;
+            playerEntity.connection.sendPacket(new SChangeGameStatePacket(11, immediateRespawn));
+        }
     }
 
     @Redirect(method = "sendMessage(Lnet/minecraft/util/text/ITextComponent;Z)V", at = @At(value = "NEW", target = "net/minecraft/network/play/server/SChatPacket"))

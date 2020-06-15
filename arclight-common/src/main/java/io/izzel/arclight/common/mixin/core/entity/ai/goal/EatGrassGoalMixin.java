@@ -20,17 +20,17 @@ public class EatGrassGoalMixin {
 
     private transient BlockPos arclight$pos;
 
-    @Inject(method = "tick", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraftforge/event/ForgeEventFactory;getMobGriefingEvent(Lnet/minecraft/world/World;Lnet/minecraft/entity/Entity;)Z"))
+    @Inject(method = "tick", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", ordinal = 0, remap = false, target = "Lnet/minecraftforge/event/ForgeEventFactory;getMobGriefingEvent(Lnet/minecraft/world/World;Lnet/minecraft/entity/Entity;)Z"))
     public void arclight$capturePos1(CallbackInfo ci, BlockPos pos) {
         arclight$pos = pos;
     }
 
-    @Inject(method = "tick", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraftforge/event/ForgeEventFactory;getMobGriefingEvent(Lnet/minecraft/world/World;Lnet/minecraft/entity/Entity;)Z"))
+    @Inject(method = "tick", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", ordinal = 1, remap = false, target = "Lnet/minecraftforge/event/ForgeEventFactory;getMobGriefingEvent(Lnet/minecraft/world/World;Lnet/minecraft/entity/Entity;)Z"))
     public void arclight$capturePos2(CallbackInfo ci, BlockPos pos) {
         arclight$pos = pos.down();
     }
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/event/ForgeEventFactory;getMobGriefingEvent(Lnet/minecraft/world/World;Lnet/minecraft/entity/Entity;)Z"))
+    @Redirect(method = "tick", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/event/ForgeEventFactory;getMobGriefingEvent(Lnet/minecraft/world/World;Lnet/minecraft/entity/Entity;)Z"))
     public boolean arclight$entityChangeBlock(World world, Entity entity) {
         boolean b = ForgeEventFactory.getMobGriefingEvent(world, entity);
         EntityChangeBlockEvent event = CraftEventFactory.callEntityChangeBlockEvent(entity, arclight$pos, Blocks.AIR.getDefaultState(), !b);

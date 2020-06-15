@@ -25,7 +25,7 @@ public abstract class MooshroomEntityMixin extends AnimalEntityMixin {
     private void arclight$animalTransformPre(MooshroomEntity mooshroomEntity) {
     }
 
-    @Inject(method = "onSheared", remap = false, cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
+    @Inject(method = "onSheared", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
     private void arclight$animalTransform(ItemStack item, IWorld world, BlockPos pos, int fortune, CallbackInfoReturnable<List<ItemStack>> cir, List<ItemStack> stackList, CowEntity cowEntity) {
         if (CraftEventFactory.callEntityTransformEvent((MooshroomEntity) (Object) this, cowEntity, EntityTransformEvent.TransformReason.SHEARED).isCancelled()) {
             cir.setReturnValue(stackList);

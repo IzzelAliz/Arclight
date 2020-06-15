@@ -30,7 +30,7 @@ public class SaveHandlerMixin implements SaveHandlerBridge {
     // @formatter:off
     @Shadow(aliases = {"field_215773_b"}, remap = false) @Final private static Logger LOGGER;
     @Shadow @Final private File playersDirectory;
-    @Shadow @Final private File field_215774_c;
+    @Shadow @Final private File worldDirectory;
     // @formatter:on
 
     private UUID uuid;
@@ -65,7 +65,7 @@ public class SaveHandlerMixin implements SaveHandlerBridge {
 
     public UUID getUUID() {
         if (uuid != null) return uuid;
-        File file1 = new File(this.field_215774_c, "uid.dat");
+        File file1 = new File(this.worldDirectory, "uid.dat");
         if (file1.exists()) {
             try (DataInputStream dis = new DataInputStream(new FileInputStream(file1))) {
                 return uuid = new UUID(dis.readLong(), dis.readLong());

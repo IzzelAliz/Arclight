@@ -79,4 +79,7 @@ mixin {
 compileJava {
     options.compilerArgs << '-XDignore.symbol.file' << '-XDenableSunApiLintControl'
     options.encoding = 'UTF-8'
+    options.compilerArgs += [
+            "-AreobfTsrgFiles=${project.file('extra_mapping.tsrg').canonicalPath}"
+    ]
 }

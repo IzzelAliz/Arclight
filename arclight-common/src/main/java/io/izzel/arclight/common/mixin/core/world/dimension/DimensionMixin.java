@@ -12,4 +12,8 @@ public abstract class DimensionMixin implements DimensionBridge {
     // @formatter:off
     @Accessor("type") public abstract DimensionType bridge$getDimensionManager();
     // @formatter:on
+
+    public DimensionType getDimensionManager() {
+        return bridge$getDimensionManager();
+    }
 }

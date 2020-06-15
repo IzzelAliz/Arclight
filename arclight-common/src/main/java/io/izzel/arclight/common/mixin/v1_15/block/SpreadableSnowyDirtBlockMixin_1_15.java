@@ -4,7 +4,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.SpreadableSnowyDirtBlock;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,7 +25,7 @@ public class SpreadableSnowyDirtBlockMixin_1_15 {
     }
 
     @Redirect(method = "tick", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Z"))
-    public boolean arclight$blockSpread(ServerWorld world, BlockPos to, BlockState state, BlockState state1, World worldIn, BlockPos from) {
+    public boolean arclight$blockSpread(ServerWorld world, BlockPos to, BlockState state, BlockState state1, ServerWorld worldIn, BlockPos from) {
         return CraftEventFactory.handleBlockSpreadEvent(world, from, to, state);
     }
 }

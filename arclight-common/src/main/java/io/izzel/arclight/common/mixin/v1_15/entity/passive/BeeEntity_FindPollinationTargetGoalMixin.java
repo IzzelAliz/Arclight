@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 @Mixin(targets = "net.minecraft.entity.passive.BeeEntity.FindPollinationTargetGoal")
 public class BeeEntity_FindPollinationTargetGoalMixin {
 
-    @Shadow(aliases = {"this$0", "field_226483_b_"}) private BeeEntity outerThis;
+    @Shadow(aliases = {"this$0", "field_226483_b_"}, remap = false) private BeeEntity outerThis;
 
     @Inject(method = "tick", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playEvent(ILnet/minecraft/util/math/BlockPos;I)V"))
     private void arclight$entityChangeBlock(CallbackInfo ci, int i, BlockPos blockPos, BlockState blockState, Block block, boolean flag, IntegerProperty property) {

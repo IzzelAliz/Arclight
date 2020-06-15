@@ -5,7 +5,9 @@ import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.world.ExplosionBridge;
 import io.izzel.arclight.common.bridge.world.server.ServerWorldBridge;
+import io.izzel.arclight.common.bridge.world.storage.MapDataBridge;
 import io.izzel.arclight.common.bridge.world.storage.WorldInfoBridge;
+import io.izzel.arclight.common.mixin.core.world.WorldMixin;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -53,8 +55,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-import io.izzel.arclight.common.bridge.world.storage.MapDataBridge;
-import io.izzel.arclight.common.mixin.core.world.WorldMixin;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -213,7 +213,7 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
 
     private transient CreatureSpawnEvent.SpawnReason arclight$reason;
 
-    @Inject(method = "addEntity0", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraftforge/eventbus/api/IEventBus;post(Lnet/minecraftforge/eventbus/api/Event;)Z"))
+    @Inject(method = "addEntity0", cancellable = true, at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/eventbus/api/IEventBus;post(Lnet/minecraftforge/eventbus/api/Event;)Z"))
     public void arclight$addEntityEvent(Entity entityIn, CallbackInfoReturnable<Boolean> cir) {
         if (arclight$reason == null) arclight$reason = CreatureSpawnEvent.SpawnReason.DEFAULT;
         if (!CraftEventFactory.doEntityAddEventCalling((ServerWorld) (Object) this, entityIn, arclight$reason)) {

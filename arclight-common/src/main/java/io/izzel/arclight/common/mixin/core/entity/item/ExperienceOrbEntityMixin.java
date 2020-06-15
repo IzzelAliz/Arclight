@@ -10,7 +10,7 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.PlayerPickupXpEvent;
+import net.minecraftforge.event.entity.player.PlayerXpEvent;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityTargetEvent;
@@ -73,7 +73,7 @@ public abstract class ExperienceOrbEntityMixin extends EntityMixin {
     public void onCollideWithPlayer(PlayerEntity entityIn) {
         if (!this.world.isRemote) {
             if (this.delayBeforeCanPickup == 0 && entityIn.xpCooldown == 0) {
-                if (MinecraftForge.EVENT_BUS.post(new PlayerPickupXpEvent(entityIn, (ExperienceOrbEntity) (Object) this)))
+                if (MinecraftForge.EVENT_BUS.post(new PlayerXpEvent.PickupXp(entityIn, (ExperienceOrbEntity) (Object) this)))
                     return;
                 entityIn.xpCooldown = 2;
                 entityIn.onItemPickup((ExperienceOrbEntity) (Object) this, 1);

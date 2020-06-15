@@ -7,13 +7,13 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.BucketItem;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.SChangeBlockPacket;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
+import net.minecraft.util.IItemProvider;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
@@ -54,7 +54,7 @@ public abstract class BucketItemMixin {
         }
     }
 
-    @Inject(method = "onItemRightClick", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/BucketItem;tryPlaceContainedLiquid(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/util/math/BlockRayTraceResult;)Z"))
+    @Inject(method = "onItemRightClick", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/item/BucketItem;tryPlaceContainedLiquid(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/util/math/BlockRayTraceResult;)Z"))
     private void arclight$capture(World worldIn, PlayerEntity playerIn, Hand handIn, CallbackInfoReturnable<ActionResult<ItemStack>> cir, ItemStack stack, RayTraceResult result) {
         BlockRayTraceResult blockRayTraceResult = (BlockRayTraceResult) result;
         arclight$direction = blockRayTraceResult.getFace();
@@ -73,7 +73,7 @@ public abstract class BucketItemMixin {
     private transient org.bukkit.inventory.@Nullable ItemStack arclight$captureItem;
 
     @Redirect(method = "fillBucket", at = @At(value = "NEW", target = "net/minecraft/item/ItemStack"))
-    private ItemStack arclight$useCapture(Item fillBucket) {
+    private ItemStack arclight$useCapture(IItemProvider fillBucket) {
         return arclight$captureItem == null ? new ItemStack(fillBucket) : CraftItemStack.asNMSCopy(arclight$captureItem);
     }
 

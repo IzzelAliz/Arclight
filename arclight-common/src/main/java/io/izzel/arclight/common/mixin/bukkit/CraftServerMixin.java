@@ -39,7 +39,7 @@ public abstract class CraftServerMixin {
     @Shadow(remap = false) protected abstract void loadCustomPermissions();
     @Shadow(remap = false) @Final protected DedicatedServer console;
     @Shadow(remap = false) @Final @Mutable private String serverName;
-    @Accessor(value = "logger", remap = false) public abstract void setLogger(Logger logger);
+    @Accessor(value = "logger", remap = false) @Mutable public abstract void setLogger(Logger logger);
     // @formatter:on
 
     @Inject(method = "<init>", at = @At("RETURN"))

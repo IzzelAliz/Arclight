@@ -45,7 +45,7 @@ public abstract class ItemStackMixin implements ItemStackBridge {
         this.convertStack(version);
     }
 
-    @ModifyVariable(method = "attemptDamageItem", index = 0, name = "amount", at = @At(value = "JUMP", opcode = Opcodes.IFGT, ordinal = 0))
+    @ModifyVariable(method = "attemptDamageItem", index = 1, name = "amount", at = @At(value = "JUMP", opcode = Opcodes.IFGT, ordinal = 0))
     private int arclight$itemDamage(int i, int amount, Random rand, ServerPlayerEntity damager) {
         if (damager != null) {
             PlayerItemDamageEvent event = new PlayerItemDamageEvent(((ServerPlayerEntityBridge) damager).bridge$getBukkitEntity(), CraftItemStack.asCraftMirror((ItemStack) (Object) this), i);

@@ -12,6 +12,7 @@ import net.minecraft.particles.ParticleTypes;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.PotionEvent;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -27,10 +28,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin_1_15 extends EntityMixin_1_15 implements LivingEntityBridge {
@@ -49,6 +52,9 @@ public abstract class LivingEntityMixin_1_15 extends EntityMixin_1_15 implements
     @Shadow @Nullable public abstract EffectInstance removeActivePotionEffect(@Nullable Effect potioneffectin);
     @Shadow public int deathTime;
     @Shadow protected abstract void createWitherRose(@Nullable LivingEntity p_226298_1_);
+    @Shadow public abstract Optional<BlockPos> getBedPosition();
+    @Shadow public abstract boolean isSleeping();
+    @Shadow public abstract Collection<EffectInstance> getActivePotionEffects();
     // @formatter:on
 
     /**

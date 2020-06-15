@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.tileentity;
 
+import io.izzel.arclight.common.bridge.tileentity.TileEntityBridge;
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
@@ -15,7 +16,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import io.izzel.arclight.common.bridge.tileentity.TileEntityBridge;
 
 import javax.annotation.Nullable;
 
@@ -30,6 +30,7 @@ public abstract class TileEntityMixin implements TileEntityBridge {
     @Shadow protected BlockPos pos;
     @Shadow public abstract BlockState getBlockState();
     @Shadow public abstract void markDirty();
+    @Shadow public abstract BlockPos getPos();
     // @formatter:on
 
     @Inject(method = "read", at = @At("RETURN"))

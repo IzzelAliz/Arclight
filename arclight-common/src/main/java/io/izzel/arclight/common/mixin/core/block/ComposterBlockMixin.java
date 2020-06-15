@@ -13,7 +13,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(ComposterBlock.class)
 public class ComposterBlockMixin {
 
-    @Redirect(method = "createInventory", at = @At(value = "NEW", target = "net/minecraft/block/ComposterBlock.EmptyInventory"))
+    @SuppressWarnings("UnresolvedMixinReference")
+    @Redirect(method = "createInventory", at = @At(value = "NEW", target = "()Lnet/minecraft/block/ComposterBlock$EmptyInventory;"))
     public ComposterBlock.EmptyInventory arclight$newEmpty(BlockState blockState, IWorld world, BlockPos blockPos) {
         ComposterBlock.EmptyInventory inventory = new ComposterBlock.EmptyInventory();
         ((IInventoryBridge) inventory).setOwner(new CraftBlockInventoryHolder(world, blockPos, inventory));

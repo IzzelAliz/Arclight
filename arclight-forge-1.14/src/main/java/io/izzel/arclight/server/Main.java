@@ -28,9 +28,9 @@ public class Main {
         try {
             System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
             System.setProperty("log4j.jul.LoggerAdapter", "io.izzel.arclight.common.mod.util.ArclightLoggerAdapter");
+            ArclightVersion.setVersion(ArclightVersion.v1_14);
             LogManager.getLogger("Arclight").info("Loading mappings ...");
             Objects.requireNonNull(ArclightRemapper.INSTANCE);
-            ArclightVersion.setVersion(ArclightVersion.v1_14);
             ServerMain.main(args);
         } catch (Exception e) {
             e.printStackTrace();

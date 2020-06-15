@@ -4,7 +4,7 @@ import com.mojang.datafixers.util.Either;
 import io.izzel.arclight.common.bridge.entity.InternalEntityBridge;
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
-import io.izzel.arclight.common.mixin.core.entity.LivingEntityMixin;
+import io.izzel.arclight.common.mixin.v1_15.entity.LivingEntityMixin_1_15;
 import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Direction;
@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PlayerEntity.class)
-public abstract class PlayerEntityMixin_1_15 extends LivingEntityMixin implements PlayerEntityBridge {
+public abstract class PlayerEntityMixin_1_15 extends LivingEntityMixin_1_15 implements PlayerEntityBridge {
 
     // @formatter:off
     @Shadow public abstract Either<PlayerEntity.SleepResult, Unit> trySleep(BlockPos at);
@@ -104,8 +104,8 @@ public abstract class PlayerEntityMixin_1_15 extends LivingEntityMixin implement
     @Inject(method = "stopSleepInBed", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;sleepTimer:I"))
     private void arclight$wakeup(boolean flag, boolean flag1, CallbackInfo ci) {
         BlockPos blockPos = this.getBedPosition().orElse(null);
-        if (this.getBukkitEntity() instanceof Player) {
-            Player player = (Player) this.getBukkitEntity();
+        if (this.bridge$getBukkitEntity() instanceof Player) {
+            Player player = (Player) this.bridge$getBukkitEntity();
             Block bed;
             if (blockPos != null) {
                 bed = CraftBlock.at(this.world, blockPos);

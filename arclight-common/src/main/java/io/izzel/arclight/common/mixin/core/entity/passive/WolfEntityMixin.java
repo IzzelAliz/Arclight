@@ -53,9 +53,11 @@ public abstract class WolfEntityMixin extends TameableEntityMixin {
     private void arclight$handledBy(SitGoal sitGoal, boolean sitting) {
     }
 
-    @Redirect(method = "setTamed", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/WolfEntity;setHealth(F)V"))
-    private void arclight$healToMax(WolfEntity wolfEntity, float health) {
-        wolfEntity.setHealth(wolfEntity.getMaxHealth());
+    @Inject(method = "setTamed", at = @At("RETURN"))
+    private void arclight$healToMax(boolean tamed, CallbackInfo ci) {
+        if (tamed) {
+            this.setHealth(this.getMaxHealth());
+        }
     }
 
     @Inject(method = "processInteract", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/WolfEntity;heal(F)V"))

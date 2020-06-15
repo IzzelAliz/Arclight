@@ -47,6 +47,11 @@ public abstract class ChunkMixin implements ChunkBridge {
         return bukkitChunk;
     }
 
+    @Override
+    public void bridge$setBukkitChunk(org.bukkit.Chunk chunk) {
+        this.bukkitChunk = chunk;
+    }
+
     public BlockState setType(BlockPos pos, BlockState state, boolean isMoving, boolean doPlace) {
         return this.bridge$setType(pos, state, isMoving, doPlace);
     }

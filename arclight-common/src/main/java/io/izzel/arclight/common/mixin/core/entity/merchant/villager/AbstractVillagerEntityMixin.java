@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.entity.merchant.villager;
 
 import io.izzel.arclight.common.bridge.entity.merchant.IMerchantBridge;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
+import io.izzel.arclight.common.bridge.item.MerchantOfferBridge;
 import io.izzel.arclight.common.mixin.core.entity.CreatureEntityMixin;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.merchant.villager.AbstractVillagerEntity;
@@ -22,7 +23,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import io.izzel.arclight.common.bridge.item.MerchantOfferBridge;
 
 @Mixin(AbstractVillagerEntity.class)
 public abstract class AbstractVillagerEntityMixin extends CreatureEntityMixin implements IMerchantBridge {
@@ -41,7 +41,7 @@ public abstract class AbstractVillagerEntityMixin extends CreatureEntityMixin im
         return (craftMerchant == null) ? craftMerchant = new CraftMerchant((AbstractVillagerEntity) (Object) this) : craftMerchant;
     }
 
-    @Redirect(method = "addTrades", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/MerchantOffers;add(Ljava/lang/Object;)Z"))
+    @Redirect(method = "addTrades", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraft/item/MerchantOffers;add(Ljava/lang/Object;)Z"))
     private boolean arclight$gainOffer(MerchantOffers merchantOffers, Object e) {
         MerchantOffer offer = (MerchantOffer) e;
         VillagerAcquireTradeEvent event = new VillagerAcquireTradeEvent((AbstractVillager) getBukkitEntity(), ((MerchantOfferBridge) offer).bridge$asBukkit());

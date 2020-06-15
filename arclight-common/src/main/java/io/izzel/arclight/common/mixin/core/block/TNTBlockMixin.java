@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(TNTBlock.class)
 public class TNTBlockMixin {
 
-    @Inject(method = "onProjectileCollision", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/block/TNTBlock;catchFire(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/util/Direction;Lnet/minecraft/entity/LivingEntity;)V"))
+    @Inject(method = "onProjectileCollision", cancellable = true, at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraft/block/TNTBlock;catchFire(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/util/Direction;Lnet/minecraft/entity/LivingEntity;)V"))
     public void arclight$entityChangeBlock(World worldIn, BlockState state, BlockRayTraceResult hit, Entity projectile, CallbackInfo ci) {
         if (CraftEventFactory.callEntityChangeBlockEvent(projectile, hit.getPos(), Blocks.AIR.getDefaultState()).isCancelled()) {
             ci.cancel();

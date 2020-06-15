@@ -95,7 +95,7 @@ processResources {
 }
 
 jar {
-    manifest.attributes 'MixinConnector': 'io.izzel.arclight.common.mod.ArclightConnector'
+    manifest.attributes 'MixinConnector': 'io.izzel.arclight.impl.ArclightConnector_1_14'
     manifest.attributes 'Main-Class': 'io.izzel.arclight.server.Main'
     manifest.attributes 'Implementation-Title': 'Arclight'
     manifest.attributes 'Implementation-Version': "arclight-${project.version}-${getGitHash()}"
@@ -115,10 +115,13 @@ remapSpigotJar {
 }
 
 mixin {
-    add sourceSets.main, 'mixins.arclight.impl.refmap.json'
+    add sourceSets.main, 'mixins.arclight.impl.refmap.1_14.json'
 }
 
 compileJava {
     options.compilerArgs << '-XDignore.symbol.file' << '-XDenableSunApiLintControl'
     options.encoding = 'UTF-8'
+    options.compilerArgs += [
+            "-AreobfTsrgFiles=${project(':arclight-common').file('extra_mapping.tsrg').canonicalPath}"
+    ]
 }

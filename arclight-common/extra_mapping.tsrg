@@ -1,0 +1,11 @@
+net/minecraft/world/IWorld net/minecraft/world/IWorld
+	addEntity (Lnet/minecraft/entity/Entity;)Z func_217376_c
+net/minecraft/world/World net/minecraft/world/World
+	addEntity (Lnet/minecraft/entity/Entity;)Z func_217376_c
+	getClosestPlayer (Lnet/minecraft/entity/EntityPredicate;Lnet/minecraft/entity/LivingEntity;)Lnet/minecraft/entity/player/PlayerEntity; func_217370_a
+net/minecraft/world/IWorld net/minecraft/world/IWorld
+	setBlockState (Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z func_180501_a
+net/minecraft/entity/monster/MonsterEntity net/minecraft/entity/monster/MonsterEntity
+	setAttackTarget (Lnet/minecraft/entity/LivingEntity;)V func_70624_b
+net/minecraft/entity/passive/WolfEntity net/minecraft/entity/passive/WolfEntity
+	setHealth (F)V func_70606_j
