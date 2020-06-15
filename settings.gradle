@@ -1,6 +1,5 @@
 rootProject.name = 'arclight'
 include 'arclight-forge-1.14'
-include 'arclight-testplugin'
 include 'arclight-common'
 include 'forge-installer'
 include 'arclight-api'
