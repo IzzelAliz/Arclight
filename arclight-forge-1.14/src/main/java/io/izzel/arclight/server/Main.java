@@ -3,16 +3,22 @@ package io.izzel.arclight.server;
 import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.api.EnumHelper;
 import io.izzel.arclight.api.Unsafe;
-import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
 import io.izzel.arclight.forgeinstaller.ForgeInstaller;
+import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
 import net.minecraftforge.server.ServerMain;
-import org.apache.logging.log4j.LogManager;
 
+import java.io.InputStream;
 import java.util.Objects;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 public class Main {
 
     public static void main(String[] args) throws Throwable {
+        System.setProperty("java.util.logging.manager", ArclightLazyLogManager.class.getCanonicalName());
+        System.setProperty("log4j.jul.LoggerAdapter", "io.izzel.arclight.common.mod.util.log.ArclightLoggerAdapter");
+        ArclightLocale.info("i18n.using-language", ArclightConfig.spec().getLocale().getCurrent(), ArclightConfig.spec().getLocale().getFallback());
+        ArclightVersion.setVersion(ArclightVersion.v1_14);
         ForgeInstaller.install();
         try { // Java 9 & Java 兼容性
             int javaVersion = (int) Float.parseFloat(System.getProperty("java.class.version"));
@@ -26,15 +32,23 @@ public class Main {
             return;
         }
         try {
-            System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
-            System.setProperty("log4j.jul.LoggerAdapter", "io.izzel.arclight.common.mod.util.ArclightLoggerAdapter");
-            ArclightVersion.setVersion(ArclightVersion.v1_14);
-            LogManager.getLogger("Arclight").info("Loading mappings ...");
+            printLogo();
+            ArclightI18nLogger.getLogger("Arclight").info("loading-mapping");
             Objects.requireNonNull(ArclightRemapper.INSTANCE);
             ServerMain.main(args);
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("Fail to launch Arclight.");
+        }
+    }
+
+    private static void printLogo() throws Exception {
+        try (InputStream stream = Main.class.getResourceAsStream("/META-INF/MANIFEST.MF")) {
+            Manifest manifest = new Manifest(stream);
+            Attributes attributes = manifest.getMainAttributes();
+            String version = attributes.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+            String buildTime = attributes.getValue("Implementation-Timestamp");
+            ArclightI18nLogger.getLogger("Arclight").info("logo", version, buildTime);
         }
     }
 }

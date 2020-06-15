@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mod.util;
+package io.izzel.arclight.common.mod.util.log;
 
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginLogger;

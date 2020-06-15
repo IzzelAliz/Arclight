@@ -68,9 +68,11 @@ def embedLibs = ['org.spongepowered:mixin:0.8', 'org.ow2.asm:asm-util:6.2',
 dependencies {
     minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
     compile group: 'org.jetbrains', name: 'annotations', version: '19.0.0'
+    compile project(':arclight-common')
     compile(project(':arclight-common')) {
         exclude module: 'forge'
     }
+    embed project(':i18n-config')
     embed project(':forge-installer')
     for (def lib : embedLibs) {
         arclight lib
@@ -98,8 +100,9 @@ jar {
     manifest.attributes 'MixinConnector': 'io.izzel.arclight.impl.ArclightConnector_1_14'
     manifest.attributes 'Main-Class': 'io.izzel.arclight.server.Main'
     manifest.attributes 'Implementation-Title': 'Arclight'
-    manifest.attributes 'Implementation-Version': "arclight-${project.version}-${getGitHash()}"
+    manifest.attributes 'Implementation-Version': "arclight-$minecraftVersion-${project.version}-${getGitHash()}"
     manifest.attributes 'Implementation-Vendor': 'Arclight Team'
+    manifest.attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd HH:mm:ss")
     from(configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }) {
         exclude "META-INF/MANIFEST.MF"
         exclude "META-INF/*.SF"

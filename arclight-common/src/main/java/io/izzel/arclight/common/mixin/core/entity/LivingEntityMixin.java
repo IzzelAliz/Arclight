@@ -591,9 +591,11 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
 
     @Redirect(method = "heal", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;setHealth(F)V"))
     public void arclight$healEvent(LivingEntity livingEntity, float health) {
+        EntityRegainHealthEvent.RegainReason regainReason = arclight$regainReason == null ? EntityRegainHealthEvent.RegainReason.CUSTOM : arclight$regainReason;
+        arclight$regainReason = null;
         float f = this.getHealth();
         float amount = health - f;
-        EntityRegainHealthEvent event = new EntityRegainHealthEvent(this.getBukkitEntity(), amount, arclight$regainReason == null ? EntityRegainHealthEvent.RegainReason.CUSTOM : arclight$regainReason);
+        EntityRegainHealthEvent event = new EntityRegainHealthEvent(this.getBukkitEntity(), amount, regainReason);
         if (this.valid) {
             Bukkit.getPluginManager().callEvent(event);
         }
