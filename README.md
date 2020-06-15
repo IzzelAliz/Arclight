@@ -2,7 +2,12 @@
 
 A Bukkit server implementation utilizing Mixin.
 
-[![AppVeyor](https://img.shields.io/appveyor/build/IzzelAliz/arclight?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight) ![MC 1.14.4](https://img.shields.io/badge/MC-1.14.4-FF69B4?style=flat-square) ![Forge 28.2.0](https://img.shields.io/badge/Forge-28.2.0-purple?style=flat-square) ![GitHub](https://img.shields.io/github/license/IzzelAliz/Arclight?style=flat-square)
+[![AppVeyor](https://img.shields.io/appveyor/build/IzzelAliz/arclight?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight)  ![GitHub](https://img.shields.io/github/license/IzzelAliz/Arclight?style=flat-square)
+
+| Minecraft | Forge |
+| ---- | ---- |
+| ![MC 1.14.4](https://img.shields.io/badge/MC-1.14.4-FF69B4?style=flat-square) | ![Forge 28.2.0](https://img.shields.io/badge/Forge-28.2.0-purple?style=flat-square) |
+| ![MC 1.15.2](https://img.shields.io/badge/MC-1.15.2-6666FF?style=flat-square) | ![Forge 28.2.0](https://img.shields.io/badge/Forge-31.2.0-AA66FF?style=flat-square) |
 
 ![](.github/arclightlogo.jpg)
 
