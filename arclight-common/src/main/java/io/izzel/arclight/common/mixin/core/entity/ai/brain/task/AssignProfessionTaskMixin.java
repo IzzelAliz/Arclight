@@ -14,7 +14,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(AssignProfessionTask.class)
 public class AssignProfessionTaskMixin {
 
-    @Redirect(method = "startExecuting", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/merchant/villager/VillagerEntity;setVillagerData(Lnet/minecraft/entity/merchant/villager/VillagerData;)V"))
+    @SuppressWarnings("UnresolvedMixinReference")
+    @Redirect(method = "*(Lnet/minecraft/entity/merchant/villager/VillagerEntity;Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/entity/merchant/villager/VillagerProfession;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/merchant/villager/VillagerEntity;setVillagerData(Lnet/minecraft/entity/merchant/villager/VillagerData;)V"))
     private void arclight$careerChangeHook(VillagerEntity villagerEntity, VillagerData villagerData) {
         VillagerProfession profession = villagerData.getProfession();
         VillagerCareerChangeEvent event = CraftEventFactory.callVillagerCareerChangeEvent(villagerEntity, CraftVillager.nmsToBukkitProfession(profession), VillagerCareerChangeEvent.ChangeReason.EMPLOYED);
