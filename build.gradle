@@ -5,6 +5,10 @@ allprojects {
     group 'io.izzel.arclight'
     version '1.0.0-SNAPSHOT'
 
+    ext {
+        agpVersion = '1.5'
+    }
+
     task cleanBuild {
         doFirst {
             def f = project.file("build/libs")

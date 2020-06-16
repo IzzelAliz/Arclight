@@ -1,12 +1,16 @@
 package io.izzel.arclight.forgeinstaller;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.izzel.arclight.api.Unsafe;
+import io.izzel.arclight.i18n.ArclightLocale;
+import io.izzel.arclight.i18n.LocalizedException;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -18,35 +22,143 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 public class ForgeInstaller {
 
-    private static final String INFO = "Download mirror service by BMCLAPI: https://bmclapidoc.bangbang93.com\n" +
-        "Support MinecraftForge project at https://www.patreon.com/LexManos/";
+    private static final String[] MAVEN_REPO = {
+        "https://bmclapi2.bangbang93.com/maven/",
+        "https://maven.aliyun.com/repository/public/",
+        "https://repo.spongepowered.org/maven/",
+        "https://oss.sonatype.org/content/repositories/snapshots/",
+        "https://hub.spigotmc.org/nexus/content/repositories/snapshots/",
+        "https://files.minecraftforge.net/maven/",
+        "https://repo1.maven.org/maven2/"
+    };
     private static final String INSTALLER_URL = "https://bmclapi2.bangbang93.com/maven/net/minecraftforge/forge/%s-%s/forge-%s-%s-installer.jar";
-    private static final String BMCL_API = "https://bmclapi2.bangbang93.com/maven/";
     private static final String SERVER_URL = "https://bmclapi2.bangbang93.com/version/%s/server";
+    private static final Map<String, String> VERSION_HASH = ImmutableMap.of(
+        "1.14.4", "3dc3d84a581f14691199cf6831b71ed1296a9fdf",
+        "1.15.2", "bb2b6b1aefcd70dfd1892149ac3a215f6c636b07"
+    );
 
     public static void install() throws Throwable {
         InputStream stream = ForgeInstaller.class.getResourceAsStream("/META-INF/installer.json");
         InstallInfo installInfo = new Gson().fromJson(new InputStreamReader(stream), InstallInfo.class);
+        List<Supplier<Path>> suppliers = checkMaven(installInfo.libraries);
         Path path = Paths.get(String.format("forge-%s-%s.jar", installInfo.installer.minecraft, installInfo.installer.forge));
-        if (!Files.exists(path)) {
-            System.out.println(INFO);
-            Thread.sleep(5000);
-            download(installInfo);
-            ProcessBuilder builder = new ProcessBuilder();
-            builder.command("java", "-jar", String.format("forge-%s-%s-installer.jar", installInfo.installer.minecraft, installInfo.installer.forge), "--installServer", ".");
-            builder.inheritIO();
-            Process process = builder.start();
-            process.waitFor();
+        if (!suppliers.isEmpty() || !Files.exists(path)) {
+            ArclightLocale.info("downloader.info");
+            ExecutorService pool = Executors.newFixedThreadPool(8);
+            CompletableFuture<?>[] array = suppliers.stream().map(reportSupply(pool)).toArray(CompletableFuture[]::new);
+            if (!Files.exists(path)) {
+                CompletableFuture<?>[] futures = installForge(installInfo, pool);
+                handleFutures(futures);
+                ArclightLocale.info("downloader.forge-install");
+                ProcessBuilder builder = new ProcessBuilder();
+                builder.command("java", "-jar", String.format("forge-%s-%s-installer.jar", installInfo.installer.minecraft, installInfo.installer.forge), "--installServer", ".");
+                Process process = builder.start();
+                process.waitFor();
+            }
+            handleFutures(array);
+            pool.shutdownNow();
         }
         classpath(path, installInfo);
+    }
+
+    private static Function<Supplier<Path>, CompletableFuture<Path>> reportSupply(ExecutorService service) {
+        return it -> CompletableFuture.supplyAsync(it, service).thenApply(path -> {
+            ArclightLocale.info("downloader.complete", path);
+            return path;
+        });
+    }
+
+    private static CompletableFuture<?>[] installForge(InstallInfo info, ExecutorService pool) throws Exception {
+        String format = String.format(INSTALLER_URL, info.installer.minecraft, info.installer.forge, info.installer.minecraft, info.installer.forge);
+        String dist = String.format("forge-%s-%s-installer.jar", info.installer.minecraft, info.installer.forge);
+        FileDownloader fd = new FileDownloader(format, dist, info.installer.hash);
+        CompletableFuture<?> installerFuture = reportSupply(pool).apply(fd).thenAccept(path -> {
+            try {
+                FileSystem system = FileSystems.newFileSystem(path, null);
+                Map<String, String> map = new HashMap<>();
+                Path profile = system.getPath("install_profile.json");
+                map.putAll(profileLibraries(profile));
+                Path version = system.getPath("version.json");
+                map.putAll(profileLibraries(version));
+                List<Supplier<Path>> suppliers = checkMaven(map);
+                CompletableFuture<?>[] array = suppliers.stream().map(reportSupply(pool)).toArray(CompletableFuture[]::new);
+                handleFutures(array);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        CompletableFuture<?> serverFuture = reportSupply(pool).apply(
+            new FileDownloader(String.format(SERVER_URL, info.installer.minecraft),
+                String.format("minecraft_server.%s.jar", info.installer.minecraft), VERSION_HASH.get(info.installer.minecraft))
+        );
+        return new CompletableFuture<?>[]{installerFuture, serverFuture};
+    }
+
+    private static void handleFutures(CompletableFuture<?>... futures) {
+        for (CompletableFuture<?> future : futures) {
+            try {
+                future.join();
+            } catch (CompletionException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof LocalizedException) {
+                    LocalizedException local = (LocalizedException) cause;
+                    ArclightLocale.error(local.node(), local.args());
+                } else throw e;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static Map<String, String> profileLibraries(Path path) throws IOException {
+        Map<String, String> ret = new HashMap<>();
+        JsonArray array = new JsonParser().parse(Files.newBufferedReader(path)).getAsJsonObject().getAsJsonArray("libraries");
+        for (JsonElement element : array) {
+            String name = element.getAsJsonObject().get("name").getAsString();
+            JsonObject artifact = element.getAsJsonObject().getAsJsonObject("downloads").getAsJsonObject("artifact");
+            String hash = artifact.get("sha1").getAsString();
+            String url = artifact.get("url").getAsString();
+            if (url == null || url.trim().isEmpty()) continue;
+            ret.put(name, hash);
+        }
+        return ret;
+    }
+
+    private static List<Supplier<Path>> checkMaven(Map<String, String> map) {
+        List<Supplier<Path>> incomplete = new ArrayList<>();
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            String maven = entry.getKey();
+            String path = "libraries/" + Util.mavenToPath(maven);
+            if (new File(path).exists()) {
+                try {
+                    String hash = Util.hash(path);
+                    if (!hash.equals(entry.getValue())) {
+                        incomplete.add(new MavenDownloader(MAVEN_REPO, maven, path, entry.getValue()));
+                    }
+                } catch (Exception e) {
+                    incomplete.add(new MavenDownloader(MAVEN_REPO, maven, path, entry.getValue()));
+                }
+            } else {
+                incomplete.add(new MavenDownloader(MAVEN_REPO, maven, path, entry.getValue()));
+            }
+        }
+        return incomplete;
     }
 
     private static void classpath(Path path, InstallInfo installInfo) throws Throwable {
@@ -57,8 +169,8 @@ public class ForgeInstaller {
             if (s.contains("eventbus-1.0.0-service")) continue;
             addToPath(Paths.get(s));
         }
-        for (String library : installInfo.libraries) {
-            addToPath(Paths.get("libraries", mavenToPath(library)));
+        for (String library : installInfo.libraries.keySet()) {
+            addToPath(Paths.get("libraries", Util.mavenToPath(library)));
         }
         addToPath(path);
     }
@@ -70,69 +182,5 @@ public class ForgeInstaller {
         Object ucp = Unsafe.getObject(loader, offset);
         Method method = ucp.getClass().getDeclaredMethod("addURL", URL.class);
         Unsafe.lookup().unreflect(method).invoke(ucp, path.toUri().toURL());
-    }
-
-    private static void download(InstallInfo info) throws Exception {
-        SimpleDownloader downloader = new SimpleDownloader();
-        String format = String.format(INSTALLER_URL, info.installer.minecraft, info.installer.forge, info.installer.minecraft, info.installer.forge);
-        String dist = String.format("forge-%s-%s-installer.jar", info.installer.minecraft, info.installer.forge);
-        downloader.download(format, dist, null,
-            path -> processInstaller(path, downloader));
-        for (String library : info.libraries) {
-            String path = mavenToPath(library);
-            downloader.downloadMaven(path);
-        }
-        downloader.download(String.format(SERVER_URL, info.installer.minecraft), String.format("minecraft_server.%s.jar", info.installer.minecraft), null);
-        if (!downloader.awaitTermination()) {
-            Files.deleteIfExists(Paths.get(dist));
-            throw new Exception();
-        }
-    }
-
-    private static void processInstaller(Path path, SimpleDownloader downloader) {
-        try {
-            FileSystem system = FileSystems.newFileSystem(path, null);
-            Set<String> set = Collections.newSetFromMap(new ConcurrentHashMap<>());
-            Path profile = system.getPath("install_profile.json");
-            downloadLibraries(downloader, profile, set);
-            Path version = system.getPath("version.json");
-            downloadLibraries(downloader, version, set);
-            system.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static void downloadLibraries(SimpleDownloader downloader, Path path, Set<String> set) throws IOException {
-        JsonArray array = new JsonParser().parse(Files.newBufferedReader(path)).getAsJsonObject().getAsJsonArray("libraries");
-        for (JsonElement element : array) {
-            String name = element.getAsJsonObject().get("name").getAsString();
-            if (!set.add(name)) continue;
-            String libPath = mavenToPath(name);
-            JsonObject artifact = element.getAsJsonObject().getAsJsonObject("downloads").getAsJsonObject("artifact");
-            String url = artifact.get("url").getAsString();
-            if (url == null || url.trim().isEmpty()) continue;
-            String hash = artifact.get("sha1").getAsString();
-            downloader.download(BMCL_API + libPath, "libraries/" + libPath, hash);
-        }
-    }
-
-    private static String mavenToPath(String maven) {
-        String type;
-        if (maven.matches(".*@\\w+$")) {
-            int i = maven.lastIndexOf('@');
-            type = maven.substring(i + 1);
-            maven = maven.substring(0, i);
-        } else {
-            type = "jar";
-        }
-        String[] arr = maven.split(":");
-        if (arr.length == 3) {
-            String pkg = arr[0].replace('.', '/');
-            return String.format("%s/%s/%s/%s-%s.%s", pkg, arr[1], arr[2], arr[1], arr[2], type);
-        } else if (arr.length == 4) {
-            String pkg = arr[0].replace('.', '/');
-            return String.format("%s/%s/%s/%s-%s-%s.%s", pkg, arr[1], arr[2], arr[1], arr[2], arr[3], type);
-        } else throw new RuntimeException("Wrong maven coordinate " + maven);
     }
 }

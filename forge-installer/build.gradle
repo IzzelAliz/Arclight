@@ -4,9 +4,14 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven {
+        name = 'sponge'
+        url = 'https://repo.spongepowered.org/maven'
+    }
 }
 
 dependencies {
     compile 'com.google.code.gson:gson:2.8.0'
     compile project(':arclight-api')
+    compile project(':i18n-config')
 }
