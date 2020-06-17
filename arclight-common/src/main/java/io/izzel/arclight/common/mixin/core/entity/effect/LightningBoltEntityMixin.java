@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.entity.effect;
 import io.izzel.arclight.common.mixin.core.entity.EntityMixin;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.effect.LightningBoltEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -28,6 +29,11 @@ public abstract class LightningBoltEntityMixin extends EntityMixin {
     private void arclight$init(World worldIn, double x, double y, double z, boolean effectOnlyIn, CallbackInfo ci) {
         this.isEffect = effectOnlyIn;
         this.isSilent = false;
+    }
+
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;onStruckByLightning(Lnet/minecraft/entity/effect/LightningBoltEntity;)V"))
+    private void arclight$captureEntity(CallbackInfo ci) {
+        ArclightCaptures.captureDamageEventEntity((Entity) (Object) this);
     }
 
     @Inject(method = "tick", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/entity/Entity;onStruckByLightning(Lnet/minecraft/entity/effect/LightningBoltEntity;)V"))
