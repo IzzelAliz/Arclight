@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.entity.monster;
 
 import io.izzel.arclight.common.bridge.entity.monster.CreeperEntityBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.mixin.core.entity.CreatureEntityMixin;
 import net.minecraft.entity.AreaEffectCloudEntity;
 import net.minecraft.entity.effect.LightningBoltEntity;
 import net.minecraft.entity.monster.CreeperEntity;
@@ -22,7 +23,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-import io.izzel.arclight.common.mixin.core.entity.CreatureEntityMixin;
 
 import java.util.Collection;
 
@@ -36,7 +36,7 @@ public abstract class CreeperEntityMixin extends CreatureEntityMixin implements 
     @Shadow private int timeSinceIgnited;
     // @formatter:on
 
-    @Inject(method = "onStruckByLightning", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/monster/CreeperEntity;dataManager:Lnet/minecraft/network/datasync/EntityDataManager;"))
+    @Inject(method = "onStruckByLightning", cancellable = true, at = @At(value = "FIELD", target = "Lnet/minecraft/entity/monster/CreeperEntity;dataManager:Lnet/minecraft/network/datasync/EntityDataManager;"))
     private void arclight$lightningBolt(LightningBoltEntity lightningBolt, CallbackInfo ci) {
         if (CraftEventFactory.callCreeperPowerEvent((CreeperEntity) (Object) this, lightningBolt, CreeperPowerEvent.PowerCause.LIGHTNING).isCancelled()) {
             ci.cancel();

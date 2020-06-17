@@ -15,7 +15,7 @@ import java.util.Random;
 @Mixin(RedstoneLampBlock.class)
 public class RedstoneLampBlockMixin_1_14 {
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+    @Inject(method = "tick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
     private void arclight$redstoneChange(BlockState state, World worldIn, BlockPos pos, Random rand, CallbackInfo ci) {
         if (CraftEventFactory.callRedstoneChange(worldIn, pos, 15, 0).getNewCurrent() != 0) {
             ci.cancel();

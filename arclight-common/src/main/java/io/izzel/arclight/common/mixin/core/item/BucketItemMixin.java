@@ -39,7 +39,7 @@ public abstract class BucketItemMixin {
     @Shadow public abstract boolean tryPlaceContainedLiquid(@javax.annotation.Nullable PlayerEntity player, World worldIn, BlockPos posIn, @javax.annotation.Nullable BlockRayTraceResult p_180616_4_);
     // @formatter:on
 
-    @Inject(method = "onItemRightClick", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/block/IBucketPickupHandler;pickupFluid(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Lnet/minecraft/fluid/Fluid;"))
+    @Inject(method = "onItemRightClick", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/block/IBucketPickupHandler;pickupFluid(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Lnet/minecraft/fluid/Fluid;"))
     private void arclight$bucketFill(World worldIn, PlayerEntity playerIn, Hand handIn, CallbackInfoReturnable<ActionResult<ItemStack>> cir, ItemStack stack, RayTraceResult result) {
         BlockPos pos = ((BlockRayTraceResult) result).getPos();
         BlockState state = worldIn.getBlockState(pos);
@@ -94,7 +94,7 @@ public abstract class BucketItemMixin {
     private transient BlockPos arclight$click;
     private transient ItemStack arclight$stack;
 
-    @Inject(method = "tryPlaceContainedLiquid", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/dimension/Dimension;doesWaterVaporize()Z"))
+    @Inject(method = "tryPlaceContainedLiquid", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/dimension/Dimension;doesWaterVaporize()Z"))
     private void arclight$bucketEmpty(PlayerEntity player, World worldIn, BlockPos posIn, BlockRayTraceResult p_180616_4_, CallbackInfoReturnable<Boolean> cir) {
         if (player != null) {
             PlayerBucketEmptyEvent event = CraftEventFactory.callPlayerBucketEmptyEvent(worldIn, player, posIn, arclight$click, arclight$direction, arclight$stack);

@@ -229,7 +229,7 @@ public abstract class LivingEntityMixin_1_14 extends EntityMixin_1_14 implements
         return removeActivePotionEffect(potioneffectin);
     }
 
-    @Inject(method = "removeActivePotionEffect", at = @At("HEAD"))
+    @Inject(method = "removeActivePotionEffect", cancellable = true, at = @At("HEAD"))
     public void arclight$clearActive(Effect effect, CallbackInfoReturnable<EffectInstance> cir) {
         EntityPotionEffectEvent.Cause cause = bridge$getEffectCause().orElse(EntityPotionEffectEvent.Cause.UNKNOWN);
         if (isTickingEffects) {

@@ -384,7 +384,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         this.player.getServerWorld().getChunkProvider().updatePlayerPosition(this.player);
     }
 
-    @Inject(method = "processConfirmTeleport", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/ServerPlayNetHandler;teleportId:I"))
+    @Inject(method = "processConfirmTeleport", cancellable = true, at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/ServerPlayNetHandler;teleportId:I"))
     private void arclight$confirm(CConfirmTeleportPacket packetIn, CallbackInfo ci) {
         if (this.targetPos == null) {
             ci.cancel();
@@ -1078,7 +1078,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     private static final Set<String> sneakKeys = ImmutableSet.of("START_SNEAKING", "PRESS_SHIFT_KEY");
     private static final Set<String> standKeys = ImmutableSet.of("STOP_SNEAKING", "RELEASE_SHIFT_KEY");
 
-    @Inject(method = "processEntityAction", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/ServerPlayerEntity;markPlayerActive()V"))
+    @Inject(method = "processEntityAction", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/ServerPlayerEntity;markPlayerActive()V"))
     private void arclight$toggleAction(CEntityActionPacket packetIn, CallbackInfo ci) {
         if (this.player.removed) {
             ci.cancel();
@@ -1178,7 +1178,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         }
     }
 
-    @Inject(method = "processCloseWindow", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/ServerPlayerEntity;closeContainer()V"))
+    @Inject(method = "processCloseWindow", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/ServerPlayerEntity;closeContainer()V"))
     private void arclight$invClose(CCloseWindowPacket packetIn, CallbackInfo ci) {
         if (((ServerPlayerEntityBridge) this.player).bridge$isMovementBlocked()) {
             ci.cancel();
@@ -1499,7 +1499,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         }
     }
 
-    @Inject(method = "processEnchantItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/ServerPlayerEntity;markPlayerActive()V"))
+    @Inject(method = "processEnchantItem", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/ServerPlayerEntity;markPlayerActive()V"))
     private void arclight$noEnchant(CEnchantItemPacket packetIn, CallbackInfo ci) {
         if (((ServerPlayerEntityBridge) player).bridge$isMovementBlocked()) {
             ci.cancel();
@@ -1574,14 +1574,14 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         }
     }
 
-    @Inject(method = "processConfirmTransaction", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/network/PacketThreadUtil;checkThreadAndEnqueue(Lnet/minecraft/network/IPacket;Lnet/minecraft/network/INetHandler;Lnet/minecraft/world/server/ServerWorld;)V"))
+    @Inject(method = "processConfirmTransaction", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/network/PacketThreadUtil;checkThreadAndEnqueue(Lnet/minecraft/network/IPacket;Lnet/minecraft/network/INetHandler;Lnet/minecraft/world/server/ServerWorld;)V"))
     private void arclight$noTransaction(CConfirmTransactionPacket packetIn, CallbackInfo ci) {
         if (((ServerPlayerEntityBridge) player).bridge$isMovementBlocked()) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "processUpdateSign", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/ServerPlayerEntity;markPlayerActive()V"))
+    @Inject(method = "processUpdateSign", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/ServerPlayerEntity;markPlayerActive()V"))
     private void arclight$noSignEdit(CUpdateSignPacket packetIn, CallbackInfo ci) {
         if (((ServerPlayerEntityBridge) player).bridge$isMovementBlocked()) {
             ci.cancel();

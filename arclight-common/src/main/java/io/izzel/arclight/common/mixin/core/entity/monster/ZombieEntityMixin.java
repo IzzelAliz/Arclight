@@ -66,7 +66,7 @@ public abstract class ZombieEntityMixin extends CreatureEntityMixin {
     private void arclight$transformPre(VillagerEntity villagerEntity) {
     }
 
-    @Inject(method = "onKillEntity", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
+    @Inject(method = "onKillEntity", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
     private void arclight$transformInfection(LivingEntity entityLivingIn, CallbackInfo ci, VillagerEntity villagerEntity, ZombieVillagerEntity zombieVillagerEntity) {
         if (CraftEventFactory.callEntityTransformEvent(villagerEntity, zombieVillagerEntity, EntityTransformEvent.TransformReason.INFECTION).isCancelled()) {
             ci.cancel();
