@@ -46,6 +46,16 @@ public abstract class ServerChunkProviderMixin implements ServerChunkProviderBri
     @Accessor("lightManager") public abstract ServerWorldLightManager bridge$getLightManager();
     // @formatter:on
 
+    public boolean isChunkLoaded(final int chunkX, final int chunkZ) {
+        final ChunkHolder chunk = ((ChunkManagerBridge) this.chunkManager).bridge$chunkHolderAt(ChunkPos.asLong(chunkX, chunkZ));
+        return chunk != null && ((ChunkHolderBridge) chunk).bridge$getFullChunk() != null;
+    }
+
+    @Override
+    public boolean bridge$isChunkLoaded(int x, int z) {
+        return isChunkLoaded(x, z);
+    }
+
     /**
      * @author IzzelAliz
      * @reason

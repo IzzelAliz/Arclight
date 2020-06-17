@@ -12,5 +12,7 @@ public interface ServerChunkProviderBridge {
 
     boolean bridge$tickDistanceManager();
 
+    boolean bridge$isChunkLoaded(int x, int z);
+
     ServerWorldLightManager bridge$getLightManager();
 }
