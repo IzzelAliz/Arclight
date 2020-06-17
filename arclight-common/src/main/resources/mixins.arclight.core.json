@@ -298,6 +298,7 @@
     "network.play.server.SChatPacketMixin",
     "network.play.server.SWorldBorderPacketMixin",
     "network.rcon.RConConsoleSourceMixin",
+    "network.status.ServerStatusNetHandlerMixin",
     "potion.EffectMixin",
     "server.CustomServerBossInfoMixin",
     "server.MinecraftServerMixin",

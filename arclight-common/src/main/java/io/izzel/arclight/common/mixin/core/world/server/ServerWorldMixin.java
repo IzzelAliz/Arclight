@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.server;
 
 import com.google.common.collect.Lists;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.world.ExplosionBridge;
 import io.izzel.arclight.common.bridge.world.server.ServerWorldBridge;
@@ -16,6 +17,7 @@ import net.minecraft.entity.effect.LightningBoltEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.network.IPacket;
+import net.minecraft.network.play.server.SSpawnParticlePacket;
 import net.minecraft.particles.IParticleData;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.server.MinecraftServer;
@@ -44,6 +46,7 @@ import org.bukkit.event.server.MapInitializeEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
@@ -58,6 +61,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Executor;
 import java.util.logging.Level;
@@ -73,6 +77,7 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
     @Shadow public abstract <T extends IParticleData> int spawnParticle(T type, double posX, double posY, double posZ, int particleCount, double xOffset, double yOffset, double zOffset, double speed);
     @Shadow protected abstract boolean sendPacketWithinDistance(ServerPlayerEntity player, boolean longDistance, double posX, double posY, double posZ, IPacket<?> packet);
     @Shadow @Nonnull public abstract MinecraftServer shadow$getServer();
+    @Shadow @Final private List<ServerPlayerEntity> players;
     // @formatter:on
 
     public void arclight$constructor(MinecraftServer serverIn, Executor executor, SaveHandler saveHandler, WorldInfo worldInfo, DimensionType dimType, IProfiler profiler, IChunkStatusListener listener) {
@@ -84,6 +89,19 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         this.generator = gen;
         this.environment = env;
         bridge$getWorld();
+    }
+
+    public <T extends IParticleData> int sendParticles(final ServerPlayerEntity sender, final T t0, final double d0, final double d1, final double d2, final int i, final double d3, final double d4, final double d5, final double d6, final boolean force) {
+        SSpawnParticlePacket packet = new SSpawnParticlePacket((T) t0, force, d0, d1, d2, (float) d3, (float) d4, (float) d5, (float) d6, i);
+        int j = 0;
+        for (ServerPlayerEntity entity : this.players) {
+            if (sender == null || ((ServerPlayerEntityBridge) entity).bridge$getBukkitEntity().canSee(((ServerPlayerEntityBridge) sender).bridge$getBukkitEntity())) {
+                if (this.sendPacketWithinDistance(entity, force, d0, d1, d2, packet)) {
+                    ++j;
+                }
+            }
+        }
+        return j;
     }
 
     @Inject(method = "onEntityAdded", at = @At("RETURN"))
