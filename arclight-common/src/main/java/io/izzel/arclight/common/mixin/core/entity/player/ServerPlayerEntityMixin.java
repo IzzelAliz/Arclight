@@ -433,6 +433,11 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
         sendMessage(ichatbasecomponent);
     }
 
+    @Override
+    public void bridge$sendMessage(ITextComponent component) {
+        this.sendMessage(component);
+    }
+
     @Redirect(method = "copyFrom", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/crafting/ServerRecipeBook;copyFrom(Lnet/minecraft/item/crafting/RecipeBook;)V"))
     private void arclight$noRecipeBookCopy(ServerRecipeBook serverRecipeBook, RecipeBook that) {
     }

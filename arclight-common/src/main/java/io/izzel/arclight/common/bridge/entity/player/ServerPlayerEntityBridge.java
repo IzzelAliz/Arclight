@@ -28,6 +28,8 @@ public interface ServerPlayerEntityBridge extends PlayerEntityBridge {
 
     void bridge$sendMessage(ITextComponent[] ichatbasecomponent);
 
+    void bridge$sendMessage(ITextComponent component);
+
     boolean bridge$isJoining();
 
     void bridge$reset();

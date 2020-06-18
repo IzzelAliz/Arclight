@@ -79,6 +79,7 @@ import net.minecraft.world.GameRules;
 import net.minecraft.world.GameType;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.ForgeHooks;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -947,13 +948,10 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         if (s.isEmpty() || this.player.getChatVisibility() == ChatVisibility.HIDDEN) {
             return;
         }
+        ServerPlayNetHandler handler = (ServerPlayNetHandler) (Object) this;
         if (!async && s.startsWith("/")) {
             this.handleSlashCommand(s);
         } else if (this.player.getChatVisibility() != ChatVisibility.SYSTEM) {
-            ITextComponent itextcomponent = new TranslationTextComponent("chat.type.text", this.player.getDisplayName(), net.minecraftforge.common.ForgeHooks.newChatWithLinks(s));
-            itextcomponent = net.minecraftforge.common.ForgeHooks.onServerChatEvent((ServerPlayNetHandler) (Object) this, s, itextcomponent);
-            if (itextcomponent == null) return;
-            s = CraftChatMessage.fromComponent(itextcomponent);
             Player player = this.getPlayer();
             AsyncPlayerChatEvent event = new AsyncPlayerChatEvent(async, player, s, new LazyPlayerSet(this.minecraftServer));
             this.server.getPluginManager().callEvent(event);
@@ -969,14 +967,16 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                             return null;
                         }
                         String message = String.format(queueEvent.getFormat(), queueEvent.getPlayer().getDisplayName(), queueEvent.getMessage());
-                        Bukkit.getConsoleSender().sendMessage(message);
+                        ITextComponent component = ForgeHooks.onServerChatEvent(handler, queueEvent.getMessage(), ForgeHooks.newChatWithLinks(message));
+                        if (component == null) return null;
+                        Bukkit.getConsoleSender().sendMessage(CraftChatMessage.fromComponent(component));
                         if (((LazyPlayerSet) queueEvent.getRecipients()).isLazy()) {
                             for (Object player : minecraftServer.getPlayerList().players) {
-                                ((ServerPlayerEntityBridge) player).bridge$sendMessage(CraftChatMessage.fromString(message));
+                                ((ServerPlayerEntityBridge) player).bridge$sendMessage(component);
                             }
                         } else {
                             for (Player player2 : queueEvent.getRecipients()) {
-                                player2.sendMessage(message);
+                                ((ServerPlayerEntityBridge) player2).bridge$sendMessage(component);
                             }
                         }
                         return null;
@@ -1002,15 +1002,32 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 return;
             }
             s = String.format(event.getFormat(), event.getPlayer().getDisplayName(), event.getMessage());
-            Bukkit.getConsoleSender().sendMessage(s);
-            if (((LazyPlayerSet) event.getRecipients()).isLazy()) {
-                for (Object recipient : minecraftServer.getPlayerList().players) {
-                    ((ServerPlayerEntityBridge) recipient).bridge$sendMessage(CraftChatMessage.fromString(s));
+            ITextComponent chatWithLinks = ForgeHooks.newChatWithLinks(s);
+            class ForgeChat extends Waitable<Void> {
+
+                @Override
+                protected Void evaluate() {
+                    // this is called on main thread
+                    ITextComponent component = ForgeHooks.onServerChatEvent(handler, event.getMessage(), chatWithLinks);
+                    if (component == null) return null;
+                    Bukkit.getConsoleSender().sendMessage(CraftChatMessage.fromComponent(component));
+                    if (((LazyPlayerSet) event.getRecipients()).isLazy()) {
+                        for (Object recipient : minecraftServer.getPlayerList().players) {
+                            ((ServerPlayerEntityBridge) recipient).bridge$sendMessage(component);
+                        }
+                    } else {
+                        for (Player recipient2 : event.getRecipients()) {
+                            ((ServerPlayerEntityBridge) recipient2).bridge$sendMessage(component);
+                        }
+                    }
+                    return null;
                 }
+            }
+            Waitable<Void> waitable = new ForgeChat();
+            if (async) {
+                ((MinecraftServerBridge) minecraftServer).bridge$queuedProcess(waitable);
             } else {
-                for (Player recipient2 : event.getRecipients()) {
-                    recipient2.sendMessage(s);
-                }
+                waitable.run();
             }
         }
     }
