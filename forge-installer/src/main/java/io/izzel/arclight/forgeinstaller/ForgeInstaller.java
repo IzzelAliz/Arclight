@@ -22,8 +22,10 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -56,7 +58,7 @@ public class ForgeInstaller {
     public static void install() throws Throwable {
         InputStream stream = ForgeInstaller.class.getResourceAsStream("/META-INF/installer.json");
         InstallInfo installInfo = new Gson().fromJson(new InputStreamReader(stream), InstallInfo.class);
-        List<Supplier<Path>> suppliers = checkMaven(installInfo.libraries);
+        List<Supplier<Path>> suppliers = checkMavenNoSource(installInfo.libraries);
         Path path = Paths.get(String.format("forge-%s-%s.jar", installInfo.installer.minecraft, installInfo.installer.forge));
         if (!suppliers.isEmpty() || !Files.exists(path)) {
             ArclightLocale.info("downloader.info");
@@ -68,6 +70,7 @@ public class ForgeInstaller {
                 ArclightLocale.info("downloader.forge-install");
                 ProcessBuilder builder = new ProcessBuilder();
                 builder.command("java", "-jar", String.format("forge-%s-%s-installer.jar", installInfo.installer.minecraft, installInfo.installer.forge), "--installServer", ".");
+                builder.inheritIO();
                 Process process = builder.start();
                 process.waitFor();
             }
@@ -91,7 +94,7 @@ public class ForgeInstaller {
         CompletableFuture<?> installerFuture = reportSupply(pool).apply(fd).thenAccept(path -> {
             try {
                 FileSystem system = FileSystems.newFileSystem(path, null);
-                Map<String, String> map = new HashMap<>();
+                Map<String, Map.Entry<String, String>> map = new HashMap<>();
                 Path profile = system.getPath("install_profile.json");
                 map.putAll(profileLibraries(profile));
                 Path version = system.getPath("version.json");
@@ -126,8 +129,8 @@ public class ForgeInstaller {
         }
     }
 
-    private static Map<String, String> profileLibraries(Path path) throws IOException {
-        Map<String, String> ret = new HashMap<>();
+    private static Map<String, Map.Entry<String, String>> profileLibraries(Path path) throws IOException {
+        Map<String, Map.Entry<String, String>> ret = new HashMap<>();
         JsonArray array = new JsonParser().parse(Files.newBufferedReader(path)).getAsJsonObject().getAsJsonArray("libraries");
         for (JsonElement element : array) {
             String name = element.getAsJsonObject().get("name").getAsString();
@@ -135,27 +138,37 @@ public class ForgeInstaller {
             String hash = artifact.get("sha1").getAsString();
             String url = artifact.get("url").getAsString();
             if (url == null || url.trim().isEmpty()) continue;
-            ret.put(name, hash);
+            ret.put(name, new AbstractMap.SimpleImmutableEntry<>(hash, url));
         }
         return ret;
     }
 
-    private static List<Supplier<Path>> checkMaven(Map<String, String> map) {
-        List<Supplier<Path>> incomplete = new ArrayList<>();
+    private static List<Supplier<Path>> checkMavenNoSource(Map<String, String> map) {
+        LinkedHashMap<String, Map.Entry<String, String>> hashMap = new LinkedHashMap<>(map.size());
         for (Map.Entry<String, String> entry : map.entrySet()) {
+            hashMap.put(entry.getKey(), new AbstractMap.SimpleImmutableEntry<>(entry.getValue(), null));
+        }
+        return checkMaven(hashMap);
+    }
+
+    private static List<Supplier<Path>> checkMaven(Map<String, Map.Entry<String, String>> map) {
+        List<Supplier<Path>> incomplete = new ArrayList<>();
+        for (Map.Entry<String, Map.Entry<String, String>> entry : map.entrySet()) {
             String maven = entry.getKey();
+            String hash = entry.getValue().getKey();
+            String url = entry.getValue().getValue();
             String path = "libraries/" + Util.mavenToPath(maven);
             if (new File(path).exists()) {
                 try {
-                    String hash = Util.hash(path);
-                    if (!hash.equals(entry.getValue())) {
-                        incomplete.add(new MavenDownloader(MAVEN_REPO, maven, path, entry.getValue()));
+                    String fileHash = Util.hash(path);
+                    if (!fileHash.equals(hash)) {
+                        incomplete.add(new MavenDownloader(MAVEN_REPO, maven, path, hash, url));
                     }
                 } catch (Exception e) {
-                    incomplete.add(new MavenDownloader(MAVEN_REPO, maven, path, entry.getValue()));
+                    incomplete.add(new MavenDownloader(MAVEN_REPO, maven, path, hash, url));
                 }
             } else {
-                incomplete.add(new MavenDownloader(MAVEN_REPO, maven, path, entry.getValue()));
+                incomplete.add(new MavenDownloader(MAVEN_REPO, maven, path, hash, url));
             }
         }
         return incomplete;

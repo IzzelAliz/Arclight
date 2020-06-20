@@ -5,31 +5,47 @@ import io.izzel.arclight.i18n.LocalizedException;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class MavenDownloader implements Supplier<Path> {
 
-    private final String[] repos;
+    private static final Function<String, String> FORGE_TO_BMCLAPI =
+        s -> s.replace("https://files.minecraftforge.net/maven/", "https://bmclapi2.bangbang93.com/maven/");
+
+    private final LinkedList<String> urls;
     private final String coord;
     private final String target;
     private final String hash;
 
     public MavenDownloader(String[] repos, String coord, String target, String hash) {
-        this.repos = repos;
+        this.urls = new LinkedList<>();
         this.coord = coord;
         this.target = target;
         this.hash = hash;
+        String path = Util.mavenToPath(coord);
+        for (String repo : repos) {
+            this.urls.add(repo + path);
+        }
+    }
+
+    public MavenDownloader(String[] repos, String coord, String target, String hash, String sourceUrl) {
+        this(repos, coord, target, hash);
+        if (sourceUrl != null && !this.urls.contains(sourceUrl)) {
+            this.urls.addFirst(sourceUrl);
+            this.urls.addFirst(FORGE_TO_BMCLAPI.apply(sourceUrl));
+        }
     }
 
     @Override
     public Path get() {
-        String path = Util.mavenToPath(coord);
         List<Exception> exceptions = new ArrayList<>();
-        for (String repo : repos) {
+        for (String url : this.urls) {
             try {
-                return new FileDownloader(repo + path, target, hash).get();
+                return new FileDownloader(url, target, hash).get();
             } catch (Exception e) {
                 exceptions.add(e);
             }

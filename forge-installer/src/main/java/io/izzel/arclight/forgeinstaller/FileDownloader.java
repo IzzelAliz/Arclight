@@ -10,6 +10,7 @@ import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -64,6 +65,8 @@ public class FileDownloader implements Supplier<Path> {
             } else {
                 throw LocalizedException.checked("downloader.not-found", url);
             }
+        } catch (AccessDeniedException e) {
+            throw LocalizedException.unchecked("downloader.access-denied", e.getFile(), e);
         } catch (Exception e) {
             Unsafe.throwException(e);
             return null;

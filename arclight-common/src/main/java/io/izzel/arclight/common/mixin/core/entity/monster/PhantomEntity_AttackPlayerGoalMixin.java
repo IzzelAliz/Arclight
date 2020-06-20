@@ -15,7 +15,7 @@ public abstract class PhantomEntity_AttackPlayerGoalMixin {
     @Shadow(aliases = {"this$0", "field_203141_a"}, remap = false) private PhantomEntity outerThis;
 
     @SuppressWarnings("UnresolvedMixinReference")
-    @Inject(method = "shouldExecute", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/monster/PhantomEntity;func_70624_b(Lnet/minecraft/entity/LivingEntity;)V"))
+    @Inject(method = "shouldExecute", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraft/entity/monster/PhantomEntity;func_70624_b(Lnet/minecraft/entity/LivingEntity;)V"))
     private void arclight$reason(CallbackInfoReturnable<Boolean> cir) {
         ((MobEntityBridge) outerThis).bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.CLOSEST_PLAYER, true);
     }
