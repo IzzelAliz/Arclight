@@ -1,6 +1,9 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import com.google.common.io.ByteStreams;
+import io.izzel.arclight.common.bridge.bukkit.JavaPluginLoaderBridge;
+import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
+import io.izzel.arclight.common.mod.util.remapper.PluginRemapper;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPluginLoader;
@@ -8,8 +11,6 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
-import io.izzel.arclight.common.mod.util.remapper.PluginRemapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,7 +54,7 @@ public class PluginClassLoaderMixin extends URLClassLoader {
 
         if (result == null) {
             if (checkGlobal) {
-                result = ((JavaPluginLoaderMixin) (Object) loader).bridge$getClassByName(name);
+                result = ((JavaPluginLoaderBridge) (Object) loader).bridge$getClassByName(name);
             }
 
             if (result == null) {
@@ -104,7 +105,7 @@ public class PluginClassLoaderMixin extends URLClassLoader {
                 }
 
                 if (result != null) {
-                    ((JavaPluginLoaderMixin) (Object) loader).bridge$setClass(name, result);
+                    ((JavaPluginLoaderBridge) (Object) loader).bridge$setClass(name, result);
                 }
             }
 
