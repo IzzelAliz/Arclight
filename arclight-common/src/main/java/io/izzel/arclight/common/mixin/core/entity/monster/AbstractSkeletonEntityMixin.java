@@ -21,7 +21,7 @@ public abstract class AbstractSkeletonEntityMixin extends CreatureEntityMixin {
     @Inject(method = "attackEntityWithRangedAttack", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/monster/AbstractSkeletonEntity;playSound(Lnet/minecraft/util/SoundEvent;FF)V"))
     private void arclight$shootBow(LivingEntity target, float distanceFactor, CallbackInfo ci, ItemStack itemStack, AbstractArrowEntity arrowEntity) {
-        EntityShootBowEvent event = CraftEventFactory.callEntityShootBowEvent((AbstractSkeletonEntity) (Object) this, this.getHeldItemOffhand(), arrowEntity, 0.8F);
+        EntityShootBowEvent event = CraftEventFactory.callEntityShootBowEvent((AbstractSkeletonEntity) (Object) this, this.getHeldItemMainhand(), arrowEntity, 0.8F);
         if (event.isCancelled()) {
             event.getProjectile().remove();
             ci.cancel();
