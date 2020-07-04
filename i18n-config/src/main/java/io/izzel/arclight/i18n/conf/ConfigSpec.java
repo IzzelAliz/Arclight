@@ -15,6 +15,9 @@ public class ConfigSpec {
     @Setting("locale")
     private LocaleSpec localeSpec;
 
+    @Setting("compatibility")
+    private CompatSpec compatSpec;
+
     public int getVersion() {
         return version;
     }
@@ -25,5 +28,9 @@ public class ConfigSpec {
 
     public LocaleSpec getLocale() {
         return localeSpec;
+    }
+
+    public CompatSpec getCompat() {
+        return compatSpec;
     }
 }

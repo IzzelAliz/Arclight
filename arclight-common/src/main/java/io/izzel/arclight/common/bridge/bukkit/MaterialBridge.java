@@ -1,14 +1,18 @@
 package io.izzel.arclight.common.bridge.bukkit;
 
-import org.bukkit.NamespacedKey;
+import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
+import net.minecraft.block.Block;
+import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
+
+import javax.annotation.Nullable;
 
 public interface MaterialBridge {
 
-    void bridge$setKey(NamespacedKey namespacedKey);
+    void bridge$setupBlock(ResourceLocation key, Block block, MaterialPropertySpec spec);
 
-    void bridge$setInternal(net.minecraft.block.material.Material internal);
+    void bridge$setupItem(ResourceLocation key, Item item, MaterialPropertySpec spec);
 
-    void bridge$setItem();
-
-    void bridge$setBlock();
+    @Nullable
+    MaterialPropertySpec bridge$getSpec();
 }
