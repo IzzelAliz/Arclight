@@ -12,6 +12,7 @@
     "CraftChunkMixin",
     "CraftConsoleCommandSenderMixin",
     "CraftEventFactoryMixin",
+    "CraftItemFactoryMixin",
     "CraftMagicNumbersMixin",
     "CraftServerMixin",
     "JavaPluginLoaderMixin",

@@ -59,6 +59,9 @@ public class MaterialPropertySpec implements Cloneable {
     @Setting("craftingRemainingItem")
     public String craftingRemainingItem;
 
+    @Setting("itemMetaType")
+    public String itemMetaType;
+
     @Override
     public MaterialPropertySpec clone() {
         try {

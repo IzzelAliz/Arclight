@@ -15,4 +15,6 @@ public interface MaterialBridge {
 
     @Nullable
     MaterialPropertySpec bridge$getSpec();
+
+    MaterialPropertySpec.MaterialType bridge$getType();
 }

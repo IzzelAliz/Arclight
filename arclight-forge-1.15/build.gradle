@@ -30,6 +30,7 @@ arclight {
     bukkitVersion = 'v1_15_R1'
     wipeVersion = true
     reobfVersion = true
+    accessTransformer = project(':arclight-common').file('bukkit.at')
 }
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'

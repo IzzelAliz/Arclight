@@ -155,6 +155,11 @@ public abstract class MaterialMixin implements MaterialBridge {
     }
 
     @Override
+    public MaterialPropertySpec.MaterialType bridge$getType() {
+        return arclight$type;
+    }
+
+    @Override
     public void bridge$setupBlock(ResourceLocation key, Block block, MaterialPropertySpec spec) {
         this.arclight$spec = spec.clone();
         arclight$type = MaterialPropertySpec.MaterialType.FORGE_BLOCK;
