@@ -24,7 +24,7 @@ public class FollowOwnerGoalMixin_1_15 {
 
     private transient boolean arclight$cancelled;
 
-    @Redirect(method = "func_226328_a_", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/TameableEntity;setLocationAndAngles(DDDFF)V"))
+    @Redirect(method = "tryToTeleportToLocation", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/TameableEntity;setLocationAndAngles(DDDFF)V"))
     public void arclight$teleport(TameableEntity tameableEntity, double x, double y, double z, float yaw, float pitch) {
         CraftEntity craftEntity = ((EntityBridge) this.tameable).bridge$getBukkitEntity();
         Location location = new Location(craftEntity.getWorld(), x, y, z, yaw, pitch);
@@ -35,7 +35,7 @@ public class FollowOwnerGoalMixin_1_15 {
         }
     }
 
-    @Inject(method = "func_226328_a_", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/pathfinding/PathNavigator;clearPath()V"))
+    @Inject(method = "tryToTeleportToLocation", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/pathfinding/PathNavigator;clearPath()V"))
     public void arclight$returnIfFail(int p_226328_1_, int p_226328_2_, int p_226328_3_, CallbackInfoReturnable<Boolean> cir) {
         if (arclight$cancelled) {
             cir.setReturnValue(false);

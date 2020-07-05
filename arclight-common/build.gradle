@@ -21,7 +21,7 @@ apply plugin: 'io.izzel.arclight'
 
 ext {
     minecraftVersion = '1.15.2'
-    forgeVersion = '31.2.0'
+    forgeVersion = '31.2.30'
 }
 
 arclight {
@@ -36,7 +36,7 @@ arclight {
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
 
 minecraft {
-    mappings channel: 'snapshot', version: "20200530-1.15.1"
+    mappings channel: 'snapshot', version: "20200705-1.15.1"
     accessTransformer = project.file('src/main/resources/META-INF/accesstransformer.cfg')
 }
 

@@ -28,7 +28,7 @@ public class LeadItemMixin_1_15 {
      * @reason
      */
     @Overwrite
-    public static ActionResultType func_226641_a_(PlayerEntity player, World worldIn, BlockPos fence) {
+    public static ActionResultType bindPlayerMobs(PlayerEntity player, World worldIn, BlockPos fence) {
         LeashKnotEntity leashknotentity = null;
         boolean flag = false;
         double d0 = 7.0D;

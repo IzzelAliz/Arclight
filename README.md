@@ -7,7 +7,7 @@ A Bukkit server implementation utilizing Mixin.
 | Minecraft | Forge |
 | ---- | ---- |
 | ![MC 1.14.4](https://img.shields.io/badge/MC-1.14.4-FF69B4?style=flat-square) | ![Forge 28.2.0](https://img.shields.io/badge/Forge-28.2.0-purple?style=flat-square) |
-| ![MC 1.15.2](https://img.shields.io/badge/MC-1.15.2-6666FF?style=flat-square) | ![Forge 28.2.0](https://img.shields.io/badge/Forge-31.2.0-AA66FF?style=flat-square) |
+| ![MC 1.15.2](https://img.shields.io/badge/MC-1.15.2-6666FF?style=flat-square) | ![Forge 31.2.30](https://img.shields.io/badge/Forge-31.2.30-AA66FF?style=flat-square) |
 
 ![](.github/arclightlogo.jpg)
 

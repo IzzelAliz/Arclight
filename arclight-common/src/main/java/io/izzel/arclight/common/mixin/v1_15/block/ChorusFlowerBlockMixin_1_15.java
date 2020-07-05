@@ -27,7 +27,7 @@ public abstract class ChorusFlowerBlockMixin_1_15 extends BlockMixin {
 
     // @formatter:off
     @Shadow @Final public static IntegerProperty AGE;
-    @Shadow @Final private ChorusPlantBlock field_196405_b;
+    @Shadow @Final private ChorusPlantBlock plantBlock;
     @Shadow private static boolean areAllNeighborsEmpty(IWorldReader worldIn, BlockPos pos, @Nullable Direction excludingSide) { return false; }
     @Shadow protected abstract void placeGrownFlower(World worldIn, BlockPos pos, int age);
     @Shadow protected abstract void placeDeadFlower(World worldIn, BlockPos pos);
@@ -52,12 +52,12 @@ public abstract class ChorusFlowerBlockMixin_1_15 extends BlockMixin {
                     Block block = blockstate.getBlock();
                     if (block == Blocks.END_STONE) {
                         flag = true;
-                    } else if (block == this.field_196405_b) {
+                    } else if (block == this.plantBlock) {
                         int j = 1;
 
                         for (int k = 0; k < 4; ++k) {
                             Block block1 = worldIn.getBlockState(pos.down(j + 1)).getBlock();
-                            if (block1 != this.field_196405_b) {
+                            if (block1 != this.plantBlock) {
                                 if (block1 == Blocks.END_STONE) {
                                     flag1 = true;
                                 }
@@ -76,7 +76,7 @@ public abstract class ChorusFlowerBlockMixin_1_15 extends BlockMixin {
 
                     if (flag && areAllNeighborsEmpty(worldIn, blockpos, (Direction) null) && worldIn.isAirBlock(pos.up(2))) {
                         if (CraftEventFactory.handleBlockSpreadEvent(worldIn, pos, pos.up(), state.with(ChorusFlowerBlock.AGE, i), 2)) {
-                            worldIn.setBlockState(pos, this.field_196405_b.makeConnections(worldIn, pos), 2);
+                            worldIn.setBlockState(pos, this.plantBlock.makeConnections(worldIn, pos), 2);
                             this.placeGrownFlower(worldIn, blockpos, i);
                         }
                     } else if (i < 4) {
@@ -99,7 +99,7 @@ public abstract class ChorusFlowerBlockMixin_1_15 extends BlockMixin {
                         }
 
                         if (flag2) {
-                            worldIn.setBlockState(pos, this.field_196405_b.makeConnections(worldIn, pos), 2);
+                            worldIn.setBlockState(pos, this.plantBlock.makeConnections(worldIn, pos), 2);
                         } else {
                             if (CraftEventFactory.handleBlockGrowEvent(worldIn, pos, this.getDefaultState().with(ChorusFlowerBlock.AGE, 5), 2)) {
                                 this.placeDeadFlower(worldIn, pos);
