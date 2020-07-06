@@ -15,6 +15,7 @@
     "CraftConsoleCommandSenderMixin",
     "CraftEntityMixin",
     "CraftEventFactoryMixin",
+    "CraftInventoryMixin",
     "CraftItemFactoryMixin",
     "CraftMagicNumbersMixin",
     "CraftServerMixin",

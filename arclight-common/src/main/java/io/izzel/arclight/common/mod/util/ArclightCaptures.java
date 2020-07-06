@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mod.util;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
@@ -178,6 +179,20 @@ public class ArclightCaptures {
         } finally {
             damageEventBlock = null;
         }
+    }
+
+    private static transient PlayerEntity containerOwner;
+
+    public static void captureContainerOwner(PlayerEntity entity) {
+        containerOwner = entity;
+    }
+
+    public static PlayerEntity getContainerOwner() {
+        return containerOwner;
+    }
+
+    public static void resetContainerOwner() {
+        containerOwner = null;
     }
 
     private static void recapture(String type) {

@@ -7,6 +7,7 @@ import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.inventory.container.ContainerBridge;
 import io.izzel.arclight.common.bridge.util.FoodStatsBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.ChestBlockDoubleInventoryHacks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -397,9 +398,11 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
 
     @Inject(method = "sendAllContents", at = @At("RETURN"))
     private void arclight$sendExtra(Container container, NonNullList<ItemStack> itemsList, CallbackInfo ci) {
+        ArclightCaptures.captureContainerOwner((ServerPlayerEntity) (Object) this);
         if (EnumSet.of(InventoryType.CRAFTING, InventoryType.WORKBENCH).contains(((ContainerBridge) container).bridge$getBukkitView().getType())) {
             this.connection.sendPacket(new SSetSlotPacket(container.windowId, 0, container.getSlot(0).getStack()));
         }
+        ArclightCaptures.resetContainerOwner();
     }
 
     @Inject(method = "closeScreen", at = @At("HEAD"))

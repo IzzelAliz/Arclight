@@ -66,6 +66,7 @@ dependencies {
 
 remapSpigotJar {
     includes.add('net/minecraft/block/ChestBlock$DoubleInventory')
+    includes.add('net/minecraft/tileentity/LecternTileEntity$LecternInventory')
 }
 
 generateArclightMeta {

@@ -1,13 +1,18 @@
 package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import com.google.common.base.Preconditions;
+import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.inventory.container.ContainerBridge;
 import io.izzel.arclight.common.bridge.inventory.container.SlotBridge;
+import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.CraftResultInventory;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.ClickType;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
@@ -18,10 +23,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v.inventory.CraftInventory;
+import org.bukkit.craftbukkit.v.inventory.CraftInventoryCustom;
+import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.event.Event;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -31,6 +39,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -54,8 +63,59 @@ public abstract class ContainerMixin implements ContainerBridge {
     // @formatter:on
 
     public boolean checkReachable = true;
+    private InventoryView bukkitView;
 
-    public abstract InventoryView getBukkitView();
+    // todo check this
+    public InventoryView getBukkitView() {
+        if (bukkitView == null) {
+            PlayerEntity candidate = null;
+            Set<IInventory> set = new HashSet<>();
+            for (Slot slot : this.inventorySlots) {
+                if (slot.inventory != null) {
+                    if (slot.inventory instanceof PlayerInventory) {
+                        if (candidate != null && ((PlayerInventory) slot.inventory).player != candidate) {
+                            ArclightMod.LOGGER.warn("Duplicate PlayerInventory inside {}, previous {}, new {}", this, candidate, slot.inventory);
+                        }
+                        candidate = ((PlayerInventory) slot.inventory).player;
+                    } else {
+                        set.add(slot.inventory);
+                    }
+                }
+            }
+            if (candidate == null) {
+                if (ArclightCaptures.getContainerOwner() != null) {
+                    candidate = ArclightCaptures.getContainerOwner();
+                } else {
+                    throw new RuntimeException("candidate cannot be null");
+                }
+            }
+            CraftResultInventory resultCandidate = null;
+            IInventory mainCandidate = null;
+            for (IInventory inventory : set) {
+                if (inventory instanceof CraftResultInventory) {
+                    resultCandidate = (CraftResultInventory) inventory;
+                } else {
+                    mainCandidate = inventory;
+                }
+            }
+            Inventory inv;
+            if (mainCandidate == null && resultCandidate != null) {
+                mainCandidate = resultCandidate;
+                resultCandidate = null;
+            }
+            if (mainCandidate != null) {
+                if (resultCandidate != null) {
+                    inv = new org.bukkit.craftbukkit.v.inventory.CraftResultInventory(mainCandidate, resultCandidate);
+                } else {
+                    inv = new CraftInventory(mainCandidate);
+                }
+            } else { // container has no slots
+                inv = new CraftInventoryCustom(((PlayerEntityBridge) candidate).bridge$getBukkitEntity(), 0);
+            }
+            bukkitView = new CraftInventoryView(((PlayerEntityBridge) candidate).bridge$getBukkitEntity(), inv, (Container) (Object) this);
+        }
+        return bukkitView;
+    }
 
     public void transferTo(Container other, CraftHumanEntity player) {
         InventoryView source = this.getBukkitView();
