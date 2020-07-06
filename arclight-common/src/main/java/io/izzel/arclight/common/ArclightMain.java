@@ -1,15 +1,19 @@
 package io.izzel.arclight.common;
 
+import com.google.gson.internal.bind.TypeAdapters;
+import com.google.gson.reflect.TypeToken;
 import io.izzel.arclight.api.EnumHelper;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.util.log.ArclightI18nLogger;
 import io.izzel.arclight.common.mod.util.log.ArclightLazyLogManager;
 import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
+import io.izzel.arclight.common.util.EnumTypeFactory;
 import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.arclight.i18n.ArclightLocale;
 import net.minecraftforge.server.ServerMain;
 
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.util.Objects;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -37,11 +41,20 @@ public abstract class ArclightMain {
             ArclightI18nLogger.getLogger("Arclight").info("loading-mapping");
             Objects.requireNonNull(ArclightRemapper.INSTANCE);
             this.beforeStart();
+            this.dirtyHacks();
             ServerMain.main(args);
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("Fail to launch Arclight.");
         }
+    }
+
+    private void dirtyHacks() throws Exception {
+        TypeAdapters.ENUM_FACTORY.create(null, TypeToken.get(ArclightMain.class));
+        Field field = TypeAdapters.class.getDeclaredField("ENUM_FACTORY");
+        Object base = Unsafe.staticFieldBase(field);
+        long offset = Unsafe.staticFieldOffset(field);
+        Unsafe.putObjectVolatile(base, offset, new EnumTypeFactory());
     }
 
     private void printLogo() throws Exception {

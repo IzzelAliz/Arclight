@@ -62,6 +62,9 @@ public class MaterialPropertySpec implements Cloneable {
     @Setting("itemMetaType")
     public String itemMetaType;
 
+    @Setting("blockStateClass")
+    public String blockStateClass;
+
     @Override
     public MaterialPropertySpec clone() {
         try {

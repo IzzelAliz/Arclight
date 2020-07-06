@@ -9,14 +9,25 @@ import java.util.Optional;
 @ConfigSerializable
 public class CompatSpec {
 
-    @Setting("property-override")
-    private Map<String, MaterialPropertySpec> overrides;
+    @Setting("material-property-overrides")
+    private Map<String, MaterialPropertySpec> materials;
 
-    public Map<String, MaterialPropertySpec> getOverrides() {
-        return overrides;
+    @Setting("entity-property-overrides")
+    private Map<String, EntityPropertySpec> entities;
+
+    public Map<String, MaterialPropertySpec> getMaterials() {
+        return materials;
     }
 
-    public Optional<MaterialPropertySpec> getOverride(String key) {
-        return Optional.ofNullable(overrides.get(key));
+    public Optional<MaterialPropertySpec> getMaterial(String key) {
+        return Optional.ofNullable(materials.get(key));
+    }
+
+    public Map<String, EntityPropertySpec> getEntities() {
+        return entities;
+    }
+
+    public Optional<EntityPropertySpec> getEntity(String key) {
+        return Optional.ofNullable(entities.get(key));
     }
 }
