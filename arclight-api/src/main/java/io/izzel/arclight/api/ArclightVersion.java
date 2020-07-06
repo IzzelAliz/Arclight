@@ -4,19 +4,25 @@ import java.util.Objects;
 
 public class ArclightVersion {
 
-    public static final ArclightVersion v1_14 = new ArclightVersion("1.14.4", 1140);
-    public static final ArclightVersion v1_15 = new ArclightVersion("1.15.2", 1152);
+    public static final ArclightVersion v1_14 = new ArclightVersion("1.14.4", 1140, "v1_14_R1");
+    public static final ArclightVersion v1_15 = new ArclightVersion("1.15.2", 1152, "v1_15_R1");
 
     private final String name;
     private final int num;
+    private final String pkg;
 
-    public ArclightVersion(String name, int num) {
+    public ArclightVersion(String name, int num, String pkg) {
         this.name = name;
         this.num = num;
+        this.pkg = pkg;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String packageName() {
+        return pkg;
     }
 
     @Override
@@ -42,6 +48,11 @@ public class ArclightVersion {
     }
 
     private static ArclightVersion version;
+
+    public static ArclightVersion current() {
+        if (ArclightVersion.version == null) throw new IllegalStateException("Version is not set!");
+        return version;
+    }
 
     public static void setVersion(ArclightVersion version) {
         if (ArclightVersion.version != null) throw new IllegalStateException("Version is already set!");
