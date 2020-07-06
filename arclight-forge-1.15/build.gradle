@@ -119,7 +119,7 @@ remapSpigotJar {
 }
 
 mixin {
-    // add sourceSets.main, 'mixins.arclight.impl.refmap.1_14.json'
+    add sourceSets.main, 'mixins.arclight.impl.refmap.1_15.json'
 }
 
 compileJava {
