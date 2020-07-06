@@ -47,8 +47,7 @@ public class InventoryImplementer implements Implementer {
                 return false;
             }
             if (isInventoryClass(node, transformerLoader)) {
-                tryImplement(node);
-                return true;
+                return tryImplement(node);
             } else return false;
         } catch (Throwable t) {
             if (t instanceof LocalizedException) {
@@ -95,7 +94,7 @@ public class InventoryImplementer implements Implementer {
         }
     }
 
-    private void tryImplement(ClassNode node) {
+    private boolean tryImplement(ClassNode node) {
         Set<String> methods = new HashSet<>();
         for (MethodNode method : node.methods) {
             methods.add(method.name + method.desc);
@@ -103,12 +102,13 @@ public class InventoryImplementer implements Implementer {
         if (methods.contains("getViewers()Ljava/util/List;")) {
             ArclightImplementer.LOGGER.debug(MARKER, "Found implemented class {}", node.name);
             node.interfaces.add(BRIDGE_TYPE);
+            return false;
         } else {
             List<FieldNode> list = findPossibleList(node);
             if (list.size() != 1) {
                 if (list.size() > 1) {
                     ArclightImplementer.LOGGER.warn(MARKER, "Found multiple possible fields in class {}: {}", node.name, list.stream().map(it -> it.name + it.desc).collect(Collectors.joining(", ")));
-                } else return;
+                } else return false;
             }
             ArclightImplementer.LOGGER.debug(MARKER, "Implementing inventory for class {}", node.name);
             FieldNode stackList = list.get(0);
@@ -178,6 +178,7 @@ public class InventoryImplementer implements Implementer {
                 methodNode.instructions = insnList;
                 node.methods.add(methodNode);
             }
+            return true;
         }
     }
 
