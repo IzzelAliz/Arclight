@@ -129,6 +129,12 @@ public class BukkitRegistry {
             }
             BLOCK_MATERIAL.put(block, material);
             MATERIAL_BLOCK.put(material, block);
+            Item value = ForgeRegistries.ITEMS.getValue(location);
+            if (value != null) {
+                ((MaterialBridge) (Object) material).bridge$setItem();
+                ITEM_MATERIAL.put(value, material);
+                MATERIAL_ITEM.put(material, value);
+            }
         }
         for (Map.Entry<ResourceLocation, Item> entry : ForgeRegistries.ITEMS.getEntries()) {
             ResourceLocation location = entry.getKey();
@@ -146,6 +152,12 @@ public class BukkitRegistry {
             }
             ITEM_MATERIAL.put(item, material);
             MATERIAL_ITEM.put(material, item);
+            Block value = ForgeRegistries.BLOCKS.getValue(location);
+            if (value != null) {
+                ((MaterialBridge) (Object) material).bridge$setBlock();
+                BLOCK_MATERIAL.put(value, material);
+                MATERIAL_BLOCK.put(material, value);
+            }
         }
         EnumHelper.addEnums(Material.class, list);
         ArclightMod.LOGGER.info("registry.material", i - origin, blocks, items);

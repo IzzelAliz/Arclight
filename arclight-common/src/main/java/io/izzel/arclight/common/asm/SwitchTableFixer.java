@@ -28,6 +28,7 @@ public class SwitchTableFixer implements Implementer {
     private static final Marker MARKER = MarkerManager.getMarker("SWITCH_TABLE");
     private static final Set<String> ENUMS = ImmutableSet.<String>builder()
         .add("org/bukkit/Material")
+        .add("org/bukkit/entity/EntityType")
         .build();
 
     public byte[] processClass(byte[] bytes) {

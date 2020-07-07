@@ -88,18 +88,29 @@ public abstract class MaterialMixin implements MaterialBridge {
 
     private MaterialPropertySpec.MaterialType arclight$type = MaterialPropertySpec.MaterialType.VANILLA;
     private MaterialPropertySpec arclight$spec;
+    private boolean arclight$block = false, arclight$item = false;
+
+    @Override
+    public void bridge$setBlock() {
+        this.arclight$block = true;
+    }
+
+    @Override
+    public void bridge$setItem() {
+        this.arclight$item = true;
+    }
 
     @Inject(method = "isBlock", cancellable = true, at = @At("HEAD"))
     private void arclight$isBlock(CallbackInfoReturnable<Boolean> cir) {
         if (arclight$type != MaterialPropertySpec.MaterialType.VANILLA) {
-            cir.setReturnValue(arclight$type == MaterialPropertySpec.MaterialType.FORGE_BLOCK);
+            cir.setReturnValue(arclight$block);
         }
     }
 
     @Inject(method = "isItem", cancellable = true, at = @At("HEAD"))
     private void arclight$isItem(CallbackInfoReturnable<Boolean> cir) {
         if (arclight$type != MaterialPropertySpec.MaterialType.VANILLA) {
-            cir.setReturnValue(arclight$type == MaterialPropertySpec.MaterialType.FORGE_ITEM);
+            cir.setReturnValue(arclight$item);
         }
     }
 
@@ -238,14 +249,16 @@ public abstract class MaterialMixin implements MaterialBridge {
     @Override
     public void bridge$setupBlock(ResourceLocation key, Block block, MaterialPropertySpec spec) {
         this.arclight$spec = spec.clone();
-        arclight$type = MaterialPropertySpec.MaterialType.FORGE_BLOCK;
+        arclight$type = MaterialPropertySpec.MaterialType.FORGE;
+        arclight$block = true;
         arclight$setupCommon(key, block, block.asItem());
     }
 
     @Override
     public void bridge$setupItem(ResourceLocation key, Item item, MaterialPropertySpec spec) {
         this.arclight$spec = spec.clone();
-        arclight$type = MaterialPropertySpec.MaterialType.FORGE_ITEM;
+        arclight$type = MaterialPropertySpec.MaterialType.FORGE;
+        arclight$item = true;
         arclight$setupCommon(key, null, item);
     }
 

@@ -18,6 +18,10 @@ public interface MaterialBridge {
 
     void bridge$setupItem(ResourceLocation key, Item item, MaterialPropertySpec spec);
 
+    void bridge$setBlock();
+
+    void bridge$setItem();
+
     @Nullable
     MaterialPropertySpec bridge$getSpec();
 
