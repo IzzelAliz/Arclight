@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import com.google.common.io.ByteStreams;
+import io.izzel.arclight.common.asm.SwitchTableFixer;
 import io.izzel.arclight.common.bridge.bukkit.JavaPluginLoaderBridge;
 import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
 import io.izzel.arclight.common.mod.util.remapper.PluginRemapper;
@@ -70,6 +71,7 @@ public class PluginClassLoaderMixin extends URLClassLoader {
                         throw new ClassNotFoundException(name, ex);
                     }
 
+                    classBytes = SwitchTableFixer.INSTANCE.processClass(classBytes);
                     classBytes = Bukkit.getUnsafe().processClass(description, path, classBytes);
                     if (remapper == null) {
                         remapper = ArclightRemapper.INSTANCE.createPluginRemapper(this.loader, this);

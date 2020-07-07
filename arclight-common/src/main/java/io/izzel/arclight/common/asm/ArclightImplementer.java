@@ -35,6 +35,7 @@ public class ArclightImplementer implements ILaunchPluginService {
     public void initializeLaunch(ITransformerLoader transformerLoader, Path[] specialPaths) {
         this.transformerLoader = transformerLoader;
         this.implementers.put("inventory", new InventoryImplementer());
+        this.implementers.put("switch", SwitchTableFixer.INSTANCE);
     }
 
     @Override
