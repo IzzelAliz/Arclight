@@ -17,6 +17,7 @@
     "CraftEventFactoryMixin",
     "CraftInventoryMixin",
     "CraftItemFactoryMixin",
+    "CraftLegacyMixin",
     "CraftMagicNumbersMixin",
     "CraftServerMixin",
     "CraftWorldMixin",

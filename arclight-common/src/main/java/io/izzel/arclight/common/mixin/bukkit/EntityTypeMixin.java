@@ -22,8 +22,11 @@ import java.util.function.Function;
 @Mixin(value = EntityType.class, remap = false)
 public class EntityTypeMixin implements EntityTypeBridge {
 
+    // @formatter:off
     @Shadow @Final @Mutable private NamespacedKey key;
     @Shadow @Final @Mutable private Class<? extends Entity> clazz;
+    @Shadow @Final @Mutable private String name;
+    // @formatter:on
 
     private net.minecraft.entity.EntityType<?> handleType;
     private EntityPropertySpec spec;
@@ -32,6 +35,7 @@ public class EntityTypeMixin implements EntityTypeBridge {
     @Override
     public void bridge$setup(ResourceLocation location, net.minecraft.entity.EntityType<?> entityType, EntityPropertySpec spec) {
         this.key = CraftNamespacedKey.fromMinecraft(location);
+        this.name = location.toString();
         this.handleType = entityType;
         this.spec = spec.clone();
         this.setup();

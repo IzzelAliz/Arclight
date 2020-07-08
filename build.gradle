@@ -3,7 +3,7 @@ import java.nio.file.attribute.BasicFileAttributes
 
 allprojects {
     group 'io.izzel.arclight'
-    version '1.0.1'
+    version '1.0.2-SNAPSHOT'
 
     ext {
         agpVersion = '1.7'

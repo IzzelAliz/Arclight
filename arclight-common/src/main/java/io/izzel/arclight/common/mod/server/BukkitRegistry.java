@@ -31,7 +31,6 @@ import org.bukkit.potion.PotionEffectType;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -70,7 +69,7 @@ public class BukkitRegistry {
             }
             if (!found) {
                 String name = ResourceLocationUtil.standardize(location);
-                entityType = EnumHelper.makeEnum(EntityType.class, name, i++, ENTITY_CTOR, ImmutableList.of(ResourceLocationUtil.standardize(location).toLowerCase(Locale.ROOT), Entity.class, -1));
+                entityType = EnumHelper.makeEnum(EntityType.class, name, i++, ENTITY_CTOR, ImmutableList.of(location.getPath(), Entity.class, -1));
                 ((EntityTypeBridge) (Object) entityType).bridge$setup(location, type, entitySpec(location));
                 newTypes.add(entityType);
                 ArclightMod.LOGGER.debug("Registered {} as entity {}", location, entityType);
@@ -102,7 +101,7 @@ public class BukkitRegistry {
             String name = ResourceLocationUtil.standardize(entry.getKey());
             ArclightPotionEffect effect = new ArclightPotionEffect(entry.getValue(), name);
             PotionEffectType.registerPotionEffectType(effect);
-            ArclightMod.LOGGER.debug("Registered {}: {} as potion", entry.getKey(), effect);
+            ArclightMod.LOGGER.debug("Registered {} as potion {}", entry.getKey(), effect);
         }
         PotionEffectType.stopAcceptingRegistrations();
         ArclightMod.LOGGER.info("registry.potion", size - origin);
@@ -116,9 +115,9 @@ public class BukkitRegistry {
         for (Map.Entry<ResourceLocation, Block> entry : ForgeRegistries.BLOCKS.getEntries()) {
             ResourceLocation location = entry.getKey();
             Block block = entry.getValue();
-            Material material = Material.matchMaterial(location.toString());
+            String name = ResourceLocationUtil.standardize(location);
+            Material material = BY_NAME.get(name);
             if (material == null) {
-                String name = ResourceLocationUtil.standardize(location);
                 material = EnumHelper.makeEnum(Material.class, name, i, MAT_CTOR, ImmutableList.of(i));
                 ((MaterialBridge) (Object) material).bridge$setupBlock(location, block, matSpec(location));
                 BY_NAME.put(name, material);
@@ -139,9 +138,9 @@ public class BukkitRegistry {
         for (Map.Entry<ResourceLocation, Item> entry : ForgeRegistries.ITEMS.getEntries()) {
             ResourceLocation location = entry.getKey();
             Item item = entry.getValue();
-            Material material = Material.matchMaterial(location.toString());
+            String name = ResourceLocationUtil.standardize(location);
+            Material material = BY_NAME.get(name);
             if (material == null) {
-                String name = ResourceLocationUtil.standardize(location);
                 material = EnumHelper.makeEnum(Material.class, name, i, MAT_CTOR, ImmutableList.of(i));
                 ((MaterialBridge) (Object) material).bridge$setupItem(location, item, matSpec(location));
                 BY_NAME.put(name, material);
