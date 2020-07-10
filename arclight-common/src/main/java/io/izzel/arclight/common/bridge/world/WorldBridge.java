@@ -26,4 +26,12 @@ public interface WorldBridge extends IWorldWriterBridge {
     TileEntity bridge$getTileEntity(BlockPos pos, boolean validate);
 
     SpigotWorldConfig bridge$spigotConfig();
+
+    long bridge$ticksPerAnimalSpawns();
+
+    long bridge$ticksPerMonsterSpawns();
+
+    long bridge$ticksPerWaterSpawns();
+
+    long bridge$ticksPerAmbientSpawns();
 }

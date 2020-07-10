@@ -61,6 +61,10 @@ public abstract class WorldMixin implements WorldBridge {
     protected CraftWorld world;
     public boolean pvpMode;
     public boolean keepSpawnInMemory = true;
+    public long ticksPerAnimalSpawns;
+    public long ticksPerMonsterSpawns;
+    public long ticksPerWaterSpawns;
+    public long ticksPerAmbientSpawns;
     public boolean populating;
     public org.bukkit.generator.ChunkGenerator generator;
     protected org.bukkit.World.Environment environment;
@@ -70,6 +74,30 @@ public abstract class WorldMixin implements WorldBridge {
     private void arclight$init(WorldInfo info, DimensionType dimType, BiFunction<World, Dimension, AbstractChunkProvider> provider, IProfiler profilerIn, boolean remote, CallbackInfo ci) {
         spigotConfig = new SpigotWorldConfig(worldInfo.getWorldName());
         ((WorldBorderBridge) this.worldBorder).bridge$setWorld((ServerWorld) (Object) this);
+        this.ticksPerAnimalSpawns = this.getServer().getTicksPerAnimalSpawns();
+        this.ticksPerMonsterSpawns = this.getServer().getTicksPerMonsterSpawns();
+        this.ticksPerWaterSpawns = this.getServer().getTicksPerWaterSpawns();
+        this.ticksPerAmbientSpawns = this.getServer().getTicksPerAmbientSpawns();
+    }
+
+    @Override
+    public long bridge$ticksPerAnimalSpawns() {
+        return ticksPerAnimalSpawns;
+    }
+
+    @Override
+    public long bridge$ticksPerMonsterSpawns() {
+        return ticksPerMonsterSpawns;
+    }
+
+    @Override
+    public long bridge$ticksPerWaterSpawns() {
+        return ticksPerWaterSpawns;
+    }
+
+    @Override
+    public long bridge$ticksPerAmbientSpawns() {
+        return ticksPerAmbientSpawns;
     }
 
     public void arclight$constructor(WorldInfo info, DimensionType dimType, BiFunction<World, Dimension, AbstractChunkProvider> provider, IProfiler profilerIn, boolean remote) {
