@@ -29,7 +29,7 @@ public class CraftEventFactoryMixin {
         BlockPos damageEventBlock = ArclightCaptures.getDamageEventBlock();
         if (damageEventEntity != null && entityDamage == null) {
             if (source.damageType.equals(DamageSource.LIGHTNING_BOLT.damageType)) {
-                entityDamage = entity;
+                entityDamage = damageEventEntity;
             }
         }
         if (damageEventBlock != null && blockDamage == null) {
