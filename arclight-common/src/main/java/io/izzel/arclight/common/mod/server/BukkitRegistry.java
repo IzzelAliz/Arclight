@@ -56,7 +56,7 @@ public class BukkitRegistry {
     private static void loadEntities() {
         int origin = EntityType.values().length;
         int i = origin;
-        List<EntityType> newTypes = new ArrayList<>(ForgeRegistries.ENTITIES.getEntries().size() - origin);
+        List<EntityType> newTypes = new ArrayList<>(ForgeRegistries.ENTITIES.getEntries().size() - origin + 1); // UNKNOWN
         for (Map.Entry<ResourceLocation, net.minecraft.entity.EntityType<?>> entry : ForgeRegistries.ENTITIES.getEntries()) {
             ResourceLocation location = entry.getKey();
             net.minecraft.entity.EntityType<?> type = entry.getValue();

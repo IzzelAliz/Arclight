@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world;
 
+import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.bridge.world.border.WorldBorderBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
@@ -76,8 +77,13 @@ public abstract class WorldMixin implements WorldBridge {
         ((WorldBorderBridge) this.worldBorder).bridge$setWorld((ServerWorld) (Object) this);
         this.ticksPerAnimalSpawns = this.getServer().getTicksPerAnimalSpawns();
         this.ticksPerMonsterSpawns = this.getServer().getTicksPerMonsterSpawns();
-        this.ticksPerWaterSpawns = this.getServer().getTicksPerWaterSpawns();
-        this.ticksPerAmbientSpawns = this.getServer().getTicksPerAmbientSpawns();
+        if (ArclightVersion.atLeast(ArclightVersion.v1_15)) {
+            this.ticksPerWaterSpawns = this.getServer().getTicksPerWaterSpawns();
+            this.ticksPerAmbientSpawns = this.getServer().getTicksPerAmbientSpawns();
+        } else {
+            this.ticksPerWaterSpawns = 1;
+            this.ticksPerAmbientSpawns = 1;
+        }
     }
 
     @Override
@@ -200,7 +206,7 @@ public abstract class WorldMixin implements WorldBridge {
 
     @Override
     public CraftWorld bridge$getWorld() {
-        return this.world;
+        return this.getWorld();
     }
 
     @Override

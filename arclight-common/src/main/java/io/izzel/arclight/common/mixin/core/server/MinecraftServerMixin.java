@@ -9,9 +9,11 @@ import com.mojang.datafixers.DataFixer;
 import io.izzel.arclight.common.bridge.command.ICommandSourceBridge;
 import io.izzel.arclight.common.bridge.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.world.dimension.DimensionTypeBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.server.BukkitRegistry;
 import io.izzel.arclight.common.mod.util.BukkitOptionParser;
+import it.unimi.dsi.fastutil.longs.LongIterator;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import net.minecraft.command.CommandSource;
@@ -23,15 +25,24 @@ import net.minecraft.profiler.DebugProfiler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerProfileCache;
 import net.minecraft.util.SharedConstants;
+import net.minecraft.util.Unit;
 import net.minecraft.util.Util;
 import net.minecraft.util.concurrent.RecursiveEventLoop;
 import net.minecraft.util.concurrent.TickDelayedTask;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.ForcedChunksSaveData;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.chunk.listener.IChunkStatusListener;
 import net.minecraft.world.chunk.listener.IChunkStatusListenerFactory;
+import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.server.ServerChunkProvider;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.server.TicketType;
 import net.minecraft.world.storage.SaveHandler;
 import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.fml.StartupQuery;
@@ -53,6 +64,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
@@ -94,12 +106,16 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
     @Shadow protected abstract void stopServer();
     @Shadow protected abstract void systemExitNow();
     @Shadow public abstract Commands getCommandManager();
+    @Shadow protected abstract void applyDebugWorldInfo(WorldInfo worldInfoIn);
+    @Shadow protected abstract void setUserMessage(ITextComponent userMessageIn);
+    @Shadow public abstract ServerWorld getWorld(DimensionType dimension);
     // @formatter:on
 
     public MinecraftServerMixin(String name) {
         super(name);
     }
 
+    private boolean forceTicks;
     public CraftServer server;
     public OptionSet options;
     public ConsoleCommandSender console;
@@ -199,7 +215,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
                 ServerLifecycleHooks.expectServerStopped(); // has to come before finalTick to avoid race conditions
             } else {
                 ServerLifecycleHooks.expectServerStopped(); // has to come before finalTick to avoid race conditions
-                this.finalTick((CrashReport) null);
+                this.finalTick(null);
             }
         } catch (StartupQuery.AbortedException e) {
             // ignore silently
@@ -215,7 +231,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
 
             File file1 = new File(new File(this.getDataDirectory(), "crash-reports"), "crash-" + (new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date()) + "-server.txt");
             if (crashreport.saveToFile(file1)) {
-                LOGGER.error("This crash report has been saved to: {}", (Object) file1.getAbsolutePath());
+                LOGGER.error("This crash report has been saved to: {}", file1.getAbsolutePath());
             } else {
                 LOGGER.error("We were unable to save this crash report to disk.");
             }
@@ -265,17 +281,90 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
         this.server.getPluginManager().callEvent(new ServerLoadEvent(ServerLoadEvent.LoadType.STARTUP));
     }
 
-    @Inject(method = "loadWorlds", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/MinecraftServer;func_213204_a(Lnet/minecraft/world/storage/DimensionSavedDataManager;)V"))
-    private void arclight$worldInit(SaveHandler p_213194_1_, WorldInfo info, WorldSettings p_213194_3_, IChunkStatusListener p_213194_4_, CallbackInfo ci, ServerWorld serverWorld) {
-        if (((CraftServer) Bukkit.getServer()).scoreboardManager == null) {
-            ((CraftServer) Bukkit.getServer()).scoreboardManager = new CraftScoreboardManager((MinecraftServer) (Object) this, serverWorld.getScoreboard());
-        }
-        Bukkit.getPluginManager().callEvent(new WorldInitEvent(((WorldBridge) serverWorld).bridge$getWorld()));
+    public void initWorld(ServerWorld serverWorld, WorldInfo worldInfo, WorldSettings worldSettings) {
+        serverWorld.getWorldBorder().copyFrom(worldInfo);
         if (((WorldBridge) serverWorld).bridge$getGenerator() != null) {
             ((WorldBridge) serverWorld).bridge$getWorld().getPopulators().addAll(
                 ((WorldBridge) serverWorld).bridge$getGenerator().getDefaultPopulators(
                     ((WorldBridge) serverWorld).bridge$getWorld()));
         }
+        if (!worldInfo.isInitialized()) {
+            try {
+                serverWorld.createSpawnPosition(worldSettings);
+                if (worldInfo.getGenerator() == WorldType.DEBUG_ALL_BLOCK_STATES) {
+                    this.applyDebugWorldInfo(worldInfo);
+                }
+                worldInfo.setInitialized(true);
+            } catch (Throwable throwable) {
+                CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Exception initializing level");
+                try {
+                    serverWorld.fillCrashReport(crashreport);
+                } catch (Throwable ignored) {}
+                throw new ReportedException(crashreport);
+            }
+            worldInfo.setInitialized(true);
+        }
+    }
+
+    public void loadSpawn(IChunkStatusListener listener, ServerWorld serverWorld) {
+        if (!((WorldBridge) serverWorld).bridge$getWorld().getKeepSpawnInMemory()) {
+            return;
+        }
+        this.setUserMessage(new TranslationTextComponent("menu.generatingTerrain"));
+        this.forceTicks = true;
+        LOGGER.info("Preparing start region for dimension '{}'/{}", serverWorld.getWorldInfo().getWorldName(), DimensionType.getKey(((DimensionTypeBridge) serverWorld.dimension.getType()).bridge$getType()));
+        BlockPos pos = serverWorld.getSpawnPoint();
+        listener.start(new ChunkPos(pos));
+        ServerChunkProvider chunkProvider = serverWorld.getChunkProvider();
+        chunkProvider.getLightManager().func_215598_a(500);
+        this.serverTime = Util.milliTime();
+        chunkProvider.registerTicket(TicketType.START, new ChunkPos(pos), 11, Unit.INSTANCE);
+        while (chunkProvider.getLoadedChunksCount() != 441) {
+            this.executeModerately();
+        }
+        this.executeModerately();
+        DimensionType type = serverWorld.dimension.getType();
+        ForcedChunksSaveData chunks = serverWorld.getSavedData().get(ForcedChunksSaveData::new, "chunks");
+        if (chunks != null) {
+            ServerWorld world = this.getWorld(type);
+            LongIterator iterator = chunks.getChunks().iterator();
+            while (iterator.hasNext()) {
+                long i = iterator.nextLong();
+                ChunkPos chunkPos = new ChunkPos(i);
+                world.getChunkProvider().forceChunk(chunkPos, true);
+            }
+        }
+        this.executeModerately();
+        listener.stop();
+        chunkProvider.getLightManager().func_215598_a(5);
+        this.forceTicks = false;
+    }
+
+    private void executeModerately() {
+        this.drainTasks();
+        java.util.concurrent.locks.LockSupport.parkNanos("executing tasks", 1000L);
+    }
+
+    @Inject(method = "isAheadOfTime", cancellable = true, at = @At("HEAD"))
+    private void arclight$forceAheadOfTime(CallbackInfoReturnable<Boolean> cir) {
+        if (this.forceTicks) cir.setReturnValue(true);
+    }
+
+    @Inject(method = "loadWorlds", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/MinecraftServer;func_213204_a(Lnet/minecraft/world/storage/DimensionSavedDataManager;)V"))
+    private void arclight$worldInit(SaveHandler p_213194_1_, WorldInfo info, WorldSettings p_213194_3_, IChunkStatusListener p_213194_4_, CallbackInfo ci, ServerWorld serverWorld) {
+        if (((CraftServer) Bukkit.getServer()).scoreboardManager == null) {
+            ((CraftServer) Bukkit.getServer()).scoreboardManager = new CraftScoreboardManager((MinecraftServer) (Object) this, serverWorld.getScoreboard());
+        }
+        if (((WorldBridge) serverWorld).bridge$getGenerator() != null) {
+            ((WorldBridge) serverWorld).bridge$getWorld().getPopulators().addAll(
+                ((WorldBridge) serverWorld).bridge$getGenerator().getDefaultPopulators(
+                    ((WorldBridge) serverWorld).bridge$getWorld()));
+        }
+    }
+
+    @Inject(method = "loadWorlds", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/management/PlayerList;func_212504_a(Lnet/minecraft/world/server/ServerWorld;)V"))
+    private void arclight$initEvent(SaveHandler saveHandlerIn, WorldInfo info, WorldSettings worldSettingsIn, IChunkStatusListener chunkStatusListenerIn, CallbackInfo ci, ServerWorld serverWorld) {
+        Bukkit.getPluginManager().callEvent(new WorldInitEvent(((WorldBridge) serverWorld).bridge$getWorld()));
     }
 
     @Inject(method = "updateTimeLightAndEntities", at = @At("HEAD"))

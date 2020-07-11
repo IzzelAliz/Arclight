@@ -92,7 +92,7 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         throw new RuntimeException();
     }
 
-    public void arclight$constructor(MinecraftServer serverIn, Executor executor, SaveHandler saveHandler, WorldInfo worldInfo, DimensionType dimType, IProfiler profiler, IChunkStatusListener listener, org.bukkit.generator.ChunkGenerator gen, org.bukkit.World.Environment env) {
+    public void arclight$constructor(MinecraftServer serverIn, Executor executor, SaveHandler saveHandler, WorldInfo worldInfo, DimensionType dimType, IProfiler profiler, IChunkStatusListener listener, org.bukkit.World.Environment env, org.bukkit.generator.ChunkGenerator gen) {
         arclight$constructor(serverIn, executor, saveHandler, worldInfo, dimType, profiler, listener);
         this.generator = gen;
         this.environment = env;
