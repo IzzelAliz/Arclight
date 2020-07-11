@@ -69,7 +69,7 @@ public class ArclightImplementer implements ILaunchPluginService {
                 trails.add(key);
             }
         }
-        if (!trails.isEmpty()) {
+        if (this.auditAcceptor != null && !trails.isEmpty()) {
             this.auditAcceptor.accept(new String[]{String.join(",", trails)});
         }
         return !trails.isEmpty();
