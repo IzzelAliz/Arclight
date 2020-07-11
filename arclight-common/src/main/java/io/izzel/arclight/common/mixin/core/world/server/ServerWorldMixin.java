@@ -9,10 +9,15 @@ import io.izzel.arclight.common.bridge.world.server.ServerWorldBridge;
 import io.izzel.arclight.common.bridge.world.storage.MapDataBridge;
 import io.izzel.arclight.common.bridge.world.storage.WorldInfoBridge;
 import io.izzel.arclight.common.mixin.core.world.WorldMixin;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityClassification;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.effect.LightningBoltEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.IInventory;
@@ -32,6 +37,7 @@ import net.minecraft.world.WorldSettings;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.listener.IChunkStatusListener;
 import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.server.ServerChunkProvider;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.MapData;
 import net.minecraft.world.storage.SaveHandler;
@@ -78,6 +84,8 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
     @Shadow protected abstract boolean sendPacketWithinDistance(ServerPlayerEntity player, boolean longDistance, double posX, double posY, double posZ, IPacket<?> packet);
     @Shadow @Nonnull public abstract MinecraftServer shadow$getServer();
     @Shadow @Final private List<ServerPlayerEntity> players;
+    @Shadow @Final public Int2ObjectMap<Entity> entitiesById;
+    @Shadow public abstract ServerChunkProvider getChunkProvider();
     // @formatter:on
 
     public void arclight$constructor(MinecraftServer serverIn, Executor executor, SaveHandler saveHandler, WorldInfo worldInfo, DimensionType dimType, IProfiler profiler, IChunkStatusListener listener) {
@@ -330,5 +338,27 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         } else {
             return found;
         }
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    public Object2IntMap<EntityClassification> countEntities() {
+        Object2IntMap<EntityClassification> map = new Object2IntOpenHashMap<>();
+        for (Entity entity : this.entitiesById.values()) {
+            if (entity instanceof MobEntity) {
+                MobEntity mobEntity = (MobEntity) entity;
+                if (mobEntity.canDespawn(0.0) && mobEntity.isNoDespawnRequired()) {
+                    continue;
+                }
+            }
+            EntityClassification classification = entity.getType().getClassification();
+            if (classification != EntityClassification.MISC && this.getChunkProvider().func_223435_b(entity)) {
+                map.mergeInt(classification, 1, Integer::sum);
+            }
+        }
+        return map;
     }
 }
