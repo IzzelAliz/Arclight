@@ -123,55 +123,57 @@ public abstract class EntityMixin_1_15 implements EntityBridge {
             Entity transportedEntity = teleporter.placeEntity((Entity) (Object) this, serverworld, serverworld1[0], this.rotationYaw, spawnPortal -> { //Forge: Start vanilla logic
                 Vec3d vec3d = this.getMotion();
                 float f = 0.0F;
-                BlockPos blockpos;
-                if (dimensiontype == DimensionType.THE_END && destination == DimensionType.OVERWORLD) {
-                    EntityPortalEvent event = CraftEventFactory.callEntityPortalEvent((Entity) (Object) this, serverworld1[0], serverworld1[0].getHeight(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, serverworld1[0].getSpawnPoint()), 0);
-                    if (event == null) {
-                        return null;
-                    }
-                    serverworld1[0] = ((CraftWorld) event.getTo().getWorld()).getHandle();
-                    blockpos = new BlockPos(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
-                    //blockpos = serverworld1[0].getHeight(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, serverworld1[0].getSpawnPoint());
-                } else if (destination == DimensionType.THE_END) {
-                    EntityPortalEvent event = CraftEventFactory.callEntityPortalEvent((Entity) (Object) this, serverworld1[0], (serverworld1[0].getSpawnCoordinate() != null) ? serverworld1[0].getSpawnCoordinate() : serverworld1[0].getSpawnPoint(), 0);
-                    if (event == null) {
-                        return null;
-                    }
-                    serverworld1[0] = ((CraftWorld) event.getTo().getWorld()).getHandle();
-                    blockpos = new BlockPos(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
-                    //blockpos = serverworld1[0].getSpawnCoordinate();
-                } else {
-                    double movementFactor = serverworld.getDimension().getMovementFactor() / serverworld1[0].getDimension().getMovementFactor();
-                    double d0 = this.getPosX() * movementFactor;
-                    double d1 = this.getPosZ() * movementFactor;
-
-                    double d3 = Math.min(-2.9999872E7D, serverworld1[0].getWorldBorder().minX() + 16.0D);
-                    double d4 = Math.min(-2.9999872E7D, serverworld1[0].getWorldBorder().minZ() + 16.0D);
-                    double d5 = Math.min(2.9999872E7D, serverworld1[0].getWorldBorder().maxX() - 16.0D);
-                    double d6 = Math.min(2.9999872E7D, serverworld1[0].getWorldBorder().maxZ() - 16.0D);
-                    d0 = MathHelper.clamp(d0, d3, d5);
-                    d1 = MathHelper.clamp(d1, d4, d6);
-                    Vec3d vec3d1 = this.getLastPortalVec();
-                    blockpos = new BlockPos(d0, this.getPosY(), d1);
-
-                    EntityPortalEvent event2 = CraftEventFactory.callEntityPortalEvent((Entity) (Object) this, serverworld1[0], blockpos, 128);
-                    if (event2 == null) {
-                        return null;
-                    }
-                    serverworld1[0] = ((CraftWorld) event2.getTo().getWorld()).getHandle();
-                    blockpos = new BlockPos(event2.getTo().getX(), event2.getTo().getY(), event2.getTo().getZ());
-                    int searchRadius = event2.getSearchRadius();
-                    // todo 实现 radius
-
-                    if (spawnPortal) {
-                        BlockPattern.PortalInfo blockpattern$portalinfo = serverworld1[0].getDefaultTeleporter().placeInExistingPortal(blockpos, vec3d, this.getTeleportDirection(), vec3d1.x, vec3d1.y, (Object) this instanceof PlayerEntity);
-                        if (blockpattern$portalinfo == null) {
+                BlockPos blockpos = location;
+                if (blockpos == null) {
+                    if (dimensiontype == DimensionType.THE_END && destination == DimensionType.OVERWORLD) {
+                        EntityPortalEvent event = CraftEventFactory.callEntityPortalEvent((Entity) (Object) this, serverworld1[0], serverworld1[0].getHeight(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, serverworld1[0].getSpawnPoint()), 0);
+                        if (event == null) {
                             return null;
                         }
+                        serverworld1[0] = ((CraftWorld) event.getTo().getWorld()).getHandle();
+                        blockpos = new BlockPos(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
+                        //blockpos = serverworld1[0].getHeight(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, serverworld1[0].getSpawnPoint());
+                    } else if (destination == DimensionType.THE_END) {
+                        EntityPortalEvent event = CraftEventFactory.callEntityPortalEvent((Entity) (Object) this, serverworld1[0], (serverworld1[0].getSpawnCoordinate() != null) ? serverworld1[0].getSpawnCoordinate() : serverworld1[0].getSpawnPoint(), 0);
+                        if (event == null) {
+                            return null;
+                        }
+                        serverworld1[0] = ((CraftWorld) event.getTo().getWorld()).getHandle();
+                        blockpos = new BlockPos(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
+                        //blockpos = serverworld1[0].getSpawnCoordinate();
+                    } else {
+                        double movementFactor = serverworld.getDimension().getMovementFactor() / serverworld1[0].getDimension().getMovementFactor();
+                        double d0 = this.getPosX() * movementFactor;
+                        double d1 = this.getPosZ() * movementFactor;
 
-                        blockpos = new BlockPos(blockpattern$portalinfo.pos);
-                        vec3d = blockpattern$portalinfo.motion;
-                        f = (float) blockpattern$portalinfo.rotation;
+                        double d3 = Math.min(-2.9999872E7D, serverworld1[0].getWorldBorder().minX() + 16.0D);
+                        double d4 = Math.min(-2.9999872E7D, serverworld1[0].getWorldBorder().minZ() + 16.0D);
+                        double d5 = Math.min(2.9999872E7D, serverworld1[0].getWorldBorder().maxX() - 16.0D);
+                        double d6 = Math.min(2.9999872E7D, serverworld1[0].getWorldBorder().maxZ() - 16.0D);
+                        d0 = MathHelper.clamp(d0, d3, d5);
+                        d1 = MathHelper.clamp(d1, d4, d6);
+                        Vec3d vec3d1 = this.getLastPortalVec();
+                        blockpos = new BlockPos(d0, this.getPosY(), d1);
+
+                        EntityPortalEvent event2 = CraftEventFactory.callEntityPortalEvent((Entity) (Object) this, serverworld1[0], blockpos, 128);
+                        if (event2 == null) {
+                            return null;
+                        }
+                        serverworld1[0] = ((CraftWorld) event2.getTo().getWorld()).getHandle();
+                        blockpos = new BlockPos(event2.getTo().getX(), event2.getTo().getY(), event2.getTo().getZ());
+                        int searchRadius = event2.getSearchRadius();
+                        // todo 实现 radius
+
+                        if (spawnPortal) {
+                            BlockPattern.PortalInfo blockpattern$portalinfo = serverworld1[0].getDefaultTeleporter().placeInExistingPortal(blockpos, vec3d, this.getTeleportDirection(), vec3d1.x, vec3d1.y, (Object) this instanceof PlayerEntity);
+                            if (blockpattern$portalinfo == null) {
+                                return null;
+                            }
+
+                            blockpos = new BlockPos(blockpattern$portalinfo.pos);
+                            vec3d = blockpattern$portalinfo.motion;
+                            f = (float) blockpattern$portalinfo.rotation;
+                        }
                     }
                 }
 
