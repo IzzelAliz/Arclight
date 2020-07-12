@@ -56,6 +56,7 @@ import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.scoreboard.CraftScoreboardManager;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.event.world.WorldInitEvent;
+import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.plugin.PluginLoadOrder;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -63,6 +64,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -76,6 +78,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Map;
 import java.util.function.BooleanSupplier;
 
 @Mixin(MinecraftServer.class)
@@ -355,16 +358,64 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
         if (((CraftServer) Bukkit.getServer()).scoreboardManager == null) {
             ((CraftServer) Bukkit.getServer()).scoreboardManager = new CraftScoreboardManager((MinecraftServer) (Object) this, serverWorld.getScoreboard());
         }
+    }
+
+    @Redirect(method = "loadWorlds", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
+    private Object arclight$worldInit(Map<Object, Object> map, Object key, Object value) {
+        Object ret = map.put(key, value);
+        ServerWorld serverWorld = (ServerWorld) value;
         if (((WorldBridge) serverWorld).bridge$getGenerator() != null) {
             ((WorldBridge) serverWorld).bridge$getWorld().getPopulators().addAll(
                 ((WorldBridge) serverWorld).bridge$getGenerator().getDefaultPopulators(
                     ((WorldBridge) serverWorld).bridge$getWorld()));
         }
+        Bukkit.getPluginManager().callEvent(new WorldInitEvent(((WorldBridge) serverWorld).bridge$getWorld()));
+        return ret;
     }
 
-    @Inject(method = "loadWorlds", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/management/PlayerList;func_212504_a(Lnet/minecraft/world/server/ServerWorld;)V"))
-    private void arclight$initEvent(SaveHandler saveHandlerIn, WorldInfo info, WorldSettings worldSettingsIn, IChunkStatusListener chunkStatusListenerIn, CallbackInfo ci, ServerWorld serverWorld) {
-        Bukkit.getPluginManager().callEvent(new WorldInitEvent(((WorldBridge) serverWorld).bridge$getWorld()));
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    public void loadInitialChunks(IChunkStatusListener listener) {
+        this.setUserMessage(new TranslationTextComponent("menu.generatingTerrain"));
+        ServerWorld serverworld = this.getWorld(DimensionType.OVERWORLD);
+        this.forceTicks = true;
+        LOGGER.info("Preparing start region for dimension " + DimensionType.getKey(serverworld.dimension.getType()));
+        BlockPos blockpos = serverworld.getSpawnPoint();
+        listener.start(new ChunkPos(blockpos));
+        ServerChunkProvider serverchunkprovider = serverworld.getChunkProvider();
+        serverchunkprovider.getLightManager().func_215598_a(500);
+        this.serverTime = Util.milliTime();
+        serverchunkprovider.registerTicket(TicketType.START, new ChunkPos(blockpos), 11, Unit.INSTANCE);
+
+        while (serverchunkprovider.getLoadedChunksCount() != 441) {
+            this.executeModerately();
+        }
+
+        this.executeModerately();
+
+        for (DimensionType dimensiontype : DimensionType.getAll()) {
+            ServerWorld serverWorld = this.getWorld(dimensiontype);
+            if (((WorldBridge) serverWorld).bridge$getWorld().getKeepSpawnInMemory()) {
+                ForcedChunksSaveData forcedchunkssavedata = serverWorld.getSavedData().get(ForcedChunksSaveData::new, "chunks");
+                if (forcedchunkssavedata != null) {
+                    LongIterator longiterator = forcedchunkssavedata.getChunks().iterator();
+
+                    while (longiterator.hasNext()) {
+                        long i = longiterator.nextLong();
+                        ChunkPos chunkpos = new ChunkPos(i);
+                        serverWorld.getChunkProvider().forceChunk(chunkpos, true);
+                    }
+                }
+            }
+            Bukkit.getPluginManager().callEvent(new WorldLoadEvent(((WorldBridge) serverWorld).bridge$getWorld()));
+        }
+
+        this.executeModerately();
+        listener.stop();
+        serverchunkprovider.getLightManager().func_215598_a(5);
     }
 
     @Inject(method = "updateTimeLightAndEntities", at = @At("HEAD"))

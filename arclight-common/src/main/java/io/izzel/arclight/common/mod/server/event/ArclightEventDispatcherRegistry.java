@@ -9,7 +9,6 @@ public abstract class ArclightEventDispatcherRegistry {
         MinecraftForge.EVENT_BUS.register(new BlockBreakEventDispatcher());
         MinecraftForge.EVENT_BUS.register(new BlockPlaceEventDispatcher());
         MinecraftForge.EVENT_BUS.register(new EntityPotionEffectEventDispatcher());
-        MinecraftForge.EVENT_BUS.register(new WorldEventDispatcher());
         MinecraftForge.EVENT_BUS.register(new EntityEventDispatcher());
         MinecraftForge.EVENT_BUS.register(new NetworkEventDispatcher());
         MinecraftForge.EVENT_BUS.register(new EntityTeleportEventDispatcher());
