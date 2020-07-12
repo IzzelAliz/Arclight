@@ -5,6 +5,7 @@ import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.world.ExplosionBridge;
+import io.izzel.arclight.common.bridge.world.dimension.DimensionTypeBridge;
 import io.izzel.arclight.common.bridge.world.server.ServerWorldBridge;
 import io.izzel.arclight.common.bridge.world.storage.MapDataBridge;
 import io.izzel.arclight.common.bridge.world.storage.WorldInfoBridge;
@@ -39,6 +40,7 @@ import net.minecraft.world.chunk.listener.IChunkStatusListener;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerChunkProvider;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.spawner.WanderingTraderSpawner;
 import net.minecraft.world.storage.MapData;
 import net.minecraft.world.storage.SaveHandler;
 import net.minecraft.world.storage.WorldInfo;
@@ -56,6 +58,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -86,6 +89,7 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
     @Shadow @Final private List<ServerPlayerEntity> players;
     @Shadow @Final public Int2ObjectMap<Entity> entitiesById;
     @Shadow public abstract ServerChunkProvider getChunkProvider();
+    @Shadow @Final @Mutable @Nullable private WanderingTraderSpawner wanderingTraderSpawner;
     // @formatter:on
 
     public void arclight$constructor(MinecraftServer serverIn, Executor executor, SaveHandler saveHandler, WorldInfo worldInfo, DimensionType dimType, IProfiler profiler, IChunkStatusListener listener) {
@@ -190,6 +194,9 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
     @Inject(method = "<init>", at = @At("RETURN"))
     public void arclight$init(MinecraftServer serverIn, Executor executor, SaveHandler saveHandler, WorldInfo worldInfo, DimensionType dimType, IProfiler profiler, IChunkStatusListener listener, CallbackInfo ci) {
         ((WorldInfoBridge) worldInfo).bridge$setWorld((ServerWorld) (Object) this);
+        if (this.wanderingTraderSpawner == null && ((DimensionTypeBridge) this.dimension.getType()).bridge$getType() == DimensionType.OVERWORLD) {
+            this.wanderingTraderSpawner = new WanderingTraderSpawner((ServerWorld) (Object) this);
+        }
     }
 
     private transient boolean arclight$force;

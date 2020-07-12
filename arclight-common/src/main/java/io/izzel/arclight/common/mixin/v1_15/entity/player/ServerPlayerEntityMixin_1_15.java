@@ -44,7 +44,6 @@ import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.util.BlockStateListPopulator;
-import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -90,7 +89,7 @@ public abstract class ServerPlayerEntityMixin_1_15 extends PlayerEntityMixin_1_1
     @Overwrite(remap = false)
     @Nullable
     public Entity changeDimension(DimensionType dim, ITeleporter teleporter) {
-        final DimensionType[] destination = {dim};
+        DimensionType[] destination = {dim};
         if (this.isSleeping()) return (ServerPlayerEntity) (Object) this;
 
         if (!ForgeHooks.onTravelToDimension((ServerPlayerEntity) (Object) this, destination[0])) return null;
@@ -112,7 +111,7 @@ public abstract class ServerPlayerEntityMixin_1_15 extends PlayerEntityMixin_1_1
         } else {
             ServerWorld serverworld = this.server.getWorld(dimensiontype);
             // this.dimension = destination;
-            final ServerWorld[] serverworld1 = {this.server.getWorld(destination[0])};
+            ServerWorld[] serverworld1 = {this.server.getWorld(destination[0])};
 
             /*
             WorldInfo worldinfo = serverworld1.getWorldInfo();
@@ -124,7 +123,7 @@ public abstract class ServerPlayerEntityMixin_1_15 extends PlayerEntityMixin_1_1
             serverworld.removeEntity((ServerPlayerEntity) (Object) this, true); //Forge: the player entity is moved to the new world, NOT cloned. So keep the data alive with no matching invalidate call.
             this.revive();
             */
-            final PlayerList[] playerlist = new PlayerList[1];
+            PlayerList[] playerlist = new PlayerList[1];
 
             Entity e = teleporter.placeEntity((ServerPlayerEntity) (Object) this, serverworld, serverworld1[0], this.rotationYaw, spawnPortal -> {//Forge: Start vanilla logic
                 double d0 = this.getPosX();
@@ -154,7 +153,7 @@ public abstract class ServerPlayerEntityMixin_1_15 extends PlayerEntityMixin_1_1
 
                 Location enter = this.bridge$getBukkitEntity().getLocation();
                 Location exit = (serverworld1[0] == null) ? null : new Location(((ServerWorldBridge) serverworld1[0]).bridge$getWorld(), d0, d1, d2, f1, f);
-                PlayerPortalEvent event = new PlayerPortalEvent((Player) this.bridge$getBukkitEntity(), enter, exit, cause, 128, true, ((DimensionTypeBridge) destination[0]).bridge$getType() == DimensionType.THE_END ? 0 : 16);
+                PlayerPortalEvent event = new PlayerPortalEvent(this.bridge$getBukkitEntity(), enter, exit, cause, 128, true, ((DimensionTypeBridge) destination[0]).bridge$getType() == DimensionType.THE_END ? 0 : 16);
                 Bukkit.getServer().getPluginManager().callEvent(event);
                 if (event.isCancelled() || event.getTo() == null) {
                     return null;
@@ -240,7 +239,7 @@ public abstract class ServerPlayerEntityMixin_1_15 extends PlayerEntityMixin_1_1
 
                 serverworld.getProfiler().endSection();
 
-                final PlayerTeleportEvent tpEvent = new PlayerTeleportEvent((Player) this.bridge$getBukkitEntity(), enter, exit, cause);
+                PlayerTeleportEvent tpEvent = new PlayerTeleportEvent(this.bridge$getBukkitEntity(), enter, exit, cause);
                 Bukkit.getServer().getPluginManager().callEvent(tpEvent);
                 if (tpEvent.isCancelled() || tpEvent.getTo() == null) {
                     return null;
@@ -278,8 +277,11 @@ public abstract class ServerPlayerEntityMixin_1_15 extends PlayerEntityMixin_1_1
 
                 return (ServerPlayerEntity) (Object) this;//forge: this is part of the ITeleporter patch
             });//Forge: End vanilla logic
-            if (e != (Object) this)
+            if (e == null) {
+                return (ServerPlayerEntity) (Object) this;
+            } else if (e != (Object) this) {
                 throw new IllegalArgumentException(String.format("Teleporter %s returned not the player entity but instead %s, expected PlayerEntity %s", teleporter, e, this));
+            }
             this.interactionManager.setWorld(serverworld1[0]);
             this.connection.sendPacket(new SPlayerAbilitiesPacket(this.abilities));
             playerlist[0].sendWorldInfo((ServerPlayerEntity) (Object) this, serverworld1[0]);
@@ -295,7 +297,7 @@ public abstract class ServerPlayerEntityMixin_1_15 extends PlayerEntityMixin_1_1
             this.lastFoodLevel = -1;
             BasicEventHooks.firePlayerChangedDimensionEvent((ServerPlayerEntity) (Object) this, dimensiontype, destination[0]);
 
-            PlayerChangedWorldEvent changeEvent = new PlayerChangedWorldEvent((Player) this.bridge$getBukkitEntity(), ((WorldBridge) serverworld).bridge$getWorld());
+            PlayerChangedWorldEvent changeEvent = new PlayerChangedWorldEvent(this.bridge$getBukkitEntity(), ((WorldBridge) serverworld).bridge$getWorld());
             Bukkit.getPluginManager().callEvent(changeEvent);
             return (ServerPlayerEntity) (Object) this;
         }
