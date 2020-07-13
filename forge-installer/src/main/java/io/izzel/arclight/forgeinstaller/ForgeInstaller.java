@@ -69,7 +69,7 @@ public class ForgeInstaller {
                 handleFutures(futures);
                 ArclightLocale.info("downloader.forge-install");
                 ProcessBuilder builder = new ProcessBuilder();
-                builder.command("java", "-jar", String.format("forge-%s-%s-installer.jar", installInfo.installer.minecraft, installInfo.installer.forge), "--installServer", ".");
+                builder.command("java", "-Djava.net.useSystemProxies=true", "-jar", String.format("forge-%s-%s-installer.jar", installInfo.installer.minecraft, installInfo.installer.forge), "--installServer", ".");
                 builder.inheritIO();
                 Process process = builder.start();
                 process.waitFor();
