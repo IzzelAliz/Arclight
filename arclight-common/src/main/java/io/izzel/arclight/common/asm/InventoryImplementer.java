@@ -80,17 +80,21 @@ public class InventoryImplementer implements Implementer {
 
     private ClassNode findClass(String typeName, ILaunchPluginService.ITransformerLoader transformerLoader) throws Exception {
         try {
-            byte[] bytes = transformerLoader.buildTransformedClassNodeFor(Type.getObjectType(typeName).getClassName());
-            ClassNode node = new ClassNode();
-            new ClassReader(bytes).accept(node, ClassReader.EXPAND_FRAMES);
-            return node;
-        } catch (ClassNotFoundException e) {
             InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(typeName + ".class");
             if (stream == null) throw LocalizedException.checked("implementer.not-found", typeName);
             byte[] array = ByteStreams.toByteArray(stream);
             ClassNode node = new ClassNode();
-            new ClassReader(array).accept(node, ClassReader.EXPAND_FRAMES);
+            new ClassReader(array).accept(node, ClassReader.SKIP_CODE);
             return node;
+        } catch (Throwable e) {
+            try {
+                byte[] bytes = transformerLoader.buildTransformedClassNodeFor(Type.getObjectType(typeName).getClassName());
+                ClassNode node = new ClassNode();
+                new ClassReader(bytes).accept(node, ClassReader.SKIP_CODE);
+                return node;
+            } catch (Throwable t) {
+                throw LocalizedException.checked("implementer.not-found", typeName);
+            }
         }
     }
 
