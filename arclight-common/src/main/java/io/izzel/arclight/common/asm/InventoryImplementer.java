@@ -9,6 +9,7 @@ import org.apache.logging.log4j.MarkerManager;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -16,9 +17,11 @@ import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -136,7 +139,7 @@ public class InventoryImplementer implements Implementer {
                 insnList.add(new VarInsnNode(Opcodes.ALOAD, 0));
                 insnList.add(new FieldInsnNode(Opcodes.GETFIELD, node.name, transaction.name, transaction.desc));
                 insnList.add(new VarInsnNode(Opcodes.ALOAD, 1));
-                insnList.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, Type.getInternalName(List.class), "add", "(Ljava/lang/Object;)Z", false));
+                insnList.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, Type.getInternalName(List.class), "add", "(Ljava/lang/Object;)Z", true));
                 insnList.add(new InsnNode(Opcodes.POP));
                 insnList.add(new InsnNode(Opcodes.RETURN));
                 methodNode.instructions = insnList;
@@ -148,7 +151,7 @@ public class InventoryImplementer implements Implementer {
                 insnList.add(new VarInsnNode(Opcodes.ALOAD, 0));
                 insnList.add(new FieldInsnNode(Opcodes.GETFIELD, node.name, transaction.name, transaction.desc));
                 insnList.add(new VarInsnNode(Opcodes.ALOAD, 1));
-                insnList.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, Type.getInternalName(List.class), "remove", "(Ljava/lang/Object;)Z", false));
+                insnList.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, Type.getInternalName(List.class), "remove", "(Ljava/lang/Object;)Z", true));
                 insnList.add(new InsnNode(Opcodes.POP));
                 insnList.add(new InsnNode(Opcodes.RETURN));
                 methodNode.instructions = insnList;
@@ -181,6 +184,23 @@ public class InventoryImplementer implements Implementer {
                 insnList.add(new InsnNode(Opcodes.RETURN));
                 methodNode.instructions = insnList;
                 node.methods.add(methodNode);
+            }
+            {
+                for (MethodNode methodNode : node.methods) {
+                    if (methodNode.name.equals("<init>")) {
+                        AbstractInsnNode initNode = methodNode.instructions.getLast();
+                        while (initNode.getOpcode() != Opcodes.INVOKESPECIAL || !((MethodInsnNode) initNode).name.equals("<init>")) {
+                            initNode = initNode.getNext();
+                        }
+                        InsnList insnList = new InsnList();
+                        insnList.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                        insnList.add(new TypeInsnNode(Opcodes.NEW, Type.getInternalName(ArrayList.class)));
+                        insnList.add(new InsnNode(Opcodes.DUP));
+                        insnList.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, Type.getInternalName(ArrayList.class), "<init>", "()V", false));
+                        insnList.add(new FieldInsnNode(Opcodes.PUTFIELD, node.name, transaction.name, transaction.desc));
+                        methodNode.instructions.insert(initNode, insnList);
+                    }
+                }
             }
             return true;
         }
