@@ -416,6 +416,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
         this.executeModerately();
         listener.stop();
         serverchunkprovider.getLightManager().func_215598_a(5);
+        this.forceTicks = false;
     }
 
     @Inject(method = "updateTimeLightAndEntities", at = @At("HEAD"))
