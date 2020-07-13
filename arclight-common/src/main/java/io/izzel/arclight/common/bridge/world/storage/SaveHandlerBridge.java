@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.bridge.world.storage;
 
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.world.server.ServerWorld;
 
 import java.io.File;
 import java.util.UUID;
@@ -9,7 +10,7 @@ public interface SaveHandlerBridge {
 
     String[] bridge$getSeenPlayers();
 
-    UUID bridge$getUUID();
+    UUID bridge$getUUID(ServerWorld world);
 
     File bridge$getPlayerDir();
 

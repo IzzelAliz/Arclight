@@ -441,8 +441,8 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
 
     @Inject(method = "writeWithoutTypeId", at = @At(value = "INVOKE", shift = At.Shift.AFTER, ordinal = 0, target = "Lnet/minecraft/nbt/CompoundNBT;putUniqueId(Ljava/lang/String;Ljava/util/UUID;)V"))
     public void arclight$writeWithoutTypeId$CraftBukkitNBT(CompoundNBT compound, CallbackInfoReturnable<CompoundNBT> cir) {
-        compound.putLong("WorldUUIDLeast", ((SaveHandlerBridge) (((ServerWorld) this.world).getSaveHandler())).bridge$getUUID().getLeastSignificantBits());
-        compound.putLong("WorldUUIDMost", ((SaveHandlerBridge) (((ServerWorld) this.world).getSaveHandler())).bridge$getUUID().getMostSignificantBits());
+        compound.putLong("WorldUUIDLeast", ((SaveHandlerBridge) (((ServerWorld) this.world).getSaveHandler())).bridge$getUUID(((ServerWorld) this.world)).getLeastSignificantBits());
+        compound.putLong("WorldUUIDMost", ((SaveHandlerBridge) (((ServerWorld) this.world).getSaveHandler())).bridge$getUUID(((ServerWorld) this.world)).getMostSignificantBits());
         compound.putInt("Bukkit.updateLevel", CURRENT_LEVEL);
         compound.putInt("Spigot.ticksLived", this.ticksExisted);
     }

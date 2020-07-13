@@ -16,11 +16,13 @@ import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.potion.Effect;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.CrashReportExtender;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistry;
 import net.minecraftforge.registries.IForgeRegistry;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.craftbukkit.v.CraftCrashReport;
 import org.bukkit.craftbukkit.v.enchantments.CraftEnchantment;
 import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
 import org.bukkit.enchantments.Enchantment;
@@ -47,6 +49,7 @@ public class BukkitRegistry {
     private static final Map<String, EntityType> ENTITY_NAME_MAP = getStatic(EntityType.class, "NAME_MAP");
 
     public static void registerAll() {
+        CrashReportExtender.registerCrashCallable("Arclight", () -> new CraftCrashReport().call().toString());
         loadMaterials();
         loadPotions();
         loadEnchantments();

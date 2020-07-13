@@ -359,6 +359,7 @@
     "world.spawner.PatrolSpawnerMixin",
     "world.spawner.PhantomSpawnerMixin",
     "world.spawner.WanderingTraderSpawnerMixin",
+    "world.storage.DerivedWorldInfoMixin",
     "world.storage.MapData_MapInfoMixin",
     "world.storage.MapDataMixin",
     "world.storage.SaveHandlerMixin",

@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world;
 import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.bridge.world.border.WorldBorderBridge;
+import io.izzel.arclight.common.bridge.world.storage.DerivedWorldInfoBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -73,7 +74,10 @@ public abstract class WorldMixin implements WorldBridge {
 
     @Inject(method = "<init>(Lnet/minecraft/world/storage/WorldInfo;Lnet/minecraft/world/dimension/DimensionType;Ljava/util/function/BiFunction;Lnet/minecraft/profiler/IProfiler;Z)V", at = @At("RETURN"))
     private void arclight$init(WorldInfo info, DimensionType dimType, BiFunction<World, Dimension, AbstractChunkProvider> provider, IProfiler profilerIn, boolean remote, CallbackInfo ci) {
-        spigotConfig = new SpigotWorldConfig(worldInfo.getWorldName());
+        if (info instanceof DerivedWorldInfoBridge) {
+            ((DerivedWorldInfoBridge) info).bridge$setDimension(dimType);
+        }
+        spigotConfig = new SpigotWorldConfig(info.getWorldName());
         ((WorldBorderBridge) this.worldBorder).bridge$setWorld((ServerWorld) (Object) this);
         this.ticksPerAnimalSpawns = this.getServer().getTicksPerAnimalSpawns();
         this.ticksPerMonsterSpawns = this.getServer().getTicksPerMonsterSpawns();

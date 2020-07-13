@@ -2,10 +2,13 @@ package io.izzel.arclight.common.mixin.core.world.storage;
 
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.world.storage.SaveHandlerBridge;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.SaveHandler;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
@@ -33,7 +36,7 @@ public class SaveHandlerMixin implements SaveHandlerBridge {
     @Shadow @Final private File worldDirectory;
     // @formatter:on
 
-    private UUID uuid;
+    private final Int2ObjectMap<UUID> uuidMap = new Int2ObjectOpenHashMap<>();
 
     @Inject(method = "readPlayerData", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundNBT;contains(Ljava/lang/String;I)Z"))
     public void arclight$lastSeenTime(PlayerEntity player, CallbackInfoReturnable<CompoundNBT> cir) {
@@ -64,11 +67,20 @@ public class SaveHandlerMixin implements SaveHandlerBridge {
     }
 
     public UUID getUUID() {
+        return getUUID(null);
+    }
+
+    public UUID getUUID(ServerWorld world) {
+        int dimId = world == null ? 0 : world.dimension.getType().getId();
+        UUID uuid = uuidMap.get(dimId);
         if (uuid != null) return uuid;
-        File file1 = new File(this.worldDirectory, "uid.dat");
+        File folder = world == null ? this.worldDirectory : world.dimension.getType().getDirectory(this.worldDirectory);
+        File file1 = new File(folder, "uid.dat");
         if (file1.exists()) {
             try (DataInputStream dis = new DataInputStream(new FileInputStream(file1))) {
-                return uuid = new UUID(dis.readLong(), dis.readLong());
+                uuid = new UUID(dis.readLong(), dis.readLong());
+                uuidMap.put(dimId, uuid);
+                return uuid;
             } catch (IOException ex) {
                 LOGGER.warn("Failed to read " + file1 + ", generating new random UUID", ex);
             }
@@ -80,6 +92,7 @@ public class SaveHandlerMixin implements SaveHandlerBridge {
         } catch (IOException ex) {
             LOGGER.warn("Failed to write " + file1, ex);
         }
+        uuidMap.put(dimId, uuid);
         return uuid;
     }
 
@@ -105,8 +118,8 @@ public class SaveHandlerMixin implements SaveHandlerBridge {
     }
 
     @Override
-    public UUID bridge$getUUID() {
-        return getUUID();
+    public UUID bridge$getUUID(ServerWorld world) {
+        return getUUID(world);
     }
 
     @Override
