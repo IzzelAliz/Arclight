@@ -188,8 +188,8 @@ public class InventoryImplementer implements Implementer {
             {
                 for (MethodNode methodNode : node.methods) {
                     if (methodNode.name.equals("<init>")) {
-                        AbstractInsnNode initNode = methodNode.instructions.getLast();
-                        while (initNode.getOpcode() != Opcodes.INVOKESPECIAL || !((MethodInsnNode) initNode).name.equals("<init>")) {
+                        AbstractInsnNode initNode = methodNode.instructions.getFirst();
+                        while (!(initNode.getOpcode() == Opcodes.INVOKESPECIAL && ((MethodInsnNode) initNode).name.equals("<init>"))) {
                             initNode = initNode.getNext();
                         }
                         InsnList insnList = new InsnList();
