@@ -267,6 +267,6 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
             return;
         }
         LOGGER.info("UUID of player {} is {}", loginGameProfile.getName(), loginGameProfile.getId());
-        currentLoginState = ServerLoginNetHandler.State.READY_TO_ACCEPT;
+        currentLoginState = ServerLoginNetHandler.State.NEGOTIATING;
     }
 }
