@@ -6,6 +6,7 @@ import io.izzel.arclight.api.EnumHelper;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.bridge.bukkit.EntityTypeBridge;
 import io.izzel.arclight.common.bridge.bukkit.MaterialBridge;
+import io.izzel.arclight.common.bridge.world.dimension.DimensionTypeBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.util.ResourceLocationUtil;
 import io.izzel.arclight.common.mod.util.potion.ArclightPotionEffect;
@@ -16,12 +17,15 @@ import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.potion.Effect;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.dimension.DimensionType;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.fml.CrashReportExtender;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistry;
 import net.minecraftforge.registries.IForgeRegistry;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.World;
 import org.bukkit.craftbukkit.v.CraftCrashReport;
 import org.bukkit.craftbukkit.v.enchantments.CraftEnchantment;
 import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
@@ -41,12 +45,14 @@ public class BukkitRegistry {
 
     private static final List<Class<?>> MAT_CTOR = ImmutableList.of(int.class);
     private static final List<Class<?>> ENTITY_CTOR = ImmutableList.of(String.class, Class.class, int.class);
+    private static final List<Class<?>> ENV_CTOR = ImmutableList.of(int.class);
     private static final Map<String, Material> BY_NAME = getStatic(Material.class, "BY_NAME");
     private static final Map<Block, Material> BLOCK_MATERIAL = getStatic(CraftMagicNumbers.class, "BLOCK_MATERIAL");
     private static final Map<Item, Material> ITEM_MATERIAL = getStatic(CraftMagicNumbers.class, "ITEM_MATERIAL");
     private static final Map<Material, Item> MATERIAL_ITEM = getStatic(CraftMagicNumbers.class, "MATERIAL_ITEM");
     private static final Map<Material, Block> MATERIAL_BLOCK = getStatic(CraftMagicNumbers.class, "MATERIAL_BLOCK");
     private static final Map<String, EntityType> ENTITY_NAME_MAP = getStatic(EntityType.class, "NAME_MAP");
+    private static final Map<Integer, World.Environment> ENVIRONMENT_MAP = getStatic(World.Environment.class, "lookup");
 
     public static void registerAll() {
         CrashReportExtender.registerCrashCallable("Arclight", () -> new CraftCrashReport().call().toString());
@@ -54,6 +60,24 @@ public class BukkitRegistry {
         loadPotions();
         loadEnchantments();
         loadEntities();
+    }
+
+    public static void registerEnvironments() {
+        int i = World.Environment.values().length;
+        List<World.Environment> newTypes = new ArrayList<>();
+        for (DimensionType dimensionType : DimensionManager.getRegistry()) {
+            DimensionType actual = ((DimensionTypeBridge) dimensionType).bridge$getType();
+            World.Environment environment = World.Environment.getEnvironment(actual.getId());
+            if (environment == null) {
+                String name = ResourceLocationUtil.standardize(actual.getRegistryName());
+                environment = EnumHelper.makeEnum(World.Environment.class, name, i++, ENV_CTOR, ImmutableList.of(actual.getId()));
+                newTypes.add(environment);
+                ENVIRONMENT_MAP.put(actual.getId(), environment);
+                ArclightMod.LOGGER.debug("Registered {} as entity {}", actual.getRegistryName(), environment);
+            }
+        }
+        EnumHelper.addEnums(World.Environment.class, newTypes);
+        ArclightMod.LOGGER.info("registry.environment", newTypes.size());
     }
 
     private static void loadEntities() {

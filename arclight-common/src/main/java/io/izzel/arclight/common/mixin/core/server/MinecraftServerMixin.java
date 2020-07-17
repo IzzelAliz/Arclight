@@ -353,6 +353,11 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
         if (this.forceTicks) cir.setReturnValue(true);
     }
 
+    @Inject(method = "loadWorlds", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraftforge/common/DimensionManager;fireRegister()V", remap = false))
+    private void arclight$registerEnv(SaveHandler saveHandlerIn, WorldInfo info, WorldSettings worldSettingsIn, IChunkStatusListener chunkStatusListenerIn, CallbackInfo ci) {
+        BukkitRegistry.registerEnvironments();
+    }
+
     @Inject(method = "loadWorlds", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/MinecraftServer;func_213204_a(Lnet/minecraft/world/storage/DimensionSavedDataManager;)V"))
     private void arclight$worldInit(SaveHandler p_213194_1_, WorldInfo info, WorldSettings p_213194_3_, IChunkStatusListener p_213194_4_, CallbackInfo ci, ServerWorld serverWorld) {
         if (((CraftServer) Bukkit.getServer()).scoreboardManager == null) {

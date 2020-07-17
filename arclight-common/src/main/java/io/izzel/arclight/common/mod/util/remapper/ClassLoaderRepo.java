@@ -7,6 +7,7 @@ import org.objectweb.asm.tree.ClassNode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.net.URLConnection;
 
 public class ClassLoaderRepo implements ClassRepo {
@@ -19,7 +20,9 @@ public class ClassLoaderRepo implements ClassRepo {
 
     @Override
     public ClassNode findClass(String internalName) {
-        URL url = classLoader.getResource(internalName + ".class");
+        URL url = classLoader instanceof URLClassLoader
+            ? ((URLClassLoader) classLoader).findResource(internalName + ".class") // search local
+            : classLoader.getResource(internalName + ".class");
         if (url == null) return null;
         try {
             URLConnection connection = url.openConnection();
