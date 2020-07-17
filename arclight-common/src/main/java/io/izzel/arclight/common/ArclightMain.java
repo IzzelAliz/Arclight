@@ -6,7 +6,6 @@ import io.izzel.arclight.api.EnumHelper;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.util.log.ArclightI18nLogger;
 import io.izzel.arclight.common.mod.util.log.ArclightLazyLogManager;
-import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
 import io.izzel.arclight.common.util.EnumTypeFactory;
 import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.arclight.i18n.ArclightLocale;
@@ -14,7 +13,6 @@ import net.minecraftforge.server.ServerMain;
 
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.util.Objects;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
@@ -38,8 +36,6 @@ public abstract class ArclightMain {
         }
         try {
             printLogo();
-            ArclightI18nLogger.getLogger("Arclight").info("loading-mapping");
-            Objects.requireNonNull(ArclightRemapper.INSTANCE);
             this.beforeStart();
             this.dirtyHacks();
             ServerMain.main(args);

@@ -3,21 +3,23 @@ package io.izzel.arclight.common.mod.util.remapper;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import io.izzel.arclight.api.Unsafe;
+import io.izzel.arclight.common.mod.util.log.ArclightI18nLogger;
 import net.md_5.specialsource.InheritanceMap;
 import net.md_5.specialsource.JarMapping;
 import net.md_5.specialsource.provider.ClassLoaderProvider;
 import net.md_5.specialsource.provider.JointProvider;
-import org.bukkit.plugin.java.JavaPluginLoader;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ArclightRemapper {
 
     public static final ArclightRemapper INSTANCE;
 
     static {
+        ArclightI18nLogger.getLogger("Arclight").info("loading-mapping");
         try {
             INSTANCE = new ArclightRemapper();
         } catch (Exception e) {
@@ -28,6 +30,7 @@ public class ArclightRemapper {
     private final JarMapping toNmsMapping;
     private final JarMapping toBukkitMapping;
     public final InheritanceMap inheritanceMap;
+    private final List<PluginTransformer> transformerList = new ArrayList<>();
 
     public ArclightRemapper() throws Exception {
         this.toNmsMapping = new JarMapping();
@@ -50,10 +53,16 @@ public class ArclightRemapper {
         inheritanceProvider.add(new ClassLoaderProvider(ClassLoader.getSystemClassLoader()));
         this.toNmsMapping.setFallbackInheritanceProvider(inheritanceProvider);
         this.toBukkitMapping.setFallbackInheritanceProvider(inheritanceProvider);
+        this.transformerList.add(ArclightInterfaceInvokerGen.INSTANCE);
+        this.transformerList.add(ArclightRedirectAdapter.INSTANCE);
     }
 
-    public PluginRemapper createPluginRemapper(JavaPluginLoader loader, URLClassLoader plugin) {
-        return new PluginRemapper(copyOf(toNmsMapping), copyOf(toBukkitMapping), loader, plugin);
+    public ClassLoaderRemapper createClassLoaderRemapper(ClassLoader classLoader) {
+        return new ClassLoaderRemapper(copyOf(toNmsMapping), copyOf(toBukkitMapping), classLoader);
+    }
+
+    public List<PluginTransformer> getTransformerList() {
+        return transformerList;
     }
 
     private static long pkgOffset, clOffset, mdOffset, fdOffset, mapOffset;

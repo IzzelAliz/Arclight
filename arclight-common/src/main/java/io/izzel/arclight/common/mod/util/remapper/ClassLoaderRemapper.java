@@ -4,15 +4,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
-import io.izzel.arclight.common.mod.util.remapper.generated.ArclightReflectionHandler;
 import io.izzel.arclight.api.Unsafe;
+import io.izzel.arclight.common.mod.util.remapper.generated.ArclightReflectionHandler;
 import net.md_5.specialsource.JarMapping;
 import net.md_5.specialsource.JarRemapper;
 import net.md_5.specialsource.RemappingClassAdapter;
 import net.md_5.specialsource.repo.ClassRepo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bukkit.plugin.java.JavaPluginLoader;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -27,7 +26,6 @@ import org.spongepowered.asm.service.MixinService;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,33 +34,30 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class PluginRemapper extends JarRemapper {
+public class ClassLoaderRemapper extends JarRemapper {
 
     private static final Logger LOGGER = LogManager.getLogger("Arclight");
     private static final String PREFIX = "net/minecraft/";
 
-    private final PluginInheritanceProvider inheritanceProvider;
-    private final ClassRepo classRepo;
     private final JarMapping toBukkitMapping;
     private final JarRemapper toBukkitRemapper;
-    private final URLClassLoader plugin;
+    private final ClassLoader classLoader;
     private final String generatedHandler;
 
-    public PluginRemapper(JarMapping jarMapping, JarMapping toBukkitMapping, JavaPluginLoader loader, URLClassLoader plugin) {
+    public ClassLoaderRemapper(JarMapping jarMapping, JarMapping toBukkitMapping, ClassLoader classLoader) {
         super(jarMapping);
         this.toBukkitMapping = toBukkitMapping;
-        this.plugin = plugin;
-        this.classRepo = SharedClassRepo.get(loader, plugin);
-        this.inheritanceProvider = new PluginInheritanceProvider(this.classRepo);
+        this.classLoader = classLoader;
         this.jarMapping.setInheritanceMap(ArclightRemapper.INSTANCE.inheritanceMap);
-        this.jarMapping.setFallbackInheritanceProvider(this.inheritanceProvider);
-        this.toBukkitMapping.setFallbackInheritanceProvider(this.inheritanceProvider);
+        this.jarMapping.setFallbackInheritanceProvider(GlobalClassRepo.inheritanceProvider());
+        this.toBukkitMapping.setFallbackInheritanceProvider(GlobalClassRepo.inheritanceProvider());
         this.toBukkitRemapper = new JarRemapper(this.toBukkitMapping);
         this.generatedHandler = generateReflectionHandler();
+        GlobalClassRepo.INSTANCE.addRepo(new ClassLoaderRepo(this.classLoader));
     }
 
-    public URLClassLoader getPluginClassLoader() {
-        return plugin;
+    public ClassLoader getClassLoader() {
+        return classLoader;
     }
 
     public JarMapping toBukkitMapping() {
@@ -77,8 +72,8 @@ public class PluginRemapper extends JarRemapper {
         return toBukkitRemapper;
     }
 
-    public ClassRepo getClassRepo() {
-        return classRepo;
+    public String getGeneratedHandler() {
+        return generatedHandler;
     }
 
     // BiMap: srg -> bukkit
@@ -204,7 +199,7 @@ public class PluginRemapper extends JarRemapper {
     private boolean shouldRemap(String internalName) {
         Boolean b = cacheRemap.get(internalName);
         if (b != null) return b;
-        for (String s : inheritanceProvider.getAll(internalName)) {
+        for (String s : GlobalClassRepo.inheritanceProvider().getAll(internalName)) {
             if (s.startsWith(PREFIX)) {
                 cacheRemap.put(internalName, true);
                 return true;
@@ -230,7 +225,7 @@ public class PluginRemapper extends JarRemapper {
             if (ArclightRemapper.INSTANCE.inheritanceMap.hasParents(owner)) {
                 parents = ArclightRemapper.INSTANCE.inheritanceMap.getParents(owner);
             } else {
-                parents = this.inheritanceProvider.getParents(owner);
+                parents = GlobalClassRepo.inheritanceProvider().getParents(owner);
                 ArclightRemapper.INSTANCE.inheritanceMap.setParents(owner, parents);
             }
 
@@ -249,7 +244,7 @@ public class PluginRemapper extends JarRemapper {
     }
 
     public byte[] remapClass(byte[] arr) {
-        return remapClassFile(arr, classRepo);
+        return remapClassFile(arr, GlobalClassRepo.INSTANCE);
     }
 
     @Override
@@ -262,8 +257,9 @@ public class PluginRemapper extends JarRemapper {
         RemappingClassAdapter mapper = new RemappingClassAdapter(node, this, repo);
         reader.accept(mapper, ClassReader.SKIP_FRAMES);
 
-        ArclightRedirectAdapter.redirect(node, generatedHandler);
-        ArclightInterfaceInvokerGen.generate(node, this.classRepo, this, this.inheritanceProvider);
+        for (PluginTransformer transformer : ArclightRemapper.INSTANCE.getTransformerList()) {
+            transformer.handleClass(node, this);
+        }
 
         // 有的插件的编译器奇奇怪怪的，所以在这里要重新计算 frame
         ClassWriter wr = new PluginClassWriter(ClassWriter.COMPUTE_FRAMES);
@@ -272,14 +268,14 @@ public class PluginRemapper extends JarRemapper {
         return wr.toByteArray();
     }
 
-    private static AtomicInteger atomicInteger = new AtomicInteger();
+    private static final AtomicInteger COUNTER = new AtomicInteger();
 
     private String generateReflectionHandler() {
         try {
             ClassNode node = MixinService.getService().getBytecodeProvider().getClassNode(Type.getInternalName(ArclightReflectionHandler.class));
             Preconditions.checkNotNull(node, "node");
             ClassWriter writer = new ClassWriter(0);
-            String name = Type.getInternalName(ArclightReflectionHandler.class) + "_" + atomicInteger.getAndIncrement();
+            String name = Type.getInternalName(ArclightReflectionHandler.class) + "_" + COUNTER.getAndIncrement();
             ClassVisitor visitor = new ClassRemapper(writer, new NameRemapper(name));
             node.accept(visitor);
             byte[] bytes = writer.toByteArray();
@@ -296,7 +292,7 @@ public class PluginRemapper extends JarRemapper {
 
     private static class NameRemapper extends Remapper {
 
-        private static String origin = Type.getInternalName(ArclightReflectionHandler.class);
+        private static final String ORIGIN = Type.getInternalName(ArclightReflectionHandler.class);
 
         private final String internal;
 
@@ -306,14 +302,14 @@ public class PluginRemapper extends JarRemapper {
 
         @Override
         public String mapType(String internalName) {
-            if (internalName.equals(origin)) {
+            if (internalName.equals(ORIGIN)) {
                 return internal;
             }
             return super.mapType(internalName);
         }
     }
 
-    private class PluginClassWriter extends ClassWriter {
+    private static class PluginClassWriter extends ClassWriter {
 
         public PluginClassWriter(int flags) {
             super(flags);
@@ -321,11 +317,11 @@ public class PluginRemapper extends JarRemapper {
 
         @Override
         protected String getCommonSuperClass(String type1, String type2) {
-            Collection<String> parents = inheritanceProvider.getAll(type2);
+            Collection<String> parents = GlobalClassRepo.inheritanceProvider().getAll(type2);
             if (parents.contains(type1)) {
                 return type1;
             }
-            if (inheritanceProvider.getAll(type1).contains(type2)) {
+            if (GlobalClassRepo.inheritanceProvider().getAll(type1).contains(type2)) {
                 return type2;
             }
             do {
@@ -335,7 +331,7 @@ public class PluginRemapper extends JarRemapper {
         }
 
         private String getSuper(final String typeName) {
-            ClassNode node = classRepo.findClass(typeName);
+            ClassNode node = GlobalClassRepo.INSTANCE.findClass(typeName);
             if (node == null) return "java/lang/Object";
             return node.superName;
         }

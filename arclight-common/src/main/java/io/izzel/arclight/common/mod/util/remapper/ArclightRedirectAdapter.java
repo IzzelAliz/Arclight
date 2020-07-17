@@ -17,10 +17,11 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 
-public class ArclightRedirectAdapter {
+public class ArclightRedirectAdapter implements PluginTransformer {
 
-    private static String REPLACED_NAME = Type.getInternalName(ArclightReflectionHandler.class);
-    private static Map<MethodInsnNode, MethodInsnNode> methodRedirects = ImmutableMap
+    public static final ArclightRedirectAdapter INSTANCE = new ArclightRedirectAdapter();
+    private static final String REPLACED_NAME = Type.getInternalName(ArclightReflectionHandler.class);
+    private static final Map<MethodInsnNode, MethodInsnNode> METHOD_REDIRECTS = ImmutableMap
         .<MethodInsnNode, MethodInsnNode>builder()
         .put(
             method(Opcodes.INVOKEVIRTUAL, Field.class, "getName"),
@@ -104,14 +105,19 @@ public class ArclightRedirectAdapter {
         )
         .build();
 
-    public static void redirect(ClassNode classNode, String generatedOwner) {
+    @Override
+    public void handleClass(ClassNode node, ClassLoaderRemapper remapper) {
+        redirect(node, remapper.getGeneratedHandler());
+    }
+
+    private static void redirect(ClassNode classNode, String generatedOwner) {
         for (MethodNode methodNode : classNode.methods) {
             ListIterator<AbstractInsnNode> iterator = methodNode.instructions.iterator();
             while (iterator.hasNext()) {
                 AbstractInsnNode insnNode = iterator.next();
                 if (insnNode instanceof MethodInsnNode) {
                     MethodInsnNode from = (MethodInsnNode) insnNode;
-                    for (Map.Entry<MethodInsnNode, MethodInsnNode> entry : methodRedirects.entrySet()) {
+                    for (Map.Entry<MethodInsnNode, MethodInsnNode> entry : METHOD_REDIRECTS.entrySet()) {
                         MethodInsnNode key = entry.getKey();
                         if (
                             key.getOpcode() == from.getOpcode() &&
@@ -151,5 +157,4 @@ public class ArclightRedirectAdapter {
         String desc = Type.getMethodDescriptor(method);
         return new MethodInsnNode(opcode, owner, name, desc);
     }
-
 }

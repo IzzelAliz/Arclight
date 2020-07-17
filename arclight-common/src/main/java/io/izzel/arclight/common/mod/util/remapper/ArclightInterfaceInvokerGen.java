@@ -16,14 +16,20 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class ArclightInterfaceInvokerGen {
+public class ArclightInterfaceInvokerGen implements PluginTransformer {
 
+    public static final ArclightInterfaceInvokerGen INSTANCE = new ArclightInterfaceInvokerGen();
     private static final String PREFIX = "net/minecraft/";
 
-    public static void generate(ClassNode classNode, ClassRepo classRepo, PluginRemapper remapper, InheritanceProvider inheritanceProvider) {
+    @Override
+    public void handleClass(ClassNode node, ClassLoaderRemapper remapper) {
+        generate(node, remapper, GlobalClassRepo.inheritanceProvider());
+    }
+
+    private static void generate(ClassNode classNode, ClassLoaderRemapper remapper, InheritanceProvider inheritanceProvider) {
         if (shouldGenerate(classNode.name, inheritanceProvider)) {
             HashSet<Map.Entry<String, String>> set = new HashSet<>();
-            interfaceMethods(classNode.name, set, classRepo);
+            interfaceMethods(classNode.name, set, GlobalClassRepo.INSTANCE);
             for (Map.Entry<String, String> entry : set) {
                 String name = entry.getKey();
                 String desc = entry.getValue();
@@ -47,7 +53,7 @@ public class ArclightInterfaceInvokerGen {
         }
     }
 
-    private static MethodNode generateSynthetic(String name, String desc, MethodInsnNode node, PluginRemapper remapper) {
+    private static MethodNode generateSynthetic(String name, String desc, MethodInsnNode node, ClassLoaderRemapper remapper) {
         name = remapper.mapType(name);
         MethodNode methodNode = new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC, name, desc, null, null);
         methodNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));

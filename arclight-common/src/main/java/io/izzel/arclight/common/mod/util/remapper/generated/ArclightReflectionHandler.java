@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mod.util.remapper.generated;
 
+import io.izzel.arclight.common.mod.util.remapper.ClassLoaderRemapper;
 import org.objectweb.asm.Type;
-import io.izzel.arclight.common.mod.util.remapper.PluginRemapper;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -14,11 +14,11 @@ public class ArclightReflectionHandler {
 
     private static final String PREFIX = "net.minecraft.";
 
-    public static PluginRemapper remapper;
+    public static ClassLoaderRemapper remapper;
 
     // bukkit -> srg
     public static Class<?> redirectForName(String cl) throws ClassNotFoundException {
-        return redirectForName(cl, true, remapper.getPluginClassLoader());
+        return redirectForName(cl, true, remapper.getClassLoader());
     }
 
     // bukkit -> srg

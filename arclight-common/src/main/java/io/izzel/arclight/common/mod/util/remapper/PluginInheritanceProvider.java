@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class PluginInheritanceProvider implements InheritanceProvider {
 
-    private static Map<String, Collection<String>> sharedInheritanceMap = new ConcurrentHashMap<>();
+    private static final Map<String, Collection<String>> SHARED_INHERITANCE_MAP = new ConcurrentHashMap<>();
 
     private final ClassRepo classRepo;
 
@@ -34,7 +34,7 @@ public class PluginInheritanceProvider implements InheritanceProvider {
     }
 
     public Collection<String> getAll(String className) {
-        Collection<String> collection = sharedInheritanceMap.get(className);
+        Collection<String> collection = SHARED_INHERITANCE_MAP.get(className);
         if (collection != null) return collection;
 
         ClassNode node = classRepo.findClass(className);
@@ -48,7 +48,7 @@ public class PluginInheritanceProvider implements InheritanceProvider {
             parents.add("java/lang/Object");
         }
 
-        sharedInheritanceMap.put(className, parents);
+        SHARED_INHERITANCE_MAP.put(className, parents);
         return parents;
     }
 }
