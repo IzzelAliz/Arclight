@@ -30,6 +30,8 @@ public class SwitchTableFixer implements Implementer {
         .add("org/bukkit/Material")
         .add("org/bukkit/entity/EntityType")
         .add("org/bukkit/World$Environment")
+        .add("org/bukkit/entity/Villager$Profession")
+        .add("org/bukkit/block/Biome")
         .build();
 
     public byte[] processClass(byte[] bytes) {

@@ -1,11 +1,16 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.common.bridge.bukkit.MaterialBridge;
+import io.izzel.arclight.common.mod.util.ResourceLocationUtil;
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.Material;
+import org.bukkit.block.Biome;
 import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
+import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,5 +29,23 @@ public abstract class CraftBlockMixin {
         if (bridge.bridge$getType() != MaterialPropertySpec.MaterialType.VANILLA) {
             cir.setReturnValue(bridge.bridge$blockStateFactory().apply((CraftBlock) (Object) this));
         }
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    public static Biome biomeBaseToBiome(net.minecraft.world.biome.Biome base) {
+        return Biome.valueOf(ResourceLocationUtil.standardize(base.getRegistryName()));
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    public static net.minecraft.world.biome.Biome biomeToBiomeBase(Biome bio) {
+        return ForgeRegistries.BIOMES.getValue(CraftNamespacedKey.toMinecraft(bio.getKey()));
     }
 }

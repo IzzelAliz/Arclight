@@ -14,6 +14,7 @@ import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.arclight.i18n.conf.EntityPropertySpec;
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
 import net.minecraft.block.Block;
+import net.minecraft.entity.merchant.villager.VillagerProfession;
 import net.minecraft.item.Item;
 import net.minecraft.potion.Effect;
 import net.minecraft.util.ResourceLocation;
@@ -26,16 +27,20 @@ import net.minecraftforge.registries.IForgeRegistry;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.block.Biome;
 import org.bukkit.craftbukkit.v.CraftCrashReport;
 import org.bukkit.craftbukkit.v.enchantments.CraftEnchantment;
 import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
+import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Villager;
 import org.bukkit.potion.PotionEffectType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,6 +65,56 @@ public class BukkitRegistry {
         loadPotions();
         loadEnchantments();
         loadEntities();
+        loadVillagerProfessions();
+        loadBiomes();
+    }
+
+    private static void loadBiomes() {
+        int i = Biome.values().length;
+        List<Biome> newTypes = new ArrayList<>();
+        Field key = Arrays.stream(Biome.class.getDeclaredFields()).filter(it -> it.getName().equals("key")).findAny().orElse(null);
+        long keyOffset = Unsafe.objectFieldOffset(key);
+        for (net.minecraft.world.biome.Biome biome : ForgeRegistries.BIOMES) {
+            String name = ResourceLocationUtil.standardize(biome.getRegistryName());
+            Biome bukkit;
+            try {
+                bukkit = Biome.valueOf(name);
+            } catch (Throwable t) {
+                bukkit = null;
+            }
+            if (bukkit == null) {
+                bukkit = EnumHelper.makeEnum(Biome.class, name, i++, ImmutableList.of(), ImmutableList.of());
+                newTypes.add(bukkit);
+                Unsafe.putObject(bukkit, keyOffset, CraftNamespacedKey.fromMinecraft(biome.getRegistryName()));
+                ArclightMod.LOGGER.debug("Registered {} as biome {}", biome.getRegistryName(), bukkit);
+            }
+        }
+        EnumHelper.addEnums(Biome.class, newTypes);
+        ArclightMod.LOGGER.info("registry.biome", newTypes.size());
+    }
+
+    private static void loadVillagerProfessions() {
+        int i = Villager.Profession.values().length;
+        List<Villager.Profession> newTypes = new ArrayList<>();
+        Field key = Arrays.stream(Villager.Profession.class.getDeclaredFields()).filter(it -> it.getName().equals("key")).findAny().orElse(null);
+        long keyOffset = Unsafe.objectFieldOffset(key);
+        for (VillagerProfession villagerProfession : ForgeRegistries.PROFESSIONS) {
+            String name = ResourceLocationUtil.standardize(villagerProfession.getRegistryName());
+            Villager.Profession profession;
+            try {
+                profession = Villager.Profession.valueOf(name);
+            } catch (Throwable t) {
+                profession = null;
+            }
+            if (profession == null) {
+                profession = EnumHelper.makeEnum(Villager.Profession.class, name, i++, ImmutableList.of(), ImmutableList.of());
+                newTypes.add(profession);
+                Unsafe.putObject(profession, keyOffset, CraftNamespacedKey.fromMinecraft(villagerProfession.getRegistryName()));
+                ArclightMod.LOGGER.debug("Registered {} as villager profession {}", villagerProfession.getRegistryName(), profession);
+            }
+        }
+        EnumHelper.addEnums(Villager.Profession.class, newTypes);
+        ArclightMod.LOGGER.info("registry.villager-profession", newTypes.size());
     }
 
     public static void registerEnvironments() {
@@ -73,7 +128,7 @@ public class BukkitRegistry {
                 environment = EnumHelper.makeEnum(World.Environment.class, name, i++, ENV_CTOR, ImmutableList.of(actual.getId()));
                 newTypes.add(environment);
                 ENVIRONMENT_MAP.put(actual.getId(), environment);
-                ArclightMod.LOGGER.debug("Registered {} as entity {}", actual.getRegistryName(), environment);
+                ArclightMod.LOGGER.debug("Registered {} as environment {}", actual.getRegistryName(), environment);
             }
         }
         EnumHelper.addEnums(World.Environment.class, newTypes);
