@@ -971,12 +971,12 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                         if (component == null) return null;
                         Bukkit.getConsoleSender().sendMessage(CraftChatMessage.fromComponent(component));
                         if (((LazyPlayerSet) queueEvent.getRecipients()).isLazy()) {
-                            for (Object player : minecraftServer.getPlayerList().players) {
+                            for (ServerPlayerEntity player : minecraftServer.getPlayerList().players) {
                                 ((ServerPlayerEntityBridge) player).bridge$sendMessage(component);
                             }
                         } else {
                             for (Player player2 : queueEvent.getRecipients()) {
-                                ((ServerPlayerEntityBridge) player2).bridge$sendMessage(component);
+                                ((ServerPlayerEntityBridge) ((CraftPlayer) player2).getHandle()).bridge$sendMessage(component);
                             }
                         }
                         return null;
@@ -1012,12 +1012,12 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                     if (component == null) return null;
                     Bukkit.getConsoleSender().sendMessage(CraftChatMessage.fromComponent(component));
                     if (((LazyPlayerSet) event.getRecipients()).isLazy()) {
-                        for (Object recipient : minecraftServer.getPlayerList().players) {
+                        for (ServerPlayerEntity recipient : minecraftServer.getPlayerList().players) {
                             ((ServerPlayerEntityBridge) recipient).bridge$sendMessage(component);
                         }
                     } else {
                         for (Player recipient2 : event.getRecipients()) {
-                            ((ServerPlayerEntityBridge) recipient2).bridge$sendMessage(component);
+                            ((ServerPlayerEntityBridge) ((CraftPlayer) recipient2).getHandle()).bridge$sendMessage(component);
                         }
                     }
                     return null;

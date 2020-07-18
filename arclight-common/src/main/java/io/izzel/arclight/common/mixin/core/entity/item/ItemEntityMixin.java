@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mixin.core.entity.item;
 
-import com.google.common.base.Preconditions;
 import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.entity.player.PlayerInventoryBridge;
@@ -111,10 +110,12 @@ public abstract class ItemEntityMixin extends EntityMixin {
         }
     }
 
+    /* #24
     @Inject(method = "setItem", at = @At("HEAD"))
     private void arclight$noAirDrops(ItemStack stack, CallbackInfo ci) {
         Preconditions.checkArgument(!stack.isEmpty(), "Cannot drop air");
     }
+    */
 
     @Inject(method = "setItem", at = @At("RETURN"))
     private void arclight$markDirty(ItemStack stack, CallbackInfo ci) {
