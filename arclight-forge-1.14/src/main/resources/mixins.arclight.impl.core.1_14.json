@@ -80,6 +80,7 @@
     "world.chunk.ChunkMixin_1_14",
     "world.dimension.DimensionTypeMixin_1_14",
     "world.gen.feature.structure.SwampHutPieceMixin_1_14",
+    "world.server.ServerChunkProviderMixin_1_14",
     "world.server.TicketManagerMixin_1_14",
     "world.spawner.WorldEntitySpawnerMixin_1_14",
     "world.storage.MapDataMixin_1_14"

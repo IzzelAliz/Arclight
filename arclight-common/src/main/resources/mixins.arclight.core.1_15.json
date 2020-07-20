@@ -82,6 +82,7 @@
     "world.chunk.ChunkMixin_1_15",
     "world.dimension.DimensionTypeMixin_1_15",
     "world.gen.feature.structure.SwampHutPieceMixin_1_15",
+    "world.server.ServerChunkProviderMixin_1_15",
     "world.server.ServerMultiWorldMixin_1_15",
     "world.server.ServerWorldMixin_1_15",
     "world.server.TicketManagerMixin_1_15",
