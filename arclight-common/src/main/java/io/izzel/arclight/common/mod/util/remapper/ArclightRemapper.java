@@ -55,10 +55,11 @@ public class ArclightRemapper {
         this.toBukkitMapping.setFallbackInheritanceProvider(inheritanceProvider);
         this.transformerList.add(ArclightInterfaceInvokerGen.INSTANCE);
         this.transformerList.add(ArclightRedirectAdapter.INSTANCE);
+        this.transformerList.add(ClassLoaderAdapter.INSTANCE);
     }
 
-    public ClassLoaderRemapper createClassLoaderRemapper(ClassLoader classLoader) {
-        return new ClassLoaderRemapper(copyOf(toNmsMapping), copyOf(toBukkitMapping), classLoader);
+    public static ClassLoaderRemapper createClassLoaderRemapper(ClassLoader classLoader) {
+        return new ClassLoaderRemapper(INSTANCE.copyOf(INSTANCE.toNmsMapping), INSTANCE.copyOf(INSTANCE.toBukkitMapping), classLoader);
     }
 
     public List<PluginTransformer> getTransformerList() {
