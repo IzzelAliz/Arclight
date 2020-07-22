@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.entity.passive;
 
 import io.izzel.arclight.common.bridge.entity.passive.AnimalEntityBridge;
+import io.izzel.arclight.common.mixin.core.entity.AgeableEntityMixin;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -12,7 +13,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import io.izzel.arclight.common.mixin.core.entity.AgeableEntityMixin;
 
 @Mixin(AnimalEntity.class)
 public abstract class AnimalEntityMixin extends AgeableEntityMixin implements AnimalEntityBridge {
@@ -34,7 +34,9 @@ public abstract class AnimalEntityMixin extends AgeableEntityMixin implements An
 
     @Inject(method = "setInLove(Lnet/minecraft/entity/player/PlayerEntity;)V", at = @At("HEAD"))
     private void arclight$setBreedItem(PlayerEntity player, CallbackInfo ci) {
-        this.breedItem = player.inventory.getCurrentItem();
+        if (player != null) {
+            this.breedItem = player.inventory.getCurrentItem();
+        }
     }
 
     @Override
