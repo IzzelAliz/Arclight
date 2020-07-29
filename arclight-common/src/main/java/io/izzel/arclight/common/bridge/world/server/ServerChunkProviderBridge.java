@@ -10,6 +10,8 @@ import java.io.IOException;
 
 public interface ServerChunkProviderBridge {
 
+    boolean isChunkLoaded(int chunkX,int chunkZ);
+
     void bridge$close(boolean save) throws IOException;
 
     void bridge$purgeUnload();

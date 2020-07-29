@@ -36,6 +36,7 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.listener.IChunkStatusListener;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerChunkProvider;
@@ -91,6 +92,12 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
     @Shadow public abstract ServerChunkProvider getChunkProvider();
     @Shadow @Final @Mutable @Nullable private WanderingTraderSpawner wanderingTraderSpawner;
     // @formatter:on
+
+
+    @Override
+    public Chunk getChunkAt(int chunkX, int chunkZ) {
+        return (Chunk) ((World) (Object) this).getChunk(chunkX, chunkZ, ChunkStatus.FULL);
+    }
 
     public void arclight$constructor(MinecraftServer serverIn, Executor executor, SaveHandler saveHandler, WorldInfo worldInfo, DimensionType dimType, IProfiler profiler, IChunkStatusListener listener) {
         throw new RuntimeException();
