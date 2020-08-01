@@ -90,7 +90,7 @@ public class ClassLoaderAdapter implements PluginTransformer {
                             storeArgs(argumentTypes, argsMap, methodNode, insnList);
                             insnList.add(new InsnNode(Opcodes.DUP));
                             insnList.add(new VarInsnNode(argumentTypes[index].getOpcode(Opcodes.ILOAD), methodNode.maxLocals + argsMap[index]));
-                            insnList.add(new MethodInsnNode(Opcodes.INVOKESTATIC, Type.getInternalName(ClassLoaderAdapter.class), "remapClassContent", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", false));
+                            insnList.add(new MethodInsnNode(Opcodes.INVOKESTATIC, Type.getInternalName(ClassLoaderAdapter.class), "remapClassContent", "(Ljava/lang/ClassLoader;Ljava/lang/Object;)Ljava/lang/Object;", false));
                             insnList.add(new TypeInsnNode(Opcodes.CHECKCAST, argumentTypes[index].getInternalName()));
                             insnList.add(new VarInsnNode(argumentTypes[index].getOpcode(Opcodes.ISTORE), methodNode.maxLocals + argsMap[index]));
                             loadArgs(argumentTypes, argsMap, methodNode, insnList);
