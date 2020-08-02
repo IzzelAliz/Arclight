@@ -171,7 +171,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
                 this.statusResponse.setVersion(new ServerStatusResponse.Version(SharedConstants.getVersion().getName(), SharedConstants.getVersion().getProtocolVersion()));
                 this.applyServerIconToResponse(this.statusResponse);
 
-                Arrays.fill(recentTps, 0);
+                Arrays.fill(recentTps, 20);
                 long curTime, tickSection = Util.milliTime(), tickCount = 1;
 
                 while (this.serverRunning) {
