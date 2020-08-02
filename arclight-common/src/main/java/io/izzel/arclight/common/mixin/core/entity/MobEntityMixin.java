@@ -93,7 +93,7 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
         this.aware = true;
     }
 
-    private transient AtomicBoolean arclight$targetSuccess;
+    protected transient AtomicBoolean arclight$targetSuccess;
     private transient EntityTargetEvent.TargetReason arclight$reason;
     private transient boolean arclight$fireEvent;
 

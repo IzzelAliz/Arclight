@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mod.util.potion;
+package io.izzel.arclight.common.mod.util.types;
 
 import net.minecraft.potion.Effect;
 import org.bukkit.craftbukkit.v.potion.CraftPotionEffectType;

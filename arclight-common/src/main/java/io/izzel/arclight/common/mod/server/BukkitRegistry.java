@@ -9,7 +9,8 @@ import io.izzel.arclight.common.bridge.bukkit.MaterialBridge;
 import io.izzel.arclight.common.bridge.world.dimension.DimensionTypeBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.util.ResourceLocationUtil;
-import io.izzel.arclight.common.mod.util.potion.ArclightPotionEffect;
+import io.izzel.arclight.common.mod.util.types.ArclightEnchantment;
+import io.izzel.arclight.common.mod.util.types.ArclightPotionEffect;
 import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.arclight.i18n.conf.EntityPropertySpec;
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
@@ -29,7 +30,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.craftbukkit.v.CraftCrashReport;
-import org.bukkit.craftbukkit.v.enchantments.CraftEnchantment;
 import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -167,7 +167,10 @@ public class BukkitRegistry {
         int size = ForgeRegistries.ENCHANTMENTS.getEntries().size();
         putBool(Enchantment.class, "acceptingNew", true);
         for (Map.Entry<ResourceLocation, net.minecraft.enchantment.Enchantment> entry : ForgeRegistries.ENCHANTMENTS.getEntries()) {
-            Enchantment.registerEnchantment(new CraftEnchantment(entry.getValue()));
+            String name = ResourceLocationUtil.standardize(entry.getKey());
+            ArclightEnchantment enchantment = new ArclightEnchantment(entry.getValue(), name);
+            Enchantment.registerEnchantment(enchantment);
+            ArclightMod.LOGGER.debug("Registered {} as enchantment {}", entry.getKey(), enchantment);
         }
         Enchantment.stopAcceptingRegistrations();
         ArclightMod.LOGGER.info("registry.enchantment", size - origin);

@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 import javax.annotation.Nullable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Mixin(EndermanEntity.class)
 public abstract class EndermanEntityMixin extends CreatureEntityMixin implements EndermanEntityBridge {
@@ -28,9 +29,16 @@ public abstract class EndermanEntityMixin extends CreatureEntityMixin implements
      */
     @Overwrite
     public void setAttackTarget(@Nullable LivingEntity entity) {
-        if (!super.setGoalTarget(entity, EntityTargetEvent.TargetReason.UNKNOWN, true)) {
+        if (this.getAttackTarget() == entity) {
             return;
         }
-        bridge$updateTarget(getAttackTarget());
+        this.bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.UNKNOWN, true);
+        arclight$targetSuccess = new AtomicBoolean();
+        super.setAttackTarget(entity);
+        boolean ret = arclight$targetSuccess.get();
+        arclight$targetSuccess = null;
+        if (ret) {
+            bridge$updateTarget(getAttackTarget());
+        }
     }
 }
