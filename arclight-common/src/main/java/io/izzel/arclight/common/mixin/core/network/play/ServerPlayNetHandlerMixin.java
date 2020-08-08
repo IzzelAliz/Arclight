@@ -1174,7 +1174,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                     if (net.minecraftforge.common.ForgeHooks.onInteractEntityAt(player, entity, packetIn.getHitVec(), hand) != null)
                         return;
                     ActionResultType result = entity.applyPlayerInteraction(this.player, packetIn.getHitVec(), hand);
-                    if (result.isSuccess()) {
+                    if (result == ActionResultType.SUCCESS) {
                         this.player.swingArm(hand);
                     }
                     if (!itemInHand.isEmpty() && itemInHand.getCount() <= -1) {
