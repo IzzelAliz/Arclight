@@ -9,7 +9,7 @@ buildscript {
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
         classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
-        classpath "com.github.IzzelAliz:arclight-gradle-plugin:$agpVersion"
+        classpath "com.github.ArclightTeam:arclight-gradle-plugin:$agpVersion"
     }
 }
 
