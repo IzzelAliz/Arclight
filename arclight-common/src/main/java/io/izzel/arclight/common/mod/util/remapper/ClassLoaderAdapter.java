@@ -33,13 +33,13 @@ public class ClassLoaderAdapter implements PluginTransformer {
     private static final Marker MARKER = MarkerManager.getMarker("CLADAPTER");
     private static final String CLASSLOADER = "java/lang/ClassLoader";
 
-    private final Map<Type, Map.Entry<Type, Integer>> defineClassTypes = ImmutableMap.<Type, Map.Entry<Type, Integer>>builder()
-        .put(Type.getMethodType("(Ljava/lang/String;[BIILjava/security/CodeSource;)Ljava/lang/Class;"), Maps.immutableEntry(Type.getType(SecureClassLoader.class), 1))
-        .put(Type.getMethodType("(Ljava/lang/String;Ljava/nio/ByteBuffer;Ljava/security/CodeSource;)Ljava/lang/Class;"), Maps.immutableEntry(Type.getType(SecureClassLoader.class), 1))
-        .put(Type.getMethodType("([BII)Ljava/lang/Class;"), Maps.immutableEntry(Type.getType(ClassLoader.class), 0))
-        .put(Type.getMethodType("(Ljava/lang/String;[BII)Ljava/lang/Class;"), Maps.immutableEntry(Type.getType(ClassLoader.class), 1))
-        .put(Type.getMethodType("(Ljava/lang/String;[BIILjava/security/ProtectionDomain;)Ljava/lang/Class;"), Maps.immutableEntry(Type.getType(ClassLoader.class), 1))
-        .put(Type.getMethodType("(Ljava/lang/String;Ljava/nio/ByteBuffer;Ljava/security/ProtectionDomain;)Ljava/lang/Class;"), Maps.immutableEntry(Type.getType(ClassLoader.class), 1))
+    private final Map<Type, Map.Entry<Type, int[]>> defineClassTypes = ImmutableMap.<Type, Map.Entry<Type, int[]>>builder()
+        .put(Type.getMethodType("(Ljava/lang/String;[BIILjava/security/CodeSource;)Ljava/lang/Class;"), Maps.immutableEntry(Type.getType(SecureClassLoader.class), new int[]{1, 3}))
+        .put(Type.getMethodType("(Ljava/lang/String;Ljava/nio/ByteBuffer;Ljava/security/CodeSource;)Ljava/lang/Class;"), Maps.immutableEntry(Type.getType(SecureClassLoader.class), new int[]{1, -1}))
+        .put(Type.getMethodType("([BII)Ljava/lang/Class;"), Maps.immutableEntry(Type.getType(ClassLoader.class), new int[]{0, 2}))
+        .put(Type.getMethodType("(Ljava/lang/String;[BII)Ljava/lang/Class;"), Maps.immutableEntry(Type.getType(ClassLoader.class), new int[]{1, 3}))
+        .put(Type.getMethodType("(Ljava/lang/String;[BIILjava/security/ProtectionDomain;)Ljava/lang/Class;"), Maps.immutableEntry(Type.getType(ClassLoader.class), new int[]{1, 3}))
+        .put(Type.getMethodType("(Ljava/lang/String;Ljava/nio/ByteBuffer;Ljava/security/ProtectionDomain;)Ljava/lang/Class;"), Maps.immutableEntry(Type.getType(ClassLoader.class), new int[]{1, -1}))
         .build();
     private final Map<String, String> classLoaderTypes = ImmutableMap.<String, String>builder()
         .put(Type.getInternalName(URLClassLoader.class), Type.getInternalName(RemappingURLClassLoader.class))
@@ -80,10 +80,11 @@ public class ClassLoaderAdapter implements PluginTransformer {
                     }
                     if (methodInsnNode.name.equals("defineClass")) {
                         Type descType = Type.getMethodType(methodInsnNode.desc);
-                        Map.Entry<Type, Integer> entry = defineClassTypes.get(descType);
+                        Map.Entry<Type, int[]> entry = defineClassTypes.get(descType);
                         if (entry != null && GlobalClassRepo.inheritanceProvider().getAll(methodInsnNode.owner).contains(entry.getKey().getInternalName())) {
                             ArclightMod.LOGGER.debug(MARKER, "Found defineClass {} call in {} {}", descType.getInternalName(), node.name, methodNode.name + methodNode.desc);
-                            int index = entry.getValue();
+                            int index = entry.getValue()[0];
+                            int lengthIndex = entry.getValue()[1];
                             InsnList insnList = new InsnList();
                             Type[] argumentTypes = descType.getArgumentTypes();
                             int[] argsMap = argsMap(argumentTypes);
@@ -92,6 +93,11 @@ public class ClassLoaderAdapter implements PluginTransformer {
                             insnList.add(new VarInsnNode(argumentTypes[index].getOpcode(Opcodes.ILOAD), methodNode.maxLocals + argsMap[index]));
                             insnList.add(new MethodInsnNode(Opcodes.INVOKESTATIC, Type.getInternalName(ClassLoaderAdapter.class), "remapClassContent", "(Ljava/lang/ClassLoader;Ljava/lang/Object;)Ljava/lang/Object;", false));
                             insnList.add(new TypeInsnNode(Opcodes.CHECKCAST, argumentTypes[index].getInternalName()));
+                            if (lengthIndex != -1) {
+                                insnList.add(new InsnNode(Opcodes.DUP));
+                                insnList.add(new InsnNode(Opcodes.ARRAYLENGTH));
+                                insnList.add(new VarInsnNode(argumentTypes[lengthIndex].getOpcode(Opcodes.ISTORE), methodNode.maxLocals + argsMap[lengthIndex]));
+                            }
                             insnList.add(new VarInsnNode(argumentTypes[index].getOpcode(Opcodes.ISTORE), methodNode.maxLocals + argsMap[index]));
                             loadArgs(argumentTypes, argsMap, methodNode, insnList);
                             methodNode.instructions.insertBefore(methodInsnNode, insnList);
