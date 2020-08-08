@@ -125,7 +125,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public abstract void setAbsorptionAmount(float amount);
     @Shadow public abstract CombatTracker getCombatTracker();
     @Shadow private AbstractAttributeMap attributes;
-    @Shadow public abstract boolean isAlive();
     @Shadow public abstract boolean isOnLadder();
     @Shadow protected ItemStack activeItemStack;
     @Shadow public abstract void onItemPickup(Entity entityIn, int quantity);
@@ -235,6 +234,15 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         } finally {
             arclight$action = null;
         }
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    public boolean isAlive() {
+        return !this.removed && this.dataManager.get(HEALTH) > 0.0F;
     }
 
     @Inject(method = "getHealth", cancellable = true, at = @At("HEAD"))
