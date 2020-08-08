@@ -202,7 +202,7 @@ public abstract class EnchantmentContainerMixin extends ContainerMixin implement
                     }
                     CraftItemStack item = CraftItemStack.asCraftMirror(itemstack2);
 
-                    EnchantItemEvent event = new EnchantItemEvent(((Player) ((PlayerEntityBridge) playerIn).bridge$getBukkitEntity()), this.getBukkitView(), ((IWorldPosCallableBridge) this.worldPosCallable).bridge$getLocation().getBlock(), item, this.enchantLevels[i], enchants, i);
+                    EnchantItemEvent event = new EnchantItemEvent(((Player) ((PlayerEntityBridge) playerIn).bridge$getBukkitEntity()), this.getBukkitView(), ((IWorldPosCallableBridge) this.worldPosCallable).bridge$getLocation().getBlock(), item, this.enchantLevels[id], enchants, id);
                     Bukkit.getPluginManager().callEvent(event);
 
                     int level = event.getExpLevelCost();
