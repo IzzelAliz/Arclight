@@ -1,5 +1,5 @@
 ---
-name: Bug Report Chinese
+name: Bug Report
 about: 错误报告中文模板
 title: ''
 labels: ''
@@ -34,6 +34,9 @@ assignees: ''
 
 
 ### 错误描述
+
+<!-- 请尽可能详细。对于描述，请假设开发者不知道 mod 是干什么的。
+     如果可以的话，在安装尽可能少的 mod 的情况下复现它 -->
 
 叙述这个为什么是一个错误，是哪一方面的，以及其他可能需要的信息
 
