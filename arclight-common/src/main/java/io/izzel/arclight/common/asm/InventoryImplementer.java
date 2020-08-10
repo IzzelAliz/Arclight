@@ -15,6 +15,7 @@ import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.IntInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TypeInsnNode;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 public class InventoryImplementer implements Implementer {
@@ -103,8 +105,13 @@ public class InventoryImplementer implements Implementer {
 
     private boolean tryImplement(ClassNode node) {
         Set<String> methods = new HashSet<>();
+        MethodNode stackLimitMethod = null;
         for (MethodNode method : node.methods) {
-            methods.add(method.name + method.desc);
+            String desc = method.name + method.desc;
+            methods.add(desc);
+            if (desc.equals("func_70297_j_()I")) {
+                stackLimitMethod = method;
+            }
         }
         if (methods.contains("getViewers()Ljava/util/List;")) {
             ArclightImplementer.LOGGER.debug(MARKER, "Found implemented class {}", node.name);
@@ -124,6 +131,7 @@ public class InventoryImplementer implements Implementer {
             node.fields.add(transaction);
             node.fields.add(maxStack);
             node.interfaces.add(BRIDGE_TYPE);
+            InsnList initInsn = new InsnList();
             {
                 MethodNode methodNode = new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC, "getContents", Type.getMethodDescriptor(Type.getType(List.class)), null, null);
                 InsnList insnList = new InsnList();
@@ -166,7 +174,7 @@ public class InventoryImplementer implements Implementer {
                 methodNode.instructions = insnList;
                 node.methods.add(methodNode);
             }
-            if (!methods.contains("func_70297_j_()I")) {
+            {
                 MethodNode methodNode = new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC, "func_70297_j_", "()I", null, null);
                 InsnList insnList = new InsnList();
                 insnList.add(new VarInsnNode(Opcodes.ALOAD, 0));
@@ -174,6 +182,17 @@ public class InventoryImplementer implements Implementer {
                 insnList.add(new InsnNode(Opcodes.IRETURN));
                 methodNode.instructions = insnList;
                 node.methods.add(methodNode);
+            }
+            if (stackLimitMethod == null) {
+                initInsn.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                initInsn.add(new IntInsnNode(Opcodes.BIPUSH, 64));
+                initInsn.add(new FieldInsnNode(Opcodes.PUTFIELD, node.name, maxStack.name, maxStack.desc));
+            } else {
+                stackLimitMethod.name += "$" + Integer.toHexString(ThreadLocalRandom.current().nextInt());
+                initInsn.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                initInsn.add(new InsnNode(Opcodes.DUP));
+                initInsn.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, node.name, stackLimitMethod.name, stackLimitMethod.desc, false));
+                initInsn.add(new FieldInsnNode(Opcodes.PUTFIELD, node.name, maxStack.name, maxStack.desc));
             }
             {
                 MethodNode methodNode = new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC, "setMaxStackSize", "(I)V", null, null);
@@ -192,7 +211,9 @@ public class InventoryImplementer implements Implementer {
                         while (!(initNode.getOpcode() == Opcodes.INVOKESPECIAL && ((MethodInsnNode) initNode).name.equals("<init>"))) {
                             initNode = initNode.getNext();
                         }
-                        InsnList insnList = new InsnList();
+                        MethodNode mn = new MethodNode();
+                        initInsn.accept(mn);
+                        InsnList insnList = mn.instructions;
                         insnList.add(new VarInsnNode(Opcodes.ALOAD, 0));
                         insnList.add(new TypeInsnNode(Opcodes.NEW, Type.getInternalName(ArrayList.class)));
                         insnList.add(new InsnNode(Opcodes.DUP));
