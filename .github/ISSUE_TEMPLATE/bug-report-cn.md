@@ -1,5 +1,5 @@
 ---
-name: Bug Report
+name: Bug Report CN
 about: 错误报告中文模板
 title: ''
 labels: ''
