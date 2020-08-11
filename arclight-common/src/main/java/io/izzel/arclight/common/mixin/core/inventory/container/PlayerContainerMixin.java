@@ -30,11 +30,11 @@ public abstract class PlayerContainerMixin extends ContainerMixin {
     // @formatter:on
 
     private CraftInventoryView bukkitEntity;
-    private PlayerInventory player;
+    private PlayerInventory playerInventory;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void arclight$init(PlayerInventory playerInventory, boolean localWorld, PlayerEntity playerIn, CallbackInfo ci) {
-        this.player = playerInventory;
+        this.playerInventory = playerInventory;
         ((CraftingInventoryBridge) this.craftMatrix).bridge$setOwner(playerInventory.player);
         ((CraftingInventoryBridge) this.craftMatrix).bridge$setResultInventory(this.craftResult);
         this.setTitle(new TranslationTextComponent("container.crafting"));
@@ -52,7 +52,7 @@ public abstract class PlayerContainerMixin extends ContainerMixin {
         }
 
         CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftMatrix, this.craftResult);
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.player.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
+        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
         return bukkitEntity;
     }
 }

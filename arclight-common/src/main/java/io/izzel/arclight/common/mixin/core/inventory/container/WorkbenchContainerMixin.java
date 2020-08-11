@@ -1,8 +1,10 @@
 package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
+import io.izzel.arclight.common.bridge.inventory.CraftingInventoryBridge;
 import io.izzel.arclight.common.bridge.inventory.container.ContainerBridge;
 import io.izzel.arclight.common.bridge.inventory.container.WorkbenchContainerBridge;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -30,8 +32,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import io.izzel.arclight.common.bridge.inventory.CraftingInventoryBridge;
-import io.izzel.arclight.common.mod.util.ArclightCaptures;
 
 import java.util.Optional;
 
@@ -46,7 +46,7 @@ public abstract class WorkbenchContainerMixin extends ContainerMixin implements 
     // @formatter:on
 
     private CraftInventoryView bukkitEntity;
-    private PlayerInventory player;
+    private PlayerInventory playerInventory;
 
     @Inject(method = "canInteractWith", cancellable = true, at = @At("HEAD"))
     public void arclight$unreachable(PlayerEntity playerIn, CallbackInfoReturnable<Boolean> cir) {
@@ -92,7 +92,7 @@ public abstract class WorkbenchContainerMixin extends ContainerMixin implements 
     public void arclight$init(int i, PlayerInventory playerInventory, IWorldPosCallable callable, CallbackInfo ci) {
         ((CraftingInventoryBridge) this.craftMatrix).bridge$setOwner(playerInventory.player);
         ((CraftingInventoryBridge) this.craftMatrix).bridge$setResultInventory(this.craftResult);
-        this.player = playerInventory;
+        this.playerInventory = playerInventory;
     }
 
     @Override
@@ -102,7 +102,7 @@ public abstract class WorkbenchContainerMixin extends ContainerMixin implements 
         }
 
         CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftMatrix, this.craftResult);
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.player.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
+        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
         return bukkitEntity;
     }
 }

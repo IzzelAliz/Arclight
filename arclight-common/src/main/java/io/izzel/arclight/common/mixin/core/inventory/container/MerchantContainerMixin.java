@@ -26,11 +26,11 @@ public abstract class MerchantContainerMixin extends ContainerMixin {
     // @formatter:on
 
     private CraftInventoryView bukkitEntity = null;
-    private PlayerInventory player;
+    private PlayerInventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/entity/merchant/IMerchant;)V", at = @At("RETURN"))
     public void arclight$init(int id, PlayerInventory playerInventoryIn, IMerchant merchantIn, CallbackInfo ci) {
-        this.player = playerInventoryIn;
+        this.playerInventory = playerInventoryIn;
     }
 
     @Inject(method = "playMerchantYesSound", cancellable = true, at = @At("HEAD"))
@@ -43,7 +43,7 @@ public abstract class MerchantContainerMixin extends ContainerMixin {
     @Override
     public InventoryView getBukkitView() {
         if (bukkitEntity == null) {
-            bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.player.player).bridge$getBukkitEntity(), new CraftInventoryMerchant(this.merchant, this.merchantInventory), (Container) (Object) this);
+            bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), new CraftInventoryMerchant(this.merchant, this.merchantInventory), (Container) (Object) this);
         }
         return bukkitEntity;
     }

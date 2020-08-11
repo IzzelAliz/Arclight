@@ -25,11 +25,11 @@ public abstract class BrewingStandContainerMixin extends ContainerMixin {
     // @formatter:on
 
     private CraftInventoryView bukkitEntity = null;
-    private PlayerInventory player;
+    private PlayerInventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/inventory/IInventory;Lnet/minecraft/util/IIntArray;)V", at = @At("RETURN"))
     public void arclight$init(int p_i50096_1_, PlayerInventory playerInventory, IInventory p_i50096_3_, IIntArray p_i50096_4_, CallbackInfo ci) {
-        this.player = playerInventory;
+        this.playerInventory = playerInventory;
     }
 
     @Inject(method = "canInteractWith", cancellable = true, at = @At("HEAD"))
@@ -44,7 +44,7 @@ public abstract class BrewingStandContainerMixin extends ContainerMixin {
         }
 
         CraftInventoryBrewer inventory = new CraftInventoryBrewer(this.tileBrewingStand);
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.player.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
+        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
         return bukkitEntity;
     }
 }

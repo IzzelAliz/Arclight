@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
+import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.inventory.container.EnchantmentContainerBridge;
 import io.izzel.arclight.common.bridge.util.IWorldPosCallableBridge;
 import net.minecraft.advancements.CriteriaTriggers;
@@ -65,11 +66,11 @@ public abstract class EnchantmentContainerMixin extends ContainerMixin implement
     // @formatter:on
 
     private CraftInventoryView bukkitEntity = null;
-    private Player player;
+    private PlayerInventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/util/IWorldPosCallable;)V", at = @At("RETURN"))
     public void arclight$init(int p_i50086_1_, PlayerInventory playerInventory, IWorldPosCallable p_i50086_3_, CallbackInfo ci) {
-        this.player = (Player) ((PlayerEntityBridge) playerInventory.player).bridge$getBukkitEntity();
+        this.playerInventory = playerInventory;
     }
 
     @Inject(method = "canInteractWith", cancellable = true, at = @At("HEAD"))
@@ -136,7 +137,7 @@ public abstract class EnchantmentContainerMixin extends ContainerMixin implement
                         offers[j] = (enchantment != null) ? new EnchantmentOffer(enchantment, this.worldClue[j], this.enchantLevels[j]) : null;
                     }
 
-                    PrepareItemEnchantEvent event = new PrepareItemEnchantEvent(player, this.getBukkitView(), ((IWorldPosCallableBridge) this.worldPosCallable).bridge$getLocation().getBlock(), item, offers, (int) power);
+                    PrepareItemEnchantEvent event = new PrepareItemEnchantEvent(((ServerPlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), this.getBukkitView(), ((IWorldPosCallableBridge) this.worldPosCallable).bridge$getLocation().getBlock(), item, offers, (int) power);
                     event.setCancelled(!itemstack.isEnchantable());
                     Bukkit.getPluginManager().callEvent(event);
 
@@ -265,7 +266,7 @@ public abstract class EnchantmentContainerMixin extends ContainerMixin implement
         }
 
         CraftInventoryEnchanting inventory = new CraftInventoryEnchanting(this.tableInventory);
-        bukkitEntity = new CraftInventoryView(this.player, inventory, (Container) (Object) this);
+        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
         return bukkitEntity;
     }
 

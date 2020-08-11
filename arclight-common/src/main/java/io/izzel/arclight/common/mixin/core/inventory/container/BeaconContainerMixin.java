@@ -27,11 +27,11 @@ public abstract class BeaconContainerMixin extends ContainerMixin {
     // @formatter:on
 
     private CraftInventoryView bukkitEntity;
-    private PlayerInventory player;
+    private PlayerInventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/inventory/IInventory;Lnet/minecraft/util/IIntArray;Lnet/minecraft/util/IWorldPosCallable;)V", at = @At("RETURN"))
     public void arclight$init(int p_i50100_1_, IInventory inventory, IIntArray p_i50100_3_, IWorldPosCallable p_i50100_4_, CallbackInfo ci) {
-        this.player = (PlayerInventory) inventory;
+        this.playerInventory = (PlayerInventory) inventory;
     }
 
     @Inject(method = "canInteractWith", cancellable = true, at = @At("HEAD"))
@@ -46,7 +46,7 @@ public abstract class BeaconContainerMixin extends ContainerMixin {
         }
 
         CraftInventory inventory = new CraftInventoryBeacon(this.tileBeacon);
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.player.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
+        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
         return bukkitEntity;
     }
 }

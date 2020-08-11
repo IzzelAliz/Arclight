@@ -24,11 +24,11 @@ public abstract class HopperContainerMixin extends ContainerMixin {
     // @formatter:on
 
     private CraftInventoryView bukkitEntity = null;
-    private PlayerInventory player;
+    private PlayerInventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/inventory/IInventory;)V", at = @At("RETURN"))
     public void arclight$init(int p_i50079_1_, PlayerInventory playerInventory, IInventory p_i50079_3_, CallbackInfo ci) {
-        this.player = playerInventory;
+        this.playerInventory = playerInventory;
     }
 
     @Inject(method = "canInteractWith", cancellable = true, at = @At("HEAD"))
@@ -42,7 +42,7 @@ public abstract class HopperContainerMixin extends ContainerMixin {
             return bukkitEntity;
         }
         CraftInventory inventory = new CraftInventory(this.hopperInventory);
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.player.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
+        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
         return bukkitEntity;
     }
 }

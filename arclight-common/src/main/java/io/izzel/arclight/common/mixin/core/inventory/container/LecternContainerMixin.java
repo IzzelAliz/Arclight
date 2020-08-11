@@ -11,7 +11,6 @@ import net.minecraft.util.IIntArray;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryLectern;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
-import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTakeLecternBookEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,7 +27,7 @@ public abstract class LecternContainerMixin extends ContainerMixin implements Le
     // @formatter:on
 
     private CraftInventoryView bukkitEntity;
-    private Player player;
+    private PlayerInventory playerInventory;
 
     public void arclight$constructor(int i) {
         throw new RuntimeException();
@@ -40,17 +39,17 @@ public abstract class LecternContainerMixin extends ContainerMixin implements Le
 
     public void arclight$constructor(int i, PlayerInventory playerInventory) {
         arclight$constructor(i);
-        this.player = ((ServerPlayerEntityBridge) playerInventory.player).bridge$getBukkitEntity();
+        this.playerInventory = playerInventory;
     }
 
     public void arclight$constructor(int i, IInventory inventory, IIntArray intArray, PlayerInventory playerInventory) {
         arclight$constructor(i, inventory, intArray);
-        this.player = ((ServerPlayerEntityBridge) playerInventory.player).bridge$getBukkitEntity();
+        this.playerInventory = playerInventory;
     }
 
     @Inject(method = "enchantItem", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/inventory/IInventory;removeStackFromSlot(I)Lnet/minecraft/item/ItemStack;"))
     public void arclight$takeBook(PlayerEntity playerIn, int id, CallbackInfoReturnable<Boolean> cir) {
-        PlayerTakeLecternBookEvent event = new PlayerTakeLecternBookEvent(player, ((CraftInventoryLectern) getBukkitView().getTopInventory()).getHolder());
+        PlayerTakeLecternBookEvent event = new PlayerTakeLecternBookEvent(((ServerPlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), ((CraftInventoryLectern) getBukkitView().getTopInventory()).getHolder());
         Bukkit.getServer().getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             cir.setReturnValue(false);
@@ -68,12 +67,12 @@ public abstract class LecternContainerMixin extends ContainerMixin implements Le
             return bukkitEntity;
         }
         CraftInventoryLectern inventory = new CraftInventoryLectern(this.lecternInventory);
-        bukkitEntity = new CraftInventoryView(this.player, inventory, (Container) (Object) this);
+        bukkitEntity = new CraftInventoryView(((ServerPlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
         return bukkitEntity;
     }
 
     @Override
     public void bridge$setPlayerInventory(PlayerInventory playerInventory) {
-        this.player = ((ServerPlayerEntityBridge) playerInventory.player).bridge$getBukkitEntity();
+        this.playerInventory = playerInventory;
     }
 }

@@ -23,11 +23,11 @@ public abstract class ShulkerBoxContainerMixin extends ContainerMixin {
     // @formatter:on
 
     private CraftInventoryView bukkitEntity;
-    private PlayerInventory player;
+    private PlayerInventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/inventory/IInventory;)V", at = @At("RETURN"))
     public void arclight$init(int p_i50066_1_, PlayerInventory playerInventory, IInventory p_i50066_3_, CallbackInfo ci) {
-        this.player = playerInventory;
+        this.playerInventory = playerInventory;
     }
 
     @Override
@@ -36,7 +36,7 @@ public abstract class ShulkerBoxContainerMixin extends ContainerMixin {
             return bukkitEntity;
         }
 
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.player.player).bridge$getBukkitEntity(), new CraftInventory(this.inventory), (Container) (Object) this);
+        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), new CraftInventory(this.inventory), (Container) (Object) this);
         return bukkitEntity;
     }
 }

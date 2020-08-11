@@ -24,11 +24,11 @@ public abstract class HorseInventoryContainerMixin extends ContainerMixin {
     // @formatter:on
 
     CraftInventoryView bukkitEntity;
-    PlayerInventory player;
+    PlayerInventory playerInventory;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void arclight$init(int p_i50077_1_, PlayerInventory playerInventory, IInventory p_i50077_3_, AbstractHorseEntity p_i50077_4_, CallbackInfo ci) {
-        this.player = playerInventory;
+        this.playerInventory = playerInventory;
     }
 
     @Override
@@ -36,7 +36,7 @@ public abstract class HorseInventoryContainerMixin extends ContainerMixin {
         if (bukkitEntity != null) {
             return bukkitEntity;
         }
-        return bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) player.player).bridge$getBukkitEntity(),
+        return bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) playerInventory.player).bridge$getBukkitEntity(),
             ((IInventoryBridge) this.horseInventory).getOwner().getInventory(), (Container) (Object) this);
     }
 }

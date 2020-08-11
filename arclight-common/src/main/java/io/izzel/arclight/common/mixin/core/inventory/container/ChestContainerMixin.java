@@ -28,11 +28,11 @@ public abstract class ChestContainerMixin extends ContainerMixin {
     // @formatter:on
 
     private CraftInventoryView bukkitEntity;
-    private PlayerInventory player;
+    private PlayerInventory playerInventory;
 
     @Inject(method = "<init>(Lnet/minecraft/inventory/container/ContainerType;ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/inventory/IInventory;I)V", at = @At("RETURN"))
     public void arclight$init(ContainerType<?> type, int id, PlayerInventory playerInventoryIn, IInventory p_i50092_4_, int rows, CallbackInfo ci) {
-        this.player = playerInventoryIn;
+        this.playerInventory = playerInventoryIn;
     }
 
     @Inject(method = "canInteractWith", cancellable = true, at = @At("HEAD"))
@@ -55,7 +55,7 @@ public abstract class ChestContainerMixin extends ContainerMixin {
             inventory = new CraftInventory(this.lowerChestInventory);
         }
 
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.player.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
+        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
         return bukkitEntity;
     }
 }
