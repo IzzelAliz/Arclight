@@ -28,7 +28,6 @@ import net.minecraft.network.play.server.SChangeGameStatePacket;
 import net.minecraft.network.play.server.SChatPacket;
 import net.minecraft.network.play.server.SEntityStatusPacket;
 import net.minecraft.network.play.server.SPlayEntityEffectPacket;
-import net.minecraft.network.play.server.SRespawnPacket;
 import net.minecraft.network.play.server.SServerDifficultyPacket;
 import net.minecraft.network.play.server.SSetExperiencePacket;
 import net.minecraft.network.play.server.SSpawnPositionPacket;
@@ -270,11 +269,11 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             playerIn.setPosition(playerIn.getPosX(), playerIn.getPosY() + 1.0, playerIn.getPosZ());
         }
         if (fromWorld.getEnvironment() == ((WorldBridge) serverWorld).bridge$getWorld().getEnvironment()) {
-            playerIn.connection.sendPacket(new SRespawnPacket((serverWorld.dimension.getType().getId() >= 0) ? DimensionType.THE_NETHER : DimensionType.OVERWORLD, WorldInfo.byHashing(serverWorld.getWorldInfo().getSeed()), serverWorld.getWorldInfo().getGenerator(), playerIn.interactionManager.getGameType()));
+            playerIn.connection.sendPacket(this.bridge$respawnPacket((serverWorld.dimension.getType().getId() >= 0) ? DimensionType.THE_NETHER : DimensionType.OVERWORLD, serverWorld.getWorldInfo().getSeed(), serverWorld.getWorldInfo().getGenerator(), playerIn.interactionManager.getGameType()));
         }
         WorldInfo worldInfo = serverWorld.getWorldInfo();
         net.minecraftforge.fml.network.NetworkHooks.sendDimensionDataPacket(playerIn.connection.netManager, playerIn);
-        playerIn.connection.sendPacket(new SRespawnPacket(((DimensionTypeBridge) serverWorld.dimension.getType()).bridge$getType(), WorldInfo.byHashing(serverWorld.getWorldInfo().getSeed()), serverWorld.getWorldInfo().getGenerator(), playerIn.interactionManager.getGameType()));
+        playerIn.connection.sendPacket(this.bridge$respawnPacket(((DimensionTypeBridge) serverWorld.dimension.getType()).bridge$getType(), serverWorld.getWorldInfo().getSeed(), serverWorld.getWorldInfo().getGenerator(), playerIn.interactionManager.getGameType()));
         playerIn.connection.sendPacket(new SUpdateViewDistancePacket(((ServerWorldBridge) serverWorld).bridge$spigotConfig().viewDistance));
         playerIn.setWorld(serverWorld);
         playerIn.interactionManager.setWorld(serverWorld);
@@ -420,12 +419,12 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         }
 
         if (fromWorld.getEnvironment() == ((WorldBridge) serverworld).bridge$getWorld().getEnvironment()) {
-            serverplayerentity.connection.sendPacket(this.bridge$respawnPacket((((DimensionTypeBridge) serverplayerentity.dimension).bridge$getType().getId() >= 0) ? DimensionType.THE_NETHER : DimensionType.OVERWORLD, WorldInfo.byHashing(serverworld.getWorldInfo().getSeed()), serverworld.getWorldInfo().getGenerator(), playerIn.interactionManager.getGameType()));
+            serverplayerentity.connection.sendPacket(this.bridge$respawnPacket((((DimensionTypeBridge) serverplayerentity.dimension).bridge$getType().getId() >= 0) ? DimensionType.THE_NETHER : DimensionType.OVERWORLD, serverworld.getWorldInfo().getSeed(), serverworld.getWorldInfo().getGenerator(), playerIn.interactionManager.getGameType()));
         }
 
         WorldInfo worldinfo = serverplayerentity.world.getWorldInfo();
         NetworkHooks.sendDimensionDataPacket(serverplayerentity.connection.netManager, serverplayerentity);
-        serverplayerentity.connection.sendPacket(this.bridge$respawnPacket(((DimensionTypeBridge) serverplayerentity.dimension).bridge$getType(), WorldInfo.byHashing(worldinfo.getSeed()), worldinfo.getGenerator(), serverplayerentity.interactionManager.getGameType()));
+        serverplayerentity.connection.sendPacket(this.bridge$respawnPacket(((DimensionTypeBridge) serverplayerentity.dimension).bridge$getType(), worldinfo.getSeed(), worldinfo.getGenerator(), serverplayerentity.interactionManager.getGameType()));
         serverplayerentity.connection.sendPacket(new SUpdateViewDistancePacket(((WorldBridge) serverworld).bridge$spigotConfig().viewDistance));
         BlockPos blockpos1 = serverworld.getSpawnPoint();
         serverplayerentity.connection.setPlayerLocation(serverplayerentity.posX, serverplayerentity.posY, serverplayerentity.posZ, serverplayerentity.rotationYaw, serverplayerentity.rotationPitch);

@@ -14,6 +14,7 @@ import net.minecraft.world.GameType;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.storage.WorldInfo;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -33,7 +34,7 @@ public abstract class PlayerListMixin_1_15 implements PlayerListBridge {
 
     @Override
     public SRespawnPacket bridge$respawnPacket(DimensionType type, long seed, WorldType worldType, GameType gameType) {
-        return new SRespawnPacket(type, seed, worldType, gameType);
+        return new SRespawnPacket(type, WorldInfo.byHashing(seed), worldType, gameType);
     }
 
     @Redirect(method = "initializeConnectionToPlayer", at = @At(value = "NEW", target = "net/minecraft/network/play/server/SJoinGamePacket"))
