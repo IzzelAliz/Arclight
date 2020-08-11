@@ -234,7 +234,7 @@ public abstract class TeleporterMixin_1_15 implements TeleporterBridge {
     public BlockPattern.PortalInfo findAndTeleport(Entity p_222268_1_, BlockPos pos, float p_222268_2_, int searchRadius, boolean searchOnly) {
         Vec3d vec3d = p_222268_1_.getLastPortalVec();
         Direction direction = p_222268_1_.getTeleportDirection();
-        BlockPattern.PortalInfo portalInfo = this.findPortal(new BlockPos(p_222268_1_), p_222268_1_.getMotion(), direction, vec3d.x, vec3d.y, p_222268_1_ instanceof PlayerEntity, searchRadius);
+        BlockPattern.PortalInfo portalInfo = this.findPortal(pos, p_222268_1_.getMotion(), direction, vec3d.x, vec3d.y, p_222268_1_ instanceof PlayerEntity, searchRadius);
         if (searchOnly) return portalInfo;
         if (portalInfo == null) {
             return null;
