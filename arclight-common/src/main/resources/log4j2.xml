@@ -19,13 +19,11 @@
     </filters>
     <Appenders>
         <TerminalConsole name="Console">
+            <RegexFilter regex=".*will not be sent to client.*" onMatch="DENY" onMismatch="NEUTRAL"/>
             <PatternLayout>
                 <!-- use white for info output -->
                 <LoggerNamePatternSelector
                         defaultPattern="%highlight{[%d{HH:mm:ss}] [%t/%level] [%c{1.}/%markerSimpleName]: %minecraftFormatting{%msg}%n%tEx}{INFO=normal}">
-                    <!-- mute errors like Could not serialize xx - will not be sent to client! -->
-                    <PatternMatch key="net.minecraft.command.arguments.ArgumentTypes"
-                                  pattern="%highlight{[%d{HH:mm:ss}] [%t/%level] [minecraft/%logger{1}]: %minecraftFormatting{%msg}%n%tEx}{ERROR=normal}"/>
                     <!-- don't include the full logger name for Mojang's logs since they use full class names and it's very verbose -->
                     <PatternMatch key="net.minecraft."
                                   pattern="%highlight{[%d{HH:mm:ss}] [%t/%level] [minecraft/%logger{1}]: %minecraftFormatting{%msg}%n%tEx}{INFO=normal}"/>
