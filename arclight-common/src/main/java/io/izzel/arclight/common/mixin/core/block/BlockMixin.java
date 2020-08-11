@@ -1,12 +1,15 @@
 package io.izzel.arclight.common.mixin.core.block;
 
 import io.izzel.arclight.common.bridge.block.BlockBridge;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -20,10 +23,16 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.loot.LootContext;
 import net.minecraft.world.storage.loot.LootParameters;
 import net.minecraftforge.common.extensions.IForgeBlock;
+import org.bukkit.craftbukkit.v.CraftWorld;
+import org.bukkit.craftbukkit.v.block.CraftBlock;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -79,5 +88,16 @@ public abstract class BlockMixin implements BlockBridge {
     @Override
     public int bridge$getExpDrop(BlockState blockState, World world, BlockPos blockPos, ItemStack itemStack) {
         return getExpDrop(blockState, world, blockPos, itemStack);
+    }
+
+    @Inject(method = "harvestBlock", at = @At("RETURN"))
+    private void arclight$handleBlockDrops(World worldIn, PlayerEntity player, BlockPos pos, BlockState blockState, TileEntity te, ItemStack stack, CallbackInfo ci) {
+        List<ItemEntity> blockDrops = ArclightCaptures.getBlockDrops();
+        org.bukkit.block.BlockState state = ArclightCaptures.getBlockBreakPlayerState();
+        BlockBreakEvent breakEvent = ArclightCaptures.resetBlockBreakPlayer();
+        if (player instanceof ServerPlayerEntity && blockDrops != null && (breakEvent == null || breakEvent.isDropItems())) {
+            CraftBlock craftBlock = CraftBlock.at(((CraftWorld) state.getWorld()).getHandle(), pos);
+            CraftEventFactory.handleBlockDropItemEvent(craftBlock, state, ((ServerPlayerEntity) player), blockDrops);
+        }
     }
 }

@@ -40,13 +40,9 @@ public class ArclightCaptures {
     private static BlockState blockBreakPlayerState;
 
     public static void captureBlockBreakPlayer(BlockBreakEvent event) {
-        if (blockBreakEvent == null) {
-            blockBreakEvent = event;
-            blockDrops = new ArrayList<>();
-            blockBreakPlayerState = event.getBlock().getState();
-        } else {
-            recapture("block break");
-        }
+        blockBreakEvent = event;
+        blockDrops = new ArrayList<>();
+        blockBreakPlayerState = event.getBlock().getState();
     }
 
     public static BlockBreakEvent getBlockBreakPlayer() {
