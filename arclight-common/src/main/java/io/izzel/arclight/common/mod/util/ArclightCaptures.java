@@ -102,11 +102,7 @@ public class ArclightCaptures {
     private static Hand placeEventHand;
 
     public static void capturePlaceEventHand(Hand hand) {
-        if (ArclightCaptures.placeEventHand == null) {
-            ArclightCaptures.placeEventHand = hand;
-        } else {
-            recapture("place hand");
-        }
+        ArclightCaptures.placeEventHand = hand;
     }
 
     public static Hand getPlaceEventHand(Hand hand) {

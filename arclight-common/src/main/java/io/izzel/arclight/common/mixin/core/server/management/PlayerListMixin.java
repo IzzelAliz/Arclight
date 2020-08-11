@@ -241,7 +241,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                     isBedSpawn = true;
                     location = new Location(cworld, vec3d.x, vec3d.y, vec3d.z);
                 } else {
-                    playerIn.setRespawnPosition(null, true, false);
+                    this.bridge$setSpawnPoint(playerIn, null, true, playerIn.dimension, false);
                     playerIn.connection.sendPacket(new SChangeGameStatePacket(0, 0.0f));
                 }
             }
@@ -414,16 +414,6 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         serverplayerentity.connection.captureCurrentPosition();
 
         this.setPlayerGameTypeBasedOnOther(serverplayerentity, playerIn, serverworld);
-        if (blockpos != null) {
-            Optional<Vec3d> optional = PlayerEntity.checkBedValidRespawnPosition(this.server.getWorld(playerIn.dimension), blockpos, flag);
-            if (optional.isPresent()) {
-                Vec3d vec3d = optional.get();
-                serverplayerentity.setLocationAndAngles(vec3d.x, vec3d.y, vec3d.z, 0.0F, 0.0F);
-                this.bridge$setSpawnPoint(serverplayerentity, blockpos, flag, dimension, false);
-            } else {
-                serverplayerentity.connection.sendPacket(new SChangeGameStatePacket(0, 0.0F));
-            }
-        }
 
         while (avoidSuffocation && !this.bridge$worldNoCollision(serverworld, serverplayerentity) && serverplayerentity.posY < 256.0D) {
             serverplayerentity.setPosition(serverplayerentity.posX, serverplayerentity.posY + 1.0D, serverplayerentity.posZ);
@@ -461,6 +451,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         }
 
         BasicEventHooks.firePlayerRespawnEvent(serverplayerentity, conqueredEnd);
+        System.out.println("pos " + serverplayerentity.getBedLocation());
         return serverplayerentity;
     }
 
