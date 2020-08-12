@@ -131,8 +131,8 @@ public abstract class ContainerMixin implements ContainerBridge {
         InventoryView destination = ((ContainerBridge) other).bridge$getBukkitView();
         ((IInventoryBridge) ((CraftInventory) source.getTopInventory()).getInventory()).onClose(player);
         ((IInventoryBridge) ((CraftInventory) source.getBottomInventory()).getInventory()).onClose(player);
-        ((IInventoryBridge) ((CraftInventory) destination.getTopInventory()).getInventory()).onClose(player);
-        ((IInventoryBridge) ((CraftInventory) destination.getBottomInventory()).getInventory()).onClose(player);
+        ((IInventoryBridge) ((CraftInventory) destination.getTopInventory()).getInventory()).onOpen(player);
+        ((IInventoryBridge) ((CraftInventory) destination.getBottomInventory()).getInventory()).onOpen(player);
     }
 
     private ITextComponent title;

@@ -13,7 +13,6 @@ import net.minecraft.inventory.container.PlayerContainer;
 import net.minecraft.util.text.TranslationTextComponent;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryCrafting;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
-import org.bukkit.inventory.InventoryView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -46,7 +45,7 @@ public abstract class PlayerContainerMixin extends ContainerMixin {
     }
 
     @Override
-    public InventoryView getBukkitView() {
+    public CraftInventoryView getBukkitView() {
         if (bukkitEntity != null) {
             return bukkitEntity;
         }

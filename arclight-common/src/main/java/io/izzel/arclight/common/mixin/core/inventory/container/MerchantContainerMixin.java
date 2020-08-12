@@ -9,7 +9,6 @@ import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.MerchantContainer;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryMerchant;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
-import org.bukkit.inventory.InventoryView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -41,7 +40,7 @@ public abstract class MerchantContainerMixin extends ContainerMixin {
     }
 
     @Override
-    public InventoryView getBukkitView() {
+    public CraftInventoryView getBukkitView() {
         if (bukkitEntity == null) {
             bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), new CraftInventoryMerchant(this.merchant, this.merchantInventory), (Container) (Object) this);
         }

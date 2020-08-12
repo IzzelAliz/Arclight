@@ -10,7 +10,6 @@ import net.minecraft.inventory.container.LoomContainer;
 import net.minecraft.util.IWorldPosCallable;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryLoom;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
-import org.bukkit.inventory.InventoryView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -44,7 +43,7 @@ public abstract class LoomContainerMixin extends ContainerMixin implements LoomC
     }
 
     @Override
-    public InventoryView getBukkitView() {
+    public CraftInventoryView getBukkitView() {
         if (bukkitEntity != null) {
             return bukkitEntity;
         }

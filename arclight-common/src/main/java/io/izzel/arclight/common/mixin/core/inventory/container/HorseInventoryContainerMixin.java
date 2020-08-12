@@ -8,7 +8,6 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.HorseInventoryContainer;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
-import org.bukkit.inventory.InventoryView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -32,7 +31,7 @@ public abstract class HorseInventoryContainerMixin extends ContainerMixin {
     }
 
     @Override
-    public InventoryView getBukkitView() {
+    public CraftInventoryView getBukkitView() {
         if (bukkitEntity != null) {
             return bukkitEntity;
         }
