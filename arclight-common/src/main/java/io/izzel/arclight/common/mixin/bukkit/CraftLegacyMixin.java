@@ -11,6 +11,7 @@ import java.util.Arrays;
 public class CraftLegacyMixin {
 
     private static Material[] moddedMaterials;
+    private static int offset;
 
     /**
      * @author IzzelAliz
@@ -19,8 +20,27 @@ public class CraftLegacyMixin {
     @Overwrite
     public static Material[] modern_values() {
         if (moddedMaterials == null) {
+            int origin = Material.values().length;
             moddedMaterials = Arrays.stream(Material.values()).filter(it -> !it.isLegacy()).toArray(Material[]::new);
+            offset = origin - moddedMaterials.length;
         }
-        return moddedMaterials;
+        return Arrays.copyOf(moddedMaterials, moddedMaterials.length);
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    public static int modern_ordinal(Material material) {
+        if (moddedMaterials == null) {
+            modern_values();
+        }
+        if (material.isLegacy()) {
+            throw new NoSuchFieldError("Legacy field ordinal: " + material);
+        } else {
+            int ordinal = material.ordinal();
+            return ordinal < Material.LEGACY_AIR.ordinal() ? ordinal : ordinal - offset;
+        }
     }
 }
