@@ -1,0 +1,20 @@
+staleLabel: stale
+exemptLabels:
+  - assigned
+
+pulls:
+  daysUntilStale: 60
+  daysUntilClose: 14
+  markComment: >
+    This pull has been automatically marked as stale because it has not had
+    recent activity. It will be closed if no further activity occurs. Thank you
+    for your contributions.
+  closeComment: false
+issues:
+  daysUntilStale: 180
+  daysUntilClose: 14
+  markComment: >
+    This issue has been automatically marked as stale because it has not had
+    recent activity. It will be closed if no further activity occurs. Thank you
+    for your contributions.
+  closeComment: false
