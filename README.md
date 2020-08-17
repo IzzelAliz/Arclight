@@ -2,19 +2,22 @@
 
 A Bukkit server implementation utilizing Mixin.
 
-[![AppVeyor](https://img.shields.io/appveyor/build/IzzelAliz/arclight?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight)  ![GitHub](https://img.shields.io/github/license/IzzelAliz/Arclight?style=flat-square)
+![Actions](https://img.shields.io/github/workflow/status/IzzelAliz/Arclight/Java%20CI%20with%20Gradle?style=flat-square)  ![GitHub](https://img.shields.io/github/license/IzzelAliz/Arclight?style=flat-square)
 
-| Minecraft | Forge |
-| ---- | ---- |
-| ![MC 1.14.4](https://img.shields.io/badge/MC-1.14.4-FF69B4?style=flat-square) | ![Forge 28.2.0](https://img.shields.io/badge/Forge-28.2.0-purple?style=flat-square) |
-| ![MC 1.15.2](https://img.shields.io/badge/MC-1.15.2-6666FF?style=flat-square) | ![Forge 31.2.30](https://img.shields.io/badge/Forge-31.2.30-AA66FF?style=flat-square) |
+| Minecraft | Forge | Status | Build |
+| :----: | :----: | :---: | :---: |
+| 1.16.x | - | - | [![1.16 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-16?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-16) |
+| 1.15.x | 31.2.30 | ACTIVE | [![1.15 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-15?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-15) |
+| 1.14.x | 28.2.0 | [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/1.0.6) | [![1.14 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight) |
+
+* Legacy version still accepts pull requests.
 
 ![](.github/arclightlogo.jpg)
 
 ## Installing
 
-1. Download the jar from [release page](https://github.com/IzzelAliz/Arclight/releases) or [build server](https://ci.appveyor.com/project/IzzelAliz/arclight/build/artifacts).
-2. Launch with command `java -jar arclight-forge-mcversion-xxx.jar nogui`. The `nogui` argument will disable the server control panel.
+1. Download the jar from [release page](https://github.com/IzzelAliz/Arclight/releases) or build server. (see the table above)
+2. Launch with command `java -jar arclight-forge-<mc>-<version>.jar nogui`. The `nogui` argument will disable the server control panel.
 
 ## Support
 
