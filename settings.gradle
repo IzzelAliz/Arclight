@@ -3,6 +3,5 @@ include 'arclight-forge-1.14'
 include 'arclight-common'
 include 'forge-installer'
 include 'arclight-api'
-include 'arclight-forge-1.15'
 include 'i18n-config'
 
