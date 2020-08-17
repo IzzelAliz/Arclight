@@ -5,6 +5,7 @@ import net.minecraft.block.CropsBlock;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
@@ -26,5 +27,10 @@ public class CropsBlockMixin {
         boolean result = ForgeEventFactory.getMobGriefingEvent(world, entity);
         EntityChangeBlockEvent event = CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state, result);
         return event.isCancelled();
+    }
+
+    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+    public boolean arclight$blockGrowTick(ServerWorld world, BlockPos pos, BlockState newState, int flags) {
+        return CraftEventFactory.handleBlockGrowEvent(world, pos, newState, flags);
     }
 }

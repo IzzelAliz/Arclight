@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.entity;
 
 import com.google.common.collect.Lists;
+import io.izzel.arclight.common.bridge.entity.AreaEffectCloudEntityBridge;
 import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
 import net.minecraft.entity.AreaEffectCloudEntity;
 import net.minecraft.entity.Entity;
@@ -24,7 +25,6 @@ import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import io.izzel.arclight.common.bridge.entity.AreaEffectCloudEntityBridge;
 
 import javax.annotation.Nullable;
 import java.util.Iterator;
@@ -80,7 +80,7 @@ public abstract class AreaEffectCloudEntityMixin extends EntityMixin implements 
                             int k = j >> 16 & 255;
                             int l = j >> 8 & 255;
                             int i1 = j & 255;
-                            this.world.addOptionalParticle(iparticledata, this.posX + (double) f3, this.posY, this.posZ + (double) f4, (double) ((float) k / 255.0F), (double) ((float) l / 255.0F), (double) ((float) i1 / 255.0F));
+                            this.world.addOptionalParticle(iparticledata, this.posX + (double) f3, this.posY, this.posZ + (double) f4, (float) k / 255.0F, (float) l / 255.0F, (float) i1 / 255.0F);
                         } else {
                             this.world.addOptionalParticle(iparticledata, this.posX + (double) f3, this.posY, this.posZ + (double) f4, 0.0D, 0.0D, 0.0D);
                         }
@@ -99,9 +99,9 @@ public abstract class AreaEffectCloudEntityMixin extends EntityMixin implements 
                         int i2 = l1 >> 16 & 255;
                         int j2 = l1 >> 8 & 255;
                         int j1 = l1 & 255;
-                        this.world.addOptionalParticle(iparticledata, this.posX + (double) f8, this.posY, this.posZ + (double) f9, (double) ((float) i2 / 255.0F), (double) ((float) j2 / 255.0F), (double) ((float) j1 / 255.0F));
+                        this.world.addOptionalParticle(iparticledata, this.posX + (double) f8, this.posY, this.posZ + (double) f9, (float) i2 / 255.0F, (float) j2 / 255.0F, (float) j1 / 255.0F);
                     } else {
-                        this.world.addOptionalParticle(iparticledata, this.posX + (double) f8, this.posY, this.posZ + (double) f9, (0.5D - this.rand.nextDouble()) * 0.15D, (double) 0.01F, (0.5D - this.rand.nextDouble()) * 0.15D);
+                        this.world.addOptionalParticle(iparticledata, this.posX + (double) f8, this.posY, this.posZ + (double) f9, (0.5D - this.rand.nextDouble()) * 0.15D, 0.01F, (0.5D - this.rand.nextDouble()) * 0.15D);
                     }
                 }
             }

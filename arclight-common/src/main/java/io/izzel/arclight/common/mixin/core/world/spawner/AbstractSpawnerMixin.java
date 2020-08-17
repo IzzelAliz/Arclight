@@ -5,7 +5,6 @@ import io.izzel.arclight.common.bridge.world.WorldBridge;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntitySpawnPlacementRegistry;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ILivingEntityData;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.nbt.CompoundNBT;
@@ -117,7 +116,7 @@ public abstract class AbstractSpawnerMixin {
                             return;
                         }
 
-                        int k = world.getEntitiesWithinAABB(entity.getClass(), (new AxisAlignedBB((double) blockpos.getX(), (double) blockpos.getY(), (double) blockpos.getZ(), (double) (blockpos.getX() + 1), (double) (blockpos.getY() + 1), (double) (blockpos.getZ() + 1))).grow((double) this.spawnRange)).size();
+                        int k = world.getEntitiesWithinAABB(entity.getClass(), (new AxisAlignedBB(blockpos.getX(), blockpos.getY(), blockpos.getZ(), blockpos.getX() + 1, blockpos.getY() + 1, blockpos.getZ() + 1)).grow(this.spawnRange)).size();
                         if (k >= this.maxNearbyEntities) {
                             this.resetTimer();
                             return;
@@ -131,7 +130,7 @@ public abstract class AbstractSpawnerMixin {
                             }
 
                             if (this.spawnData.getNbt().size() == 1 && this.spawnData.getNbt().contains("id", 8)) {
-                                ((MobEntity) entity).onInitialSpawn(world, world.getDifficultyForLocation(new BlockPos(entity)), SpawnReason.SPAWNER, (ILivingEntityData) null, (CompoundNBT) null);
+                                ((MobEntity) entity).onInitialSpawn(world, world.getDifficultyForLocation(new BlockPos(entity)), SpawnReason.SPAWNER, null, null);
                             }
 
                             if (((WorldBridge) mobentity.world).bridge$spigotConfig().nerfSpawnerMobs) {

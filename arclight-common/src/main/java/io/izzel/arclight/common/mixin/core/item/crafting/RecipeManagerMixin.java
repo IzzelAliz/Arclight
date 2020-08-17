@@ -76,7 +76,7 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
         }
 
         this.recipes = (Map) map;
-        LOGGER.info("Loaded {} recipes", (int) map.size());
+        LOGGER.info("Loaded {} recipes", map.size());
     }
 
     /**

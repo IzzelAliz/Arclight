@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.entity.player;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.datafixers.util.Either;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.entity.InternalEntityBridge;
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
@@ -8,6 +9,7 @@ import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.util.DamageSourceBridge;
 import io.izzel.arclight.common.bridge.util.FoodStatsBridge;
+import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.bridge.world.server.ServerWorldBridge;
 import io.izzel.arclight.common.mixin.core.entity.LivingEntityMixin;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -37,32 +39,37 @@ import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.stats.Stat;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.Direction;
 import net.minecraft.util.FoodStats;
 import net.minecraft.util.Hand;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
+import net.minecraft.util.Unit;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.World;
+import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.ForgeHooks;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.block.Block;
+import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.util.CraftVector;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityCombustByEntityEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
+import org.bukkit.event.player.PlayerBedLeaveEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerVelocityEvent;
 import org.bukkit.scoreboard.Team;
@@ -115,6 +122,9 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
     @Shadow protected boolean isMovementBlocked() { return false; }
     @Shadow public abstract Scoreboard getWorldScoreboard();
     @Shadow protected EnderChestInventory enterChestInventory;
+    @Shadow public abstract Either<PlayerEntity.SleepResult, Unit> trySleep(BlockPos at);
+    @Shadow public abstract void startSleeping(BlockPos p_213342_1_);
+    @Shadow public int sleepTimer;
     // @formatter:on
 
     public boolean fauxSleeping;
@@ -125,7 +135,104 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
     private void arclight$init(World worldIn, GameProfile gameProfileIn, CallbackInfo ci) {
         oldLevel = -1;
         ((FoodStatsBridge) this.foodStats).bridge$setEntityHuman((PlayerEntity) (Object) this);
-        ((IInventoryBridge) this.enterChestInventory).setOwner(((HumanEntity) this.getBukkitEntity()));
+        ((IInventoryBridge) this.enterChestInventory).setOwner(this.getBukkitEntity());
+    }
+
+    private boolean arclight$forceSleep = false;
+    private Object arclight$processSleep = null;
+
+    private Either<PlayerEntity.SleepResult, Unit> getBedResult(BlockPos at, Direction direction) {
+        arclight$processSleep = true;
+        Either<PlayerEntity.SleepResult, Unit> either = this.trySleep(at);
+        arclight$processSleep = null;
+        return either;
+    }
+
+    public Either<PlayerEntity.SleepResult, Unit> sleep(BlockPos at, boolean force) {
+        arclight$forceSleep = force;
+        try {
+            return this.trySleep(at);
+        } finally {
+            arclight$forceSleep = false;
+        }
+    }
+
+    @Inject(method = "trySleep", cancellable = true, at = @At(value = "HEAD"))
+    public void arclight$onSleep(BlockPos at, CallbackInfoReturnable<Either<PlayerEntity.SleepResult, Unit>> cir) {
+        if (arclight$processSleep == null) {
+            Either<PlayerEntity.SleepResult, Unit> result = getBedResult(at, null);
+
+            if (result.left().orElse(null) == PlayerEntity.SleepResult.OTHER_PROBLEM) {
+                cir.setReturnValue(result);
+                return;
+            }
+            if (arclight$forceSleep) {
+                result = Either.right(Unit.INSTANCE);
+            }
+            if (this.bridge$getBukkitEntity() instanceof Player) {
+                result = CraftEventFactory.callPlayerBedEnterEvent((PlayerEntity) (Object) this, at, result);
+                if (result.left().isPresent()) {
+                    cir.setReturnValue(result);
+                    return;
+                }
+            }
+
+            this.startSleeping(at);
+            this.sleepTimer = 0;
+            if (this.world instanceof ServerWorld) {
+                ((ServerWorld) this.world).updateAllPlayersSleepingFlag();
+            }
+            cir.setReturnValue(Either.right(Unit.INSTANCE));
+        }
+    }
+
+    @Inject(method = "trySleep", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;startSleeping(Lnet/minecraft/util/math/BlockPos;)V"))
+    public void arclight$preSleep(BlockPos at, CallbackInfoReturnable<Either<PlayerEntity.SleepResult, Unit>> cir) {
+        if (arclight$processSleep != null) {
+            cir.setReturnValue(Either.right(Unit.INSTANCE));
+        }
+    }
+
+    @Inject(method = "stopSleepInBed", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;sleepTimer:I"))
+    private void arclight$wakeup(boolean flag, boolean flag1, CallbackInfo ci) {
+        BlockPos blockPos = this.getBedPosition().orElse(null);
+        if (this.bridge$getBukkitEntity() instanceof Player) {
+            Player player = (Player) this.bridge$getBukkitEntity();
+            Block bed;
+            if (blockPos != null) {
+                bed = CraftBlock.at(this.world, blockPos);
+            } else {
+                bed = ((WorldBridge) this.world).bridge$getWorld().getBlockAt(player.getLocation());
+            }
+            PlayerBedLeaveEvent event = new PlayerBedLeaveEvent(player, bed, true);
+            Bukkit.getPluginManager().callEvent(event);
+        }
+    }
+
+    @Inject(method = "setSpawnPoint", remap = false, at = @At("RETURN"))
+    private void arclight$updateSpawnpoint(BlockPos pos, boolean p_226560_2_, boolean p_226560_3_, DimensionType dim, CallbackInfo ci) {
+        bridge$setSpawnWorld(pos == null ? "" : this.world.worldInfo.getWorldName());
+    }
+
+    @Inject(method = "startFallFlying", cancellable = true, at = @At("HEAD"))
+    private void arclight$startGlidingEvent(CallbackInfo ci) {
+        if (CraftEventFactory.callToggleGlideEvent((PlayerEntity) (Object) this, true).isCancelled()) {
+            this.setFlag(7, true);
+            this.setFlag(7, false);
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "stopFallFlying", cancellable = true, at = @At("HEAD"))
+    private void arclight$stopGlidingEvent(CallbackInfo ci) {
+        if (CraftEventFactory.callToggleGlideEvent((PlayerEntity) (Object) this, false).isCancelled()) {
+            ci.cancel();
+        }
+    }
+
+    @Override
+    public Either<PlayerEntity.SleepResult, Unit> bridge$trySleep(BlockPos at, boolean force) {
+        return sleep(at, force);
     }
 
     @Override
@@ -328,7 +435,7 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
                     }
                     if (flag4) {
                         final float f5 = 1.0f + EnchantmentHelper.getSweepingDamageRatio((PlayerEntity) (Object) this) * f;
-                        final List<LivingEntity> list = this.world.getEntitiesWithinAABB((Class<? extends LivingEntity>) LivingEntity.class, entity.getBoundingBox().grow(1.0, 0.25, 1.0));
+                        final List<LivingEntity> list = this.world.getEntitiesWithinAABB(LivingEntity.class, entity.getBoundingBox().grow(1.0, 0.25, 1.0));
                         for (final LivingEntity entityliving : list) {
                             if (entityliving != (Object) this && entityliving != entity && !this.isOnSameTeam(entityliving) && (!(entityliving instanceof ArmorStandEntity) || !((ArmorStandEntity) entityliving).hasMarker()) && this.getDistanceSq(entityliving) < 9.0 && entityliving.attackEntityFrom(((DamageSourceBridge) DamageSource.causePlayerDamage((PlayerEntity) (Object) this)).bridge$sweep(), f5)) {
                                 entityliving.knockBack((PlayerEntity) (Object) this, 0.4f, MathHelper.sin(this.rotationYaw * 0.017453292f), -MathHelper.cos(this.rotationYaw * 0.017453292f));

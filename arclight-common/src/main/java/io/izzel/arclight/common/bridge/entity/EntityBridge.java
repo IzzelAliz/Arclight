@@ -52,6 +52,4 @@ public interface EntityBridge extends ICommandSourceBridge {
     void bridge$setRideCooldown(int rideCooldown);
 
     int bridge$getRideCooldown();
-
-    double bridge$getEyeHeight();
 }

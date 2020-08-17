@@ -251,7 +251,7 @@ public abstract class EnchantmentContainerMixin extends ContainerMixin implement
                     this.tableInventory.markDirty();
                     this.xpSeed.set(playerIn.getXPSeed());
                     this.onCraftMatrixChanged(this.tableInventory);
-                    p_217003_6_.playSound((PlayerEntity) null, p_217003_7_, SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.BLOCKS, 1.0F, p_217003_6_.rand.nextFloat() * 0.1F + 0.9F);
+                    p_217003_6_.playSound(null, p_217003_7_, SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.BLOCKS, 1.0F, p_217003_6_.rand.nextFloat() * 0.1F + 0.9F);
                 }
 
             });

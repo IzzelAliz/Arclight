@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world;
 import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.bridge.world.border.WorldBorderBridge;
+import io.izzel.arclight.common.bridge.world.dimension.DimensionTypeBridge;
 import io.izzel.arclight.common.bridge.world.storage.DerivedWorldInfoBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.block.Block;
@@ -35,6 +36,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -174,6 +176,11 @@ public abstract class WorldMixin implements WorldBridge {
                 ci.cancel();
             }
         }
+    }
+
+    @Redirect(method = "isNightTime", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/dimension/Dimension;getType()Lnet/minecraft/world/dimension/DimensionType;"))
+    private DimensionType arclight$nightTimeType(Dimension dimension) {
+        return ((DimensionTypeBridge) dimension.getType()).bridge$getType();
     }
 
     public CraftServer getServer() {

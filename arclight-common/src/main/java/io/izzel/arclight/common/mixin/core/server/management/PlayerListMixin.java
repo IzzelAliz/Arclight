@@ -27,7 +27,9 @@ import net.minecraft.network.login.ServerLoginNetHandler;
 import net.minecraft.network.play.server.SChangeGameStatePacket;
 import net.minecraft.network.play.server.SChatPacket;
 import net.minecraft.network.play.server.SEntityStatusPacket;
+import net.minecraft.network.play.server.SJoinGamePacket;
 import net.minecraft.network.play.server.SPlayEntityEffectPacket;
+import net.minecraft.network.play.server.SRespawnPacket;
 import net.minecraft.network.play.server.SServerDifficultyPacket;
 import net.minecraft.network.play.server.SSetExperiencePacket;
 import net.minecraft.network.play.server.SSpawnPositionPacket;
@@ -48,8 +50,10 @@ import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.GameRules;
+import net.minecraft.world.GameType;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldType;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.IPlayerFileData;
@@ -151,6 +155,11 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().sendSupportedChannels();
     }
 
+    @Redirect(method = "initializeConnectionToPlayer", at = @At(value = "NEW", target = "net/minecraft/network/play/server/SJoinGamePacket"))
+    private SJoinGamePacket arclight$spawnPacket(int playerId, GameType gameType, long hashedSeed, boolean hardcoreMode, DimensionType dimensionType, int maxPlayers, WorldType worldType, int viewDistance, boolean reducedDebugInfo, boolean enableRespawnScreen, NetworkManager netManager, ServerPlayerEntity playerIn) {
+        return new SJoinGamePacket(playerId, gameType, hashedSeed, hardcoreMode, ((DimensionTypeBridge) dimensionType).bridge$getType(), maxPlayers, worldType, ((ServerWorldBridge) playerIn.getServerWorld()).bridge$spigotConfig().viewDistance, reducedDebugInfo, enableRespawnScreen);
+    }
+
     @Inject(method = "func_212504_a", cancellable = true, at = @At("HEAD"))
     private void arclight$returnIfSet(ServerWorld world, CallbackInfo ci) {
         if (this.playerDataManager != null) {
@@ -240,7 +249,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                     isBedSpawn = true;
                     location = new Location(cworld, vec3d.x, vec3d.y, vec3d.z);
                 } else {
-                    this.bridge$setSpawnPoint(playerIn, null, true, playerIn.dimension, false);
+                    playerIn.setSpawnPoint(null, true, false, playerIn.dimension);
                     playerIn.connection.sendPacket(new SChangeGameStatePacket(0, 0.0f));
                 }
             }
@@ -269,11 +278,11 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             playerIn.setPosition(playerIn.getPosX(), playerIn.getPosY() + 1.0, playerIn.getPosZ());
         }
         if (fromWorld.getEnvironment() == ((WorldBridge) serverWorld).bridge$getWorld().getEnvironment()) {
-            playerIn.connection.sendPacket(this.bridge$respawnPacket((serverWorld.dimension.getType().getId() >= 0) ? DimensionType.THE_NETHER : DimensionType.OVERWORLD, serverWorld.getWorldInfo().getSeed(), serverWorld.getWorldInfo().getGenerator(), playerIn.interactionManager.getGameType()));
+            playerIn.connection.sendPacket(new SRespawnPacket((serverWorld.dimension.getType().getId() >= 0) ? DimensionType.THE_NETHER : DimensionType.OVERWORLD, WorldInfo.byHashing(serverWorld.getWorldInfo().getSeed()), serverWorld.getWorldInfo().getGenerator(), playerIn.interactionManager.getGameType()));
         }
         WorldInfo worldInfo = serverWorld.getWorldInfo();
         net.minecraftforge.fml.network.NetworkHooks.sendDimensionDataPacket(playerIn.connection.netManager, playerIn);
-        playerIn.connection.sendPacket(this.bridge$respawnPacket(((DimensionTypeBridge) serverWorld.dimension.getType()).bridge$getType(), serverWorld.getWorldInfo().getSeed(), serverWorld.getWorldInfo().getGenerator(), playerIn.interactionManager.getGameType()));
+        playerIn.connection.sendPacket(new SRespawnPacket(((DimensionTypeBridge) serverWorld.dimension.getType()).bridge$getType(), WorldInfo.byHashing(serverWorld.getWorldInfo().getSeed()), serverWorld.getWorldInfo().getGenerator(), playerIn.interactionManager.getGameType()));
         playerIn.connection.sendPacket(new SUpdateViewDistancePacket(((ServerWorldBridge) serverWorld).bridge$spigotConfig().viewDistance));
         playerIn.setWorld(serverWorld);
         playerIn.interactionManager.setWorld(serverWorld);
@@ -359,7 +368,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                     isBedSpawn = true;
                     location = new Location(cworld, vec3d.x, vec3d.y, vec3d.z);
                 } else {
-                    this.bridge$setSpawnPoint(playerIn, null, true, playerIn.dimension, false);
+                    playerIn.setSpawnPoint(null, true, false, playerIn.dimension);
                     playerIn.connection.sendPacket(new SChangeGameStatePacket(0, 0.0f));
                 }
             }
@@ -414,17 +423,17 @@ public abstract class PlayerListMixin implements PlayerListBridge {
 
         this.setPlayerGameTypeBasedOnOther(serverplayerentity, playerIn, serverworld);
 
-        while (avoidSuffocation && !this.bridge$worldNoCollision(serverworld, serverplayerentity) && serverplayerentity.posY < 256.0D) {
+        while (avoidSuffocation && !serverworld.hasNoCollisions(serverplayerentity) && serverplayerentity.posY < 256.0D) {
             serverplayerentity.setPosition(serverplayerentity.posX, serverplayerentity.posY + 1.0D, serverplayerentity.posZ);
         }
 
         if (fromWorld.getEnvironment() == ((WorldBridge) serverworld).bridge$getWorld().getEnvironment()) {
-            serverplayerentity.connection.sendPacket(this.bridge$respawnPacket((((DimensionTypeBridge) serverplayerentity.dimension).bridge$getType().getId() >= 0) ? DimensionType.THE_NETHER : DimensionType.OVERWORLD, serverworld.getWorldInfo().getSeed(), serverworld.getWorldInfo().getGenerator(), playerIn.interactionManager.getGameType()));
+            serverplayerentity.connection.sendPacket(new SRespawnPacket((((DimensionTypeBridge) serverplayerentity.dimension).bridge$getType().getId() >= 0) ? DimensionType.THE_NETHER : DimensionType.OVERWORLD, WorldInfo.byHashing(serverworld.getWorldInfo().getSeed()), serverworld.getWorldInfo().getGenerator(), playerIn.interactionManager.getGameType()));
         }
 
         WorldInfo worldinfo = serverplayerentity.world.getWorldInfo();
         NetworkHooks.sendDimensionDataPacket(serverplayerentity.connection.netManager, serverplayerentity);
-        serverplayerentity.connection.sendPacket(this.bridge$respawnPacket(((DimensionTypeBridge) serverplayerentity.dimension).bridge$getType(), worldinfo.getSeed(), worldinfo.getGenerator(), serverplayerentity.interactionManager.getGameType()));
+        serverplayerentity.connection.sendPacket(new SRespawnPacket(((DimensionTypeBridge) serverplayerentity.dimension).bridge$getType(), WorldInfo.byHashing(worldinfo.getSeed()), worldinfo.getGenerator(), serverplayerentity.interactionManager.getGameType()));
         serverplayerentity.connection.sendPacket(new SUpdateViewDistancePacket(((WorldBridge) serverworld).bridge$spigotConfig().viewDistance));
         BlockPos blockpos1 = serverworld.getSpawnPoint();
         serverplayerentity.connection.setPlayerLocation(serverplayerentity.posX, serverplayerentity.posY, serverplayerentity.posZ, serverplayerentity.rotationYaw, serverplayerentity.rotationPitch);
@@ -456,7 +465,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
 
     public void sendAll(IPacket<?> packet, PlayerEntity entityhuman) {
         for (ServerPlayerEntity entityplayer : this.players) {
-            if (entityhuman == null || !(entityhuman instanceof ServerPlayerEntity) || ((ServerPlayerEntityBridge) entityplayer).bridge$getBukkitEntity().canSee(((ServerPlayerEntityBridge) entityhuman).bridge$getBukkitEntity())) {
+            if (!(entityhuman instanceof ServerPlayerEntity) || ((ServerPlayerEntityBridge) entityplayer).bridge$getBukkitEntity().canSee(((ServerPlayerEntityBridge) entityhuman).bridge$getBukkitEntity())) {
                 entityplayer.connection.sendPacket(packet);
             }
         }

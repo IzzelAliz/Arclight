@@ -36,7 +36,7 @@ public abstract class LeashKnotEntityMixin extends HangingEntityMixin {
         }
         boolean flag = false;
         final double d0 = 7.0;
-        final List<MobEntity> list = this.world.getEntitiesWithinAABB((Class<? extends MobEntity>) MobEntity.class, new AxisAlignedBB(this.posX - 7.0, this.posY - 7.0, this.posZ - 7.0, this.posX + 7.0, this.posY + 7.0, this.posZ + 7.0));
+        final List<MobEntity> list = this.world.getEntitiesWithinAABB(MobEntity.class, new AxisAlignedBB(this.posX - 7.0, this.posY - 7.0, this.posZ - 7.0, this.posX + 7.0, this.posY + 7.0, this.posZ + 7.0));
         for (final MobEntity entityinsentient : list) {
             if (entityinsentient.getLeashHolder() == entityhuman) {
                 if (CraftEventFactory.callPlayerLeashEntityEvent(entityinsentient, (LeashKnotEntity) (Object) this, entityhuman).isCancelled()) {

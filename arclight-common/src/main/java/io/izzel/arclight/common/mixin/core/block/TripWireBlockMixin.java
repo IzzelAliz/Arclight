@@ -39,7 +39,7 @@ public abstract class TripWireBlockMixin extends BlockMixin {
         BlockState blockstate = worldIn.getBlockState(pos);
         boolean flag = blockstate.get(POWERED);
         boolean flag1 = false;
-        List<? extends Entity> list = worldIn.getEntitiesWithinAABBExcludingEntity((Entity) null, blockstate.getShape(worldIn, pos).getBoundingBox().offset(pos));
+        List<? extends Entity> list = worldIn.getEntitiesWithinAABBExcludingEntity(null, blockstate.getShape(worldIn, pos).getBoundingBox().offset(pos));
         if (!list.isEmpty()) {
             for (Entity entity : list) {
                 if (!entity.doesEntityNotTriggerPressurePlate()) {
@@ -49,7 +49,7 @@ public abstract class TripWireBlockMixin extends BlockMixin {
             }
         }
 
-        if (flag != flag1 && flag1 && (Boolean) blockstate.get(TripWireBlock.ATTACHED)) {
+        if (flag != flag1 && flag1 && blockstate.get(TripWireBlock.ATTACHED)) {
             org.bukkit.block.Block block = CraftBlock.at(worldIn, pos);
             boolean allowed = false;
 

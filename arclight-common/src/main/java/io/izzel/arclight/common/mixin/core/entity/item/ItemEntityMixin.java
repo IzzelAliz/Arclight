@@ -23,6 +23,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -120,5 +121,12 @@ public abstract class ItemEntityMixin extends EntityMixin {
     @Inject(method = "setItem", at = @At("RETURN"))
     private void arclight$markDirty(ItemStack stack, CallbackInfo ci) {
         ((EntityDataManagerBridge) this.getDataManager()).bridge$markDirty(ITEM);
+    }
+
+    @Redirect(method = "func_226531_a_", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/item/ItemEntity;setItem(Lnet/minecraft/item/ItemStack;)V"))
+    private static void arclight$setNonEmpty(ItemEntity itemEntity, ItemStack stack) {
+        if (!stack.isEmpty()) {
+            itemEntity.setItem(stack);
+        }
     }
 }

@@ -18,6 +18,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityClassification;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.effect.LightningBoltEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -52,6 +53,7 @@ import org.bukkit.entity.LightningStrike;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.server.MapInitializeEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
+import org.bukkit.event.world.TimeSkipEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
@@ -90,6 +92,8 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
     @Shadow @Final public Int2ObjectMap<Entity> entitiesById;
     @Shadow public abstract ServerChunkProvider getChunkProvider();
     @Shadow @Final @Mutable @Nullable private WanderingTraderSpawner wanderingTraderSpawner;
+    @Shadow private boolean allPlayersSleeping;
+    @Shadow protected abstract void wakeUpAllPlayers();
     // @formatter:on
 
     public void arclight$constructor(MinecraftServer serverIn, Executor executor, SaveHandler saveHandler, WorldInfo worldInfo, DimensionType dimType, IProfiler profiler, IChunkStatusListener listener) {
@@ -104,7 +108,7 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
     }
 
     public <T extends IParticleData> int sendParticles(final ServerPlayerEntity sender, final T t0, final double d0, final double d1, final double d2, final int i, final double d3, final double d4, final double d5, final double d6, final boolean force) {
-        SSpawnParticlePacket packet = new SSpawnParticlePacket((T) t0, force, d0, d1, d2, (float) d3, (float) d4, (float) d5, (float) d6, i);
+        SSpawnParticlePacket packet = new SSpawnParticlePacket(t0, force, d0, d1, d2, (float) d3, (float) d4, (float) d5, (float) d6, i);
         int j = 0;
         for (ServerPlayerEntity entity : this.players) {
             if (sender == null || ((ServerPlayerEntityBridge) entity).bridge$getBukkitEntity().canSee(((ServerPlayerEntityBridge) sender).bridge$getBukkitEntity())) {
@@ -367,5 +371,26 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
             }
         }
         return map;
+    }
+
+    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setDayTime(J)V"))
+    private void arclight$timeSkip(ServerWorld world, long time) {
+        TimeSkipEvent event = new TimeSkipEvent(this.bridge$getWorld(), TimeSkipEvent.SkipReason.NIGHT_SKIP, (time - time % 24000L) - this.getDayTime());
+        Bukkit.getPluginManager().callEvent(event);
+        arclight$timeSkipCancelled = event.isCancelled();
+        if (!event.isCancelled()) {
+            world.setDayTime(this.getDayTime() + event.getSkipAmount());
+            this.allPlayersSleeping = this.players.stream().allMatch(LivingEntity::isSleeping);
+        }
+    }
+
+    private transient boolean arclight$timeSkipCancelled;
+
+    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;wakeUpAllPlayers()V"))
+    private void arclight$notWakeIfCancelled(ServerWorld world) {
+        if (!arclight$timeSkipCancelled) {
+            this.wakeUpAllPlayers();
+        }
+        arclight$timeSkipCancelled = false;
     }
 }

@@ -10,6 +10,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
@@ -34,6 +35,25 @@ public abstract class FireBlockMixin implements FireBlockBridge {
     @Shadow public abstract BlockState getStateForPlacement(IBlockReader p_196448_1_, BlockPos p_196448_2_);
     @Shadow @Final private Object2IntMap<net.minecraft.block.Block> flammabilities;
     // @formatter:on
+
+    @Redirect(method = "tick", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+    public boolean arclight$fireSpread(ServerWorld world, BlockPos mutablePos, BlockState newState, int flags,
+                                       BlockState state, ServerWorld worldIn, BlockPos pos) {
+        if (world.getBlockState(mutablePos).getBlock() != Blocks.FIRE) {
+            if (!CraftEventFactory.callBlockIgniteEvent(world, mutablePos, pos).isCancelled()) {
+                return CraftEventFactory.handleBlockSpreadEvent(world, pos, mutablePos, newState, flags);
+            }
+        }
+        return false;
+    }
+
+    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;removeBlock(Lnet/minecraft/util/math/BlockPos;Z)Z"))
+    public boolean arclight$extinguish1(ServerWorld world, BlockPos pos, boolean isMoving) {
+        if (!CraftEventFactory.callBlockFadeEvent(world, pos, Blocks.AIR.getDefaultState()).isCancelled()) {
+            world.removeBlock(pos, isMoving);
+        }
+        return false;
+    }
 
     @Inject(method = "tryCatchFire", cancellable = true, at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/World;getBlockState(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/block/BlockState;"))
     public void arclight$blockBurn(World worldIn, BlockPos pos, int chance, Random random, int age, Direction face, CallbackInfo ci) {

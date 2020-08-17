@@ -57,7 +57,7 @@ public class BoatItemMixin extends Item {
                 Vec3d vec3d1 = playerIn.getEyePosition(1.0F);
 
                 for (Entity entity : list) {
-                    AxisAlignedBB axisalignedbb = entity.getBoundingBox().grow((double) entity.getCollisionBorderSize());
+                    AxisAlignedBB axisalignedbb = entity.getBoundingBox().grow(entity.getCollisionBorderSize());
                     if (axisalignedbb.contains(vec3d1)) {
                         return new ActionResult<>(ActionResultType.PASS, itemstack);
                     }

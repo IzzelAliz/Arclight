@@ -21,6 +21,11 @@ public abstract class NoteBlockMixin implements NoteBlockBridge {
     @Shadow protected abstract void triggerNote(World worldIn, BlockPos pos);
     // @formatter:on
 
+    @Redirect(method = "onBlockActivated", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/NoteBlock;triggerNote(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V"))
+    public void arclight$callNote2(NoteBlock noteBlock, World worldIn, BlockPos pos, BlockState blockState) {
+        this.bridge$play(worldIn, pos, blockState);
+    }
+
     @Redirect(method = "neighborChanged", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/NoteBlock;triggerNote(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V"))
     public void arclight$callNote1(NoteBlock noteBlock, World worldIn, BlockPos pos, BlockState blockState) {
         this.play(worldIn, pos, blockState);

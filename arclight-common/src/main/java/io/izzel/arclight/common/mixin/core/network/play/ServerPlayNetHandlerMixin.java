@@ -38,6 +38,7 @@ import net.minecraft.item.Items;
 import net.minecraft.item.WritableBookItem;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.StringNBT;
 import net.minecraft.network.IPacket;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.PacketThreadUtil;
@@ -309,7 +310,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                     this.netManager.sendPacket(new SMoveVehiclePacket(entity));
                     return;
                 }
-                boolean flag = this.bridge$worldNoCollision(worldserver, entity, entity.getBoundingBox().shrink(0.0625));
+                boolean flag = worldserver.hasNoCollisions(entity, entity.getBoundingBox().shrink(0.0625));
                 d7 = d4 - this.lowestRiddenX1;
                 d8 = d5 - this.lowestRiddenY1 - 1.0E-6;
                 d9 = d6 - this.lowestRiddenZ1;
@@ -329,7 +330,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 }
                 entity.setPositionAndRotation(d4, d5, d6, f, f2);
                 this.player.setPositionAndRotation(d4, d5, d6, this.player.rotationYaw, this.player.rotationPitch);
-                boolean flag3 = this.bridge$worldNoCollision(worldserver, entity, entity.getBoundingBox().shrink(0.0625));
+                boolean flag3 = worldserver.hasNoCollisions(entity, entity.getBoundingBox().shrink(0.0625));
                 if (flag && (flag2 || !flag3)) {
                     entity.setPositionAndRotation(d0, d2, d3, f, f2);
                     this.player.setPositionAndRotation(d0, d2, d3, this.player.rotationYaw, this.player.rotationPitch);
@@ -421,14 +422,14 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                     if (nbttagcompound != null) {
                         itemstack3.setTag(nbttagcompound.copy());
                     }
-                    itemstack3.setTagInfo("author", this.bridge$stringNbt(this.player.getName().getString()));
-                    itemstack3.setTagInfo("title", this.bridge$stringNbt(itemstack.getTag().getString("title")));
+                    itemstack3.setTagInfo("author", StringNBT.valueOf(this.player.getName().getString()));
+                    itemstack3.setTagInfo("title", StringNBT.valueOf(itemstack.getTag().getString("title")));
                     ListNBT nbttaglist = itemstack.getTag().getList("pages", 8);
                     for (int i = 0; i < nbttaglist.size(); ++i) {
                         String s = nbttaglist.getString(i);
                         StringTextComponent chatcomponenttext = new StringTextComponent(s);
                         s = ITextComponent.Serializer.toJson(chatcomponenttext);
-                        nbttaglist.set(i, this.bridge$stringNbt(s));
+                        nbttaglist.set(i, StringNBT.valueOf(s));
                     }
                     itemstack3.setTagInfo("pages", nbttaglist);
                     this.player.setHeldItem(packetplayinbedit.getHand(), CraftEventFactory.handleEditBookEvent(this.player, enumitemslot, itemstack2, itemstack3));
@@ -688,13 +689,13 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                             return;
                         }
                     }
-                    this.bridge$dropItems(this.player, false);
+                    this.player.drop(false);
                 }
                 return;
             }
             case DROP_ALL_ITEMS: {
                 if (!this.player.isSpectator()) {
-                    this.bridge$dropItems(this.player, true);
+                    this.player.drop(true);
                 }
                 return;
             }
@@ -778,7 +779,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             float f8 = f3 * f5;
             double d4 = (this.player.interactionManager.getGameType() == GameType.CREATIVE) ? 5.0 : 4.5;
             Vec3d vec3d2 = vec3d.add(f7 * d4, f6 * d4, f8 * d4);
-            RayTraceResult movingobjectposition = this.player.world.rayTraceBlocks(new RayTraceContext(vec3d, vec3d2, RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE, this.player));
+            BlockRayTraceResult movingobjectposition = this.player.world.rayTraceBlocks(new RayTraceContext(vec3d, vec3d2, RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE, this.player));
             boolean cancelled;
             if (movingobjectposition == null || movingobjectposition.getType() != RayTraceResult.Type.BLOCK) {
                 PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(this.player, Action.RIGHT_CLICK_AIR, itemstack, enumhand);
@@ -787,7 +788,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 ((PlayerInteractionManagerBridge) this.player.interactionManager).bridge$setFiredInteract(false);
                 cancelled = ((PlayerInteractionManagerBridge) this.player.interactionManager).bridge$getInteractResult();
             } else {
-                BlockRayTraceResult movingobjectpositionblock = (BlockRayTraceResult) movingobjectposition;
+                BlockRayTraceResult movingobjectpositionblock = movingobjectposition;
                 PlayerInteractEvent event2 = CraftEventFactory.callPlayerInteractEvent(this.player, Action.RIGHT_CLICK_BLOCK, movingobjectpositionblock.getPos(), movingobjectpositionblock.getFace(), itemstack, true, enumhand);
                 cancelled = (event2.useItemInHand() == Event.Result.DENY);
             }

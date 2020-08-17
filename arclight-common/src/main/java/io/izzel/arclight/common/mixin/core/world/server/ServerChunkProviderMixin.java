@@ -24,6 +24,7 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.server.ServerWorldLightManager;
 import net.minecraft.world.server.TicketManager;
 import net.minecraft.world.server.TicketType;
+import net.minecraft.world.spawner.WorldEntitySpawner;
 import net.minecraft.world.storage.WorldInfo;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -174,7 +175,7 @@ public abstract class ServerChunkProviderMixin implements ServerChunkProviderBri
                                 if (entityclassification != EntityClassification.MISC && (!entityclassification.getPeacefulCreature() || this.spawnPassives) && (entityclassification.getPeacefulCreature() || this.spawnHostiles) && (!entityclassification.getAnimal() || flag2)) {
                                     int i1 = limit * l / field_217238_b;
                                     if (object2intmap.getInt(entityclassification) <= i1) {
-                                        this.bridge$worldNaturalSpawn(entityclassification, this.world, chunk, blockpos);
+                                        WorldEntitySpawner.spawnEntitiesInChunk(entityclassification, this.world, chunk, blockpos);
                                     }
                                 }
                             }

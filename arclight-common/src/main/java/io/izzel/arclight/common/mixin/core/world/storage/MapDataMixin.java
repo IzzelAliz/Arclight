@@ -54,7 +54,7 @@ public abstract class MapDataMixin implements MapDataBridge {
                 if (type == null) {
                     /* All Maps which do not have their valid world loaded are set to a dimension which hopefully won't be reached.
                        This is to prevent them being corrupted with the wrong map data. */
-                    type = this.bridge$dimension(ArclightConstants.ARCLIGHT_DIMENSION, "", "", OverworldDimension::new, false);
+                    type = new DimensionType(ArclightConstants.ARCLIGHT_DIMENSION, "", "", OverworldDimension::new, false, null, null, null);
                     ((DimensionTypeBridge) type).bridge$setType(DimensionType.OVERWORLD);
 
                 }

@@ -1,16 +1,27 @@
 package io.izzel.arclight.common.mixin.core.entity.item;
 
 import com.google.common.collect.Lists;
+import io.izzel.arclight.common.bridge.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.mixin.core.entity.LivingEntityMixin;
 import net.minecraft.entity.item.ArmorStandEntity;
 import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
+import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.v.CraftEquipmentSlot;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -27,7 +38,10 @@ import java.util.stream.Collectors;
 @Mixin(ArmorStandEntity.class)
 public abstract class ArmorStandEntityMixin extends LivingEntityMixin {
 
+    // @formatter:off
     @Shadow private boolean canInteract;
+    @Shadow public abstract ItemStack getItemStackFromSlot(EquipmentSlotType slotIn);
+    // @formatter:on
 
     @Override
     public float getBukkitYaw() {
@@ -122,5 +136,24 @@ public abstract class ArmorStandEntityMixin extends LivingEntityMixin {
             drops = captureDrops.stream().map(ItemEntity::getItem).map(CraftItemStack::asCraftMirror).collect(Collectors.toList());
         }
         CraftEventFactory.callEntityDeathEvent((ArmorStandEntity) (Object) this, drops);
+    }
+
+    @Inject(method = "func_226529_a_", cancellable = true, at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;abilities:Lnet/minecraft/entity/player/PlayerAbilities;"))
+    public void arclight$manipulateEvent(PlayerEntity playerEntity, EquipmentSlotType slotType, ItemStack itemStack, Hand hand, CallbackInfoReturnable<Boolean> cir) {
+        ItemStack itemStack1 = this.getItemStackFromSlot(slotType);
+
+        org.bukkit.inventory.ItemStack armorStandItem = CraftItemStack.asCraftMirror(itemStack1);
+        org.bukkit.inventory.ItemStack playerHeldItem = CraftItemStack.asCraftMirror(itemStack);
+
+        Player player = ((ServerPlayerEntityBridge) playerEntity).bridge$getBukkitEntity();
+        ArmorStand self = (ArmorStand) ((EntityBridge) this).bridge$getBukkitEntity();
+
+        EquipmentSlot slot = CraftEquipmentSlot.getSlot(slotType);
+        PlayerArmorStandManipulateEvent event = new PlayerArmorStandManipulateEvent(player, self, playerHeldItem, armorStandItem, slot);
+        Bukkit.getPluginManager().callEvent(event);
+
+        if (event.isCancelled()) {
+            cir.setReturnValue(true);
+        }
     }
 }

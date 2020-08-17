@@ -1,6 +1,3 @@
-import java.nio.file.*
-import java.nio.file.attribute.BasicFileAttributes
-
 allprojects {
     group 'io.izzel.arclight'
     version '1.0.7-SNAPSHOT'
@@ -11,22 +8,7 @@ allprojects {
 
     task cleanBuild {
         doFirst {
-            def f = project.file("build/libs")
-            if (Files.exists(f.toPath())) {
-                Files.walkFileTree(f.toPath(), new SimpleFileVisitor<Path>() {
-                    @Override
-                    FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                        Files.delete(file)
-                        return FileVisitResult.CONTINUE
-                    }
-
-                    @Override
-                    FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                        Files.delete(dir)
-                        return FileVisitResult.CONTINUE
-                    }
-                })
-            }
+            project.file("build/libs").deleteDir()
         }
     }
 }
