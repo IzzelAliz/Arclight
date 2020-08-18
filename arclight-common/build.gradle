@@ -20,14 +20,14 @@ apply plugin: 'idea'
 apply plugin: 'io.izzel.arclight'
 
 ext {
-    minecraftVersion = '1.15.2'
-    forgeVersion = '31.2.30'
+    minecraftVersion = '1.16.2'
+    forgeVersion = '33.0.5'
 }
 
 arclight {
     mcVersion = minecraftVersion
     forgeVersion = project.ext.forgeVersion
-    bukkitVersion = 'v1_15_R1'
+    bukkitVersion = 'v1_16_R2'
     wipeVersion = true
     reobfVersion = false
     accessTransformer = project.file('bukkit.at')
@@ -36,7 +36,7 @@ arclight {
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
 
 minecraft {
-    mappings channel: 'snapshot', version: "20200705-1.15.1"
+    mappings channel: 'snapshot', version: "20200813-1.16.1"
     accessTransformer = project.file('src/main/resources/META-INF/accesstransformer.cfg')
 }
 
@@ -47,6 +47,7 @@ repositories {
     maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
     maven { url = 'https://repo.codemc.io/repository/nms/' }
     maven { url = 'https://files.minecraftforge.net/maven/' }
+    maven { url = 'https://www.dogforce-games.com/maven/' }
 }
 
 dependencies {
@@ -57,9 +58,9 @@ dependencies {
     compile 'jline:jline:2.12.1'
     compile 'net.md-5:SpecialSource:1.8.6'
     compile 'org.apache.logging.log4j:log4j-jul:2.11.2'
-    compile 'net.md-5:bungeecord-chat:1.13-SNAPSHOT'
-    compile 'mysql:mysql-connector-java:5.1.47'
-    compile 'org.yaml:snakeyaml:1.23'
+    compile 'net.md-5:bungeecord-chat:1.16-R0.3'
+    compile 'mysql:mysql-connector-java:5.1.49'
+    compile 'org.yaml:snakeyaml:1.26'
     compile project(':arclight-api')
     compile project(':i18n-config')
 }
