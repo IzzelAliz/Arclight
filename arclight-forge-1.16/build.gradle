@@ -1,0 +1,129 @@
+buildscript {
+    repositories {
+        maven { url = 'https://files.minecraftforge.net/maven' }
+        maven { url = 'https://repo.spongepowered.org/maven' }
+        jcenter()
+        mavenCentral()
+        maven { url = 'https://jitpack.io' }
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+        classpath "com.github.ArclightTeam:arclight-gradle-plugin:$agpVersion"
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'io.izzel.arclight'
+
+ext {
+    minecraftVersion = '1.16.2'
+    forgeVersion = '33.0.5'
+}
+
+arclight {
+    mcVersion = minecraftVersion
+    forgeVersion = project.ext.forgeVersion
+    bukkitVersion = 'v1_16_R2'
+    wipeVersion = true
+    reobfVersion = true
+    accessTransformer = project(':arclight-common').file('bukkit.at')
+}
+
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+
+configurations {
+    embed
+    compile.extendsFrom(embed)
+}
+
+minecraft {
+    mappings channel: 'snapshot', version: "20200813-1.16.1"
+    accessTransformer = project(':arclight-common').file('src/main/resources/META-INF/accesstransformer.cfg')
+}
+
+repositories {
+    jcenter()
+    maven {
+        name = 'sponge-repo'
+        url = 'https://repo.spongepowered.org/maven'
+    }
+    maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
+    maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
+    maven { url = 'https://repo.codemc.io/repository/nms/' }
+    maven { url = 'https://files.minecraftforge.net/maven/' }
+    maven { url = 'https://www.dogforce-games.com/maven/' }
+}
+
+def embedLibs = ['org.spongepowered:mixin:0.8', 'org.ow2.asm:asm-util:8.0.1',
+                 'org.ow2.asm:asm-analysis:8.0.1', 'org.yaml:snakeyaml:1.25',
+                 'org.xerial:sqlite-jdbc:3.32.3', 'mysql:mysql-connector-java:5.1.49',
+                 'commons-lang:commons-lang:2.6', 'com.googlecode.json-simple:json-simple:1.1.1',
+                 'org.apache.logging.log4j:log4j-jul:2.11.2', 'net.md-5:SpecialSource:1.8.6',
+                 'net.minecraftforge:eventbus:2.0.0-milestone.1:service', 'org.jline:jline-terminal-jansi:3.12.1',
+                 'org.fusesource.jansi:jansi:1.18', 'org.jline:jline-terminal:3.12.1',
+                 'org.jline:jline-reader:3.12.1', 'jline:jline:2.12.1']
+
+dependencies {
+    minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
+    compile group: 'org.jetbrains', name: 'annotations', version: '19.0.0'
+    compile(project(':arclight-common')) {
+        exclude module: 'forge'
+    }
+    embed project(':i18n-config')
+    embed project(':forge-installer')
+    for (def lib : embedLibs) {
+        arclight lib
+    }
+    embed 'net.md-5:bungeecord-chat:1.16-R0.3@jar'
+    embed "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
+}
+
+def getGitHash = { ->
+    def stdout = new ByteArrayOutputStream()
+    exec {
+        commandLine 'git', 'rev-parse', '--short', 'HEAD'
+        standardOutput = stdout
+    }
+    return stdout.toString().trim()
+}
+
+processResources {
+    filesMatching("**/mods.toml") {
+        expand 'version': "$minecraftVersion-${project.version}-${getGitHash()}"
+    }
+}
+
+jar {
+    manifest.attributes 'MixinConnector': 'io.izzel.arclight.impl.ArclightConnector_1_16'
+    manifest.attributes 'Main-Class': 'io.izzel.arclight.server.Main_1_16'
+    manifest.attributes 'Implementation-Title': 'Arclight'
+    manifest.attributes 'Implementation-Version': "arclight-$minecraftVersion-${project.version}-${getGitHash()}"
+    manifest.attributes 'Implementation-Vendor': 'Arclight Team'
+    manifest.attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd HH:mm:ss")
+    from(configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }) {
+        exclude "META-INF/MANIFEST.MF"
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+        exclude "LICENSE.txt"
+    }
+    from(project(':arclight-common').tasks.jar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) })
+}
+
+remapSpigotJar {
+    includes.add('net/minecraft/block/ChestBlock$DoubleInventory')
+    includes.add('net/minecraft/tileentity/LecternTileEntity$LecternInventory')
+}
+
+mixin {
+    // add sourceSets.main, 'mixins.arclight.impl.refmap.1_15.json'
+}
+
+compileJava {
+    options.compilerArgs << '-XDignore.symbol.file' << '-XDenableSunApiLintControl'
+    options.encoding = 'UTF-8'
+}
