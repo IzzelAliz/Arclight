@@ -393,4 +393,9 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         }
         arclight$timeSkipCancelled = false;
     }
+
+    @Override
+    public ServerWorld bridge$getMinecraftWorld() {
+        return (ServerWorld) (Object) this;
+    }
 }

@@ -3,7 +3,6 @@ package io.izzel.arclight.common.bridge.entity.player;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
@@ -34,5 +33,5 @@ public interface ServerPlayerEntityBridge extends PlayerEntityBridge {
 
     void bridge$reset();
 
-    Entity bridge$changeDimension(DimensionType dimensionType, PlayerTeleportEvent.TeleportCause cause);
+    Entity bridge$changeDimension(ServerWorld world, PlayerTeleportEvent.TeleportCause cause);
 }

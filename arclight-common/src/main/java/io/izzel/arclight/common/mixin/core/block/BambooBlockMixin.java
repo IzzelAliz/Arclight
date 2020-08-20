@@ -37,10 +37,10 @@ public abstract class BambooBlockMixin extends BlockMixin {
         boolean update = false;
 
         if (height >= 1) {
-            if (blockstate.getBlock() == Blocks.BAMBOO && blockstate.get(PROPERTY_BAMBOO_LEAVES) != BambooLeaves.NONE) {
-                if (blockstate.getBlock() == Blocks.BAMBOO && blockstate.get(PROPERTY_BAMBOO_LEAVES) != BambooLeaves.NONE) {
+            if (blockstate.isIn(Blocks.BAMBOO) && blockstate.get(PROPERTY_BAMBOO_LEAVES) != BambooLeaves.NONE) {
+                if (blockstate.isIn(Blocks.BAMBOO) && blockstate.get(PROPERTY_BAMBOO_LEAVES) != BambooLeaves.NONE) {
                     bambooleaves = BambooLeaves.LARGE;
-                    if (blockstate1.getBlock() == Blocks.BAMBOO) {
+                    if (blockstate1.isIn(Blocks.BAMBOO)) {
                         update = true;
                     }
                 }
@@ -49,7 +49,7 @@ public abstract class BambooBlockMixin extends BlockMixin {
             }
         }
 
-        int newAge = blockStateIn.get(PROPERTY_AGE) != 1 && blockstate1.getBlock() != Blocks.BAMBOO ? 0 : 1;
+        int newAge = blockStateIn.get(PROPERTY_AGE) != 1 && !blockstate1.isIn(Blocks.BAMBOO) ? 0 : 1;
         int newState = (height < 11 || !(rand.nextFloat() < 0.25F)) && height != 15 ? 0 : 1;
 
         if (CraftEventFactory.handleBlockSpreadEvent(worldIn, posIn, posIn.up(),

@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.core.command.arguments;
 
 import com.mojang.brigadier.StringReader;
 import net.minecraft.command.arguments.BlockStateParser;
-import net.minecraft.state.IProperty;
+import net.minecraft.state.Property;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -18,7 +18,7 @@ import java.util.Map;
 public class BlockStateParserMixin {
 
     // @formatter:off
-    @Shadow @Final @Mutable private Map<IProperty<?>, Comparable<?>> properties;
+    @Shadow @Final @Mutable private Map<Property<?>, Comparable<?>> properties;
     // @formatter:on
 
     @Inject(method = "<init>", at = @At("RETURN"))

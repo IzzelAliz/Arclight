@@ -12,8 +12,13 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(CocoaBlock.class)
 public class CocoaBlockMixin {
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
-    public boolean arclight$blockGrow(ServerWorld world, BlockPos pos, BlockState newState, int flags) {
+    @Redirect(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+    public boolean arclight$blockGrow1(ServerWorld world, BlockPos pos, BlockState newState, int flags) {
+        return CraftEventFactory.handleBlockGrowEvent(world, pos, newState, flags);
+    }
+
+    @Redirect(method = "grow", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+    private boolean arclight$blockGrow2(ServerWorld world, BlockPos pos, BlockState newState, int flags) {
         return CraftEventFactory.handleBlockGrowEvent(world, pos, newState, flags);
     }
 }

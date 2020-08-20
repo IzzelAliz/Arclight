@@ -10,6 +10,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import org.bukkit.TreeType;
 import org.bukkit.block.BlockState;
+import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
 import org.bukkit.event.block.BlockBreakEvent;
 
 import java.util.ArrayList;
@@ -20,11 +21,7 @@ public class ArclightCaptures {
     private static Entity entityChangeBlock;
 
     public static void captureEntityChangeBlock(Entity entity) {
-        if (entityChangeBlock == null) {
-            entityChangeBlock = entity;
-        } else {
-            recapture("entity change block");
-        }
+        entityChangeBlock = entity;
     }
 
     public static Entity getEntityChangeBlock() {
@@ -185,6 +182,20 @@ public class ArclightCaptures {
 
     public static void resetContainerOwner() {
         containerOwner = null;
+    }
+
+    private static transient CraftPortalEvent craftPortalEvent;
+
+    public static void captureCraftPortalEvent(CraftPortalEvent event) {
+        craftPortalEvent = event;
+    }
+
+    public static CraftPortalEvent getCraftPortalEvent() {
+        try {
+            return craftPortalEvent;
+        } finally {
+            craftPortalEvent = null;
+        }
     }
 
     private static void recapture(String type) {

@@ -27,7 +27,7 @@ public class CactusBlockMixin {
         CraftEventFactory.blockDamage = null;
     }
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Z"))
+    @Redirect(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Z"))
     private boolean arclight$blockGrow(ServerWorld serverWorld, BlockPos pos, BlockState state) {
         return CraftEventFactory.handleBlockGrowEvent(serverWorld, pos, state);
     }

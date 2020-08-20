@@ -36,7 +36,7 @@ public class AbstractButtonBlockMixin {
     // @formatter:on
 
     @Inject(method = "checkPressed", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;get(Lnet/minecraft/state/IProperty;)Ljava/lang/Comparable;"))
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;get(Lnet/minecraft/state/Property;)Ljava/lang/Comparable;"))
     public void arclight$entityInteract(BlockState state, World worldIn, BlockPos pos, CallbackInfo ci,
                                         List<? extends Entity> list, boolean flag) {
         boolean flag1 = state.get(AbstractButtonBlock.POWERED);

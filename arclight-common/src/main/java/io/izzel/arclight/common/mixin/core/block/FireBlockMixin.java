@@ -32,7 +32,7 @@ import java.util.Random;
 public abstract class FireBlockMixin implements FireBlockBridge {
 
     // @formatter:off
-    @Shadow public abstract BlockState getStateForPlacement(IBlockReader p_196448_1_, BlockPos p_196448_2_);
+    @Shadow protected abstract BlockState getStateForPlacement(IBlockReader p_196448_1_, BlockPos p_196448_2_);
     @Shadow @Final private Object2IntMap<net.minecraft.block.Block> flammabilities;
     // @formatter:on
 
@@ -68,6 +68,9 @@ public abstract class FireBlockMixin implements FireBlockBridge {
 
     @Redirect(method = "updatePostPlacement", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;getDefaultState()Lnet/minecraft/block/BlockState;"))
     public BlockState arclight$blockFade(net.minecraft.block.Block block, BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) {
+        if (!(worldIn instanceof World)) {
+            return Blocks.AIR.getDefaultState();
+        }
         CraftBlockState blockState = CraftBlockState.getBlockState(worldIn, currentPos);
         blockState.setData(Blocks.AIR.getDefaultState());
         BlockFadeEvent event = new BlockFadeEvent(blockState.getBlock(), blockState);
@@ -77,14 +80,6 @@ public abstract class FireBlockMixin implements FireBlockBridge {
         } else {
             return blockState.getHandle();
         }
-    }
-
-    @Redirect(method = "onBlockAdded", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;removeBlock(Lnet/minecraft/util/math/BlockPos;Z)Z"))
-    public boolean arclight$extinguish2(World world, BlockPos pos, boolean isMoving) {
-        if (!CraftEventFactory.callBlockFadeEvent(world, pos, Blocks.AIR.getDefaultState()).isCancelled()) {
-            world.removeBlock(pos, isMoving);
-        }
-        return false;
     }
 
     @Override

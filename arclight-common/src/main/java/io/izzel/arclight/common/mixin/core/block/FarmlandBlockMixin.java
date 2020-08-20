@@ -23,7 +23,7 @@ public abstract class FarmlandBlockMixin extends BlockMixin {
         }
     }
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+    @Redirect(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
     public boolean arclight$moistureChange(ServerWorld world, BlockPos pos, BlockState newState, int flags) {
         return CraftEventFactory.handleMoistureChangeEvent(world, pos, newState, flags);
     }

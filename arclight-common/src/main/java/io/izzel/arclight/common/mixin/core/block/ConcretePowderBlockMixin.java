@@ -46,6 +46,9 @@ public abstract class ConcretePowderBlockMixin extends FallingBlockMixin {
 
     @Redirect(method = "updatePostPlacement", at = @At(value = "FIELD", target = "Lnet/minecraft/block/ConcretePowderBlock;solidifiedState:Lnet/minecraft/block/BlockState;"))
     public BlockState arclight$blockForm(@Coerce ConcretePowderBlockMixin block, BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) {
+        if (!(worldIn instanceof World)) {
+            return this.solidifiedState;
+        }
         CraftBlockState blockState = CraftBlockState.getBlockState(worldIn, currentPos);
         blockState.setData(this.solidifiedState);
         BlockFormEvent event = new BlockFormEvent(blockState.getBlock(), blockState);

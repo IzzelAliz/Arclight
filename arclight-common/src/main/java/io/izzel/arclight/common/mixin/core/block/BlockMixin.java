@@ -6,7 +6,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -17,11 +16,8 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.loot.LootContext;
-import net.minecraft.world.storage.loot.LootParameters;
 import net.minecraftforge.common.extensions.IForgeBlock;
 import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
@@ -44,7 +40,6 @@ public abstract class BlockMixin implements BlockBridge {
     @Shadow public abstract BlockState getDefaultState();
     @Shadow @Nullable public BlockState getStateForPlacement(BlockItemUseContext context) { return null; }
     @Shadow public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) { return null; }
-    @Shadow public abstract int tickRate(IWorldReader worldIn);
     // @formatter:on
 
     /**
@@ -69,24 +64,14 @@ public abstract class BlockMixin implements BlockBridge {
         }
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    public static List<ItemStack> getDrops(BlockState state, ServerWorld worldIn, BlockPos pos, @Nullable TileEntity tileEntityIn, Entity entityIn, ItemStack stack) {
-        LootContext.Builder lootcontext$builder = (new LootContext.Builder(worldIn)).withRandom(worldIn.rand).withParameter(LootParameters.POSITION, pos).withParameter(LootParameters.TOOL, stack).withNullableParameter(LootParameters.THIS_ENTITY, entityIn).withNullableParameter(LootParameters.BLOCK_ENTITY, tileEntityIn);
-        return state.getDrops(lootcontext$builder);
-    }
-
-    public int getExpDrop(BlockState blockState, World world, BlockPos blockPos, ItemStack itemStack) {
+    public int getExpDrop(BlockState blockState, ServerWorld world, BlockPos blockPos, ItemStack itemStack) {
         int silkTouch = EnchantmentHelper.getEnchantmentLevel(Enchantments.SILK_TOUCH, itemStack);
         int fortune = EnchantmentHelper.getEnchantmentLevel(Enchantments.FORTUNE, itemStack);
         return ((IForgeBlock) this).getExpDrop(blockState, world, blockPos, fortune, silkTouch);
     }
 
     @Override
-    public int bridge$getExpDrop(BlockState blockState, World world, BlockPos blockPos, ItemStack itemStack) {
+    public int bridge$getExpDrop(BlockState blockState, ServerWorld world, BlockPos blockPos, ItemStack itemStack) {
         return getExpDrop(blockState, world, blockPos, itemStack);
     }
 

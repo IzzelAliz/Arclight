@@ -21,7 +21,7 @@ public class DetectorRailBlockMixin {
 
     private transient boolean arclight$flag;
 
-    @Inject(method = "updatePoweredState", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "JUMP", ordinal = 0, opcode = Opcodes.IFEQ))
+    @Inject(method = "updatePoweredState", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "JUMP", ordinal = 1, opcode = Opcodes.IFEQ))
     public void arclight$blockRedstone(World worldIn, BlockPos pos, BlockState state, CallbackInfo ci, boolean flag, boolean flag1) {
         if (flag != flag1) {
             Block block = CraftBlock.at(worldIn, pos);
@@ -34,7 +34,7 @@ public class DetectorRailBlockMixin {
     }
 
     // todo 注入顺序
-    @ModifyVariable(method = "updatePoweredState", index = 5, name = "flag1", at = @At(value = "JUMP", ordinal = 0, opcode = Opcodes.IFEQ))
+    @ModifyVariable(method = "updatePoweredState", index = 5, name = "flag1", at = @At(value = "JUMP", ordinal = 1, opcode = Opcodes.IFEQ))
     public boolean arclight$blockRedstone(boolean flag1) {
         return arclight$flag;
     }

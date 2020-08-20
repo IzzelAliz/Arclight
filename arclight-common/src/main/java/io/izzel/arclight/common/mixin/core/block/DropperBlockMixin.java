@@ -12,7 +12,7 @@ import net.minecraft.tileentity.DispenserTileEntity;
 import net.minecraft.tileentity.HopperTileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryDoubleChest;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
@@ -33,7 +33,7 @@ public class DropperBlockMixin {
      * @reason
      */
     @Overwrite
-    public void dispense(World worldIn, BlockPos pos) {
+    public void dispense(ServerWorld worldIn, BlockPos pos) {
         ProxyBlockSource proxyblocksource = new ProxyBlockSource(worldIn, pos);
         DispenserTileEntity dispensertileentity = proxyblocksource.getBlockTileEntity();
         int i = dispensertileentity.getDispenseSlot();
@@ -63,7 +63,7 @@ public class DropperBlockMixin {
                         return;
                     }
                     itemstack1 = HopperTileEntity.putStackInInventoryAllSlots(dispensertileentity, iinventory, CraftItemStack.asNMSCopy(event.getItem()), direction.getOpposite());
-                    if (event.getItem().equals(craftItemStack) &&itemstack1.isEmpty()) {
+                    if (event.getItem().equals(craftItemStack) && itemstack1.isEmpty()) {
                         itemstack1 = itemstack.copy();
                         itemstack1.shrink(1);
                     } else {

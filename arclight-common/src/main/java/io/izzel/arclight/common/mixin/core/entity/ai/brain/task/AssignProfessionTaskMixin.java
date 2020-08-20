@@ -15,20 +15,10 @@ import org.bukkit.event.entity.VillagerCareerChangeEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
+import java.util.Optional;
+
 @Mixin(AssignProfessionTask.class)
 public class AssignProfessionTaskMixin {
-
-    /*
-    @SuppressWarnings("UnresolvedMixinReference")
-    @Redirect(method = "*(Lnet/minecraft/entity/merchant/villager/VillagerEntity;Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/entity/merchant/villager/VillagerProfession;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/merchant/villager/VillagerEntity;setVillagerData(Lnet/minecraft/entity/merchant/villager/VillagerData;)V"))
-    private void arclight$careerChangeHook(VillagerEntity villagerEntity, VillagerData villagerData) {
-        VillagerProfession profession = villagerData.getProfession();
-        VillagerCareerChangeEvent event = CraftEventFactory.callVillagerCareerChangeEvent(villagerEntity, CraftVillager.nmsToBukkitProfession(profession), VillagerCareerChangeEvent.ChangeReason.EMPLOYED);
-        if (!event.isCancelled()) {
-            VillagerData newData = villagerEntity.getVillagerData().withProfession(CraftVillager.bukkitToNmsProfession(event.getProfession()));
-            villagerEntity.setVillagerData(newData);
-        }
-    }*/
 
     /**
      * @author IzzelAliz
@@ -36,12 +26,19 @@ public class AssignProfessionTaskMixin {
      */
     @Overwrite
     protected void startExecuting(ServerWorld worldIn, VillagerEntity entityIn, long gameTimeIn) {
-        GlobalPos globalpos = entityIn.getBrain().getMemory(MemoryModuleType.JOB_SITE).get();
-        MinecraftServer minecraftserver = worldIn.getServer();
-        minecraftserver.getWorld(globalpos.getDimension()).getPointOfInterestManager().getType(globalpos.getPos()).ifPresent((p_220390_2_) -> {
-            Registry.VILLAGER_PROFESSION.stream().filter((p_220389_1_) -> {
-                return p_220389_1_.getPointOfInterest() == p_220390_2_;
-            }).findFirst().ifPresent((p_220388_2_) -> {
+        GlobalPos globalpos = entityIn.getBrain().getMemory(MemoryModuleType.POTENTIAL_JOB_SITE).get();
+        entityIn.getBrain().removeMemory(MemoryModuleType.POTENTIAL_JOB_SITE);
+        entityIn.getBrain().setMemory(MemoryModuleType.JOB_SITE, globalpos);
+        worldIn.setEntityState(entityIn, (byte) 14);
+        if (entityIn.getVillagerData().getProfession() == VillagerProfession.NONE) {
+            MinecraftServer minecraftserver = worldIn.getServer();
+            Optional.ofNullable(minecraftserver.getWorld(globalpos.getDimension())).flatMap((p_241376_1_) -> {
+                return p_241376_1_.getPointOfInterestManager().getType(globalpos.getPos());
+            }).flatMap((p_220390_0_) -> {
+                return Registry.VILLAGER_PROFESSION.stream().filter((p_220389_1_) -> {
+                    return p_220389_1_.getPointOfInterest() == p_220390_0_;
+                }).findFirst();
+            }).ifPresent((p_220388_2_) -> {
                 VillagerData villagerData = entityIn.getVillagerData().withProfession(p_220388_2_);
                 VillagerProfession profession = villagerData.getProfession();
                 VillagerCareerChangeEvent event = CraftEventFactory.callVillagerCareerChangeEvent(entityIn, CraftVillager.nmsToBukkitProfession(profession), VillagerCareerChangeEvent.ChangeReason.EMPLOYED);
@@ -51,6 +48,6 @@ public class AssignProfessionTaskMixin {
                     entityIn.resetBrain(worldIn);
                 }
             });
-        });
+        }
     }
 }

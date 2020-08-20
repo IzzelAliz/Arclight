@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(BambooSaplingBlock.class)
 public class BambooSaplingBlockMixin {
 
-    @Redirect(method = "func_220087_a", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+    @Redirect(method = "growBamboo", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
     public boolean arclight$blockSpread(World world, BlockPos pos, BlockState newState, int flags) {
         return CraftEventFactory.handleBlockSpreadEvent(world, pos.down(), pos, newState, flags);
     }

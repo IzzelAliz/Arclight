@@ -83,7 +83,7 @@ public class CauldronBlockMixin {
     @Inject(method = "fillWithRain", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
     public void arclight$fillRain(World worldIn, BlockPos pos, CallbackInfo ci) {
         BlockState state = worldIn.getBlockState(pos);
-        BlockState cycle = state.cycle(CauldronBlock.LEVEL);
+        BlockState cycle = state.func_235896_a_(CauldronBlock.LEVEL);
         int newLevel = cycle.get(CauldronBlock.LEVEL);
         if (!changeLevel(worldIn, pos, state, newLevel, null, CauldronLevelChangeEvent.ChangeReason.UNKNOWN)) {
             ci.cancel();

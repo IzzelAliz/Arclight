@@ -37,7 +37,7 @@ public abstract class ComposterBlock_FullInventoryMixin extends InventoryMixin {
     @Overwrite
     public void markDirty() {
         if (this.isEmpty()) {
-            ComposterBlock.clear(this.state, this.world, this.pos);
+            ComposterBlock.resetFillState(this.state, this.world, this.pos);
             this.extracted = true;
         } else {
             this.world.setBlockState(this.pos, this.state, 3);

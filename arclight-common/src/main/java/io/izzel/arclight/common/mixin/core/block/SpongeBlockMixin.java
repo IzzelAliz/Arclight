@@ -8,8 +8,8 @@ import net.minecraft.block.FlowingFluidBlock;
 import net.minecraft.block.IBucketPickupHandler;
 import net.minecraft.block.SpongeBlock;
 import net.minecraft.block.material.Material;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
-import net.minecraft.fluid.IFluidState;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
@@ -50,7 +50,7 @@ public class SpongeBlockMixin {
             for (Direction direction : Direction.values()) {
                 BlockPos blockpos1 = blockpos.offset(direction);
                 BlockState blockstate = blockList.getBlockState(blockpos1);
-                IFluidState ifluidstate = blockList.getFluidState(blockpos1);
+                FluidState ifluidstate = blockList.getFluidState(blockpos1);
                 Material material = blockstate.getMaterial();
                 if (ifluidstate.isTagged(FluidTags.WATER)) {
                     if (blockstate.getBlock() instanceof IBucketPickupHandler && ((IBucketPickupHandler) blockstate.getBlock()).pickupFluid(worldIn, blockpos1, blockstate) != Fluids.EMPTY) {
@@ -95,7 +95,7 @@ public class SpongeBlockMixin {
             for (CraftBlockState block : blocks) {
                 BlockPos blockposition2 = block.getPosition();
                 BlockState iblockdata = worldIn.getBlockState(blockposition2);
-                IFluidState fluid = worldIn.getFluidState(blockposition2);
+                FluidState fluid = worldIn.getFluidState(blockposition2);
                 Material material = iblockdata.getMaterial();
 
                 if (fluid.isTagged(FluidTags.WATER)) {

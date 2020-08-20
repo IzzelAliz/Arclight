@@ -6,21 +6,15 @@ import net.minecraft.block.CommandBlockBlock;
 import net.minecraft.tileentity.CommandBlockTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.event.block.BlockRedstoneEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(CommandBlockBlock.class)
 public abstract class CommandBlockBlockMixin {
-
-    // @formatter:off
-    @Shadow public abstract int tickRate(IWorldReader worldIn);
-    // @formatter:on
 
     /**
      * @author IzzelAliz
@@ -46,7 +40,7 @@ public abstract class CommandBlockBlockMixin {
                 if (!flag1 && !commandblocktileentity.isAuto() && commandblocktileentity.getMode() != CommandBlockTileEntity.Mode.SEQUENCE) {
                     if (flag) {
                         commandblocktileentity.setConditionMet();
-                        worldIn.getPendingBlockTicks().scheduleTick(pos, (CommandBlockBlock) (Object) this, this.tickRate(worldIn));
+                        worldIn.getPendingBlockTicks().scheduleTick(pos, (CommandBlockBlock) (Object) this, 1);
                     }
 
                 }
