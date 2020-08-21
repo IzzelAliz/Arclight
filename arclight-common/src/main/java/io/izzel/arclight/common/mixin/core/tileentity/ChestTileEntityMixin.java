@@ -94,6 +94,7 @@ public abstract class ChestTileEntityMixin extends LockableTileEntityMixin {
         this.maxStack = size;
     }
 
+    @Override
     public boolean onlyOpsCanSetNbt() {
         return true;
     }

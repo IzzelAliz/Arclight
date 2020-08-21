@@ -16,4 +16,9 @@ public class CocoaBlockMixin {
     public boolean arclight$blockGrow(ServerWorld world, BlockPos pos, BlockState newState, int flags) {
         return CraftEventFactory.handleBlockGrowEvent(world, pos, newState, flags);
     }
+
+    @Redirect(method = "grow", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+    private boolean arclight$blockGrow2(ServerWorld world, BlockPos pos, BlockState newState, int flags) {
+        return CraftEventFactory.handleBlockGrowEvent(world, pos, newState, flags);
+    }
 }
