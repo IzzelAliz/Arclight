@@ -137,14 +137,14 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             cserver = new CraftServer((DedicatedServer) minecraftServer, (PlayerList) (Object) this);
             ((MinecraftServerBridge) minecraftServer).bridge$setServer(cserver);
             ((MinecraftServerBridge) minecraftServer).bridge$setConsole(ColouredConsoleSender.getInstance());
-            org.spigotmc.SpigotConfig.init(new File("./spigot.yml"));
-            org.spigotmc.SpigotConfig.registerCommands();
         } catch (Throwable t) {
             t.printStackTrace();
         }
         try {
             ArclightMod.LOGGER.info("registry.begin");
             BukkitRegistry.registerAll();
+            org.spigotmc.SpigotConfig.init(new File("./spigot.yml"));
+            org.spigotmc.SpigotConfig.registerCommands();
         } catch (Throwable t) {
             ArclightMod.LOGGER.error("registry.error", t);
         }

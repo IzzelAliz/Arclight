@@ -11,6 +11,8 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.tileentity.AbstractFurnaceTileEntity;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.World;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
@@ -43,7 +45,7 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
     @Shadow protected abstract boolean isBurning();
     @Shadow protected abstract boolean canSmelt(@Nullable IRecipe<?> recipeIn);
     @Shadow public abstract void setRecipeUsed(@Nullable IRecipe<?> recipe);
-    @Shadow public abstract void func_213995_d(PlayerEntity p_213995_1_);
+    @Shadow public abstract List<IRecipe<?>> grantStoredRecipeExperience(World world, Vector3d pos);
     // @formatter:on
 
     public List<HumanEntity> transaction = new ArrayList<>();
@@ -122,22 +124,28 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
     }
 
     private static AbstractFurnaceTileEntity arclight$captureFurnace;
+    private static PlayerEntity arclight$capturePlayer;
     private static ItemStack arclight$item;
     private static int arclight$captureAmount;
 
-    public void d(PlayerEntity entity, ItemStack itemStack, int amount) {
-        arclight$item = itemStack;
-        arclight$captureAmount = amount;
-        arclight$captureFurnace = (AbstractFurnaceTileEntity) (Object) this;
-        this.func_213995_d(entity);
-        arclight$item = null;
-        arclight$captureAmount = 0;
-        arclight$captureFurnace = null;
+    public List<IRecipe<?>> a(World world, Vector3d pos, PlayerEntity entity, ItemStack itemStack, int amount) {
+        try {
+            arclight$item = itemStack;
+            arclight$captureAmount = amount;
+            arclight$captureFurnace = (AbstractFurnaceTileEntity) (Object) this;
+            arclight$capturePlayer = entity;
+            return this.grantStoredRecipeExperience(world, pos);
+        } finally {
+            arclight$item = null;
+            arclight$captureAmount = 0;
+            arclight$captureFurnace = null;
+            arclight$capturePlayer = null;
+        }
     }
 
     @Override
-    public void bridge$dropExp(PlayerEntity entity, ItemStack itemStack, int amount) {
-        d(entity, itemStack, amount);
+    public List<IRecipe<?>> bridge$dropExp(World world, Vector3d pos, PlayerEntity entity, ItemStack itemStack, int amount) {
+        return a(world, pos, entity, itemStack, amount);
     }
 
     /**
@@ -145,29 +153,25 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
      * @reason
      */
     @Overwrite
-    private static void spawnExpOrbs(PlayerEntity entity, int ex, float f) {
-        if (f == 0.0F) {
-            ex = 0;
-        } else if (f < 1.0F) {
-            int i = MathHelper.floor((float) ex * f);
-            if (i < MathHelper.ceil((float) ex * f) && Math.random() < (double) ((float) ex * f - (float) i)) {
-                ++i;
-            }
-
-            ex = i;
+    private static void splitAndSpawnExperience(World world, Vector3d pos, int craftedAmount, float experience) {
+        int i = MathHelper.floor((float) craftedAmount * experience);
+        float f = MathHelper.frac((float) craftedAmount * experience);
+        if (f != 0.0F && Math.random() < (double) f) {
+            ++i;
         }
 
-        if (arclight$captureFurnace != null && arclight$captureAmount != 0) {
-            FurnaceExtractEvent event = new FurnaceExtractEvent(((ServerPlayerEntityBridge) entity).bridge$getBukkitEntity(), CraftBlock.at(arclight$captureFurnace.getWorld(), arclight$captureFurnace.getPos()), CraftMagicNumbers.getMaterial(arclight$item.getItem()), arclight$captureAmount, ex);
+        if (arclight$capturePlayer != null && arclight$captureAmount != 0) {
+            FurnaceExtractEvent event = new FurnaceExtractEvent(((ServerPlayerEntityBridge) arclight$capturePlayer).bridge$getBukkitEntity(),
+                CraftBlock.at(world, arclight$captureFurnace.getPos()), CraftMagicNumbers.getMaterial(arclight$item.getItem()), arclight$captureAmount, i);
             Bukkit.getPluginManager().callEvent(event);
-            ex = event.getExpToDrop();
-        }
-        while (ex > 0) {
-            int j = ExperienceOrbEntity.getXPSplit(ex);
-            ex -= j;
-            entity.world.addEntity(new ExperienceOrbEntity(entity.world, entity.posX, entity.posY + 0.5D, entity.posZ + 0.5D, j));
+            i = event.getExpToDrop();
         }
 
+        while (i > 0) {
+            int j = ExperienceOrbEntity.getXPSplit(i);
+            i -= j;
+            world.addEntity(new ExperienceOrbEntity(world, pos.x, pos.y, pos.z, j));
+        }
     }
 
     @Override

@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.item.crafting;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
@@ -13,6 +14,7 @@ import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IResourceManager;
+import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Util;
 import net.minecraft.util.registry.Registry;
@@ -45,7 +47,7 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
      */
     @Overwrite
     @SuppressWarnings("unchecked")
-    protected void apply(Map<ResourceLocation, JsonObject> splashList, IResourceManager resourceManagerIn, IProfiler profilerIn) {
+    protected void apply(Map<ResourceLocation, JsonElement> objectIn, IResourceManager resourceManagerIn, IProfiler profilerIn) {
         this.someRecipesErrored = false;
         Map<IRecipeType<?>, Object2ObjectLinkedOpenHashMap<ResourceLocation, IRecipe<?>>> map = Maps.newHashMap();
 
@@ -53,17 +55,17 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
             map.put(type, new Object2ObjectLinkedOpenHashMap<>());
         }
 
-        for (Map.Entry<ResourceLocation, JsonObject> entry : splashList.entrySet()) {
+        for (Map.Entry<ResourceLocation, JsonElement> entry : objectIn.entrySet()) {
             ResourceLocation resourcelocation = entry.getKey();
             if (resourcelocation.getPath().startsWith("_"))
                 continue; //Forge: filter anything beginning with "_" as it's used for metadata.
 
             try {
-                if (!CraftingHelper.processConditions(entry.getValue(), "conditions")) {
+                if (entry.getValue().isJsonObject() && !CraftingHelper.processConditions(entry.getValue().getAsJsonObject(), "conditions")) {
                     LOGGER.info("Skipping loading recipe {} as it's conditions were not met", resourcelocation);
                     continue;
                 }
-                IRecipe<?> irecipe = deserializeRecipe(resourcelocation, entry.getValue());
+                IRecipe<?> irecipe = deserializeRecipe(resourcelocation, JSONUtils.getJsonObject(entry.getValue(), "top element"));
                 if (irecipe == null) {
                     LOGGER.info("Skipping loading recipe {} as it's serializer returned null", resourcelocation);
                     continue;

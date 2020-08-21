@@ -269,6 +269,11 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         this.arclight$reason = reason;
     }
 
+    @Override
+    public CreatureSpawnEvent.SpawnReason bridge$getAddEntityReason() {
+        return this.arclight$reason;
+    }
+
     public boolean addEntity(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
         bridge$pushAddEntityReason(reason);
         return addEntity(entity);

@@ -2,10 +2,12 @@ package io.izzel.arclight.common.mixin.core.tileentity;
 
 import com.google.common.collect.Lists;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.entity.MobEntityBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.BeeEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tags.EntityTypeTags;
@@ -15,6 +17,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityEnterBlockEvent;
+import org.bukkit.event.entity.EntityTargetEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -33,7 +36,7 @@ public abstract class BeehiveTileEntityMixin extends TileEntityMixin {
 
     // @formatter:off
     @Shadow @Final private List<BeehiveTileEntity.Bee> bees;
-    @Shadow protected abstract boolean releaseBee(BlockState p_226967_1_, CompoundNBT p_226967_2_, @Nullable List<Entity> p_226967_3_, BeehiveTileEntity.State p_226967_4_);
+    @Shadow protected abstract boolean func_235651_a_(BlockState p_235651_1_, BeehiveTileEntity.Bee p_235651_2_, @org.jetbrains.annotations.Nullable List<Entity> p_235651_3_, BeehiveTileEntity.State p_235651_4_);
     // @formatter:on
 
     public int maxBees = 3;
@@ -47,9 +50,15 @@ public abstract class BeehiveTileEntityMixin extends TileEntityMixin {
         return this.bees.size() >= maxBees;
     }
 
+    @Redirect(method = "angerBees", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/BeeEntity;setAttackTarget(Lnet/minecraft/entity/LivingEntity;)V"))
+    private void arclight$angryReason(BeeEntity beeEntity, LivingEntity livingEntity) {
+        ((MobEntityBridge) beeEntity).bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.CLOSEST_PLAYER, true);
+        beeEntity.setAttackTarget(livingEntity);
+    }
+
     public List<Entity> tryReleaseBee(BlockState blockState, BeehiveTileEntity.State state, boolean force) {
         List<Entity> list = Lists.newArrayList();
-        this.bees.removeIf(bee -> this.releaseBee(blockState, bee.entityData, list, state, force));
+        this.bees.removeIf(bee -> this.releaseBee(blockState, bee, list, state, force));
         return list;
     }
 
@@ -67,10 +76,10 @@ public abstract class BeehiveTileEntityMixin extends TileEntityMixin {
         }
     }
 
-    private boolean releaseBee(BlockState blockState, CompoundNBT nbt, @Nullable List<Entity> list, BeehiveTileEntity.State state, boolean force) {
+    private boolean releaseBee(BlockState blockState, BeehiveTileEntity.Bee bee, @Nullable List<Entity> list, BeehiveTileEntity.State state, boolean force) {
         arclight$force = force;
         try {
-            return this.releaseBee(blockState, nbt, list, state);
+            return this.func_235651_a_(blockState, bee, list, state);
         } finally {
             arclight$force = false;
         }
@@ -78,12 +87,12 @@ public abstract class BeehiveTileEntityMixin extends TileEntityMixin {
 
     private transient boolean arclight$force;
 
-    @Redirect(method = "releaseBee", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;isNightTime()Z"))
+    @Redirect(method = "func_235651_a_", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;isNightTime()Z"))
     private boolean arclight$bypassNightCheck(World world) {
         return !arclight$force && world.isNightTime();
     }
 
-    @Redirect(method = "releaseBee", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getType()Lnet/minecraft/entity/EntityType;"))
+    @Redirect(method = "func_235651_a_", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getType()Lnet/minecraft/entity/EntityType;"))
     private EntityType<?> arclight$spawnFirst(Entity entity) {
         EntityType<?> type = entity.getType();
         if (type.isContained(EntityTypeTags.BEEHIVE_INHABITORS)) {
@@ -97,13 +106,13 @@ public abstract class BeehiveTileEntityMixin extends TileEntityMixin {
         return type;
     }
 
-    @Redirect(method = "releaseBee", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
+    @Redirect(method = "func_235651_a_", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
     private boolean arclight$addedBefore(World world, Entity entityIn) {
         return true;
     }
 
     @Inject(method = "read", at = @At("RETURN"))
-    private void arclight$readMax(CompoundNBT compound, CallbackInfo ci) {
+    private void arclight$readMax(BlockState state, CompoundNBT compound, CallbackInfo ci) {
         if (compound.contains("Bukkit.MaxEntities")) {
             this.maxBees = compound.getInt("Bukkit.MaxEntities");
         }

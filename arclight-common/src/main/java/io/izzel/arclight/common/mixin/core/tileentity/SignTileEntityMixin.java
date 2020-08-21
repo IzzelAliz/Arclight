@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.tileentity;
 
 import io.izzel.arclight.common.bridge.command.ICommandSourceBridge;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.tileentity.SignTileEntityBridge;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.ICommandSource;
 import net.minecraft.entity.Entity;
@@ -9,21 +10,22 @@ import net.minecraft.item.DyeColor;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.SignTileEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector2f;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.server.ServerWorld;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v.command.CraftBlockCommandSender;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import io.izzel.arclight.common.bridge.tileentity.SignTileEntityBridge;
 
 import javax.annotation.Nullable;
+import java.util.UUID;
 
 @Mixin(SignTileEntity.class)
 public abstract class SignTileEntityMixin extends TileEntityMixin implements SignTileEntityBridge, ICommandSource, ICommandSourceBridge {
@@ -33,7 +35,7 @@ public abstract class SignTileEntityMixin extends TileEntityMixin implements Sig
     // @formatter:on
 
     @Redirect(method = "getCommandSource", at = @At(value = "NEW", target = "net/minecraft/command/CommandSource"))
-    private CommandSource arclight$source(ICommandSource source, Vec3d vec3d, Vec2f vec2f, ServerWorld world, int i, String s, ITextComponent component, MinecraftServer server, @Nullable Entity entity) {
+    private CommandSource arclight$source(ICommandSource source, Vector3d vec3d, Vector2f vec2f, ServerWorld world, int i, String s, ITextComponent component, MinecraftServer server, @Nullable Entity entity) {
         return new CommandSource(this, vec3d, vec2f, world, i, s, component, server, entity);
     }
 
@@ -45,7 +47,7 @@ public abstract class SignTileEntityMixin extends TileEntityMixin implements Sig
     }
 
     @Override
-    public void sendMessage(ITextComponent component) {
+    public void sendMessage(@NotNull ITextComponent component, @NotNull UUID uuid) {
     }
 
     @Override

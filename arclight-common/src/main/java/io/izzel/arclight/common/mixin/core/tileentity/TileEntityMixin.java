@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.tileentity;
 
 import io.izzel.arclight.common.bridge.tileentity.TileEntityBridge;
+import io.izzel.arclight.common.bridge.world.WorldBridge;
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
@@ -26,15 +27,16 @@ public abstract class TileEntityMixin implements TileEntityBridge {
     public CraftPersistentDataContainer persistentDataContainer;
 
     // @formatter:off
-    @Shadow @Nullable protected World world;
+    @Shadow @Nullable public World world;
     @Shadow protected BlockPos pos;
     @Shadow public abstract BlockState getBlockState();
     @Shadow public abstract void markDirty();
-    @Shadow public abstract BlockPos getPos();
+    @Shadow public BlockPos getPos() { return null; }
+    @Shadow public abstract boolean onlyOpsCanSetNbt();
     // @formatter:on
 
     @Inject(method = "read", at = @At("RETURN"))
-    public void arclight$loadPersistent(CompoundNBT compound, CallbackInfo ci) {
+    public void arclight$loadPersistent(BlockState state, CompoundNBT compound, CallbackInfo ci) {
         this.persistentDataContainer = new CraftPersistentDataContainer(DATA_TYPE_REGISTRY);
 
         CompoundNBT persistentDataTag = compound.getCompound("PublicBukkitValues");
@@ -54,7 +56,7 @@ public abstract class TileEntityMixin implements TileEntityBridge {
         if (this.world == null) return null;
         org.bukkit.block.Block block = CraftBlock.at(this.world, this.pos);
         if (block == null) {
-            org.bukkit.Bukkit.getLogger().log(java.util.logging.Level.WARNING, "No block for owner at %s %d %d %d", new Object[]{world.getWorld(), pos.getX(), pos.getY(), pos.getZ()});
+            org.bukkit.Bukkit.getLogger().log(java.util.logging.Level.WARNING, "No block for owner at %s %d %d %d", new Object[]{((WorldBridge) world).bridge$getWorld(), pos.getX(), pos.getY(), pos.getZ()});
             return null;
         }
         org.bukkit.block.BlockState state = block.getState();

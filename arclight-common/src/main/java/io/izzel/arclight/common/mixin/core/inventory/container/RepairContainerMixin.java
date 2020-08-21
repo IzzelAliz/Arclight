@@ -4,15 +4,11 @@ import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.util.IWorldPosCallableBridge;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.RepairContainer;
 import net.minecraft.item.EnchantedBookItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.util.IWorldPosCallable;
 import net.minecraft.util.IntReferenceHolder;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.common.ForgeHooks;
@@ -25,21 +21,13 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Map;
 
 @Mixin(RepairContainer.class)
-public abstract class RepairContainerMixin extends ContainerMixin {
+public abstract class RepairContainerMixin extends AbstractRepairContainerMixin {
 
     // @formatter:off
-    @Shadow @Final private IWorldPosCallable worldPosCallable;
-    @Shadow @Final private IInventory inputSlots;
-    @Shadow @Final private IInventory outputSlot;
-    @Shadow @Final private PlayerEntity player;
     @Shadow @Final public IntReferenceHolder maximumCost;
     @Shadow public int materialCost;
     @Shadow public String repairedItemName;
@@ -47,19 +35,7 @@ public abstract class RepairContainerMixin extends ContainerMixin {
     // @formatter:on
 
     public int maximumRepairCost = 40;
-    private int lastLevelCost;
     private CraftInventoryView bukkitEntity;
-    private PlayerInventory playerInventory;
-
-    @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/util/IWorldPosCallable;)V", at = @At("RETURN"))
-    public void arclight$init(int p_i50102_1_, PlayerInventory playerInventory, IWorldPosCallable p_i50102_3_, CallbackInfo ci) {
-        this.playerInventory = playerInventory;
-    }
-
-    @Inject(method = "canInteractWith", cancellable = true, at = @At("HEAD"))
-    public void arclight$unreachable(PlayerEntity playerIn, CallbackInfoReturnable<Boolean> cir) {
-        if (!bridge$isCheckReachable()) cir.setReturnValue(true);
-    }
 
     /**
      * @author IzzelAliz
@@ -67,7 +43,7 @@ public abstract class RepairContainerMixin extends ContainerMixin {
      */
     @Overwrite
     public void updateRepairOutput() {
-        ItemStack itemstack = this.inputSlots.getStackInSlot(0);
+        ItemStack itemstack = this.field_234643_d_.getStackInSlot(0);
         this.maximumCost.set(1);
         int i = 0;
         int j = 0;
@@ -78,14 +54,14 @@ public abstract class RepairContainerMixin extends ContainerMixin {
             this.maximumCost.set(0);
         } else {
             ItemStack itemstack1 = itemstack.copy();
-            ItemStack itemstack2 = this.inputSlots.getStackInSlot(1);
+            ItemStack itemstack2 = this.field_234643_d_.getStackInSlot(1);
             Map<Enchantment, Integer> map = EnchantmentHelper.getEnchantments(itemstack1);
             j = j + itemstack.getRepairCost() + (itemstack2.isEmpty() ? 0 : itemstack2.getRepairCost());
             this.materialCost = 0;
             boolean flag = false;
 
             if (!itemstack2.isEmpty()) {
-                if (!ForgeHooks.onAnvilChange((RepairContainer) (Object) this, itemstack, itemstack2, outputSlot, repairedItemName, j))
+                if (!ForgeHooks.onAnvilChange((RepairContainer) (Object) this, itemstack, itemstack2, field_234642_c_, repairedItemName, j))
                     return;
                 flag = itemstack2.getItem() == Items.ENCHANTED_BOOK && !EnchantedBookItem.getEnchantments(itemstack2).isEmpty();
                 if (itemstack1.isDamageable() && itemstack1.getItem().getIsRepairable(itemstack, itemstack2)) {
@@ -136,11 +112,11 @@ public abstract class RepairContainerMixin extends ContainerMixin {
 
                     for (Enchantment enchantment1 : map1.keySet()) {
                         if (enchantment1 != null) {
-                            int i2 = map.containsKey(enchantment1) ? map.get(enchantment1) : 0;
+                            int i2 = map.getOrDefault(enchantment1, 0);
                             int j2 = map1.get(enchantment1);
                             j2 = i2 == j2 ? j2 + 1 : Math.max(j2, i2);
                             boolean flag1 = enchantment1.canApply(itemstack);
-                            if (this.player.abilities.isCreativeMode || itemstack.getItem() == Items.ENCHANTED_BOOK) {
+                            if (this.field_234645_f_.abilities.isCreativeMode || itemstack.getItem() == Items.ENCHANTED_BOOK) {
                                 flag1 = true;
                             }
 
@@ -218,7 +194,7 @@ public abstract class RepairContainerMixin extends ContainerMixin {
                 this.maximumCost.set(maximumRepairCost - 1);
             }
 
-            if (this.maximumCost.get() >= maximumRepairCost && !this.player.abilities.isCreativeMode) {
+            if (this.maximumCost.get() >= maximumRepairCost && !this.field_234645_f_.abilities.isCreativeMode) {
                 itemstack1 = ItemStack.EMPTY;
             }
 
@@ -249,8 +225,8 @@ public abstract class RepairContainerMixin extends ContainerMixin {
         }
 
         CraftInventory inventory = new CraftInventoryAnvil(
-            ((IWorldPosCallableBridge) this.worldPosCallable).bridge$getLocation(), this.inputSlots, this.outputSlot, (RepairContainer) (Object) this);
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
+            ((IWorldPosCallableBridge) this.field_234644_e_).bridge$getLocation(), this.field_234643_d_, this.field_234642_c_, (RepairContainer) (Object) this);
+        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.field_234645_f_).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
         return bukkitEntity;
     }
 }

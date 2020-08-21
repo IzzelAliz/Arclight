@@ -16,6 +16,7 @@ import net.minecraft.inventory.container.EnchantmentContainer;
 import net.minecraft.item.EnchantedBookItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.IWorldPosCallable;
 import net.minecraft.util.IntReferenceHolder;
@@ -213,6 +214,12 @@ public abstract class EnchantmentContainerMixin extends ContainerMixin implement
 
                     if (flag) {
                         itemstack2 = new ItemStack(Items.ENCHANTED_BOOK);
+
+                        CompoundNBT tag = itemstack2.getTag();
+                        if (tag != null) {
+                            itemstack2.setTag(tag.copy());
+                        }
+
                         this.tableInventory.setInventorySlotContents(0, itemstack2);
                     }
 

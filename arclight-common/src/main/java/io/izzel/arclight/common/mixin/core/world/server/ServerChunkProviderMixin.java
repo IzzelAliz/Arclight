@@ -6,17 +6,12 @@ import io.izzel.arclight.common.bridge.world.server.ChunkHolderBridge;
 import io.izzel.arclight.common.bridge.world.server.ChunkManagerBridge;
 import io.izzel.arclight.common.bridge.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.bridge.world.server.TicketManagerBridge;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import net.minecraft.entity.EntityClassification;
 import net.minecraft.profiler.IProfiler;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.GameRules;
-import net.minecraft.world.WorldType;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
-import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerChunkProvider;
@@ -24,8 +19,7 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.server.ServerWorldLightManager;
 import net.minecraft.world.server.TicketManager;
 import net.minecraft.world.server.TicketType;
-import net.minecraft.world.spawner.WorldEntitySpawner;
-import net.minecraft.world.storage.WorldInfo;
+import net.minecraft.world.storage.IWorldInfo;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -37,8 +31,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 @Mixin(ServerChunkProvider.class)
 public abstract class ServerChunkProviderMixin implements ServerChunkProviderBridge {
@@ -53,11 +47,9 @@ public abstract class ServerChunkProviderMixin implements ServerChunkProviderBri
     @Shadow @Nullable protected abstract ChunkHolder func_217213_a(long chunkPosIn);
     @Shadow protected abstract boolean func_217235_l();
     @Shadow protected abstract boolean func_217224_a(@Nullable ChunkHolder chunkHolderIn, int p_217224_2_);
-    @Shadow private long lastGameTime;
     @Shadow public boolean spawnHostiles;
     @Shadow public boolean spawnPassives;
-    @Shadow @Final private static int field_217238_b;
-    @Shadow @Final public ChunkGenerator<?> generator;
+    @Shadow protected abstract void func_241098_a_(long p_241098_1_, Consumer<Chunk> p_241098_3_);
     @Invoker("func_217235_l") public abstract boolean bridge$tickDistanceManager();
     @Accessor("lightManager") public abstract ServerWorldLightManager bridge$getLightManager();
     // @formatter:on
@@ -105,98 +97,16 @@ public abstract class ServerChunkProviderMixin implements ServerChunkProviderBri
         return this.func_217224_a(chunkholder, j) ? ChunkHolder.MISSING_CHUNK_FUTURE : chunkholder.func_219276_a(requiredStatus, this.chunkManager);
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    private void tickChunks() {
-        long i = this.world.getGameTime();
-        long j = i - this.lastGameTime;
-        this.lastGameTime = i;
-        WorldInfo worldinfo = this.world.getWorldInfo();
-        boolean flag = worldinfo.getGenerator() == WorldType.DEBUG_ALL_BLOCK_STATES;
-        boolean flag1 = this.world.getGameRules().getBoolean(GameRules.DO_MOB_SPAWNING) && !this.world.getPlayers().isEmpty();
-        if (!flag) {
-            this.world.getProfiler().startSection("pollingChunks");
-            int k = this.world.getGameRules().getInt(GameRules.RANDOM_TICK_SPEED);
-            BlockPos blockpos = this.world.getSpawnPoint();
+    @Redirect(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/GameRules;getBoolean(Lnet/minecraft/world/GameRules$RuleKey;)Z"))
+    private boolean arclight$noPlayer(GameRules gameRules, GameRules.RuleKey<GameRules.BooleanValue> key) {
+        return gameRules.getBoolean(key) && !this.world.getPlayers().isEmpty();
+    }
 
-            boolean spawnAnimal = ((WorldBridge) this.world).bridge$ticksPerAnimalSpawns() != 0 && worldinfo.getGameTime() % ((WorldBridge) this.world).bridge$ticksPerAnimalSpawns() == 0;
-            boolean spawnMonster = ((WorldBridge) this.world).bridge$ticksPerMonsterSpawns() != 0 && worldinfo.getGameTime() % ((WorldBridge) this.world).bridge$ticksPerMonsterSpawns() == 0;
-            boolean spawnWater = ((WorldBridge) this.world).bridge$ticksPerWaterSpawns() != 0 && worldinfo.getGameTime() % ((WorldBridge) this.world).bridge$ticksPerWaterSpawns() == 0;
-            boolean spawnAmbient = ((WorldBridge) this.world).bridge$ticksPerAmbientSpawns() != 0 && worldinfo.getGameTime() % ((WorldBridge) this.world).bridge$ticksPerAmbientSpawns() == 0;
-            boolean flag2 = spawnAnimal;
-
-            this.world.getProfiler().startSection("naturalSpawnCount");
-            int l = this.ticketManager.getSpawningChunksCount();
-            EntityClassification[] aentityclassification = EntityClassification.values();
-            Object2IntMap<EntityClassification> object2intmap = this.world.countEntities();
-            this.world.getProfiler().endSection();
-            ((ChunkManagerBridge) this.chunkManager).bridge$getLoadedChunksIterable().forEach((p_223434_10_) -> {
-                Optional<Chunk> optional = p_223434_10_.getEntityTickingFuture().getNow(ChunkHolder.UNLOADED_CHUNK).left();
-                if (optional.isPresent()) {
-                    Chunk chunk = optional.get();
-                    this.world.getProfiler().startSection("broadcast");
-                    p_223434_10_.sendChanges(chunk);
-                    this.world.getProfiler().endSection();
-                    ChunkPos chunkpos = p_223434_10_.getPosition();
-                    if (!((ChunkManagerBridge) this.chunkManager).bridge$isOutsideSpawningRadius(chunkpos)) {
-                        chunk.setInhabitedTime(chunk.getInhabitedTime() + j);
-                        if (flag1 && (this.spawnHostiles || this.spawnPassives) && this.world.getWorldBorder().contains(chunk.getPos())) {
-                            this.world.getProfiler().startSection("spawner");
-
-                            for (EntityClassification entityclassification : aentityclassification) {
-
-                                boolean spawnThisTick = true;
-                                int limit = entityclassification.getMaxNumberOfCreature();
-                                switch (entityclassification) {
-                                    case MONSTER:
-                                        spawnThisTick = spawnMonster;
-                                        limit = ((WorldBridge) world).bridge$getWorld().getMonsterSpawnLimit();
-                                        break;
-                                    case CREATURE:
-                                        spawnThisTick = spawnAnimal;
-                                        limit = ((WorldBridge) world).bridge$getWorld().getAnimalSpawnLimit();
-                                        break;
-                                    case WATER_CREATURE:
-                                        spawnThisTick = spawnWater;
-                                        limit = ((WorldBridge) world).bridge$getWorld().getWaterAnimalSpawnLimit();
-                                        break;
-                                    case AMBIENT:
-                                        spawnThisTick = spawnAmbient;
-                                        limit = ((WorldBridge) world).bridge$getWorld().getAmbientSpawnLimit();
-                                        break;
-                                }
-
-                                if (!spawnThisTick || limit == 0) {
-                                    continue;
-                                }
-                                if (entityclassification != EntityClassification.MISC && (!entityclassification.getPeacefulCreature() || this.spawnPassives) && (entityclassification.getPeacefulCreature() || this.spawnHostiles) && (!entityclassification.getAnimal() || flag2)) {
-                                    int i1 = limit * l / field_217238_b;
-                                    if (object2intmap.getInt(entityclassification) <= i1) {
-                                        WorldEntitySpawner.spawnEntitiesInChunk(entityclassification, this.world, chunk, blockpos);
-                                    }
-                                }
-                            }
-
-                            this.world.getProfiler().endSection();
-                        }
-
-                        this.world.tickEnvironment(chunk, k);
-                    }
-                }
-            });
-            this.world.getProfiler().startSection("customSpawners");
-            if (flag1) {
-                this.generator.spawnMobs(this.world, this.spawnHostiles, this.spawnPassives);
-            }
-
-            this.world.getProfiler().endSection();
-            this.world.getProfiler().endSection();
-        }
-
-        ((ChunkManagerBridge) this.chunkManager).bridge$tickEntityTracker();
+    @Redirect(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/storage/IWorldInfo;getGameTime()J"))
+    private long arclight$ticksPer(IWorldInfo worldInfo) {
+        long gameTime = worldInfo.getGameTime();
+        long ticksPer = ((WorldBridge) this.world).bridge$ticksPerAnimalSpawns();
+        return (ticksPer != 0L && gameTime % ticksPer == 0) ? 0 : 1;
     }
 
     public void close(boolean save) throws IOException {

@@ -12,21 +12,21 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(TimeCommand.class)
 public class TimeCommandMixin {
 
-    @Redirect(method = "addTime", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setDayTime(J)V"))
+    @Redirect(method = "addTime", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;func_241114_a_(J)V"))
     private static void arclight$addTimeEvent(ServerWorld serverWorld, long time) {
         TimeSkipEvent event = new TimeSkipEvent(((ServerWorldBridge) serverWorld).bridge$getWorld(), TimeSkipEvent.SkipReason.COMMAND, time - serverWorld.getDayTime());
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
-            serverWorld.setDayTime(serverWorld.getDayTime() + event.getSkipAmount());
+            serverWorld.func_241114_a_(serverWorld.getDayTime() + event.getSkipAmount());
         }
     }
 
-    @Redirect(method = "setTime", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setDayTime(J)V"))
+    @Redirect(method = "setTime", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;func_241114_a_(J)V"))
     private static void arclight$setTimeEvent(ServerWorld serverWorld, long time) {
         TimeSkipEvent event = new TimeSkipEvent(((ServerWorldBridge) serverWorld).bridge$getWorld(), TimeSkipEvent.SkipReason.COMMAND, time - serverWorld.getDayTime());
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
-            serverWorld.setDayTime(serverWorld.getDayTime() + event.getSkipAmount());
+            serverWorld.func_241114_a_(serverWorld.getDayTime() + event.getSkipAmount());
         }
     }
 }

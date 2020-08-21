@@ -92,6 +92,13 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
                         new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "b", "(Lcom/mojang/authlib/GameProfile;Lcom/google/common/base/Predicate;Z)Ljava/util/concurrent/Future;", null, null)
                     )
                 ))
+            .put("net.minecraft.command.impl.ReloadCommand",
+                Maps.immutableEntry(
+                    ImmutableList.of(),
+                    ImmutableList.of(
+                        new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "reload", "(Lnet/minecraft/server/MinecraftServer;)V", null, null)
+                    )
+                ))
             .build();
 
     private final Set<String> modifyConstructor = ImmutableSet.<String>builder()
@@ -111,6 +118,7 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
         .add("net.minecraft.util.math.shapes.IndirectMerger")
         .add("net.minecraft.network.play.client.CCloseWindowPacket")
         .add("net.minecraft.world.dimension.DimensionType")
+        .add("net.minecraft.util.text.Color")
         .build();
 
     @Override
@@ -186,6 +194,25 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
             }
             FieldNode node = new FieldNode(Opcodes.ACC_PUBLIC, "field_190539_a", "Lnet/minecraft/entity/passive/horse/LlamaEntity;", null, null);
             targetClass.fields.add(node);
+        }
+        if (targetClassName.equals("net.minecraft.world.chunk.Chunk")) {
+            for (FieldNode field : targetClass.fields) {
+                if (field.name.equals("$$world")) {
+                    field.name = "world";
+                }
+            }
+            for (MethodNode method : targetClass.methods) {
+                if (method.name.equals("<init>")) {
+                    for (AbstractInsnNode instruction : method.instructions) {
+                        if (instruction instanceof FieldInsnNode) {
+                            FieldInsnNode fieldInsnNode = (FieldInsnNode) instruction;
+                            if (fieldInsnNode.name.equals("$$world")) {
+                                fieldInsnNode.name = "world";
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

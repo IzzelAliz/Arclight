@@ -15,12 +15,13 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.LecternTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIntArray;
-import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector2f;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.server.ServerWorld;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v.command.CraftBlockCommandSender;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -29,6 +30,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import javax.annotation.Nullable;
+import java.util.UUID;
 
 @Mixin(LecternTileEntity.class)
 public abstract class LecternTileEntityMixin extends TileEntityMixin implements ICommandSource, ICommandSourceBridge {
@@ -39,7 +41,7 @@ public abstract class LecternTileEntityMixin extends TileEntityMixin implements 
     // @formatter:on
 
     @Redirect(method = "createCommandSource", at = @At(value = "NEW", target = "net/minecraft/command/CommandSource"))
-    private CommandSource arclight$source(ICommandSource source, Vec3d vec3d, Vec2f vec2f, ServerWorld world, int i, String s, ITextComponent component, MinecraftServer server, @Nullable Entity entity) {
+    private CommandSource arclight$source(ICommandSource source, Vector3d vec3d, Vector2f vec2f, ServerWorld world, int i, String s, ITextComponent component, MinecraftServer server, @Nullable Entity entity) {
         return new CommandSource(this, vec3d, vec2f, world, i, s, component, server, entity);
     }
 
@@ -55,7 +57,7 @@ public abstract class LecternTileEntityMixin extends TileEntityMixin implements 
     }
 
     @Override
-    public void sendMessage(ITextComponent component) {
+    public void sendMessage(@NotNull ITextComponent component, @NotNull UUID uuid) {
     }
 
     @Override

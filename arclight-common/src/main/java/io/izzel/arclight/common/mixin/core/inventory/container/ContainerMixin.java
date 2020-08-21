@@ -68,9 +68,6 @@ public abstract class ContainerMixin implements ContainerBridge {
     @Shadow public static boolean areItemsAndTagsEqual(ItemStack stack1, ItemStack stack2) { return false; }
     // @formatter:on
 
-    @Shadow
-    protected abstract boolean mergeItemStack(ItemStack stack, int startIndex, int endIndex, boolean reverseDirection);
-
     public boolean checkReachable = true;
     private InventoryView bukkitView;
 
@@ -158,7 +155,7 @@ public abstract class ContainerMixin implements ContainerBridge {
      * @reason
      */
     @Overwrite
-    public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, PlayerEntity player) {
+    private ItemStack func_241440_b_(int slotId, int dragType, ClickType clickTypeIn, PlayerEntity player) {
         ItemStack itemstack = ItemStack.EMPTY;
         PlayerInventory playerinventory = player.inventory;
         if (clickTypeIn == ClickType.QUICK_CRAFT) {

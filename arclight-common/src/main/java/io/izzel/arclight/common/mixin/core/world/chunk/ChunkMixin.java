@@ -14,6 +14,7 @@ import net.minecraft.world.biome.BiomeContainer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.world.server.ServerWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftChunk;
 import org.bukkit.event.world.ChunkLoadEvent;
@@ -45,10 +46,12 @@ public abstract class ChunkMixin implements ChunkBridge {
     public boolean mustNotSave;
     public boolean needsDecoration;
     private transient boolean arclight$doPlace;
+    public ServerWorld $$world;
 
     @Inject(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/util/math/ChunkPos;Lnet/minecraft/world/biome/BiomeContainer;Lnet/minecraft/util/palette/UpgradeData;Lnet/minecraft/world/ITickList;Lnet/minecraft/world/ITickList;J[Lnet/minecraft/world/chunk/ChunkSection;Ljava/util/function/Consumer;)V", at = @At("RETURN"))
     private void arclight$init(World worldIn, ChunkPos chunkPosIn, BiomeContainer biomeContainerIn, UpgradeData upgradeDataIn, ITickList<Block> tickBlocksIn, ITickList<Fluid> tickFluidsIn, long inhabitedTimeIn, ChunkSection[] sectionsIn, Consumer<Chunk> postLoadConsumerIn, CallbackInfo ci) {
         bridge$setBukkitChunk(new CraftChunk((Chunk) (Object) this));
+        this.$$world = ((ServerWorld) world);
     }
 
     public org.bukkit.Chunk getBukkitChunk() {
@@ -117,10 +120,10 @@ public abstract class ChunkMixin implements ChunkBridge {
             if (this.needsDecoration) {
                 this.needsDecoration = false;
                 java.util.Random random = new java.util.Random();
-                random.setSeed(world.getSeed());
+                random.setSeed(((ServerWorld) world).getSeed());
                 long xRand = random.nextLong() / 2L * 2L + 1L;
                 long zRand = random.nextLong() / 2L * 2L + 1L;
-                random.setSeed((long) this.pos.x * xRand + (long) this.pos.z * zRand ^ world.getSeed());
+                random.setSeed((long) this.pos.x * xRand + (long) this.pos.z * zRand ^ ((ServerWorld) world).getSeed());
 
                 org.bukkit.World world = ((WorldBridge) this.world).bridge$getWorld();
                 if (world != null) {

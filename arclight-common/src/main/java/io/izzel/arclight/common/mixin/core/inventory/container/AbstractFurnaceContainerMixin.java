@@ -9,6 +9,7 @@ import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.crafting.AbstractCookingRecipe;
 import net.minecraft.item.crafting.IRecipeType;
+import net.minecraft.item.crafting.RecipeBookCategory;
 import net.minecraft.tileentity.AbstractFurnaceTileEntity;
 import net.minecraft.util.IIntArray;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryFurnace;
@@ -31,8 +32,8 @@ public abstract class AbstractFurnaceContainerMixin extends ContainerMixin {
     private CraftInventoryView bukkitEntity = null;
     private PlayerInventory playerInventory;
 
-    @Inject(method = "<init>(Lnet/minecraft/inventory/container/ContainerType;Lnet/minecraft/item/crafting/IRecipeType;ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/inventory/IInventory;Lnet/minecraft/util/IIntArray;)V", at = @At("RETURN"))
-    public void arclight$init(ContainerType<?> containerTypeIn, IRecipeType<? extends AbstractCookingRecipe> recipeTypeIn, int id, PlayerInventory playerInventoryIn, IInventory furnaceInventoryIn, IIntArray p_i50104_6_, CallbackInfo ci) {
+    @Inject(method = "<init>(Lnet/minecraft/inventory/container/ContainerType;Lnet/minecraft/item/crafting/IRecipeType;Lnet/minecraft/item/crafting/RecipeBookCategory;ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/inventory/IInventory;Lnet/minecraft/util/IIntArray;)V", at = @At("RETURN"))
+    public void arclight$init(ContainerType<?> p_i241922_1_, IRecipeType<? extends AbstractCookingRecipe> p_i241922_2_, RecipeBookCategory p_i241922_3_, int p_i241922_4_, PlayerInventory playerInventoryIn, IInventory p_i241922_6_, IIntArray p_i241922_7_, CallbackInfo ci) {
         this.playerInventory = playerInventoryIn;
     }
 
