@@ -236,7 +236,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     }
 
     public boolean isChunkLoaded() {
-        return world.chunkExists((int) Math.floor(posX) >> 4, (int) Math.floor(posY) >> 4);
+        return world.chunkExists((int) Math.floor(posX) >> 4, (int) Math.floor(posZ) >> 4);
     }
 
     @Override
