@@ -13,6 +13,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
@@ -28,13 +29,12 @@ public class EnderPearlItemMixin extends Item {
      * @reason
      */
     @Overwrite
-    public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
+    public @NotNull ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, @NotNull Hand handIn) {
         ItemStack itemstack = playerIn.getHeldItem(handIn);
-
         if (!worldIn.isRemote) {
             EnderPearlEntity enderpearlentity = new EnderPearlEntity(worldIn, playerIn);
             enderpearlentity.setItem(itemstack);
-            enderpearlentity.shoot(playerIn, playerIn.rotationPitch, playerIn.rotationYaw, 0.0F, 1.5F, 1.0F);
+            enderpearlentity.func_234612_a_(playerIn, playerIn.rotationPitch, playerIn.rotationYaw, 0.0F, 1.5F, 1.0F);
             if (!worldIn.addEntity(enderpearlentity)) {
                 if (playerIn instanceof ServerPlayerEntityBridge) {
                     ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().updateInventory();
@@ -43,14 +43,14 @@ public class EnderPearlItemMixin extends Item {
             }
         }
 
-        worldIn.playSound(null, playerIn.posX, playerIn.posY, playerIn.posZ, SoundEvents.ENTITY_ENDER_PEARL_THROW, SoundCategory.NEUTRAL, 0.5F, 0.4F / (random.nextFloat() * 0.4F + 0.8F));
+        worldIn.playSound(null, playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ(), SoundEvents.ENTITY_ENDER_PEARL_THROW, SoundCategory.NEUTRAL, 0.5F, 0.4F / (random.nextFloat() * 0.4F + 0.8F));
         playerIn.getCooldownTracker().setCooldown(this, 20);
 
         playerIn.addStat(Stats.ITEM_USED.get(this));
-
         if (!playerIn.abilities.isCreativeMode) {
             itemstack.shrink(1);
         }
-        return new ActionResult<>(ActionResultType.SUCCESS, itemstack);
+
+        return ActionResult.func_233538_a_(itemstack, worldIn.isRemote());
     }
 }

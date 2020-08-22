@@ -13,11 +13,11 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
-import net.minecraft.util.IItemProvider;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v.util.DummyGeneratorAccess;
@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
@@ -44,7 +44,7 @@ public abstract class BucketItemMixin {
         BlockPos pos = ((BlockRayTraceResult) result).getPos();
         BlockState state = worldIn.getBlockState(pos);
         Fluid dummyFluid = ((IBucketPickupHandler) state.getBlock()).pickupFluid(DummyGeneratorAccess.INSTANCE, pos, state);
-        PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent(worldIn, playerIn, pos, pos, ((BlockRayTraceResult) result).getFace(), stack, dummyFluid.getFilledBucket());
+        PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent((ServerWorld) worldIn, playerIn, pos, pos, ((BlockRayTraceResult) result).getFace(), stack, dummyFluid.getFilledBucket());
         if (event.isCancelled()) {
             ((ServerPlayerEntity) playerIn).connection.sendPacket(new SChangeBlockPacket(worldIn, pos));
             ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().updateInventory();
@@ -72,9 +72,9 @@ public abstract class BucketItemMixin {
 
     private transient org.bukkit.inventory.@Nullable ItemStack arclight$captureItem;
 
-    @Redirect(method = "fillBucket", at = @At(value = "NEW", target = "net/minecraft/item/ItemStack"))
-    private ItemStack arclight$useCapture(IItemProvider fillBucket) {
-        return arclight$captureItem == null ? new ItemStack(fillBucket) : CraftItemStack.asNMSCopy(arclight$captureItem);
+    @ModifyArg(method = "onItemRightClick", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/DrinkHelper;func_242398_a(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;)Lnet/minecraft/item/ItemStack;"))
+    private ItemStack arclight$useEventItem(ItemStack itemStack) {
+        return arclight$captureItem == null ? itemStack : CraftItemStack.asNMSCopy(arclight$captureItem);
     }
 
     public boolean a(PlayerEntity entity, World world, BlockPos pos, @Nullable BlockRayTraceResult result, Direction direction, BlockPos clicked, ItemStack itemstack) {
@@ -94,10 +94,10 @@ public abstract class BucketItemMixin {
     private transient BlockPos arclight$click;
     private transient ItemStack arclight$stack;
 
-    @Inject(method = "tryPlaceContainedLiquid", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/dimension/Dimension;doesWaterVaporize()Z"))
+    @Inject(method = "tryPlaceContainedLiquid", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/DimensionType;func_236040_e_()Z"))
     private void arclight$bucketEmpty(PlayerEntity player, World worldIn, BlockPos posIn, BlockRayTraceResult p_180616_4_, CallbackInfoReturnable<Boolean> cir) {
         if (player != null) {
-            PlayerBucketEmptyEvent event = CraftEventFactory.callPlayerBucketEmptyEvent(worldIn, player, posIn, arclight$click, arclight$direction, arclight$stack);
+            PlayerBucketEmptyEvent event = CraftEventFactory.callPlayerBucketEmptyEvent((ServerWorld) worldIn, player, posIn, arclight$click, arclight$direction, arclight$stack);
             if (event.isCancelled()) {
                 ((ServerPlayerEntity) player).connection.sendPacket(new SChangeBlockPacket(worldIn, posIn));
                 ((ServerPlayerEntityBridge) player).bridge$getBukkitEntity().updateInventory();

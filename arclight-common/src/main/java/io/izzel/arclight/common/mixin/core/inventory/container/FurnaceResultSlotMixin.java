@@ -17,8 +17,8 @@ public class FurnaceResultSlotMixin {
     @Shadow private int removeCount;
     // @formatter:on
 
-    @Redirect(method = "onCrafting(Lnet/minecraft/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/tileentity/AbstractFurnaceTileEntity;func_213995_d(Lnet/minecraft/entity/player/PlayerEntity;)V"))
+    @Redirect(method = "onCrafting(Lnet/minecraft/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/tileentity/AbstractFurnaceTileEntity;unlockRecipes(Lnet/minecraft/entity/player/PlayerEntity;)V"))
     public void arclight$furnaceDropExp(AbstractFurnaceTileEntity furnace, PlayerEntity playerEntity, ItemStack stack) {
-        ((AbstractFurnaceTileEntityBridge) furnace).bridge$dropExp(playerEntity, stack, this.removeCount);
+        ((AbstractFurnaceTileEntityBridge) furnace).bridge$dropExp(playerEntity.world, playerEntity.getPositionVec(), playerEntity, stack, this.removeCount);
     }
 }

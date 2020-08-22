@@ -56,6 +56,7 @@ repositories {
     maven { url = 'https://repo.codemc.io/repository/nms/' }
     maven { url = 'https://files.minecraftforge.net/maven/' }
     maven { url = 'https://www.dogforce-games.com/maven/' }
+    maven { url = 'https://jitpack.io/' }
 }
 
 def embedLibs = ['org.spongepowered:mixin:0.8', 'org.ow2.asm:asm-util:8.0.1',
@@ -80,6 +81,7 @@ dependencies {
     }
     embed 'net.md-5:bungeecord-chat:1.16-R0.3@jar'
     embed "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
+    embed 'com.github.ArclightTeam:mixin-tools:1.0.0'
 }
 
 def getGitHash = { ->

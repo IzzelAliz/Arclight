@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.item;
 
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.entity.projectile.TridentEntityBridge;
+import io.izzel.arclight.mixin.Eject;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -29,27 +30,19 @@ public class TridentItemMixin {
         if (j != 0) stack.damageItem(amount, entityIn, onBroken);
     }
 
-    private transient boolean arclight$success;
-
-    @Inject(method = "onPlayerStoppedUsing", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
-    public void arclight$returnIfFail(ItemStack stack, World worldIn, LivingEntity entityLiving, int timeLeft, CallbackInfo ci) {
-        if (!arclight$success) {
-            ci.cancel();
-        }
-    }
-
-    @Redirect(method = "onPlayerStoppedUsing", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
-    public boolean arclight$addEntity(World world, Entity entityIn, ItemStack stack, World worldIn, LivingEntity entityLiving, int timeLeft) {
+    @Eject(method = "onPlayerStoppedUsing", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
+    public boolean arclight$addEntity(World world, Entity entityIn, CallbackInfo ci, ItemStack stack, World worldIn, LivingEntity entityLiving, int timeLeft) {
         if (!world.addEntity(entityIn)) {
             if (entityLiving instanceof ServerPlayerEntity) {
                 ((ServerPlayerEntityBridge) entityLiving).bridge$getBukkitEntity().updateInventory();
             }
-            return arclight$success = false;
+            ci.cancel();
+            return false;
         }
         stack.damageItem(1, entityLiving, (entity) ->
             entity.sendBreakAnimation(entityLiving.getActiveHand()));
         ((TridentEntityBridge) entityIn).bridge$setThrownStack(stack.copy());
-        return arclight$success = true;
+        return true;
     }
 
     @Inject(method = "onPlayerStoppedUsing", at = @At(value = "FIELD", ordinal = 1, target = "Lnet/minecraft/entity/player/PlayerEntity;rotationYaw:F"))

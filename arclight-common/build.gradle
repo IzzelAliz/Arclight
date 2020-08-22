@@ -48,6 +48,7 @@ repositories {
     maven { url = 'https://repo.codemc.io/repository/nms/' }
     maven { url = 'https://files.minecraftforge.net/maven/' }
     maven { url = 'https://www.dogforce-games.com/maven/' }
+    maven { url = 'https://jitpack.io/' }
 }
 
 dependencies {
@@ -55,6 +56,7 @@ dependencies {
     compile "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
     compile 'org.jetbrains:annotations:19.0.0'
     compile 'org.spongepowered:mixin:0.8'
+    compile 'com.github.ArclightTeam:mixin-tools:1.0.0'
     compile 'jline:jline:2.12.1'
     compile 'net.md-5:SpecialSource:1.8.6'
     compile 'org.apache.logging.log4j:log4j-jul:2.11.2'

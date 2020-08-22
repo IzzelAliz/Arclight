@@ -14,11 +14,12 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -44,17 +45,17 @@ public class BoatItemMixin extends Item {
      * @reason
      */
     @Overwrite
-    public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
+    public @NotNull ActionResult<ItemStack> onItemRightClick(@NotNull World worldIn, PlayerEntity playerIn, @NotNull Hand handIn) {
         ItemStack itemstack = playerIn.getHeldItem(handIn);
-        RayTraceResult raytraceresult = rayTrace(worldIn, playerIn, RayTraceContext.FluidMode.ANY);
-        if (raytraceresult.getType() == RayTraceResult.Type.MISS) {
+        BlockRayTraceResult result = rayTrace(worldIn, playerIn, RayTraceContext.FluidMode.ANY);
+        if (result.getType() == RayTraceResult.Type.MISS) {
             return new ActionResult<>(ActionResultType.PASS, itemstack);
         } else {
-            Vec3d vec3d = playerIn.getLook(1.0F);
+            Vector3d vec3d = playerIn.getLook(1.0F);
             double d0 = 5.0D;
             List<Entity> list = worldIn.getEntitiesInAABBexcluding(playerIn, playerIn.getBoundingBox().expand(vec3d.scale(5.0D)).grow(1.0D), field_219989_a);
             if (!list.isEmpty()) {
-                Vec3d vec3d1 = playerIn.getEyePosition(1.0F);
+                Vector3d vec3d1 = playerIn.getEyePosition(1.0F);
 
                 for (Entity entity : list) {
                     AxisAlignedBB axisalignedbb = entity.getBoundingBox().grow(entity.getCollisionBorderSize());
@@ -64,22 +65,21 @@ public class BoatItemMixin extends Item {
                 }
             }
 
-            if (raytraceresult.getType() == RayTraceResult.Type.BLOCK) {
-                BlockRayTraceResult blockRayTraceResult = (BlockRayTraceResult) raytraceresult;
-                PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(playerIn, Action.RIGHT_CLICK_BLOCK, blockRayTraceResult.getPos(), blockRayTraceResult.getFace(), itemstack, handIn);
+            if (result.getType() == RayTraceResult.Type.BLOCK) {
+                PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(playerIn, Action.RIGHT_CLICK_BLOCK, result.getPos(), result.getFace(), itemstack, handIn);
 
                 if (event.isCancelled()) {
                     return new ActionResult<>(ActionResultType.PASS, itemstack);
                 }
 
-                BoatEntity boatentity = new BoatEntity(worldIn, raytraceresult.getHitVec().x, raytraceresult.getHitVec().y, raytraceresult.getHitVec().z);
+                BoatEntity boatentity = new BoatEntity(worldIn, result.getHitVec().x, result.getHitVec().y, result.getHitVec().z);
                 boatentity.setBoatType(this.type);
                 boatentity.rotationYaw = playerIn.rotationYaw;
                 if (!worldIn.hasNoCollisions(boatentity, boatentity.getBoundingBox().grow(-0.1D))) {
                     return new ActionResult<>(ActionResultType.FAIL, itemstack);
                 } else {
                     if (!worldIn.isRemote) {
-                        if (CraftEventFactory.callEntityPlaceEvent(worldIn, blockRayTraceResult.getPos(), blockRayTraceResult.getFace(), playerIn, boatentity).isCancelled()) {
+                        if (CraftEventFactory.callEntityPlaceEvent(worldIn, result.getPos(), result.getFace(), playerIn, boatentity).isCancelled()) {
                             return new ActionResult<>(ActionResultType.FAIL, itemstack);
                         }
                         if (!worldIn.addEntity(boatentity)) {
@@ -92,7 +92,7 @@ public class BoatItemMixin extends Item {
                     }
 
                     playerIn.addStat(Stats.ITEM_USED.get(this));
-                    return new ActionResult<>(ActionResultType.SUCCESS, itemstack);
+                    return ActionResult.func_233538_a_(itemstack, worldIn.isRemote());
                 }
             } else {
                 return new ActionResult<>(ActionResultType.PASS, itemstack);

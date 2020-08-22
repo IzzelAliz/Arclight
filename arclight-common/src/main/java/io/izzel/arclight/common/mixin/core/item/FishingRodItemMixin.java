@@ -44,7 +44,7 @@ public class FishingRodItemMixin extends Item {
             }
 
             playerIn.swingArm(handIn);
-            worldIn.playSound(null, playerIn.posX, playerIn.posY, playerIn.posZ, SoundEvents.ENTITY_FISHING_BOBBER_RETRIEVE, SoundCategory.NEUTRAL, 1.0F, 0.4F / (random.nextFloat() * 0.4F + 0.8F));
+            worldIn.playSound(null, playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ(), SoundEvents.ENTITY_FISHING_BOBBER_RETRIEVE, SoundCategory.NEUTRAL, 1.0F, 0.4F / (random.nextFloat() * 0.4F + 0.8F));
         } else {
             if (!worldIn.isRemote) {
                 int k = EnchantmentHelper.getFishingSpeedBonus(itemstack);
@@ -58,7 +58,7 @@ public class FishingRodItemMixin extends Item {
                     playerIn.fishingBobber = null;
                     return new ActionResult<>(ActionResultType.PASS, itemstack);
                 }
-                worldIn.playSound(null, playerIn.posX, playerIn.posY, playerIn.posZ, SoundEvents.ENTITY_FISHING_BOBBER_THROW, SoundCategory.NEUTRAL, 0.5F, 0.4F / (random.nextFloat() * 0.4F + 0.8F));
+                worldIn.playSound(null, playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ(), SoundEvents.ENTITY_FISHING_BOBBER_THROW, SoundCategory.NEUTRAL, 0.5F, 0.4F / (random.nextFloat() * 0.4F + 0.8F));
                 worldIn.addEntity(new FishingBobberEntity(playerIn, worldIn, j, k));
             }
 
@@ -66,6 +66,6 @@ public class FishingRodItemMixin extends Item {
             playerIn.addStat(Stats.ITEM_USED.get(this));
         }
 
-        return new ActionResult<>(ActionResultType.SUCCESS, itemstack);
+        return ActionResult.func_233538_a_(itemstack, worldIn.isRemote());
     }
 }

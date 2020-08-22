@@ -33,7 +33,7 @@ public abstract class BowItemMixin extends ShootableItem {
     // @formatter:off
     @Shadow public abstract int getUseDuration(ItemStack stack);
     @Shadow public static float getArrowVelocity(int charge) { return 0; }
-    @Shadow(remap = false) public abstract AbstractArrowEntity customeArrow(AbstractArrowEntity arrow);
+    @Shadow(remap = false) public abstract AbstractArrowEntity customArrow(AbstractArrowEntity arrow);
     // @formatter:on
 
     /**
@@ -62,8 +62,8 @@ public abstract class BowItemMixin extends ShootableItem {
                     if (!worldIn.isRemote) {
                         ArrowItem arrowitem = (ArrowItem) (itemstack.getItem() instanceof ArrowItem ? itemstack.getItem() : Items.ARROW);
                         AbstractArrowEntity abstractarrowentity = arrowitem.createArrow(worldIn, itemstack, playerentity);
-                        abstractarrowentity = customeArrow(abstractarrowentity);
-                        abstractarrowentity.shoot(playerentity, playerentity.rotationPitch, playerentity.rotationYaw, 0.0F, f * 3.0F, 1.0F);
+                        abstractarrowentity = customArrow(abstractarrowentity);
+                        abstractarrowentity.func_234612_a_(playerentity, playerentity.rotationPitch, playerentity.rotationYaw, 0.0F, f * 3.0F, 1.0F);
                         if (f == 1.0F) {
                             abstractarrowentity.setIsCritical(true);
                         }
@@ -105,7 +105,7 @@ public abstract class BowItemMixin extends ShootableItem {
                         }
                     }
 
-                    worldIn.playSound(null, playerentity.posX, playerentity.posY, playerentity.posZ, SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.PLAYERS, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 1.2F) + f * 0.5F);
+                    worldIn.playSound(null, playerentity.getPosX(), playerentity.getPosY(), playerentity.getPosZ(), SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.PLAYERS, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 1.2F) + f * 0.5F);
                     if (!flag1 && !playerentity.abilities.isCreativeMode) {
                         itemstack.shrink(1);
                         if (itemstack.isEmpty()) {
