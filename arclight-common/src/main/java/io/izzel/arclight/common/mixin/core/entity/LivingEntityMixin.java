@@ -7,14 +7,15 @@ import com.mojang.datafixers.util.Either;
 import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.mixin.Eject;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.attributes.AbstractAttributeMap;
-import net.minecraft.entity.ai.attributes.IAttribute;
-import net.minecraft.entity.ai.attributes.IAttributeInstance;
+import net.minecraft.entity.ai.attributes.Attribute;
+import net.minecraft.entity.ai.attributes.AttributeModifierManager;
+import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.passive.AnimalEntity;
@@ -75,11 +76,14 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
+import java.util.UUID;
 
 @SuppressWarnings({"ConstantConditions", "Guava"})
 @Mixin(LivingEntity.class)
@@ -99,7 +103,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public int deathTime;
     @Shadow protected boolean dead;
     @Shadow(remap = false) public void remove(boolean keepData) { }
-    @Shadow public abstract IAttributeInstance getAttribute(IAttribute attribute);
+    @Shadow public abstract ModifiableAttributeInstance getAttribute(Attribute attribute);
     @Shadow public boolean potionsNeedUpdate;
     @Shadow public abstract boolean removePotionEffect(Effect effectIn);
     @Shadow public abstract boolean clearActivePotions();
@@ -119,7 +123,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public float attackedAtYaw;
     @Shadow public abstract void setRevengeTarget(@Nullable LivingEntity livingBase);
     @Shadow protected abstract void markVelocityChanged();
-    @Shadow public abstract void knockBack(Entity entityIn, float strength, double xRatio, double zRatio);
     @Shadow @Nullable protected abstract SoundEvent getDeathSound();
     @Shadow protected abstract float getSoundVolume();
     @Shadow protected abstract float getSoundPitch();
@@ -132,10 +135,9 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow @Nullable public abstract EffectInstance getActivePotionEffect(Effect potionIn);
     @Shadow protected abstract float applyPotionDamageCalculations(DamageSource source, float damage);
     @Shadow public abstract float getAbsorptionAmount();
-    @Shadow protected abstract void damageArmor(float damage);
     @Shadow public abstract void setAbsorptionAmount(float amount);
     @Shadow public abstract CombatTracker getCombatTracker();
-    @Shadow private AbstractAttributeMap attributes;
+    @Shadow @Final private AttributeModifierManager attributes;
     @Shadow public abstract boolean isOnLadder();
     @Shadow protected ItemStack activeItemStack;
     @Shadow public abstract void onItemPickup(Entity entityIn, int quantity);
@@ -164,6 +166,10 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow protected abstract void onNewPotionEffect(EffectInstance id);
     @Shadow @Nullable public abstract EffectInstance removeActivePotionEffect(@Nullable Effect potioneffectin);
     @Shadow protected abstract void createWitherRose(@Nullable LivingEntity p_226298_1_);
+    @Shadow public abstract double getAttributeValue(Attribute attribute);
+    @Shadow public abstract void applyKnockback(float strength, double ratioX, double ratioZ);
+    @Shadow protected abstract void damageArmor(DamageSource damageSource, float damage);
+    @Shadow protected abstract void playEquipSound(ItemStack stack);
     // @formatter:on
 
     public int expToDrop;
@@ -172,11 +178,19 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     public CraftAttributeMap craftAttributes;
     public boolean collides;
     public boolean canPickUpLoot;
+    public Set<UUID> collidableExemptions = new HashSet<>();
+
+    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;setHealth(F)V"))
+    private void arclight$muteHealth(LivingEntity entity, float health) {
+        // do nothing
+    }
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(EntityType<? extends LivingEntity> type, World worldIn, CallbackInfo ci) {
         this.maxAirTicks = 300;
         this.collides = true;
+        this.craftAttributes = new CraftAttributeMap(this.attributes);
+        this.dataManager.set(HEALTH, (float) this.getAttributeValue(Attributes.MAX_HEALTH));
     }
 
     /**
@@ -375,34 +389,16 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         }
     }
 
-
-    private transient boolean arclight$fallSuccess;
-
-    @Inject(method = "onLivingFall", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/entity/LivingEntity;attackEntityFrom(Lnet/minecraft/util/DamageSource;F)Z"))
-    public void arclight$fall(float distance, float damageMultiplier, CallbackInfoReturnable<Boolean> cir) {
-        if (!arclight$fallSuccess) {
-            cir.setReturnValue(true);
-        }
-    }
-
-    @Redirect(method = "onLivingFall", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;attackEntityFrom(Lnet/minecraft/util/DamageSource;F)Z"))
-    public boolean arclight$fall(LivingEntity livingEntity, DamageSource source, float amount) {
-        return arclight$fallSuccess = livingEntity.attackEntityFrom(source, amount);
+    @Eject(method = "onLivingFall", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;attackEntityFrom(Lnet/minecraft/util/DamageSource;F)Z"))
+    private boolean arclight$fall(LivingEntity livingEntity, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        boolean ret = livingEntity.attackEntityFrom(source, amount);
+        cir.setReturnValue(ret);
+        return ret;
     }
 
     @Override
     public boolean bridge$canPickUpLoot() {
         return canPickUpLoot;
-    }
-
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getMaxHealth()F"))
-    public float arclight$muteHealth(LivingEntity livingEntity) {
-        return 0;
-    }
-
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;setHealth(F)V"))
-    public void arclight$muteHealth2(LivingEntity livingEntity, float health) {
-        this.dataManager.set(HEALTH, (float) this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).getValue());
     }
 
     @Override
@@ -444,9 +440,9 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         if (compound.contains("Bukkit.MaxHealth")) {
             INBT nbtbase = compound.get("Bukkit.MaxHealth");
             if (nbtbase.getId() == 5) {
-                this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(((FloatNBT) nbtbase).getDouble());
+                this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(((FloatNBT) nbtbase).getDouble());
             } else if (nbtbase.getId() == 3) {
-                this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(((IntNBT) nbtbase).getDouble());
+                this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(((IntNBT) nbtbase).getDouble());
             }
         }
     }
@@ -567,7 +563,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             if ((Object) this instanceof AnimalEntity) {
                 ((AnimalEntity) (Object) this).resetInLove();
                 if ((Object) this instanceof TameableEntity) {
-                    ((TameableEntity) (Object) this).getAISit().setSitting(false);
+                    ((TameableEntity) (Object) this).func_233687_w_(false);
                 }
             }
 
@@ -620,15 +616,15 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 }
 
                 if (entity1 != null) {
-                    double d1 = entity1.posX - this.posX;
+                    double d1 = entity1.getPosX() - this.getPosX();
 
                     double d0;
-                    for (d0 = entity1.posZ - this.posZ; d1 * d1 + d0 * d0 < 1.0E-4D; d0 = (Math.random() - Math.random()) * 0.01D) {
+                    for (d0 = entity1.getPosZ() - this.getPosZ(); d1 * d1 + d0 * d0 < 1.0E-4D; d0 = (Math.random() - Math.random()) * 0.01D) {
                         d1 = (Math.random() - Math.random()) * 0.01D;
                     }
 
                     this.attackedAtYaw = (float) (MathHelper.atan2(d0, d1) * (double) (180F / (float) Math.PI) - (double) this.rotationYaw);
-                    this.knockBack(entity1, 0.4F, d1, d0);
+                    this.applyKnockback(0.4F, d1, d0);
                 } else {
                     this.attackedAtYaw = (float) ((int) (Math.random() * 2.0D) * 180);
                 }
@@ -751,7 +747,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             // Apply damage to armor
             if (!damagesource.isUnblockable()) {
                 float armorDamage = (float) (event.getDamage() + event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) + event.getDamage(EntityDamageEvent.DamageModifier.HARD_HAT));
-                this.damageArmor(armorDamage);
+                this.damageArmor(damagesource, armorDamage);
             }
 
             // Apply blocking code // PAIL: steal from above
@@ -927,26 +923,21 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 this.addPotionEffect(new EffectInstance(Effects.REGENERATION, 900, 1));
                 bridge$pushEffectCause(EntityPotionEffectEvent.Cause.TOTEM);
                 this.addPotionEffect(new EffectInstance(Effects.ABSORPTION, 100, 1));
+                bridge$pushEffectCause(EntityPotionEffectEvent.Cause.TOTEM);
+                this.addPotionEffect(new EffectInstance(Effects.FIRE_RESISTANCE, 800, 1));
                 this.world.setEntityState((Entity) (Object) this, (byte) 35);
             }
             return !event.isCancelled();
         }
     }
 
-    @Redirect(method = "applyArmorCalculations", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;damageArmor(F)V"))
-    public void arclight$muteDamageArmor(LivingEntity livingEntity, float damage) {
+    @Redirect(method = "applyArmorCalculations", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;damageArmor(Lnet/minecraft/util/DamageSource;F)V"))
+    public void arclight$muteDamageArmor(LivingEntity entity, DamageSource damageSource, float damage) {
     }
 
     @Redirect(method = "applyPotionDamageCalculations", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isPotionActive(Lnet/minecraft/potion/Effect;)Z"))
     public boolean arclight$mutePotion(LivingEntity livingEntity, Effect potionIn) {
         return false;
-    }
-
-    @Inject(method = "getAttributes", at = @At("RETURN"))
-    public void arclight$initializeCraftAttr(CallbackInfoReturnable<AbstractAttributeMap> cir) {
-        if (this.craftAttributes == null) {
-            this.craftAttributes = new CraftAttributeMap(this.attributes);
-        }
     }
 
     @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;setFlag(IZ)V"))
@@ -981,6 +972,11 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         return this.isAlive() && !this.isOnLadder() && this.collides;
     }
 
+    @Override
+    public boolean canCollideWith(Entity entity) {
+        return this.canBePushed() && this.collides != this.collidableExemptions.contains(entity.getUniqueID());
+    }
+
     private transient ItemStack arclight$consumePost;
 
     @Inject(method = "onItemUseFinish", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
@@ -1001,25 +997,33 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         }
     }
 
-    @Redirect(method = "onItemUseFinish", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;onItemUseFinish(Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;)Lnet/minecraft/item/ItemStack;"))
-    public ItemStack arclight$useEventItem(ItemStack itemStack, World worldIn, LivingEntity entityLiving) {
-        if (arclight$consumePost != null) itemStack = arclight$consumePost;
-        arclight$consumePost = null;
+    @Eject(method = "onItemUseFinish", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;onItemUseFinish(Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;)Lnet/minecraft/item/ItemStack;"))
+    private ItemStack arclight$itemConsume(ItemStack itemStack, World worldIn, LivingEntity entityLiving, CallbackInfo ci) {
+        if (this instanceof ServerPlayerEntityBridge) {
+            final org.bukkit.inventory.ItemStack craftItem = CraftItemStack.asBukkitCopy(itemStack);
+            final PlayerItemConsumeEvent event = new PlayerItemConsumeEvent((Player) this.getBukkitEntity(), craftItem);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                ((ServerPlayerEntityBridge) this).bridge$getBukkitEntity().updateInventory();
+                ((ServerPlayerEntityBridge) this).bridge$getBukkitEntity().updateScaledHealth();
+                ci.cancel();
+                return null;
+            } else if (!craftItem.equals(event.getItem())) {
+                return CraftItemStack.asNMSCopy(event.getItem()).onItemUseFinish(worldIn, entityLiving);
+            }
+        }
         return itemStack.onItemUseFinish(worldIn, entityLiving);
     }
 
-    @Inject(method = "attemptTeleport", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
-        at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/entity/LivingEntity;setPositionAndUpdate(DDD)V"))
-    public void arclight$entityTeleport(double d0, double d1, double d2, boolean flag, CallbackInfoReturnable<Boolean> cir, double d3, double d4, double d5) {
-        EntityTeleportEvent event = new EntityTeleportEvent(getBukkitEntity(), new Location(((WorldBridge) this.world).bridge$getWorld(), d3, d4, d5),
-            new Location(((WorldBridge) this.world).bridge$getWorld(), this.posX, this.posY, this.posZ));
+    @Eject(method = "attemptTeleport", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/entity/LivingEntity;setPositionAndUpdate(DDD)V"))
+    private void arclight$entityTeleport(LivingEntity entity, double x, double y, double z, CallbackInfoReturnable<Boolean> cir) {
+        EntityTeleportEvent event = new EntityTeleportEvent(getBukkitEntity(), new Location(((WorldBridge) this.world).bridge$getWorld(), this.getPosX(), this.getPosY(), this.getPosZ()),
+            new Location(((WorldBridge) this.world).bridge$getWorld(), x, y, z));
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
-            this.posX = event.getTo().getX();
-            this.posY = event.getTo().getY();
-            this.posZ = event.getTo().getZ();
+            this.setPositionAndUpdate(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
         } else {
-            this.setPositionAndUpdate(d3, d4, d5);
+            this.setPositionAndUpdate(this.getPosX(), this.getPosY(), this.getPosZ());
             cir.setReturnValue(false);
         }
     }
@@ -1029,6 +1033,13 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         Collection<ItemEntity> drops = livingEntity.captureDrops();
         // todo this instanceof ArmorStandEntity
         return drops == null ? livingEntity.captureDrops(value) : drops;
+    }
+
+    @Inject(method = "canEntityBeSeen", cancellable = true, at = @At("HEAD"))
+    private void arclight$seeNoEvil(Entity entityIn, CallbackInfoReturnable<Boolean> cir) {
+        if (this.world != entityIn.world) {
+            cir.setReturnValue(false);
+        }
     }
 
     @Inject(method = "applyFoodEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;addPotionEffect(Lnet/minecraft/potion/EffectInstance;)Z"))

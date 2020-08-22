@@ -1,17 +1,21 @@
 package io.izzel.arclight.common.mixin.core.entity;
 
+import io.izzel.arclight.common.bridge.block.PortalInfoBridge;
 import io.izzel.arclight.common.bridge.command.ICommandSourceBridge;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.entity.InternalEntityBridge;
 import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.entity.MobEntityBridge;
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.world.TeleporterBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
-import io.izzel.arclight.common.bridge.world.storage.SaveHandlerBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
-import net.minecraft.block.pattern.BlockPattern;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.PortalInfo;
+import net.minecraft.block.PortalSize;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
@@ -27,21 +31,23 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
 import net.minecraft.util.SoundEvent;
+import net.minecraft.util.TeleportationRepositioner;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.common.ForgeHooks;
-import net.minecraftforge.common.util.ITeleporter;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
@@ -50,6 +56,7 @@ import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
 import org.bukkit.entity.Hanging;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.entity.EntityAirChangeEvent;
@@ -81,6 +88,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 
@@ -90,11 +98,8 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
 
     // @formatter:off
     @Shadow public float rotationYaw;
-    @Shadow public double posX;
-    @Shadow public double posY;
     @Shadow public World world;
     @Shadow protected int rideCooldown;
-    @Shadow public double posZ;
     @Shadow public float rotationPitch;
     @Shadow public int fire;
     @Shadow public abstract Pose getPose();
@@ -104,7 +109,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow public abstract boolean attackEntityFrom(DamageSource source, float amount);
     @Shadow public abstract void setFire(int p_70015_1_);
     @Shadow public boolean collidedHorizontally;
-    @Shadow protected abstract Vec3d getAllowedMovement(Vec3d p_213306_1_);
+    @Shadow protected abstract Vector3d getAllowedMovement(Vector3d p_213306_1_);
     @Shadow public abstract void remove();
     @Shadow public int ticksExisted;
     @Shadow public void setWorld(World p_70029_1_) { }
@@ -112,14 +117,13 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow @Final public List<Entity> passengers;
     @Shadow @Nullable public abstract Entity getControllingPassenger();
     @Shadow public abstract boolean isSwimming();
-    @Shadow public DimensionType dimension;
     @Shadow public abstract boolean isAlive();
     @Shadow public abstract void detach();
     @Shadow @Final protected EntityDataManager dataManager;
     @Shadow @Final private static DataParameter<Integer> AIR;
     @Shadow @Deprecated public boolean removed;
     @Shadow @Nullable public abstract MinecraftServer getServer();
-    @Shadow public abstract Vec3d getMotion();
+    @Shadow public abstract Vector3d getMotion();
     @Shadow public abstract EntityType<?> getType();
     @Shadow(remap = false) public abstract void remove(boolean keepData);
     @Shadow @Final protected Random rand;
@@ -137,7 +141,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow(remap = false) public abstract Collection<ItemEntity> captureDrops();
     @Shadow(remap = false) public abstract Collection<ItemEntity> captureDrops(Collection<ItemEntity> value);
     @Shadow public abstract BlockPos getPosition();
-    @Shadow public boolean onGround;
+    @Shadow protected boolean onGround;
     @Shadow public abstract boolean isInWater();
     @Shadow public abstract boolean isPassenger();
     @Shadow public float fallDistance;
@@ -145,7 +149,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow public float distanceWalkedModified;
     @Shadow public float prevDistanceWalkedModified;
     @Shadow public abstract boolean isOnSameTeam(Entity entityIn);
-    @Shadow public abstract void setMotion(Vec3d motionIn);
+    @Shadow public abstract void setMotion(Vector3d motionIn);
     @Shadow public abstract double getDistanceSq(Entity entityIn);
     @Shadow protected UUID entityUniqueID;
     @Shadow protected abstract void markVelocityChanged();
@@ -160,11 +164,10 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow public abstract boolean hasNoGravity();
     @Shadow protected abstract void doBlockCollisions();
     @Shadow public float prevRotationYaw;
-    @Shadow public abstract boolean handleWaterMovement();
     @Shadow public abstract boolean isBeingRidden();
     @Shadow public abstract boolean isPassenger(Entity entityIn);
     @Shadow public abstract void setMotion(double x, double y, double z);
-    @Shadow public abstract void move(MoverType typeIn, Vec3d pos);
+    @Shadow public abstract void move(MoverType typeIn, Vector3d pos);
     @Shadow @Nullable public abstract Entity getRidingEntity();
     @Shadow @Nullable public abstract Team getTeam();
     @Shadow public abstract void extinguish();
@@ -172,18 +175,22 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow public abstract void setLocationAndAngles(double x, double y, double z, float yaw, float pitch);
     @Shadow public abstract int getEntityId();
     @Shadow @Nullable public abstract ITextComponent getCustomName();
-    @Shadow protected abstract void applyEnchantments(LivingEntity entityLivingBaseIn, Entity entityIn);
-    @Shadow @Nullable public abstract Entity changeDimension(DimensionType destination);
+    @Shadow public abstract void applyEnchantments(LivingEntity entityLivingBaseIn, Entity entityIn);
+    @Shadow @Nullable public abstract Entity changeDimension(ServerWorld world);
     @Shadow public abstract boolean isRidingSameEntity(Entity entityIn);
     @Shadow public abstract boolean isInvulnerable();
     @Shadow public abstract double getPosX();
     @Shadow public abstract double getPosZ();
-    @Shadow public abstract Vec3d getLastPortalVec();
     @Shadow public abstract double getPosY();
-    @Shadow public abstract Direction getTeleportDirection();
     @Shadow public abstract double getPosYEye();
-    @Shadow public abstract Vec3d getPositionVec();
+    @Shadow public abstract Vector3d getPositionVec();
     @Shadow(remap = false) public abstract void revive();
+    @Shadow public abstract boolean canBePushed();
+    @Shadow protected abstract void setDead();
+    @Shadow protected abstract Optional<TeleportationRepositioner.Result> func_241830_a(ServerWorld p_241830_1_, BlockPos p_241830_2_, boolean p_241830_3_);
+    @Shadow protected BlockPos field_242271_ac;
+    @Shadow protected abstract Vector3d func_241839_a(Direction.Axis p_241839_1_, TeleportationRepositioner.Result p_241839_2_);
+    @Shadow public abstract EntitySize getSize(Pose poseIn);
     // @formatter:on
 
     private static final int CURRENT_LEVEL = 2;
@@ -236,7 +243,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     }
 
     public boolean isChunkLoaded() {
-        return world.chunkExists((int) Math.floor(posX) >> 4, (int) Math.floor(posY) >> 4);
+        return world.chunkExists((int) Math.floor(getPosX()) >> 4, (int) Math.floor(getPosZ()) >> 4);
     }
 
     @Override
@@ -265,7 +272,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         if (yaw == Float.POSITIVE_INFINITY || yaw == Float.NEGATIVE_INFINITY) {
             if (((Object) this) instanceof PlayerEntity) {
                 Bukkit.getLogger().warning(this.getScoreboardName() + " was caught trying to crash the server with an invalid yaw");
-                ((CraftPlayer) this.getBukkitEntity()).kickPlayer("Infinite yaw (Are you hacking?)"); // 专业防抄袭
+                ((CraftPlayer) this.getBukkitEntity()).kickPlayer("Infinite yaw (Are you hacking?)");
             }
             this.rotationYaw = 0;
             callbackInfo.cancel();
@@ -280,7 +287,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         if (pitch == Float.POSITIVE_INFINITY || pitch == Float.NEGATIVE_INFINITY) {
             if (((Object) this) instanceof PlayerEntity) {
                 Bukkit.getLogger().warning(this.getScoreboardName() + " was caught trying to crash the server with an invalid pitch");
-                ((CraftPlayer) this.getBukkitEntity()).kickPlayer("Infinite pitch (Are you hacking?)"); // 专业防抄袭
+                ((CraftPlayer) this.getBukkitEntity()).kickPlayer("Infinite pitch (Are you hacking?)");
             }
             this.rotationPitch = 0;
             callbackInfo.cancel();
@@ -395,17 +402,30 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     }
 
     @Inject(method = "move", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/block/Block;onEntityWalk(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/Entity;)V"))
-    private void arclight$resetBlockWalk(MoverType typeIn, Vec3d pos, CallbackInfo ci) {
+    private void arclight$resetBlockWalk(MoverType typeIn, Vector3d pos, CallbackInfo ci) {
         ArclightCaptures.captureDamageEventBlock(null);
     }
 
-    @Redirect(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;setFire(I)V"))
-    public void arclight$move$EntityCombustEvent(Entity entity, int seconds) {
-        EntityCombustEvent event = new EntityCombustByBlockEvent(null, getBukkitEntity(), 8);
-        Bukkit.getPluginManager().callEvent(event);
+    @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;canTriggerWalking()Z"))
+    private void arclight$move$blockCollide(MoverType typeIn, Vector3d pos, CallbackInfo ci) {
+        if (collidedHorizontally && this.bridge$getBukkitEntity() instanceof Vehicle) {
+            Vehicle vehicle = (Vehicle) this.bridge$getBukkitEntity();
+            org.bukkit.block.Block block = ((WorldBridge) this.world).bridge$getWorld().getBlockAt(MathHelper.floor(this.getPosX()), MathHelper.floor(this.getPosY()), MathHelper.floor(this.getPosZ()));
+            Vector3d vec3d = this.getAllowedMovement(pos);
+            if (pos.x > vec3d.x) {
+                block = block.getRelative(BlockFace.EAST);
+            } else if (vec3d.x < vec3d.x) {
+                block = block.getRelative(BlockFace.WEST);
+            } else if (pos.z > vec3d.z) {
+                block = block.getRelative(BlockFace.SOUTH);
+            } else if (pos.z < vec3d.z) {
+                block = block.getRelative(BlockFace.NORTH);
+            }
 
-        if (!event.isCancelled()) {
-            this.setFire(event.getDuration());
+            if (block.getType() != org.bukkit.Material.AIR) {
+                VehicleBlockCollisionEvent event = new VehicleBlockCollisionEvent(vehicle, block);
+                Bukkit.getPluginManager().callEvent(event);
+            }
         }
     }
 
@@ -436,7 +456,16 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
 
     @Inject(method = "setPositionAndRotation", at = @At("RETURN"))
     private void arclight$loadChunk(double x, double y, double z, float yaw, float pitch, CallbackInfo ci) {
-        this.world.getChunk((int)Math.floor(this.posX) >> 4, (int)Math.floor(this.posZ) >> 4);
+        this.world.getChunk((int) Math.floor(this.getPosX()) >> 4, (int) Math.floor(this.getPosZ()) >> 4);
+    }
+
+    public boolean canCollideWith(Entity entity) {
+        return this.canBePushed();
+    }
+
+    @Override
+    public boolean bridge$canCollideWith(Entity entity) {
+        return canCollideWith(entity);
     }
 
     @Inject(method = "writeUnlessRemoved", cancellable = true, at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/entity/Entity;getEntityString()Ljava/lang/String;"))
@@ -459,8 +488,8 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
 
     @Inject(method = "writeWithoutTypeId", at = @At(value = "INVOKE", shift = At.Shift.AFTER, ordinal = 0, target = "Lnet/minecraft/nbt/CompoundNBT;putUniqueId(Ljava/lang/String;Ljava/util/UUID;)V"))
     public void arclight$writeWithoutTypeId$CraftBukkitNBT(CompoundNBT compound, CallbackInfoReturnable<CompoundNBT> cir) {
-        compound.putLong("WorldUUIDLeast", ((SaveHandlerBridge) (((ServerWorld) this.world).getSaveHandler())).bridge$getUUID(((ServerWorld) this.world)).getLeastSignificantBits());
-        compound.putLong("WorldUUIDMost", ((SaveHandlerBridge) (((ServerWorld) this.world).getSaveHandler())).bridge$getUUID(((ServerWorld) this.world)).getMostSignificantBits());
+        compound.putLong("WorldUUIDLeast", ((WorldBridge) this.world).bridge$getWorld().getUID().getLeastSignificantBits());
+        compound.putLong("WorldUUIDMost", ((WorldBridge) this.world).bridge$getWorld().getUID().getMostSignificantBits());
         compound.putInt("Bukkit.updateLevel", CURRENT_LEVEL);
         compound.putInt("Spigot.ticksLived", this.ticksExisted);
     }
@@ -507,7 +536,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             }
 
             if (bworld == null) {
-                bworld = ((WorldBridge) ((CraftServer) server).getServer().getWorld(DimensionType.OVERWORLD)).bridge$getWorld();
+                bworld = ((WorldBridge) ((CraftServer) server).getServer().getWorld(World.OVERWORLD)).bridge$getWorld();
             }
 
             setWorld(bworld == null ? null : ((CraftWorld) bworld).getHandle());
@@ -544,7 +573,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         cir.setReturnValue(true);
     }
 
-    @Redirect(method = "stopRiding()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;removePassenger(Lnet/minecraft/entity/Entity;)V"))
+    @Redirect(method = "dismount", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;removePassenger(Lnet/minecraft/entity/Entity;)V"))
     public void arclight$stopRiding$CraftBukkitPatch(Entity entity, Entity passenger) {
         if (!((EntityBridge) entity).bridge$removePassenger(passenger)) {
             this.ridingEntity = entity;
@@ -644,7 +673,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         return true; // CraftBukkit
     }
 
-    @Inject(method = "updatePortal", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;changeDimension(Lnet/minecraft/world/dimension/DimensionType;)Lnet/minecraft/entity/Entity;"))
+    @Inject(method = "updatePortal", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;changeDimension(Lnet/minecraft/world/server/ServerWorld;)Lnet/minecraft/entity/Entity;"))
     public void arclight$changeDimension(CallbackInfo ci) {
         if (this instanceof ServerPlayerEntityBridge) {
             ((ServerPlayerEntityBridge) this).bridge$pushChangeDimensionCause(PlayerTeleportEvent.TeleportCause.NETHER_PORTAL);
@@ -677,7 +706,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         // CraftBukkit end
     }
 
-    @Redirect(method = "onStruckByLightning", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;setFire(I)V"))
+    @Redirect(method = "func_241841_a", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;setFire(I)V"))
     public void arclight$onStruckByLightning$EntityCombustByEntityEvent0(Entity entity, int seconds) {
         final org.bukkit.entity.Entity thisBukkitEntity = this.getBukkitEntity();
         final org.bukkit.entity.Entity stormBukkitEntity = ((EntityBridge) entity).bridge$getBukkitEntity();
@@ -691,7 +720,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         // CraftBukkit end
     }
 
-    @Redirect(method = "onStruckByLightning", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;attackEntityFrom(Lnet/minecraft/util/DamageSource;F)Z"))
+    @Redirect(method = "func_241841_a", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;attackEntityFrom(Lnet/minecraft/util/DamageSource;F)Z"))
     public boolean arclight$onStruckByLightning$EntityCombustByEntityEvent1(Entity entity, DamageSource source, float amount) {
         final org.bukkit.entity.Entity thisBukkitEntity = this.getBukkitEntity();
         final org.bukkit.entity.Entity stormBukkitEntity = ((EntityBridge) entity).bridge$getBukkitEntity();
@@ -737,37 +766,14 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         }
     }
 
-    public Entity teleportTo(DimensionType type, BlockPos blockPos) {
+    public Entity teleportTo(ServerWorld world, BlockPos blockPos) {
         arclight$tpPos = blockPos;
-        return changeDimension(type);
+        return changeDimension(world);
     }
 
     @Override
-    public Entity bridge$teleportTo(DimensionType type, BlockPos blockPos) {
-        return teleportTo(type, blockPos);
-    }
-
-    @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;canTriggerWalking()Z"))
-    private void arclight$move$blockCollide(MoverType typeIn, Vec3d pos, CallbackInfo ci) {
-        if (collidedHorizontally && this.bridge$getBukkitEntity() instanceof Vehicle) {
-            Vehicle vehicle = (Vehicle) this.bridge$getBukkitEntity();
-            org.bukkit.block.Block block = ((WorldBridge) this.world).bridge$getWorld().getBlockAt(MathHelper.floor(this.getPosX()), MathHelper.floor(this.getPosY()), MathHelper.floor(this.getPosZ()));
-            Vec3d vec3d = this.getAllowedMovement(pos);
-            if (pos.x > vec3d.x) {
-                block = block.getRelative(BlockFace.EAST);
-            } else if (vec3d.x < vec3d.x) {
-                block = block.getRelative(BlockFace.WEST);
-            } else if (pos.z > vec3d.z) {
-                block = block.getRelative(BlockFace.SOUTH);
-            } else if (pos.z < vec3d.z) {
-                block = block.getRelative(BlockFace.NORTH);
-            }
-
-            if (block.getType() != org.bukkit.Material.AIR) {
-                VehicleBlockCollisionEvent event = new VehicleBlockCollisionEvent(vehicle, block);
-                Bukkit.getPluginManager().callEvent(event);
-            }
-        }
+    public Entity bridge$teleportTo(ServerWorld world, BlockPos blockPos) {
+        return teleportTo(world, blockPos);
     }
 
     /**
@@ -776,107 +782,135 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
      */
     @Overwrite(remap = false)
     @Nullable
-    public Entity changeDimension(DimensionType destination, ITeleporter teleporter) {
-        BlockPos location = ((InternalEntityBridge) this).internal$capturedPos();
-        if (!ForgeHooks.onTravelToDimension((Entity) (Object) this, destination)) return null;
-        if (!this.world.isRemote && !this.removed) {
+    public Entity changeDimension(ServerWorld server, net.minecraftforge.common.util.ITeleporter teleporter) {
+        if (this.world instanceof ServerWorld && !this.removed) {
             this.world.getProfiler().startSection("changeDimension");
-            MinecraftServer minecraftserver = this.getServer();
-            DimensionType dimensiontype = this.dimension;
-            ServerWorld serverworld = minecraftserver.getWorld(dimensiontype);
-            ServerWorld[] serverworld1 = new ServerWorld[]{minecraftserver.getWorld(destination)};
-
-            if (serverworld1 == null) {
+            if (server == null) {
                 return null;
             }
-            //this.dimension = destination;
-            //this.detach();
             this.world.getProfiler().startSection("reposition");
-            Entity transportedEntity = teleporter.placeEntity((Entity) (Object) this, serverworld, serverworld1[0], this.rotationYaw, spawnPortal -> { //Forge: Start vanilla logic
-                Vec3d vec3d = this.getMotion();
-                float f = 0.0F;
-                BlockPos blockpos = location;
-                if (blockpos == null) {
-                    if (dimensiontype == DimensionType.THE_END && destination == DimensionType.OVERWORLD) {
-                        EntityPortalEvent event = CraftEventFactory.callEntityPortalEvent((Entity) (Object) this, serverworld1[0], serverworld1[0].getHeight(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, serverworld1[0].getSpawnPoint()), 0);
-                        if (event == null) {
-                            return null;
-                        }
-                        serverworld1[0] = ((CraftWorld) event.getTo().getWorld()).getHandle();
-                        blockpos = new BlockPos(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
-                        //blockpos = serverworld1[0].getHeight(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, serverworld1[0].getSpawnPoint());
-                    } else if (destination == DimensionType.THE_END) {
-                        EntityPortalEvent event = CraftEventFactory.callEntityPortalEvent((Entity) (Object) this, serverworld1[0], (serverworld1[0].getSpawnCoordinate() != null) ? serverworld1[0].getSpawnCoordinate() : serverworld1[0].getSpawnPoint(), 0);
-                        if (event == null) {
-                            return null;
-                        }
-                        serverworld1[0] = ((CraftWorld) event.getTo().getWorld()).getHandle();
-                        blockpos = new BlockPos(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
-                        //blockpos = serverworld1[0].getSpawnCoordinate();
-                    } else {
-                        double movementFactor = serverworld.getDimension().getMovementFactor() / serverworld1[0].getDimension().getMovementFactor();
-                        double d0 = this.getPosX() * movementFactor;
-                        double d1 = this.getPosZ() * movementFactor;
-
-                        double d3 = Math.min(-2.9999872E7D, serverworld1[0].getWorldBorder().minX() + 16.0D);
-                        double d4 = Math.min(-2.9999872E7D, serverworld1[0].getWorldBorder().minZ() + 16.0D);
-                        double d5 = Math.min(2.9999872E7D, serverworld1[0].getWorldBorder().maxX() - 16.0D);
-                        double d6 = Math.min(2.9999872E7D, serverworld1[0].getWorldBorder().maxZ() - 16.0D);
-                        d0 = MathHelper.clamp(d0, d3, d5);
-                        d1 = MathHelper.clamp(d1, d4, d6);
-                        Vec3d vec3d1 = this.getLastPortalVec();
-                        blockpos = new BlockPos(d0, this.getPosY(), d1);
-
-                        EntityPortalEvent event2 = CraftEventFactory.callEntityPortalEvent((Entity) (Object) this, serverworld1[0], blockpos, 128);
-                        if (event2 == null) {
-                            return null;
-                        }
-                        serverworld1[0] = ((CraftWorld) event2.getTo().getWorld()).getHandle();
-                        blockpos = new BlockPos(event2.getTo().getX(), event2.getTo().getY(), event2.getTo().getZ());
-                        int searchRadius = event2.getSearchRadius();
-                        // todo 实现 radius
-
-                        if (spawnPortal) {
-                            BlockPattern.PortalInfo blockpattern$portalinfo = serverworld1[0].getDefaultTeleporter().placeInExistingPortal(blockpos, vec3d, this.getTeleportDirection(), vec3d1.x, vec3d1.y, (Object) this instanceof PlayerEntity);
-                            if (blockpattern$portalinfo == null) {
-                                return null;
-                            }
-
-                            blockpos = new BlockPos(blockpattern$portalinfo.pos);
-                            vec3d = blockpattern$portalinfo.motion;
-                            f = (float) blockpattern$portalinfo.rotation;
-                        }
-                    }
-                }
-
-                this.dimension = destination;
+            PortalInfo portalinfo = this.func_241829_a(server);
+            if (portalinfo == null) {
+                return null;
+            } else {
+                server = ((PortalInfoBridge) portalinfo).bridge$getWorld();
                 this.detach();
+                Entity transportedEntity = teleporter.placeEntity((Entity) (Object) this, (ServerWorld) this.world, server, this.rotationYaw, spawnPortal -> { //Forge: Start vanilla logic
+                    this.world.getProfiler().endStartSection("reloading");
+                    ServerWorld world = ((PortalInfoBridge) portalinfo).bridge$getWorld();
+                    Entity entity = this.getType().create(world);
+                    if (entity != null) {
+                        entity.copyDataFromOld((Entity) (Object) this);
+                        entity.setLocationAndAngles(portalinfo.pos.x, portalinfo.pos.y, portalinfo.pos.z, portalinfo.field_242960_c, entity.rotationPitch);
+                        entity.setMotion(portalinfo.motion);
+                        world.addFromAnotherDimension(entity);
+                        if (((WorldBridge) world).bridge$getTypeKey() == DimensionType.THE_END) {
+                            ArclightCaptures.captureEndPortalEntity((Entity) (Object) this, spawnPortal);
+                            ServerWorld.func_241121_a_(world);
+                        }
 
-                this.world.getProfiler().endStartSection("reloading");
-                Entity entity = this.getType().create(serverworld1[0]);
-                if (entity != null) {
-                    entity.copyDataFromOld((Entity) (Object) this);
-                    entity.moveToBlockPosAndAngles(blockpos, entity.rotationYaw + f, entity.rotationPitch);
-                    entity.setMotion(vec3d);
-                    serverworld1[0].addFromAnotherDimension(entity);
-
-                    ((InternalEntityBridge) this).internal$getBukkitEntity().setHandle(entity);
-                    ((EntityBridge) entity).bridge$setBukkitEntity(((InternalEntityBridge) this).internal$getBukkitEntity());
-                    if ((Object) this instanceof MobEntity) {
-                        ((MobEntity) (Object) this).clearLeashed(true, false);
+                        this.getBukkitEntity().setHandle(entity);
+                        ((EntityBridge) entity).bridge$setBukkitEntity(this.bridge$getBukkitEntity());
+                        if ((Object) this instanceof MobEntity) {
+                            ((MobEntity) (Object) this).clearLeashed(true, false);
+                        }
                     }
-                }
-                return entity;
-            });//Forge: End vanilla logic
+                    return entity;
+                }); //Forge: End vanilla logic
 
-            this.remove(false);
-            this.world.getProfiler().endSection();
-            serverworld.resetUpdateEntityTick();
-            serverworld1[0].resetUpdateEntityTick();
-            this.world.getProfiler().endSection();
-            return transportedEntity;
+                this.setDead();
+                this.world.getProfiler().endSection();
+                ((ServerWorld) this.world).resetUpdateEntityTick();
+                server.resetUpdateEntityTick();
+                this.world.getProfiler().endSection();
+                return transportedEntity;
+            }
         } else {
             return null;
         }
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Nullable
+    @Overwrite
+    protected PortalInfo func_241829_a(ServerWorld world) {
+        if (world == null) {
+            return null;
+        }
+        boolean flag = ((WorldBridge) this.world).bridge$getTypeKey() == DimensionType.THE_END && ((WorldBridge) world).bridge$getTypeKey() == DimensionType.OVERWORLD;
+        boolean flag1 = ((WorldBridge) world).bridge$getTypeKey() == DimensionType.THE_END;
+        if (!flag && !flag1) {
+            boolean flag2 = ((WorldBridge) world).bridge$getTypeKey() == DimensionType.THE_NETHER;
+            if (this.world.getDimensionKey() != World.THE_NETHER && !flag2) {
+                return null;
+            } else {
+                WorldBorder worldborder = world.getWorldBorder();
+                double d0 = Math.max(-2.9999872E7D, worldborder.minX() + 16.0D);
+                double d1 = Math.max(-2.9999872E7D, worldborder.minZ() + 16.0D);
+                double d2 = Math.min(2.9999872E7D, worldborder.maxX() - 16.0D);
+                double d3 = Math.min(2.9999872E7D, worldborder.maxZ() - 16.0D);
+                double d4 = DimensionType.func_242715_a(this.world.func_230315_m_(), world.func_230315_m_());
+                BlockPos blockpos1 = new BlockPos(MathHelper.clamp(this.getPosX() * d4, d0, d2), this.getPosY(), MathHelper.clamp(this.getPosZ() * d4, d1, d3));
+
+                CraftPortalEvent event = this.callPortalEvent((Entity) (Object) this, world, blockpos1, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL, flag2 ? 16 : 128, 16);
+                if (event == null) {
+                    return null;
+                }
+                ServerWorld worldFinal = world = ((CraftWorld) event.getTo().getWorld()).getHandle();
+                blockpos1 = new BlockPos(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
+
+                return this.a(world, blockpos1, flag2, event.getSearchRadius(), event.getCanCreatePortal(), event.getCreationRadius()).map((p_242275_2_) -> {
+                    BlockState blockstate = this.world.getBlockState(this.field_242271_ac);
+                    Direction.Axis direction$axis;
+                    Vector3d vector3d;
+                    if (blockstate.hasProperty(BlockStateProperties.HORIZONTAL_AXIS)) {
+                        direction$axis = blockstate.get(BlockStateProperties.HORIZONTAL_AXIS);
+                        TeleportationRepositioner.Result teleportationrepositioner$result = TeleportationRepositioner.func_243676_a(this.field_242271_ac, direction$axis, 21, Direction.Axis.Y, 21, (p_242276_2_) -> {
+                            return this.world.getBlockState(p_242276_2_) == blockstate;
+                        });
+                        vector3d = this.func_241839_a(direction$axis, teleportationrepositioner$result);
+                    } else {
+                        direction$axis = Direction.Axis.X;
+                        vector3d = new Vector3d(0.5D, 0.0D, 0.0D);
+                    }
+
+                    return PortalSize.func_242963_a(worldFinal, p_242275_2_, direction$axis, vector3d, this.getSize(this.getPose()), this.getMotion(), this.rotationYaw, this.rotationPitch);
+                }).orElse(null);
+            }
+        } else {
+            BlockPos blockpos;
+            if (flag1) {
+                blockpos = ServerWorld.field_241108_a_;
+            } else {
+                blockpos = world.getHeight(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, world.getSpawnPoint());
+            }
+
+            CraftPortalEvent event = this.callPortalEvent((Entity) (Object) this, world, blockpos, PlayerTeleportEvent.TeleportCause.END_PORTAL, 0, 0);
+            if (event == null) {
+                return null;
+            }
+            blockpos = new BlockPos(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
+
+            return new PortalInfo(new Vector3d((double) blockpos.getX() + 0.5D, blockpos.getY(), (double) blockpos.getZ() + 0.5D), this.getMotion(), this.rotationYaw, this.rotationPitch);
+        }
+    }
+
+    protected CraftPortalEvent callPortalEvent(Entity entity, ServerWorld exitWorldServer, BlockPos exitPosition, PlayerTeleportEvent.TeleportCause cause, int searchRadius, int creationRadius) {
+        CraftEntity bukkitEntity = ((EntityBridge) entity).bridge$getBukkitEntity();
+        Location enter = bukkitEntity.getLocation();
+        Location exit = new Location(((WorldBridge) exitWorldServer).bridge$getWorld(), exitPosition.getX(), exitPosition.getY(), exitPosition.getZ());
+        EntityPortalEvent event = new EntityPortalEvent(bukkitEntity, enter, exit, searchRadius);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled() || event.getTo() == null || event.getTo().getWorld() == null || !entity.isAlive()) {
+            return null;
+        }
+        return new CraftPortalEvent(event);
+    }
+
+    protected Optional<TeleportationRepositioner.Result> a(ServerWorld serverWorld, BlockPos pos, boolean flag, int searchRadius, boolean canCreatePortal, int createRadius) {
+        return ((TeleporterBridge) serverWorld.getDefaultTeleporter()).bridge$findPortal(pos, searchRadius);
     }
 }

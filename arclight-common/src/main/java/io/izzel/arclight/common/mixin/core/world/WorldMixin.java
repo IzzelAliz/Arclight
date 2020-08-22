@@ -11,7 +11,9 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.border.WorldBorder;
@@ -59,9 +61,10 @@ public abstract class WorldMixin implements WorldBridge {
     @Shadow public abstract WorldBorder getWorldBorder();
     @Shadow@Final private WorldBorder worldBorder;
     @Shadow public abstract long getDayTime();
-    @Accessor("mainThread") public abstract Thread arclight$getMainThread();
+    @Shadow@Final private DimensionType dimensionType;@Accessor("mainThread") public abstract Thread arclight$getMainThread();
     // @formatter:on
 
+    private RegistryKey<DimensionType> typeKey;
     protected CraftWorld world;
     public boolean pvpMode;
     public boolean keepSpawnInMemory = true;
@@ -90,6 +93,8 @@ public abstract class WorldMixin implements WorldBridge {
             this.ticksPerWaterSpawns = 1;
             this.ticksPerAmbientSpawns = 1;
         }
+        this.typeKey = this.getServer().getHandle().getServer().func_244267_aX().func_230520_a_().func_230519_c_(dimensionType)
+            .orElseThrow(() -> new IllegalStateException("Unregistered dimension type: " + dimType));
     }
 
     @Override
@@ -121,6 +126,15 @@ public abstract class WorldMixin implements WorldBridge {
         this.generator = gen;
         this.environment = env;
         bridge$getWorld();
+    }
+
+    public RegistryKey<DimensionType> getTypeKey() {
+        return this.typeKey;
+    }
+
+    @Override
+    public RegistryKey<DimensionType> bridge$getTypeKey() {
+        return getTypeKey();
     }
 
     @Override

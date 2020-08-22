@@ -3,7 +3,9 @@ package io.izzel.arclight.common.mixin.core.entity;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.entity.MobEntityBridge;
+import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.mixin.Eject;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -15,6 +17,7 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.play.server.SMountEntityPacket;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
@@ -23,9 +26,11 @@ import org.apache.logging.log4j.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityCombustByEntityEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+import org.bukkit.event.entity.EntityTransformEvent;
 import org.bukkit.event.entity.EntityUnleashEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
@@ -54,8 +59,7 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
     @Shadow protected abstract ResourceLocation shadow$getLootTable();
     @Shadow public static EquipmentSlotType getSlotForItemStack(ItemStack stack) { return null; }
     @Shadow public abstract ItemStack getItemStackFromSlot(EquipmentSlotType slotIn);
-    @Shadow protected abstract boolean shouldExchangeEquipment(ItemStack candidate, ItemStack existing, EquipmentSlotType p_208003_3_);
-    @Shadow protected abstract boolean canEquipItem(ItemStack stack);
+    @Shadow public abstract boolean canEquipItem(ItemStack stack);
     @Shadow protected abstract float getDropChance(EquipmentSlotType slotIn);
     @Shadow public abstract void setItemStackToSlot(EquipmentSlotType slotIn, ItemStack stack);
     @Shadow @Final public float[] inventoryHandsDropChances;
@@ -64,6 +68,9 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
     @Shadow public abstract boolean isNoDespawnRequired();
     @Shadow protected void updateAITasks() { }
     @Shadow public abstract boolean isAIDisabled();
+    @Shadow protected abstract boolean shouldExchangeEquipment(ItemStack candidate, ItemStack existing);
+    @Shadow protected abstract void func_233657_b_(EquipmentSlotType p_233657_1_, ItemStack p_233657_2_);
+    @Shadow @Nullable public abstract <T extends MobEntity> T func_233656_b_(EntityType<T> p_233656_1_, boolean p_233656_2_);
     // @formatter:on
 
     public boolean aware;
@@ -193,38 +200,41 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
         }
     }
 
+    @Inject(method = "updateEquipmentIfNeeded", at = @At("HEAD"))
+    private void arclight$captureItemEntity(ItemEntity itemEntity, CallbackInfo ci) {
+        arclight$item = itemEntity;
+    }
+
+    private transient ItemEntity arclight$item;
+
     /**
      * @author IzzelAliz
      * @reason
      */
     @Overwrite
-    protected void updateEquipmentIfNeeded(ItemEntity itemEntity) {
-        ItemStack itemstack = itemEntity.getItem();
-        EquipmentSlotType equipmentslottype = getSlotForItemStack(itemstack);
-        ItemStack itemstack1 = this.getItemStackFromSlot(equipmentslottype);
-        boolean flag = this.shouldExchangeEquipment(itemstack, itemstack1, equipmentslottype);
-        boolean canPickup = flag && this.canEquipItem(itemstack);
-        canPickup = !CraftEventFactory.callEntityPickupItemEvent((Entity) (Object) this, itemEntity, 0, !canPickup).isCancelled();
+    public boolean func_233665_g_(ItemStack p_233665_1_) {
+        ItemEntity itemEntity = arclight$item;
+        arclight$item = null;
+        EquipmentSlotType equipmentslottype = getSlotForItemStack(p_233665_1_);
+        ItemStack itemstack = this.getItemStackFromSlot(equipmentslottype);
+        boolean flag = this.shouldExchangeEquipment(p_233665_1_, itemstack);
+        boolean canPickup = flag && this.canEquipItem(p_233665_1_);
+        if (itemEntity != null) {
+            canPickup = !CraftEventFactory.callEntityPickupItemEvent((MobEntity) (Object) this, itemEntity, 0, !canPickup).isCancelled();
+        }
         if (canPickup) {
             double d0 = this.getDropChance(equipmentslottype);
-            if (!itemstack1.isEmpty() && (double) (this.rand.nextFloat() - 0.1F) < d0) {
+            if (!itemstack.isEmpty() && (double) Math.max(this.rand.nextFloat() - 0.1F, 0.0F) < d0) {
                 forceDrops = true;
-                this.entityDropItem(itemstack1);
+                this.entityDropItem(itemstack);
                 forceDrops = false;
             }
 
-            this.setItemStackToSlot(equipmentslottype, itemstack);
-            switch (equipmentslottype.getSlotType()) {
-                case HAND:
-                    this.inventoryHandsDropChances[equipmentslottype.getIndex()] = 2.0F;
-                    break;
-                case ARMOR:
-                    this.inventoryArmorDropChances[equipmentslottype.getIndex()] = 2.0F;
-            }
-
-            this.persistenceRequired = true;
-            this.onItemPickup(itemEntity, itemstack.getCount());
-            itemEntity.remove();
+            this.func_233657_b_(equipmentslottype, p_233665_1_);
+            this.playEquipSound(p_233665_1_);
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -234,18 +244,18 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
     }
 
     @Inject(method = "processInitialInteract", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/MobEntity;clearLeashed(ZZ)V"))
-    private void arclight$unleash(PlayerEntity player, Hand hand, CallbackInfoReturnable<Boolean> cir) {
+    private void arclight$unleash(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResultType> cir) {
         if (CraftEventFactory.callPlayerUnleashEntityEvent((MobEntity) (Object) this, player).isCancelled()) {
             ((ServerPlayerEntity) player).connection.sendPacket(new SMountEntityPacket((MobEntity) (Object) this, this.getLeashHolder()));
-            cir.setReturnValue(false);
+            cir.setReturnValue(ActionResultType.PASS);
         }
     }
 
-    @Inject(method = "processInitialInteract", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/MobEntity;setLeashHolder(Lnet/minecraft/entity/Entity;Z)V"))
-    private void arclight$leash(PlayerEntity player, Hand hand, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "func_233661_c_", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/MobEntity;setLeashHolder(Lnet/minecraft/entity/Entity;Z)V"))
+    private void arclight$leash(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResultType> cir) {
         if (CraftEventFactory.callPlayerLeashEntityEvent((MobEntity) (Object) this, player, player).isCancelled()) {
             ((ServerPlayerEntity) player).connection.sendPacket(new SMountEntityPacket((MobEntity) (Object) this, this.getLeashHolder()));
-            cir.setReturnValue(false);
+            cir.setReturnValue(ActionResultType.PASS);
         }
     }
 
@@ -265,9 +275,39 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
         this.forceDrops = true;
     }
 
-    @Inject(method = "recreateLeash", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/MobEntity;clearLeashed(ZZ)V"))
-    public void arclight$createLeash(CallbackInfo ci) {
+    @Inject(method = "startRiding", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/MobEntity;clearLeashed(ZZ)V"))
+    private void arclight$unleashRide(Entity entityIn, boolean force, CallbackInfoReturnable<Boolean> cir) {
         Bukkit.getPluginManager().callEvent(new EntityUnleashEvent(this.getBukkitEntity(), EntityUnleashEvent.UnleashReason.UNKNOWN));
+    }
+
+    @Inject(method = "setDead", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/MobEntity;clearLeashed(ZZ)V"))
+    private void arclight$unleashDead(CallbackInfo ci) {
+        Bukkit.getPluginManager().callEvent(new EntityUnleashEvent(this.getBukkitEntity(), EntityUnleashEvent.UnleashReason.UNKNOWN));
+    }
+
+    @Eject(method = "func_233656_b_", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
+    private boolean arclight$copySpawn(World world, Entity entityIn, CallbackInfoReturnable<MobEntity> cir) {
+        EntityTransformEvent.TransformReason transformReason = arclight$transform == null ? EntityTransformEvent.TransformReason.UNKNOWN : arclight$transform;
+        arclight$transform = null;
+        if (CraftEventFactory.callEntityTransformEvent((MobEntity) (Object) this, (LivingEntity) entityIn, transformReason).isCancelled()) {
+            cir.setReturnValue(null);
+            return false;
+        } else {
+            return world.addEntity(entityIn);
+        }
+    }
+
+    public <T extends MobEntity> T a(EntityType<T> entityType, boolean flag, EntityTransformEvent.TransformReason transformReason, CreatureSpawnEvent.SpawnReason spawnReason) {
+        ((WorldBridge) this.world).bridge$pushAddEntityReason(spawnReason);
+        bridge$pushTransformReason(transformReason);
+        return this.func_233656_b_(entityType, flag);
+    }
+
+    private transient EntityTransformEvent.TransformReason arclight$transform;
+
+    @Override
+    public void bridge$pushTransformReason(EntityTransformEvent.TransformReason transformReason) {
+        this.arclight$transform = transformReason;
     }
 
     @Redirect(method = "attackEntityAsMob", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;setFire(I)V"))

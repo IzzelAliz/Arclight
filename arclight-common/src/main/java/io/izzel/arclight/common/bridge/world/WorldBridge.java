@@ -1,7 +1,9 @@
 package io.izzel.arclight.common.bridge.world;
 
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.DimensionType;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.generator.ChunkGenerator;
@@ -34,4 +36,6 @@ public interface WorldBridge extends IWorldWriterBridge, IWorldBridge {
     long bridge$ticksPerWaterSpawns();
 
     long bridge$ticksPerAmbientSpawns();
+
+    RegistryKey<DimensionType> bridge$getTypeKey();
 }

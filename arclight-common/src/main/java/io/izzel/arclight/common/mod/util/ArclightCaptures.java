@@ -198,6 +198,27 @@ public class ArclightCaptures {
         }
     }
 
+    private static transient Entity endPortalEntity;
+    private static transient boolean spawnPortal;
+
+    public static void captureEndPortalEntity(Entity entity, boolean portal) {
+        endPortalEntity = entity;
+        spawnPortal = portal;
+    }
+
+    public static boolean getEndPortalSpawn() {
+        return spawnPortal;
+    }
+
+    public static Entity getEndPortalEntity() {
+        try {
+            return endPortalEntity;
+        } finally {
+            endPortalEntity = null;
+            spawnPortal = false;
+        }
+    }
+
     private static void recapture(String type) {
         throw new IllegalStateException("Recapturing " + type);
     }

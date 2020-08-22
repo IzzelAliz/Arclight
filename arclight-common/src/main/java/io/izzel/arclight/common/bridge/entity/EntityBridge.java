@@ -3,7 +3,7 @@ package io.izzel.arclight.common.bridge.entity;
 import io.izzel.arclight.common.bridge.command.ICommandSourceBridge;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.server.ServerWorld;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.projectiles.ProjectileSource;
 
@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface EntityBridge extends ICommandSourceBridge {
 
-    Entity bridge$teleportTo(DimensionType type, BlockPos blockPos);
+    Entity bridge$teleportTo(ServerWorld world, BlockPos blockPos);
 
     void bridge$setOnFire(int tick, boolean callEvent);
 
@@ -52,4 +52,6 @@ public interface EntityBridge extends ICommandSourceBridge {
     void bridge$setRideCooldown(int rideCooldown);
 
     int bridge$getRideCooldown();
+
+    boolean bridge$canCollideWith(Entity entity);
 }
