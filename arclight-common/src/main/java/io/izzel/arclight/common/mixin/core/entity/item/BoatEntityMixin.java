@@ -49,7 +49,7 @@ public abstract class BoatEntityMixin extends EntityMixin {
         }
     }
 
-    @Inject(method = "attackEntityFrom", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/item/BoatEntity;getDamageTaken()F"))
+    @Inject(method = "attackEntityFrom", cancellable = true, at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/entity/item/BoatEntity;getDamageTaken()F"))
     private void arclight$destroyVehicle(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (this.getDamageTaken() > 40.0F) {
             Vehicle vehicle = (Vehicle) this.getBukkitEntity();
@@ -80,7 +80,7 @@ public abstract class BoatEntityMixin extends EntityMixin {
     @Inject(method = "tick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/item/BoatEntity;updateRocking()V"))
     private void arclight$updateVehicle(CallbackInfo ci) {
         final org.bukkit.World bworld = ((WorldBridge) this.world).bridge$getWorld();
-        final Location to = new Location(bworld, this.posX, this.posY, this.posZ, this.rotationYaw, this.rotationPitch);
+        final Location to = new Location(bworld, this.getPosX(), this.getPosY(), this.getPosZ(), this.rotationYaw, this.rotationPitch);
         final Vehicle vehicle = (Vehicle) this.getBukkitEntity();
         Bukkit.getPluginManager().callEvent(new VehicleUpdateEvent(vehicle));
         if (this.lastLocation != null && !this.lastLocation.equals(to)) {

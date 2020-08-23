@@ -26,15 +26,15 @@ public class EntityTeleportEventDispatcher {
                 event.setTargetX(bukkitEvent.getTo().getX());
                 event.setTargetY(bukkitEvent.getTo().getY());
                 event.setTargetZ(bukkitEvent.getTo().getZ());
-            } else {
-                CraftEntity entity = ((EntityBridge) event.getEntity()).bridge$getBukkitEntity();
-                EntityTeleportEvent bukkitEvent = new EntityTeleportEvent(entity, entity.getLocation(), new Location(entity.getWorld(), event.getTargetX(), event.getTargetY(), event.getTargetZ()));
-                Bukkit.getPluginManager().callEvent(bukkitEvent);
-                event.setCanceled(bukkitEvent.isCancelled());
-                event.setTargetX(bukkitEvent.getTo().getX());
-                event.setTargetY(bukkitEvent.getTo().getY());
-                event.setTargetZ(bukkitEvent.getTo().getZ());
             }
+        } else {
+            CraftEntity entity = ((EntityBridge) event.getEntity()).bridge$getBukkitEntity();
+            EntityTeleportEvent bukkitEvent = new EntityTeleportEvent(entity, entity.getLocation(), new Location(entity.getWorld(), event.getTargetX(), event.getTargetY(), event.getTargetZ()));
+            Bukkit.getPluginManager().callEvent(bukkitEvent);
+            event.setCanceled(bukkitEvent.isCancelled());
+            event.setTargetX(bukkitEvent.getTo().getX());
+            event.setTargetY(bukkitEvent.getTo().getY());
+            event.setTargetZ(bukkitEvent.getTo().getZ());
         }
     }
 }

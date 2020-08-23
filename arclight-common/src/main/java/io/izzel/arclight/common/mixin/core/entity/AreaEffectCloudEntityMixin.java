@@ -27,7 +27,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import javax.annotation.Nullable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -80,9 +79,9 @@ public abstract class AreaEffectCloudEntityMixin extends EntityMixin implements 
                             int k = j >> 16 & 255;
                             int l = j >> 8 & 255;
                             int i1 = j & 255;
-                            this.world.addOptionalParticle(iparticledata, this.posX + (double) f3, this.posY, this.posZ + (double) f4, (float) k / 255.0F, (float) l / 255.0F, (float) i1 / 255.0F);
+                            this.world.addOptionalParticle(iparticledata, this.getPosX() + (double) f3, this.getPosY(), this.getPosZ() + (double) f4, (float) k / 255.0F, (float) l / 255.0F, (float) i1 / 255.0F);
                         } else {
-                            this.world.addOptionalParticle(iparticledata, this.posX + (double) f3, this.posY, this.posZ + (double) f4, 0.0D, 0.0D, 0.0D);
+                            this.world.addOptionalParticle(iparticledata, this.getPosX() + (double) f3, this.getPosY(), this.getPosZ() + (double) f4, 0.0D, 0.0D, 0.0D);
                         }
                     }
                 }
@@ -99,9 +98,9 @@ public abstract class AreaEffectCloudEntityMixin extends EntityMixin implements 
                         int i2 = l1 >> 16 & 255;
                         int j2 = l1 >> 8 & 255;
                         int j1 = l1 & 255;
-                        this.world.addOptionalParticle(iparticledata, this.posX + (double) f8, this.posY, this.posZ + (double) f9, (float) i2 / 255.0F, (float) j2 / 255.0F, (float) j1 / 255.0F);
+                        this.world.addOptionalParticle(iparticledata, this.getPosX() + (double) f8, this.getPosY(), this.getPosZ() + (double) f9, (float) i2 / 255.0F, (float) j2 / 255.0F, (float) j1 / 255.0F);
                     } else {
-                        this.world.addOptionalParticle(iparticledata, this.posX + (double) f8, this.posY, this.posZ + (double) f9, (0.5D - this.rand.nextDouble()) * 0.15D, 0.01F, (0.5D - this.rand.nextDouble()) * 0.15D);
+                        this.world.addOptionalParticle(iparticledata, this.getPosX() + (double) f8, this.getPosY(), this.getPosZ() + (double) f9, (0.5D - this.rand.nextDouble()) * 0.15D, 0.01F, (0.5D - this.rand.nextDouble()) * 0.15D);
                     }
                 }
             }
@@ -131,14 +130,8 @@ public abstract class AreaEffectCloudEntityMixin extends EntityMixin implements 
             }
 
             if (this.ticksExisted % 5 == 0) {
-                Iterator<Map.Entry<Entity, Integer>> iterator = this.reapplicationDelayMap.entrySet().iterator();
 
-                while (iterator.hasNext()) {
-                    Map.Entry<Entity, Integer> entry = iterator.next();
-                    if (this.ticksExisted >= entry.getValue()) {
-                        iterator.remove();
-                    }
-                }
+                this.reapplicationDelayMap.entrySet().removeIf(entry -> this.ticksExisted >= entry.getValue());
 
                 List<EffectInstance> effects = Lists.newArrayList();
 
@@ -155,8 +148,8 @@ public abstract class AreaEffectCloudEntityMixin extends EntityMixin implements 
                         List<LivingEntity> entities = new java.util.ArrayList<>();
                         for (LivingEntity livingentity : list) {
                             if (!this.reapplicationDelayMap.containsKey(livingentity) && livingentity.canBeHitWithPotion()) {
-                                double d0 = livingentity.posX - this.posX;
-                                double d1 = livingentity.posZ - this.posZ;
+                                double d0 = livingentity.getPosX() - this.getPosX();
+                                double d1 = livingentity.getPosZ() - this.getPosZ();
                                 double d2 = d0 * d0 + d1 * d1;
                                 if (d2 <= (double) (f * f)) {
                                     entities.add(livingentity);

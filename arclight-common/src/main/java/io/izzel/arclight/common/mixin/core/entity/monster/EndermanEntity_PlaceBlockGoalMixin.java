@@ -23,7 +23,7 @@ public class EndermanEntity_PlaceBlockGoalMixin {
     // @formatter:on
 
     @Inject(method = "tick", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/IWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
     private void arclight$entityChangeBlock(CallbackInfo ci, Random random, IWorld world, int i, int j, int k, BlockPos blockPos, BlockState blockState, BlockPos blockPos1, BlockState blockState1, BlockState blockState2) {
         if (CraftEventFactory.callEntityChangeBlockEvent(this.enderman, blockPos, blockState2).isCancelled()) {
             ci.cancel();

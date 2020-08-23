@@ -45,7 +45,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Mixin(MobEntity.class)
 @Implements(@Interface(iface = MobEntityBridge.Hack.class, prefix = "hack$"))
@@ -100,7 +99,7 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
         this.aware = true;
     }
 
-    protected transient AtomicBoolean arclight$targetSuccess;
+    protected transient boolean arclight$targetSuccess = false;
     private transient EntityTargetEvent.TargetReason arclight$reason;
     private transient boolean arclight$fireEvent;
 
@@ -128,7 +127,7 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
             final EntityTargetLivingEntityEvent event = new EntityTargetLivingEntityEvent(this.getBukkitEntity(), ctarget, reason);
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
-                if (arclight$targetSuccess != null) arclight$targetSuccess.set(false);
+                arclight$targetSuccess = false;
                 return;
             }
             if (event.getTarget() != null) {
@@ -139,7 +138,7 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
         }
         this.attackTarget = livingEntity;
         ForgeHooks.onLivingSetAttackTarget((MobEntity) (Object) this, this.attackTarget);
-        if (arclight$targetSuccess != null) arclight$targetSuccess.set(true);
+        arclight$targetSuccess = true;
     }
 
     public boolean setGoalTarget(LivingEntity livingEntity, EntityTargetEvent.TargetReason reason, boolean fireEvent) {
@@ -147,12 +146,14 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
         if (getAttackTarget() == livingEntity) {
             return false;
         } else {
-            arclight$targetSuccess = new AtomicBoolean();
             setAttackTarget(livingEntity);
-            boolean ret = arclight$targetSuccess.get();
-            arclight$targetSuccess = null;
-            return ret;
+            return arclight$targetSuccess;
         }
+    }
+
+    @Override
+    public boolean bridge$lastGoalTargetResult() {
+        return arclight$targetSuccess;
     }
 
     @Override

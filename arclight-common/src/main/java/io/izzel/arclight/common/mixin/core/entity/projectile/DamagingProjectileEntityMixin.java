@@ -1,9 +1,7 @@
 package io.izzel.arclight.common.mixin.core.entity.projectile;
 
 import io.izzel.arclight.common.bridge.entity.projectile.DamagingProjectileEntityBridge;
-import io.izzel.arclight.common.mixin.core.entity.EntityMixin;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.DamagingProjectileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.MathHelper;
@@ -19,14 +17,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(DamagingProjectileEntity.class)
-public abstract class DamagingProjectileEntityMixin extends EntityMixin implements DamagingProjectileEntityBridge {
+public abstract class DamagingProjectileEntityMixin extends ProjectileEntityMixin implements DamagingProjectileEntityBridge {
 
     // @formatter:off
     @Shadow public double accelerationX;
     @Shadow public double accelerationY;
     @Shadow public double accelerationZ;
-    @Shadow public LivingEntity shootingEntity;
-    @Shadow protected void onImpact(RayTraceResult result) {}
     // @formatter:on
 
     public float bukkitYield;
@@ -39,9 +35,6 @@ public abstract class DamagingProjectileEntityMixin extends EntityMixin implemen
     }
 
     public void setDirection(double d0, double d1, double d2) {
-        d0 += this.rand.nextGaussian() * 0.4D;
-        d1 += this.rand.nextGaussian() * 0.4D;
-        d2 += this.rand.nextGaussian() * 0.4D;
         double d3 = MathHelper.sqrt(d0 * d0 + d1 * d1 + d2 * d2);
 
         this.accelerationX = d0 / d3 * 0.1D;
@@ -56,7 +49,7 @@ public abstract class DamagingProjectileEntityMixin extends EntityMixin implemen
         }
     }
 
-    @Inject(method = "attackEntityFrom", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getLookVec()Lnet/minecraft/util/math/Vec3d;"))
+    @Inject(method = "attackEntityFrom", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getLookVec()Lnet/minecraft/util/math/vector/Vector3d;"))
     private void arclight$nonLivingAttack(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (CraftEventFactory.handleNonLivingEntityDamageEvent((DamagingProjectileEntity) (Object) this, source, amount)) {
             cir.setReturnValue(false);

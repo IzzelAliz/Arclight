@@ -79,12 +79,12 @@ public abstract class ArmorStandEntityMixin extends LivingEntityMixin {
         arclight$callEntityDeath();
     }
 
-    @Inject(method = "func_213817_e", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/item/ArmorStandEntity;remove()V"))
+    @Inject(method = "damageArmorStand", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/item/ArmorStandEntity;remove()V"))
     private void arclight$deathEvent2(DamageSource p_213817_1_, float p_213817_2_, CallbackInfo ci) {
         arclight$callEntityDeath();
     }
 
-    @Redirect(method = "func_213815_f", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;spawnAsEntity(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/item/ItemStack;)V"))
+    @Redirect(method = "func_213816_g", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;spawnAsEntity(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/item/ItemStack;)V"))
     private void arclight$captureDrops1(World worldIn, BlockPos pos, ItemStack stack) {
         arclight$tryCaptureDrops(worldIn, pos, stack);
     }
@@ -122,7 +122,10 @@ public abstract class ArmorStandEntityMixin extends LivingEntityMixin {
 
     private Collection<ItemEntity> arclight$drops() {
         Collection<ItemEntity> drops = this.captureDrops();
-        return drops == null ? this.captureDrops(new ArrayList<>()) : drops;
+        if (drops == null) {
+            this.captureDrops(new ArrayList<>());
+        }
+        return this.captureDrops();
     }
 
     private void arclight$callEntityDeath() {
@@ -138,7 +141,7 @@ public abstract class ArmorStandEntityMixin extends LivingEntityMixin {
         CraftEventFactory.callEntityDeathEvent((ArmorStandEntity) (Object) this, drops);
     }
 
-    @Inject(method = "func_226529_a_", cancellable = true, at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;abilities:Lnet/minecraft/entity/player/PlayerAbilities;"))
+    @Inject(method = "equipOrSwap", cancellable = true, at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;abilities:Lnet/minecraft/entity/player/PlayerAbilities;"))
     public void arclight$manipulateEvent(PlayerEntity playerEntity, EquipmentSlotType slotType, ItemStack itemStack, Hand hand, CallbackInfoReturnable<Boolean> cir) {
         ItemStack itemStack1 = this.getItemStackFromSlot(slotType);
 

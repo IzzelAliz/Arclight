@@ -8,16 +8,16 @@ import net.minecraft.entity.boss.dragon.EnderDragonEntity;
 import net.minecraft.entity.boss.dragon.phase.IPhase;
 import net.minecraft.entity.boss.dragon.phase.PhaseType;
 import net.minecraft.item.ItemStack;
+import net.minecraft.loot.LootContext;
+import net.minecraft.loot.LootParameters;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.loot.LootContext;
-import net.minecraft.world.storage.loot.LootParameters;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.event.entity.EntityExplodeEvent;
@@ -35,9 +35,9 @@ public abstract class EnderDragonEntityMixin extends MobEntityMixin {
 
     private Explosion explosionSource = new Explosion(null, (EnderDragonEntity) (Object) this, Double.NaN, Double.NaN, Double.NaN, Float.NaN, true, Explosion.Mode.DESTROY);
 
-    @Redirect(method = "livingTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/boss/dragon/phase/IPhase;getTargetLocation()Lnet/minecraft/util/math/Vec3d;"))
-    private Vec3d arclight$noMoveHovering(IPhase phase) {
-        Vec3d vec3d = phase.getTargetLocation();
+    @Redirect(method = "livingTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/boss/dragon/phase/IPhase;getTargetLocation()Lnet/minecraft/util/math/vector/Vector3d;"))
+    private Vector3d arclight$noMoveHovering(IPhase phase) {
+        Vector3d vec3d = phase.getTargetLocation();
         return vec3d != null && phase.getType() != PhaseType.HOVER ? vec3d : null;
     }
 
@@ -106,12 +106,12 @@ public abstract class EnderDragonEntityMixin extends MobEntityMixin {
                 final BlockPos blockposition2 = craftBlock.getPosition();
                 final net.minecraft.block.Block nmsBlock = craftBlock.getNMS().getBlock();
                 if (nmsBlock.canDropFromExplosion(this.explosionSource)) {
-                    final TileEntity tileentity = nmsBlock.hasTileEntity() ? this.world.getTileEntity(blockposition2) : null;
-                    final LootContext.Builder loottableinfo_builder = new LootContext.Builder((ServerWorld) this.world).withRandom(this.world.rand).withParameter(LootParameters.POSITION, blockposition2).withParameter(LootParameters.TOOL, ItemStack.EMPTY).withParameter(LootParameters.EXPLOSION_RADIUS, 1.0f / event.getYield()).withNullableParameter(LootParameters.BLOCK_ENTITY, tileentity);
+                    TileEntity tileentity = nmsBlock.hasTileEntity(craftBlock.getNMS()) ? this.world.getTileEntity(blockposition2) : null;
+                    LootContext.Builder loottableinfo_builder = new LootContext.Builder((ServerWorld)this.world).withRandom(this.world.rand).withParameter(LootParameters.field_237457_g_, Vector3d.copyCentered(blockposition2)).withParameter(LootParameters.TOOL, ItemStack.EMPTY).withParameter(LootParameters.EXPLOSION_RADIUS, 1.0f / event.getYield()).withNullableParameter(LootParameters.BLOCK_ENTITY, tileentity);
                     for (ItemStack stack : craftBlock.getNMS().getDrops(loottableinfo_builder)) {
                         Block.spawnAsEntity(this.world, blockposition2, stack);
                     }
-                    craftBlock.getNMS().spawnAdditionalDrops(this.world, blockposition2, ItemStack.EMPTY);
+                    craftBlock.getNMS().spawnAdditionalDrops((ServerWorld) this.world, blockposition2, ItemStack.EMPTY);
                     // net.minecraft.block.Block.spawnDrops(craftBlock.getNMS(), loottableinfo_builder);
                 }
                 nmsBlock.onExplosionDestroy(this.world, blockposition2, this.explosionSource);

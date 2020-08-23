@@ -13,6 +13,8 @@ public interface MobEntityBridge extends LivingEntityBridge {
 
     boolean bridge$setGoalTarget(LivingEntity livingEntity, EntityTargetEvent.TargetReason reason, boolean fireEvent);
 
+    boolean bridge$lastGoalTargetResult();
+
     ResourceLocation bridge$getLootTable();
 
     boolean bridge$isPersistenceRequired();

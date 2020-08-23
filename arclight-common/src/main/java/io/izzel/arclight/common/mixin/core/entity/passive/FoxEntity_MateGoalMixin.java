@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.entity.passive;
 
 import io.izzel.arclight.common.bridge.entity.passive.AnimalEntityBridge;
-import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.entity.passive.FoxEntityBridge;
 import io.izzel.arclight.common.mixin.core.entity.ai.goal.BreedGoalMixin;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.entity.item.ExperienceOrbEntity;
@@ -9,12 +9,13 @@ import net.minecraft.entity.passive.FoxEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.GameRules;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.BabyEntitySpawnEvent;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityBreedEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
-import io.izzel.arclight.common.bridge.entity.passive.FoxEntityBridge;
 
 @Mixin(targets = "net.minecraft.entity.passive.FoxEntity.MateGoal")
 public class FoxEntity_MateGoalMixin extends BreedGoalMixin {
@@ -25,7 +26,19 @@ public class FoxEntity_MateGoalMixin extends BreedGoalMixin {
      */
     @Overwrite
     protected void spawnBaby() {
-        FoxEntity foxentity = (FoxEntity) this.animal.createChild(this.targetMate);
+        ServerWorld serverworld = (ServerWorld) this.world;
+        FoxEntity foxentity = (FoxEntity) this.animal.func_241840_a(serverworld, this.targetMate);
+        final BabyEntitySpawnEvent event = new BabyEntitySpawnEvent(animal, targetMate, foxentity);
+        final boolean cancelled = MinecraftForge.EVENT_BUS.post(event);
+        foxentity = (FoxEntity) event.getChild();
+        if (cancelled) {
+            //Reset the "inLove" state for the animals
+            this.animal.setGrowingAge(6000);
+            this.targetMate.setGrowingAge(6000);
+            this.animal.resetInLove();
+            this.targetMate.resetInLove();
+            return;
+        }
         if (foxentity != null) {
             ServerPlayerEntity serverplayerentity = this.animal.getLoveCause();
             ServerPlayerEntity serverplayerentity1 = this.targetMate.getLoveCause();
@@ -50,19 +63,17 @@ public class FoxEntity_MateGoalMixin extends BreedGoalMixin {
                 CriteriaTriggers.BRED_ANIMALS.trigger(serverplayerentity2, this.animal, this.targetMate, foxentity);
             }
 
-            int i = 6000;
             this.animal.setGrowingAge(6000);
             this.targetMate.setGrowingAge(6000);
             this.animal.resetInLove();
             this.targetMate.resetInLove();
             foxentity.setGrowingAge(-24000);
-            foxentity.setLocationAndAngles(this.animal.posX, this.animal.posY, this.animal.posZ, 0.0F, 0.0F);
-            ((WorldBridge) this.world).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.BREEDING);
-            this.world.addEntity(foxentity);
+            foxentity.setLocationAndAngles(this.animal.getPosX(), this.animal.getPosY(), this.animal.getPosZ(), 0.0F, 0.0F);
+            serverworld.func_242417_l(foxentity);
             this.world.setEntityState(this.animal, (byte) 18);
             if (this.world.getGameRules().getBoolean(GameRules.DO_MOB_LOOT)) {
                 if (experience > 0) {
-                    this.world.addEntity(new ExperienceOrbEntity(this.world, this.animal.posX, this.animal.posY, this.animal.posZ, experience));
+                    this.world.addEntity(new ExperienceOrbEntity(this.world, this.animal.getPosX(), this.animal.getPosY(), this.animal.getPosZ(), experience));
                 }
             }
 

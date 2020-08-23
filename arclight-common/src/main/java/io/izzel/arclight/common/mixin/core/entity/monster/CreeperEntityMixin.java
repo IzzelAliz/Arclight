@@ -9,6 +9,7 @@ import net.minecraft.entity.monster.CreeperEntity;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.world.Explosion;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -36,8 +37,8 @@ public abstract class CreeperEntityMixin extends CreatureEntityMixin implements 
     @Shadow private int timeSinceIgnited;
     // @formatter:on
 
-    @Inject(method = "onStruckByLightning", cancellable = true, at = @At(value = "FIELD", target = "Lnet/minecraft/entity/monster/CreeperEntity;dataManager:Lnet/minecraft/network/datasync/EntityDataManager;"))
-    private void arclight$lightningBolt(LightningBoltEntity lightningBolt, CallbackInfo ci) {
+    @Inject(method = "func_241841_a", cancellable = true, at = @At(value = "FIELD", target = "Lnet/minecraft/entity/monster/CreeperEntity;dataManager:Lnet/minecraft/network/datasync/EntityDataManager;"))
+    private void arclight$lightningBolt(ServerWorld world, LightningBoltEntity lightningBolt, CallbackInfo ci) {
         if (CraftEventFactory.callCreeperPowerEvent((CreeperEntity) (Object) this, lightningBolt, CreeperPowerEvent.PowerCause.LIGHTNING).isCancelled()) {
             ci.cancel();
         }
@@ -56,7 +57,7 @@ public abstract class CreeperEntityMixin extends CreatureEntityMixin implements 
             Bukkit.getPluginManager().callEvent(event);
             if (!event.isCancelled()) {
                 this.dead = true;
-                this.world.createExplosion((CreeperEntity) (Object) this, this.posX, this.posY, this.posZ, event.getRadius(), event.getFire(), explosion_effect);
+                this.world.createExplosion((CreeperEntity) (Object) this, this.getPosX(), this.getPosY(), this.getPosZ(), event.getRadius(), event.getFire(), explosion_effect);
                 this.remove();
                 this.spawnLingeringCloud();
             } else {

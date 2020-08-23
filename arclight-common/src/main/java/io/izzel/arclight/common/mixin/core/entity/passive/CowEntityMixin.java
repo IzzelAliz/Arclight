@@ -4,11 +4,13 @@ import net.minecraft.entity.passive.CowEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.DrinkHelper;
 import net.minecraft.util.Hand;
 import net.minecraft.util.SoundEvents;
+import net.minecraft.world.server.ServerWorld;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
-import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
@@ -20,23 +22,20 @@ public abstract class CowEntityMixin extends AnimalEntityMixin {
      * @reason
      */
     @Overwrite
-    public boolean processInteract(final PlayerEntity entityhuman, final Hand enumhand) {
-        final ItemStack itemstack = entityhuman.getHeldItem(enumhand);
-        if (itemstack.getItem() != Items.BUCKET || entityhuman.abilities.isCreativeMode || this.isChild()) {
-            return super.processInteract(entityhuman, enumhand);
+    public ActionResultType func_230254_b_(PlayerEntity playerEntity, Hand hand) {
+        ItemStack itemstack = playerEntity.getHeldItem(hand);
+        if (itemstack.getItem() == Items.BUCKET && !this.isChild()) {
+            playerEntity.playSound(SoundEvents.ENTITY_COW_MILK, 1.0F, 1.0F);
+            org.bukkit.event.player.PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent((ServerWorld) playerEntity.world, playerEntity, this.getPosition(), this.getPosition(), null, itemstack, Items.MILK_BUCKET);
+
+            if (event.isCancelled()) {
+                return ActionResultType.PASS;
+            }
+            ItemStack itemstack1 = DrinkHelper.func_242398_a(itemstack, playerEntity, CraftItemStack.asNMSCopy(event.getItemStack()));
+            playerEntity.setHeldItem(hand, itemstack1);
+            return ActionResultType.func_233537_a_(this.world.isRemote);
+        } else {
+            return super.func_230254_b_(playerEntity, hand);
         }
-        final PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent(entityhuman.world, entityhuman, this.getPosition(), this.getPosition(), null, itemstack, Items.MILK_BUCKET);
-        if (event.isCancelled()) {
-            return false;
-        }
-        final ItemStack result = CraftItemStack.asNMSCopy(event.getItemStack());
-        entityhuman.playSound(SoundEvents.ENTITY_COW_MILK, 1.0f, 1.0f);
-        itemstack.shrink(1);
-        if (itemstack.isEmpty()) {
-            entityhuman.setHeldItem(enumhand, result);
-        } else if (!entityhuman.inventory.addItemStackToInventory(result)) {
-            entityhuman.dropItem(result, false);
-        }
-        return true;
     }
 }

@@ -6,8 +6,6 @@ import io.izzel.arclight.common.bridge.world.WorldBridge;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.entity.projectile.EggEntity;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.math.EntityRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -27,10 +25,8 @@ public abstract class EggEntityMixin extends ThrowableEntityMixin {
      * @reason
      */
     @Overwrite
-    protected void onImpact(final RayTraceResult movingobjectposition) {
-        if (movingobjectposition.getType() == RayTraceResult.Type.ENTITY) {
-            ((EntityRayTraceResult) movingobjectposition).getEntity().attackEntityFrom(DamageSource.causeThrownDamage((EggEntity) (Object) this, this.getThrower()), 0.0f);
-        }
+    protected void onImpact(final RayTraceResult result) {
+        super.onImpact(result);
         if (!this.world.isRemote) {
             boolean hatching = this.rand.nextInt(8) == 0;
             byte b0 = 1;
@@ -41,9 +37,9 @@ public abstract class EggEntityMixin extends ThrowableEntityMixin {
                 b0 = 0;
             }
             org.bukkit.entity.EntityType hatchingType = org.bukkit.entity.EntityType.CHICKEN;
-            final Entity shooter = this.getThrower();
+            Entity shooter = this.func_234616_v_();
             if (shooter instanceof ServerPlayerEntity) {
-                final PlayerEggThrowEvent event = new PlayerEggThrowEvent(((ServerPlayerEntityBridge) shooter).bridge$getBukkitEntity(), (Egg) this.getBukkitEntity(), hatching, b0, hatchingType);
+                PlayerEggThrowEvent event = new PlayerEggThrowEvent(((ServerPlayerEntityBridge) shooter).bridge$getBukkitEntity(), (Egg) this.getBukkitEntity(), hatching, b0, hatchingType);
                 Bukkit.getPluginManager().callEvent(event);
                 b0 = event.getNumHatches();
                 hatching = event.isHatching();
@@ -51,12 +47,12 @@ public abstract class EggEntityMixin extends ThrowableEntityMixin {
             }
             if (hatching) {
                 for (int i = 0; i < b0; ++i) {
-                    Entity entity = ((CraftEntity) ((WorldBridge) this.world).bridge$getWorld().spawnEntity(new Location(((WorldBridge) this.world).bridge$getWorld(), this.posX, this.posY, this.posZ, this.rotationYaw, 0.0f), hatchingType)).getHandle();
+                    Entity entity = ((CraftEntity) ((WorldBridge) this.world).bridge$getWorld().spawnEntity(new Location(((WorldBridge) this.world).bridge$getWorld(), this.getPosX(), this.getPosY(), this.getPosZ(), this.rotationYaw, 0.0f), hatchingType)).getHandle();
                     if (((EntityBridge) entity).bridge$getBukkitEntity() instanceof Ageable) {
                         ((Ageable) ((EntityBridge) entity).bridge$getBukkitEntity()).setBaby();
                     }
                     ((WorldBridge) this.world).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.EGG);
-                    this.world.getWorld().addEntity(entity);
+                    this.world.addEntity(entity);
                 }
             }
             this.world.setEntityState((EggEntity) (Object) this, (byte) 3);

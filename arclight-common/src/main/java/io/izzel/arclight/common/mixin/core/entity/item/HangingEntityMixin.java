@@ -12,7 +12,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.IndirectEntityDamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Hanging;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
@@ -33,7 +33,7 @@ public abstract class HangingEntityMixin extends EntityMixin {
 
     @Inject(method = "tick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/item/HangingEntity;remove()V"))
     private void arclight$hangingBreak(CallbackInfo ci) {
-        Material material = this.world.getBlockState(new BlockPos((HangingEntity) (Object) this)).getMaterial();
+        Material material = this.world.getBlockState(new BlockPos(this.getPosition())).getMaterial();
         HangingBreakEvent.RemoveCause cause;
         if (!material.equals(Material.AIR)) {
             cause = HangingBreakEvent.RemoveCause.OBSTRUCTION;
@@ -63,7 +63,7 @@ public abstract class HangingEntityMixin extends EntityMixin {
     }
 
     @Inject(method = "move", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/item/HangingEntity;remove()V"))
-    private void arclight$hangingBreakByMove(MoverType typeIn, Vec3d pos, CallbackInfo ci) {
+    private void arclight$hangingBreakByMove(MoverType typeIn, Vector3d pos, CallbackInfo ci) {
         if (this.removed) {
             ci.cancel();
             return;
@@ -98,9 +98,7 @@ public abstract class HangingEntityMixin extends EntityMixin {
         d0 += d5 * enumdirection.getXOffset();
         d3 += d5 * enumdirection.getZOffset();
         if (entity != null) {
-            entity.posX = d0;
-            entity.posY = d2;
-            entity.posZ = d3;
+            entity.setRawPosition(d0, d2, d3);
         }
         double d7 = width;
         double d8 = height;

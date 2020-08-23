@@ -17,7 +17,6 @@ import net.minecraft.entity.CreatureAttribute;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.boss.dragon.EnderDragonPartEntity;
 import net.minecraft.entity.item.ArmorStandEntity;
 import net.minecraft.entity.item.ItemEntity;
@@ -49,11 +48,9 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.util.Unit;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.ForgeHooks;
 import org.bukkit.Bukkit;
@@ -107,7 +104,6 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
     @Shadow public abstract void setLeftShoulderEntity(CompoundNBT tag);
     @Shadow public abstract CompoundNBT getRightShoulderEntity();
     @Shadow public abstract CompoundNBT getLeftShoulderEntity();
-    @Shadow @Deprecated public abstract BlockPos getBedLocation();
     @Shadow public int experienceLevel;
     @Shadow @Final public PlayerInventory inventory;
     @Shadow public Container openContainer;
@@ -123,16 +119,14 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
     @Shadow public abstract Scoreboard getWorldScoreboard();
     @Shadow protected EnderChestInventory enterChestInventory;
     @Shadow public abstract Either<PlayerEntity.SleepResult, Unit> trySleep(BlockPos at);
-    @Shadow public abstract void startSleeping(BlockPos p_213342_1_);
     @Shadow public int sleepTimer;
     // @formatter:on
 
     public boolean fauxSleeping;
-    public String spawnWorld = "";
     public int oldLevel;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void arclight$init(World worldIn, GameProfile gameProfileIn, CallbackInfo ci) {
+    private void arclight$init(World p_i241920_1_, BlockPos p_i241920_2_, float p_i241920_3_, GameProfile p_i241920_4_, CallbackInfo ci) {
         oldLevel = -1;
         ((FoodStatsBridge) this.foodStats).bridge$setEntityHuman((PlayerEntity) (Object) this);
         ((IInventoryBridge) this.enterChestInventory).setOwner(this.getBukkitEntity());
