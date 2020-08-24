@@ -165,36 +165,6 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
             }
         }
         modifyConstructor(targetClassName, targetClass);
-        if (targetClassName.equals("net.minecraft.entity.projectile.LlamaSpitEntity")) {
-            for (FieldNode node : targetClass.fields) {
-                if (node.name.equals("field_190539_a")) {
-                    node.desc = "Lnet/minecraft/entity/LivingEntity;";
-                }
-            }
-            for (MethodNode node : targetClass.methods) {
-                ListIterator<AbstractInsnNode> iterator = node.instructions.iterator();
-                while (iterator.hasNext()) {
-                    AbstractInsnNode insnNode = iterator.next();
-                    if (insnNode instanceof FieldInsnNode) {
-                        FieldInsnNode fieldInsnNode = (FieldInsnNode) insnNode;
-                        if (fieldInsnNode.getOpcode() == Opcodes.GETFIELD || fieldInsnNode.getOpcode() == Opcodes.PUTFIELD) {
-                            if (fieldInsnNode.name.equals("field_190539_a")) {
-                                fieldInsnNode.desc = "Lnet/minecraft/entity/LivingEntity;";
-                                if (iterator.hasNext()) {
-                                    AbstractInsnNode next = iterator.next();
-                                    if (next.getOpcode() == Opcodes.INVOKEVIRTUAL && ((MethodInsnNode) next).name.equals("func_110124_au")
-                                        && ((MethodInsnNode) next).desc.equals("()Ljava/util/UUID;")) {
-                                        ((MethodInsnNode) next).owner = "net/minecraft/entity/LivingEntity";
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            FieldNode node = new FieldNode(Opcodes.ACC_PUBLIC, "field_190539_a", "Lnet/minecraft/entity/passive/horse/LlamaEntity;", null, null);
-            targetClass.fields.add(node);
-        }
         if (targetClassName.equals("net.minecraft.world.chunk.Chunk")) {
             for (FieldNode field : targetClass.fields) {
                 if (field.name.equals("$$world")) {

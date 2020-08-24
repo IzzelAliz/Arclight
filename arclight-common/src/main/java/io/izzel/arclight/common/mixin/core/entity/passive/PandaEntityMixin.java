@@ -24,7 +24,7 @@ public abstract class PandaEntityMixin extends AnimalEntityMixin {
     @Overwrite
     protected void updateEquipmentIfNeeded(ItemEntity itemEntity) {
         boolean cancel = this.getItemStackFromSlot(EquipmentSlotType.MAINHAND).isEmpty() && PANDA_ITEMS.test(itemEntity);
-        if (CraftEventFactory.callEntityPickupItemEvent((PandaEntity) (Object) this, itemEntity, 0, cancel).isCancelled()) {
+        if (!CraftEventFactory.callEntityPickupItemEvent((PandaEntity) (Object) this, itemEntity, 0, cancel).isCancelled()) {
             ItemStack itemstack = itemEntity.getItem();
             this.setItemStackToSlot(EquipmentSlotType.MAINHAND, itemstack);
             this.inventoryHandsDropChances[EquipmentSlotType.MAINHAND.getIndex()] = 2.0F;

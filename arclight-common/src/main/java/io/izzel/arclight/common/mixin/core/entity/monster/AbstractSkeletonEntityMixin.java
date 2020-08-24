@@ -25,6 +25,7 @@ public abstract class AbstractSkeletonEntityMixin extends CreatureEntityMixin {
         if (event.isCancelled()) {
             event.getProjectile().remove();
             ci.cancel();
+            return;
         }
         if (event.getProjectile() != ((EntityBridge) arrowEntity).bridge$getBukkitEntity()) {
             this.playSound(SoundEvents.ENTITY_SKELETON_SHOOT, 1.0F, 1.0F / (this.getRNG().nextFloat() * 0.4F + 0.8F));

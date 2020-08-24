@@ -170,6 +170,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public abstract void applyKnockback(float strength, double ratioX, double ratioZ);
     @Shadow protected abstract void damageArmor(DamageSource damageSource, float damage);
     @Shadow protected abstract void playEquipSound(ItemStack stack);
+    @Shadow public abstract boolean getShouldBeDead();
     // @formatter:on
 
     public int expToDrop;

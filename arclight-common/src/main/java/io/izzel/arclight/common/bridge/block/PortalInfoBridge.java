@@ -2,6 +2,7 @@ package io.izzel.arclight.common.bridge.block;
 
 import net.minecraft.world.server.ServerWorld;
 import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
+import org.jetbrains.annotations.Nullable;
 
 public interface PortalInfoBridge {
 
@@ -11,5 +12,5 @@ public interface PortalInfoBridge {
 
     void bridge$setWorld(ServerWorld world);
 
-    ServerWorld bridge$getWorld();
+    @Nullable ServerWorld bridge$getWorld();
 }

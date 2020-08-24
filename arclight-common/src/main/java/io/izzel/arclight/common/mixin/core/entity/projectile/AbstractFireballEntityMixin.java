@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(AbstractFireballEntity.class)
-public class AbstractFireballEntityMixin {
+public abstract class AbstractFireballEntityMixin extends DamagingProjectileEntityMixin {
 
     @Inject(method = "readAdditional", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/projectile/AbstractFireballEntity;setStack(Lnet/minecraft/item/ItemStack;)V"))
     private void arclight$nonNullItem(CompoundNBT compound, CallbackInfo ci, ItemStack stack) {

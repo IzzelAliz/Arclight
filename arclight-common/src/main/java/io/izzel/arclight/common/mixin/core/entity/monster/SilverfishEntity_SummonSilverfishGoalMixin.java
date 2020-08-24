@@ -34,7 +34,7 @@ public abstract class SilverfishEntity_SummonSilverfishGoalMixin extends Goal {
         if (this.lookForFriends <= 0) {
             World world = this.silverfish.world;
             Random random = this.silverfish.getRNG();
-            BlockPos blockpos = new BlockPos(this.silverfish);
+            BlockPos blockpos = this.silverfish.getPosition();
 
             for (int i = 0; i <= 5 && i >= -5; i = (i <= 0 ? 1 : 0) - i) {
                 for (int j = 0; j <= 10 && j >= -10; j = (j <= 0 ? 1 : 0) - j) {

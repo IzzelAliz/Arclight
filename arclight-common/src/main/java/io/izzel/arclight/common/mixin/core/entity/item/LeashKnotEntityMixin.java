@@ -5,6 +5,7 @@ import net.minecraft.entity.item.LeashKnotEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.play.server.SMountEntityPacket;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.AxisAlignedBB;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -30,13 +31,13 @@ public abstract class LeashKnotEntityMixin extends HangingEntityMixin {
      */
     @SuppressWarnings("ConstantConditions")
     @Overwrite
-    public boolean processInitialInteract(final PlayerEntity entityhuman, final Hand enumhand) {
+    public ActionResultType processInitialInteract(final PlayerEntity entityhuman, final Hand enumhand) {
         if (this.world.isRemote) {
-            return true;
+            return ActionResultType.SUCCESS;
         }
         boolean flag = false;
         final double d0 = 7.0;
-        final List<MobEntity> list = this.world.getEntitiesWithinAABB(MobEntity.class, new AxisAlignedBB(this.posX - 7.0, this.posY - 7.0, this.posZ - 7.0, this.posX + 7.0, this.posY + 7.0, this.posZ + 7.0));
+        final List<MobEntity> list = this.world.getEntitiesWithinAABB(MobEntity.class, new AxisAlignedBB(this.getPosX() - 7.0, this.getPosY() - 7.0, this.getPosZ() - 7.0, this.getPosX() + 7.0, this.getPosY() + 7.0, this.getPosZ() + 7.0));
         for (final MobEntity entityinsentient : list) {
             if (entityinsentient.getLeashHolder() == entityhuman) {
                 if (CraftEventFactory.callPlayerLeashEntityEvent(entityinsentient, (LeashKnotEntity) (Object) this, entityhuman).isCancelled()) {
@@ -62,6 +63,6 @@ public abstract class LeashKnotEntityMixin extends HangingEntityMixin {
                 this.remove();
             }
         }
-        return true;
+        return ActionResultType.CONSUME;
     }
 }

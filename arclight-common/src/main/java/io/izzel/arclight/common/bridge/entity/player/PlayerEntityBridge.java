@@ -11,10 +11,6 @@ public interface PlayerEntityBridge extends LivingEntityBridge {
 
     boolean bridge$isFauxSleeping();
 
-    String bridge$getSpawnWorld();
-
-    void bridge$setSpawnWorld(String world);
-
     @Override
     CraftHumanEntity bridge$getBukkitEntity();
 

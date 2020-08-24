@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 @Mixin(PotionEntity.class)
-public abstract class PotionEntityMixin extends ThrowableEntityMixin {
+public abstract class PotionEntityMixin extends ProjectileItemEntityMixin {
 
     @Redirect(method = "onImpact", at = @At(value = "INVOKE", remap = false, ordinal = 1, target = "Ljava/util/List;isEmpty()Z"))
     private boolean arclight$callEvent(List list) {
@@ -77,7 +77,7 @@ public abstract class PotionEntityMixin extends ThrowableEntityMixin {
                 double d2 = event.getIntensity(victim);
                 for (EffectInstance mobeffect : list) {
                     Effect mobeffectlist = mobeffect.getPotion();
-                    if (!((WorldBridge) this.world).bridge$isPvpMode() && this.getThrower() instanceof ServerPlayerEntity && entityliving2 instanceof ServerPlayerEntity && entityliving2 != this.getThrower()) {
+                    if (!((WorldBridge) this.world).bridge$isPvpMode() && this.func_234616_v_() instanceof ServerPlayerEntity && entityliving2 instanceof ServerPlayerEntity && entityliving2 != this.func_234616_v_()) {
                         int i = Effect.getId(mobeffectlist);
                         if (i == 2 || i == 4 || i == 7 || i == 15 || i == 17 || i == 18) {
                             continue;
@@ -87,7 +87,7 @@ public abstract class PotionEntityMixin extends ThrowableEntityMixin {
                         }
                     }
                     if (mobeffectlist.isInstant()) {
-                        mobeffectlist.affectEntity((PotionEntity) (Object) this, this.getThrower(), entityliving2, mobeffect.getAmplifier(), d2);
+                        mobeffectlist.affectEntity((PotionEntity) (Object) this, this.func_234616_v_(), entityliving2, mobeffect.getAmplifier(), d2);
                     } else {
                         int i = (int) (d2 * mobeffect.getDuration() + 0.5);
                         if (i <= 20) {
@@ -110,7 +110,7 @@ public abstract class PotionEntityMixin extends ThrowableEntityMixin {
         }
     }
 
-    @Inject(method = "extinguishFires", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;extinguishFire(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/util/Direction;)Z"))
+    @Inject(method = "extinguishFires", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;removeBlock(Lnet/minecraft/util/math/BlockPos;Z)Z"))
     private void arclight$entityChangeBlock(BlockPos pos, Direction direction, CallbackInfo ci) {
         if (CraftEventFactory.callEntityChangeBlockEvent((PotionEntity) (Object) this, pos.offset(direction), Blocks.AIR.getDefaultState()).isCancelled()) {
             ci.cancel();

@@ -34,7 +34,7 @@ public abstract class ItemFrameEntityMixin extends HangingEntityMixin {
         if (!itemstack.isEmpty()) {
             itemstack = itemstack.copy();
             itemstack.setCount(1);
-            itemstack.setItemFrame((ItemFrameEntity) (Object) this);
+            itemstack.setAttachedEntity((ItemFrameEntity) (Object) this);
         }
         this.getDataManager().set(ITEM, itemstack);
         if (!itemstack.isEmpty() && playSound) {
@@ -51,9 +51,7 @@ public abstract class ItemFrameEntityMixin extends HangingEntityMixin {
         double locY = blockPosition.getY() + 0.5 - direction.getYOffset() * 0.46875;
         double locZ = blockPosition.getZ() + 0.5 - direction.getZOffset() * 0.46875;
         if (entity != null) {
-            entity.posX = locX;
-            entity.posY = locY;
-            entity.posZ = locZ;
+            entity.setRawPosition(locX, locY, locZ);
         }
         double d2 = width;
         double d3 = height;

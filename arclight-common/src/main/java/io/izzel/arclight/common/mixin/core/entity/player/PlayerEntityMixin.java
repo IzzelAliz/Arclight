@@ -17,6 +17,7 @@ import net.minecraft.entity.CreatureAttribute;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.boss.dragon.EnderDragonPartEntity;
 import net.minecraft.entity.item.ArmorStandEntity;
 import net.minecraft.entity.item.ItemEntity;
@@ -38,7 +39,6 @@ import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.stats.Stat;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.Direction;
 import net.minecraft.util.FoodStats;
 import net.minecraft.util.Hand;
 import net.minecraft.util.HandSide;
@@ -48,6 +48,7 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.util.Unit;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.World;
@@ -132,103 +133,6 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
         ((IInventoryBridge) this.enterChestInventory).setOwner(this.getBukkitEntity());
     }
 
-    private boolean arclight$forceSleep = false;
-    private Object arclight$processSleep = null;
-
-    private Either<PlayerEntity.SleepResult, Unit> getBedResult(BlockPos at, Direction direction) {
-        arclight$processSleep = true;
-        Either<PlayerEntity.SleepResult, Unit> either = this.trySleep(at);
-        arclight$processSleep = null;
-        return either;
-    }
-
-    public Either<PlayerEntity.SleepResult, Unit> sleep(BlockPos at, boolean force) {
-        arclight$forceSleep = force;
-        try {
-            return this.trySleep(at);
-        } finally {
-            arclight$forceSleep = false;
-        }
-    }
-
-    @Inject(method = "trySleep", cancellable = true, at = @At(value = "HEAD"))
-    public void arclight$onSleep(BlockPos at, CallbackInfoReturnable<Either<PlayerEntity.SleepResult, Unit>> cir) {
-        if (arclight$processSleep == null) {
-            Either<PlayerEntity.SleepResult, Unit> result = getBedResult(at, null);
-
-            if (result.left().orElse(null) == PlayerEntity.SleepResult.OTHER_PROBLEM) {
-                cir.setReturnValue(result);
-                return;
-            }
-            if (arclight$forceSleep) {
-                result = Either.right(Unit.INSTANCE);
-            }
-            if (this.bridge$getBukkitEntity() instanceof Player) {
-                result = CraftEventFactory.callPlayerBedEnterEvent((PlayerEntity) (Object) this, at, result);
-                if (result.left().isPresent()) {
-                    cir.setReturnValue(result);
-                    return;
-                }
-            }
-
-            this.startSleeping(at);
-            this.sleepTimer = 0;
-            if (this.world instanceof ServerWorld) {
-                ((ServerWorld) this.world).updateAllPlayersSleepingFlag();
-            }
-            cir.setReturnValue(Either.right(Unit.INSTANCE));
-        }
-    }
-
-    @Inject(method = "trySleep", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;startSleeping(Lnet/minecraft/util/math/BlockPos;)V"))
-    public void arclight$preSleep(BlockPos at, CallbackInfoReturnable<Either<PlayerEntity.SleepResult, Unit>> cir) {
-        if (arclight$processSleep != null) {
-            cir.setReturnValue(Either.right(Unit.INSTANCE));
-        }
-    }
-
-    @Inject(method = "stopSleepInBed", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;sleepTimer:I"))
-    private void arclight$wakeup(boolean flag, boolean flag1, CallbackInfo ci) {
-        BlockPos blockPos = this.getBedPosition().orElse(null);
-        if (this.bridge$getBukkitEntity() instanceof Player) {
-            Player player = (Player) this.bridge$getBukkitEntity();
-            Block bed;
-            if (blockPos != null) {
-                bed = CraftBlock.at(this.world, blockPos);
-            } else {
-                bed = ((WorldBridge) this.world).bridge$getWorld().getBlockAt(player.getLocation());
-            }
-            PlayerBedLeaveEvent event = new PlayerBedLeaveEvent(player, bed, true);
-            Bukkit.getPluginManager().callEvent(event);
-        }
-    }
-
-    @Inject(method = "setSpawnPoint", remap = false, at = @At("RETURN"))
-    private void arclight$updateSpawnpoint(BlockPos pos, boolean p_226560_2_, boolean p_226560_3_, DimensionType dim, CallbackInfo ci) {
-        bridge$setSpawnWorld(pos == null ? "" : this.world.worldInfo.getWorldName());
-    }
-
-    @Inject(method = "startFallFlying", cancellable = true, at = @At("HEAD"))
-    private void arclight$startGlidingEvent(CallbackInfo ci) {
-        if (CraftEventFactory.callToggleGlideEvent((PlayerEntity) (Object) this, true).isCancelled()) {
-            this.setFlag(7, true);
-            this.setFlag(7, false);
-            ci.cancel();
-        }
-    }
-
-    @Inject(method = "stopFallFlying", cancellable = true, at = @At("HEAD"))
-    private void arclight$stopGlidingEvent(CallbackInfo ci) {
-        if (CraftEventFactory.callToggleGlideEvent((PlayerEntity) (Object) this, false).isCancelled()) {
-            ci.cancel();
-        }
-    }
-
-    @Override
-    public Either<PlayerEntity.SleepResult, Unit> bridge$trySleep(BlockPos at, boolean force) {
-        return sleep(at, force);
-    }
-
     @Override
     public boolean bridge$isFauxSleeping() {
         return fauxSleeping;
@@ -268,19 +172,6 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
             }
             cir.setReturnValue(null);
         }
-    }
-
-    @Inject(method = "readAdditional", at = @At("RETURN"))
-    private void arclight$readSpawnWorld(CompoundNBT compound, CallbackInfo ci) {
-        this.spawnWorld = compound.getString("SpawnWorld");
-        if ("".equals(spawnWorld)) {
-            this.spawnWorld = Bukkit.getWorlds().get(0).getName();
-        }
-    }
-
-    @Inject(method = "writeAdditional", at = @At("RETURN"))
-    private void arclight$writeSpawnWorld(CompoundNBT compound, CallbackInfo ci) {
-        compound.putString("SpawnWorld", this.spawnWorld);
     }
 
     /**
@@ -365,7 +256,7 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
     public void attackTargetEntityWithCurrentItem(final Entity entity) {
         if (!net.minecraftforge.common.ForgeHooks.onPlayerAttackTarget((PlayerEntity) (Object) this, entity)) return;
         if (entity.canBeAttackedWithItem() && !entity.hitByEntity((PlayerEntity) (Object) this)) {
-            float f = (float) this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue();
+            float f = (float) this.getAttributeValue(Attributes.ATTACK_DAMAGE);
             float f2;
             if (entity instanceof LivingEntity) {
                 f2 = EnchantmentHelper.getModifierForCreature(this.getHeldItemMainhand(), ((LivingEntity) entity).getCreatureAttribute());
@@ -382,7 +273,7 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
                 final byte b0 = 0;
                 int i = b0 + EnchantmentHelper.getKnockbackModifier((PlayerEntity) (Object) this);
                 if (this.isSprinting() && flag) {
-                    this.world.playSound(null, this.posX, this.posY, this.posZ, SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, this.getSoundCategory(), 1.0f, 1.0f);
+                    this.world.playSound(null, this.getPosX(), this.getPosY(), this.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, this.getSoundCategory(), 1.0f, 1.0f);
                     ++i;
                     flag2 = true;
                 }
@@ -415,12 +306,12 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
                         }
                     }
                 }
-                final Vec3d vec3d = entity.getMotion();
+                final Vector3d vec3d = entity.getMotion();
                 final boolean flag6 = entity.attackEntityFrom(DamageSource.causePlayerDamage((PlayerEntity) (Object) this), f);
                 if (flag6) {
                     if (i > 0) {
                         if (entity instanceof LivingEntity) {
-                            ((LivingEntity) entity).knockBack((PlayerEntity) (Object) this, i * 0.5f, MathHelper.sin(this.rotationYaw * 0.017453292f), -MathHelper.cos(this.rotationYaw * 0.017453292f));
+                            ((LivingEntity) entity).applyKnockback(i * 0.5f, MathHelper.sin(this.rotationYaw * 0.017453292f), -MathHelper.cos(this.rotationYaw * 0.017453292f));
                         } else {
                             entity.addVelocity(-MathHelper.sin(this.rotationYaw * 0.017453292f) * i * 0.5f, 0.1, MathHelper.cos(this.rotationYaw * 0.017453292f) * i * 0.5f);
                         }
@@ -432,10 +323,10 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
                         final List<LivingEntity> list = this.world.getEntitiesWithinAABB(LivingEntity.class, entity.getBoundingBox().grow(1.0, 0.25, 1.0));
                         for (final LivingEntity entityliving : list) {
                             if (entityliving != (Object) this && entityliving != entity && !this.isOnSameTeam(entityliving) && (!(entityliving instanceof ArmorStandEntity) || !((ArmorStandEntity) entityliving).hasMarker()) && this.getDistanceSq(entityliving) < 9.0 && entityliving.attackEntityFrom(((DamageSourceBridge) DamageSource.causePlayerDamage((PlayerEntity) (Object) this)).bridge$sweep(), f5)) {
-                                entityliving.knockBack((PlayerEntity) (Object) this, 0.4f, MathHelper.sin(this.rotationYaw * 0.017453292f), -MathHelper.cos(this.rotationYaw * 0.017453292f));
+                                entityliving.applyKnockback(0.4f, MathHelper.sin(this.rotationYaw * 0.017453292f), -MathHelper.cos(this.rotationYaw * 0.017453292f));
                             }
                         }
-                        this.world.playSound(null, this.posX, this.posY, this.posZ, SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, this.getSoundCategory(), 1.0f, 1.0f);
+                        this.world.playSound(null, this.getPosX(), this.getPosY(), this.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, this.getSoundCategory(), 1.0f, 1.0f);
                         this.spawnSweepParticles();
                     }
                     if (entity instanceof ServerPlayerEntity && entity.velocityChanged) {
@@ -456,14 +347,14 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
                         }
                     }
                     if (flag3) {
-                        this.world.playSound(null, this.posX, this.posY, this.posZ, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, this.getSoundCategory(), 1.0f, 1.0f);
+                        this.world.playSound(null, this.getPosX(), this.getPosY(), this.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, this.getSoundCategory(), 1.0f, 1.0f);
                         this.onCriticalHit(entity);
                     }
                     if (!flag3 && !flag4) {
                         if (flag) {
-                            this.world.playSound(null, this.posX, this.posY, this.posZ, SoundEvents.ENTITY_PLAYER_ATTACK_STRONG, this.getSoundCategory(), 1.0f, 1.0f);
+                            this.world.playSound(null, this.getPosX(), this.getPosY(), this.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_STRONG, this.getSoundCategory(), 1.0f, 1.0f);
                         } else {
-                            this.world.playSound(null, this.posX, this.posY, this.posZ, SoundEvents.ENTITY_PLAYER_ATTACK_WEAK, this.getSoundCategory(), 1.0f, 1.0f);
+                            this.world.playSound(null, this.getPosX(), this.getPosY(), this.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_WEAK, this.getSoundCategory(), 1.0f, 1.0f);
                         }
                     }
                     if (f2 > 0.0f) {
@@ -499,12 +390,12 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
                         }
                         if (this.world instanceof ServerWorld && f6 > 2.0f) {
                             final int k = (int) (f6 * 0.5);
-                            ((ServerWorld) this.world).spawnParticle(ParticleTypes.DAMAGE_INDICATOR, entity.posX, entity.posY + entity.getHeight() * 0.5f, entity.posZ, k, 0.1, 0.0, 0.1, 0.2);
+                            ((ServerWorld) this.world).spawnParticle(ParticleTypes.DAMAGE_INDICATOR, entity.getPosX(), entity.getPosY() + entity.getHeight() * 0.5f, entity.getPosZ(), k, 0.1, 0.0, 0.1, 0.2);
                         }
                     }
                     this.addExhaustion(0.1f);
                 } else {
-                    this.world.playSound(null, this.posX, this.posY, this.posZ, SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, this.getSoundCategory(), 1.0f, 1.0f);
+                    this.world.playSound(null, this.getPosX(), this.getPosY(), this.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, this.getSoundCategory(), 1.0f, 1.0f);
                     if (flag5) {
                         entity.extinguish();
                     }
@@ -516,15 +407,54 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
         }
     }
 
+    protected transient boolean arclight$forceSleep;
+
+    public Either<PlayerEntity.SleepResult, Unit> sleep(BlockPos at, boolean force) {
+        this.arclight$forceSleep = force;
+        return this.trySleep(at);
+    }
+
     @Override
-    public void bridge$setSpawnWorld(String world) {
-        this.spawnWorld = world;
+    public Either<PlayerEntity.SleepResult, Unit> bridge$trySleep(BlockPos at, boolean force) {
+        return sleep(at, force);
+    }
+
+    @Inject(method = "stopSleepInBed", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;sleepTimer:I"))
+    private void arclight$wakeup(boolean flag, boolean flag1, CallbackInfo ci) {
+        BlockPos blockPos = this.getBedPosition().orElse(null);
+        if (this.bridge$getBukkitEntity() instanceof Player) {
+            Player player = (Player) this.bridge$getBukkitEntity();
+            Block bed;
+            if (blockPos != null) {
+                bed = CraftBlock.at(this.world, blockPos);
+            } else {
+                bed = ((WorldBridge) this.world).bridge$getWorld().getBlockAt(player.getLocation());
+            }
+            PlayerBedLeaveEvent event = new PlayerBedLeaveEvent(player, bed, true);
+            Bukkit.getPluginManager().callEvent(event);
+        }
     }
 
     @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setFlag(IZ)V"))
     private void arclight$toggleGlide(PlayerEntity playerEntity, int flag, boolean set) {
         if (playerEntity.getFlag(flag) != set && !CraftEventFactory.callToggleGlideEvent((PlayerEntity) (Object) this, set).isCancelled()) {
             playerEntity.setFlag(flag, set);
+        }
+    }
+
+    @Inject(method = "startFallFlying", cancellable = true, at = @At("HEAD"))
+    private void arclight$startGlidingEvent(CallbackInfo ci) {
+        if (CraftEventFactory.callToggleGlideEvent((PlayerEntity) (Object) this, true).isCancelled()) {
+            this.setFlag(7, true);
+            this.setFlag(7, false);
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "stopFallFlying", cancellable = true, at = @At("HEAD"))
+    private void arclight$stopGlidingEvent(CallbackInfo ci) {
+        if (CraftEventFactory.callToggleGlideEvent((PlayerEntity) (Object) this, false).isCancelled()) {
+            ci.cancel();
         }
     }
 
@@ -549,7 +479,7 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
             if (entity instanceof TameableEntity) {
                 ((TameableEntity) entity).setOwnerId(this.entityUniqueID);
             }
-            entity.setPosition(this.posX, this.posY + 0.699999988079071, this.posZ);
+            entity.setPosition(this.getPosX(), this.getPosY() + 0.699999988079071, this.getPosZ());
             return ((ServerWorldBridge) this.world).bridge$addEntitySerialized(entity, CreatureSpawnEvent.SpawnReason.SHOULDER_ENTITY);
         }).orElse(true);
     }
@@ -561,10 +491,5 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
     @Override
     public CraftHumanEntity bridge$getBukkitEntity() {
         return (CraftHumanEntity) ((InternalEntityBridge) this).internal$getBukkitEntity();
-    }
-
-    @Override
-    public String bridge$getSpawnWorld() {
-        return spawnWorld;
     }
 }

@@ -5,6 +5,7 @@ import io.izzel.arclight.common.mixin.core.entity.MobEntityMixin;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.monster.SlimeEntity;
+import net.minecraft.util.text.ITextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.entity.Slime;
@@ -35,30 +36,36 @@ public abstract class SlimeEntityMixin extends MobEntityMixin {
     @Override
     public void remove(boolean keepData) {
         int i = this.getSlimeSize();
-        if (!this.world.isRemote && i > 1 && this.getHealth() <= 0.0f) {
-            int j = 2 + this.rand.nextInt(3);
-            SlimeSplitEvent event = new SlimeSplitEvent((Slime) this.getBukkitEntity(), j);
+        if (!this.world.isRemote && i > 1 && this.getShouldBeDead() && !this.removed) {
+            ITextComponent itextcomponent = this.getCustomName();
+            boolean flag = this.isAIDisabled();
+            float f = (float) i / 4.0F;
+            int j = i / 2;
+            int k = 2 + this.rand.nextInt(3);
+
+            SlimeSplitEvent event = new SlimeSplitEvent((Slime) this.getBukkitEntity(), k);
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled() || event.getCount() <= 0) {
                 super.remove(keepData);
                 return;
             }
-            j = event.getCount();
-            List<LivingEntity> slimes = new ArrayList<>(j);
-            for (int k = 0; k < j; ++k) {
-                float f = (k % 2 - 0.5f) * i / 4.0f;
-                float f2 = (k / 2 - 0.5f) * i / 4.0f;
-                SlimeEntity entityslime = this.getType().create(this.world);
-                if (this.hasCustomName()) {
-                    entityslime.setCustomName(this.getCustomName());
-                }
+            k = event.getCount();
+            List<LivingEntity> slimes = new ArrayList<>(k);
+
+            for (int l = 0; l < k; ++l) {
+                float f1 = ((float) (l % 2) - 0.5F) * f;
+                float f2 = ((float) (l / 2) - 0.5F) * f;
+                SlimeEntity slimeentity = this.getType().create(this.world);
                 if (this.isNoDespawnRequired()) {
-                    entityslime.enablePersistence();
+                    slimeentity.enablePersistence();
                 }
-                entityslime.setInvulnerable(this.isInvulnerable());
-                entityslime.setSlimeSize(i / 2, true);
-                entityslime.setLocationAndAngles(this.posX + f, this.posY + 0.5, this.posZ + f2, this.rand.nextFloat() * 360.0f, 0.0f);
-                slimes.add(entityslime);
+
+                slimeentity.setCustomName(itextcomponent);
+                slimeentity.setNoAI(flag);
+                slimeentity.setInvulnerable(this.isInvulnerable());
+                slimeentity.setSlimeSize(j, true);
+                slimeentity.setLocationAndAngles(this.getPosX() + (double) f1, this.getPosY() + 0.5D, this.getPosZ() + (double) f2, this.rand.nextFloat() * 360.0F, 0.0F);
+                slimes.add(slimeentity);
             }
             if (CraftEventFactory.callEntityTransformEvent((SlimeEntity) (Object) this, slimes, EntityTransformEvent.TransformReason.SPLIT).isCancelled()) {
                 return;

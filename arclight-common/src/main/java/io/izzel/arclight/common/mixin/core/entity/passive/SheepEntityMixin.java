@@ -18,12 +18,12 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 @Mixin(SheepEntity.class)
 public abstract class SheepEntityMixin extends AnimalEntityMixin {
 
-    @Inject(method = "func_213612_dV", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/SheepEntity;entityDropItem(Lnet/minecraft/util/IItemProvider;I)Lnet/minecraft/entity/item/ItemEntity;"))
+    @Inject(method = "shear", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/SheepEntity;entityDropItem(Lnet/minecraft/util/IItemProvider;I)Lnet/minecraft/entity/item/ItemEntity;"))
     private void arclight$forceDrop(CallbackInfo ci) {
         forceDrops = true;
     }
 
-    @Inject(method = "func_213612_dV", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/entity/passive/SheepEntity;entityDropItem(Lnet/minecraft/util/IItemProvider;I)Lnet/minecraft/entity/item/ItemEntity;"))
+    @Inject(method = "shear", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/entity/passive/SheepEntity;entityDropItem(Lnet/minecraft/util/IItemProvider;I)Lnet/minecraft/entity/item/ItemEntity;"))
     private void arclight$forceDropReset(CallbackInfo ci) {
         forceDrops = false;
     }

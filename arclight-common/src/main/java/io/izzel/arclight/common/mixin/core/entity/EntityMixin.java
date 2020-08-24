@@ -191,6 +191,10 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow protected BlockPos field_242271_ac;
     @Shadow protected abstract Vector3d func_241839_a(Direction.Axis p_241839_1_, TeleportationRepositioner.Result p_241839_2_);
     @Shadow public abstract EntitySize getSize(Pose poseIn);
+    @Shadow protected abstract boolean func_233566_aG_();
+    @Shadow public abstract boolean isInLava();
+    @Shadow protected abstract void setOnFireFromLava();
+    @Shadow protected boolean firstUpdate;
     // @formatter:on
 
     private static final int CURRENT_LEVEL = 2;
@@ -862,7 +866,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                 ServerWorld worldFinal = world = ((CraftWorld) event.getTo().getWorld()).getHandle();
                 blockpos1 = new BlockPos(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
 
-                return this.a(world, blockpos1, flag2, event.getSearchRadius(), event.getCanCreatePortal(), event.getCreationRadius()).map((p_242275_2_) -> {
+                return this.findOrCreatePortal(world, blockpos1, flag2, event.getSearchRadius(), event.getCanCreatePortal(), event.getCreationRadius()).map((p_242275_2_) -> {
                     BlockState blockstate = this.world.getBlockState(this.field_242271_ac);
                     Direction.Axis direction$axis;
                     Vector3d vector3d;
@@ -911,6 +915,10 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     }
 
     protected Optional<TeleportationRepositioner.Result> a(ServerWorld serverWorld, BlockPos pos, boolean flag, int searchRadius, boolean canCreatePortal, int createRadius) {
+        return findOrCreatePortal(serverWorld, pos, flag, searchRadius, canCreatePortal, createRadius);
+    }
+
+    protected Optional<TeleportationRepositioner.Result> findOrCreatePortal(ServerWorld serverWorld, BlockPos pos, boolean flag, int searchRadius, boolean canCreatePortal, int createRadius) {
         return ((TeleporterBridge) serverWorld.getDefaultTeleporter()).bridge$findPortal(pos, searchRadius);
     }
 }

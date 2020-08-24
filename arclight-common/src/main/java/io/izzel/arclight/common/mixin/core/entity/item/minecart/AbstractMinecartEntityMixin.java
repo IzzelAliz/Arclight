@@ -3,8 +3,8 @@ package io.izzel.arclight.common.mixin.core.entity.item.minecart;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.mixin.core.entity.EntityMixin;
+import net.minecraft.block.AbstractRailBlock;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.PoweredRailBlock;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -17,7 +17,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityPredicates;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -59,6 +59,7 @@ public abstract class AbstractMinecartEntityMixin extends EntityMixin {
     @Shadow public abstract void onActivatorRailPass(int x, int y, int z, boolean receivingPower);
     @Shadow private boolean isInReverse;
     @Shadow public abstract AbstractMinecartEntity.Type getMinecartType();
+    @Shadow public abstract boolean canUseRail();
     // @formatter:on
 
     public boolean slowWhenEmpty = true;
@@ -130,9 +131,9 @@ public abstract class AbstractMinecartEntityMixin extends EntityMixin {
      */
     @Overwrite
     public void tick() {
-        double prevX = this.posX;
-        double prevY = this.posY;
-        double prevZ = this.posZ;
+        double prevX = this.getPosX();
+        double prevY = this.getPosY();
+        double prevZ = this.getPosZ();
         float prevYaw = this.rotationYaw;
         float prevPitch = this.rotationPitch;
         if (this.getRollingAmplitude() > 0) {
@@ -141,14 +142,14 @@ public abstract class AbstractMinecartEntityMixin extends EntityMixin {
         if (this.getDamage() > 0.0f) {
             this.setDamage(this.getDamage() - 1.0f);
         }
-        if (this.posY < -64.0) {
+        if (this.getPosY() < -64.0) {
             this.outOfWorld();
         }
         if (this.world.isRemote) {
             if (this.turnProgress > 0) {
-                double d0 = this.posX + (this.minecartX - this.posX) / this.turnProgress;
-                double d2 = this.posY + (this.minecartY - this.posY) / this.turnProgress;
-                double d3 = this.posZ + (this.minecartZ - this.posZ) / this.turnProgress;
+                double d0 = this.getPosX() + (this.minecartX - this.getPosX()) / this.turnProgress;
+                double d2 = this.getPosY() + (this.minecartY - this.getPosY()) / this.turnProgress;
+                double d3 = this.getPosZ() + (this.minecartZ - this.getPosZ()) / this.turnProgress;
                 double d4 = MathHelper.wrapDegrees(this.minecartYaw - this.rotationYaw);
                 this.rotationYaw += (float) (d4 / this.turnProgress);
                 this.rotationPitch += (float) ((this.minecartPitch - this.rotationPitch) / this.turnProgress);
@@ -156,38 +157,38 @@ public abstract class AbstractMinecartEntityMixin extends EntityMixin {
                 this.setPosition(d0, d2, d3);
                 this.setRotation(this.rotationYaw, this.rotationPitch);
             } else {
-                this.setPosition(this.posX, this.posY, this.posZ);
+                this.setPosition(this.getPosX(), this.getPosY(), this.getPosZ());
                 this.setRotation(this.rotationYaw, this.rotationPitch);
             }
         } else {
             /*
-            this.prevPosX = this.posX;
-            this.prevPosY = this.posY;
-            this.prevPosZ = this.posZ;
+            this.prevPosX = this.getPosX();
+            this.prevPosY = this.getPosY();
+            this.prevPosZ = this.getPosZ();
              */
             if (!this.hasNoGravity()) {
                 this.setMotion(this.getMotion().add(0.0, -0.04, 0.0));
             }
-            int i = MathHelper.floor(this.posX);
-            int j = MathHelper.floor(this.posY);
-            int k = MathHelper.floor(this.posZ);
+            int i = MathHelper.floor(this.getPosX());
+            int j = MathHelper.floor(this.getPosY());
+            int k = MathHelper.floor(this.getPosZ());
             if (this.world.getBlockState(new BlockPos(i, j - 1, k)).isIn(BlockTags.RAILS)) {
                 --j;
             }
             BlockPos blockposition = new BlockPos(i, j, k);
-            BlockState iblockdata = this.world.getBlockState(blockposition);
-            if (iblockdata.isIn(BlockTags.RAILS)) {
-                this.moveAlongTrack(blockposition, iblockdata);
-                if (iblockdata.getBlock() == Blocks.ACTIVATOR_RAIL) {
-                    this.onActivatorRailPass(i, j, k, iblockdata.get(PoweredRailBlock.POWERED));
+            BlockState blockstate = this.world.getBlockState(blockposition);
+            if (this.canUseRail() && AbstractRailBlock.isRail(blockstate)) {
+                this.moveAlongTrack(blockposition, blockstate);
+                if (blockstate.getBlock() instanceof PoweredRailBlock && ((PoweredRailBlock) blockstate.getBlock()).isActivatorRail()) {
+                    this.onActivatorRailPass(i, j, k, blockstate.get(PoweredRailBlock.POWERED));
                 }
             } else {
                 this.moveDerailedMinecart();
             }
             this.doBlockCollisions();
             this.rotationPitch = 0.0f;
-            double d5 = this.prevPosX - this.posX;
-            double d6 = this.prevPosZ - this.posZ;
+            double d5 = this.prevPosX - this.getPosX();
+            double d6 = this.prevPosZ - this.getPosZ();
             if (d5 * d5 + d6 * d6 > 0.001) {
                 this.rotationYaw = (float) (MathHelper.atan2(d6, d5) * 180.0 / 3.141592653589793);
                 if (this.isInReverse) {
@@ -202,7 +203,7 @@ public abstract class AbstractMinecartEntityMixin extends EntityMixin {
             this.setRotation(this.rotationYaw, this.rotationPitch);
             org.bukkit.World bworld = ((WorldBridge) this.world).bridge$getWorld();
             Location from = new Location(bworld, prevX, prevY, prevZ, prevYaw, prevPitch);
-            Location to = new Location(bworld, this.posX, this.posY, this.posZ, this.rotationYaw, this.rotationPitch);
+            Location to = new Location(bworld, this.getPosX(), this.getPosY(), this.getPosZ(), this.rotationYaw, this.rotationPitch);
             Vehicle vehicle = (Vehicle) this.getBukkitEntity();
             Bukkit.getPluginManager().callEvent(new VehicleUpdateEvent(vehicle));
             if (!from.equals(to)) {
@@ -242,7 +243,12 @@ public abstract class AbstractMinecartEntityMixin extends EntityMixin {
                     }
                 }
             }
-            this.handleWaterMovement();
+            this.func_233566_aG_();
+            if (this.isInLava()) {
+                this.setOnFireFromLava();
+                this.fallDistance *= 0.5F;
+            }
+            this.firstUpdate = false;
         }
     }
 
@@ -262,14 +268,14 @@ public abstract class AbstractMinecartEntityMixin extends EntityMixin {
     @Overwrite
     protected void moveDerailedMinecart() {
         final double d0 = this.getMaximumSpeed();
-        final Vec3d vec3d = this.getMotion();
+        final Vector3d vec3d = this.getMotion();
         this.setMotion(MathHelper.clamp(vec3d.x, -d0, d0), vec3d.y, MathHelper.clamp(vec3d.z, -d0, d0));
         if (this.onGround) {
-            this.setMotion(new Vec3d(this.getMotion().x * this.derailedX, this.getMotion().y * this.derailedY, this.getMotion().z * this.derailedZ));
+            this.setMotion(new Vector3d(this.getMotion().x * this.derailedX, this.getMotion().y * this.derailedY, this.getMotion().z * this.derailedZ));
         }
         this.move(MoverType.SELF, this.getMotion());
         if (!this.onGround) {
-            this.setMotion(new Vec3d(this.getMotion().x * this.flyingX, this.getMotion().y * this.flyingY, this.getMotion().z * this.flyingZ));
+            this.setMotion(new Vector3d(this.getMotion().x * this.flyingX, this.getMotion().y * this.flyingY, this.getMotion().z * this.flyingZ));
         }
     }
 

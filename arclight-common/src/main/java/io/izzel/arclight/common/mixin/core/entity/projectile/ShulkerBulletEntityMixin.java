@@ -7,9 +7,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.ShulkerBulletEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.EntityRayTraceResult;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -23,7 +21,6 @@ import javax.annotation.Nullable;
 public abstract class ShulkerBulletEntityMixin extends EntityMixin {
 
     // @formatter:off
-    @Shadow private LivingEntity owner;
     @Shadow private Entity target;
     @Shadow @Nullable private Direction direction;
     @Shadow protected abstract void selectNextMoveDirection(@Nullable Direction.Axis p_184569_1_);
@@ -34,22 +31,9 @@ public abstract class ShulkerBulletEntityMixin extends EntityMixin {
         this.projectileSource = ((LivingEntityBridge) ownerIn).bridge$getBukkitEntity();
     }
 
-    @Inject(method = "bulletHit", at = @At("HEAD"))
-    private void arclight$projectileHit(RayTraceResult result, CallbackInfo ci) {
-        CraftEventFactory.callProjectileHitEvent((ShulkerBulletEntity) (Object) this, result);
-    }
-
-    @Inject(method = "bulletHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;addPotionEffect(Lnet/minecraft/potion/EffectInstance;)Z"))
-    private void arclight$reason(RayTraceResult result, CallbackInfo ci) {
-        ((LivingEntityBridge) ((EntityRayTraceResult) result).getEntity()).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.ATTACK);
-    }
-
-    public LivingEntity getShooter() {
-        return this.owner;
-    }
-
-    public void setShooter(final LivingEntity e) {
-        this.owner = e;
+    @Inject(method = "onEntityHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;addPotionEffect(Lnet/minecraft/potion/EffectInstance;)Z"))
+    private void arclight$reason(EntityRayTraceResult result, CallbackInfo ci) {
+        ((LivingEntityBridge) result.getEntity()).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.ATTACK);
     }
 
     public Entity getTarget() {
