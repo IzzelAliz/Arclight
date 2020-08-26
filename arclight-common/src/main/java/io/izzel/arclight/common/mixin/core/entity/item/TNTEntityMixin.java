@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mixin.core.entity.item;
 
-import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.common.mixin.core.entity.EntityMixin;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -45,11 +44,6 @@ public abstract class TNTEntityMixin extends EntityMixin {
      */
     @Overwrite
     public void tick() {
-        if (ArclightVersion.lesserThan(ArclightVersion.v1_15)) {
-            this.prevPosX = this.posX;
-            this.prevPosY = this.posY;
-            this.prevPosZ = this.posZ;
-        }
         if (!this.hasNoGravity()) {
             this.setMotion(this.getMotion().add(0.0D, -0.04D, 0.0D));
         }
@@ -67,11 +61,12 @@ public abstract class TNTEntityMixin extends EntityMixin {
             }
             this.remove();
         } else {
-            this.handleWaterMovement();
+            this.func_233566_aG_();
             if (this.world.isRemote) {
-                this.world.addParticle(ParticleTypes.SMOKE, this.posX, this.posY + 0.5D, this.posZ, 0.0D, 0.0D, 0.0D);
+                this.world.addParticle(ParticleTypes.SMOKE, this.getPosX(), this.getPosY() + 0.5D, this.getPosZ(), 0.0D, 0.0D, 0.0D);
             }
         }
+
     }
 
     /**
@@ -83,7 +78,7 @@ public abstract class TNTEntityMixin extends EntityMixin {
         ExplosionPrimeEvent event = new ExplosionPrimeEvent((Explosive) this.getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
-            this.world.createExplosion((TNTEntity) (Object) this, this.posX, this.posY + this.getHeight() / 16.0f, this.posZ, event.getRadius(), event.getFire(), Explosion.Mode.BREAK);
+            this.world.createExplosion((TNTEntity) (Object) this, this.getPosX(), this.getPosY() + this.getHeight() / 16.0f, this.getPosZ(), event.getRadius(), event.getFire(), Explosion.Mode.BREAK);
         }
     }
 }

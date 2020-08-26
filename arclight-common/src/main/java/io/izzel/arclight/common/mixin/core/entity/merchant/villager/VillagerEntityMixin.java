@@ -6,6 +6,7 @@ import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.entity.monster.WitchEntity;
 import net.minecraft.entity.passive.IronGolemEntity;
 import net.minecraft.item.MerchantOffer;
+import net.minecraft.world.server.ServerWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.entity.Villager;
@@ -39,17 +40,17 @@ public abstract class VillagerEntityMixin extends AbstractVillagerEntityMixin {
         }
     }
 
-    @Inject(method = "onStruckByLightning", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
-    private void arclight$transformWitch(LightningBoltEntity lightningBolt, CallbackInfo ci, WitchEntity witchEntity) {
+    @Inject(method = "func_241841_a", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;func_242417_l(Lnet/minecraft/entity/Entity;)V"))
+    private void arclight$transformWitch(ServerWorld serverWorld, LightningBoltEntity lightningBolt, CallbackInfo ci, WitchEntity witchEntity) {
         if (CraftEventFactory.callEntityTransformEvent((VillagerEntity) (Object) this, witchEntity, EntityTransformEvent.TransformReason.LIGHTNING).isCancelled()) {
             ci.cancel();
         } else {
-            ((WorldBridge) this.world).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.LIGHTNING);
+            ((WorldBridge) serverWorld).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.LIGHTNING);
         }
     }
 
-    @Inject(method = "trySpawnGolem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
-    private void arclight$ironGolemReason(CallbackInfoReturnable<IronGolemEntity> cir) {
-        ((WorldBridge) this.world).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.VILLAGE_DEFENSE);
+    @Inject(method = "trySpawnGolem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;func_242417_l(Lnet/minecraft/entity/Entity;)V"))
+    private void arclight$ironGolemReason(ServerWorld world, CallbackInfoReturnable<IronGolemEntity> cir) {
+        ((WorldBridge) world).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.VILLAGE_DEFENSE);
     }
 }

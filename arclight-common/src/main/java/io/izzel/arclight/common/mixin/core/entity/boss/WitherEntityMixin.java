@@ -38,7 +38,7 @@ public abstract class WitherEntityMixin extends CreatureEntityMixin {
     @Shadow public abstract int getWatchedTargetId(int head);
     @Shadow public abstract void updateWatchedTargetId(int targetOffset, int newId);
     @Shadow protected abstract void launchWitherSkullToEntity(int p_82216_1_, LivingEntity p_82216_2_);
-    @Shadow @Final private static EntityPredicate field_213798_bB;
+    @Shadow @Final private static EntityPredicate ENEMY_CONDITION;
     @Shadow private int blockBreakCounter;
     @Shadow @Final public ServerBossInfo bossInfo;
     // @formatter:on
@@ -56,9 +56,11 @@ public abstract class WitherEntityMixin extends CreatureEntityMixin {
                 ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), 7.0F, false);
                 Bukkit.getPluginManager().callEvent(event);
                 if (!event.isCancelled()) {
-                    this.world.createExplosion((WitherEntity) (Object) this, this.posX, this.getPosYEye(), this.posZ, event.getRadius(), event.getFire(), explosion$mode);
+                    this.world.createExplosion((WitherEntity) (Object) this, this.getPosX(), this.getPosYEye(), this.getPosZ(), event.getRadius(), event.getFire(), explosion$mode);
                 }
-                this.world.playBroadcastSound(1023, new BlockPos((WitherEntity) (Object) this), 0);
+                if (!this.isSilent()) {
+                    this.world.playBroadcastSound(1023, this.getPosition(), 0);
+                }
             }
 
             this.setInvulTime(j1);
@@ -80,9 +82,9 @@ public abstract class WitherEntityMixin extends CreatureEntityMixin {
                         if (k3 > 15) {
                             float f = 10.0F;
                             float f1 = 5.0F;
-                            double d0 = MathHelper.nextDouble(this.rand, this.posX - 10.0D, this.posX + 10.0D);
-                            double d1 = MathHelper.nextDouble(this.rand, this.posY - 5.0D, this.posY + 5.0D);
-                            double d2 = MathHelper.nextDouble(this.rand, this.posZ - 10.0D, this.posZ + 10.0D);
+                            double d0 = MathHelper.nextDouble(this.rand, this.getPosX() - 10.0D, this.getPosX() + 10.0D);
+                            double d1 = MathHelper.nextDouble(this.rand, this.getPosY() - 5.0D, this.getPosY() + 5.0D);
+                            double d2 = MathHelper.nextDouble(this.rand, this.getPosZ() - 10.0D, this.getPosZ() + 10.0D);
                             this.launchWitherSkullToCoords(i + 1, d0, d1, d2, true);
                             this.idleHeadUpdates[i - 1] = 0;
                         }
@@ -103,7 +105,7 @@ public abstract class WitherEntityMixin extends CreatureEntityMixin {
                             this.updateWatchedTargetId(i, 0);
                         }
                     } else {
-                        List<LivingEntity> list = this.world.getTargettableEntitiesWithinAABB(LivingEntity.class, field_213798_bB, (WitherEntity) (Object) this, this.getBoundingBox().grow(20.0D, 8.0D, 20.0D));
+                        List<LivingEntity> list = this.world.getTargettableEntitiesWithinAABB(LivingEntity.class, ENEMY_CONDITION, (WitherEntity) (Object) this, this.getBoundingBox().grow(20.0D, 8.0D, 20.0D));
 
                         for (int j2 = 0; j2 < 10 && !list.isEmpty(); ++j2) {
                             LivingEntity livingentity = list.get(this.rand.nextInt(list.size()));
@@ -137,9 +139,9 @@ public abstract class WitherEntityMixin extends CreatureEntityMixin {
             if (this.blockBreakCounter > 0) {
                 --this.blockBreakCounter;
                 if (this.blockBreakCounter == 0 && ForgeEventFactory.getMobGriefingEvent(this.world, (WitherEntity) (Object) this)) {
-                    int i1 = MathHelper.floor(this.posY);
-                    int l1 = MathHelper.floor(this.posX);
-                    int i2 = MathHelper.floor(this.posZ);
+                    int i1 = MathHelper.floor(this.getPosY());
+                    int l1 = MathHelper.floor(this.getPosX());
+                    int i2 = MathHelper.floor(this.getPosZ());
                     boolean flag = false;
 
                     for (int k2 = -1; k2 <= 1; ++k2) {
@@ -161,7 +163,7 @@ public abstract class WitherEntityMixin extends CreatureEntityMixin {
                     }
 
                     if (flag) {
-                        this.world.playEvent(null, 1022, new BlockPos((WitherEntity) (Object) this), 0);
+                        this.world.playEvent(null, 1022, this.getPosition(), 0);
                     }
                 }
             }

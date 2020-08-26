@@ -4,7 +4,6 @@ import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.WitherSkullEntity;
 import net.minecraft.util.math.EntityRayTraceResult;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
 import org.bukkit.Bukkit;
@@ -20,14 +19,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(WitherSkullEntity.class)
 public abstract class WitherSkullEntityMixin extends DamagingProjectileEntityMixin {
 
-    @Inject(method = "onImpact", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;heal(F)V"))
-    private void arclight$heal(RayTraceResult result, CallbackInfo ci) {
-        ((LivingEntityBridge) this.shootingEntity).bridge$pushHealReason(EntityRegainHealthEvent.RegainReason.WITHER);
+    @Inject(method = "onEntityHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;heal(F)V"))
+    private void arclight$heal(EntityRayTraceResult result, CallbackInfo ci) {
+        ((LivingEntityBridge) this.func_234616_v_()).bridge$pushHealReason(EntityRegainHealthEvent.RegainReason.WITHER);
     }
 
-    @Inject(method = "onImpact", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;addPotionEffect(Lnet/minecraft/potion/EffectInstance;)Z"))
-    private void arclight$effect(RayTraceResult result, CallbackInfo ci) {
-        ((LivingEntityBridge) ((EntityRayTraceResult) result).getEntity()).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.ATTACK);
+    @Inject(method = "onEntityHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;addPotionEffect(Lnet/minecraft/potion/EffectInstance;)Z"))
+    private void arclight$effect(EntityRayTraceResult result, CallbackInfo ci) {
+        ((LivingEntityBridge) result.getEntity()).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.ATTACK);
     }
 
     @Redirect(method = "onImpact", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;createExplosion(Lnet/minecraft/entity/Entity;DDDFZLnet/minecraft/world/Explosion$Mode;)Lnet/minecraft/world/Explosion;"))

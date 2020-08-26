@@ -298,6 +298,12 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
         }
     }
 
+    @Inject(method = "func_233656_b_", at = @At("RETURN"))
+    private <T extends MobEntity> void arclight$cleanReason(EntityType<T> p_233656_1_, boolean p_233656_2_, CallbackInfoReturnable<T> cir) {
+        ((WorldBridge) this.world).bridge$pushAddEntityReason(null);
+        this.arclight$transform = null;
+    }
+
     public <T extends MobEntity> T a(EntityType<T> entityType, boolean flag, EntityTransformEvent.TransformReason transformReason, CreatureSpawnEvent.SpawnReason spawnReason) {
         ((WorldBridge) this.world).bridge$pushAddEntityReason(spawnReason);
         bridge$pushTransformReason(transformReason);

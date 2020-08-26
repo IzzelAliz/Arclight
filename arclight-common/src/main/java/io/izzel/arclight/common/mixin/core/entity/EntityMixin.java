@@ -195,6 +195,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow public abstract boolean isInLava();
     @Shadow protected abstract void setOnFireFromLava();
     @Shadow protected boolean firstUpdate;
+    @Shadow public abstract boolean isSilent();
     // @formatter:on
 
     private static final int CURRENT_LEVEL = 2;

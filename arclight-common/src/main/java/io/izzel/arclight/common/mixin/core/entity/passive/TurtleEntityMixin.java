@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.entity.passive;
 import io.izzel.arclight.common.bridge.entity.passive.TurtleEntityBridge;
 import net.minecraft.entity.effect.LightningBoltEntity;
 import net.minecraft.entity.passive.TurtleEntity;
+import net.minecraft.world.server.ServerWorld;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -31,13 +32,13 @@ public abstract class TurtleEntityMixin extends AnimalEntityMixin implements Tur
         forceDrops = false;
     }
 
-    @Inject(method = "onStruckByLightning", at = @At("HEAD"))
-    private void arclight$lightning(LightningBoltEntity lightningBolt, CallbackInfo ci) {
+    @Inject(method = "func_241841_a", at = @At("HEAD"))
+    private void arclight$lightning(ServerWorld p_241841_1_, LightningBoltEntity lightningBolt, CallbackInfo ci) {
         CraftEventFactory.entityDamage = lightningBolt;
     }
 
-    @Inject(method = "onStruckByLightning", at = @At("RETURN"))
-    private void arclight$lightningReset(LightningBoltEntity lightningBolt, CallbackInfo ci) {
+    @Inject(method = "func_241841_a", at = @At("RETURN"))
+    private void arclight$lightningReset(ServerWorld p_241841_1_, LightningBoltEntity lightningBolt, CallbackInfo ci) {
         CraftEventFactory.entityDamage = null;
     }
 }

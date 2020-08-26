@@ -1,11 +1,10 @@
 package io.izzel.arclight.common.mixin.core.entity.monster;
 
 import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
-import io.izzel.arclight.common.bridge.world.WorldBridge;
-import net.minecraft.entity.merchant.villager.VillagerEntity;
+import io.izzel.arclight.mixin.Eject;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.monster.ZombieVillagerEntity;
-import net.minecraft.world.server.ServerWorld;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.entity.ZombieVillager;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
@@ -13,9 +12,7 @@ import org.bukkit.event.entity.EntityTransformEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.UUID;
 
@@ -33,19 +30,15 @@ public abstract class ZombieVillagerEntityMixin extends ZombieEntityMixin {
         bridge$pushEffectCause(EntityPotionEffectEvent.Cause.CONVERSION);
     }
 
-    @Redirect(method = "cureZombie", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/monster/ZombieVillagerEntity;remove()V"))
-    private void arclight$transformPre(ZombieVillagerEntity zombieVillagerEntity) {
-    }
-
-    @Inject(method = "cureZombie", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;addEntity(Lnet/minecraft/entity/Entity;)Z"))
-    private void arclight$transform(ServerWorld world, CallbackInfo ci, VillagerEntity villagerEntity) {
-        if (CraftEventFactory.callEntityTransformEvent((ZombieVillagerEntity)(Object)this, villagerEntity, EntityTransformEvent.TransformReason.CURED).isCancelled()) {
-            ((ZombieVillager) getBukkitEntity()).setConversionTime(-1);
+    @Eject(method = "cureZombie", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/monster/ZombieVillagerEntity;func_233656_b_(Lnet/minecraft/entity/EntityType;Z)Lnet/minecraft/entity/MobEntity;"))
+    private <T extends MobEntity> T arclight$cure(ZombieVillagerEntity zombieVillagerEntity, EntityType<T> entityType, boolean flag, CallbackInfo ci) {
+        T t = this.a(entityType, flag, EntityTransformEvent.TransformReason.CURED, CreatureSpawnEvent.SpawnReason.CURED);
+        if (t == null) {
+            ((ZombieVillager) this.bridge$getBukkitEntity()).setConversionTime(-1);
             ci.cancel();
         } else {
-            this.remove();
-            ((WorldBridge) world).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.CURED);
-            ((LivingEntityBridge) villagerEntity).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.CONVERSION);
+            ((LivingEntityBridge) t).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.CONVERSION);
         }
+        return t;
     }
 }

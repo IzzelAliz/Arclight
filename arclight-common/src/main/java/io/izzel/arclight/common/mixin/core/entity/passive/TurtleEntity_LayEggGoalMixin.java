@@ -32,7 +32,7 @@ public abstract class TurtleEntity_LayEggGoalMixin extends MoveToBlockGoal {
     @Overwrite
     public void tick() {
         super.tick();
-        BlockPos blockpos = new BlockPos(this.turtle);
+        BlockPos blockpos = this.turtle.getPosition();
         if (!this.turtle.isInWater() && this.getIsAboveDestination()) {
             if (((TurtleEntityBridge) this.turtle).bridge$getDigging() < 1) {
                 ((TurtleEntityBridge) this.turtle).bridge$setDigging(true);

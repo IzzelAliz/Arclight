@@ -39,4 +39,14 @@ public interface IServerWorldMixin extends IWorld, IWorldBridge, WorldBridge {
             this.addEntity(next);
         }
     }
+
+    default boolean addAllEntities(Entity entity, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason reason) {
+        Iterator<Entity> iterator = entity.getSelfAndPassengers().iterator();
+        while (iterator.hasNext()) {
+            Entity next = iterator.next();
+            bridge$pushAddEntityReason(reason);
+            this.addEntity(next);
+        }
+        return !entity.removed;
+    }
 }
