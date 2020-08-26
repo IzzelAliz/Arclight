@@ -206,6 +206,11 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
         arclight$item = itemEntity;
     }
 
+    @Override
+    public void bridge$captureItemDrop(ItemEntity itemEntity) {
+        this.arclight$item = itemEntity;
+    }
+
     private transient ItemEntity arclight$item;
 
     /**

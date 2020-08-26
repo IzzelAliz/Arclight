@@ -10,8 +10,8 @@ import net.minecraft.network.status.ServerStatusNetHandler;
 import net.minecraft.network.status.server.SServerInfoPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.SharedConstants;
-import net.minecraft.util.text.StringTextComponent;
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.v.util.CraftChatMessage;
 import org.spigotmc.SpigotConfig;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -49,7 +49,7 @@ public class ServerStatusNetHandlerMixin {
         playerSample.setPlayers(profiles.toArray(new GameProfile[0]));
         ServerStatusResponse ping = new ServerStatusResponse();
         ping.setFavicon(event.icon.value);
-        ping.setServerDescription(new StringTextComponent(event.getMotd()));
+        ping.setServerDescription(CraftChatMessage.fromString(event.getMotd(), true)[0]);
         ping.setPlayers(playerSample);
         int version = SharedConstants.getVersion().getProtocolVersion();
         ping.setVersion(new ServerStatusResponse.Version(this.server.getServerModName() + " " + this.server.getMinecraftVersion(), version));

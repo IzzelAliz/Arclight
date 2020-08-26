@@ -3,9 +3,9 @@ package io.izzel.arclight.common.mixin.core.world.raid;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.village.PointOfInterest;
-import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.raid.Raid;
 import net.minecraft.world.raid.RaidManager;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -30,7 +30,7 @@ public class RaidManagerMixin {
     @Inject(method = "badOmenTick", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/raid/Raid;increaseLevel(Lnet/minecraft/entity/player/PlayerEntity;)V"))
     public void arclight$raidTrigger(ServerPlayerEntity playerEntity, CallbackInfoReturnable<Raid> cir,
                                      DimensionType dimensionType, BlockPos pos, BlockPos pos1, List<PointOfInterest> list,
-                                     int i, Vec3d vec3d, Raid raid) {
+                                     int i, Vector3d vec3d, Raid raid) {
         if (!CraftEventFactory.callRaidTriggerEvent(raid, playerEntity)) {
             playerEntity.removePotionEffect(Effects.BAD_OMEN);
             this.byId.remove(raid.getId(), raid);

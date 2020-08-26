@@ -3,7 +3,6 @@ package io.izzel.arclight.common.mixin.core.network.play.server;
 import io.izzel.arclight.common.bridge.world.border.WorldBorderBridge;
 import net.minecraft.network.play.server.SWorldBorderPacket;
 import net.minecraft.world.border.WorldBorder;
-import net.minecraft.world.dimension.NetherDimension;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -20,7 +19,7 @@ public class SWorldBorderPacketMixin {
 
     @Inject(method = "<init>(Lnet/minecraft/world/border/WorldBorder;Lnet/minecraft/network/play/server/SWorldBorderPacket$Action;)V", at = @At("RETURN"))
     private void arclight$nether(WorldBorder border, SWorldBorderPacket.Action actionIn, CallbackInfo ci) {
-        this.centerX = border.getCenterX() * ((((WorldBorderBridge) border).bridge$getWorld().dimension instanceof NetherDimension) ? 8 : 1);
-        this.centerZ = border.getCenterZ() * ((((WorldBorderBridge) border).bridge$getWorld().dimension instanceof NetherDimension) ? 8 : 1);
+        this.centerX = border.getCenterX() * (((WorldBorderBridge) border).bridge$getWorld().func_230315_m_().func_242724_f());
+        this.centerZ = border.getCenterZ() * (((WorldBorderBridge) border).bridge$getWorld().func_230315_m_().func_242724_f());
     }
 }

@@ -21,6 +21,9 @@ public interface ServerWorldBridge extends WorldBridge {
 
     boolean bridge$addEntitySerialized(Entity entity, CreatureSpawnEvent.SpawnReason reason);
 
+    // todo
+    boolean bridge$addAllEntitiesSafely(Entity entity, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason reason);
+
     interface Hack {
 
         TileEntity getTileEntity(BlockPos blockPos);
