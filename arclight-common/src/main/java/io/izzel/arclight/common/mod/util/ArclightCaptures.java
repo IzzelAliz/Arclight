@@ -7,6 +7,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
+import net.minecraft.util.datafix.codec.DatapackCodec;
 import net.minecraft.util.math.BlockPos;
 import org.bukkit.TreeType;
 import org.bukkit.block.BlockState;
@@ -216,6 +217,20 @@ public class ArclightCaptures {
         } finally {
             endPortalEntity = null;
             spawnPortal = false;
+        }
+    }
+
+    private static transient DatapackCodec datapackCodec;
+
+    public static void captureDatapackConfig(DatapackCodec codec) {
+        datapackCodec = codec;
+    }
+
+    public static DatapackCodec getDatapackConfig() {
+        try {
+            return datapackCodec;
+        } finally {
+            datapackCodec = null;
         }
     }
 

@@ -1,8 +1,8 @@
-package io.izzel.arclight.common.mixin.core.world.storage.loot.conditions;
+package io.izzel.arclight.common.mixin.core.loot.conditions;
 
-import net.minecraft.world.storage.loot.LootContext;
-import net.minecraft.world.storage.loot.LootParameters;
-import net.minecraft.world.storage.loot.conditions.SurvivesExplosion;
+import net.minecraft.loot.LootContext;
+import net.minecraft.loot.LootParameters;
+import net.minecraft.loot.conditions.SurvivesExplosion;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 

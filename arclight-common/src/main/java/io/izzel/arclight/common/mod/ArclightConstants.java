@@ -5,7 +5,7 @@ import io.izzel.arclight.api.EnumHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Unit;
 import net.minecraft.world.server.TicketType;
-import net.minecraft.world.storage.loot.LootParameter;
+import net.minecraft.loot.LootParameter;
 import org.bukkit.TreeType;
 import org.bukkit.plugin.Plugin;
 

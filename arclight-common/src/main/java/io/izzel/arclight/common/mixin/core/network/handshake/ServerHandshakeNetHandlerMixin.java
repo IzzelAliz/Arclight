@@ -14,6 +14,7 @@ import net.minecraft.network.login.server.SDisconnectLoginPacket;
 import net.minecraft.network.status.ServerStatusNetHandler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.SharedConstants;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.LogManager;
@@ -36,8 +37,11 @@ public class ServerHandshakeNetHandlerMixin {
     private static final HashMap<InetAddress, Long> throttleTracker = new HashMap<>();
     private static int throttleCounter = 0;
 
+    // @formatter:off
     @Shadow @Final private NetworkManager networkManager;
     @Shadow @Final private MinecraftServer server;
+    @Shadow @Final private static ITextComponent field_241169_a_;
+    // @formatter:on
 
     /**
      * @author IzzelAliz
@@ -112,8 +116,12 @@ public class ServerHandshakeNetHandlerMixin {
                 break;
             }
             case STATUS: {
-                this.networkManager.setConnectionState(ProtocolType.STATUS);
-                this.networkManager.setNetHandler(new ServerStatusNetHandler(this.server, this.networkManager));
+                if (this.server.func_230541_aj_()) {
+                    this.networkManager.setConnectionState(ProtocolType.STATUS);
+                    this.networkManager.setNetHandler(new ServerStatusNetHandler(this.server, this.networkManager));
+                } else {
+                    this.networkManager.closeChannel(field_241169_a_);
+                }
                 break;
             }
             default: {

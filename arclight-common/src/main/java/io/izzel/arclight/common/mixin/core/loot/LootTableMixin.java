@@ -1,10 +1,11 @@
-package io.izzel.arclight.common.mixin.core.world.storage.loot;
+package io.izzel.arclight.common.mixin.core.loot;
 
 import io.izzel.arclight.common.bridge.world.storage.loot.LootTableBridge;
+import io.izzel.arclight.mixin.Eject;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.world.storage.loot.LootContext;
-import net.minecraft.world.storage.loot.LootTable;
+import net.minecraft.loot.LootContext;
+import net.minecraft.loot.LootTable;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
@@ -12,6 +13,8 @@ import org.bukkit.event.world.LootGenerateEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 import java.util.Random;
@@ -26,6 +29,18 @@ public abstract class LootTableMixin implements LootTableBridge {
     @Shadow protected abstract List<Integer> getEmptySlotsRandomized(IInventory inventory, Random rand);
     @Shadow protected abstract void shuffleItems(List<ItemStack> stacks, int p_186463_2_, Random rand);
     // @formatter:on
+
+    @Eject(method = "fillInventory", at = @At(value = "INVOKE", target = "Lnet/minecraft/loot/LootTable;generate(Lnet/minecraft/loot/LootContext;)Ljava/util/List;"))
+    private List<ItemStack> arclight$nonPluginEvent(LootTable lootTable, LootContext context, CallbackInfo ci, IInventory inv) {
+        List<ItemStack> list = lootTable.generate(context);
+        LootGenerateEvent event = CraftEventFactory.callLootGenerateEvent(inv, (LootTable) (Object) this, context, list, false);
+        if (event.isCancelled()) {
+            ci.cancel();
+            return null;
+        } else {
+            return event.getLoot().stream().map(CraftItemStack::asNMSCopy).collect(Collectors.toList());
+        }
+    }
 
     public void fillInventory(IInventory inv, LootContext context, boolean plugin) {
         List<ItemStack> list = this.generate(context);

@@ -1,10 +1,11 @@
 package io.izzel.arclight.common.mixin.core.fluid;
 
+import io.izzel.arclight.common.bridge.world.IWorldBridge;
+import io.izzel.arclight.mixin.Eject;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.fluid.IFluidState;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.LavaFluid;
-import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.IWorld;
@@ -16,8 +17,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Random;
@@ -35,7 +34,7 @@ public abstract class LavaFluidMixin {
      * @reason
      */
     @Overwrite
-    public void randomTick(World world, BlockPos pos, IFluidState state, Random random) {
+    public void randomTick(World world, BlockPos pos, FluidState state, Random random) {
         if (world.getGameRules().getBoolean(GameRules.DO_FIRE_TICK)) {
             int i = random.nextInt(3);
             if (i > 0) {
@@ -84,15 +83,13 @@ public abstract class LavaFluidMixin {
         }
     }
 
-    @Inject(method = "flowInto", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/IWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
-    private void arclight$returnIfFail(IWorld worldIn, BlockPos pos, BlockState blockStateIn, Direction direction, IFluidState fluidStateIn, CallbackInfo ci) {
-        if (!arclight$success) ci.cancel();
-    }
-
-    private transient boolean arclight$success;
-
-    @Redirect(method = "flowInto", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/IWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
-    private boolean arclight$blockFromTo(IWorld iWorld, BlockPos pos, BlockState newState, int flags) {
-        return arclight$success = CraftEventFactory.handleBlockFormEvent(iWorld.getWorld(), pos, newState, flags);
+    @Eject(method = "flowInto", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/IWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+    private boolean arclight$blockFromTo(IWorld world, BlockPos pos, BlockState newState, int flags, CallbackInfo ci) {
+        if (!CraftEventFactory.handleBlockFormEvent(((IWorldBridge) world).bridge$getMinecraftWorld(), pos, newState, flags)) {
+            ci.cancel();
+            return false;
+        } else {
+            return true;
+        }
     }
 }

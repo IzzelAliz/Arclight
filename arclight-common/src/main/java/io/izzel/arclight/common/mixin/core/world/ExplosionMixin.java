@@ -7,18 +7,19 @@ import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.world.ExplosionBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.block.AbstractFireBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.enchantment.ProtectionEnchantment;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.FallingBlockEntity;
 import net.minecraft.entity.item.TNTEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.DamagingProjectileEntity;
-import net.minecraft.fluid.IFluidState;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemStack;
+import net.minecraft.loot.LootContext;
+import net.minecraft.loot.LootParameters;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
@@ -27,12 +28,11 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.Explosion;
+import net.minecraft.world.ExplosionContext;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.loot.LootContext;
-import net.minecraft.world.storage.loot.LootParameters;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -49,10 +49,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 
@@ -69,7 +69,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
     @Shadow @Final private double z;
     @Shadow @Final public Entity exploder;
     @Shadow public abstract DamageSource getDamageSource();
-    @Shadow @Final private Map<PlayerEntity, Vec3d> playerKnockbackMap;
+    @Shadow @Final private Map<PlayerEntity, Vector3d> playerKnockbackMap;
     @Accessor("exploder") public abstract Entity bridge$getExploder();
     @Accessor("size") public abstract float bridge$getSize();
     @Accessor("size") public abstract void bridge$setSize(float size);
@@ -78,6 +78,8 @@ public abstract class ExplosionMixin implements ExplosionBridge {
     @Shadow @Final private Random random;
     @Shadow private static void func_229976_a_(ObjectArrayList<Pair<ItemStack, BlockPos>> p_229976_0_, ItemStack p_229976_1_, BlockPos p_229976_2_) { }
     // @formatter:on
+
+    @Shadow @Final private ExplosionContext field_234893_k_;
 
     @Inject(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/entity/Entity;DDDFZLnet/minecraft/world/Explosion$Mode;)V",
         at = @At("RETURN"))
@@ -91,6 +93,9 @@ public abstract class ExplosionMixin implements ExplosionBridge {
      */
     @Overwrite
     public void doExplosionA() {
+        if (this.size < 0.1F) {
+            return;
+        }
         Set<BlockPos> set = Sets.newHashSet();
         int i = 16;
 
@@ -113,17 +118,13 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                         for (float f1 = 0.3F; f > 0.0F; f -= 0.22500001F) {
                             BlockPos blockpos = new BlockPos(d4, d6, d8);
                             BlockState blockstate = this.world.getBlockState(blockpos);
-                            IFluidState ifluidstate = this.world.getFluidState(blockpos);
-                            if (!blockstate.isAir(this.world, blockpos) || !ifluidstate.isEmpty()) {
-                                float f2 = Math.max(blockstate.getExplosionResistance(this.world, blockpos, exploder, (Explosion) (Object) this), ifluidstate.getExplosionResistance(this.world, blockpos, exploder, (Explosion) (Object) this));
-                                if (this.exploder != null) {
-                                    f2 = this.exploder.getExplosionResistance((Explosion) (Object) this, this.world, blockpos, blockstate, ifluidstate, f2);
-                                }
-
-                                f -= (f2 + 0.3F) * 0.3F;
+                            FluidState fluidstate = this.world.getFluidState(blockpos);
+                            Optional<Float> optional = this.field_234893_k_.getExplosionResistance((Explosion) (Object) this, this.world, blockpos, blockstate, fluidstate);
+                            if (optional.isPresent()) {
+                                f -= (optional.get() + 0.3F) * 0.3F;
                             }
 
-                            if (f > 0.0F && (this.exploder == null || this.exploder.canExplosionDestroyBlock((Explosion) (Object) this, this.world, blockpos, blockstate, f))) {
+                            if (f > 0.0F && this.field_234893_k_.canExplosionDestroyBlock((Explosion) (Object) this, this.world, blockpos, blockstate, f)) {
                                 set.add(blockpos);
                             }
 
@@ -146,15 +147,15 @@ public abstract class ExplosionMixin implements ExplosionBridge {
         int j1 = MathHelper.floor(this.z + (double) f3 + 1.0D);
         List<Entity> list = this.world.getEntitiesWithinAABBExcludingEntity(this.exploder, new AxisAlignedBB(k1, i2, j2, l1, i1, j1));
         net.minecraftforge.event.ForgeEventFactory.onExplosionDetonate(this.world, (Explosion) (Object) this, list, f3);
-        Vec3d vec3d = new Vec3d(this.x, this.y, this.z);
+        Vector3d vec3d = new Vector3d(this.x, this.y, this.z);
 
         for (Entity entity : list) {
             if (!entity.isImmuneToExplosions()) {
                 double d12 = MathHelper.sqrt(entity.getDistanceSq(vec3d)) / f3;
                 if (d12 <= 1.0D) {
-                    double d5 = entity.posX - this.x;
+                    double d5 = entity.getPosX() - this.x;
                     double d7 = entity.getPosYEye() - this.y;
-                    double d9 = entity.posZ - this.z;
+                    double d9 = entity.getPosZ() - this.z;
                     double d13 = MathHelper.sqrt(d5 * d5 + d7 * d7 + d9 * d9);
                     if (d13 != 0.0D) {
                         d5 = d5 / d13;
@@ -180,7 +181,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                         if (entity instanceof PlayerEntity) {
                             PlayerEntity playerentity = (PlayerEntity) entity;
                             if (!playerentity.isSpectator() && (!playerentity.isCreative() || !playerentity.abilities.isFlying)) {
-                                this.playerKnockbackMap.put(playerentity, new Vec3d(d5 * d10, d7 * d10, d9 * d10));
+                                this.playerKnockbackMap.put(playerentity, new Vector3d(d5 * d10, d7 * d10, d9 * d10));
                             }
                         }
                     }
@@ -235,7 +236,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                     this.world.getProfiler().startSection("explosion_blocks");
                     if (blockstate.canDropFromExplosion(this.world, blockpos, (Explosion) (Object) this) && this.world instanceof ServerWorld) {
                         TileEntity tileentity = blockstate.hasTileEntity() ? this.world.getTileEntity(blockpos) : null;
-                        LootContext.Builder lootcontext$builder = (new LootContext.Builder((ServerWorld) this.world)).withRandom(this.world.rand).withParameter(LootParameters.POSITION, blockpos).withParameter(LootParameters.TOOL, ItemStack.EMPTY).withNullableParameter(LootParameters.BLOCK_ENTITY, tileentity).withNullableParameter(LootParameters.THIS_ENTITY, this.exploder);
+                        LootContext.Builder lootcontext$builder = (new LootContext.Builder((ServerWorld)this.world)).withRandom(this.world.rand).withParameter(LootParameters.field_237457_g_, Vector3d.copyCentered(blockpos)).withParameter(LootParameters.TOOL, ItemStack.EMPTY).withNullableParameter(LootParameters.BLOCK_ENTITY, tileentity).withNullableParameter(LootParameters.THIS_ENTITY, this.exploder);
                         if (this.mode == Explosion.Mode.DESTROY || yield < 1.0F) {
                             lootcontext$builder.withParameter(LootParameters.EXPLOSION_RADIUS, 1.0F / yield);
                         }
@@ -260,7 +261,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                 if (this.random.nextInt(3) == 0 && this.world.getBlockState(blockpos2).isAir() && this.world.getBlockState(blockpos2.down()).isOpaqueCube(this.world, blockpos2.down())) {
                     BlockIgniteEvent event = CraftEventFactory.callBlockIgniteEvent(this.world, blockpos2.getX(), blockpos2.getY(), blockpos2.getZ(), (Explosion) (Object) this);
                     if (!event.isCancelled()) {
-                        this.world.setBlockState(blockpos2, Blocks.FIRE.getDefaultState());
+                        this.world.setBlockState(blockpos2, AbstractFireBlock.getFireForPlacement(this.world, blockpos2));
                     }
                 }
             }
@@ -310,25 +311,5 @@ public abstract class ExplosionMixin implements ExplosionBridge {
             this.affectedBlockPositions.add(blockPos);
         }
         return cancelled ? Float.NaN : yield;
-    }
-
-    /**
-     * @author IzzelAliz
-     * @reason add shooting entity track
-     */
-    @Nullable
-    @Overwrite
-    public LivingEntity getExplosivePlacedBy() {
-        if (this.exploder == null) {
-            return null;
-        } else if (this.exploder instanceof TNTEntity) {
-            return ((TNTEntity) this.exploder).getTntPlacedBy();
-        } else if (this.exploder instanceof LivingEntity) {
-            return (LivingEntity) this.exploder;
-        } else if (this.exploder instanceof DamagingProjectileEntity) {
-            return ((DamagingProjectileEntity) this.exploder).shootingEntity;
-        } else {
-            return null;
-        }
     }
 }

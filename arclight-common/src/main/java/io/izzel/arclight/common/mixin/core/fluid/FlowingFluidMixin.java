@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.core.fluid;
 import net.minecraft.block.BlockState;
 import net.minecraft.fluid.FlowingFluid;
 import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.IFluidState;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
@@ -28,11 +28,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class FlowingFluidMixin {
 
     // @formatter:off
-    @Shadow protected abstract boolean canFlow(IBlockReader worldIn, BlockPos fromPos, BlockState fromBlockState, Direction direction, BlockPos toPos, BlockState toBlockState, IFluidState toFluidState, Fluid fluidIn);
+    @Shadow protected abstract boolean canFlow(IBlockReader worldIn, BlockPos fromPos, BlockState fromBlockState, Direction direction, BlockPos toPos, BlockState toBlockState, FluidState toFluidState, Fluid fluidIn);
     // @formatter:on
 
-    @Inject(method = "flowAround", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/fluid/FlowingFluid;flowInto(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/Direction;Lnet/minecraft/fluid/IFluidState;)V"))
-    public void arclight$flowInto(IWorld worldIn, BlockPos pos, IFluidState stateIn, CallbackInfo ci) {
+    @Inject(method = "flowAround", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/fluid/FlowingFluid;flowInto(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/Direction;Lnet/minecraft/fluid/FluidState;)V"))
+    public void arclight$flowInto(IWorld worldIn, BlockPos pos, FluidState stateIn, CallbackInfo ci) {
         Block source = CraftBlock.at(worldIn, pos);
         BlockFromToEvent event = new BlockFromToEvent(source, BlockFace.DOWN);
         Bukkit.getPluginManager().callEvent(event);
@@ -41,8 +41,8 @@ public abstract class FlowingFluidMixin {
         }
     }
 
-    @Redirect(method = "func_207937_a", at = @At(value = "INVOKE", target = "Lnet/minecraft/fluid/FlowingFluid;canFlow(Lnet/minecraft/world/IBlockReader;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/Direction;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/fluid/IFluidState;Lnet/minecraft/fluid/Fluid;)Z"))
-    public boolean arclight$flowInto(FlowingFluid flowingFluid, IBlockReader worldIn, BlockPos fromPos, BlockState fromBlockState, Direction direction, BlockPos toPos, BlockState toBlockState, IFluidState toFluidState, Fluid fluidIn) {
+    @Redirect(method = "func_207937_a", at = @At(value = "INVOKE", target = "Lnet/minecraft/fluid/FlowingFluid;canFlow(Lnet/minecraft/world/IBlockReader;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/Direction;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/fluid/FluidState;Lnet/minecraft/fluid/Fluid;)Z"))
+    public boolean arclight$flowInto(FlowingFluid flowingFluid, IBlockReader worldIn, BlockPos fromPos, BlockState fromBlockState, Direction direction, BlockPos toPos, BlockState toBlockState, FluidState toFluidState, Fluid fluidIn) {
         if (this.canFlow(worldIn, fromPos, fromBlockState, direction, toPos, toBlockState, toFluidState, fluidIn)) {
             Block source = CraftBlock.at(((World) worldIn), fromPos);
             BlockFromToEvent event = new BlockFromToEvent(source, CraftBlock.notchToBlockFace(direction));
