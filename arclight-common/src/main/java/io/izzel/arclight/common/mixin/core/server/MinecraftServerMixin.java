@@ -45,6 +45,8 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.server.TicketType;
 import net.minecraft.world.storage.SaveHandler;
 import net.minecraft.world.storage.WorldInfo;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.StartupQuery;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.Logger;
@@ -58,6 +60,7 @@ import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.plugin.PluginLoadOrder;
+import org.spigotmc.WatchdogThread;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -248,6 +251,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
             } catch (Throwable throwable) {
                 LOGGER.error("Exception stopping the server", throwable);
             } finally {
+                WatchdogThread.doStop();
                 ServerLifecycleHooks.handleServerStopped((MinecraftServer) (Object) this);
                 this.systemExitNow();
             }
@@ -310,6 +314,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
     }
 
     public void loadSpawn(IChunkStatusListener listener, ServerWorld serverWorld) {
+        MinecraftForge.EVENT_BUS.post(new WorldEvent.Load(serverWorld));
         if (!((WorldBridge) serverWorld).bridge$getWorld().getKeepSpawnInMemory()) {
             return;
         }
