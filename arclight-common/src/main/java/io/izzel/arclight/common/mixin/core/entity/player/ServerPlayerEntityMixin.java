@@ -259,7 +259,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
     public void setWorld(World world) {
         super.setWorld(world);
         if (world == null) {
-            this.removed = false;
+            this.revive();
             Vector3d position = null;
             if (this.field_241137_cq_ != null && (world = ServerLifecycleHooks.getCurrentServer().getWorld(this.field_241137_cq_)) != null && this.func_241140_K_() != null) {
                 position = PlayerEntity.func_242374_a((ServerWorld) world, this.func_241140_K_(), this.func_242109_L(), false, false).orElse(null);

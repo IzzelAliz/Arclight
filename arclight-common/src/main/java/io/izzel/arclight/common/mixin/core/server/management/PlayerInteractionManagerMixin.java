@@ -4,12 +4,12 @@ import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.server.management.PlayerInteractionManagerBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CakeBlock;
 import net.minecraft.block.DoorBlock;
 import net.minecraft.block.TrapDoorBlock;
 import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.item.ItemStack;
@@ -74,11 +74,11 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
      */
     @Overwrite
     public void func_225416_a(BlockPos blockPos, CPlayerDiggingPacket.Action action, Direction direction, int i) {
-        double d0 = this.player.posX - (blockPos.getX() + 0.5);
-        double d2 = this.player.posY - (blockPos.getY() + 0.5) + 1.5;
-        double d3 = this.player.posZ - (blockPos.getZ() + 0.5);
+        double d0 = this.player.getPosX() - (blockPos.getX() + 0.5);
+        double d2 = this.player.getPosY() - (blockPos.getY() + 0.5) + 1.5;
+        double d3 = this.player.getPosZ() - (blockPos.getZ() + 0.5);
         double d4 = d0 * d0 + d2 * d2 + d3 * d3;
-        double dist = player.getAttribute(net.minecraft.entity.player.PlayerEntity.REACH_DISTANCE).getValue() + 1;
+        double dist = player.getAttribute(net.minecraftforge.common.ForgeMod.REACH_DISTANCE.get()).getValue() + 1;
         dist *= dist;
         net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock forgeEvent = net.minecraftforge.common.ForgeHooks.onLeftClickBlock(player, blockPos, direction);
         if (forgeEvent.isCanceled() || (!this.isCreative() && forgeEvent.getUseItem() == net.minecraftforge.eventbus.api.Event.Result.DENY)) { // Restore block and te data
@@ -110,11 +110,7 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
                 return;
             }
             if (this.isCreative()) {
-                if (!this.world.extinguishFire(null, blockPos, direction)) {
-                    this.func_229860_a_(blockPos, action, "creative destroy");
-                } else {
-                    this.player.connection.sendPacket(new SPlayerDiggingPacket(blockPos, this.world.getBlockState(blockPos), action, true, "fire put out"));
-                }
+                this.func_229860_a_(blockPos, action, "creative destroy");
                 return;
             }
             if (this.player.blockActionRestricted(this.world, blockPos, this.gameType)) {
@@ -133,12 +129,11 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
                 } else if (data.getBlock() instanceof TrapDoorBlock) {
                     this.player.connection.sendPacket(new SChangeBlockPacket(this.world, blockPos));
                 }
-            } else if (!iblockdata.isAir()) {
+            } else if (!iblockdata.isAir(world, blockPos)) {
                 if (forgeEvent.getUseBlock() != net.minecraftforge.eventbus.api.Event.Result.DENY) {
                     iblockdata.onBlockClicked(this.world, blockPos, this.player);
                 }
                 f = iblockdata.getPlayerRelativeBlockHardness(this.player, this.player.world, blockPos);
-                this.world.extinguishFire(null, blockPos, direction);
             }
             if (event.useItemInHand() == Event.Result.DENY) {
                 if (f > 1.0f) {
@@ -154,7 +149,7 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
             if (blockEvent.getInstaBreak()) {
                 f = 2.0f;
             }
-            if (!iblockdata.isAir() && f >= 1.0f) {
+            if (!iblockdata.isAir(world, blockPos) && f >= 1.0f) {
                 this.func_229860_a_(blockPos, action, "insta mine");
             } else {
                 if (this.isDestroyingBlock) {
@@ -236,7 +231,7 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
      * @reason
      */
     @Overwrite
-    public ActionResultType func_219441_a(PlayerEntity playerIn, World worldIn, ItemStack stackIn, Hand handIn, BlockRayTraceResult blockRaytraceResultIn) {
+    public ActionResultType func_219441_a(ServerPlayerEntity playerIn, World worldIn, ItemStack stackIn, Hand handIn, BlockRayTraceResult blockRaytraceResultIn) {
         BlockPos blockpos = blockRaytraceResultIn.getPos();
         BlockState blockstate = worldIn.getBlockState(blockpos);
         ActionResultType resultType = ActionResultType.PASS;
@@ -255,7 +250,7 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
         if (bukkitEvent.useInteractedBlock() == Event.Result.DENY) {
             if (blockstate.getBlock() instanceof DoorBlock) {
                 boolean bottom = blockstate.get(DoorBlock.HALF) == DoubleBlockHalf.LOWER;
-                ((ServerPlayerEntity) playerIn).connection.sendPacket(new SChangeBlockPacket(this.world, bottom ? blockpos.up() : blockpos.down()));
+                playerIn.connection.sendPacket(new SChangeBlockPacket(this.world, bottom ? blockpos.up() : blockpos.down()));
             } else if (blockstate.getBlock() instanceof CakeBlock) {
                 ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().sendHealthUpdate();
             }
@@ -279,9 +274,11 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
             }
             boolean flag = !playerIn.getHeldItemMainhand().isEmpty() || !playerIn.getHeldItemOffhand().isEmpty();
             boolean flag1 = (playerIn.isSecondaryUseActive() && flag) && !(playerIn.getHeldItemMainhand().doesSneakBypassUse(worldIn, blockpos, playerIn) && playerIn.getHeldItemOffhand().doesSneakBypassUse(worldIn, blockpos, playerIn));
+            ItemStack itemstack = stackIn.copy();
             if (event.getUseBlock() != net.minecraftforge.eventbus.api.Event.Result.DENY && !flag1) {
                 resultType = blockstate.onBlockActivated(worldIn, playerIn, handIn, blockRaytraceResultIn);
                 if (resultType.isSuccessOrConsume()) {
+                    CriteriaTriggers.RIGHT_CLICK_BLOCK_WITH_ITEM.test(playerIn, blockpos, itemstack);
                     return resultType;
                 }
             }
@@ -293,10 +290,14 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
                     int i = stackIn.getCount();
                     resultType = stackIn.onItemUse(itemusecontext);
                     stackIn.setCount(i);
-                    return resultType;
                 } else {
-                    return stackIn.onItemUse(itemusecontext);
+                    resultType = stackIn.onItemUse(itemusecontext);
                 }
+
+                if (resultType.isSuccessOrConsume()) {
+                    CriteriaTriggers.RIGHT_CLICK_BLOCK_WITH_ITEM.test(playerIn, blockpos, itemstack);
+                }
+                return resultType;
             } else {
                 return resultType;
             }

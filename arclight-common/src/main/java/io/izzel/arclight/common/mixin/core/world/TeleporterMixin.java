@@ -4,23 +4,14 @@ import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.world.TeleporterBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.NetherPortalBlock;
-import net.minecraft.block.pattern.BlockPattern;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Direction;
+import net.minecraft.util.TeleportationRepositioner;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.village.PointOfInterest;
-import net.minecraft.village.PointOfInterestManager;
-import net.minecraft.village.PointOfInterestType;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.server.TicketType;
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.util.BlockStateListPopulator;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.spongepowered.asm.mixin.Final;
@@ -28,247 +19,101 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
-import java.util.stream.Collectors;
 
 @Mixin(Teleporter.class)
 public abstract class TeleporterMixin implements TeleporterBridge {
 
     // @formatter:off
+    @Shadow public abstract Optional<TeleportationRepositioner.Result> func_242956_a(BlockPos p_242956_1_, Direction.Axis p_242956_2_);
     @Shadow @Final protected ServerWorld world;
-    @Shadow @Final protected Random random;
+    @Shadow public abstract Optional<TeleportationRepositioner.Result> func_242957_a(BlockPos p_242957_1_, boolean p_242957_2_);
     // @formatter:on
 
-    private transient BlockStateListPopulator arclight$populator;
-
-    @Redirect(method = "makePortal", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
-    public boolean arclight$portalPlace1(ServerWorld serverWorld, BlockPos pos, BlockState newState, int flags) {
-        if (arclight$populator == null) {
-            arclight$populator = new BlockStateListPopulator(serverWorld);
-        }
-        return arclight$populator.setBlockState(pos, newState, flags);
+    @ModifyVariable(method = "func_242957_a", index = 4, at = @At(value = "INVOKE", target = "Lnet/minecraft/village/PointOfInterestManager;ensureLoadedAndValid(Lnet/minecraft/world/IWorldReader;Lnet/minecraft/util/math/BlockPos;I)V"))
+    private int arclight$useSearchRadius(int i) {
+        return this.arclight$searchRadius == -1 ? i : this.arclight$searchRadius;
     }
 
-    @Redirect(method = "makePortal", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Z"))
-    public boolean arclight$portalPlace2(ServerWorld serverWorld, BlockPos pos, BlockState state) {
-        if (arclight$populator == null) {
-            arclight$populator = new BlockStateListPopulator(serverWorld);
+    private transient int arclight$searchRadius = -1;
+
+    public Optional<TeleportationRepositioner.Result> findPortal(BlockPos pos, int searchRadius) {
+        this.arclight$searchRadius = searchRadius;
+        try {
+            return this.func_242957_a(pos, false);
+        } finally {
+            this.arclight$searchRadius = -1;
         }
-        return arclight$populator.setBlockState(pos, state, 3);
     }
 
-    @Inject(method = "makePortal", at = @At("RETURN"))
+    @Override
+    public Optional<TeleportationRepositioner.Result> bridge$findPortal(BlockPos pos, int searchRadius) {
+        return findPortal(pos, searchRadius);
+    }
+
+    @ModifyArg(method = "func_242956_a", index = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;func_243514_a(Lnet/minecraft/util/math/BlockPos;ILnet/minecraft/util/Direction;Lnet/minecraft/util/Direction;)Ljava/lang/Iterable;"))
+    private int arclight$changeRadius(int i) {
+        return this.arclight$createRadius == -1 ? i : this.arclight$createRadius;
+    }
+
+    @Redirect(method = "func_242956_a", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Z"))
+    private boolean arclight$captureBlocks1(ServerWorld serverWorld, BlockPos pos, BlockState state) {
+        if (this.arclight$populator == null) {
+            this.arclight$populator = new BlockStateListPopulator(serverWorld);
+        }
+        return this.arclight$populator.setBlockState(pos, state, 3);
+    }
+
+    @Redirect(method = "func_242956_a", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+    private boolean arclight$captureBlocks2(ServerWorld serverWorld, BlockPos pos, BlockState state, int flags) {
+        if (this.arclight$populator == null) {
+            this.arclight$populator = new BlockStateListPopulator(serverWorld);
+        }
+        return this.arclight$populator.setBlockState(pos, state, flags);
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public void arclight$portalCreate(Entity entityIn, CallbackInfoReturnable<Boolean> cir) {
-        PortalCreateEvent event = new PortalCreateEvent((List) arclight$populator.getList(), ((WorldBridge) this.world).bridge$getWorld(),
-            ((EntityBridge) entityIn).bridge$getBukkitEntity(), PortalCreateEvent.CreateReason.NETHER_PAIR);
-        Bukkit.getPluginManager().callEvent(event);
-        if (!event.isCancelled()) {
-            arclight$populator.updateList();
-        }
-        arclight$populator = null;
-    }
-
-    @Override
-    public boolean bridge$makePortal(Entity entityIn, BlockPos pos, int createRadius) {
-        return this.createPortal(entityIn, pos, createRadius);
-    }
-
-    public boolean createPortal(Entity entity, BlockPos createPosition, int createRadius) {
-        boolean flag = true;
-        double d0 = -1.0;
-        int i = createPosition.getX();
-        int j = createPosition.getY();
-        int k = createPosition.getZ();
-        int l = i;
-        int i2 = j;
-        int j2 = k;
-        int k2 = 0;
-        int l2 = this.random.nextInt(4);
-        BlockPos.Mutable blockposition_mutableblockposition = new BlockPos.Mutable();
-        for (int i3 = i - createRadius; i3 <= i + createRadius; ++i3) {
-            double d2 = i3 + 0.5 - createPosition.getX();
-            for (int j3 = k - createRadius; j3 <= k + createRadius; ++j3) {
-                double d3 = j3 + 0.5 - createPosition.getZ();
-                Label_0439:
-                for (int k3 = this.world.getActualHeight() - 1; k3 >= 0; --k3) {
-                    if (this.world.isAirBlock(blockposition_mutableblockposition.setPos(i3, k3, j3))) {
-                        while (k3 > 0 && this.world.isAirBlock(blockposition_mutableblockposition.setPos(i3, k3 - 1, j3))) {
-                            --k3;
-                        }
-                        for (int i4 = l2; i4 < l2 + 4; ++i4) {
-                            int l3 = i4 % 2;
-                            int j4 = 1 - l3;
-                            if (i4 % 4 >= 2) {
-                                l3 = -l3;
-                                j4 = -j4;
-                            }
-                            for (int l4 = 0; l4 < 3; ++l4) {
-                                for (int i5 = 0; i5 < 4; ++i5) {
-                                    for (int k4 = -1; k4 < 4; ++k4) {
-                                        int k5 = i3 + (i5 - 1) * l3 + l4 * j4;
-                                        int j5 = k3 + k4;
-                                        int l5 = j3 + (i5 - 1) * j4 - l4 * l3;
-                                        blockposition_mutableblockposition.setPos(k5, j5, l5);
-                                        if (k4 < 0 && !this.world.getBlockState(blockposition_mutableblockposition).getMaterial().isSolid()) {
-                                            continue Label_0439;
-                                        }
-                                        if (k4 >= 0 && !this.world.isAirBlock(blockposition_mutableblockposition)) {
-                                            continue Label_0439;
-                                        }
-                                    }
-                                }
-                            }
-                            double d4 = k3 + 0.5 - entity.getPosY();
-                            double d5 = d2 * d2 + d4 * d4 + d3 * d3;
-                            if (d0 < 0.0 || d5 < d0) {
-                                d0 = d5;
-                                l = i3;
-                                i2 = k3;
-                                j2 = j3;
-                                k2 = i4 % 4;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if (d0 < 0.0) {
-            for (int i3 = i - createRadius; i3 <= i + createRadius; ++i3) {
-                double d2 = i3 + 0.5 - createPosition.getX();
-                for (int j3 = k - createRadius; j3 <= k + createRadius; ++j3) {
-                    double d3 = j3 + 0.5 - createPosition.getZ();
-                    Label_0812:
-                    for (int k3 = this.world.getActualHeight() - 1; k3 >= 0; --k3) {
-                        if (this.world.isAirBlock(blockposition_mutableblockposition.setPos(i3, k3, j3))) {
-                            while (k3 > 0 && this.world.isAirBlock(blockposition_mutableblockposition.setPos(i3, k3 - 1, j3))) {
-                                --k3;
-                            }
-                            for (int i4 = l2; i4 < l2 + 2; ++i4) {
-                                int l3 = i4 % 2;
-                                int j4 = 1 - l3;
-                                for (int l4 = 0; l4 < 4; ++l4) {
-                                    for (int i5 = -1; i5 < 4; ++i5) {
-                                        int k4 = i3 + (l4 - 1) * l3;
-                                        int k5 = k3 + i5;
-                                        int j5 = j3 + (l4 - 1) * j4;
-                                        blockposition_mutableblockposition.setPos(k4, k5, j5);
-                                        if (i5 < 0 && !this.world.getBlockState(blockposition_mutableblockposition).getMaterial().isSolid()) {
-                                            continue Label_0812;
-                                        }
-                                        if (i5 >= 0 && !this.world.isAirBlock(blockposition_mutableblockposition)) {
-                                            continue Label_0812;
-                                        }
-                                    }
-                                }
-                                double d4 = k3 + 0.5 - entity.getPosY();
-                                double d5 = d2 * d2 + d4 * d4 + d3 * d3;
-                                if (d0 < 0.0 || d5 < d0) {
-                                    d0 = d5;
-                                    l = i3;
-                                    i2 = k3;
-                                    j2 = j3;
-                                    k2 = i4 % 2;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        int i6 = l;
-        int j6 = i2;
-        int j3 = j2;
-        int k6 = k2 % 2;
-        int l6 = 1 - k6;
-        if (k2 % 4 >= 2) {
-            k6 = -k6;
-            l6 = -l6;
-        }
-        BlockStateListPopulator blockList = new BlockStateListPopulator(this.world);
-        if (d0 < 0.0) {
-            i2 = (j6 = MathHelper.clamp(i2, 70, this.world.getActualHeight() - 10));
-            for (int k3 = -1; k3 <= 1; ++k3) {
-                for (int i4 = 1; i4 < 3; ++i4) {
-                    for (int l3 = -1; l3 < 3; ++l3) {
-                        int j4 = i6 + (i4 - 1) * k6 + k3 * l6;
-                        int l4 = j6 + l3;
-                        int i5 = j3 + (i4 - 1) * l6 - k3 * k6;
-                        boolean flag2 = l3 < 0;
-                        blockposition_mutableblockposition.setPos(j4, l4, i5);
-                        blockList.setBlockState(blockposition_mutableblockposition, flag2 ? Blocks.OBSIDIAN.getDefaultState() : Blocks.AIR.getDefaultState(), 3);
-                    }
-                }
-            }
-        }
-        for (int k3 = -1; k3 < 3; ++k3) {
-            for (int i4 = -1; i4 < 4; ++i4) {
-                if (k3 == -1 || k3 == 2 || i4 == -1 || i4 == 3) {
-                    blockposition_mutableblockposition.setPos(i6 + k3 * k6, j6 + i4, j3 + k3 * l6);
-                    blockList.setBlockState(blockposition_mutableblockposition, Blocks.OBSIDIAN.getDefaultState(), 3);
-                }
-            }
-        }
-        BlockState iblockdata = (Blocks.NETHER_PORTAL.getDefaultState()).with(NetherPortalBlock.AXIS, (k6 == 0) ? Direction.Axis.Z : Direction.Axis.X);
-        for (int i4 = 0; i4 < 2; ++i4) {
-            for (int l3 = 0; l3 < 3; ++l3) {
-                blockposition_mutableblockposition.setPos(i6 + i4 * k6, j6 + l3, j3 + i4 * l6);
-                blockList.setBlockState(blockposition_mutableblockposition, iblockdata, 18);
-            }
-        }
-        org.bukkit.World bworld = ((WorldBridge) this.world).bridge$getWorld();
-        PortalCreateEvent event = new PortalCreateEvent((List) blockList.getList(), bworld, ((EntityBridge) entity).bridge$getBukkitEntity(), PortalCreateEvent.CreateReason.NETHER_PAIR);
-        Bukkit.getPluginManager().callEvent(event);
-        if (!event.isCancelled()) {
-            blockList.updateList();
-        }
-        return true;
-    }
-
-    public BlockPattern.PortalInfo findAndTeleport(Entity p_222268_1_, BlockPos pos, float p_222268_2_, int searchRadius, boolean searchOnly) {
-        Vec3d vec3d = p_222268_1_.getLastPortalVec();
-        Direction direction = p_222268_1_.getTeleportDirection();
-        BlockPattern.PortalInfo portalInfo = this.findPortal(pos, p_222268_1_.getMotion(), direction, vec3d.x, vec3d.y, p_222268_1_ instanceof PlayerEntity, searchRadius);
-        if (searchOnly) return portalInfo;
-        if (portalInfo == null) {
-            return null;
+    @Inject(method = "func_242956_a", at = @At("RETURN"))
+    private void arclight$portalCreate(BlockPos pos, Direction.Axis axis, CallbackInfoReturnable<Optional<TeleportationRepositioner.Result>> cir) {
+        CraftWorld craftWorld = ((WorldBridge) this.world).bridge$getWorld();
+        List<org.bukkit.block.BlockState> blockStates;
+        if (this.arclight$populator == null) {
+            blockStates = new ArrayList<>();
         } else {
-            Vec3d vec3d1 = portalInfo.pos;
-            Vec3d vec3d2 = portalInfo.motion;
-            p_222268_1_.setMotion(vec3d2);
-            p_222268_1_.rotationYaw = p_222268_2_ + (float) portalInfo.rotation;
-            p_222268_1_.moveForced(vec3d1.x, vec3d1.y, vec3d1.z);
-            return portalInfo;
+            blockStates = (List) this.arclight$populator.getList();
+        }
+        PortalCreateEvent event = new PortalCreateEvent(blockStates, craftWorld, (this.arclight$entity == null) ? null : ((EntityBridge) this.arclight$entity).bridge$getBukkitEntity(), PortalCreateEvent.CreateReason.NETHER_PAIR);
+
+        Bukkit.getPluginManager().callEvent(event);
+        if (!event.isCancelled() && this.arclight$populator != null) {
+            this.arclight$populator.updateList();
+        }
+    }
+
+    private transient BlockStateListPopulator arclight$populator;
+    private transient Entity arclight$entity;
+    private transient int arclight$createRadius = -1;
+
+    public Optional<TeleportationRepositioner.Result> createPortal(BlockPos pos, Direction.Axis axis, Entity entity, int createRadius) {
+        this.arclight$entity = entity;
+        this.arclight$createRadius = createRadius;
+        try {
+            return this.func_242956_a(pos, axis);
+        } finally {
+            this.arclight$entity = null;
+            this.arclight$createRadius = -1;
         }
     }
 
     @Override
-    public BlockPattern.PortalInfo bridge$placeInPortal(Entity p_222268_1_, BlockPos pos, float p_222268_2_, int searchRadius, boolean searchOnly) {
-        return findAndTeleport(p_222268_1_, pos, p_222268_2_, searchRadius, searchOnly);
-    }
-
-    public BlockPattern.PortalInfo findPortal(BlockPos p_222272_1_, Vec3d p_222272_2_, Direction directionIn, double p_222272_4_, double p_222272_6_, boolean p_222272_8_, int searchRadius) {
-        PointOfInterestManager pointofinterestmanager = this.world.getPointOfInterestManager();
-        pointofinterestmanager.ensureLoadedAndValid(this.world, p_222272_1_, 128);
-        List<PointOfInterest> list = pointofinterestmanager.getInSquare((p_226705_0_) -> {
-            return p_226705_0_ == PointOfInterestType.NETHER_PORTAL;
-        }, p_222272_1_, searchRadius, PointOfInterestManager.Status.ANY).collect(Collectors.toList());
-        Optional<PointOfInterest> optional = list.stream().min(Comparator.<PointOfInterest>comparingDouble((p_226706_1_) -> {
-            return p_226706_1_.getPos().distanceSq(p_222272_1_);
-        }).thenComparingInt((p_226704_0_) -> {
-            return p_226704_0_.getPos().getY();
-        }));
-        return optional.map((p_226707_7_) -> {
-            BlockPos blockpos = p_226707_7_.getPos();
-            this.world.getChunkProvider().registerTicket(TicketType.PORTAL, new ChunkPos(blockpos), 3, blockpos);
-            BlockPattern.PatternHelper blockpattern$patternhelper = NetherPortalBlock.createPatternHelper(this.world, blockpos);
-            return blockpattern$patternhelper.getPortalInfo(directionIn, blockpos, p_222272_6_, p_222272_2_, p_222272_4_);
-        }).orElse(null);
+    public Optional<TeleportationRepositioner.Result> bridge$createPortal(BlockPos pos, Direction.Axis axis, Entity entity, int createRadius) {
+        return createPortal(pos, axis, entity, createRadius);
     }
 }

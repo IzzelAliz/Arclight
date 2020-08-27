@@ -26,4 +26,9 @@ public abstract class WorldGenRegionMixin implements IWorldWriterBridge {
     @Override
     public void bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason reason) {
     }
+
+    @Override
+    public CreatureSpawnEvent.SpawnReason bridge$getAddEntityReason() {
+        return CreatureSpawnEvent.SpawnReason.DEFAULT;
+    }
 }

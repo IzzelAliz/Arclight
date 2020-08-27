@@ -117,6 +117,10 @@ public abstract class WorldMixin implements WorldBridge {
         return ticksPerAmbientSpawns;
     }
 
+    @Override
+    public long bridge$ticksPerWaterAmbientSpawns() {
+    }
+
     public void arclight$constructor(WorldInfo info, DimensionType dimType, BiFunction<World, Dimension, AbstractChunkProvider> provider, IProfiler profilerIn, boolean remote) {
         throw new RuntimeException();
     }

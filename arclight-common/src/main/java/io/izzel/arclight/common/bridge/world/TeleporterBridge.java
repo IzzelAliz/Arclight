@@ -9,8 +9,6 @@ import java.util.Optional;
 
 public interface TeleporterBridge {
 
-    boolean bridge$makePortal(Entity entityIn, BlockPos pos, int createRadius);
-
     Optional<TeleportationRepositioner.Result> bridge$findPortal(BlockPos pos, int searchRadius);
 
     Optional<TeleportationRepositioner.Result> bridge$createPortal(BlockPos pos, Direction.Axis axis, Entity entity, int createRadius);

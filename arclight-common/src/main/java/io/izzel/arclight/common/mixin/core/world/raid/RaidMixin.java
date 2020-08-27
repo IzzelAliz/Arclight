@@ -13,12 +13,14 @@ import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.raid.RaidStopEvent;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
@@ -36,27 +38,41 @@ public class RaidMixin implements RaidBridge {
     @Shadow @Final private ServerWorld world;
     // @formatter:on
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/raid/Raid;stop()V"))
+    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/raid/Raid;stop()V"),
+        slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/Difficulty;PEACEFUL:Lnet/minecraft/world/Difficulty;")))
     public void arclight$stopPeace(CallbackInfo ci) {
         CraftEventFactory.callRaidStopEvent((Raid) (Object) this, RaidStopEvent.Reason.PEACE);
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/raid/Raid;stop()V"))
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/raid/Raid;stop()V"),
+        slice = @Slice(
+            from = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;isVillage(Lnet/minecraft/util/math/BlockPos;)Z"),
+            to = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/raid/Raid;ticksActive:J")
+        ))
     public void arclight$stopNotInVillage(CallbackInfo ci) {
         CraftEventFactory.callRaidStopEvent((Raid) (Object) this, RaidStopEvent.Reason.NOT_IN_VILLAGE);
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 2, target = "Lnet/minecraft/world/raid/Raid;stop()V"))
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/raid/Raid;stop()V"),
+        slice = @Slice(
+            from = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/raid/Raid;ticksActive:J"),
+            to = @At(value = "INVOKE", target = "Lnet/minecraft/world/raid/Raid;getRaiderCount()I")
+        ))
     public void arclight$stopTimeout(CallbackInfo ci) {
         CraftEventFactory.callRaidStopEvent((Raid) (Object) this, RaidStopEvent.Reason.TIMEOUT);
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 3, target = "Lnet/minecraft/world/raid/Raid;stop()V"))
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/raid/Raid;stop()V"),
+        slice = @Slice(
+            from = @At(value = "INVOKE", target = "Lnet/minecraft/world/raid/Raid;shouldSpawnGroup()Z"),
+            to = @At(value = "INVOKE", target = "Lnet/minecraft/world/raid/Raid;isStarted()Z")
+        ))
     public void arclight$stopUnspawnable(CallbackInfo ci) {
         CraftEventFactory.callRaidStopEvent((Raid) (Object) this, RaidStopEvent.Reason.UNSPAWNABLE);
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 4, target = "Lnet/minecraft/world/raid/Raid;stop()V"))
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/raid/Raid;stop()V"),
+        slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/raid/Raid;isOver()Z")))
     public void arclight$stopFinish(CallbackInfo ci) {
         CraftEventFactory.callRaidStopEvent((Raid) (Object) this, RaidStopEvent.Reason.FINISHED);
     }
@@ -107,7 +123,7 @@ public class RaidMixin implements RaidBridge {
         CraftEventFactory.callRaidSpawnWaveEvent((Raid) (Object) this, arclight$leader, arclight$raiders);
     }
 
-    @Inject(method = "joinRaid(ILnet/minecraft/entity/monster/AbstractRaiderEntity;Lnet/minecraft/util/math/BlockPos;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;addEntity(Lnet/minecraft/entity/Entity;)Z"))
+    @Inject(method = "joinRaid(ILnet/minecraft/entity/monster/AbstractRaiderEntity;Lnet/minecraft/util/math/BlockPos;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;func_242417_l(Lnet/minecraft/entity/Entity;)V"))
     public void arclight$addEntity(int wave, AbstractRaiderEntity p_221317_2_, BlockPos p_221317_3_, boolean p_221317_4_, CallbackInfo ci) {
         ((WorldBridge) this.world).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.RAID);
     }

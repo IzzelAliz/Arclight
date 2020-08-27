@@ -41,7 +41,7 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin {
         BukkitRegistry.lockRegistries();
     }
 
-    @Inject(method = "init", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/network/rcon/MainThread;startThread()V"))
+    @Inject(method = "init", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/network/rcon/MainThread;func_242130_a(Lnet/minecraft/network/rcon/IServer;)Lnet/minecraft/network/rcon/MainThread;"))
     public void arclight$setRcon(CallbackInfoReturnable<Boolean> cir) {
         this.remoteConsole = new CraftRemoteConsoleCommandSender(this.rconConsoleSource);
     }
@@ -90,5 +90,35 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin {
             }
         }, "Exit Thread").start();
         System.exit(0);
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    public String getPlugins() {
+        StringBuilder result = new StringBuilder();
+        org.bukkit.plugin.Plugin[] plugins = server.getPluginManager().getPlugins();
+
+        result.append(server.getName());
+        result.append(" on Bukkit ");
+        result.append(server.getBukkitVersion());
+
+        if (plugins.length > 0 && server.getQueryPlugins()) {
+            result.append(": ");
+
+            for (int i = 0; i < plugins.length; i++) {
+                if (i > 0) {
+                    result.append("; ");
+                }
+
+                result.append(plugins[i].getDescription().getName());
+                result.append(" ");
+                result.append(plugins[i].getDescription().getVersion().replaceAll(";", ","));
+            }
+        }
+
+        return result.toString();
     }
 }

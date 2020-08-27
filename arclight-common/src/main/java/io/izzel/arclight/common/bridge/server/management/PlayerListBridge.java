@@ -19,6 +19,5 @@ public interface PlayerListBridge {
 
     ServerPlayerEntity bridge$canPlayerLogin(SocketAddress socketAddress, GameProfile gameProfile, ServerLoginNetHandler handler);
 
-    // todo
     void bridge$sendMessage(ITextComponent[] components);
 }
