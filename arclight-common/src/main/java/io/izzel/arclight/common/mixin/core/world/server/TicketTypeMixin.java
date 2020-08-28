@@ -6,13 +6,14 @@ import net.minecraft.world.server.TicketType;
 import org.bukkit.plugin.Plugin;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
-import io.izzel.arclight.common.mod.ArclightConstants;
+
+import java.util.Comparator;
 
 @Mixin(TicketType.class)
 public abstract class TicketTypeMixin implements TicketTypeBridge {
 
-    private static final TicketType<Unit> PLUGIN = ArclightConstants.PLUGIN;
-    private static final TicketType<Plugin> PLUGIN_TICKET = ArclightConstants.PLUGIN_TICKET;
+    private static final TicketType<Unit> PLUGIN = TicketType.create("plugin", (a, b) -> 0);
+    private static final TicketType<Plugin> PLUGIN_TICKET = TicketType.create("plugin_ticket", Comparator.comparing(it -> it.getClass().getName()));
 
     @Override @Accessor(value = "lifespan")
     public abstract void bridge$setLifespan(long lifespan);

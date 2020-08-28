@@ -18,7 +18,7 @@ import java.util.Random;
 public class RedstoneTorchBlockMixin {
 
     @Inject(method = "tick", cancellable = true, at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
-    private static void arclight$blockRedstone1(BlockState state, ServerWorld worldIn, BlockPos pos, Random rand, CallbackInfo ci) {
+    private void arclight$blockRedstone1(BlockState state, ServerWorld worldIn, BlockPos pos, Random rand, CallbackInfo ci) {
         int oldCurrent = state.get(RedstoneTorchBlock.LIT) ? 15 : 0;
         if (oldCurrent != 0) {
             CraftBlock block = CraftBlock.at(worldIn, pos);
@@ -31,7 +31,7 @@ public class RedstoneTorchBlockMixin {
     }
 
     @Inject(method = "tick", cancellable = true, at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
-    private static void arclight$blockRedstone2(BlockState state, ServerWorld worldIn, BlockPos pos, Random rand, CallbackInfo ci) {
+    private void arclight$blockRedstone2(BlockState state, ServerWorld worldIn, BlockPos pos, Random rand, CallbackInfo ci) {
         int oldCurrent = state.get(RedstoneTorchBlock.LIT) ? 15 : 0;
         if (oldCurrent != 15) {
             CraftBlock block = CraftBlock.at(worldIn, pos);

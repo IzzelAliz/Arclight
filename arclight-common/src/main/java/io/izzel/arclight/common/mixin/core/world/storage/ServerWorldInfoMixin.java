@@ -1,11 +1,10 @@
 package io.izzel.arclight.common.mixin.core.world.storage;
 
+import com.mojang.serialization.Lifecycle;
 import io.izzel.arclight.common.bridge.world.storage.WorldInfoBridge;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.play.server.SServerDifficultyPacket;
-import net.minecraft.util.registry.DynamicRegistries;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.server.ServerWorld;
@@ -14,6 +13,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -29,15 +29,10 @@ public abstract class ServerWorldInfoMixin implements WorldInfoBridge {
     @Shadow private boolean raining;
     @Shadow public abstract boolean isDifficultyLocked();
     @Shadow private WorldSettings worldSettings;
+    @Shadow @Final private Lifecycle lifecycle;
     // @formatter:on
 
     public ServerWorld world;
-
-    @Inject(method = "serialize(Lnet/minecraft/util/registry/DynamicRegistries;Lnet/minecraft/nbt/CompoundNBT;Lnet/minecraft/nbt/CompoundNBT;)V",
-        at = @At("RETURN"))
-    private void arclight$bukkitVer(DynamicRegistries registry, CompoundNBT nbt, CompoundNBT playerNBT, CallbackInfo ci) {
-        nbt.putString("Bukkit.Version", Bukkit.getName() + "/" + Bukkit.getVersion() + "/" + Bukkit.getBukkitVersion());
-    }
 
     @Inject(method = "setThundering", cancellable = true, at = @At("HEAD"))
     private void arclight$thunder(boolean thunderingIn, CallbackInfo ci) {
@@ -93,5 +88,15 @@ public abstract class ServerWorldInfoMixin implements WorldInfoBridge {
         if (!this.worldSettings.worldName.equals(name)) {
             this.worldSettings.worldName = name;
         }
+    }
+
+    @Override
+    public WorldSettings bridge$getWorldSettings() {
+        return this.worldSettings;
+    }
+
+    @Override
+    public Lifecycle bridge$getLifecycle() {
+        return this.lifecycle;
     }
 }

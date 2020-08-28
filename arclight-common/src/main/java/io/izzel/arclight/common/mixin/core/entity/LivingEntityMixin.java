@@ -71,7 +71,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -976,26 +975,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Override
     public boolean canCollideWith(Entity entity) {
         return this.canBePushed() && this.collides != this.collidableExemptions.contains(entity.getUniqueID());
-    }
-
-    private transient ItemStack arclight$consumePost;
-
-    @Inject(method = "onItemUseFinish", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getItemInUseCount()I"))
-    public void arclight$itemConsume(CallbackInfo ci, ItemStack copy) {
-        arclight$consumePost = null;
-        if (this instanceof ServerPlayerEntityBridge) {
-            final org.bukkit.inventory.ItemStack craftItem = CraftItemStack.asBukkitCopy(this.activeItemStack);
-            final PlayerItemConsumeEvent event = new PlayerItemConsumeEvent((Player) this.getBukkitEntity(), craftItem);
-            Bukkit.getPluginManager().callEvent(event);
-            if (event.isCancelled()) {
-                ((ServerPlayerEntityBridge) this).bridge$getBukkitEntity().updateInventory();
-                ((ServerPlayerEntityBridge) this).bridge$getBukkitEntity().updateScaledHealth();
-                ci.cancel();
-            } else if (!craftItem.equals(event.getItem())) {
-                arclight$consumePost = CraftItemStack.asNMSCopy(event.getItem());
-            }
-        }
     }
 
     @Eject(method = "onItemUseFinish", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;onItemUseFinish(Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;)Lnet/minecraft/item/ItemStack;"))

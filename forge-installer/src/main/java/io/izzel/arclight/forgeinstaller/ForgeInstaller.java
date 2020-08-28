@@ -40,6 +40,7 @@ import java.util.jar.Manifest;
 public class ForgeInstaller {
 
     private static final String[] MAVEN_REPO = {
+        "https://download.mcbbs.net/maven/",
         "https://bmclapi2.bangbang93.com/maven/",
         "https://maven.aliyun.com/repository/public/",
         "https://repo.spongepowered.org/maven/",

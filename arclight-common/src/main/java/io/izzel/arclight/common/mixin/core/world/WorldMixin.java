@@ -2,8 +2,8 @@ package io.izzel.arclight.common.mixin.core.world;
 
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.bridge.world.border.WorldBorderBridge;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
-import io.izzel.arclight.common.mod.util.ResourceLocationUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
@@ -18,9 +18,9 @@ import net.minecraft.world.World;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.storage.IServerWorldInfo;
 import net.minecraft.world.storage.ISpawnWorldInfo;
 import net.minecraft.world.storage.IWorldInfo;
-import net.minecraft.world.storage.ServerWorldInfo;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
@@ -87,7 +87,7 @@ public abstract class WorldMixin implements WorldBridge {
 
     @Inject(method = "<init>(Lnet/minecraft/world/storage/ISpawnWorldInfo;Lnet/minecraft/util/RegistryKey;Lnet/minecraft/world/DimensionType;Ljava/util/function/Supplier;ZZJ)V", at = @At("RETURN"))
     private void arclight$init(ISpawnWorldInfo info, RegistryKey<World> p_i241925_2_, DimensionType dimType, Supplier<IProfiler> p_i241925_4_, boolean p_i241925_5_, boolean p_i241925_6_, long p_i241925_7_, CallbackInfo ci) {
-        this.spigotConfig = new SpigotWorldConfig(((ServerWorldInfo) info).getWorldName());
+        this.spigotConfig = new SpigotWorldConfig(((IServerWorldInfo) info).getWorldName());
         ((WorldBorderBridge) this.worldBorder).bridge$setWorld((ServerWorld) (Object) this);
         this.ticksPerAnimalSpawns = this.getServer().getTicksPerAnimalSpawns();
         this.ticksPerMonsterSpawns = this.getServer().getTicksPerMonsterSpawns();
@@ -187,10 +187,10 @@ public abstract class WorldMixin implements WorldBridge {
     public CraftWorld getWorld() {
         if (this.world == null) {
             if (generator == null) {
-                generator = getServer().getGenerator(((ServerWorldInfo) this.getWorldInfo()).getWorldName());
+                generator = getServer().getGenerator(((IServerWorldInfo) this.getWorldInfo()).getWorldName());
             }
             if (environment == null) {
-                environment = org.bukkit.World.Environment.valueOf(ResourceLocationUtil.standardize(this.typeKey.getRegistryName()));
+                environment = ArclightServer.getEnvironment(this.typeKey);
             }
             this.world = new CraftWorld((ServerWorld) (Object) this, generator, environment);
             getServer().addWorld(this.world);

@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.entity.projectile;
 
 import io.izzel.arclight.common.bridge.entity.projectile.DamagingProjectileEntityBridge;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.projectile.DamagingProjectileEntity;
 import net.minecraft.util.DamageSource;
@@ -43,7 +44,7 @@ public abstract class DamagingProjectileEntityMixin extends ProjectileEntityMixi
     }
 
     @Inject(method = "tick", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/entity/projectile/DamagingProjectileEntity;onImpact(Lnet/minecraft/util/math/RayTraceResult;)V"))
-    private void arclight$projectileHit(CallbackInfo ci, RayTraceResult rayTraceResult) {
+    private void arclight$projectileHit(CallbackInfo ci, Entity entity, RayTraceResult rayTraceResult) {
         if (this.removed) {
             CraftEventFactory.callProjectileHitEvent((DamagingProjectileEntity) (Object) this, rayTraceResult);
         }

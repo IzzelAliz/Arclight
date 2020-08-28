@@ -181,12 +181,10 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
                 field.name = map.getOrDefault(field.name, field.name);
             }
             for (MethodNode method : classNode.methods) {
-                if (method.name.equals("<init>")) {
-                    for (AbstractInsnNode instruction : method.instructions) {
-                        if (instruction instanceof FieldInsnNode) {
-                            FieldInsnNode node = (FieldInsnNode) instruction;
-                            node.name = map.getOrDefault(node.name, node.name);
-                        }
+                for (AbstractInsnNode instruction : method.instructions) {
+                    if (instruction instanceof FieldInsnNode) {
+                        FieldInsnNode node = (FieldInsnNode) instruction;
+                        node.name = map.getOrDefault(node.name, node.name);
                     }
                 }
             }

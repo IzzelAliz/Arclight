@@ -16,7 +16,6 @@ public interface MinecraftServerBridge {
 
     void bridge$setRemoteConsole(RemoteConsoleCommandSender sender);
 
-    // todo
     void bridge$queuedProcess(Runnable runnable);
 
     boolean bridge$hasStopped();

@@ -1,6 +1,9 @@
 package io.izzel.arclight.common.mod.server;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.izzel.arclight.api.EnumHelper;
 import io.izzel.arclight.api.Unsafe;
@@ -58,6 +61,12 @@ public class BukkitRegistry {
     private static final Map<Material, Block> MATERIAL_BLOCK = getStatic(CraftMagicNumbers.class, "MATERIAL_BLOCK");
     private static final Map<String, EntityType> ENTITY_NAME_MAP = getStatic(EntityType.class, "NAME_MAP");
     private static final Map<Integer, World.Environment> ENVIRONMENT_MAP = getStatic(World.Environment.class, "lookup");
+    static final BiMap<RegistryKey<DimensionType>, World.Environment> DIM_MAP =
+        HashBiMap.create(ImmutableMap.<RegistryKey<DimensionType>, World.Environment>builder()
+            .put(DimensionType.OVERWORLD, World.Environment.NORMAL)
+            .put(DimensionType.THE_NETHER, World.Environment.NETHER)
+            .put(DimensionType.THE_END, World.Environment.THE_END)
+            .build());
 
     public static void registerAll() {
         CrashReportExtender.registerCrashCallable("Arclight", () -> new CraftCrashReport().call().toString());
@@ -117,33 +126,25 @@ public class BukkitRegistry {
         ArclightMod.LOGGER.info("registry.villager-profession", newTypes.size());
     }
 
-    @SuppressWarnings("rawtypes")
     public static void registerEnvironments() {
         int i = World.Environment.values().length;
         List<World.Environment> newTypes = new ArrayList<>();
-        Registry<DimensionType> registry = Registry.REGISTRY.getValueForKey((RegistryKey) Registry.DIMENSION_TYPE_KEY);
+        Registry<DimensionType> registry = ArclightServer.getMinecraftServer().func_244267_aX().func_243612_b(Registry.DIMENSION_TYPE_KEY);
         for (Map.Entry<RegistryKey<DimensionType>, DimensionType> entry : registry.getEntries()) {
             RegistryKey<DimensionType> key = entry.getKey();
-            World.Environment environment = findEnvironment(key);
+            World.Environment environment = DIM_MAP.get(key);
             if (environment == null) {
-                String name = ResourceLocationUtil.standardize(key.getRegistryName());
+                String name = ResourceLocationUtil.standardize(key.func_240901_a_());
                 environment = EnumHelper.makeEnum(World.Environment.class, name, i, ENV_CTOR, ImmutableList.of(i - 1));
                 newTypes.add(environment);
                 ENVIRONMENT_MAP.put(i - 1, environment);
-                ArclightMod.LOGGER.debug("Registered {} as environment {}", key.getRegistryName(), environment);
+                DIM_MAP.put(key, environment);
+                ArclightMod.LOGGER.debug("Registered {} as environment {}", key.func_240901_a_(), environment);
                 i++;
             }
         }
         EnumHelper.addEnums(World.Environment.class, newTypes);
         ArclightMod.LOGGER.info("registry.environment", newTypes.size());
-    }
-
-    private static World.Environment findEnvironment(RegistryKey<DimensionType> key) {
-        try {
-            return World.Environment.valueOf(ResourceLocationUtil.standardize(key.func_240901_a_()));
-        } catch (Throwable t) {
-            return null;
-        }
     }
 
     private static void loadEntities() {

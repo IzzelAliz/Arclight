@@ -50,8 +50,8 @@ public abstract class ChunkMixin implements ChunkBridge {
 
     @Inject(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/util/math/ChunkPos;Lnet/minecraft/world/biome/BiomeContainer;Lnet/minecraft/util/palette/UpgradeData;Lnet/minecraft/world/ITickList;Lnet/minecraft/world/ITickList;J[Lnet/minecraft/world/chunk/ChunkSection;Ljava/util/function/Consumer;)V", at = @At("RETURN"))
     private void arclight$init(World worldIn, ChunkPos chunkPosIn, BiomeContainer biomeContainerIn, UpgradeData upgradeDataIn, ITickList<Block> tickBlocksIn, ITickList<Fluid> tickFluidsIn, long inhabitedTimeIn, ChunkSection[] sectionsIn, Consumer<Chunk> postLoadConsumerIn, CallbackInfo ci) {
+        this.$$world = ((ServerWorld) worldIn);
         bridge$setBukkitChunk(new CraftChunk((Chunk) (Object) this));
-        this.$$world = ((ServerWorld) world);
     }
 
     public org.bukkit.Chunk getBukkitChunk() {

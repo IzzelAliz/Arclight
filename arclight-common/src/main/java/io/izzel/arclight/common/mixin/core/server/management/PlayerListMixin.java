@@ -13,6 +13,7 @@ import io.izzel.arclight.common.bridge.server.management.PlayerListBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import io.izzel.arclight.mixin.Eject;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.MobEntity;
@@ -150,7 +151,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         return new SJoinGamePacket(p_i242082_1_, p_i242082_2_, p_i242082_3_, p_i242082_4_, p_i242082_6_, p_i242082_7_, p_i242082_8_, p_i242082_9_, p_i242082_10_, p_i242082_11_, ((WorldBridge) playerIn.getServerWorld()).bridge$spigotConfig().viewDistance, p_i242082_13_, p_i242082_14_, p_i242082_15_, p_i242082_16_);
     }
 
-    @Redirect(method = "initializeConnectionToPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/management/PlayerList;func_232641_a_(Lnet/minecraft/util/text/ITextComponent;Lnet/minecraft/util/text/ChatType;Ljava/util/UUID;)V"))
+    @Eject(method = "initializeConnectionToPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/management/PlayerList;func_232641_a_(Lnet/minecraft/util/text/ITextComponent;Lnet/minecraft/util/text/ChatType;Ljava/util/UUID;)V"))
     private void arclight$playerJoin(PlayerList playerList, ITextComponent component, ChatType chatType, UUID uuid, CallbackInfo ci, NetworkManager netManager, ServerPlayerEntity playerIn) {
         PlayerJoinEvent playerJoinEvent = new PlayerJoinEvent(this.cserver.getPlayer(playerIn), CraftChatMessage.fromComponent(component));
         this.cserver.getPluginManager().callEvent(playerJoinEvent);

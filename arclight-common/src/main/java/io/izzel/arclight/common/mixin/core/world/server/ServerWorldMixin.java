@@ -13,6 +13,7 @@ import io.izzel.arclight.common.bridge.world.storage.MapDataBridge;
 import io.izzel.arclight.common.bridge.world.storage.WorldInfoBridge;
 import io.izzel.arclight.common.mixin.core.world.WorldMixin;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import io.izzel.arclight.common.mod.util.DelegateWorldInfo;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -42,6 +43,7 @@ import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.server.ServerChunkProvider;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.spawner.ISpecialSpawner;
+import net.minecraft.world.storage.DerivedWorldInfo;
 import net.minecraft.world.storage.IServerWorldInfo;
 import net.minecraft.world.storage.MapData;
 import net.minecraft.world.storage.SaveFormat;
@@ -103,7 +105,7 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
     // @formatter:on
 
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
-    private ServerWorldInfo $$worldDataServer;
+    public ServerWorldInfo $$worldDataServer;
     public SaveFormat.LevelSave convertable;
     public UUID uuid;
 
@@ -127,9 +129,14 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         this.pvpMode = minecraftServer.isPVPEnabled();
         this.convertable = p_i241885_3_;
         this.uuid = WorldUUID.getUUID(p_i241885_3_.getDimensionFolder(this.getDimensionKey()));
-        this.$$worldDataServer = (ServerWorldInfo) worldInfo;
+        if (worldInfo instanceof ServerWorldInfo) {
+            this.$$worldDataServer = (ServerWorldInfo) worldInfo;
+        } else if (worldInfo instanceof DerivedWorldInfo) {
+            // damn spigot again
+            this.$$worldDataServer = DelegateWorldInfo.wrap(((DerivedWorldInfo) worldInfo));
+        }
         ((ServerChunkProviderBridge) this.field_241102_C_).bridge$setViewDistance(spigotConfig.viewDistance);
-        ((WorldInfoBridge) worldInfo).bridge$setWorld((ServerWorld) (Object) this);
+        ((WorldInfoBridge) this.$$worldDataServer).bridge$setWorld((ServerWorld) (Object) this);
     }
 
     public Chunk getChunkIfLoaded(int x, int z) {

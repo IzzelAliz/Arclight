@@ -72,7 +72,7 @@ public abstract class BucketItemMixin {
 
     private transient org.bukkit.inventory.@Nullable ItemStack arclight$captureItem;
 
-    @ModifyArg(method = "onItemRightClick", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/DrinkHelper;func_242398_a(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;)Lnet/minecraft/item/ItemStack;"))
+    @ModifyArg(method = "onItemRightClick", index = 2, at = @At(value = "INVOKE", target = "Lnet/minecraft/util/DrinkHelper;func_242398_a(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;)Lnet/minecraft/item/ItemStack;"))
     private ItemStack arclight$useEventItem(ItemStack itemStack) {
         return arclight$captureItem == null ? itemStack : CraftItemStack.asNMSCopy(arclight$captureItem);
     }

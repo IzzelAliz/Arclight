@@ -84,11 +84,6 @@ public abstract class ArmorStandEntityMixin extends LivingEntityMixin {
         arclight$callEntityDeath();
     }
 
-    @Redirect(method = "func_213816_g", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;spawnAsEntity(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/item/ItemStack;)V"))
-    private void arclight$captureDrops1(World worldIn, BlockPos pos, ItemStack stack) {
-        arclight$tryCaptureDrops(worldIn, pos, stack);
-    }
-
     @Redirect(method = "func_213816_g", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/item/ArmorStandEntity;spawnDrops(Lnet/minecraft/util/DamageSource;)V"))
     private void arclight$dropLater(ArmorStandEntity entity, DamageSource damageSourceIn) {
     }

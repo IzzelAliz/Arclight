@@ -303,7 +303,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
         if (this.forceTicks) cir.setReturnValue(true);
     }
 
-    @Inject(method = "func_240787_a_", at = @At("HEAD"))
+    @Inject(method = "func_240787_a_", at = @At(value = "NEW", ordinal = 0, target = "net/minecraft/world/server/ServerWorld"))
     private void arclight$registerEnv(IChunkStatusListener p_240787_1_, CallbackInfo ci) {
         BukkitRegistry.registerEnvironments();
     }

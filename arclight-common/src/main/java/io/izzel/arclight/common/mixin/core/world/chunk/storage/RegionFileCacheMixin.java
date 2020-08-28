@@ -32,7 +32,7 @@ public abstract class RegionFileCacheMixin implements RegionFileCacheBridge {
 
     @Inject(method = "loadFile", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "NEW", target = "net/minecraft/world/chunk/storage/RegionFile"))
-    private void arclight$retIfSearch(ChunkPos pos, CallbackInfoReturnable<RegionFile> cir, long l, RegionFile rf, File file) {
+    private void arclight$retIfSearch(ChunkPos pos, CallbackInfoReturnable<RegionFile> cir, long l, File file) {
         if (arclight$existOnly && !file.exists()) cir.setReturnValue(null);
     }
 

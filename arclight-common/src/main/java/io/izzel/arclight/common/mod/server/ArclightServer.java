@@ -6,7 +6,10 @@ import io.izzel.arclight.common.mod.ArclightMod;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.management.PlayerList;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.world.DimensionType;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
+import org.bukkit.World;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.command.ColouredConsoleSender;
 
@@ -47,5 +50,13 @@ public class ArclightServer {
 
     public static MinecraftServer getMinecraftServer() {
         return ServerLifecycleHooks.getCurrentServer();
+    }
+
+    public static World.Environment getEnvironment(RegistryKey<DimensionType> key) {
+        return BukkitRegistry.DIM_MAP.get(key);
+    }
+
+    public static RegistryKey<DimensionType> getDimensionType(World.Environment environment) {
+        return BukkitRegistry.DIM_MAP.inverse().get(environment);
     }
 }
