@@ -5,6 +5,7 @@ import net.minecraft.entity.effect.LightningBoltEntity;
 import net.minecraft.particles.IParticleData;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.storage.SaveFormat;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
@@ -21,8 +22,11 @@ public interface ServerWorldBridge extends WorldBridge {
 
     boolean bridge$addEntitySerialized(Entity entity, CreatureSpawnEvent.SpawnReason reason);
 
-    // todo
+    boolean bridge$addAllEntities(Entity entity, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason reason);
+
     boolean bridge$addAllEntitiesSafely(Entity entity, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason reason);
+
+    SaveFormat.LevelSave bridge$getConvertable();
 
     interface Hack {
 

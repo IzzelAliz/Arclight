@@ -13,6 +13,8 @@
   "mixins": [
     "advancements.AdvancementMixin",
     "advancements.PlayerAdvancementsMixin",
+    "block.AbstractBlock_AbstractBlockStateMixin",
+    "block.AbstractBlockMixin",
     "block.AbstractButtonBlockMixin",
     "block.AbstractFireBlockMixin",
     "block.AbstractPressurePlateBlockMixin",
@@ -21,7 +23,6 @@
     "block.BambooSaplingBlockMixin",
     "block.BeehiveBlockMixin",
     "block.BlockMixin",
-    "block.BlockStateMixin",
     "block.BushBlockMixin",
     "block.CactusBlockMixin",
     "block.CakeBlockMixin",
@@ -400,10 +401,7 @@
     "world.border.WorldBorderMixin",
     "world.chunk.ChunkMixin",
     "world.chunk.storage.RegionFileCacheMixin",
-    "world.dimension.DimensionMixin",
-    "world.dimension.DimensionTypeMixin",
     "world.gen.WorldGenRegionMixin",
-    "world.gen.feature.structure.StructureMixin",
     "world.gen.feature.structure.SwampHutPieceMixin",
     "world.raid.RaidManagerMixin",
     "world.raid.RaidMixin",
@@ -412,7 +410,6 @@
     "world.server.ChunkManagerMixin",
     "world.server.ServerChunkProvider_ChunkExecutorMixin",
     "world.server.ServerChunkProviderMixin",
-    "world.server.ServerMultiWorldMixin",
     "world.server.ServerWorldMixin",
     "world.server.TicketManagerMixin",
     "world.server.TicketTypeMixin",
@@ -422,11 +419,10 @@
     "world.spawner.WanderingTraderSpawnerMixin",
     "world.spawner.WorldEntitySpawner_EntityDensityManagerMixin",
     "world.spawner.WorldEntitySpawnerMixin",
-    "world.storage.DerivedWorldInfoMixin",
     "world.storage.MapData_MapInfoMixin",
     "world.storage.MapDataMixin",
+    "world.storage.PlayerDataMixin",
     "world.storage.SaveFormatMixin",
-    "world.storage.SaveHandlerMixin",
-    "world.storage.WorldInfoMixin"
+    "world.storage.ServerWorldInfoMixin"
   ]
 }

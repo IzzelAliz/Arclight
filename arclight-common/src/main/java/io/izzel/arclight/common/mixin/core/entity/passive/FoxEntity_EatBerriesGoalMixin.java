@@ -16,7 +16,8 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 @Mixin(FoxEntity.EatBerriesGoal.class)
 public abstract class FoxEntity_EatBerriesGoalMixin extends MoveToBlockGoal {
 
-    @Shadow(aliases = {"this$0", "field_220732_h"}, remap = false) private FoxEntity outerThis;
+    @SuppressWarnings("target") @Shadow(aliases = {"this$0", "field_220732_h"}, remap = false)
+    private FoxEntity outerThis;
 
     public FoxEntity_EatBerriesGoalMixin(CreatureEntity creature, double speedIn, int length) {
         super(creature, speedIn, length);

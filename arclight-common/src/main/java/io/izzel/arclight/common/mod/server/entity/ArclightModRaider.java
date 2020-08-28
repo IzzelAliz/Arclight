@@ -5,6 +5,7 @@ import net.minecraft.entity.monster.AbstractRaiderEntity;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftRaider;
+import org.bukkit.entity.EntityCategory;
 import org.bukkit.entity.EntityType;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,5 +26,10 @@ public class ArclightModRaider extends CraftRaider {
     @Override
     public String toString() {
         return "ArclightModRaider{" + entityType + '}';
+    }
+
+    @Override
+    public @NotNull EntityCategory getCategory() {
+        return EntityCategory.ILLAGER;
     }
 }

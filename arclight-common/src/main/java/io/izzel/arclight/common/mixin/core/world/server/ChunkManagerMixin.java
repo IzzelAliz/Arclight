@@ -21,6 +21,7 @@ public abstract class ChunkManagerMixin implements ChunkManagerBridge {
     @Shadow abstract boolean isOutsideSpawningRadius(ChunkPos chunkPosIn);
     @Shadow protected abstract void tickEntityTracker();
     @Invoker("tick") public abstract void bridge$tick(BooleanSupplier hasMoreTime);
+    @Invoker("setViewDistance") public abstract void bridge$setViewDistance(int i);
     // @formatter:on
 
     public final ArclightCallbackExecutor callbackExecutor = new ArclightCallbackExecutor();

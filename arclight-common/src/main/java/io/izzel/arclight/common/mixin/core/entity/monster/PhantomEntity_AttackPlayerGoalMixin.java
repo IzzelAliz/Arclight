@@ -12,7 +12,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(targets = "net.minecraft.entity.monster.PhantomEntity.AttackPlayerGoal")
 public abstract class PhantomEntity_AttackPlayerGoalMixin {
 
-    @Shadow(aliases = {"this$0", "field_203141_a"}, remap = false) private PhantomEntity outerThis;
+    @SuppressWarnings("target") @Shadow(aliases = {"this$0", "field_203141_a"}, remap = false)
+    private PhantomEntity outerThis;
 
     @SuppressWarnings("UnresolvedMixinReference")
     @Inject(method = "shouldExecute", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraft/entity/monster/PhantomEntity;func_70624_b(Lnet/minecraft/entity/LivingEntity;)V"))

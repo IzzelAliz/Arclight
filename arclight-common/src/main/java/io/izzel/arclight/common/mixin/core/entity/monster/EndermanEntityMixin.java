@@ -3,9 +3,9 @@ package io.izzel.arclight.common.mixin.core.entity.monster;
 import io.izzel.arclight.common.bridge.entity.monster.EndermanEntityBridge;
 import io.izzel.arclight.common.mixin.core.entity.CreatureEntityMixin;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.IAttributeInstance;
+import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.monster.EndermanEntity;
 import net.minecraft.network.datasync.DataParameter;
 import org.bukkit.event.entity.EntityTargetEvent;
@@ -15,7 +15,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import javax.annotation.Nullable;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Mixin(EndermanEntity.class)
 public abstract class EndermanEntityMixin extends CreatureEntityMixin implements EndermanEntityBridge {
@@ -29,17 +28,17 @@ public abstract class EndermanEntityMixin extends CreatureEntityMixin implements
 
     @Override
     public void bridge$updateTarget(LivingEntity livingEntity) {
-        IAttributeInstance iattributeinstance = this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED);
+        ModifiableAttributeInstance modifiableattributeinstance = this.getAttribute(Attributes.MOVEMENT_SPEED);
         if (livingEntity == null) {
             this.targetChangeTime = 0;
             this.dataManager.set(SCREAMING, false);
             this.dataManager.set(field_226535_bx_, false);
-            iattributeinstance.removeModifier(ATTACKING_SPEED_BOOST);
+            modifiableattributeinstance.removeModifier(ATTACKING_SPEED_BOOST);
         } else {
             this.targetChangeTime = this.ticksExisted;
             this.dataManager.set(SCREAMING, true);
-            if (!iattributeinstance.hasModifier(ATTACKING_SPEED_BOOST)) {
-                iattributeinstance.applyModifier(ATTACKING_SPEED_BOOST);
+            if (!modifiableattributeinstance.hasModifier(ATTACKING_SPEED_BOOST)) {
+                modifiableattributeinstance.applyNonPersistentModifier(ATTACKING_SPEED_BOOST);
             }
         }
     }
@@ -63,11 +62,8 @@ public abstract class EndermanEntityMixin extends CreatureEntityMixin implements
             return;
         }
         this.bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.UNKNOWN, true);
-        arclight$targetSuccess = new AtomicBoolean();
         super.setAttackTarget(entity);
-        boolean ret = arclight$targetSuccess.get();
-        arclight$targetSuccess = null;
-        if (ret) {
+        if (arclight$targetSuccess) {
             bridge$updateTarget(getAttackTarget());
         }
     }

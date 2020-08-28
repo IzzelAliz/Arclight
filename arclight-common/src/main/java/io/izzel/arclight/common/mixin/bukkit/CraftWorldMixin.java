@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.common.bridge.bukkit.EntityTypeBridge;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.world.storage.SaveHandlerBridge;
+import io.izzel.arclight.common.bridge.world.server.ServerWorldBridge;
 import net.minecraft.world.server.ServerWorld;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.CraftWorld;
@@ -17,7 +17,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.File;
-import java.util.UUID;
 import java.util.function.Function;
 
 @Mixin(value = CraftWorld.class, remap = false)
@@ -40,16 +39,7 @@ public class CraftWorldMixin {
      * @reason
      */
     @Overwrite
-    public UUID getUID() {
-        return ((SaveHandlerBridge) this.world.getSaveHandler()).bridge$getUUID(this.world);
-    }
-
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
     public File getWorldFolder() {
-        return this.world.dimension.getType().getDirectory(this.world.getSaveHandler().getWorldDirectory());
+        return ((ServerWorldBridge) this.world).bridge$getConvertable().getDimensionFolder(this.world.getDimensionKey());
     }
 }

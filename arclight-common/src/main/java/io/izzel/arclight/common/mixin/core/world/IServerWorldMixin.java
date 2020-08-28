@@ -1,7 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world;
 
-import io.izzel.arclight.common.bridge.world.IWorldBridge;
-import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.world.server.ServerWorldBridge;
 import net.minecraft.entity.Entity;
 import net.minecraft.world.IServerWorld;
 import net.minecraft.world.IWorld;
@@ -14,7 +13,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.Iterator;
 
 @Mixin(IServerWorld.class)
-public interface IServerWorldMixin extends IWorld, IWorldBridge, WorldBridge {
+public interface IServerWorldMixin extends IWorld, ServerWorldBridge {
 
     // @formatter:off
     @Shadow ServerWorld getWorld();
@@ -48,5 +47,10 @@ public interface IServerWorldMixin extends IWorld, IWorldBridge, WorldBridge {
             this.addEntity(next);
         }
         return !entity.removed;
+    }
+
+    @Override
+    default boolean bridge$addAllEntities(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
+        return this.addAllEntities(entity, reason);
     }
 }

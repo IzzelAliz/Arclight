@@ -150,7 +150,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
     @Shadow private int lastFoodLevel;
     @Shadow public int currentWindowId;
     @Shadow public abstract void getNextWindowId();
-    @Shadow private String language;
+    @Shadow(remap = false) private String language;
     @Shadow public abstract void teleport(ServerWorld p_200619_1_, double x, double y, double z, float yaw, float pitch);
     @Shadow public abstract void giveExperiencePoints(int p_195068_1_);
     @Shadow private RegistryKey<World> field_241137_cq_;
@@ -432,7 +432,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
      * @author IzzelAliz
      * @reason
      */
-    @Overwrite
+    @Overwrite(remap = false)
     @Nullable
     public Entity changeDimension(ServerWorld server, ITeleporter teleporter) {
         if (this.isSleeping()) {
@@ -598,13 +598,13 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
         return Either.left(PlayerEntity.SleepResult.OTHER_PROBLEM);
     }
 
-    @Redirect(method = "trySleep", at = @At(value = "INVOKE", target = "Lcom/mojang/datafixers/util/Either;left(Ljava/lang/Object;)Lcom/mojang/datafixers/util/Either;"))
+    @Redirect(method = "trySleep", at = @At(value = "INVOKE", remap = false, target = "Lcom/mojang/datafixers/util/Either;left(Ljava/lang/Object;)Lcom/mojang/datafixers/util/Either;"))
     private <L, R> Either<L, R> arclight$failSleep(L value, BlockPos pos) {
         Either<L, R> either = Either.left(value);
         return arclight$fireBedEvent(either, pos);
     }
 
-    @Redirect(method = "trySleep", at = @At(value = "INVOKE", target = "Lcom/mojang/datafixers/util/Either;ifRight(Ljava/util/function/Consumer;)Lcom/mojang/datafixers/util/Either;"))
+    @Redirect(method = "trySleep", at = @At(value = "INVOKE", remap = false, target = "Lcom/mojang/datafixers/util/Either;ifRight(Ljava/util/function/Consumer;)Lcom/mojang/datafixers/util/Either;"))
     private <L, R> Either<L, R> arclight$successSleep(Either<L, R> either, Consumer<? super R> consumer, BlockPos pos) {
         return arclight$fireBedEvent(either, pos).ifRight(consumer);
     }

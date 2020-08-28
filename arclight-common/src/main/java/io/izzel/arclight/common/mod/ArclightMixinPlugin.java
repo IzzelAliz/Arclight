@@ -101,6 +101,12 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
                 ))
             .build();
 
+    // damn spigot
+    private final Map<String, Map<String, String>> fieldRenames = ImmutableMap.<String, Map<String, String>>builder()
+        .put("net.minecraft.world.chunk.Chunk", ImmutableMap.of("$$world", "field_76637_e"))
+        .put("net.minecraft.world.server.ServerWorld", ImmutableMap.of("$$worldDataServer", "field_241103_E_"))
+        .build();
+
     private final Set<String> modifyConstructor = ImmutableSet.<String>builder()
         .add("net.minecraft.world.World")
         .add("net.minecraft.world.server.ServerWorld")
@@ -165,20 +171,21 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
             }
         }
         modifyConstructor(targetClassName, targetClass);
-        if (targetClassName.equals("net.minecraft.world.chunk.Chunk")) {
-            for (FieldNode field : targetClass.fields) {
-                if (field.name.equals("$$world")) {
-                    field.name = "world";
-                }
+        renameFields(targetClassName, targetClass);
+    }
+
+    private void renameFields(String targetClassName, ClassNode classNode) {
+        Map<String, String> map = this.fieldRenames.get(targetClassName);
+        if (map != null) {
+            for (FieldNode field : classNode.fields) {
+                field.name = map.getOrDefault(field.name, field.name);
             }
-            for (MethodNode method : targetClass.methods) {
+            for (MethodNode method : classNode.methods) {
                 if (method.name.equals("<init>")) {
                     for (AbstractInsnNode instruction : method.instructions) {
                         if (instruction instanceof FieldInsnNode) {
-                            FieldInsnNode fieldInsnNode = (FieldInsnNode) instruction;
-                            if (fieldInsnNode.name.equals("$$world")) {
-                                fieldInsnNode.name = "world";
-                            }
+                            FieldInsnNode node = (FieldInsnNode) instruction;
+                            node.name = map.getOrDefault(node.name, node.name);
                         }
                     }
                 }

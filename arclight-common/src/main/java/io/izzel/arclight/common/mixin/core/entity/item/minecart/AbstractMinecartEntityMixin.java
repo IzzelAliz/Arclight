@@ -59,7 +59,7 @@ public abstract class AbstractMinecartEntityMixin extends EntityMixin {
     @Shadow public abstract void onActivatorRailPass(int x, int y, int z, boolean receivingPower);
     @Shadow private boolean isInReverse;
     @Shadow public abstract AbstractMinecartEntity.Type getMinecartType();
-    @Shadow public abstract boolean canUseRail();
+    @Shadow(remap = false) public abstract boolean canUseRail();
     // @formatter:on
 
     public boolean slowWhenEmpty = true;

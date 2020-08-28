@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.bukkit;
 import io.izzel.arclight.common.bridge.bukkit.MaterialBridge;
 import io.izzel.arclight.common.mod.util.ResourceLocationUtil;
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
+import net.minecraft.util.registry.Registry;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.Material;
 import org.bukkit.block.Biome;
@@ -36,7 +37,7 @@ public abstract class CraftBlockMixin {
      * @reason
      */
     @Overwrite
-    public static Biome biomeBaseToBiome(net.minecraft.world.biome.Biome base) {
+    public static Biome biomeBaseToBiome(Registry<net.minecraft.world.biome.Biome> registry, net.minecraft.world.biome.Biome base) {
         return Biome.valueOf(ResourceLocationUtil.standardize(base.getRegistryName()));
     }
 
@@ -45,7 +46,7 @@ public abstract class CraftBlockMixin {
      * @reason
      */
     @Overwrite
-    public static net.minecraft.world.biome.Biome biomeToBiomeBase(Biome bio) {
+    public static net.minecraft.world.biome.Biome biomeToBiomeBase(Registry<net.minecraft.world.biome.Biome> registry, Biome bio) {
         return ForgeRegistries.BIOMES.getValue(CraftNamespacedKey.toMinecraft(bio.getKey()));
     }
 }

@@ -12,6 +12,7 @@ import net.minecraft.world.GameRules;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
+import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerChunkProvider;
@@ -22,6 +23,7 @@ import net.minecraft.world.server.TicketType;
 import net.minecraft.world.storage.IWorldInfo;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -50,6 +52,7 @@ public abstract class ServerChunkProviderMixin implements ServerChunkProviderBri
     @Shadow public boolean spawnHostiles;
     @Shadow public boolean spawnPassives;
     @Shadow protected abstract void func_241098_a_(long p_241098_1_, Consumer<Chunk> p_241098_3_);
+    @Shadow @Final @Mutable public ChunkGenerator generator;
     @Invoker("func_217235_l") public abstract boolean bridge$tickDistanceManager();
     @Accessor("lightManager") public abstract ServerWorldLightManager bridge$getLightManager();
     // @formatter:on
@@ -62,6 +65,16 @@ public abstract class ServerChunkProviderMixin implements ServerChunkProviderBri
     @Override
     public boolean bridge$isChunkLoaded(int x, int z) {
         return isChunkLoaded(x, z);
+    }
+
+    @Override
+    public void bridge$setChunkGenerator(ChunkGenerator chunkGenerator) {
+        this.generator = chunkGenerator;
+    }
+
+    @Override
+    public void bridge$setViewDistance(int viewDistance) {
+        ((ChunkManagerBridge) this.chunkManager).bridge$setViewDistance(viewDistance);
     }
 
     /**

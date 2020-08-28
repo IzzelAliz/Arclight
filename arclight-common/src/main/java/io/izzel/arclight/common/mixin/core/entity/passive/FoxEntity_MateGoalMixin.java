@@ -2,9 +2,10 @@ package io.izzel.arclight.common.mixin.core.entity.passive;
 
 import io.izzel.arclight.common.bridge.entity.passive.AnimalEntityBridge;
 import io.izzel.arclight.common.bridge.entity.passive.FoxEntityBridge;
-import io.izzel.arclight.common.mixin.core.entity.ai.goal.BreedGoalMixin;
 import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.entity.ai.goal.BreedGoal;
 import net.minecraft.entity.item.ExperienceOrbEntity;
+import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.FoxEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.stats.Stats;
@@ -18,7 +19,11 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 @Mixin(targets = "net.minecraft.entity.passive.FoxEntity.MateGoal")
-public class FoxEntity_MateGoalMixin extends BreedGoalMixin {
+public abstract class FoxEntity_MateGoalMixin extends BreedGoal {
+
+    public FoxEntity_MateGoalMixin(AnimalEntity animal, double speedIn) {
+        super(animal, speedIn);
+    }
 
     /**
      * @author IzzekAkuz

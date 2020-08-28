@@ -5,6 +5,7 @@ import net.minecraft.entity.MobEntity;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftMob;
+import org.bukkit.entity.EntityCategory;
 import org.bukkit.entity.EntityType;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,5 +26,10 @@ public class ArclightModMob extends CraftMob {
     @Override
     public String toString() {
         return "ArclightModMob{" + entityType + '}';
+    }
+
+    @Override
+    public @NotNull EntityCategory getCategory() {
+        return EntityCategory.NONE;
     }
 }

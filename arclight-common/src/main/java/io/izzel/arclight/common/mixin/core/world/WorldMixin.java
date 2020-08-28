@@ -1,15 +1,14 @@
 package io.izzel.arclight.common.mixin.core.world;
 
-import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.bridge.world.border.WorldBorderBridge;
-import io.izzel.arclight.common.bridge.world.dimension.DimensionTypeBridge;
-import io.izzel.arclight.common.bridge.world.storage.DerivedWorldInfoBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import io.izzel.arclight.common.mod.util.ResourceLocationUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.profiler.IProfiler;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.BlockPos;
@@ -17,12 +16,11 @@ import net.minecraft.world.DimensionType;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.border.WorldBorder;
-import net.minecraft.world.chunk.AbstractChunkProvider;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.dimension.Dimension;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.WorldInfo;
+import net.minecraft.world.storage.ISpawnWorldInfo;
+import net.minecraft.world.storage.IWorldInfo;
+import net.minecraft.world.storage.ServerWorldInfo;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
@@ -38,13 +36,12 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
-import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 @Mixin(World.class)
 public abstract class WorldMixin implements WorldBridge {
@@ -53,15 +50,14 @@ public abstract class WorldMixin implements WorldBridge {
     @Shadow @Nullable public TileEntity getTileEntity(BlockPos pos) { return null; }
     @Shadow public abstract BlockState getBlockState(BlockPos pos);
     @Shadow public abstract void setTileEntity(BlockPos pos, @Nullable TileEntity tileEntityIn);
-    @Shadow  public Dimension dimension;
-    @Shadow public abstract WorldInfo getWorldInfo();
-    @Shadow public abstract Dimension getDimension();
-    @Shadow public abstract long getSeed();
-    @Shadow @Final public WorldInfo worldInfo;
     @Shadow public abstract WorldBorder getWorldBorder();
-    @Shadow@Final private WorldBorder worldBorder;
+    @Shadow @Final private WorldBorder worldBorder;
     @Shadow public abstract long getDayTime();
-    @Shadow@Final private DimensionType dimensionType;@Accessor("mainThread") public abstract Thread arclight$getMainThread();
+    @Shadow public abstract MinecraftServer shadow$getServer();
+    @Shadow @Final private DimensionType dimensionType;
+    @Shadow public abstract IWorldInfo getWorldInfo();
+    @Shadow public abstract RegistryKey<World> getDimensionKey();
+    @Accessor("mainThread") public abstract Thread arclight$getMainThread();
     // @formatter:on
 
     private RegistryKey<DimensionType> typeKey;
@@ -71,28 +67,33 @@ public abstract class WorldMixin implements WorldBridge {
     public long ticksPerAnimalSpawns;
     public long ticksPerMonsterSpawns;
     public long ticksPerWaterSpawns;
+    public long ticksPerWaterAmbientSpawns;
     public long ticksPerAmbientSpawns;
     public boolean populating;
     public org.bukkit.generator.ChunkGenerator generator;
     protected org.bukkit.World.Environment environment;
     public org.spigotmc.SpigotWorldConfig spigotConfig;
 
-    @Inject(method = "<init>(Lnet/minecraft/world/storage/WorldInfo;Lnet/minecraft/world/dimension/DimensionType;Ljava/util/function/BiFunction;Lnet/minecraft/profiler/IProfiler;Z)V", at = @At("RETURN"))
-    private void arclight$init(WorldInfo info, DimensionType dimType, BiFunction<World, Dimension, AbstractChunkProvider> provider, IProfiler profilerIn, boolean remote, CallbackInfo ci) {
-        if (info instanceof DerivedWorldInfoBridge) {
-            ((DerivedWorldInfoBridge) info).bridge$setDimension(dimType);
-        }
-        spigotConfig = new SpigotWorldConfig(info.getWorldName());
+    public void arclight$constructor(ISpawnWorldInfo p_i241925_1_, RegistryKey<World> p_i241925_2_, final DimensionType p_i241925_3_, Supplier<IProfiler> p_i241925_4_, boolean p_i241925_5_, boolean p_i241925_6_, long p_i241925_7_) {
+        throw new RuntimeException();
+    }
+
+    public void arclight$constructor(ISpawnWorldInfo p_i241925_1_, RegistryKey<World> p_i241925_2_, final DimensionType p_i241925_3_, Supplier<IProfiler> p_i241925_4_, boolean p_i241925_5_, boolean p_i241925_6_, long p_i241925_7_, org.bukkit.generator.ChunkGenerator gen, org.bukkit.World.Environment env) {
+        arclight$constructor(p_i241925_1_, p_i241925_2_, p_i241925_3_, p_i241925_4_, p_i241925_5_, p_i241925_6_, p_i241925_7_);
+        this.generator = gen;
+        this.environment = env;
+        bridge$getWorld();
+    }
+
+    @Inject(method = "<init>(Lnet/minecraft/world/storage/ISpawnWorldInfo;Lnet/minecraft/util/RegistryKey;Lnet/minecraft/world/DimensionType;Ljava/util/function/Supplier;ZZJ)V", at = @At("RETURN"))
+    private void arclight$init(ISpawnWorldInfo info, RegistryKey<World> p_i241925_2_, DimensionType dimType, Supplier<IProfiler> p_i241925_4_, boolean p_i241925_5_, boolean p_i241925_6_, long p_i241925_7_, CallbackInfo ci) {
+        this.spigotConfig = new SpigotWorldConfig(((ServerWorldInfo) info).getWorldName());
         ((WorldBorderBridge) this.worldBorder).bridge$setWorld((ServerWorld) (Object) this);
         this.ticksPerAnimalSpawns = this.getServer().getTicksPerAnimalSpawns();
         this.ticksPerMonsterSpawns = this.getServer().getTicksPerMonsterSpawns();
-        if (ArclightVersion.atLeast(ArclightVersion.v1_15)) {
-            this.ticksPerWaterSpawns = this.getServer().getTicksPerWaterSpawns();
-            this.ticksPerAmbientSpawns = this.getServer().getTicksPerAmbientSpawns();
-        } else {
-            this.ticksPerWaterSpawns = 1;
-            this.ticksPerAmbientSpawns = 1;
-        }
+        this.ticksPerWaterSpawns = this.getServer().getTicksPerWaterSpawns();
+        this.ticksPerWaterAmbientSpawns = this.getServer().getTicksPerWaterAmbientSpawns();
+        this.ticksPerAmbientSpawns = this.getServer().getTicksPerAmbientSpawns();
         this.typeKey = this.getServer().getHandle().getServer().func_244267_aX().func_230520_a_().func_230519_c_(dimensionType)
             .orElseThrow(() -> new IllegalStateException("Unregistered dimension type: " + dimType));
     }
@@ -119,17 +120,7 @@ public abstract class WorldMixin implements WorldBridge {
 
     @Override
     public long bridge$ticksPerWaterAmbientSpawns() {
-    }
-
-    public void arclight$constructor(WorldInfo info, DimensionType dimType, BiFunction<World, Dimension, AbstractChunkProvider> provider, IProfiler profilerIn, boolean remote) {
-        throw new RuntimeException();
-    }
-
-    public void arclight$constructor(WorldInfo info, DimensionType dimType, BiFunction<World, Dimension, AbstractChunkProvider> provider, IProfiler profilerIn, boolean remote, org.bukkit.generator.ChunkGenerator gen, org.bukkit.World.Environment env) {
-        arclight$constructor(info, dimType, provider, profilerIn, remote);
-        this.generator = gen;
-        this.environment = env;
-        bridge$getWorld();
+        return ticksPerWaterAmbientSpawns;
     }
 
     public RegistryKey<DimensionType> getTypeKey() {
@@ -164,21 +155,14 @@ public abstract class WorldMixin implements WorldBridge {
         return true;
     }
 
-    @Inject(method = "markAndNotifyBlock", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;updateNeighbors(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;I)V"))
-    private void arclight$callBlockPhysics(BlockPos pos, Chunk chunk, BlockState blockstate, BlockState newState, int flags, CallbackInfo ci) {
+    @Inject(method = "markAndNotifyBlock", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;updateNeighbours(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;II)V"))
+    private void arclight$callBlockPhysics(BlockPos pos, Chunk chunk, BlockState blockstate, BlockState state, int flags, int recursionLeft, CallbackInfo ci) {
         if (this.world != null) {
-            BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at((IWorld) this, pos), CraftBlockData.fromData(newState));
+            BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at((IWorld) this, pos), CraftBlockData.fromData(state));
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
                 ci.cancel();
             }
-        }
-    }
-
-    @Inject(method = "notifyNeighbors", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;notifyNeighborsOfStateChange(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/Block;)V"))
-    private void arclight$noPhysicsPopulating(BlockPos pos, Block blockIn, CallbackInfo ci) {
-        if (populating) {
-            ci.cancel();
         }
     }
 
@@ -196,11 +180,6 @@ public abstract class WorldMixin implements WorldBridge {
         }
     }
 
-    @Redirect(method = "isNightTime", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/dimension/Dimension;getType()Lnet/minecraft/world/dimension/DimensionType;"))
-    private DimensionType arclight$nightTimeType(Dimension dimension) {
-        return ((DimensionTypeBridge) dimension.getType()).bridge$getType();
-    }
-
     public CraftServer getServer() {
         return (CraftServer) Bukkit.getServer();
     }
@@ -208,10 +187,10 @@ public abstract class WorldMixin implements WorldBridge {
     public CraftWorld getWorld() {
         if (this.world == null) {
             if (generator == null) {
-                generator = getServer().getGenerator(getWorldInfo().getWorldName());
+                generator = getServer().getGenerator(((ServerWorldInfo) this.getWorldInfo()).getWorldName());
             }
             if (environment == null) {
-                environment = org.bukkit.World.Environment.getEnvironment(getDimension().getType().getId());
+                environment = org.bukkit.World.Environment.valueOf(ResourceLocationUtil.standardize(this.typeKey.getRegistryName()));
             }
             this.world = new CraftWorld((ServerWorld) (Object) this, generator, environment);
             getServer().addWorld(this.world);

@@ -1,10 +1,10 @@
 package io.izzel.arclight.common.bridge.world.storage;
 
-import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 
 public interface WorldInfoBridge {
 
-    void bridge$setWorld(World world);
+    void bridge$setWorld(ServerWorld world);
 
-    World bridge$getWorld();
+    ServerWorld bridge$getWorld();
 }

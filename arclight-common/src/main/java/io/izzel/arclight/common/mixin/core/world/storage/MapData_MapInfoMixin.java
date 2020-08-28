@@ -25,7 +25,7 @@ import java.util.Collection;
 public class MapData_MapInfoMixin {
 
     // @formatter:off
-    @Shadow(aliases = {"this$0", "field_176107_c"}, remap = false) private MapData outerThis;
+    @SuppressWarnings("target") @Shadow(aliases = {"this$0", "field_176107_c"}, remap = false) private MapData outerThis;
     @Shadow private boolean isDirty;
     @Shadow private int minX;
     @Shadow private int minY;

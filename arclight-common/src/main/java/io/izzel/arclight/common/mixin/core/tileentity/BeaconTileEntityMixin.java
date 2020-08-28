@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.tileentity;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
@@ -25,7 +26,7 @@ public abstract class BeaconTileEntityMixin implements BeaconTileEntityBridge {
     // @formatter:on
 
     @Inject(method = "read", at = @At("RETURN"))
-    public void arclight$level(CompoundNBT compound, CallbackInfo ci) {
+    public void arclight$level(BlockState state, CompoundNBT compound, CallbackInfo ci) {
         this.levels = compound.getInt("Levels");
     }
 

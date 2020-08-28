@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(CakeBlock.class)
 public class CakeBlockMixin {
 
-    @Redirect(method = "func_226911_a_", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/FoodStats;addStats(IF)V"))
+    @Redirect(method = "eatSlice", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/FoodStats;addStats(IF)V"))
     private void arclight$eatCake(FoodStats foodStats, int foodLevelIn, float foodSaturationModifier, IWorld worldIn, BlockPos pos, BlockState state, PlayerEntity player) {
         int old = foodStats.getFoodLevel();
         FoodLevelChangeEvent event = CraftEventFactory.callFoodLevelChangeEvent(player, old + foodLevelIn);

@@ -31,7 +31,7 @@ public abstract class ComposterBlockMixin {
     // @formatter:off
     @Shadow @Final public static IntegerProperty LEVEL;
     @Shadow @Final public static Object2FloatMap<IItemProvider> CHANCES;
-    @Shadow private static BlockState resetFillState(BlockState state, IWorld world, BlockPos pos) { return null; }
+    @Shadow public static BlockState resetFillState(BlockState state, IWorld world, BlockPos pos) { return null; }
     @Shadow public static BlockState empty(BlockState state, World world, BlockPos pos) { return null; }
     // @formatter:on
 

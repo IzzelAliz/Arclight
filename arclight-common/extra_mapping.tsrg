@@ -1,11 +1,15 @@
 net/minecraft/world/IWorld net/minecraft/world/IWorld
 	addEntity (Lnet/minecraft/entity/Entity;)Z func_217376_c
+	setBlockState (Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z func_180501_a
 net/minecraft/world/World net/minecraft/world/World
 	addEntity (Lnet/minecraft/entity/Entity;)Z func_217376_c
 	getClosestPlayer (Lnet/minecraft/entity/EntityPredicate;Lnet/minecraft/entity/LivingEntity;)Lnet/minecraft/entity/player/PlayerEntity; func_217370_a
-net/minecraft/world/IWorld net/minecraft/world/IWorld
-	setBlockState (Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z func_180501_a
+	destroyBlock (Lnet/minecraft/util/math/BlockPos;ZLnet/minecraft/entity/Entity;)Z func_225521_a_
+net/minecraft/world/server/ServerWorld net/minecraft/world/server/ServerWorld
+	func_242417_l (Lnet/minecraft/entity/Entity;)V func_242417_l
 net/minecraft/entity/monster/MonsterEntity net/minecraft/entity/monster/MonsterEntity
 	setAttackTarget (Lnet/minecraft/entity/LivingEntity;)V func_70624_b
 net/minecraft/entity/passive/WolfEntity net/minecraft/entity/passive/WolfEntity
 	setHealth (F)V func_70606_j
+net/minecraft/block/BlockState net/minecraft/block/BlockState
+	get (Lnet/minecraft/state/Property;)Ljava/lang/Comparable; func_177229_b

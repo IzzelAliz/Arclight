@@ -21,7 +21,7 @@ apply plugin: 'io.izzel.arclight'
 
 ext {
     minecraftVersion = '1.16.2'
-    forgeVersion = '33.0.5'
+    forgeVersion = '33.0.22'
 }
 
 arclight {
@@ -81,7 +81,7 @@ dependencies {
     }
     embed 'net.md-5:bungeecord-chat:1.16-R0.3@jar'
     embed "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
-    embed 'com.github.ArclightTeam:mixin-tools:1.0.0'
+    embed 'com.github.ArclightTeam:mixin-tools:1.0.0@jar'
 }
 
 def getGitHash = { ->

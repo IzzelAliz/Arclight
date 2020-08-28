@@ -19,4 +19,6 @@ public interface ChunkManagerBridge {
     ArclightCallbackExecutor bridge$getCallbackExecutor();
 
     ChunkHolder bridge$chunkHolderAt(long chunkPos);
+
+    void bridge$setViewDistance(int i);
 }

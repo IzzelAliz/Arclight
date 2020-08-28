@@ -12,10 +12,8 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
-import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.extensions.IForgeBlock;
@@ -34,12 +32,11 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 @Mixin(Block.class)
-public abstract class BlockMixin implements BlockBridge {
+public abstract class BlockMixin extends AbstractBlockMixin implements BlockBridge {
 
     // @formatter:off
     @Shadow public abstract BlockState getDefaultState();
     @Shadow @Nullable public BlockState getStateForPlacement(BlockItemUseContext context) { return null; }
-    @Shadow public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) { return null; }
     // @formatter:on
 
     /**

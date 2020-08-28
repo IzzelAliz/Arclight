@@ -12,7 +12,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(targets = "net.minecraft.entity.monster.VexEntity.CopyOwnerTargetGoal")
 public abstract class VexEntity_CopyOwnerTargetGoalMixin {
 
-    @Shadow(aliases = {"this$0", "field_190883_a"}, remap = false) private VexEntity outerThis;
+    @SuppressWarnings("target") @Shadow(aliases = {"this$0", "field_190883_a"}, remap = false)
+    private VexEntity outerThis;
 
     @Inject(method = "startExecuting", at = @At("HEAD"))
     private void arclight$reason(CallbackInfo ci) {

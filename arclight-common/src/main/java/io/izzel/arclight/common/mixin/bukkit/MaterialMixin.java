@@ -317,7 +317,7 @@ public abstract class MaterialMixin implements MaterialBridge {
             arclight$spec.interactable = true;
         }
         if (arclight$spec.hardness == null) {
-            arclight$spec.hardness = block != null ? block.blockHardness : 0;
+            arclight$spec.hardness = block != null ? block.getDefaultState().hardness : 0;
         }
         if (arclight$spec.blastResistance == null) {
             arclight$spec.blastResistance = block != null ? block.getExplosionResistance() : 0;

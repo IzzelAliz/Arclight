@@ -5,6 +5,7 @@ import net.minecraft.entity.passive.horse.AbstractHorseEntity;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftAbstractHorse;
+import org.bukkit.entity.EntityCategory;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Horse;
 import org.jetbrains.annotations.NotNull;
@@ -32,5 +33,10 @@ public class ArclightModHorse extends CraftAbstractHorse {
     @Override
     public String toString() {
         return "ArclightModHorse{" + entityType + '}';
+    }
+
+    @Override
+    public @NotNull EntityCategory getCategory() {
+        return EntityCategory.NONE;
     }
 }

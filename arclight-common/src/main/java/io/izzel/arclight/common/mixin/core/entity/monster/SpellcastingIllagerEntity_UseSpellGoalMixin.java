@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class SpellcastingIllagerEntity_UseSpellGoalMixin {
 
     // @formatter:off
-    @Shadow(aliases = {"this$0", "field_193323_e"}, remap = false) private SpellcastingIllagerEntity outerThis;
+    @SuppressWarnings("target") @Shadow(aliases = {"this$0", "field_193323_e"}, remap = false) private SpellcastingIllagerEntity outerThis;
     @Shadow protected abstract SpellcastingIllagerEntity.SpellType getSpellType();
     // @formatter:on
 
