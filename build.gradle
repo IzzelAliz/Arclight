@@ -1,9 +1,9 @@
 allprojects {
     group 'io.izzel.arclight'
-    version '1.0.7-SNAPSHOT'
+    version '1.0.7'
 
     ext {
-        agpVersion = '1.9'
+        agpVersion = '1.10'
     }
 
     task cleanBuild {
