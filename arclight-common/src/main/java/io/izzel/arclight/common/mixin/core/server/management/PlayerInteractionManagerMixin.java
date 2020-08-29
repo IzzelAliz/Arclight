@@ -133,7 +133,7 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
                 } else if (data.getBlock() instanceof TrapDoorBlock) {
                     this.player.connection.sendPacket(new SChangeBlockPacket(this.world, blockPos));
                 }
-            } else if (!iblockdata.isAir()) {
+            } else if (!iblockdata.isAir(world, blockPos)) {
                 if (forgeEvent.getUseBlock() != net.minecraftforge.eventbus.api.Event.Result.DENY) {
                     iblockdata.onBlockClicked(this.world, blockPos, this.player);
                 }
@@ -154,7 +154,7 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
             if (blockEvent.getInstaBreak()) {
                 f = 2.0f;
             }
-            if (!iblockdata.isAir() && f >= 1.0f) {
+            if (!iblockdata.isAir(world, blockPos) && f >= 1.0f) {
                 this.func_229860_a_(blockPos, action, "insta mine");
             } else {
                 if (this.isDestroyingBlock) {
