@@ -10,6 +10,9 @@
     "maxShiftBy": 2,
     "defaultRequire": 1
   },
+  "overwrites": {
+    "conformVisibility": true
+  },
   "mixins": [
     "advancements.AdvancementMixin",
     "advancements.PlayerAdvancementsMixin",
