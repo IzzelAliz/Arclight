@@ -25,7 +25,7 @@ public class CrossbowItemMixin {
     @Inject(method = "fireProjectile", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;damageItem(ILnet/minecraft/entity/LivingEntity;Ljava/util/function/Consumer;)V"))
     private static void arclight$entityShoot(World worldIn, LivingEntity shooter, Hand handIn, ItemStack crossbow, ItemStack projectile, float soundPitch, boolean isCreativeMode, float velocity, float inaccuracy, float projectileAngle, CallbackInfo ci,
                                              boolean flag, ProjectileEntity proj) {
-        EntityShootBowEvent event = CraftEventFactory.callEntityShootBowEvent(shooter, crossbow, proj, soundPitch);
+        EntityShootBowEvent event = CraftEventFactory.callEntityShootBowEvent(shooter, crossbow, projectile, proj, shooter.getActiveHand(), soundPitch, true);
         if (event.isCancelled()) {
             event.getProjectile().remove();
             ci.cancel();

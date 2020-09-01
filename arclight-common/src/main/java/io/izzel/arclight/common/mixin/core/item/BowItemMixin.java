@@ -82,11 +82,12 @@ public abstract class BowItemMixin extends ShootableItem {
                             abstractarrowentity.setFire(100);
                         }
 
-                        EntityShootBowEvent event = CraftEventFactory.callEntityShootBowEvent(playerentity, itemstack, abstractarrowentity, f);
+                        EntityShootBowEvent event = CraftEventFactory.callEntityShootBowEvent(playerentity, stack, itemstack, abstractarrowentity, playerentity.getActiveHand(), f, !flag1);
                         if (event.isCancelled()) {
                             event.getProjectile().remove();
                             return;
                         }
+                        flag1 = !event.shouldConsumeItem();
 
                         stack.damageItem(1, playerentity, (p_220009_1_) -> {
                             p_220009_1_.sendBreakAnimation(playerentity.getActiveHand());
