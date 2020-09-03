@@ -82,50 +82,75 @@ public class ClassLoaderRemapper extends JarRemapper {
     private final Map<String, Boolean> cacheRemap = new ConcurrentHashMap<>();
 
     private Map.Entry<Map<Method, String>, Map<WrappedMethod, Method>> getMethods(Class<?> cl, String internalName) {
-        return cacheMethods.computeIfAbsent(internalName, k -> this.tryGetMethods(cl, k));
+        return cacheMethods.computeIfAbsent(internalName, k -> this.tryGetMethods(cl));
     }
 
-    private Map.Entry<Map<Method, String>, Map<WrappedMethod, Method>> tryGetMethods(Class<?> cl, String internalName) {
+    private Map.Entry<Map<Method, String>, Map<WrappedMethod, Method>> tryGetMethods(Class<?> cl) {
         try {
             Map<Method, String> names = new HashMap<>();
             Map<WrappedMethod, Method> types = new HashMap<>();
             for (Method method : cl.getMethods()) {
+                checkMethodTypes(method);
                 String name = mapMethod(method);
                 names.put(method, name);
                 WrappedMethod wrapped = new WrappedMethod(name, method.getParameterTypes());
                 types.put(wrapped, method);
             }
             for (Method method : cl.getDeclaredMethods()) {
+                checkMethodTypes(method);
                 String name = mapMethod(method);
                 names.put(method, name);
                 WrappedMethod wrapped = new WrappedMethod(name, method.getParameterTypes());
                 types.put(wrapped, method);
             }
             return Maps.immutableEntry(names, types);
+        } catch (TypeNotPresentException e) {
+            if (e.getCause() instanceof ClassNotFoundException) {
+                tryDefineClass(e.getCause().getMessage().replace('.', '/'));
+                return tryGetMethods(cl);
+            } else throw e;
         } catch (NoClassDefFoundError error) {
             tryDefineClass(error.getMessage());
-            return tryGetMethods(cl, internalName);
+            return tryGetMethods(cl);
         }
     }
 
     private BiMap<Field, String> getFields(Class<?> cl, String internalName) {
-        return cacheFields.computeIfAbsent(internalName, k -> this.tryGetFields(cl, k));
+        return cacheFields.computeIfAbsent(internalName, k -> this.tryGetFields(cl));
     }
 
-    private BiMap<Field, String> tryGetFields(Class<?> cl, String internalName) {
+    private BiMap<Field, String> tryGetFields(Class<?> cl) {
         try {
             HashBiMap<Field, String> map = HashBiMap.create();
             for (Field field : cl.getFields()) {
+                checkFieldTypes(field);
                 map.forcePut(field, mapField(field));
             }
             for (Field field : cl.getDeclaredFields()) {
+                checkFieldTypes(field);
                 map.forcePut(field, mapField(field));
             }
             return map;
+        } catch (TypeNotPresentException e) {
+            if (e.getCause() instanceof ClassNotFoundException) {
+                tryDefineClass(e.getCause().getMessage().replace('.', '/'));
+                return tryGetFields(cl);
+            } else throw e;
         } catch (NoClassDefFoundError error) {
             tryDefineClass(error.getMessage());
-            return tryGetFields(cl, internalName);
+            return tryGetFields(cl);
         }
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private void checkFieldTypes(Field field) throws TypeNotPresentException {
+        field.getGenericType();
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private void checkMethodTypes(Method method) throws TypeNotPresentException {
+        method.getGenericReturnType();
+        method.getGenericParameterTypes();
     }
 
     private void tryDefineClass(String internalName) {
