@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
+import io.izzel.arclight.common.bridge.util.IWorldPosCallableBridge;
 import net.minecraft.inventory.CraftResultInventory;
 import net.minecraft.inventory.container.SmithingTableContainer;
 import net.minecraft.item.ItemStack;
@@ -27,7 +28,7 @@ public abstract class SmithingTableContainerMixin extends AbstractRepairContaine
         if (this.bukkitEntity != null) {
             return this.bukkitEntity;
         }
-        CraftInventory inventory = new CraftInventorySmithing(this.field_234643_d_, this.field_234642_c_);
+        CraftInventory inventory = new CraftInventorySmithing(((IWorldPosCallableBridge) this.field_234644_e_).bridge$getLocation(), this.field_234643_d_, this.field_234642_c_);
         return this.bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.field_234645_f_).bridge$getBukkitEntity(), inventory, (SmithingTableContainer) (Object) this);
     }
 }
