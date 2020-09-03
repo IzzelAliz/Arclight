@@ -77,7 +77,7 @@ public class ClassLoaderRemapper extends JarRemapper {
     }
 
     // BiMap: srg -> bukkit
-    private final Map<String, BiMap<WrappedField, String>> cacheFields = new ConcurrentHashMap<>();
+    private final Map<String, BiMap<Field, String>> cacheFields = new ConcurrentHashMap<>();
     private final Map<String, Map.Entry<Map<Method, String>, Map<WrappedMethod, Method>>> cacheMethods = new ConcurrentHashMap<>();
     private final Map<String, Boolean> cacheRemap = new ConcurrentHashMap<>();
 
@@ -89,7 +89,6 @@ public class ClassLoaderRemapper extends JarRemapper {
         try {
             Map<Method, String> names = new HashMap<>();
             Map<WrappedMethod, Method> types = new HashMap<>();
-            ArclightReflectionHandler.remapper = this;
             for (Method method : cl.getMethods()) {
                 String name = mapMethod(method);
                 names.put(method, name);
@@ -102,7 +101,6 @@ public class ClassLoaderRemapper extends JarRemapper {
                 WrappedMethod wrapped = new WrappedMethod(name, method.getParameterTypes());
                 types.put(wrapped, method);
             }
-            ArclightReflectionHandler.remapper = null;
             return Maps.immutableEntry(names, types);
         } catch (NoClassDefFoundError error) {
             tryDefineClass(error.getMessage());
@@ -110,21 +108,19 @@ public class ClassLoaderRemapper extends JarRemapper {
         }
     }
 
-    private BiMap<WrappedField, String> getFields(Class<?> cl, String internalName) {
+    private BiMap<Field, String> getFields(Class<?> cl, String internalName) {
         return cacheFields.computeIfAbsent(internalName, k -> this.tryGetFields(cl, k));
     }
 
-    private BiMap<WrappedField, String> tryGetFields(Class<?> cl, String internalName) {
+    private BiMap<Field, String> tryGetFields(Class<?> cl, String internalName) {
         try {
-            HashBiMap<WrappedField, String> map = HashBiMap.create();
-            ArclightReflectionHandler.remapper = this;
+            HashBiMap<Field, String> map = HashBiMap.create();
             for (Field field : cl.getFields()) {
-                map.put(WrappedField.of(field), mapField(field));
+                map.forcePut(field, mapField(field));
             }
             for (Field field : cl.getDeclaredFields()) {
-                map.put(WrappedField.of(field), mapField(field));
+                map.forcePut(field, mapField(field));
             }
-            ArclightReflectionHandler.remapper = null;
             return map;
         } catch (NoClassDefFoundError error) {
             tryDefineClass(error.getMessage());
@@ -161,24 +157,24 @@ public class ClassLoaderRemapper extends JarRemapper {
     public String tryMapDecFieldToSrg(Class<?> cl, String bukkitName) {
         String internalName = Type.getInternalName(cl);
         if (internalName.startsWith(PREFIX)) {
-            WrappedField field = getFields(cl, internalName).inverse().get(bukkitName);
-            return field == null ? bukkitName : field.name;
+            Field field = getFields(cl, internalName).inverse().get(bukkitName);
+            return field == null ? bukkitName : field.getName();
         } else return bukkitName;
     }
 
     public String tryMapFieldToSrg(Class<?> cl, String bukkitName) {
         String internalName = Type.getInternalName(cl);
         if (shouldRemap(internalName)) {
-            WrappedField field = getFields(cl, internalName).inverse().get(bukkitName);
-            return field == null ? bukkitName : field.name;
+            Field field = getFields(cl, internalName).inverse().get(bukkitName);
+            return field == null ? bukkitName : field.getName();
         } else return bukkitName;
     }
 
     public String tryMapFieldToBukkit(Class<?> cl, String srgName, Field field) {
         String internalName = Type.getInternalName(cl);
         if (internalName.startsWith(PREFIX)) {
-            BiMap<WrappedField, String> fields = getFields(cl, internalName);
-            return fields.getOrDefault(WrappedField.of(field), srgName);
+            BiMap<Field, String> fields = getFields(cl, internalName);
+            return fields.getOrDefault(field, srgName);
         } else return srgName;
     }
 
@@ -336,38 +332,6 @@ public class ClassLoaderRemapper extends JarRemapper {
             return node.superName;
         }
 
-    }
-
-    private static class WrappedField {
-
-        private final Class<?> owner;
-        private final String name;
-        private final Class<?> type;
-
-        private WrappedField(Class<?> owner, String name, Class<?> type) {
-            this.owner = owner;
-            this.name = name;
-            this.type = type;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            WrappedField that = (WrappedField) o;
-            return Objects.equals(owner, that.owner) &&
-                Objects.equals(name, that.name) &&
-                Objects.equals(type, that.type);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(owner, name, type);
-        }
-
-        private static WrappedField of(Field field) {
-            return new WrappedField(field.getDeclaringClass(), field.getName(), field.getType());
-        }
     }
 
     private static class WrappedMethod {
