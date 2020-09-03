@@ -78,6 +78,6 @@ public abstract class ZombieEntityMixin extends CreatureEntityMixin {
 
     @Inject(method = "onInitialSpawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/IWorld;addEntity(Lnet/minecraft/entity/Entity;)Z"))
     private void arclight$mount(IWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, ILivingEntityData spawnDataIn, CompoundNBT dataTag, CallbackInfoReturnable<ILivingEntityData> cir) {
-        ((WorldBridge) worldIn).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.MOUNT);
+        ((WorldBridge) worldIn.getWorld()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.MOUNT);
     }
 }
