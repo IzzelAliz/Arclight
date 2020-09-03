@@ -891,7 +891,8 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
         this.experienceLevel = this.newLevel;
         this.experienceTotal = this.newTotalExp;
         this.experience = 0.0f;
-        this.setArrowCountInEntity(this.deathTime = 0);
+        this.deathTime = 0;
+        this.setArrowCount(0, true);
         this.removeAllEffects(EntityPotionEffectEvent.Cause.DEATH);
         this.potionsNeedUpdate = true;
         this.openContainer = this.container;

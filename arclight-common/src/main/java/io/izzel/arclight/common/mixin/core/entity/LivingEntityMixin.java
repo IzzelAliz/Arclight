@@ -170,6 +170,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow protected abstract void damageArmor(DamageSource damageSource, float damage);
     @Shadow protected abstract void playEquipSound(ItemStack stack);
     @Shadow public abstract boolean getShouldBeDead();
+    @Shadow public abstract int getArrowCountInEntity();
+    @Shadow @Final private static DataParameter<Integer> ARROW_COUNT_IN_ENTITY;
     // @formatter:on
 
     public int expToDrop;
@@ -1054,5 +1056,23 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         } finally {
             arclight$cause = null;
         }
+    }
+
+    @Inject(method = "setArrowCountInEntity", cancellable = true, at = @At("HEAD"))
+    private void arclight$onArrowChange(int count, CallbackInfo ci) {
+        if (arclight$callArrowCountChange(count, false)) {
+            ci.cancel();
+        }
+    }
+
+    public final void setArrowCount(int count, boolean reset) {
+        if (arclight$callArrowCountChange(count, reset)) {
+            return;
+        }
+        this.dataManager.set(ARROW_COUNT_IN_ENTITY, count);
+    }
+
+    private boolean arclight$callArrowCountChange(int newCount, boolean reset) {
+        return CraftEventFactory.callArrowBodyCountChangeEvent((LivingEntity) (Object) this, this.getArrowCountInEntity(), newCount, reset).isCancelled();
     }
 }
