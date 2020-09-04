@@ -66,6 +66,7 @@ import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.projectiles.ProjectileSource;
+import org.spigotmc.ActivationRange;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -191,16 +192,34 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     public boolean valid;
     public org.bukkit.projectiles.ProjectileSource projectileSource; // For projectiles only
     public boolean forceExplosionKnockback; // SPIGOT-949
+    public org.spigotmc.ActivationRange.ActivationType activationType;
+    public boolean defaultActivationState;
+    public long activatedTick = Integer.MIN_VALUE;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(EntityType<?> entityTypeIn, World worldIn, CallbackInfo ci) {
         this.persist = true;
+        activationType = ActivationRange.initializeEntityActivationType((Entity) (Object) this);
+        if (worldIn != null) {
+            this.defaultActivationState = ActivationRange.initializeEntityActivationState((Entity) (Object) this, ((WorldBridge) worldIn).bridge$spigotConfig());
+        } else {
+            this.defaultActivationState = false;
+        }
     }
 
     private CraftEntity bukkitEntity;
 
     public CraftEntity getBukkitEntity() {
         return internal$getBukkitEntity();
+    }
+
+    public void inactiveTick() {
+        this.tick();
+    }
+
+    @Override
+    public void bridge$inactiveTick() {
+        this.inactiveTick();
     }
 
     @Override
@@ -436,7 +455,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
 
     @Inject(method = "setPositionAndRotation", at = @At("RETURN"))
     private void arclight$loadChunk(double x, double y, double z, float yaw, float pitch, CallbackInfo ci) {
-        this.world.getChunk((int)Math.floor(this.posX) >> 4, (int)Math.floor(this.posZ) >> 4);
+        this.world.getChunk((int) Math.floor(this.posX) >> 4, (int) Math.floor(this.posZ) >> 4);
     }
 
     @Inject(method = "writeUnlessRemoved", cancellable = true, at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/entity/Entity;getEntityString()Ljava/lang/String;"))
