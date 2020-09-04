@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.core.inventory.container;
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.inventory.CraftingInventoryBridge;
 import io.izzel.arclight.common.bridge.inventory.container.ContainerBridge;
-import io.izzel.arclight.common.bridge.inventory.container.WorkbenchContainerBridge;
+import io.izzel.arclight.common.bridge.inventory.container.PosContainerBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -37,12 +37,12 @@ import java.util.Optional;
 
 // todo 实现
 @Mixin(WorkbenchContainer.class)
-public abstract class WorkbenchContainerMixin extends ContainerMixin implements WorkbenchContainerBridge {
+public abstract class WorkbenchContainerMixin extends ContainerMixin implements PosContainerBridge {
 
     // @formatter:off
     @Mutable @Shadow @Final private CraftingInventory craftMatrix;
     @Shadow @Final private CraftResultInventory craftResult;
-    @Accessor("worldPosCallable") public abstract IWorldPosCallable bridge$getContainerAccess();
+    @Accessor("worldPosCallable") public abstract IWorldPosCallable bridge$getWorldPos();
     // @formatter:on
 
     private CraftInventoryView bukkitEntity;
@@ -60,7 +60,7 @@ public abstract class WorkbenchContainerMixin extends ContainerMixin implements 
 
     @Inject(method = "onCraftMatrixChanged", at = @At("HEAD"))
     public void arclight$capture(IInventory inventoryIn, CallbackInfo ci) {
-        ArclightCaptures.captureWorkbenchContainer((Container) (Object) this);
+        ArclightCaptures.captureWorkbenchContainer((WorkbenchContainer) (Object) this);
     }
 
     /**

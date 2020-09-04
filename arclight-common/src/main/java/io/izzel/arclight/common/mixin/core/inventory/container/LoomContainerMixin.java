@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
-import io.izzel.arclight.common.bridge.inventory.container.LoomContainerBridge;
+import io.izzel.arclight.common.bridge.inventory.container.PosContainerBridge;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.IInventory;
@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LoomContainer.class)
-public abstract class LoomContainerMixin extends ContainerMixin implements LoomContainerBridge {
+public abstract class LoomContainerMixin extends ContainerMixin implements PosContainerBridge {
 
     // @formatter:off
     @Shadow @Final private IInventory inputInventory;

@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.inventory.container.CartographyContainerBridge;
+import io.izzel.arclight.common.bridge.inventory.container.PosContainerBridge;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.CraftResultInventory;
@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(CartographyContainer.class)
-public abstract class CartographyContainerMixin extends ContainerMixin implements CartographyContainerBridge {
+public abstract class CartographyContainerMixin extends ContainerMixin implements PosContainerBridge {
 
     // @formatter:off
     @Shadow @Final private IWorldPosCallable worldPosCallable;
@@ -54,7 +54,7 @@ public abstract class CartographyContainerMixin extends ContainerMixin implement
     }
 
     @Override
-    public IWorldPosCallable bridge$getContainerAccess() {
+    public IWorldPosCallable bridge$getWorldPos() {
         return this.worldPosCallable;
     }
 }

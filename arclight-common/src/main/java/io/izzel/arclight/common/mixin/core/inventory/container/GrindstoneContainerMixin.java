@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
-import io.izzel.arclight.common.bridge.inventory.container.GrindstoneContainerBridge;
+import io.izzel.arclight.common.bridge.inventory.container.PosContainerBridge;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Container;
@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GrindstoneContainer.class)
-public abstract class GrindstoneContainerMixin extends ContainerMixin implements GrindstoneContainerBridge {
+public abstract class GrindstoneContainerMixin extends ContainerMixin implements PosContainerBridge {
 
     @Shadow @Final private IInventory inputInventory;
     @Shadow @Final private IInventory outputInventory;
@@ -42,7 +42,7 @@ public abstract class GrindstoneContainerMixin extends ContainerMixin implements
     }
 
     @Override
-    public IWorldPosCallable bridge$getContainerAccess() {
+    public IWorldPosCallable bridge$getWorldPos() {
         return this.worldPosCallable;
     }
 }

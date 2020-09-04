@@ -1,7 +1,6 @@
 package io.izzel.arclight.common.mixin.core.inventory.container;
 
-import io.izzel.arclight.common.bridge.inventory.container.EnchantmentContainerBridge;
-import io.izzel.arclight.common.bridge.util.IWorldPosCallableBridge;
+import io.izzel.arclight.common.bridge.inventory.container.PosContainerBridge;
 import io.izzel.arclight.common.mixin.core.inventory.InventoryMixin;
 import net.minecraft.inventory.container.EnchantmentContainer;
 import org.bukkit.Location;
@@ -15,6 +14,6 @@ public abstract class EnchantmentContainer1Mixin extends InventoryMixin {
 
     @Override
     public Location getLocation() {
-        return ((IWorldPosCallableBridge) ((EnchantmentContainerBridge) outerThis).bridge$getContainerAccess()).bridge$getLocation();
+        return ((PosContainerBridge) outerThis).bridge$getWorldLocation();
     }
 }

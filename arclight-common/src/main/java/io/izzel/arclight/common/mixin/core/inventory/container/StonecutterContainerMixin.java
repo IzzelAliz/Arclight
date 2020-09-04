@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
+import io.izzel.arclight.common.bridge.inventory.container.PosContainerBridge;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.CraftResultInventory;
 import net.minecraft.inventory.IInventory;
@@ -17,11 +18,12 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(StonecutterContainer.class)
-public abstract class StonecutterContainerMixin extends ContainerMixin {
+public abstract class StonecutterContainerMixin extends ContainerMixin implements PosContainerBridge {
 
     // @formatter:off
     @Shadow @Final public IInventory inputInventory;
     @Shadow @Final private CraftResultInventory inventory;
+    @Shadow @Final private IWorldPosCallable worldPosCallable;
     // @formatter:on
 
     private CraftInventoryView bukkitEntity = null;
@@ -41,5 +43,10 @@ public abstract class StonecutterContainerMixin extends ContainerMixin {
         CraftInventoryStonecutter inventory = new CraftInventoryStonecutter(this.inputInventory, this.inventory);
         bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
         return bukkitEntity;
+    }
+
+    @Override
+    public IWorldPosCallable bridge$getWorldPos() {
+        return this.worldPosCallable;
     }
 }

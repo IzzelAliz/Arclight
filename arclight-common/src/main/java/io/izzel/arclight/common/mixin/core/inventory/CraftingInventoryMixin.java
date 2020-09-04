@@ -3,13 +3,11 @@ package io.izzel.arclight.common.mixin.core.inventory;
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.inventory.CraftingInventoryBridge;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.inventory.container.WorkbenchContainerBridge;
-import io.izzel.arclight.common.bridge.util.IWorldPosCallableBridge;
+import io.izzel.arclight.common.bridge.inventory.container.PosContainerBridge;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.WorkbenchContainer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.NonNullList;
@@ -110,8 +108,8 @@ public abstract class CraftingInventoryMixin implements CraftingInventoryBridge,
 
     @Override
     public Location getLocation() {
-        return this.eventHandler instanceof WorkbenchContainer
-            ? ((IWorldPosCallableBridge) ((WorkbenchContainerBridge) eventHandler).bridge$getContainerAccess()).bridge$getLocation()
+        return this.eventHandler instanceof PosContainerBridge
+            ? ((PosContainerBridge) eventHandler).bridge$getWorldLocation()
             : ((PlayerEntityBridge) owner).bridge$getBukkitEntity().getLocation();
     }
 

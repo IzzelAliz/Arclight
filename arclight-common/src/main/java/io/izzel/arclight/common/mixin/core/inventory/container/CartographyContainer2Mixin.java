@@ -1,8 +1,7 @@
 package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.inventory.container.CartographyContainerBridge;
-import io.izzel.arclight.common.bridge.util.IWorldPosCallableBridge;
+import io.izzel.arclight.common.bridge.inventory.container.PosContainerBridge;
 import net.minecraft.inventory.container.CartographyContainer;
 import org.bukkit.Location;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,6 +14,6 @@ public abstract class CartographyContainer2Mixin implements IInventoryBridge {
 
     @Override
     public Location getLocation() {
-        return ((IWorldPosCallableBridge) ((CartographyContainerBridge) outerThis).bridge$getContainerAccess()).bridge$getLocation();
+        return ((PosContainerBridge) outerThis).bridge$getWorldLocation();
     }
 }

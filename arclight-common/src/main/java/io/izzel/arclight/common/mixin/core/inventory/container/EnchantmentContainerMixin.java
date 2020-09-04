@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.inventory.container.EnchantmentContainerBridge;
+import io.izzel.arclight.common.bridge.inventory.container.PosContainerBridge;
 import io.izzel.arclight.common.bridge.util.IWorldPosCallableBridge;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.enchantment.EnchantmentData;
@@ -52,7 +52,7 @@ import java.util.Map;
 import java.util.Random;
 
 @Mixin(EnchantmentContainer.class)
-public abstract class EnchantmentContainerMixin extends ContainerMixin implements EnchantmentContainerBridge {
+public abstract class EnchantmentContainerMixin extends ContainerMixin implements PosContainerBridge {
 
     // @formatter:off
     @Shadow @Final private IInventory tableInventory;
@@ -278,7 +278,7 @@ public abstract class EnchantmentContainerMixin extends ContainerMixin implement
     }
 
     @Override
-    public IWorldPosCallable bridge$getContainerAccess() {
+    public IWorldPosCallable bridge$getWorldPos() {
         return this.worldPosCallable;
     }
 }
