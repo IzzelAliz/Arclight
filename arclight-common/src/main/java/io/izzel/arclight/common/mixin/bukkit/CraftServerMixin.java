@@ -1,7 +1,9 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
+import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
 import jline.console.ConsoleReader;
 import net.minecraft.command.Commands;
+import net.minecraft.server.dedicated.DedicatedPlayerList;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.management.PlayerList;
 import org.bukkit.command.Command;
@@ -29,7 +31,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 @Mixin(CraftServer.class)
-public abstract class CraftServerMixin {
+public abstract class CraftServerMixin implements CraftServerBridge {
 
     // @formatter:off
     @Shadow(remap = false) @Final private CraftCommandMap commandMap;
@@ -40,6 +42,7 @@ public abstract class CraftServerMixin {
     @Shadow(remap = false) @Final protected DedicatedServer console;
     @Shadow(remap = false) @Final @Mutable private String serverName;
     @Accessor(value = "logger", remap = false) @Mutable public abstract void setLogger(Logger logger);
+    @Shadow(remap = false) @Final @Mutable protected DedicatedPlayerList playerList;
     // @formatter:on
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -113,4 +116,8 @@ public abstract class CraftServerMixin {
         }
     }
 
+    @Override
+    public void bridge$setPlayerList(PlayerList playerList) {
+        this.playerList = (DedicatedPlayerList) playerList;
+    }
 }

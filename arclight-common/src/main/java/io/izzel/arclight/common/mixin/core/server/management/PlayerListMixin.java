@@ -10,13 +10,11 @@ import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.network.NetworkManagerBridge;
 import io.izzel.arclight.common.bridge.network.login.ServerLoginNetHandlerBridge;
 import io.izzel.arclight.common.bridge.network.play.ServerPlayNetHandlerBridge;
-import io.izzel.arclight.common.bridge.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.server.management.PlayerListBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.bridge.world.dimension.DimensionTypeBridge;
 import io.izzel.arclight.common.bridge.world.server.ServerWorldBridge;
-import io.izzel.arclight.common.mod.ArclightMod;
-import io.izzel.arclight.common.mod.server.BukkitRegistry;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -64,7 +62,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
-import org.bukkit.craftbukkit.v.command.ColouredConsoleSender;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.util.CraftChatMessage;
 import org.bukkit.entity.Player;
@@ -85,7 +82,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.io.File;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -133,21 +129,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void arclight$loadCraftBukkit(MinecraftServer minecraftServer, int i, CallbackInfo ci) {
-        try {
-            cserver = new CraftServer((DedicatedServer) minecraftServer, (PlayerList) (Object) this);
-            ((MinecraftServerBridge) minecraftServer).bridge$setServer(cserver);
-            ((MinecraftServerBridge) minecraftServer).bridge$setConsole(ColouredConsoleSender.getInstance());
-            org.spigotmc.SpigotConfig.init(new File("./spigot.yml"));
-            org.spigotmc.SpigotConfig.registerCommands();
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
-        try {
-            ArclightMod.LOGGER.info("registry.begin");
-            BukkitRegistry.registerAll();
-        } catch (Throwable t) {
-            ArclightMod.LOGGER.error("registry.error", t);
-        }
+        cserver = ArclightServer.createOrLoad((DedicatedServer) minecraftServer, (PlayerList) (Object) this);
     }
 
     @Inject(method = "initializeConnectionToPlayer", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/fml/network/NetworkHooks;sendMCRegistryPackets(Lnet/minecraft/network/NetworkManager;Ljava/lang/String;)V"))
