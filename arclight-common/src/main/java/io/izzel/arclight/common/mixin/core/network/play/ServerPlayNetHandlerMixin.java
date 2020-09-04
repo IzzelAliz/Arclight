@@ -779,13 +779,17 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             float f8 = f3 * f5;
             double d4 = (this.player.interactionManager.getGameType() == GameType.CREATIVE) ? 5.0 : 4.5;
             Vec3d vec3d2 = vec3d.add(f7 * d4, f6 * d4, f8 * d4);
-            BlockRayTraceResult result = this.player.world.rayTraceBlocks(new RayTraceContext(vec3d, vec3d2, RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE, this.player));
+            BlockRayTraceResult movingobjectposition = this.player.world.rayTraceBlocks(new RayTraceContext(vec3d, vec3d2, RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE, this.player));
             boolean cancelled;
-            if (result == null || result.getType() != RayTraceResult.Type.BLOCK) {
+            if (movingobjectposition == null || movingobjectposition.getType() != RayTraceResult.Type.BLOCK) {
                 PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(this.player, Action.RIGHT_CLICK_AIR, itemstack, enumhand);
                 cancelled = (event.useItemInHand() == Event.Result.DENY);
+            } else if (((PlayerInteractionManagerBridge) this.player.interactionManager).bridge$isFiredInteract()) {
+                ((PlayerInteractionManagerBridge) this.player.interactionManager).bridge$setFiredInteract(false);
+                cancelled = ((PlayerInteractionManagerBridge) this.player.interactionManager).bridge$getInteractResult();
             } else {
-                PlayerInteractEvent event2 = CraftEventFactory.callPlayerInteractEvent(this.player, Action.RIGHT_CLICK_BLOCK, result.getPos(), result.getFace(), itemstack, true, enumhand);
+                BlockRayTraceResult movingobjectpositionblock = movingobjectposition;
+                PlayerInteractEvent event2 = CraftEventFactory.callPlayerInteractEvent(this.player, Action.RIGHT_CLICK_BLOCK, movingobjectpositionblock.getPos(), movingobjectpositionblock.getFace(), itemstack, true, enumhand);
                 cancelled = (event2.useItemInHand() == Event.Result.DENY);
             }
             if (cancelled) {
