@@ -27,6 +27,7 @@ public class ArclightServer {
                 server = new CraftServer(console, playerList);
                 ((MinecraftServerBridge) console).bridge$setServer(server);
                 ((MinecraftServerBridge) console).bridge$setConsole(ColouredConsoleSender.getInstance());
+                ArclightPermissionHandler.INSTANCE.initialize();
             } catch (Throwable t) {
                 t.printStackTrace();
             }
