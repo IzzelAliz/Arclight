@@ -13,6 +13,7 @@
   "overwrites": {
     "conformVisibility": true
   },
+  "mixinPriority": 500,
   "mixins": [
     "advancements.AdvancementMixin",
     "advancements.PlayerAdvancementsMixin",

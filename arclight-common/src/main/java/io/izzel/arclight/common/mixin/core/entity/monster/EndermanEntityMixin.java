@@ -15,7 +15,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import javax.annotation.Nullable;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Mixin(EndermanEntity.class)
 public abstract class EndermanEntityMixin extends CreatureEntityMixin implements EndermanEntityBridge {
@@ -59,15 +58,9 @@ public abstract class EndermanEntityMixin extends CreatureEntityMixin implements
      */
     @Overwrite
     public void setAttackTarget(@Nullable LivingEntity entity) {
-        if (this.getAttackTarget() == entity) {
-            return;
-        }
-        this.bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.UNKNOWN, true);
-        arclight$targetSuccess = new AtomicBoolean();
+        this.bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.CLOSEST_PLAYER, true);
         super.setAttackTarget(entity);
-        boolean ret = arclight$targetSuccess.get();
-        arclight$targetSuccess = null;
-        if (ret) {
+        if (arclight$targetSuccess) {
             bridge$updateTarget(getAttackTarget());
         }
     }

@@ -40,7 +40,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Mixin(MobEntity.class)
 @Implements(@Interface(iface = MobEntityBridge.Hack.class, prefix = "hack$"))
@@ -93,7 +92,7 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
         this.aware = true;
     }
 
-    protected transient AtomicBoolean arclight$targetSuccess;
+    protected transient boolean arclight$targetSuccess;
     private transient EntityTargetEvent.TargetReason arclight$reason;
     private transient boolean arclight$fireEvent;
 
@@ -107,12 +106,16 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
         arclight$fireEvent = false;
         EntityTargetEvent.TargetReason reason = arclight$reason == null ? EntityTargetEvent.TargetReason.UNKNOWN : arclight$reason;
         arclight$reason = null;
+        if (getAttackTarget() == livingEntity) {
+            arclight$targetSuccess = false;
+            return;
+        }
         if (fireEvent) {
             if (reason == EntityTargetEvent.TargetReason.UNKNOWN && this.getAttackTarget() != null && livingEntity == null) {
                 reason = (this.getAttackTarget().isAlive() ? EntityTargetEvent.TargetReason.FORGOT_TARGET : EntityTargetEvent.TargetReason.TARGET_DIED);
             }
             if (reason == EntityTargetEvent.TargetReason.UNKNOWN) {
-                ArclightMod.LOGGER.log(Level.WARN, "Unknown target reason, please report on the issue tracker", new Exception());
+                ArclightMod.LOGGER.log(Level.WARN, "Unknown target reason setting {} target to {}", this, livingEntity);
             }
             CraftLivingEntity ctarget = null;
             if (livingEntity != null) {
@@ -121,7 +124,7 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
             final EntityTargetLivingEntityEvent event = new EntityTargetLivingEntityEvent(this.getBukkitEntity(), ctarget, reason);
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
-                if (arclight$targetSuccess != null) arclight$targetSuccess.set(false);
+                arclight$targetSuccess = false;
                 return;
             }
             if (event.getTarget() != null) {
@@ -132,20 +135,13 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
         }
         this.attackTarget = livingEntity;
         ForgeHooks.onLivingSetAttackTarget((MobEntity) (Object) this, this.attackTarget);
-        if (arclight$targetSuccess != null) arclight$targetSuccess.set(true);
+        arclight$targetSuccess = true;
     }
 
     public boolean setGoalTarget(LivingEntity livingEntity, EntityTargetEvent.TargetReason reason, boolean fireEvent) {
         bridge$pushGoalTargetReason(reason, fireEvent);
-        if (getAttackTarget() == livingEntity) {
-            return false;
-        } else {
-            arclight$targetSuccess = new AtomicBoolean();
-            setAttackTarget(livingEntity);
-            boolean ret = arclight$targetSuccess.get();
-            arclight$targetSuccess = null;
-            return ret;
-        }
+        setAttackTarget(livingEntity);
+        return arclight$targetSuccess;
     }
 
     @Override
