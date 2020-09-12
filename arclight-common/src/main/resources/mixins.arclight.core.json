@@ -196,7 +196,6 @@
     "entity.passive.BeeEntity_AngerGoalMixin",
     "entity.passive.BeeEntity_FindPollinationTargetGoalMixin",
     "entity.passive.BeeEntityMixin",
-    "entity.passive.CatEntityMixin",
     "entity.passive.ChickenEntityMixin",
     "entity.passive.CowEntityMixin",
     "entity.passive.DolphinEntity_SwimWithPlayerGoalMixin",

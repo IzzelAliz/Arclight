@@ -47,7 +47,7 @@ public abstract class BlockItemMixin {
     protected boolean canPlace(BlockItemUseContext context, BlockState state) {
         PlayerEntity playerentity = context.getPlayer();
         ISelectionContext iselectioncontext = playerentity == null ? ISelectionContext.dummy() : ISelectionContext.forEntity(playerentity);
-        boolean original = (!this.checkPosition() || state.isValidPosition(context.getWorld(), context.getPos())) && context.getWorld().func_226663_a_(state, context.getPos(), iselectioncontext);
+        boolean original = (!this.checkPosition() || state.isValidPosition(context.getWorld(), context.getPos())) && context.getWorld().placedBlockWouldCollide(state, context.getPos(), iselectioncontext);
 
         Player player = (context.getPlayer() instanceof ServerPlayerEntityBridge) ? ((ServerPlayerEntityBridge) context.getPlayer()).bridge$getBukkitEntity() : null;
         BlockCanBuildEvent event = new BlockCanBuildEvent(CraftBlock.at(context.getWorld(), context.getPos()), player, CraftBlockData.fromData(state), original);

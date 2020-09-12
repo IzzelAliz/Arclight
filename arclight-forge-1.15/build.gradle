@@ -21,7 +21,7 @@ apply plugin: 'io.izzel.arclight'
 
 ext {
     minecraftVersion = '1.15.2'
-    forgeVersion = '31.2.30'
+    forgeVersion = '31.2.37'
 }
 
 arclight {
@@ -41,7 +41,7 @@ configurations {
 }
 
 minecraft {
-    mappings channel: 'snapshot', version: "20200705-1.15.1"
+    mappings channel: 'snapshot', version: "20200904-1.15.1"
     accessTransformer = project(':arclight-common').file('src/main/resources/META-INF/accesstransformer.cfg')
 }
 
