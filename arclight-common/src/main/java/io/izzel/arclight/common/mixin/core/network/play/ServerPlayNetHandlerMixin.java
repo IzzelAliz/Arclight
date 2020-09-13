@@ -155,7 +155,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     @Shadow private double lowestRiddenX;
     @Shadow private double lowestRiddenY;
     @Shadow private double lowestRiddenZ;
-    @Shadow protected abstract boolean func_217264_d();
+    @Shadow protected abstract boolean isServerOwner();
     @Shadow private double lowestRiddenX1;
     @Shadow private double lowestRiddenY1;
     @Shadow private double lowestRiddenZ1;
@@ -305,7 +305,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                     speed = this.player.abilities.walkSpeed * 10.0f;
                 }
                 speed *= 2.0;
-                if (d11 - d10 > Math.max(100.0, Math.pow(10.0f * i * speed, 2.0)) && !this.func_217264_d()) {
+                if (d11 - d10 > Math.max(100.0, Math.pow(10.0f * i * speed, 2.0)) && !this.isServerOwner()) {
                     LOGGER.warn("{} (vehicle of {}) moved too quickly! {},{},{}", entity.getName().getString(), this.player.getName().getString(), d7, d8, d9);
                     this.netManager.sendPacket(new SMoveVehiclePacket(entity));
                     return;
@@ -516,7 +516,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                             }
                             if (!this.player.isInvulnerableDimensionChange() && (!this.player.getServerWorld().getGameRules().getBoolean(GameRules.DISABLE_ELYTRA_MOVEMENT_CHECK) || !this.player.isElytraFlying())) {
                                 final float f3 = this.player.isElytraFlying() ? 300.0f : 100.0f;
-                                if (d12 - d11 > Math.max(f3, Math.pow(10.0f * i * speed, 2.0)) && !this.func_217264_d()) {
+                                if (d12 - d11 > Math.max(f3, Math.pow(10.0f * i * speed, 2.0)) && !this.isServerOwner()) {
                                     LOGGER.warn("{} moved too quickly! {},{},{}", this.player.getName().getString(), d8, d9, d10);
                                     this.setPlayerLocation(this.player.posX, this.player.posY, this.player.posZ, this.player.rotationYaw, this.player.rotationPitch);
                                     return;

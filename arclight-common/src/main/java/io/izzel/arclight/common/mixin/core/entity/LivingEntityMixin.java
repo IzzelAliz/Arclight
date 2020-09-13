@@ -478,19 +478,21 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
 
     @Inject(method = "getHealth", cancellable = true, at = @At("HEAD"))
     public void arclight$scaledHealth(CallbackInfoReturnable<Float> cir) {
-        if (this instanceof ServerPlayerEntityBridge) {
+        if (this instanceof ServerPlayerEntityBridge && ((ServerPlayerEntityBridge) this).bridge$initialized()) {
             cir.setReturnValue((float) ((ServerPlayerEntityBridge) this).bridge$getBukkitEntity().getHealth());
         }
     }
 
     @Inject(method = "setHealth", cancellable = true, at = @At("HEAD"))
     public void arclight$setScaled(float health, CallbackInfo ci) {
-        if (this instanceof ServerPlayerEntityBridge) {
+        if (this instanceof ServerPlayerEntityBridge && ((ServerPlayerEntityBridge) this).bridge$initialized()) {
             CraftPlayer player = ((ServerPlayerEntityBridge) this).bridge$getBukkitEntity();
 
-            player.setRealHealth(MathHelper.clamp(health, 0.0F, player.getMaxHealth()));
+            double realHealth = MathHelper.clamp(health, 0.0F, player.getMaxHealth());
+            player.setRealHealth(realHealth);
 
             player.updateScaledHealth(false);
+            player.setRealHealth(realHealth);
             ci.cancel();
         }
     }
@@ -679,6 +681,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             final boolean human = (Object) this instanceof PlayerEntity;
 
             f = net.minecraftforge.common.ForgeHooks.onLivingHurt((LivingEntity) (Object) this, damagesource, f);
+            if (f <= 0) return false;
 
             float originalDamage = f;
             Function<Double, Double> hardHat = f12 -> {
