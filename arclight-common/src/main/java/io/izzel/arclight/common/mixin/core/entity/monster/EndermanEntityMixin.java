@@ -58,10 +58,7 @@ public abstract class EndermanEntityMixin extends CreatureEntityMixin implements
      */
     @Overwrite
     public void setAttackTarget(@Nullable LivingEntity entity) {
-        if (this.getAttackTarget() == entity) {
-            return;
-        }
-        this.bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.UNKNOWN, true);
+        this.bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.CLOSEST_PLAYER, true);
         super.setAttackTarget(entity);
         if (arclight$targetSuccess) {
             bridge$updateTarget(getAttackTarget());

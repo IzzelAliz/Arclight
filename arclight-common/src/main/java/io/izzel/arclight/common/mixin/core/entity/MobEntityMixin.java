@@ -113,12 +113,16 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
         arclight$fireEvent = false;
         EntityTargetEvent.TargetReason reason = arclight$reason == null ? EntityTargetEvent.TargetReason.UNKNOWN : arclight$reason;
         arclight$reason = null;
+        if (getAttackTarget() == livingEntity) {
+            arclight$targetSuccess = false;
+            return;
+        }
         if (fireEvent) {
             if (reason == EntityTargetEvent.TargetReason.UNKNOWN && this.getAttackTarget() != null && livingEntity == null) {
                 reason = (this.getAttackTarget().isAlive() ? EntityTargetEvent.TargetReason.FORGOT_TARGET : EntityTargetEvent.TargetReason.TARGET_DIED);
             }
             if (reason == EntityTargetEvent.TargetReason.UNKNOWN) {
-                ArclightMod.LOGGER.log(Level.WARN, "Unknown target reason, please report on the issue tracker", new Exception());
+                ArclightMod.LOGGER.log(Level.WARN, "Unknown target reason setting {} target to {}", this, livingEntity);
             }
             CraftLivingEntity ctarget = null;
             if (livingEntity != null) {
@@ -143,12 +147,8 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
 
     public boolean setGoalTarget(LivingEntity livingEntity, EntityTargetEvent.TargetReason reason, boolean fireEvent) {
         bridge$pushGoalTargetReason(reason, fireEvent);
-        if (getAttackTarget() == livingEntity) {
-            return false;
-        } else {
-            setAttackTarget(livingEntity);
-            return arclight$targetSuccess;
-        }
+        setAttackTarget(livingEntity);
+        return arclight$targetSuccess;
     }
 
     @Override

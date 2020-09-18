@@ -34,4 +34,6 @@ public interface ServerPlayerEntityBridge extends PlayerEntityBridge {
     void bridge$reset();
 
     Entity bridge$changeDimension(ServerWorld world, PlayerTeleportEvent.TeleportCause cause);
+
+    boolean bridge$initialized();
 }

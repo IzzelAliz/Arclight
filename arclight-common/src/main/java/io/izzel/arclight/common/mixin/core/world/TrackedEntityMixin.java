@@ -43,7 +43,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
@@ -219,12 +218,26 @@ public abstract class TrackedEntityMixin implements TrackedEntityBridge {
         }
     }
 
-    @Redirect(method = "track", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/TrackedEntity;sendSpawnPackets(Ljava/util/function/Consumer;)V"))
-    private void arclight$addPlayer(TrackedEntity trackedEntity, Consumer<IPacket<?>> consumer, ServerPlayerEntity playerEntity) {
-        a(consumer, playerEntity);
+    @Inject(method = "track", at = @At("HEAD"))
+    private void arclight$addPlayer(ServerPlayerEntity player, CallbackInfo ci) {
+        this.arclight$player = player;
     }
 
-    public void a(Consumer<IPacket<?>> consumer, ServerPlayerEntity entityplayer) {
+    private transient ServerPlayerEntity arclight$player;
+
+    public void a(final Consumer<IPacket<?>> consumer, ServerPlayerEntity playerEntity) {
+        this.arclight$player = playerEntity;
+        this.sendSpawnPackets(consumer);
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    public void sendSpawnPackets(final Consumer<IPacket<?>> consumer) {
+        ServerPlayerEntity player = arclight$player;
+        arclight$player = null;
         MobEntity entityinsentient;
         if (this.trackedEntity.removed) {
             return;
@@ -238,7 +251,7 @@ public abstract class TrackedEntityMixin implements TrackedEntityBridge {
         boolean flag = this.sendVelocityUpdates;
         if (this.trackedEntity instanceof LivingEntity) {
             Collection<ModifiableAttributeInstance> collection = ((LivingEntity) this.trackedEntity).getAttributeManager().getWatchedInstances();
-            if (this.trackedEntity.getEntityId() == entityplayer.getEntityId()) {
+            if (this.trackedEntity.getEntityId() == player.getEntityId()) {
                 ((ServerPlayerEntityBridge) this.trackedEntity).bridge$getBukkitEntity().injectScaledMaxHealth(collection, false);
             }
             if (!collection.isEmpty()) {
