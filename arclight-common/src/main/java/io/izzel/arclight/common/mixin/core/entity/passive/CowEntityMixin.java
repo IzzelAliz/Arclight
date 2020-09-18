@@ -31,7 +31,7 @@ public abstract class CowEntityMixin extends AnimalEntityMixin {
             if (event.isCancelled()) {
                 return ActionResultType.PASS;
             }
-            ItemStack itemstack1 = DrinkHelper.func_242398_a(itemstack, playerEntity, CraftItemStack.asNMSCopy(event.getItemStack()));
+            ItemStack itemstack1 = DrinkHelper.fill(itemstack, playerEntity, CraftItemStack.asNMSCopy(event.getItemStack()));
             playerEntity.setHeldItem(hand, itemstack1);
             return ActionResultType.func_233537_a_(this.world.isRemote);
         } else {

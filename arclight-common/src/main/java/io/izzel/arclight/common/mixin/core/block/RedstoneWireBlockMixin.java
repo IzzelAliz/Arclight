@@ -19,7 +19,7 @@ public abstract class RedstoneWireBlockMixin {
     @Shadow protected abstract int getStrongestSignal(World world, BlockPos pos);
     // @formatter:on
 
-    @Redirect(method = "func_235547_a_", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/RedstoneWireBlock;getStrongestSignal(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)I"))
+    @Redirect(method = "updatePower", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/RedstoneWireBlock;getStrongestSignal(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)I"))
     public int arclight$blockRedstone(RedstoneWireBlock redstoneWireBlock, World world, BlockPos pos, World world1, BlockPos pos1, BlockState state) {
         int i = this.getStrongestSignal(world, pos);
         int oldPower = state.get(RedstoneWireBlock.POWER);

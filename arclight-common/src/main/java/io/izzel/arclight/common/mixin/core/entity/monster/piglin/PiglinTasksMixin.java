@@ -49,7 +49,7 @@ public abstract class PiglinTasksMixin {
         }
         Item item = itemstack.getItem();
         if (func_234480_a_(item)) {
-            piglinEntity.getBrain().removeMemory(MemoryModuleType.field_242310_O);
+            piglinEntity.getBrain().removeMemory(MemoryModuleType.TIME_TRYING_TO_REACH_ADMIRE_ITEM);
             func_241427_c_(piglinEntity, itemstack);
             func_234501_d_(piglinEntity);
         } else if (func_234499_c_(item) && !func_234538_z_(piglinEntity)) {

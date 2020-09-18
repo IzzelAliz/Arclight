@@ -16,7 +16,7 @@ public class IceBlockMixin {
 
     @Inject(method = "turnIntoWater", cancellable = true, at = @At("HEAD"))
     public void arclight$blockFade(BlockState blockState, World world, BlockPos blockPos, CallbackInfo ci) {
-        if (CraftEventFactory.callBlockFadeEvent(world, blockPos, world.func_230315_m_().func_236040_e_()
+        if (CraftEventFactory.callBlockFadeEvent(world, blockPos, world.getDimensionType().isUltrawarm()
             ? Blocks.AIR.getDefaultState() : Blocks.WATER.getDefaultState()).isCancelled()) {
             ci.cancel();
         }

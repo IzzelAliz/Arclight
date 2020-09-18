@@ -129,17 +129,17 @@ public class BukkitRegistry {
     public static void registerEnvironments() {
         int i = World.Environment.values().length;
         List<World.Environment> newTypes = new ArrayList<>();
-        Registry<DimensionType> registry = ArclightServer.getMinecraftServer().func_244267_aX().func_243612_b(Registry.DIMENSION_TYPE_KEY);
+        Registry<DimensionType> registry = ArclightServer.getMinecraftServer().func_244267_aX().getRegistry(Registry.DIMENSION_TYPE_KEY);
         for (Map.Entry<RegistryKey<DimensionType>, DimensionType> entry : registry.getEntries()) {
             RegistryKey<DimensionType> key = entry.getKey();
             World.Environment environment = DIM_MAP.get(key);
             if (environment == null) {
-                String name = ResourceLocationUtil.standardize(key.func_240901_a_());
+                String name = ResourceLocationUtil.standardize(key.getLocation());
                 environment = EnumHelper.makeEnum(World.Environment.class, name, i, ENV_CTOR, ImmutableList.of(i - 1));
                 newTypes.add(environment);
                 ENVIRONMENT_MAP.put(i - 1, environment);
                 DIM_MAP.put(key, environment);
-                ArclightMod.LOGGER.debug("Registered {} as environment {}", key.func_240901_a_(), environment);
+                ArclightMod.LOGGER.debug("Registered {} as environment {}", key.getLocation(), environment);
                 i++;
             }
         }

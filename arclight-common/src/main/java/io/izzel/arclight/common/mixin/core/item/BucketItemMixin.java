@@ -72,7 +72,7 @@ public abstract class BucketItemMixin {
 
     private transient org.bukkit.inventory.@Nullable ItemStack arclight$captureItem;
 
-    @ModifyArg(method = "onItemRightClick", index = 2, at = @At(value = "INVOKE", target = "Lnet/minecraft/util/DrinkHelper;func_242398_a(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;)Lnet/minecraft/item/ItemStack;"))
+    @ModifyArg(method = "onItemRightClick", index = 2, at = @At(value = "INVOKE", target = "Lnet/minecraft/util/DrinkHelper;fill(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;)Lnet/minecraft/item/ItemStack;"))
     private ItemStack arclight$useEventItem(ItemStack itemStack) {
         return arclight$captureItem == null ? itemStack : CraftItemStack.asNMSCopy(arclight$captureItem);
     }
@@ -94,7 +94,7 @@ public abstract class BucketItemMixin {
     private transient BlockPos arclight$click;
     private transient ItemStack arclight$stack;
 
-    @Inject(method = "tryPlaceContainedLiquid", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/DimensionType;func_236040_e_()Z"))
+    @Inject(method = "tryPlaceContainedLiquid", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/DimensionType;isUltrawarm()Z"))
     private void arclight$bucketEmpty(PlayerEntity player, World worldIn, BlockPos posIn, BlockRayTraceResult p_180616_4_, CallbackInfoReturnable<Boolean> cir) {
         if (player != null) {
             PlayerBucketEmptyEvent event = CraftEventFactory.callPlayerBucketEmptyEvent((ServerWorld) worldIn, player, posIn, arclight$click, arclight$direction, arclight$stack);

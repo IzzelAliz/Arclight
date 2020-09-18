@@ -21,11 +21,11 @@ public abstract class VineBlockMixin extends BlockMixin {
 
     // @formatter:off
     @Shadow public static BooleanProperty getPropertyFor(Direction side) { return null; }
-    @Shadow protected abstract boolean func_196539_a(IBlockReader p_196539_1_, BlockPos p_196539_2_);
+    @Shadow protected abstract boolean hasVineBelow(IBlockReader p_196539_1_, BlockPos p_196539_2_);
     @Shadow public static boolean canAttachTo(IBlockReader p_196542_0_, BlockPos worldIn, Direction neighborPos) { return false; }
     @Shadow @Final public static BooleanProperty UP;
-    @Shadow protected abstract boolean func_196541_a(IBlockReader p_196541_1_, BlockPos p_196541_2_, Direction p_196541_3_);
-    @Shadow protected abstract boolean func_196540_x(BlockState p_196540_1_);
+    @Shadow protected abstract boolean hasAttachment(IBlockReader p_196541_1_, BlockPos p_196541_2_, Direction p_196541_3_);
+    @Shadow protected abstract boolean isFacingCardinal(BlockState p_196540_1_);
     @Shadow protected abstract BlockState func_196544_a(BlockState p_196544_1_, BlockState p_196544_2_, Random p_196544_3_);
     // @formatter:on
 
@@ -40,7 +40,7 @@ public abstract class VineBlockMixin extends BlockMixin {
             Direction direction = Direction.getRandomDirection(random);
             BlockPos blockpos = pos.up();
             if (direction.getAxis().isHorizontal() && !state.get(getPropertyFor(direction))) {
-                if (this.func_196539_a(worldIn, pos)) {
+                if (this.hasVineBelow(worldIn, pos)) {
                     BlockPos blockpos4 = pos.offset(direction);
                     BlockState blockstate4 = worldIn.getBlockState(blockpos4);
                     if (blockstate4.isAir(worldIn, blockpos4)) {
@@ -71,13 +71,13 @@ public abstract class VineBlockMixin extends BlockMixin {
                 }
             } else {
                 if (direction == Direction.UP && pos.getY() < 255) {
-                    if (this.func_196541_a(worldIn, pos, direction)) {
+                    if (this.hasAttachment(worldIn, pos, direction)) {
                         worldIn.setBlockState(pos, state.with(UP, Boolean.TRUE), 2);
                         return;
                     }
 
                     if (worldIn.isAirBlock(blockpos)) {
-                        if (!this.func_196539_a(worldIn, pos)) {
+                        if (!this.hasVineBelow(worldIn, pos)) {
                             return;
                         }
 
@@ -89,7 +89,7 @@ public abstract class VineBlockMixin extends BlockMixin {
                             }
                         }
 
-                        if (this.func_196540_x(blockstate3)) {
+                        if (this.isFacingCardinal(blockstate3)) {
                             CraftEventFactory.handleBlockSpreadEvent(worldIn, pos, blockpos, blockstate3, 2);
                         }
 
@@ -103,7 +103,7 @@ public abstract class VineBlockMixin extends BlockMixin {
                     if (blockstate.isAir(worldIn, blockpos) || blockstate.isIn((Block) (Object) this)) {
                         BlockState blockstate1 = blockstate.isAir() ? this.getDefaultState() : blockstate;
                         BlockState blockstate2 = this.func_196544_a(state, blockstate1, random);
-                        if (blockstate1 != blockstate2 && this.func_196540_x(blockstate2)) {
+                        if (blockstate1 != blockstate2 && this.isFacingCardinal(blockstate2)) {
                             CraftEventFactory.handleBlockSpreadEvent(worldIn, pos, blockpos1, blockstate2, 2);
                         }
                     }

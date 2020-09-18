@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.io.IOException;
+import java.util.UUID;
 
 @Mixin(SChatPacket.class)
 public class SChatPacketMixin {
@@ -18,6 +19,7 @@ public class SChatPacketMixin {
     // @formatter:off
     @Shadow private ITextComponent chatComponent;
     @Shadow private ChatType type;
+    @Shadow private UUID field_240809_c_;
     // @formatter:on
 
     public BaseComponent[] components;
@@ -34,5 +36,6 @@ public class SChatPacketMixin {
             buf.writeTextComponent(this.chatComponent);
         }
         buf.writeByte(this.type.getId());
+        buf.writeUniqueId(this.field_240809_c_);
     }
 }

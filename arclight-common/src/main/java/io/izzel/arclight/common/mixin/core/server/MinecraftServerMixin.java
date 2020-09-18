@@ -332,7 +332,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
     public void loadInitialChunks(IChunkStatusListener listener) {
         ServerWorld serverworld = this.func_241755_D_();
         this.forceTicks = true;
-        LOGGER.info("Preparing start region for dimension {}", serverworld.getDimensionKey().func_240901_a_());
+        LOGGER.info("Preparing start region for dimension {}", serverworld.getDimensionKey().getLocation());
         BlockPos blockpos = serverworld.getSpawnPoint();
         listener.start(new ChunkPos(blockpos));
         ServerChunkProvider serverchunkprovider = serverworld.getChunkProvider();
@@ -405,7 +405,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
         if (!((WorldBridge) serverWorld).bridge$getWorld().getKeepSpawnInMemory()) {
             return;
         }
-        LOGGER.info("Preparing start region for dimension {}", serverWorld.getDimensionKey().func_240901_a_());
+        LOGGER.info("Preparing start region for dimension {}", serverWorld.getDimensionKey().getLocation());
         BlockPos blockpos = serverWorld.getSpawnPoint();
         listener.start(new ChunkPos(blockpos));
         ServerChunkProvider serverchunkprovider = serverWorld.getChunkProvider();

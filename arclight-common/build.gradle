@@ -20,8 +20,8 @@ apply plugin: 'idea'
 apply plugin: 'io.izzel.arclight'
 
 ext {
-    minecraftVersion = '1.16.2'
-    forgeVersion = '33.0.22'
+    minecraftVersion = '1.16.3'
+    forgeVersion = '34.0.8'
 }
 
 arclight {
@@ -36,7 +36,7 @@ arclight {
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
 
 minecraft {
-    mappings channel: 'snapshot', version: "20200820-1.16.1"
+    mappings channel: 'snapshot', version: "20200916-1.16.2"
     accessTransformer = project.file('src/main/resources/META-INF/accesstransformer.cfg')
 }
 
@@ -55,7 +55,7 @@ dependencies {
     minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
     compile "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
     compile 'org.jetbrains:annotations:19.0.0'
-    compile 'org.spongepowered:mixin:0.8'
+    compile 'org.spongepowered:mixin:0.8.1'
     compile 'com.github.ArclightTeam:mixin-tools:1.0.0'
     compile 'jline:jline:2.12.1'
     compile 'net.md-5:SpecialSource:1.8.6'

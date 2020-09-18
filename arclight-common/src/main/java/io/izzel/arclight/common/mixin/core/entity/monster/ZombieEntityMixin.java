@@ -66,7 +66,7 @@ public abstract class ZombieEntityMixin extends CreatureEntityMixin {
         }
     }
 
-    @Eject(method = "func_241847_a", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/merchant/villager/VillagerEntity;func_233656_b_(Lnet/minecraft/entity/EntityType;Z)Lnet/minecraft/entity/MobEntity;"))
+    @Eject(method = "func_241847_a", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraft/entity/merchant/villager/VillagerEntity;func_233656_b_(Lnet/minecraft/entity/EntityType;Z)Lnet/minecraft/entity/MobEntity;"))
     private <T extends MobEntity> T arclight$transform(VillagerEntity villagerEntity, EntityType<T> entityType, boolean flag, CallbackInfo ci) {
         T t = this.a(entityType, flag, EntityTransformEvent.TransformReason.INFECTION, CreatureSpawnEvent.SpawnReason.INFECTION);
         if (t == null) {

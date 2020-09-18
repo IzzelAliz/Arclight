@@ -76,10 +76,10 @@ public abstract class ExplosionMixin implements ExplosionBridge {
     @Accessor("mode") public abstract Explosion.Mode bridge$getMode();
     @Shadow @Final private boolean causesFire;
     @Shadow @Final private Random random;
-    @Shadow private static void func_229976_a_(ObjectArrayList<Pair<ItemStack, BlockPos>> p_229976_0_, ItemStack p_229976_1_, BlockPos p_229976_2_) { }
+    @Shadow private static void handleExplosionDrops(ObjectArrayList<Pair<ItemStack, BlockPos>> p_229976_0_, ItemStack p_229976_1_, BlockPos p_229976_2_) { }
     // @formatter:on
 
-    @Shadow @Final private ExplosionContext field_234893_k_;
+    @Shadow @Final private ExplosionContext context;
 
     @Inject(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/entity/Entity;DDDFZLnet/minecraft/world/Explosion$Mode;)V",
         at = @At("RETURN"))
@@ -119,12 +119,12 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                             BlockPos blockpos = new BlockPos(d4, d6, d8);
                             BlockState blockstate = this.world.getBlockState(blockpos);
                             FluidState fluidstate = this.world.getFluidState(blockpos);
-                            Optional<Float> optional = this.field_234893_k_.getExplosionResistance((Explosion) (Object) this, this.world, blockpos, blockstate, fluidstate);
+                            Optional<Float> optional = this.context.getExplosionResistance((Explosion) (Object) this, this.world, blockpos, blockstate, fluidstate);
                             if (optional.isPresent()) {
                                 f -= (optional.get() + 0.3F) * 0.3F;
                             }
 
-                            if (f > 0.0F && this.field_234893_k_.canExplosionDestroyBlock((Explosion) (Object) this, this.world, blockpos, blockstate, f)) {
+                            if (f > 0.0F && this.context.canExplosionDestroyBlock((Explosion) (Object) this, this.world, blockpos, blockstate, f)) {
                                 set.add(blockpos);
                             }
 
@@ -242,7 +242,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                         }
 
                         blockstate.getDrops(lootcontext$builder).forEach((p_229977_2_) -> {
-                            func_229976_a_(objectarraylist, p_229977_2_, blockpos1);
+                            handleExplosionDrops(objectarraylist, p_229977_2_, blockpos1);
                         });
                     }
 
@@ -268,7 +268,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
         }
     }
 
-    @Inject(method = "func_229976_a_", cancellable = true, at = @At("HEAD"))
+    @Inject(method = "handleExplosionDrops", cancellable = true, at = @At("HEAD"))
     private static void arclight$fix(ObjectArrayList<Pair<ItemStack, BlockPos>> p_229976_0_, ItemStack stack, BlockPos p_229976_2_, CallbackInfo ci) {
         if (stack.isEmpty()) ci.cancel();
     }

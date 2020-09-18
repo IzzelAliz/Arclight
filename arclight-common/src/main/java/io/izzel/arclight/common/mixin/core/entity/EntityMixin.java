@@ -825,7 +825,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                     Entity entity = this.getType().create(world);
                     if (entity != null) {
                         entity.copyDataFromOld((Entity) (Object) this);
-                        entity.setLocationAndAngles(portalinfo.pos.x, portalinfo.pos.y, portalinfo.pos.z, portalinfo.field_242960_c, entity.rotationPitch);
+                        entity.setLocationAndAngles(portalinfo.pos.x, portalinfo.pos.y, portalinfo.pos.z, portalinfo.rotationYaw, entity.rotationPitch);
                         entity.setMotion(portalinfo.motion);
                         world.addFromAnotherDimension(entity);
                         if (((WorldBridge) world).bridge$getTypeKey() == DimensionType.THE_END) {
@@ -876,7 +876,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                 double d1 = Math.max(-2.9999872E7D, worldborder.minZ() + 16.0D);
                 double d2 = Math.min(2.9999872E7D, worldborder.maxX() - 16.0D);
                 double d3 = Math.min(2.9999872E7D, worldborder.maxZ() - 16.0D);
-                double d4 = DimensionType.func_242715_a(this.world.func_230315_m_(), world.func_230315_m_());
+                double d4 = DimensionType.getCoordinateDifference(this.world.getDimensionType(), world.getDimensionType());
                 BlockPos blockpos1 = new BlockPos(MathHelper.clamp(this.getPosX() * d4, d0, d2), this.getPosY(), MathHelper.clamp(this.getPosZ() * d4, d1, d3));
 
                 CraftPortalEvent event = this.callPortalEvent((Entity) (Object) this, world, blockpos1, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL, flag2 ? 16 : 128, 16);
@@ -892,7 +892,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                     Vector3d vector3d;
                     if (blockstate.hasProperty(BlockStateProperties.HORIZONTAL_AXIS)) {
                         direction$axis = blockstate.get(BlockStateProperties.HORIZONTAL_AXIS);
-                        TeleportationRepositioner.Result teleportationrepositioner$result = TeleportationRepositioner.func_243676_a(this.field_242271_ac, direction$axis, 21, Direction.Axis.Y, 21, (p_242276_2_) -> {
+                        TeleportationRepositioner.Result teleportationrepositioner$result = TeleportationRepositioner.findLargestRectangle(this.field_242271_ac, direction$axis, 21, Direction.Axis.Y, 21, (p_242276_2_) -> {
                             return this.world.getBlockState(p_242276_2_) == blockstate;
                         });
                         vector3d = this.func_241839_a(direction$axis, teleportationrepositioner$result);

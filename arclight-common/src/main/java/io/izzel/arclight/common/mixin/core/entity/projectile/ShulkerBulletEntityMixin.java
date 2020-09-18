@@ -5,15 +5,18 @@ import io.izzel.arclight.common.mixin.core.entity.EntityMixin;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.ShulkerBulletEntity;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.EntityRayTraceResult;
 import net.minecraft.world.World;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
 
@@ -34,6 +37,13 @@ public abstract class ShulkerBulletEntityMixin extends EntityMixin {
     @Inject(method = "onEntityHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;addPotionEffect(Lnet/minecraft/potion/EffectInstance;)Z"))
     private void arclight$reason(EntityRayTraceResult result, CallbackInfo ci) {
         ((LivingEntityBridge) result.getEntity()).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.ATTACK);
+    }
+
+    @Inject(method = "attackEntityFrom", cancellable = true, at = @At("HEAD"))
+    private void arclight$damageBullet(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        if (CraftEventFactory.handleNonLivingEntityDamageEvent((ShulkerBulletEntity) (Object) this, source, amount, false)) {
+            cir.setReturnValue(false);
+        }
     }
 
     public Entity getTarget() {

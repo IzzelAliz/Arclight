@@ -19,7 +19,7 @@ public abstract class ParrotEntityMixin extends AnimalEntityMixin {
         bridge$pushEffectCause(EntityPotionEffectEvent.Cause.FOOD);
     }
 
-    @Redirect(method = "attackEntityFrom", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/ParrotEntity;func_233687_w_(Z)V"))
+    @Redirect(method = "attackEntityFrom", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraft/entity/passive/ParrotEntity;func_233687_w_(Z)V"))
     private void arclight$handledInSuper(ParrotEntity parrotEntity, boolean p_233687_1_) {
     }
 }

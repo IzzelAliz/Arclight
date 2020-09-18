@@ -45,8 +45,8 @@ public class DelegateWorldInfo extends ServerWorldInfo {
     }
 
     @Override
-    public float func_241860_d() {
-        return derivedWorldInfo.func_241860_d();
+    public float getSpawnAngle() {
+        return derivedWorldInfo.getSpawnAngle();
     }
 
     @Override
@@ -115,8 +115,8 @@ public class DelegateWorldInfo extends ServerWorldInfo {
     }
 
     @Override
-    public void func_241859_a(float p_241859_1_) {
-        derivedWorldInfo.func_241859_a(p_241859_1_);
+    public void setSpawnAngle(float p_241859_1_) {
+        derivedWorldInfo.setSpawnAngle(p_241859_1_);
     }
 
     @Override

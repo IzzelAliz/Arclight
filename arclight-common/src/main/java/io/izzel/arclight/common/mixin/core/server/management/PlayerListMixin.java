@@ -313,7 +313,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             playerIn.setPosition(playerIn.getPosX(), playerIn.getPosY() + 1.0, playerIn.getPosZ());
         }
         IWorldInfo worlddata = serverWorld.getWorldInfo();
-        playerIn.connection.sendPacket(new SRespawnPacket(serverWorld.func_230315_m_(), serverWorld.getDimensionKey(), BiomeManager.func_235200_a_(serverWorld.getSeed()), playerIn.interactionManager.getGameType(), playerIn.interactionManager.func_241815_c_(), serverWorld.isDebug(), serverWorld.func_241109_A_(), flag));
+        playerIn.connection.sendPacket(new SRespawnPacket(serverWorld.getDimensionType(), serverWorld.getDimensionKey(), BiomeManager.getHashedSeed(serverWorld.getSeed()), playerIn.interactionManager.getGameType(), playerIn.interactionManager.func_241815_c_(), serverWorld.isDebug(), serverWorld.func_241109_A_(), flag));
         playerIn.connection.sendPacket(new SUpdateViewDistancePacket(((WorldBridge) serverWorld).bridge$spigotConfig().viewDistance));
         playerIn.setWorld(serverWorld);
         playerIn.revive();
@@ -460,7 +460,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         }
 
         IWorldInfo iworldinfo = serverplayerentity.world.getWorldInfo();
-        serverplayerentity.connection.sendPacket(new SRespawnPacket(serverplayerentity.world.func_230315_m_(), serverplayerentity.world.getDimensionKey(), BiomeManager.func_235200_a_(serverplayerentity.getServerWorld().getSeed()), serverplayerentity.interactionManager.getGameType(), serverplayerentity.interactionManager.func_241815_c_(), serverplayerentity.getServerWorld().isDebug(), serverplayerentity.getServerWorld().func_241109_A_(), conqueredEnd));
+        serverplayerentity.connection.sendPacket(new SRespawnPacket(serverplayerentity.world.getDimensionType(), serverplayerentity.world.getDimensionKey(), BiomeManager.getHashedSeed(serverplayerentity.getServerWorld().getSeed()), serverplayerentity.interactionManager.getGameType(), serverplayerentity.interactionManager.func_241815_c_(), serverplayerentity.getServerWorld().isDebug(), serverplayerentity.getServerWorld().func_241109_A_(), conqueredEnd));
         serverplayerentity.connection.sendPacket(new SUpdateViewDistancePacket(((WorldBridge) serverWorld).bridge$spigotConfig().viewDistance));
         serverplayerentity.setWorld(serverWorld);
         ((ServerPlayNetHandlerBridge) serverplayerentity.connection).bridge$teleport(new Location(((WorldBridge) serverWorld).bridge$getWorld(), serverplayerentity.getPosX(), serverplayerentity.getPosY(), serverplayerentity.getPosZ(), serverplayerentity.rotationYaw, serverplayerentity.rotationPitch));

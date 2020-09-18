@@ -43,13 +43,13 @@ public abstract class InteractWithDoorTaskMixin {
         BlockState blockstate = worldIn.getBlockState(blockpos);
         if (blockstate.isIn(BlockTags.WOODEN_DOORS)) {
             DoorBlock doorblock = (DoorBlock) blockstate.getBlock();
-            if (!doorblock.func_242664_h(blockstate)) {
+            if (!doorblock.isOpen(blockstate)) {
                 EntityInteractEvent event = new org.bukkit.event.entity.EntityInteractEvent(((EntityBridge) entityIn).bridge$getBukkitEntity(), CraftBlock.at(entityIn.world, blockpos));
                 Bukkit.getPluginManager().callEvent(event);
                 if (event.isCancelled()) {
                     return;
                 }
-                doorblock.func_242663_a(worldIn, blockstate, blockpos, true);
+                doorblock.openDoor(worldIn, blockstate, blockpos, true);
             }
 
             this.func_242301_c(worldIn, entityIn, blockpos);
@@ -59,14 +59,14 @@ public abstract class InteractWithDoorTaskMixin {
         BlockState blockstate1 = worldIn.getBlockState(blockpos1);
         if (blockstate1.isIn(BlockTags.WOODEN_DOORS)) {
             DoorBlock doorblock1 = (DoorBlock) blockstate1.getBlock();
-            if (!doorblock1.func_242664_h(blockstate1)) {
+            if (!doorblock1.isOpen(blockstate1)) {
                 // todo check this blockpos1
                 EntityInteractEvent event = new org.bukkit.event.entity.EntityInteractEvent(((EntityBridge) entityIn).bridge$getBukkitEntity(), CraftBlock.at(entityIn.world, blockpos1));
                 Bukkit.getPluginManager().callEvent(event);
                 if (event.isCancelled()) {
                     return;
                 }
-                doorblock1.func_242663_a(worldIn, blockstate1, blockpos1, true);
+                doorblock1.openDoor(worldIn, blockstate1, blockpos1, true);
                 this.func_242301_c(worldIn, entityIn, blockpos1);
             }
         }

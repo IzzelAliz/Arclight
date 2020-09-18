@@ -37,7 +37,7 @@ public class MerchantOfferMixin implements MerchantOfferBridge {
         return asBukkit();
     }
 
-    @Inject(method = "func_222205_b", at = @At("HEAD"))
+    @Inject(method = "getDiscountedBuyingStackFirst", at = @At("HEAD"))
     private void arclight$fix(CallbackInfoReturnable<ItemStack> cir) {
         if (this.buyingStackFirst.getCount() <= 0) {
             cir.setReturnValue(ItemStack.EMPTY);

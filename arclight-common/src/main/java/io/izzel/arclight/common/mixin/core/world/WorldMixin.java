@@ -94,7 +94,7 @@ public abstract class WorldMixin implements WorldBridge {
         this.ticksPerWaterSpawns = this.getServer().getTicksPerWaterSpawns();
         this.ticksPerWaterAmbientSpawns = this.getServer().getTicksPerWaterAmbientSpawns();
         this.ticksPerAmbientSpawns = this.getServer().getTicksPerAmbientSpawns();
-        this.typeKey = this.getServer().getHandle().getServer().func_244267_aX().func_230520_a_().func_230519_c_(dimensionType)
+        this.typeKey = this.getServer().getHandle().getServer().func_244267_aX().func_230520_a_().getOptionalKey(dimensionType)
             .orElseThrow(() -> new IllegalStateException("Unregistered dimension type: " + dimType));
     }
 

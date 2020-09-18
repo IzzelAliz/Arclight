@@ -193,7 +193,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
 
     public final BlockPos getSpawnPoint(ServerWorld worldserver) {
         BlockPos blockposition = worldserver.getSpawnPoint();
-        if (worldserver.func_230315_m_().hasSkyLight() && worldserver.field_241103_E_.getGameType() != GameType.ADVENTURE) {
+        if (worldserver.getDimensionType().hasSkyLight() && worldserver.field_241103_E_.getGameType() != GameType.ADVENTURE) {
             long k;
             long l;
             int i = Math.max(0, this.server.getSpawnRadius(worldserver));
@@ -483,7 +483,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
                     }
 
                     Location enter = this.getBukkitEntity().getLocation();
-                    Location exit = (exitWorld[0] == null) ? null : new Location(((WorldBridge) exitWorld[0]).bridge$getWorld(), portalinfo.pos.x, portalinfo.pos.y, portalinfo.pos.z, portalinfo.field_242960_c, portalinfo.field_242961_d);
+                    Location exit = (exitWorld[0] == null) ? null : new Location(((WorldBridge) exitWorld[0]).bridge$getWorld(), portalinfo.pos.x, portalinfo.pos.y, portalinfo.pos.z, portalinfo.rotationYaw, portalinfo.rotationPitch);
                     PlayerTeleportEvent tpEvent = new PlayerTeleportEvent(this.getBukkitEntity(), enter, exit, cause);
                     Bukkit.getServer().getPluginManager().callEvent(tpEvent);
                     if (tpEvent.isCancelled() || tpEvent.getTo() == null) {
@@ -497,7 +497,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
 
                     this.invulnerableDimensionChange = true;
                     IWorldInfo iworldinfo = exitWorld[0].getWorldInfo();
-                    this.connection.sendPacket(new SRespawnPacket(exitWorld[0].func_230315_m_(), exitWorld[0].getDimensionKey(), BiomeManager.func_235200_a_(exitWorld[0].getSeed()), this.interactionManager.getGameType(), this.interactionManager.func_241815_c_(), exitWorld[0].isDebug(), exitWorld[0].func_241109_A_(), true));
+                    this.connection.sendPacket(new SRespawnPacket(exitWorld[0].getDimensionType(), exitWorld[0].getDimensionKey(), BiomeManager.getHashedSeed(exitWorld[0].getSeed()), this.interactionManager.getGameType(), this.interactionManager.func_241815_c_(), exitWorld[0].isDebug(), exitWorld[0].func_241109_A_(), true));
                     this.connection.sendPacket(new SServerDifficultyPacket(iworldinfo.getDifficulty(), iworldinfo.isDifficultyLocked()));
                     playerlist.updatePermissionLevel((ServerPlayerEntity) (Object) this);
                     serverworld.removeEntity((ServerPlayerEntity) (Object) this, true); //Forge: the player entity is moved to the new world, NOT cloned. So keep the data alive with no matching invalidate call.
@@ -571,7 +571,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
 
     private Either<PlayerEntity.SleepResult, Unit> getBedResult(BlockPos blockposition, Direction enumdirection) {
         if (!this.isSleeping() && this.isAlive()) {
-            if (!this.world.func_230315_m_().func_236043_f_()) {
+            if (!this.world.getDimensionType().isNatural()) {
                 return Either.left(PlayerEntity.SleepResult.NOT_POSSIBLE_HERE);
             }
             if (!this.func_241147_a_(blockposition, enumdirection)) {

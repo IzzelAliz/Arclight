@@ -20,8 +20,8 @@ apply plugin: 'idea'
 apply plugin: 'io.izzel.arclight'
 
 ext {
-    minecraftVersion = '1.16.2'
-    forgeVersion = '33.0.22'
+    minecraftVersion = '1.16.3'
+    forgeVersion = '34.0.8'
 }
 
 arclight {
@@ -41,7 +41,7 @@ configurations {
 }
 
 minecraft {
-    mappings channel: 'snapshot', version: "20200813-1.16.1"
+    mappings channel: 'snapshot', version: "20200916-1.16.2"
     accessTransformer = project(':arclight-common').file('src/main/resources/META-INF/accesstransformer.cfg')
 }
 
@@ -59,7 +59,7 @@ repositories {
     maven { url = 'https://jitpack.io/' }
 }
 
-def embedLibs = ['org.spongepowered:mixin:0.8', 'org.ow2.asm:asm-util:8.0.1',
+def embedLibs = ['org.spongepowered:mixin:0.8.1', 'org.ow2.asm:asm-util:8.0.1',
                  'org.ow2.asm:asm-analysis:8.0.1', 'org.yaml:snakeyaml:1.26',
                  'org.xerial:sqlite-jdbc:3.32.3', 'mysql:mysql-connector-java:5.1.49',
                  'commons-lang:commons-lang:2.6', 'com.googlecode.json-simple:json-simple:1.1.1',

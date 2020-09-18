@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
 public class ColorMixin {
 
     // @formatter:off
-    @Shadow @Final @Mutable @Nullable public String field_240741_d_;
+    @Shadow @Final @Mutable @Nullable public String name;
     // @formatter:on
 
     public TextFormatting format;
@@ -27,7 +27,7 @@ public class ColorMixin {
 
     public void arclight$constructor(int p_i232573_1_, String p_i232573_2_, TextFormatting textFormatting) {
         arclight$constructor(p_i232573_1_);
-        this.field_240741_d_ = p_i232573_2_;
+        this.name = p_i232573_2_;
         this.format = textFormatting;
     }
 
