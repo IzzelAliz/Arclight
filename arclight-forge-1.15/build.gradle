@@ -57,8 +57,8 @@ repositories {
     maven { url = 'https://files.minecraftforge.net/maven/' }
 }
 
-def embedLibs = ['org.spongepowered:mixin:0.8', 'org.ow2.asm:asm-util:6.2',
-                 'org.ow2.asm:asm-analysis:6.2', 'org.yaml:snakeyaml:1.25',
+def embedLibs = ['org.spongepowered:mixin:0.8', 'org.ow2.asm:asm-util:7.2',
+                 'org.ow2.asm:asm-analysis:7.2', 'org.yaml:snakeyaml:1.25',
                  'org.xerial:sqlite-jdbc:3.30.1', 'mysql:mysql-connector-java:5.1.48',
                  'commons-lang:commons-lang:2.6', 'com.googlecode.json-simple:json-simple:1.1.1',
                  'org.apache.logging.log4j:log4j-jul:2.11.2', 'net.md-5:SpecialSource:1.8.6',

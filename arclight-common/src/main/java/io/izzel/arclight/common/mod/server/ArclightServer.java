@@ -12,9 +12,11 @@ import org.bukkit.craftbukkit.v.command.ColouredConsoleSender;
 
 import java.io.File;
 import java.util.Objects;
+import java.util.concurrent.Executor;
 
 public class ArclightServer {
 
+    private static final Executor mainThreadExecutor = ArclightServer::executeOnMainThread;
     private static CraftServer server;
 
     @SuppressWarnings("ConstantConditions")
@@ -46,7 +48,23 @@ public class ArclightServer {
         return Objects.requireNonNull(server);
     }
 
+    public static boolean isPrimaryThread() {
+        if (server == null) {
+            return Thread.currentThread().equals(getMinecraftServer().getExecutionThread());
+        } else {
+            return server.isPrimaryThread();
+        }
+    }
+
     public static MinecraftServer getMinecraftServer() {
         return ServerLifecycleHooks.getCurrentServer();
+    }
+
+    public static void executeOnMainThread(Runnable runnable) {
+        ((MinecraftServerBridge) getMinecraftServer()).bridge$queuedProcess(runnable);
+    }
+
+    public static Executor getMainThreadExecutor() {
+        return mainThreadExecutor;
     }
 }

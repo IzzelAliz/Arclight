@@ -175,11 +175,6 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         }
     }
 
-    @Inject(method = "removeEntityComplete", remap = false, at = @At("RETURN"))
-    public void arclight$invalidateEntity(Entity entityIn, boolean keepData, CallbackInfo ci) {
-        ((EntityBridge) entityIn).bridge$setValid(false);
-    }
-
     /**
      * @author IzzelAliz
      * @reason
