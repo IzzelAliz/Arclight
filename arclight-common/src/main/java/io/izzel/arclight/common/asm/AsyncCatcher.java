@@ -138,7 +138,7 @@ public class AsyncCatcher implements Implementer {
     private String createImplType(ClassNode node, MethodNode methodNode, ClassNode classNode, MethodNode bridge) {
         classNode.version = Opcodes.V1_8;
         classNode.name = node.name + "$AsyncCatcher$" + COUNTER.getAndIncrement();
-        classNode.access = Opcodes.ACC_PRIVATE | Opcodes.ACC_SYNTHETIC | Opcodes.ACC_SUPER | Opcodes.ACC_FINAL;
+        classNode.access = Opcodes.ACC_SYNTHETIC | Opcodes.ACC_SUPER | Opcodes.ACC_FINAL;
         classNode.superName = "java/lang/Object";
         classNode.interfaces.add(Type.getType(Supplier.class).getInternalName());
         List<Type> types = new ArrayList<>();
