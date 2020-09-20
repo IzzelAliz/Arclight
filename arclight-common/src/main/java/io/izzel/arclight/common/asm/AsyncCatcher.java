@@ -169,6 +169,7 @@ public class AsyncCatcher implements Implementer {
 
         MethodNode get = new MethodNode();
         get.name = "get";
+        get.access = Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL;
         get.desc = "()Ljava/lang/Object";
         GeneratorAdapter adapter = new GeneratorAdapter(get, Opcodes.ACC_PUBLIC, get.name, get.desc);
         for (int i = 0; i < types.size(); i++) {
