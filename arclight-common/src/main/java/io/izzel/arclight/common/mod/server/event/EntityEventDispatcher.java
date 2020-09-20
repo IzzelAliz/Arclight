@@ -20,9 +20,11 @@ import java.util.List;
 
 public class EntityEventDispatcher {
 
-    @SubscribeEvent(receiveCanceled = true)
+    @SubscribeEvent(receiveCanceled = true, priority = EventPriority.LOWEST)
     public void onLivingDeath(LivingDropsEvent event) {
         if (event.getEntityLiving() instanceof ServerPlayerEntity) {
+            // recapture for ServerPlayerEntityMixin#onDeath
+            event.getEntityLiving().captureDrops(event.getDrops());
             // handled at ServerPlayerEntityMixin
             event.setCanceled(true);
             return;

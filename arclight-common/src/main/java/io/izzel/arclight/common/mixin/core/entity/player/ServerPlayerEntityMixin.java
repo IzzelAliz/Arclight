@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mixin.core.entity.player;
 
-import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Either;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.entity.InternalEntityBridge;
@@ -547,13 +546,16 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
             return;
         }
         boolean keepInventory = this.world.getGameRules().getBoolean(GameRules.KEEP_INVENTORY) || this.isSpectator();
-        List<ItemEntity> loot = new ArrayList<>();
-        this.captureDrops(new ArrayList<>());
         this.spawnDrops(damagesource);
 
         ITextComponent defaultMessage = this.getCombatTracker().getDeathMessage();
         String deathmessage = defaultMessage.getString();
-        PlayerDeathEvent event = CraftEventFactory.callPlayerDeathEvent((ServerPlayerEntity) (Object) this, Lists.transform(loot, (ItemEntity entity) -> CraftItemStack.asCraftMirror(entity.getItem())), deathmessage, keepInventory);
+        List<org.bukkit.inventory.ItemStack> loot = new ArrayList<>();
+        for (ItemEntity entity : this.captureDrops(null)) {
+            CraftItemStack craftItemStack = CraftItemStack.asCraftMirror(entity.getItem());
+            loot.add(craftItemStack);
+        }
+        PlayerDeathEvent event = CraftEventFactory.callPlayerDeathEvent((ServerPlayerEntity) (Object) this, loot, deathmessage, keepInventory);
         if (this.openContainer != this.container) {
             this.closeScreen();
         }
