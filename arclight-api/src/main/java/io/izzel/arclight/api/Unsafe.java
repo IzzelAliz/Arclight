@@ -27,6 +27,18 @@ public class Unsafe {
         }
     }
 
+    public static <T> T getStatic(Class<?> cl, String name) {
+        try {
+            Unsafe.ensureClassInitialized(cl);
+            Field field = cl.getDeclaredField(name);
+            Object materialByNameBase = Unsafe.staticFieldBase(field);
+            long materialByNameOffset = Unsafe.staticFieldOffset(field);
+            return (T) Unsafe.getObject(materialByNameBase, materialByNameOffset);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public static MethodHandles.Lookup lookup() {
         return lookup;
     }
