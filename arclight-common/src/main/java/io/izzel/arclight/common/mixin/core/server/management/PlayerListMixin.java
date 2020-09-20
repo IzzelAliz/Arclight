@@ -330,6 +330,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         playerIn.getServerWorld().removePlayer(playerIn, true); // Forge: keep data until copyFrom called
         BlockPos blockpos = playerIn.getBedLocation(dimension);
         boolean flag = playerIn.isSpawnForced(dimension);
+        boolean setSpawn = false;
         // playerIn.dimension = dimension;
         PlayerInteractionManager playerinteractionmanager;
         if (this.server.isDemo()) {
@@ -349,6 +350,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                     Vec3d vec3d = optional.get();
                     isBedSpawn = true;
                     location = new Location(cworld, vec3d.x, vec3d.y, vec3d.z);
+                    setSpawn = true;
                 } else {
                     playerIn.setSpawnPoint(null, true, false, playerIn.dimension);
                     playerIn.connection.sendPacket(new SChangeGameStatePacket(0, 0.0f));
@@ -390,6 +392,9 @@ public abstract class PlayerListMixin implements PlayerListBridge {
 
         serverplayerentity.connection = playerIn.connection;
         serverplayerentity.copyFrom(playerIn, conqueredEnd);
+        if (setSpawn) {
+            serverplayerentity.setSpawnPoint(blockpos, flag, false, dimension);
+        }
         playerIn.remove(false); // Forge: clone event had a chance to see old data, now discard it
         serverplayerentity.dimension = dimension;
         serverplayerentity.setEntityId(playerIn.getEntityId());
