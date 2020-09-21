@@ -52,6 +52,7 @@ public class AsyncCatcher implements Implementer {
     private final boolean warn;
     private final AsyncCatcherSpec.Operation defaultOp;
     private final Map<String, Map<String, String>> reasons;
+    private final ClassLoader classLoader;
 
     public AsyncCatcher() {
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
@@ -62,6 +63,7 @@ public class AsyncCatcher implements Implementer {
         this.defaultOp = ArclightConfig.spec().getAsyncCatcher().getDefaultOp();
         this.dump = ArclightConfig.spec().getAsyncCatcher().isDump();
         this.warn = ArclightConfig.spec().getAsyncCatcher().isWarn();
+        this.classLoader = Thread.currentThread().getContextClassLoader();
     }
 
     @Override
@@ -160,6 +162,7 @@ public class AsyncCatcher implements Implementer {
 
         int offset = 1;
         for (int i = 0; i < types.size(); i++) {
+            init.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
             init.instructions.add(new VarInsnNode(types.get(i).getOpcode(Opcodes.ILOAD), offset));
             init.instructions.add(new FieldInsnNode(Opcodes.PUTFIELD, classNode.name, "x" + i, types.get(i).getDescriptor()));
             offset += types.get(i).getSize();
@@ -170,14 +173,14 @@ public class AsyncCatcher implements Implementer {
         MethodNode get = new MethodNode();
         get.name = "get";
         get.access = Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL;
-        get.desc = "()Ljava/lang/Object";
+        get.desc = "()Ljava/lang/Object;";
         GeneratorAdapter adapter = new GeneratorAdapter(get, Opcodes.ACC_PUBLIC, get.name, get.desc);
         for (int i = 0; i < types.size(); i++) {
             adapter.loadThis();
             adapter.getField(Type.getObjectType(classNode.name), "x" + i, types.get(i));
         }
         get.instructions.add(new MethodInsnNode(
-            Modifier.isStatic(methodNode.access) ? Opcodes.INVOKESTATIC : Opcodes.INVOKESPECIAL,
+            Modifier.isStatic(methodNode.access) ? Opcodes.INVOKESTATIC : Opcodes.INVOKEVIRTUAL,
             node.name, bridge.name, bridge.desc
         ));
         adapter.valueOf(Type.getReturnType(bridge.desc));
@@ -186,7 +189,7 @@ public class AsyncCatcher implements Implementer {
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         classNode.accept(writer);
         byte[] bytes = writer.toByteArray();
-        Unsafe.defineClass(Type.getObjectType(classNode.name).getClassName(), bytes, 0, bytes.length, null, null);
+        Unsafe.defineClass(Type.getObjectType(classNode.name).getClassName(), bytes, 0, bytes.length, this.classLoader, AsyncCatcher.class.getProtectionDomain());
         ArclightImplementer.LOGGER.debug(MARKER, "Defined impl callback class {}", classNode.name);
         return init.desc;
     }
