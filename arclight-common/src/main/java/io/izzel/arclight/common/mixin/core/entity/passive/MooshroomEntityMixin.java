@@ -23,11 +23,13 @@ import java.util.List;
 @Mixin(MooshroomEntity.class)
 public abstract class MooshroomEntityMixin extends AnimalEntityMixin {
 
-    @Redirect(method = "onSheared", remap = false, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/MooshroomEntity;remove()V"))
+    @SuppressWarnings("UnresolvedMixinReference")
+    @Redirect(method = "onSheared", remap = false, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/MooshroomEntity;func_70106_y()V"))
     private void arclight$animalTransformPre(MooshroomEntity mooshroomEntity) {
     }
 
-    @Inject(method = "onSheared", remap = false, cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
+    @SuppressWarnings("UnresolvedMixinReference")
+    @Inject(method = "onSheared", remap = false, cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;func_217376_c(Lnet/minecraft/entity/Entity;)Z"))
     private void arclight$animalTransform(PlayerEntity player, ItemStack item, World world, BlockPos pos, int fortune, CallbackInfoReturnable<List<ItemStack>> cir, CowEntity cowEntity) {
         if (CraftEventFactory.callEntityTransformEvent((MooshroomEntity) (Object) this, cowEntity, EntityTransformEvent.TransformReason.SHEARED).isCancelled()) {
             cir.setReturnValue(Collections.emptyList());

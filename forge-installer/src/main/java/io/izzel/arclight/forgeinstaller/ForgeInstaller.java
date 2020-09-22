@@ -53,7 +53,8 @@ public class ForgeInstaller {
     private static final String SERVER_URL = "https://bmclapi2.bangbang93.com/version/%s/server";
     private static final Map<String, String> VERSION_HASH = ImmutableMap.of(
         "1.14.4", "3dc3d84a581f14691199cf6831b71ed1296a9fdf",
-        "1.15.2", "bb2b6b1aefcd70dfd1892149ac3a215f6c636b07"
+        "1.15.2", "bb2b6b1aefcd70dfd1892149ac3a215f6c636b07",
+        "1.16.3", "f02f4473dbf152c23d7d484952121db0b36698cb"
     );
 
     public static void install() throws Throwable {

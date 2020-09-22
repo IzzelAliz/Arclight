@@ -197,6 +197,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow protected abstract void setOnFireFromLava();
     @Shadow protected boolean firstUpdate;
     @Shadow public abstract boolean isSilent();
+    @Shadow public abstract void setInvisible(boolean invisible);
     // @formatter:on
 
     private static final int CURRENT_LEVEL = 2;
@@ -207,6 +208,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     public org.spigotmc.ActivationRange.ActivationType activationType;
     public boolean defaultActivationState;
     public long activatedTick = Integer.MIN_VALUE;
+    public boolean persistentInvisibility = false;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(EntityType<?> entityTypeIn, World worldIn, CallbackInfo ci) {
@@ -516,6 +518,12 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         compound.putLong("WorldUUIDMost", ((WorldBridge) this.world).bridge$getWorld().getUID().getMostSignificantBits());
         compound.putInt("Bukkit.updateLevel", CURRENT_LEVEL);
         compound.putInt("Spigot.ticksLived", this.ticksExisted);
+        if (!this.persist) {
+            compound.putBoolean("Bukkit.persist", this.persist);
+        }
+        if (this.persistentInvisibility) {
+            compound.putBoolean("Bukkit.invisible", this.persistentInvisibility);
+        }
     }
 
     @Inject(method = "writeWithoutTypeId", at = @At(value = "RETURN"))
@@ -566,7 +574,19 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             setWorld(bworld == null ? null : ((CraftWorld) bworld).getHandle());
         }
         this.getBukkitEntity().readBukkitValues(compound);
+        if (compound.contains("Bukkit.invisible")) {
+            boolean bukkitInvisible = compound.getBoolean("Bukkit.invisible");
+            this.setInvisible(bukkitInvisible);
+            this.persistentInvisibility = bukkitInvisible;
+        }
         // CraftBukkit end
+    }
+
+    @Inject(method = "setInvisible", cancellable = true, at = @At("HEAD"))
+    private void arclight$preventVisible(boolean invisible, CallbackInfo ci) {
+        if (this.persistentInvisibility) {
+            ci.cancel();
+        }
     }
 
     @Redirect(method = "entityDropItem(Lnet/minecraft/item/ItemStack;F)Lnet/minecraft/entity/item/ItemEntity;", at = @At(value = "INVOKE", remap = false, ordinal = 0, target = "Lnet/minecraft/entity/Entity;captureDrops()Ljava/util/Collection;"))

@@ -6,7 +6,7 @@ public class ArclightVersion {
 
     public static final ArclightVersion v1_14 = new ArclightVersion("1.14.4", 1140, "v1_14_R1");
     public static final ArclightVersion v1_15 = new ArclightVersion("1.15.2", 1152, "v1_15_R1");
-    public static final ArclightVersion v1_16 = new ArclightVersion("1.16.2", 1162, "v1_16_R2");
+    public static final ArclightVersion v1_16 = new ArclightVersion("1.16.3", 1163, "v1_16_R2");
 
     private final String name;
     private final int num;
