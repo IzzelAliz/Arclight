@@ -31,6 +31,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.IProgressUpdate;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockReader;
@@ -332,6 +333,10 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
     }
 
     private TileEntity fixTileEntity(BlockPos pos, BlockState state, Block type, TileEntity found) {
+        ResourceLocation registryName = found.getType().getRegistryName();
+        if (registryName == null || !registryName.getNamespace().equals("minecraft")) {
+            return found;
+        }
         this.getServer().getLogger().log(Level.SEVERE, "Block at {0}, {1}, {2} is {3} but has {4}" + ". "
             + "Bukkit will attempt to fix this, but there may be additional damage that we cannot recover.", new Object[]{pos.getX(), pos.getY(), pos.getZ(), type, found});
 
