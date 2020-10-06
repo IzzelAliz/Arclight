@@ -67,6 +67,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -80,6 +81,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.function.Consumer;
 
 @SuppressWarnings({"ConstantConditions", "Guava"})
 @Mixin(LivingEntity.class)
@@ -1032,6 +1034,11 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         Collection<ItemEntity> drops = livingEntity.captureDrops();
         // todo this instanceof ArmorStandEntity
         return drops == null ? livingEntity.captureDrops(value) : drops;
+    }
+
+    @ModifyArg(method = "spawnDrops", index = 0, at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Collection;forEach(Ljava/util/function/Consumer;)V"))
+    private Consumer<ItemEntity> arclight$cancelEvent(Consumer<ItemEntity> consumer) {
+        return this instanceof ServerPlayerEntityBridge ? itemEntity -> {} : consumer;
     }
 
     @Inject(method = "applyFoodEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;addPotionEffect(Lnet/minecraft/potion/EffectInstance;)Z"))
