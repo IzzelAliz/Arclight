@@ -2,6 +2,7 @@ package io.izzel.arclight.api;
 
 import sun.reflect.CallerSensitive;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.security.ProtectionDomain;
@@ -11,6 +12,7 @@ public class Unsafe {
 
     private static final sun.misc.Unsafe unsafe;
     private static final MethodHandles.Lookup lookup;
+    private static final MethodHandle defineClass;
 
     static {
         try {
@@ -22,6 +24,7 @@ public class Unsafe {
             Object base = unsafe.staticFieldBase(field);
             long offset = unsafe.staticFieldOffset(field);
             lookup = (MethodHandles.Lookup) unsafe.getObject(base, offset);
+            defineClass = lookup.unreflect(ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class, ProtectionDomain.class));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -349,7 +352,12 @@ public class Unsafe {
     }
 
     public static Class<?> defineClass(String s, byte[] bytes, int i, int i1, ClassLoader classLoader, ProtectionDomain protectionDomain) {
-        return unsafe.defineClass(s, bytes, i, i1, classLoader, protectionDomain);
+        try {
+            return (Class<?>) defineClass.bindTo(classLoader).invoke(s, bytes, i , i1, protectionDomain);
+        } catch (Throwable throwable) {
+            throwException(throwable);
+            return null;
+        }
     }
 
     public static Class<?> defineAnonymousClass(Class<?> aClass, byte[] bytes, Object[] objects) {
