@@ -53,7 +53,7 @@ dependencies {
     minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
     compile "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
     compile 'org.jetbrains:annotations:19.0.0'
-    compile 'org.spongepowered:mixin:0.8'
+    compile 'org.spongepowered:mixin:0.8.2'
     compile 'jline:jline:2.12.1'
     compile 'net.md-5:SpecialSource:1.8.6'
     compile 'org.apache.logging.log4j:log4j-jul:2.11.2'

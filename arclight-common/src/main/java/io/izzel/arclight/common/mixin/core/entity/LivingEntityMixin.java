@@ -681,7 +681,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             final boolean human = (Object) this instanceof PlayerEntity;
 
             f = net.minecraftforge.common.ForgeHooks.onLivingHurt((LivingEntity) (Object) this, damagesource, f);
-            if (f <= 0) return false;
+            if (f <= 0) return true;
 
             float originalDamage = f;
             Function<Double, Double> hardHat = f12 -> {
