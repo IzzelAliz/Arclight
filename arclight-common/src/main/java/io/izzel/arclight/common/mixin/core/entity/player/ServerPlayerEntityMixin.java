@@ -21,6 +21,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.passive.horse.AbstractHorseEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Container;
@@ -546,6 +547,13 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
             return;
         }
         boolean keepInventory = this.world.getGameRules().getBoolean(GameRules.KEEP_INVENTORY) || this.isSpectator();
+        PlayerInventory copyInv;
+        if (keepInventory) {
+            copyInv = this.inventory;
+        } else {
+            copyInv = new PlayerInventory((ServerPlayerEntity) (Object) this);
+            copyInv.copyInventory(this.inventory);
+        }
         this.spawnDrops(damagesource);
 
         ITextComponent defaultMessage = this.getCombatTracker().getDeathMessage();
@@ -554,6 +562,9 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
         for (ItemEntity entity : this.captureDrops(null)) {
             CraftItemStack craftItemStack = CraftItemStack.asCraftMirror(entity.getItem());
             loot.add(craftItemStack);
+        }
+        if (!keepInventory) {
+            this.inventory.copyInventory(copyInv);
         }
         PlayerDeathEvent event = CraftEventFactory.callPlayerDeathEvent((ServerPlayerEntity) (Object) this, loot, deathmessage, keepInventory);
         if (this.openContainer != this.container) {
