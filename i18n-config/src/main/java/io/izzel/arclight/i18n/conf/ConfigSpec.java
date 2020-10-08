@@ -18,6 +18,9 @@ public class ConfigSpec {
     @Setting("compatibility")
     private CompatSpec compatSpec;
 
+    @Setting("async-catcher")
+    private AsyncCatcherSpec asyncCatcherSpec;
+
     public int getVersion() {
         return version;
     }
@@ -32,5 +35,9 @@ public class ConfigSpec {
 
     public CompatSpec getCompat() {
         return compatSpec;
+    }
+
+    public AsyncCatcherSpec getAsyncCatcher() {
+        return asyncCatcherSpec;
     }
 }

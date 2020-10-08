@@ -295,6 +295,9 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
 
     private void executeModerately() {
         this.drainTasks();
+        while (!processQueue.isEmpty()) {
+            processQueue.remove().run();
+        }
         java.util.concurrent.locks.LockSupport.parkNanos("executing tasks", 1000L);
     }
 

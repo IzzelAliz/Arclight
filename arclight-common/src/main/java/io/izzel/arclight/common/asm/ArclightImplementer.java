@@ -3,10 +3,15 @@ package io.izzel.arclight.common.asm;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 import io.izzel.arclight.common.mod.util.log.ArclightI18nLogger;
 import org.apache.logging.log4j.Logger;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.VarInsnNode;
 import org.spongepowered.asm.launch.MixinLaunchPlugin;
 
+import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -36,6 +41,7 @@ public class ArclightImplementer implements ILaunchPluginService {
         this.transformerLoader = transformerLoader;
         this.implementers.put("inventory", new InventoryImplementer());
         this.implementers.put("switch", SwitchTableFixer.INSTANCE);
+        this.implementers.put("async", AsyncCatcher.INSTANCE);
     }
 
     @Override
@@ -78,5 +84,16 @@ public class ArclightImplementer implements ILaunchPluginService {
     @Override
     public boolean processClass(Phase phase, ClassNode classNode, Type classType) {
         throw new IllegalStateException("Outdated ModLauncher");
+    }
+
+    public static void loadArgs(InsnList list, MethodNode methodNode, Type[] types, int i) {
+        if (!Modifier.isStatic(methodNode.access)) {
+            list.add(new VarInsnNode(Opcodes.ALOAD, i));
+            i += 1;
+        }
+        for (Type type : types) {
+            list.add(new VarInsnNode(type.getOpcode(Opcodes.ILOAD), i));
+            i += type.getSize();
+        }
     }
 }
