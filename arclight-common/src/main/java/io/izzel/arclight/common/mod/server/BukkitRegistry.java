@@ -54,13 +54,13 @@ public class BukkitRegistry {
     private static final List<Class<?>> MAT_CTOR = ImmutableList.of(int.class);
     private static final List<Class<?>> ENTITY_CTOR = ImmutableList.of(String.class, Class.class, int.class);
     private static final List<Class<?>> ENV_CTOR = ImmutableList.of(int.class);
-    private static final Map<String, Material> BY_NAME = getStatic(Material.class, "BY_NAME");
-    private static final Map<Block, Material> BLOCK_MATERIAL = getStatic(CraftMagicNumbers.class, "BLOCK_MATERIAL");
-    private static final Map<Item, Material> ITEM_MATERIAL = getStatic(CraftMagicNumbers.class, "ITEM_MATERIAL");
-    private static final Map<Material, Item> MATERIAL_ITEM = getStatic(CraftMagicNumbers.class, "MATERIAL_ITEM");
-    private static final Map<Material, Block> MATERIAL_BLOCK = getStatic(CraftMagicNumbers.class, "MATERIAL_BLOCK");
-    private static final Map<String, EntityType> ENTITY_NAME_MAP = getStatic(EntityType.class, "NAME_MAP");
-    private static final Map<Integer, World.Environment> ENVIRONMENT_MAP = getStatic(World.Environment.class, "lookup");
+    private static final Map<String, Material> BY_NAME = Unsafe.getStatic(Material.class, "BY_NAME");
+    private static final Map<Block, Material> BLOCK_MATERIAL = Unsafe.getStatic(CraftMagicNumbers.class, "BLOCK_MATERIAL");
+    private static final Map<Item, Material> ITEM_MATERIAL = Unsafe.getStatic(CraftMagicNumbers.class, "ITEM_MATERIAL");
+    private static final Map<Material, Item> MATERIAL_ITEM = Unsafe.getStatic(CraftMagicNumbers.class, "MATERIAL_ITEM");
+    private static final Map<Material, Block> MATERIAL_BLOCK = Unsafe.getStatic(CraftMagicNumbers.class, "MATERIAL_BLOCK");
+    private static final Map<String, EntityType> ENTITY_NAME_MAP = Unsafe.getStatic(EntityType.class, "NAME_MAP");
+    private static final Map<Integer, World.Environment> ENVIRONMENT_MAP = Unsafe.getStatic(World.Environment.class, "lookup");
     static final BiMap<RegistryKey<DimensionType>, World.Environment> DIM_MAP =
         HashBiMap.create(ImmutableMap.<RegistryKey<DimensionType>, World.Environment>builder()
             .put(DimensionType.OVERWORLD, World.Environment.NORMAL)
@@ -262,18 +262,6 @@ public class BukkitRegistry {
 
     private static EntityPropertySpec entitySpec(ResourceLocation location) {
         return ArclightConfig.spec().getCompat().getEntity(location.toString()).orElse(EntityPropertySpec.EMPTY);
-    }
-
-    private static <T> T getStatic(Class<?> cl, String name) {
-        try {
-            Unsafe.ensureClassInitialized(cl);
-            Field field = cl.getDeclaredField(name);
-            Object materialByNameBase = Unsafe.staticFieldBase(field);
-            long materialByNameOffset = Unsafe.staticFieldOffset(field);
-            return (T) Unsafe.getObject(materialByNameBase, materialByNameOffset);
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     private static void putStatic(Class<?> cl, String name, Object o) {
