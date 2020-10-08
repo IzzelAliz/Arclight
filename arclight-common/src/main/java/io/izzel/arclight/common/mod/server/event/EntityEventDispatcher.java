@@ -26,7 +26,8 @@ public class EntityEventDispatcher {
             // recapture for ServerPlayerEntityMixin#onDeath
             event.getEntityLiving().captureDrops(event.getDrops());
             // handled at ServerPlayerEntityMixin
-            event.setCanceled(true);
+            // Cancelled at io.izzel.arclight.common.mixin.core.entity.LivingEntityMixin#arclight$cancelEvent
+            // event.setCanceled(true);
             return;
         }
         LivingEntity livingEntity = event.getEntityLiving();

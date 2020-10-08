@@ -68,6 +68,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -83,6 +84,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 @SuppressWarnings({"ConstantConditions", "Guava"})
 @Mixin(LivingEntity.class)
@@ -679,6 +681,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             final boolean human = (Object) this instanceof PlayerEntity;
 
             f = net.minecraftforge.common.ForgeHooks.onLivingHurt((LivingEntity) (Object) this, damagesource, f);
+            if (f <= 0) return true;
 
             float originalDamage = f;
             Function<Double, Double> hardHat = f12 -> {
@@ -1017,6 +1020,11 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         Collection<ItemEntity> drops = livingEntity.captureDrops();
         // todo this instanceof ArmorStandEntity
         return drops == null ? livingEntity.captureDrops(value) : drops;
+    }
+
+    @ModifyArg(method = "spawnDrops", index = 0, at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Collection;forEach(Ljava/util/function/Consumer;)V"))
+    private Consumer<ItemEntity> arclight$cancelEvent(Consumer<ItemEntity> consumer) {
+        return this instanceof ServerPlayerEntityBridge ? itemEntity -> {} : consumer;
     }
 
     @Inject(method = "canEntityBeSeen", cancellable = true, at = @At("HEAD"))
