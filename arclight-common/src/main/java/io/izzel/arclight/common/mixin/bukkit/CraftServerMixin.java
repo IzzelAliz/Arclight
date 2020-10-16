@@ -1,17 +1,26 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
+import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.world.server.ServerChunkProviderBridge;
 import jline.console.ConsoleReader;
 import net.minecraft.command.Commands;
 import net.minecraft.server.dedicated.DedicatedPlayerList;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.management.PlayerList;
+import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.WorldEvent;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.craftbukkit.v.CraftServer;
+import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.command.BukkitCommandWrapper;
 import org.bukkit.craftbukkit.v.command.CraftCommandMap;
 import org.bukkit.craftbukkit.v.help.SimpleHelpMap;
 import org.bukkit.craftbukkit.v.util.permissions.CraftDefaultPermissions;
+import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginLoadOrder;
 import org.bukkit.plugin.SimplePluginManager;
@@ -27,10 +36,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@Mixin(CraftServer.class)
+@Mixin(value = CraftServer.class, remap = false)
 public abstract class CraftServerMixin implements CraftServerBridge {
 
     // @formatter:off
@@ -43,6 +55,9 @@ public abstract class CraftServerMixin implements CraftServerBridge {
     @Shadow(remap = false) @Final @Mutable private String serverName;
     @Accessor(value = "logger", remap = false) @Mutable public abstract void setLogger(Logger logger);
     @Shadow(remap = false) @Final @Mutable protected DedicatedPlayerList playerList;
+    @Shadow public abstract World getWorld(UUID uid);
+    @Shadow @Final private Map<String, World> worlds;
+    @Shadow @Final private Logger logger;
     // @formatter:on
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -119,5 +134,53 @@ public abstract class CraftServerMixin implements CraftServerBridge {
     @Override
     public void bridge$setPlayerList(PlayerList playerList) {
         this.playerList = (DedicatedPlayerList) playerList;
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    public boolean unloadWorld(World world, boolean save) {
+        if (world == null) {
+            return false;
+        }
+        ServerWorld handle = ((CraftWorld) world).getHandle();
+        if (!this.console.worlds.containsKey(handle.getDimension().getType())) {
+            return false;
+        } else if (handle.getDimension().getType() == DimensionType.OVERWORLD) {
+            return false;
+        } else if (handle.getPlayers().size() > 0) {
+            return false;
+        } else {
+            WorldUnloadEvent e = new WorldUnloadEvent(((WorldBridge) handle).bridge$getWorld());
+            this.pluginManager.callEvent(e);
+            if (e.isCancelled()) {
+                return false;
+            } else {
+                try {
+                    if (save) {
+                        handle.save(null, true, true);
+                    }
+
+                    MinecraftForge.EVENT_BUS.post(new WorldEvent.Unload(handle));
+                    ((ServerChunkProviderBridge) handle.getChunkProvider()).bridge$close(save);
+                } catch (Exception var6) {
+                    this.logger.log(Level.SEVERE, null, var6);
+                }
+
+                this.worlds.remove(world.getName().toLowerCase(Locale.ENGLISH));
+                this.console.worlds.remove(handle.getDimension().getType());
+                return true;
+            }
+        }
+    }
+
+    @Override
+    public void bridge$removeWorld(ServerWorld world) {
+        if (world == null) {
+            return;
+        }
+        this.worlds.remove(((WorldBridge) world).bridge$getWorld().getName().toLowerCase(Locale.ROOT));
     }
 }
