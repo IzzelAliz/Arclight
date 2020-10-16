@@ -326,15 +326,13 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
                             portalInfo = ((TeleporterBridge) serverworld1[0].getDefaultTeleporter()).bridge$placeInPortal((ServerPlayerEntity) (Object) this, exitPosition, f2, event.getSearchRadius(), true);
                         }
                     }
-                    if (portalInfo == null) {
-                        return null;
+                    if (portalInfo != null) {
+                        exitVelocity = portalInfo.motion;
+                        exit.setX(portalInfo.pos.getX());
+                        exit.setY(portalInfo.pos.getY());
+                        exit.setZ(portalInfo.pos.getZ());
+                        exit.setYaw(f2 + (float) portalInfo.rotation);
                     }
-
-                    exitVelocity = portalInfo.motion;
-                    exit.setX(portalInfo.pos.getX());
-                    exit.setY(portalInfo.pos.getY());
-                    exit.setZ(portalInfo.pos.getZ());
-                    exit.setYaw(f2 + (float) portalInfo.rotation);
                 }
 
                 serverworld.getProfiler().endSection();

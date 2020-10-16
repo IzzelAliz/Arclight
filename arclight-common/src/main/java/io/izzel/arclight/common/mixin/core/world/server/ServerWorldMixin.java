@@ -337,6 +337,10 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         if (registryName == null || !registryName.getNamespace().equals("minecraft")) {
             return found;
         }
+        ResourceLocation blockType = type.getRegistryName();
+        if (blockType == null || !blockType.getNamespace().equals("minecraft")) {
+            return found;
+        }
         this.getServer().getLogger().log(Level.SEVERE, "Block at {0}, {1}, {2} is {3} but has {4}" + ". "
             + "Bukkit will attempt to fix this, but there may be additional damage that we cannot recover.", new Object[]{pos.getX(), pos.getY(), pos.getZ(), type, found});
 
