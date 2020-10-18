@@ -15,6 +15,7 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AbstractAttributeMap;
 import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
+import net.minecraft.entity.ai.goal.SitGoal;
 import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.passive.AnimalEntity;
@@ -571,7 +572,10 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             if ((Object) this instanceof AnimalEntity) {
                 ((AnimalEntity) (Object) this).resetInLove();
                 if ((Object) this instanceof TameableEntity) {
-                    ((TameableEntity) (Object) this).getAISit().setSitting(false);
+                    SitGoal sitGoal = ((TameableEntity) (Object) this).getAISit();
+                    if (sitGoal != null) {
+                        sitGoal.setSitting(false);
+                    }
                 }
             }
 
