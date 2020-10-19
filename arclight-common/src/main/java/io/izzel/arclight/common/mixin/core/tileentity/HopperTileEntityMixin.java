@@ -64,7 +64,7 @@ public abstract class HopperTileEntityMixin extends LockableTileEntityMixin {
         if (destination instanceof DoubleSidedInventory) {
             destinationInventory = new CraftInventoryDoubleChest(((DoubleSidedInventory) destination));
         } else {
-            destinationInventory = ((IInventoryBridge) destination).getOwner().getInventory();
+            destinationInventory = ((IInventoryBridge) destination).getOwnerInventory();
         }
 
         InventoryMoveItemEvent event = new InventoryMoveItemEvent(this.getOwner().getInventory(), original.clone(), destinationInventory, true);
@@ -94,10 +94,10 @@ public abstract class HopperTileEntityMixin extends LockableTileEntityMixin {
         if (source instanceof DoubleSidedInventory) {
             sourceInventory = new CraftInventoryDoubleChest(((DoubleSidedInventory) source));
         } else {
-            sourceInventory = ((IInventoryBridge) source).getOwner().getInventory();
+            sourceInventory = ((IInventoryBridge) source).getOwnerInventory();
         }
 
-        InventoryMoveItemEvent event = new InventoryMoveItemEvent(sourceInventory, original.clone(), ((IInventoryBridge) destination).getOwner().getInventory(), false);
+        InventoryMoveItemEvent event = new InventoryMoveItemEvent(sourceInventory, original.clone(), ((IInventoryBridge) destination).getOwnerInventory(), false);
         Bukkit.getPluginManager().callEvent(event);
         if (arclight$moveItem = event.isCancelled()) {
             if (destination instanceof HopperTileEntity) {
@@ -112,7 +112,7 @@ public abstract class HopperTileEntityMixin extends LockableTileEntityMixin {
 
     @Inject(method = "captureItem", cancellable = true, at = @At("HEAD"))
     private static void arclight$pickupItem(IInventory inventory, ItemEntity itemEntity, CallbackInfoReturnable<Boolean> cir) {
-        InventoryPickupItemEvent event = new InventoryPickupItemEvent(((IInventoryBridge) inventory).getOwner().getInventory(), (Item) ((EntityBridge) itemEntity).bridge$getBukkitEntity());
+        InventoryPickupItemEvent event = new InventoryPickupItemEvent(((IInventoryBridge) inventory).getOwnerInventory(), (Item) ((EntityBridge) itemEntity).bridge$getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             cir.setReturnValue(false);
