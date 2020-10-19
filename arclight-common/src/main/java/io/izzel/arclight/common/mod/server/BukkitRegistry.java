@@ -15,8 +15,10 @@ import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.arclight.i18n.conf.EntityPropertySpec;
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
 import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.merchant.villager.VillagerProfession;
 import net.minecraft.item.Item;
+import net.minecraft.item.Items;
 import net.minecraft.potion.Effect;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.dimension.DimensionType;
@@ -214,7 +216,7 @@ public class BukkitRegistry {
             BLOCK_MATERIAL.put(block, material);
             MATERIAL_BLOCK.put(material, block);
             Item value = ForgeRegistries.ITEMS.getValue(location);
-            if (value != null) {
+            if (value != null && value != Items.AIR) {
                 ((MaterialBridge) (Object) material).bridge$setItem();
                 ITEM_MATERIAL.put(value, material);
                 MATERIAL_ITEM.put(material, value);
@@ -237,7 +239,7 @@ public class BukkitRegistry {
             ITEM_MATERIAL.put(item, material);
             MATERIAL_ITEM.put(material, item);
             Block value = ForgeRegistries.BLOCKS.getValue(location);
-            if (value != null) {
+            if (value != null && value != Blocks.AIR) {
                 ((MaterialBridge) (Object) material).bridge$setBlock();
                 BLOCK_MATERIAL.put(value, material);
                 MATERIAL_BLOCK.put(material, value);
