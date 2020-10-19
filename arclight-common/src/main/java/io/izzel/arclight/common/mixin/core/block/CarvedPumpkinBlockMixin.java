@@ -4,6 +4,7 @@ import io.izzel.arclight.common.bridge.world.WorldBridge;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CarvedPumpkinBlock;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
@@ -50,13 +51,15 @@ public class CarvedPumpkinBlockMixin {
         arclight$success = false;
     }
 
-    @Inject(method = "trySpawnGolem", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
-    public void arclight$spawnSnow(World world, BlockPos pos, CallbackInfo ci) {
+    @Redirect(method = "trySpawnGolem", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
+    public boolean arclight$spawnSnow(World world, Entity entityIn) {
         ((WorldBridge) world).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.BUILD_SNOWMAN);
+        return arclight$success = world.addEntity(entityIn);
     }
 
-    @Inject(method = "trySpawnGolem", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
-    public void arclight$spawnIron(World world, BlockPos pos, CallbackInfo ci) {
+    @Redirect(method = "trySpawnGolem", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
+    public boolean arclight$spawnIron(World world, Entity entityIn) {
         ((WorldBridge) world).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.BUILD_IRONGOLEM);
+        return arclight$success = world.addEntity(entityIn);
     }
 }

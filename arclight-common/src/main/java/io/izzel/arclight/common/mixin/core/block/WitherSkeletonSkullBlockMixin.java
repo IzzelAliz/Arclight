@@ -4,6 +4,7 @@ import io.izzel.arclight.common.bridge.world.WorldBridge;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.WitherSkeletonSkullBlock;
+import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.SkullTileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -51,8 +52,9 @@ public class WitherSkeletonSkullBlockMixin {
         arclight$success = false;
     }
 
-    @Inject(method = "checkWitherSpawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
-    private static void arclight$spawnWither(World worldIn, BlockPos pos, SkullTileEntity p_196298_2_, CallbackInfo ci) {
-        ((WorldBridge) worldIn).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.BUILD_WITHER);
+    @Redirect(method = "checkWitherSpawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
+    private static boolean arclight$spawnWither(World world, Entity entityIn) {
+        ((WorldBridge) world).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.BUILD_WITHER);
+        return arclight$success = world.addEntity(entityIn);
     }
 }
