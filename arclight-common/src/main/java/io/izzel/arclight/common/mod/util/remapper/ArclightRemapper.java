@@ -4,6 +4,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.util.log.ArclightI18nLogger;
+import io.izzel.arclight.common.mod.util.remapper.patcher.ArclightPluginPatcher;
 import net.md_5.specialsource.InheritanceMap;
 import net.md_5.specialsource.JarMapping;
 import net.md_5.specialsource.provider.ClassLoaderProvider;
@@ -56,6 +57,7 @@ public class ArclightRemapper {
         this.transformerList.add(ArclightInterfaceInvokerGen.INSTANCE);
         this.transformerList.add(ArclightRedirectAdapter.INSTANCE);
         this.transformerList.add(ClassLoaderAdapter.INSTANCE);
+        ArclightPluginPatcher.load(this.transformerList);
     }
 
     public static ClassLoaderRemapper createClassLoaderRemapper(ClassLoader classLoader) {
