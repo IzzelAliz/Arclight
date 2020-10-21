@@ -496,6 +496,10 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
         return getBukkitSender(wrapper);
     }
 
+    public boolean isDebugging() {
+        return false;
+    }
+
     private static MinecraftServer getServer() {
         return Bukkit.getServer() instanceof CraftServer ? ((CraftServer) Bukkit.getServer()).getServer() : null;
     }
