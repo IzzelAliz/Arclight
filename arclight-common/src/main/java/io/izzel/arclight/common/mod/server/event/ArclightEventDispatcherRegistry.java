@@ -12,6 +12,7 @@ public abstract class ArclightEventDispatcherRegistry {
         MinecraftForge.EVENT_BUS.register(new EntityEventDispatcher());
         MinecraftForge.EVENT_BUS.register(new EntityTeleportEventDispatcher());
         MinecraftForge.EVENT_BUS.register(new ItemEntityEventDispatcher());
+        MinecraftForge.EVENT_BUS.register(new WorldEventDispatcher());
         ArclightMod.LOGGER.info("registry.forge-event");
     }
 

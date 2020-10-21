@@ -128,11 +128,7 @@ public class ArclightCaptures {
     private static transient Container arclight$capturedContainer;
 
     public static void captureWorkbenchContainer(Container container) {
-        if (arclight$capturedContainer == null) {
-            arclight$capturedContainer = container;
-        } else {
-            recapture("workbench container");
-        }
+        arclight$capturedContainer = container;
     }
 
     public static Container getWorkbenchContainer() {

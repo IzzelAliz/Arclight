@@ -1,13 +1,19 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
+import io.izzel.arclight.common.bridge.world.WorldBridge;
 import jline.console.ConsoleReader;
 import net.minecraft.command.Commands;
 import net.minecraft.server.dedicated.DedicatedPlayerList;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.management.PlayerList;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.WorldEvent;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.craftbukkit.v.CraftServer;
+import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.command.BukkitCommandWrapper;
 import org.bukkit.craftbukkit.v.command.CraftCommandMap;
 import org.bukkit.craftbukkit.v.help.SimpleHelpMap;
@@ -25,8 +31,10 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -42,6 +50,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
     @Shadow(remap = false) @Final protected DedicatedServer console;
     @Shadow(remap = false) @Final @Mutable private String serverName;
     @Shadow(remap = false) @Final @Mutable protected DedicatedPlayerList playerList;
+    @Shadow(remap = false) @Final private Map<String, World> worlds;
     @Accessor(value = "logger", remap = false) @Mutable public abstract void setLogger(Logger logger);
     // @formatter:on
 
@@ -119,5 +128,18 @@ public abstract class CraftServerMixin implements CraftServerBridge {
     @Override
     public void bridge$setPlayerList(PlayerList playerList) {
         this.playerList = (DedicatedPlayerList) playerList;
+    }
+
+    @Inject(method = "unloadWorld(Lorg/bukkit/World;Z)Z", require = 1, remap = false, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerChunkProvider;close()V"))
+    private void arclight$unloadForge(World world, boolean save, CallbackInfoReturnable<Boolean> cir) {
+        MinecraftForge.EVENT_BUS.post(new WorldEvent.Unload(((CraftWorld) world).getHandle()));
+    }
+
+    @Override
+    public void bridge$removeWorld(ServerWorld world) {
+        if (world == null) {
+            return;
+        }
+        this.worlds.remove(((WorldBridge) world).bridge$getWorld().getName().toLowerCase(Locale.ROOT));
     }
 }
