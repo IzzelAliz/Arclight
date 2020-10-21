@@ -21,7 +21,7 @@ apply plugin: 'io.izzel.arclight'
 
 ext {
     minecraftVersion = '1.16.3'
-    forgeVersion = '34.1.7'
+    forgeVersion = '34.1.25'
 }
 
 arclight {

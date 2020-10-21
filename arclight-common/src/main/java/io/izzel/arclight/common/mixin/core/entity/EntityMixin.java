@@ -833,7 +833,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                 return null;
             }
             this.world.getProfiler().startSection("reposition");
-            PortalInfo portalinfo = this.func_241829_a(server);
+            PortalInfo portalinfo = teleporter.getPortalInfo((Entity) (Object) this, server, this::func_241829_a);
             if (portalinfo == null) {
                 return null;
             } else {

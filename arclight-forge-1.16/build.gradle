@@ -18,10 +18,11 @@ apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'io.izzel.arclight'
+apply plugin: 'maven-publish'
 
 ext {
     minecraftVersion = '1.16.3'
-    forgeVersion = '34.1.7'
+    forgeVersion = '34.1.25'
 }
 
 arclight {
@@ -59,7 +60,7 @@ repositories {
     maven { url = 'https://jitpack.io/' }
 }
 
-def embedLibs = ['org.spongepowered:mixin:0.8.1', 'org.ow2.asm:asm-util:8.0.1',
+def embedLibs = [/*'org.spongepowered:mixin:0.8.1',*/ 'org.ow2.asm:asm-util:8.0.1',
                  'org.ow2.asm:asm-analysis:8.0.1', 'org.yaml:snakeyaml:1.26',
                  'org.xerial:sqlite-jdbc:3.32.3', 'mysql:mysql-connector-java:5.1.49',
                  'commons-lang:commons-lang:2.6', 'com.googlecode.json-simple:json-simple:1.1.1',
@@ -128,4 +129,61 @@ mixin {
 compileJava {
     options.compilerArgs << '-XDignore.symbol.file' << '-XDenableSunApiLintControl'
     options.encoding = 'UTF-8'
+}
+
+task srgJar(type: Jar) {
+    from(tasks.jar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) }) {
+        include 'io/izzel/**'
+        exclude 'io/izzel/arclight/common/mixin/**'
+    }
+    classifier = 'srg'
+}
+
+task spigotJar(type: Jar) {
+    with tasks.srgJar
+    doLast {
+        def task = tasks.create('renameSpigotJar', net.minecraftforge.gradle.userdev.tasks.RenameJarInPlace)
+        task.input = archivePath
+        task.hasLog = false
+        task.mappings = project(':arclight-common').file('build/arclight_cache/tmp_srg/bukkit_srg.srg')
+        def args = task.args.toList()
+        args.add('--reverse')
+        task.setArgs(args)
+        task.apply()
+    }
+    classifier = 'spigot'
+}
+
+task sourceJar(type: Jar) {
+    from(sourceSets.main.allSource)
+    for (def s in [':arclight-api', ':i18n-config', ':arclight-common', ':forge-installer']) {
+        from(project(s).sourceSets.main.allSource) {
+            exclude 'io/izzel/arclight/common/mixin/**'
+        }
+    }
+    classifier = 'sources'
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "IzzelAliz Repo"
+            url = uri('https://maven.izzel.io/' + (project.version.toString().endsWith('SNAPSHOT') ? 'snapshots' : 'releases'))
+            credentials {
+                username = project.findProperty("mavenUser") ?: System.getenv("ARCLIGHT_USER")
+                password = project.findProperty("mavenToken") ?: System.getenv("ARCLIGHT_TOKEN")
+            }
+        }
+    }
+    publications {
+        mavenJava(MavenPublication) {
+            artifact srgJar
+            artifact spigotJar
+            artifact sourceJar
+        }
+    }
+}
+
+if ('true'.equalsIgnoreCase(System.getenv('APPVEYOR_REPO_TAG'))) {
+    tasks.build.dependsOn(tasks.publish)
 }

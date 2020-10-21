@@ -130,7 +130,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
         this.playerList = (DedicatedPlayerList) playerList;
     }
 
-    @Inject(method = "unloadWorld(Lorg/bukkit/World;Z)Z", require = 1, remap = false, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerChunkProvider;close()V"))
+    @Inject(method = "unloadWorld(Lorg/bukkit/World;Z)Z", require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;getChunkProvider()Lnet/minecraft/world/server/ServerChunkProvider;"))
     private void arclight$unloadForge(World world, boolean save, CallbackInfoReturnable<Boolean> cir) {
         MinecraftForge.EVENT_BUS.post(new WorldEvent.Unload(((CraftWorld) world).getHandle()));
     }

@@ -487,7 +487,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
             serverworld.removeEntity((ServerPlayerEntity) (Object) this, true); //Forge: the player entity is moved to the new world, NOT cloned. So keep the data alive with no matching invalidate call.
             this.revive();
             */
-            PortalInfo portalinfo = this.func_241829_a(server);
+            PortalInfo portalinfo = teleporter.getPortalInfo((ServerPlayerEntity) (Object) this, server, this::func_241829_a);
             ServerWorld[] exitWorld = new ServerWorld[]{server};
             if (portalinfo != null) {
                 Entity e = teleporter.placeEntity((ServerPlayerEntity) (Object) this, serverworld, exitWorld[0], this.rotationYaw, spawnPortal -> {//Forge: Start vanilla logic
