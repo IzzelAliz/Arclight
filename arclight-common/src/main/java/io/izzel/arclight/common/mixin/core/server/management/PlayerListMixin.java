@@ -211,16 +211,19 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         this.players.remove(playerIn);
         // this.playersByName.remove(playerIn.getScoreboardName().toLowerCase(Locale.ROOT));
         playerIn.getServerWorld().removePlayer(playerIn, true);
+        playerIn.revive();
         BlockPos pos = playerIn.getBedLocation(type);
         boolean flag2 = playerIn.isSpawnForced(type);
         org.bukkit.World fromWorld = ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().getWorld();
         playerIn.queuedEndExit = false;
+        /*
         playerIn.copyFrom(playerIn, flag);
         playerIn.setEntityId(playerIn.getEntityId());
         playerIn.setPrimaryHand(playerIn.getPrimaryHand());
         for (String s : playerIn.getTags()) {
             playerIn.addTag(s);
         }
+        */
         if (location == null) {
             boolean isBedSpawn = false;
             CraftWorld cworld = (CraftWorld) Bukkit.getServer().getWorld(((ServerPlayerEntityBridge) playerIn).bridge$getSpawnWorld());
@@ -259,16 +262,12 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         while (avoidSuffocation && !serverWorld.hasNoCollisions(playerIn) && playerIn.getPosY() < 256.0) {
             playerIn.setPosition(playerIn.getPosX(), playerIn.getPosY() + 1.0, playerIn.getPosZ());
         }
-        if (fromWorld.getEnvironment() == ((WorldBridge) serverWorld).bridge$getWorld().getEnvironment()) {
-            playerIn.connection.sendPacket(new SRespawnPacket((serverWorld.dimension.getType().getId() >= 0) ? DimensionType.THE_NETHER : DimensionType.OVERWORLD, WorldInfo.byHashing(serverWorld.getWorldInfo().getSeed()), serverWorld.getWorldInfo().getGenerator(), playerIn.interactionManager.getGameType()));
-        }
         WorldInfo worldInfo = serverWorld.getWorldInfo();
         net.minecraftforge.fml.network.NetworkHooks.sendDimensionDataPacket(playerIn.connection.netManager, playerIn);
         playerIn.connection.sendPacket(new SRespawnPacket(((DimensionTypeBridge) serverWorld.dimension.getType()).bridge$getType(), WorldInfo.byHashing(serverWorld.getWorldInfo().getSeed()), serverWorld.getWorldInfo().getGenerator(), playerIn.interactionManager.getGameType()));
         playerIn.connection.sendPacket(new SUpdateViewDistancePacket(((ServerWorldBridge) serverWorld).bridge$spigotConfig().viewDistance));
         playerIn.setWorld(serverWorld);
         playerIn.interactionManager.setWorld(serverWorld);
-        playerIn.revive();
         ((ServerPlayNetHandlerBridge) playerIn.connection).bridge$teleport(new Location(((WorldBridge) serverWorld).bridge$getWorld(), playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ(), playerIn.rotationYaw, playerIn.rotationPitch));
         playerIn.setSneaking(false);
         BlockPos pos1 = serverWorld.getSpawnPoint();
@@ -278,7 +277,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         this.sendWorldInfo(playerIn, serverWorld);
         this.updatePermissionLevel(playerIn);
         if (!((ServerPlayNetHandlerBridge) playerIn.connection).bridge$isDisconnected()) {
-            serverWorld.addRespawnedPlayer(playerIn);
+            serverWorld.addDuringCommandTeleport(playerIn);
             this.players.add(playerIn);
             //this.playersByName.put(entityplayer2.getScoreboardName().toLowerCase(Locale.ROOT), entityplayer2);
             this.uuidToPlayerMap.put(playerIn.getUniqueID(), playerIn);
@@ -298,7 +297,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         if (((ServerPlayNetHandlerBridge) playerIn.connection).bridge$isDisconnected()) {
             this.writePlayerData(playerIn);
         }
-        net.minecraftforge.fml.hooks.BasicEventHooks.firePlayerRespawnEvent(playerIn, flag);
+        net.minecraftforge.fml.hooks.BasicEventHooks.firePlayerChangedDimensionEvent(playerIn, ((CraftWorld) fromWorld).getHandle().dimension.getType(), serverWorld.dimension.getType());
         return playerIn;
     }
 
