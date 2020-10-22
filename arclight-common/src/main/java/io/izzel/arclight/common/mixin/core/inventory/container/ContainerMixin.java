@@ -15,10 +15,12 @@ import net.minecraft.inventory.CraftResultInventory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.ClickType;
 import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.SSetSlotPacket;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
@@ -66,10 +68,9 @@ public abstract class ContainerMixin implements ContainerBridge {
     @Shadow public static boolean canAddItemToSlot(@Nullable Slot slotIn, ItemStack stack, boolean stackSizeMatters) { return false; }
     @Shadow public static void computeStackSize(Set<Slot> dragSlotsIn, int dragModeIn, ItemStack stack, int slotStackSize) { }
     @Shadow public static boolean areItemsAndTagsEqual(ItemStack stack1, ItemStack stack2) { return false; }
+    @Shadow protected abstract boolean mergeItemStack(ItemStack stack, int startIndex, int endIndex, boolean reverseDirection);
+    @Shadow @Final @javax.annotation.Nullable private ContainerType<?> containerType;
     // @formatter:on
-
-    @Shadow
-    protected abstract boolean mergeItemStack(ItemStack stack, int startIndex, int endIndex, boolean reverseDirection);
 
     public boolean checkReachable = true;
     private InventoryView bukkitView;
@@ -138,7 +139,14 @@ public abstract class ContainerMixin implements ContainerBridge {
     private ITextComponent title;
 
     public final ITextComponent getTitle() {
-        Preconditions.checkState(this.title != null, "Title not set");
+        if (this.title == null) {
+            if (this.containerType != null && this.containerType.getRegistryName() != null) {
+                this.title = new StringTextComponent(this.containerType.getRegistryName().toString());
+            } else {
+                this.title = new StringTextComponent(this.toString());
+            }
+            ArclightMod.LOGGER.warn("Container {}/{} has no title.", this, this.getClass().getName());
+        }
         return this.title;
     }
 
