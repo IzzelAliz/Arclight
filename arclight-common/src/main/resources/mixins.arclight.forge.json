@@ -8,6 +8,7 @@
   "mixins": [
     "DimensionManagerMixin",
     "ForgeEventFactoryMixin",
-    "ForgeHooksMixin"
+    "ForgeHooksMixin",
+    "IForgeDimensionMixin"
   ]
 }
