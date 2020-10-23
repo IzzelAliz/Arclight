@@ -115,6 +115,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
     @Shadow protected abstract void applyDebugWorldInfo(WorldInfo worldInfoIn);
     @Shadow protected abstract void setUserMessage(ITextComponent userMessageIn);
     @Shadow public abstract ServerWorld getWorld(DimensionType dimension);
+    @Shadow @Deprecated public abstract void markWorldsDirty();
     // @formatter:on
 
     public MinecraftServerMixin(String name) {
@@ -314,6 +315,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
     }
 
     public void loadSpawn(IChunkStatusListener listener, ServerWorld serverWorld) {
+        this.markWorldsDirty();
         MinecraftForge.EVENT_BUS.post(new WorldEvent.Load(serverWorld));
         if (!((WorldBridge) serverWorld).bridge$getWorld().getKeepSpawnInMemory()) {
             return;

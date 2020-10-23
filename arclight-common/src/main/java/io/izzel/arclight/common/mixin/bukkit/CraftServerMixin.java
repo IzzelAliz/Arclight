@@ -170,6 +170,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
                 }
 
                 this.worlds.remove(world.getName().toLowerCase(Locale.ENGLISH));
+                this.console.markWorldsDirty();
                 this.console.worlds.remove(handle.getDimension().getType());
                 return true;
             }
