@@ -119,6 +119,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
     @Shadow protected abstract void func_240778_a_(IServerConfiguration p_240778_1_);
     @Shadow protected IServerConfiguration field_240768_i_;
     @Shadow private static void func_240786_a_(ServerWorld p_240786_0_, IServerWorldInfo p_240786_1_, boolean hasBonusChest, boolean p_240786_3_, boolean p_240786_4_) { }
+    @Shadow @Deprecated public abstract void markWorldsDirty();
     // @formatter:on
 
     public MinecraftServerMixin(String name) {
@@ -404,6 +405,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
 
     // bukkit methods
     public void loadSpawn(IChunkStatusListener listener, ServerWorld serverWorld) {
+        this.markWorldsDirty();
         MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.WorldEvent.Load(serverWorld));
         if (!((WorldBridge) serverWorld).bridge$getWorld().getKeepSpawnInMemory()) {
             return;
