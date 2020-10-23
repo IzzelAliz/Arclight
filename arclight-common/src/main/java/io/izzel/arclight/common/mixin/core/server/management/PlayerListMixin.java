@@ -407,7 +407,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         serverplayerentity.setPositionAndRotation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
         serverplayerentity.connection.captureCurrentPosition();
 
-        // this.setPlayerGameTypeBasedOnOther(serverplayerentity, playerIn, serverworld);
+        this.setPlayerGameTypeBasedOnOther(serverplayerentity, playerIn, serverworld);
 
         while (avoidSuffocation && !serverworld.hasNoCollisions(serverplayerentity) && serverplayerentity.posY < 256.0D) {
             serverplayerentity.setPosition(serverplayerentity.posX, serverplayerentity.posY + 1.0D, serverplayerentity.posZ);
