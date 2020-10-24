@@ -26,6 +26,7 @@
     "JavaPluginLoaderMixin",
     "JavaPluginMixin",
     "MaterialMixin",
-    "PluginClassLoaderMixin"
+    "PluginClassLoaderMixin",
+    "PotionEffectTypeMixin"
   ]
 }
