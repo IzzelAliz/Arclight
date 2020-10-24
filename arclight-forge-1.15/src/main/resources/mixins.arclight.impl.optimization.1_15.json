@@ -1,0 +1,10 @@
+{
+  "minVersion": "0.8",
+  "package": "io.izzel.arclight.impl.mixin.v1_15.optimization.general",
+  "target": "@env(DEFAULT)",
+  "refmap": "mixins.arclight.impl.refmap.1_15.json",
+  "mixins": [
+    "ClassInheritanceMultiMapMixin",
+    "VoxelShapesMixin"
+  ]
+}

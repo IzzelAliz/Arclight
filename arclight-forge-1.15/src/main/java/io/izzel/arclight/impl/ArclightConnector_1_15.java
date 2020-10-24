@@ -10,6 +10,7 @@ public class ArclightConnector_1_15 extends ArclightConnector {
     @Override
     public void connect() {
         super.connect();
+        Mixins.addConfiguration("mixins.arclight.impl.optimization.1_15.json");
         if (ArclightConfig.spec().getOptimization().isRemoveStream()) {
             Mixins.addConfiguration("mixins.arclight.impl.optimization.stream.1_15.json");
         }
