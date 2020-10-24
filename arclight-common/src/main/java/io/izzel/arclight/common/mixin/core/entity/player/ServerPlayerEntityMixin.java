@@ -149,6 +149,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
     @Shadow public String language;
     @Shadow public abstract void teleport(ServerWorld p_200619_1_, double x, double y, double z, float yaw, float pitch);
     @Shadow public abstract void giveExperiencePoints(int p_195068_1_);
+    @Shadow private boolean disconnected;
     // @formatter:on
 
     public String displayName;
@@ -510,6 +511,13 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
     private void arclight$joining(CallbackInfo ci) {
         if (this.joining) {
             this.joining = false;
+        }
+    }
+
+    @Inject(method = "playerTick", at = @At("HEAD"), cancellable = true)
+    private void arclight$returnIfDisconnected(CallbackInfo ci) {
+        if (this.disconnected) {
+            ci.cancel();
         }
     }
 
