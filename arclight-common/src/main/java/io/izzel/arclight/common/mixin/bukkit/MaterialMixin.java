@@ -4,11 +4,13 @@ import com.google.common.collect.ImmutableMap;
 import io.izzel.arclight.common.bridge.block.FireBlockBridge;
 import io.izzel.arclight.common.bridge.bukkit.MaterialBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.common.mod.server.block.ArclightTileInventory;
 import io.izzel.arclight.i18n.LocalizedException;
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.FallingBlock;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -334,6 +336,7 @@ public abstract class MaterialMixin implements MaterialBridge {
         this.setupBlockStateFunc();
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private void setupBlockStateFunc() {
         if (arclight$spec.blockStateClass != null) {
             try {
@@ -368,6 +371,9 @@ public abstract class MaterialMixin implements MaterialBridge {
         if (this.arclight$stateFunc == null) {
             this.arclight$stateFunc = b -> {
                 TileEntity tileEntity = b.getCraftWorld().getHandle().getTileEntity(b.getPosition());
+                if (tileEntity instanceof IInventory) {
+                    return new ArclightTileInventory(b, tileEntity.getClass());
+                }
                 return tileEntity == null ? new CraftBlockState(b) : new CraftBlockEntityState<>(b, tileEntity.getClass());
             };
         }
