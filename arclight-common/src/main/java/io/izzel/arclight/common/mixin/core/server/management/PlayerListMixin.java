@@ -331,12 +331,6 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         boolean flag = playerIn.isSpawnForced(dimension);
         boolean setSpawn = false;
         // playerIn.dimension = dimension;
-        PlayerInteractionManager playerinteractionmanager;
-        if (this.server.isDemo()) {
-            playerinteractionmanager = new DemoPlayerInteractionManager(this.server.getWorld(playerIn.dimension));
-        } else {
-            playerinteractionmanager = new PlayerInteractionManager(this.server.getWorld(playerIn.dimension));
-        }
 
         playerIn.queuedEndExit = false;
 
@@ -380,7 +374,14 @@ public abstract class PlayerListMixin implements PlayerListBridge {
 
         playerIn.dimension = dimension;
 
-        ServerPlayerEntity serverplayerentity = new ServerPlayerEntity(this.server, this.server.getWorld(playerIn.dimension), playerIn.getGameProfile(), playerinteractionmanager);
+        ServerWorld serverworld = ((CraftWorld) location.getWorld()).getHandle();
+        PlayerInteractionManager playerinteractionmanager;
+        if (this.server.isDemo()) {
+            playerinteractionmanager = new DemoPlayerInteractionManager(serverworld);
+        } else {
+            playerinteractionmanager = new PlayerInteractionManager(serverworld);
+        }
+        ServerPlayerEntity serverplayerentity = new ServerPlayerEntity(this.server, serverworld, playerIn.getGameProfile(), playerinteractionmanager);
 
         // Forward to new player instance
         ((InternalEntityBridge) playerIn).internal$getBukkitEntity().setHandle(serverplayerentity);
@@ -396,6 +397,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         }
         playerIn.remove(false); // Forge: clone event had a chance to see old data, now discard it
         serverplayerentity.dimension = dimension;
+        serverplayerentity.interactionManager.setWorld(serverworld);
         serverplayerentity.setEntityId(playerIn.getEntityId());
         serverplayerentity.setPrimaryHand(playerIn.getPrimaryHand());
 
@@ -403,7 +405,6 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             serverplayerentity.addTag(s);
         }
 
-        ServerWorld serverworld = ((CraftWorld) location.getWorld()).getHandle();
         serverplayerentity.setPositionAndRotation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
         serverplayerentity.connection.captureCurrentPosition();
 
