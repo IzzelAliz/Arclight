@@ -180,7 +180,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
 
                 while (this.serverRunning) {
                     long i = (curTime = Util.milliTime()) - this.serverTime;
-                    if (i > 5000L && this.serverTime - this.timeOfLastWarning >= 30000L) {
+                    if (i > 2000L && this.serverTime - this.timeOfLastWarning >= 15000L) {
                         long j = i / 50L;
 
                         if (server.getWarnOnOverload()) {
