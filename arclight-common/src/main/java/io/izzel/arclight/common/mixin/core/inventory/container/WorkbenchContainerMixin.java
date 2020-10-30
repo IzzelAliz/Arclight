@@ -68,7 +68,7 @@ public abstract class WorkbenchContainerMixin extends ContainerMixin implements 
      * @reason
      */
     @Overwrite
-    protected static void updateCraftingResult(int i, World world, PlayerEntity playerEntity, CraftingInventory inventory, CraftResultInventory resultInventory) {
+    public static void updateCraftingResult(int i, World world, PlayerEntity playerEntity, CraftingInventory inventory, CraftResultInventory resultInventory) {
         Container container = ArclightCaptures.getWorkbenchContainer();
         if (!world.isRemote) {
             ServerPlayerEntity serverplayerentity = (ServerPlayerEntity) playerEntity;
