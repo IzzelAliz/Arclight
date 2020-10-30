@@ -11,7 +11,6 @@ import net.minecraft.util.math.EntityRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.entity.Ageable;
 import org.bukkit.entity.Egg;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -51,7 +50,7 @@ public abstract class EggEntityMixin extends ThrowableEntityMixin {
             }
             if (hatching) {
                 for (int i = 0; i < b0; ++i) {
-                    Entity entity = ((CraftEntity) ((WorldBridge) this.world).bridge$getWorld().spawnEntity(new Location(((WorldBridge) this.world).bridge$getWorld(), this.posX, this.posY, this.posZ, this.rotationYaw, 0.0f), hatchingType)).getHandle();
+                    Entity entity = ((WorldBridge) this.world).bridge$getWorld().createEntity(new Location(((WorldBridge) this.world).bridge$getWorld(), this.posX, this.posY, this.posZ, this.rotationYaw, 0.0f), hatchingType.getEntityClass());
                     if (((EntityBridge) entity).bridge$getBukkitEntity() instanceof Ageable) {
                         ((Ageable) ((EntityBridge) entity).bridge$getBukkitEntity()).setBaby();
                     }

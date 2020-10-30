@@ -1,13 +1,13 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.common.bridge.bukkit.EntityTypeBridge;
-import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.world.storage.SaveHandlerBridge;
 import net.minecraft.world.server.ServerWorld;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -21,17 +21,18 @@ import java.util.UUID;
 import java.util.function.Function;
 
 @Mixin(value = CraftWorld.class, remap = false)
-public class CraftWorldMixin {
+public abstract class CraftWorldMixin {
 
     // @formatter:off
     @Shadow @Final private ServerWorld world;
+    @Shadow public abstract <T extends Entity> T addEntity(net.minecraft.entity.Entity entity, CreatureSpawnEvent.SpawnReason reason) throws IllegalArgumentException;
     // @formatter:on
 
     @Inject(method = "spawnEntity", cancellable = true, at = @At("HEAD"))
     private void arclight$useFactory(Location loc, EntityType entityType, CallbackInfoReturnable<Entity> cir) {
         Function<Location, ? extends net.minecraft.entity.Entity> factory = ((EntityTypeBridge) (Object) entityType).bridge$entityFactory();
         if (factory != null) {
-            cir.setReturnValue(((EntityBridge) factory.apply(loc)).bridge$getBukkitEntity());
+            cir.setReturnValue(this.addEntity(factory.apply(loc), CreatureSpawnEvent.SpawnReason.CUSTOM));
         }
     }
 
