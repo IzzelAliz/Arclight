@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import java.util.Arrays;
 
 @Mixin(value = CraftLegacy.class, remap = false)
-public class CraftLegacyMixin {
+public class CraftLegacyUtilMixin {
 
     private static Material[] moddedMaterials;
     private static int offset;

@@ -387,11 +387,11 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         ((InternalEntityBridge) playerIn).internal$getBukkitEntity().setHandle(serverplayerentity);
         ((EntityBridge) serverplayerentity).bridge$setBukkitEntity(((InternalEntityBridge) playerIn).internal$getBukkitEntity());
         if ((Object) serverplayerentity instanceof MobEntity) {
-            ((MobEntity) (Object) serverplayerentity).clearLeashed(true, false);
+            ((MobEntity) (Object) playerIn).clearLeashed(true, false);
         }
 
         serverplayerentity.connection = playerIn.connection;
-        serverplayerentity.copyFrom(playerIn, conqueredEnd);
+        serverplayerentity.copyFrom(playerIn, true); // keep inventory here since inventory dropped at ServerPlayerEntity#onDeath
         if (setSpawn) {
             serverplayerentity.setSpawnPoint(blockpos, flag, false, dimension);
         }
