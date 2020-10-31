@@ -112,6 +112,7 @@
     "command.arguments.EntitySelectorMixin",
     "command.arguments.EntitySelectorParserMixin",
     "command.impl.EffectCommandMixin",
+    "command.impl.GameRuleCommandMixin",
     "command.impl.ReloadCommandMixin",
     "command.impl.TeleportCommandMixin",
     "command.impl.TimeCommandMixin",
