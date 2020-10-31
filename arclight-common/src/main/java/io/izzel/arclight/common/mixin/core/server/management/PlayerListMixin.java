@@ -246,17 +246,20 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         playerIn.stopRiding();
         this.removePlayer(playerIn);
         playerIn.getServerWorld().removePlayer(playerIn, true);
+        playerIn.revive();
         BlockPos pos = playerIn.func_241140_K_();
         float f = playerIn.func_242109_L();
         boolean flag2 = playerIn.func_241142_M_();
         org.bukkit.World fromWorld = ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().getWorld();
         playerIn.queuedEndExit = false;
+        /*
         playerIn.copyFrom(playerIn, flag);
         playerIn.setEntityId(playerIn.getEntityId());
         playerIn.setPrimaryHand(playerIn.getPrimaryHand());
         for (String s : playerIn.getTags()) {
             playerIn.addTag(s);
         }
+        */
         boolean flag3 = false;
         if (location == null) {
             boolean isBedSpawn = false;
@@ -316,7 +319,6 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         playerIn.connection.sendPacket(new SRespawnPacket(serverWorld.getDimensionType(), serverWorld.getDimensionKey(), BiomeManager.getHashedSeed(serverWorld.getSeed()), playerIn.interactionManager.getGameType(), playerIn.interactionManager.func_241815_c_(), serverWorld.isDebug(), serverWorld.func_241109_A_(), flag));
         playerIn.connection.sendPacket(new SUpdateViewDistancePacket(((WorldBridge) serverWorld).bridge$spigotConfig().viewDistance));
         playerIn.setWorld(serverWorld);
-        playerIn.revive();
         ((ServerPlayNetHandlerBridge) playerIn.connection).bridge$teleport(new Location(((WorldBridge) serverWorld).bridge$getWorld(), playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ(), playerIn.rotationYaw, playerIn.rotationPitch));
         playerIn.setSneaking(false);
         playerIn.connection.sendPacket(new SWorldSpawnChangedPacket(serverWorld.getSpawnPoint(), serverWorld.func_242107_v()));
@@ -325,12 +327,12 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         this.sendWorldInfo(playerIn, serverWorld);
         this.updatePermissionLevel(playerIn);
         if (!((ServerPlayNetHandlerBridge) playerIn.connection).bridge$isDisconnected()) {
-            serverWorld.addRespawnedPlayer(playerIn);
+            serverWorld.addDuringCommandTeleport(playerIn);
             this.addPlayer(playerIn);
             this.uuidToPlayerMap.put(playerIn.getUniqueID(), playerIn);
         }
         playerIn.setHealth(playerIn.getHealth());
-        net.minecraftforge.fml.hooks.BasicEventHooks.firePlayerRespawnEvent(playerIn, flag);
+        net.minecraftforge.fml.hooks.BasicEventHooks.firePlayerChangedDimensionEvent(playerIn, ((CraftWorld) fromWorld).getHandle().dimension, serverWorld.dimension);
         if (flag3) {
             playerIn.connection.sendPacket(new SPlaySoundEffectPacket(SoundEvents.BLOCK_RESPAWN_ANCHOR_DEPLETE, SoundCategory.BLOCKS, pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f));
         }
