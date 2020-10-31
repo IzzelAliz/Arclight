@@ -440,11 +440,11 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         ((InternalEntityBridge) playerIn).internal$getBukkitEntity().setHandle(serverplayerentity);
         ((EntityBridge) serverplayerentity).bridge$setBukkitEntity(((InternalEntityBridge) playerIn).internal$getBukkitEntity());
         if ((Object) serverplayerentity instanceof MobEntity) {
-            ((MobEntity) (Object) serverplayerentity).clearLeashed(true, false);
+            ((MobEntity) (Object) playerIn).clearLeashed(true, false);
         }
 
         serverplayerentity.connection = playerIn.connection;
-        serverplayerentity.copyFrom(playerIn, conqueredEnd);
+        serverplayerentity.copyFrom(playerIn, true); // keep inventory here since inventory dropped at ServerPlayerEntity#onDeath
         playerIn.remove(false); // Forge: clone event had a chance to see old data, now discard it
         serverplayerentity.setEntityId(playerIn.getEntityId());
         serverplayerentity.setPrimaryHand(playerIn.getPrimaryHand());
