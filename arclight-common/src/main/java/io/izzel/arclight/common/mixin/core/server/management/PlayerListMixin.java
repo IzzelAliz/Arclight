@@ -376,7 +376,6 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         org.bukkit.World fromWorld = ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().getWorld();
         playerIn.queuedEndExit = false;
 
-        // this.setPlayerGameTypeBasedOnOther(serverplayerentity, playerIn, serverworld1);
         boolean flag3 = false;
         ServerWorld spawnWorld = this.server.getWorld(playerIn.func_241141_L_());
         if (location == null) {
@@ -457,6 +456,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         playerIn.setPositionAndRotation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
         playerIn.connection.captureCurrentPosition();
 
+        this.setPlayerGameTypeBasedOnOther(serverplayerentity, playerIn, serverWorld);
         while (avoidSuffocation && !serverWorld.hasNoCollisions(serverplayerentity) && serverplayerentity.getPosY() < 256.0D) {
             serverplayerentity.setPosition(serverplayerentity.getPosX(), serverplayerentity.getPosY() + 1.0D, serverplayerentity.getPosZ());
         }
