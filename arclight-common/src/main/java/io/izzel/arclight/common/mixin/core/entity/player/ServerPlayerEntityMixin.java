@@ -577,7 +577,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
 
     @Override
     protected Optional<TeleportationRepositioner.Result> findOrCreatePortal(ServerWorld worldserver, BlockPos blockposition, boolean flag, int searchRadius, boolean canCreatePortal, int createRadius) {
-        Optional<TeleportationRepositioner.Result> optional = super.a(worldserver, blockposition, flag, searchRadius, canCreatePortal, createRadius);
+        Optional<TeleportationRepositioner.Result> optional = super.findOrCreatePortal(worldserver, blockposition, flag, searchRadius, canCreatePortal, createRadius);
         if (optional.isPresent() || !canCreatePortal) {
             return optional;
         }
