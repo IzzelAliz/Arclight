@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Arrays;
 
-@Mixin(PotionEffectType.class)
+@Mixin(value = PotionEffectType.class, remap = false)
 public class PotionEffectTypeMixin {
 
     @Shadow @Final private static PotionEffectType[] byId;
