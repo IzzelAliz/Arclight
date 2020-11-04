@@ -1631,7 +1631,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     }
 
     @Redirect(method = "processUpdateSign", at = @At(value = "INVOKE", target = "Lnet/minecraft/tileentity/SignTileEntity;setText(ILnet/minecraft/util/text/ITextComponent;)V"))
-    public void arclight$onSignChangePost(SignTileEntity signTileEntity, int line, ITextComponent p_212365_2_) {
+    public void arclight$onSignChangePost(SignTileEntity signTileEntity, int line, ITextComponent signText) {
         if (arclight$lines != null) {
             signTileEntity.setText(line, arclight$lines[line]);
             if (line == arclight$lines.length - 1) {

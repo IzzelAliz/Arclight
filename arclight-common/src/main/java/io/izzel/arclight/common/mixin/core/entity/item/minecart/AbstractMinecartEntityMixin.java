@@ -72,7 +72,7 @@ public abstract class AbstractMinecartEntityMixin extends EntityMixin {
     public double maxSpeed = 0.4D;
 
     @Inject(method = "<init>(Lnet/minecraft/entity/EntityType;Lnet/minecraft/world/World;)V", at = @At("RETURN"))
-    private void arclight$init(EntityType<?> type, World p_i48538_2_, CallbackInfo ci) {
+    private void arclight$init(EntityType<?> type, World worldIn, CallbackInfo ci) {
         slowWhenEmpty = true;
         derailedX = 0.5;
         derailedY = 0.5;

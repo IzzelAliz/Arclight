@@ -29,7 +29,7 @@ import java.util.Random;
 public abstract class RedstoneOreBlockMixin {
 
     // @formatter:off
-    @Shadow private static void activate(BlockState p_196500_0_, World p_196500_1_, BlockPos p_196500_2_) { }
+    @Shadow private static void activate(BlockState state, World world, BlockPos pos) { }
     // @formatter:on
 
     private static transient Entity arclight$entity;

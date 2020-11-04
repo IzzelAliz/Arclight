@@ -31,22 +31,22 @@ public interface IWorldPosCallableMixin extends IWorldPosCallableBridge {
      * @reason
      */
     @Overwrite
-    static IWorldPosCallable of(final World p_221488_0_, final BlockPos p_221488_1_) {
+    static IWorldPosCallable of(final World world, final BlockPos pos) {
         class Anonymous implements IWorldPosCallable, IWorldPosCallableBridge {
 
             @Override
-            public <T> Optional<T> apply(BiFunction<World, BlockPos, T> p_221484_1_) {
-                return Optional.of(p_221484_1_.apply(p_221488_0_, p_221488_1_));
+            public <T> Optional<T> apply(BiFunction<World, BlockPos, T> worldPosConsumer) {
+                return Optional.of(worldPosConsumer.apply(world, pos));
             }
 
             @Override
             public World bridge$getWorld() {
-                return p_221488_0_;
+                return world;
             }
 
             @Override
             public BlockPos bridge$getPosition() {
-                return p_221488_1_;
+                return pos;
             }
         }
         return new Anonymous();

@@ -25,7 +25,7 @@ public abstract class ShulkerBoxContainerMixin extends ContainerMixin {
     private PlayerInventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/inventory/IInventory;)V", at = @At("RETURN"))
-    public void arclight$init(int p_i50066_1_, PlayerInventory playerInventory, IInventory p_i50066_3_, CallbackInfo ci) {
+    public void arclight$init(int id, PlayerInventory playerInventory, IInventory inventory, CallbackInfo ci) {
         this.playerInventory = playerInventory;
     }
 

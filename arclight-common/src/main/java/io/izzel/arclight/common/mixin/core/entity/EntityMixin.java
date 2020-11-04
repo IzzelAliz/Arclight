@@ -108,12 +108,12 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow protected abstract void updatePortal();
     @Shadow public abstract boolean isImmuneToFire();
     @Shadow public abstract boolean attackEntityFrom(DamageSource source, float amount);
-    @Shadow public abstract void setFire(int p_70015_1_);
+    @Shadow public abstract void setFire(int seconds);
     @Shadow public boolean collidedHorizontally;
-    @Shadow protected abstract Vector3d getAllowedMovement(Vector3d p_213306_1_);
+    @Shadow protected abstract Vector3d getAllowedMovement(Vector3d vec);
     @Shadow public abstract void remove();
     @Shadow public int ticksExisted;
-    @Shadow public void setWorld(World p_70029_1_) { }
+    @Shadow public void setWorld(World worldIn) { }
     @Shadow private Entity ridingEntity;
     @Shadow @Final public List<Entity> passengers;
     @Shadow @Nullable public abstract Entity getControllingPassenger();
@@ -190,7 +190,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow protected abstract void setDead();
     @Shadow protected abstract Optional<TeleportationRepositioner.Result> func_241830_a(ServerWorld p_241830_1_, BlockPos p_241830_2_, boolean p_241830_3_);
     @Shadow protected BlockPos field_242271_ac;
-    @Shadow protected abstract Vector3d func_241839_a(Direction.Axis p_241839_1_, TeleportationRepositioner.Result p_241839_2_);
+    @Shadow protected abstract Vector3d func_241839_a(Direction.Axis axis, TeleportationRepositioner.Result result);
     @Shadow public abstract EntitySize getSize(Pose poseIn);
     @Shadow protected abstract boolean func_233566_aG_();
     @Shadow public abstract boolean isInLava();

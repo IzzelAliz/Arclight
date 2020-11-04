@@ -20,7 +20,7 @@ public abstract class PaintingEntityMixin extends HangingEntityMixin {
     @Shadow public PaintingType art;
 
     @Inject(method = "<init>(Lnet/minecraft/entity/EntityType;Lnet/minecraft/world/World;)V", at = @At("RETURN"))
-    private void arclight$init(EntityType<? extends PaintingEntity> p_i50221_1_, World p_i50221_2_, CallbackInfo ci) {
+    private void arclight$init(EntityType<? extends PaintingEntity> type, World worldIn, CallbackInfo ci) {
         final List<PaintingType> list = Lists.newArrayList(ForgeRegistries.PAINTING_TYPES.getValues());
         this.art = list.get(this.rand.nextInt(list.size()));
     }

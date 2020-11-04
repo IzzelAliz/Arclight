@@ -80,7 +80,7 @@ public abstract class ArmorStandEntityMixin extends LivingEntityMixin {
     }
 
     @Inject(method = "damageArmorStand", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/item/ArmorStandEntity;remove()V"))
-    private void arclight$deathEvent2(DamageSource p_213817_1_, float p_213817_2_, CallbackInfo ci) {
+    private void arclight$deathEvent2(DamageSource source, float p_213817_2_, CallbackInfo ci) {
         arclight$callEntityDeath();
     }
 

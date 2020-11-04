@@ -15,12 +15,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class FarmerWorkTaskMixin {
 
     @Inject(method = "compost", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/ComposterBlock;empty(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/block/BlockState;"))
-    private void arclight$captureVillager1(ServerWorld p_234016_1_, VillagerEntity p_234016_2_, GlobalPos p_234016_3_, BlockState p_234016_4_, CallbackInfo ci) {
-        ArclightCaptures.captureEntityChangeBlock(p_234016_2_);
+    private void arclight$captureVillager1(ServerWorld world, VillagerEntity villager, GlobalPos p_234016_3_, BlockState state, CallbackInfo ci) {
+        ArclightCaptures.captureEntityChangeBlock(villager);
     }
 
     @Inject(method = "compost", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/ComposterBlock;attemptFill(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/item/ItemStack;Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/block/BlockState;"))
-    private void arclight$captureVillager2(ServerWorld p_234016_1_, VillagerEntity p_234016_2_, GlobalPos p_234016_3_, BlockState p_234016_4_, CallbackInfo ci) {
-        ArclightCaptures.captureEntityChangeBlock(p_234016_2_);
+    private void arclight$captureVillager2(ServerWorld world, VillagerEntity villager, GlobalPos p_234016_3_, BlockState state, CallbackInfo ci) {
+        ArclightCaptures.captureEntityChangeBlock(villager);
     }
 }

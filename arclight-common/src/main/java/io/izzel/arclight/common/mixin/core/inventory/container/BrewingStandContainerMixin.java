@@ -28,7 +28,7 @@ public abstract class BrewingStandContainerMixin extends ContainerMixin {
     private PlayerInventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/inventory/IInventory;Lnet/minecraft/util/IIntArray;)V", at = @At("RETURN"))
-    public void arclight$init(int p_i50096_1_, PlayerInventory playerInventory, IInventory p_i50096_3_, IIntArray p_i50096_4_, CallbackInfo ci) {
+    public void arclight$init(int id, PlayerInventory playerInventory, IInventory inventory, IIntArray p_i50096_4_, CallbackInfo ci) {
         this.playerInventory = playerInventory;
     }
 

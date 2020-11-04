@@ -20,7 +20,7 @@ import java.util.Optional;
 public class SpawnEggItemMixin {
 
     @Inject(method = "getChildToSpawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;func_242417_l(Lnet/minecraft/entity/Entity;)V"))
-    private void arclight$reason(PlayerEntity p_234809_1_, MobEntity p_234809_2_, EntityType<? extends MobEntity> p_234809_3_, ServerWorld world, Vector3d p_234809_5_, ItemStack p_234809_6_, CallbackInfoReturnable<Optional<MobEntity>> cir) {
+    private void arclight$reason(PlayerEntity player, MobEntity mob, EntityType<? extends MobEntity> entityType, ServerWorld world, Vector3d pos, ItemStack stack, CallbackInfoReturnable<Optional<MobEntity>> cir) {
         ((WorldBridge) world).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.SPAWNER_EGG);
     }
 }

@@ -15,8 +15,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public abstract class RavagerEntityMixin extends CreatureEntityMixin {
 
     @Redirect(method = "livingTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;destroyBlock(Lnet/minecraft/util/math/BlockPos;ZLnet/minecraft/entity/Entity;)Z"))
-    private boolean arclight$entityChangeBlock(World world, BlockPos pos, boolean p_225521_2_, Entity entityIn) {
+    private boolean arclight$entityChangeBlock(World world, BlockPos pos, boolean dropBlock, Entity entityIn) {
         return !CraftEventFactory.callEntityChangeBlockEvent((RavagerEntity) (Object) this, pos, Blocks.AIR.getDefaultState()).isCancelled()
-            && world.destroyBlock(pos, p_225521_2_, entityIn);
+            && world.destroyBlock(pos, dropBlock, entityIn);
     }
 }

@@ -36,7 +36,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 public abstract class BucketItemMixin {
 
     // @formatter:off
-    @Shadow public abstract boolean tryPlaceContainedLiquid(@javax.annotation.Nullable PlayerEntity player, World worldIn, BlockPos posIn, @javax.annotation.Nullable BlockRayTraceResult p_180616_4_);
+    @Shadow public abstract boolean tryPlaceContainedLiquid(@javax.annotation.Nullable PlayerEntity player, World worldIn, BlockPos posIn, @javax.annotation.Nullable BlockRayTraceResult rayTrace);
     // @formatter:on
 
     @Inject(method = "onItemRightClick", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/block/IBucketPickupHandler;pickupFluid(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Lnet/minecraft/fluid/Fluid;"))
@@ -95,7 +95,7 @@ public abstract class BucketItemMixin {
     private transient ItemStack arclight$stack;
 
     @Inject(method = "tryPlaceContainedLiquid", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/DimensionType;isUltrawarm()Z"))
-    private void arclight$bucketEmpty(PlayerEntity player, World worldIn, BlockPos posIn, BlockRayTraceResult p_180616_4_, CallbackInfoReturnable<Boolean> cir) {
+    private void arclight$bucketEmpty(PlayerEntity player, World worldIn, BlockPos posIn, BlockRayTraceResult rayTrace, CallbackInfoReturnable<Boolean> cir) {
         if (player != null) {
             PlayerBucketEmptyEvent event = CraftEventFactory.callPlayerBucketEmptyEvent((ServerWorld) worldIn, player, posIn, arclight$click, arclight$direction, arclight$stack);
             if (event.isCancelled()) {

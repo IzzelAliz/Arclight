@@ -40,7 +40,7 @@ public abstract class ItemEntityMixin extends EntityMixin {
     // @formatter:on
 
     @Inject(method = "func_213858_a", cancellable = true, at = @At("HEAD"))
-    private static void arclight$itemMerge(ItemEntity from, ItemStack p_213858_1_, ItemEntity to, ItemStack p_213858_3_, CallbackInfo ci) {
+    private static void arclight$itemMerge(ItemEntity from, ItemStack stack1, ItemEntity to, ItemStack stack2, CallbackInfo ci) {
         if (CraftEventFactory.callItemMergeEvent(to, from).isCancelled()) {
             ci.cancel();
         }

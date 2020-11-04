@@ -37,7 +37,7 @@ public class WitherSkeletonSkullBlockMixin {
     }
 
     @Inject(method = "checkWitherSpawn", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
-    private static void arclight$returnIfFail(World worldIn, BlockPos blockPos, SkullTileEntity p_196298_2_, CallbackInfo ci) {
+    private static void arclight$returnIfFail(World worldIn, BlockPos blockPos, SkullTileEntity tileEntity, CallbackInfo ci) {
         if (arclight$success) {
             if (arclight$populator != null) {
                 for (BlockPos pos : arclight$populator.getBlocks()) {

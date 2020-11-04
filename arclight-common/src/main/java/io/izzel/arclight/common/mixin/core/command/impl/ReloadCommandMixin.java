@@ -18,7 +18,7 @@ public abstract class ReloadCommandMixin {
 
     private static void reload(MinecraftServer minecraftserver) {
         ResourcePackList resourcePackList = minecraftserver.getResourcePacks();
-        IServerConfiguration configuration = minecraftserver.func_240793_aU_();
+        IServerConfiguration configuration = minecraftserver.getServerConfiguration();
         Collection<String> collection = resourcePackList.func_232621_d_();
         Collection<String> collection2 = func_241058_a_(resourcePackList, configuration, collection);
         minecraftserver.func_240780_a_(collection2);

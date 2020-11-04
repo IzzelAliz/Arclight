@@ -21,12 +21,12 @@ public abstract class VineBlockMixin extends BlockMixin {
 
     // @formatter:off
     @Shadow public static BooleanProperty getPropertyFor(Direction side) { return null; }
-    @Shadow protected abstract boolean hasVineBelow(IBlockReader p_196539_1_, BlockPos p_196539_2_);
-    @Shadow public static boolean canAttachTo(IBlockReader p_196542_0_, BlockPos worldIn, Direction neighborPos) { return false; }
+    @Shadow protected abstract boolean hasVineBelow(IBlockReader blockReader, BlockPos pos);
+    @Shadow public static boolean canAttachTo(IBlockReader blockReader, BlockPos worldIn, Direction neighborPos) { return false; }
     @Shadow @Final public static BooleanProperty UP;
-    @Shadow protected abstract boolean hasAttachment(IBlockReader p_196541_1_, BlockPos p_196541_2_, Direction p_196541_3_);
-    @Shadow protected abstract boolean isFacingCardinal(BlockState p_196540_1_);
-    @Shadow protected abstract BlockState func_196544_a(BlockState p_196544_1_, BlockState p_196544_2_, Random p_196544_3_);
+    @Shadow protected abstract boolean hasAttachment(IBlockReader blockReader, BlockPos pos, Direction direction);
+    @Shadow protected abstract boolean isFacingCardinal(BlockState state);
+    @Shadow protected abstract BlockState func_196544_a(BlockState state, BlockState state2, Random rand);
     // @formatter:on
 
     /**

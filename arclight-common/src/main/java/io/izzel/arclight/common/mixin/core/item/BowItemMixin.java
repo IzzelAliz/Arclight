@@ -26,8 +26,8 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(BowItem.class)
 public abstract class BowItemMixin extends ShootableItem {
 
-    public BowItemMixin(Properties p_i50040_1_) {
-        super(p_i50040_1_);
+    public BowItemMixin(Properties builder) {
+        super(builder);
     }
 
     // @formatter:off

@@ -115,8 +115,8 @@ public class DelegateWorldInfo extends ServerWorldInfo {
     }
 
     @Override
-    public void setSpawnAngle(float p_241859_1_) {
-        derivedWorldInfo.setSpawnAngle(p_241859_1_);
+    public void setSpawnAngle(float angle) {
+        derivedWorldInfo.setSpawnAngle(angle);
     }
 
     @Override
@@ -130,8 +130,8 @@ public class DelegateWorldInfo extends ServerWorldInfo {
     }
 
     @Override
-    public void setSpawn(BlockPos spawnPoint, float p_176143_2_) {
-        derivedWorldInfo.setSpawn(spawnPoint, p_176143_2_);
+    public void setSpawn(BlockPos spawnPoint, float angle) {
+        derivedWorldInfo.setSpawn(spawnPoint, angle);
     }
 
     @Override

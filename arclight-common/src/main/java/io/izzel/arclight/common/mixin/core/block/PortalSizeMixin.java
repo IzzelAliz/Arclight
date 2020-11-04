@@ -48,7 +48,7 @@ public abstract class PortalSizeMixin implements PortalSizeBridge {
     @Shadow private int height;
     @Shadow @Final private Direction rightDir;
     @Shadow private int width;
-    @Shadow public static PortalInfo func_242963_a(ServerWorld p_242963_0_, TeleportationRepositioner.Result p_242963_1_, Direction.Axis p_242963_2_, Vector3d p_242963_3_, EntitySize p_242963_4_, Vector3d p_242963_5_, float p_242963_6_, float p_242963_7_) { return null; }
+    @Shadow public static PortalInfo func_242963_a(ServerWorld world, TeleportationRepositioner.Result result, Direction.Axis axis, Vector3d offsetVector, EntitySize size, Vector3d motion, float rotationYaw, float rotationPitch) { return null; }
     // @formatter:on
 
     List<BlockState> blocks = new ArrayList<>();
@@ -93,15 +93,15 @@ public abstract class PortalSizeMixin implements PortalSizeBridge {
 
     @SuppressWarnings("ConstantConditions")
     @Redirect(method = "func_242963_a", at = @At(value = "NEW", target = "net/minecraft/block/PortalInfo"))
-    private static PortalInfo arclight$setPortalInfo(Vector3d p_i242042_1_, Vector3d p_i242042_2_, float p_i242042_3_, float p_i242042_4_, ServerWorld world) {
-        PortalInfo portalInfo = new PortalInfo(p_i242042_1_, p_i242042_2_, p_i242042_3_, p_i242042_4_);
+    private static PortalInfo arclight$setPortalInfo(Vector3d pos, Vector3d motion, float rotationYaw, float rotationPitch, ServerWorld world) {
+        PortalInfo portalInfo = new PortalInfo(pos, motion, rotationYaw, rotationPitch);
         ((PortalInfoBridge) portalInfo).bridge$setWorld(world);
         ((PortalInfoBridge) portalInfo).bridge$setPortalEventInfo(ArclightCaptures.getCraftPortalEvent());
         return portalInfo;
     }
 
-    private static PortalInfo a(ServerWorld p_242963_0_, TeleportationRepositioner.Result p_242963_1_, Direction.Axis p_242963_2_, Vector3d p_242963_3_, EntitySize p_242963_4_, Vector3d p_242963_5_, float p_242963_6_, float p_242963_7_, CraftPortalEvent event) {
+    private static PortalInfo a(ServerWorld world, TeleportationRepositioner.Result result, Direction.Axis axis, Vector3d offsetVector, EntitySize size, Vector3d motion, float rotationYaw, float rotationPitch, CraftPortalEvent event) {
         ArclightCaptures.captureCraftPortalEvent(event);
-        return func_242963_a(p_242963_0_, p_242963_1_, p_242963_2_, p_242963_3_, p_242963_4_, p_242963_5_, p_242963_6_, p_242963_7_);
+        return func_242963_a(world, result, axis, offsetVector, size, motion, rotationYaw, rotationPitch);
     }
 }

@@ -27,14 +27,14 @@ public abstract class ContainerMinecartEntityMixin extends AbstractMinecartEntit
     @Shadow private NonNullList<ItemStack> minecartContainerItems;
 
     @Inject(method = "<init>(Lnet/minecraft/entity/EntityType;Lnet/minecraft/world/World;)V", at = @At("RETURN"))
-    private void arclight$init(EntityType<?> p_i48536_1_, World p_i48536_2_, CallbackInfo ci) {
+    private void arclight$init(EntityType<?> type, World world, CallbackInfo ci) {
         this.minecartContainerItems = NonNullList.withSize(getSizeInventory(), ItemStack.EMPTY);
         maxStack = MAX_STACK;
         transaction = new ArrayList<>();
     }
 
     @Inject(method = "<init>(Lnet/minecraft/entity/EntityType;DDDLnet/minecraft/world/World;)V", at = @At("RETURN"))
-    private void arclight$init(EntityType<?> p_i48537_1_, double p_i48537_2_, double p_i48537_4_, double p_i48537_6_, World p_i48537_8_, CallbackInfo ci) {
+    private void arclight$init(EntityType<?> type, double x, double y, double z, World world, CallbackInfo ci) {
         this.minecartContainerItems = NonNullList.withSize(getSizeInventory(), ItemStack.EMPTY);
         maxStack = MAX_STACK;
         transaction = new ArrayList<>();

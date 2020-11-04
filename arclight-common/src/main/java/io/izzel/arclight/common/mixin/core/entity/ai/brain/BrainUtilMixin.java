@@ -19,13 +19,13 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 public class BrainUtilMixin {
 
     @Inject(method = "spawnItemNearEntity", cancellable = true, at = @At("HEAD"))
-    private static void arclight$noEmptyLoot(LivingEntity entity, ItemStack stack, Vector3d p_233865_2_, CallbackInfo ci) {
+    private static void arclight$noEmptyLoot(LivingEntity entity, ItemStack stack, Vector3d offset, CallbackInfo ci) {
         if (stack.isEmpty()) ci.cancel();
     }
 
     @Inject(method = "spawnItemNearEntity", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
-    private static void arclight$entityDropItem(LivingEntity entity, ItemStack stack, Vector3d p_233865_2_, CallbackInfo ci, double d, ItemEntity itemEntity) {
+    private static void arclight$entityDropItem(LivingEntity entity, ItemStack stack, Vector3d offset, CallbackInfo ci, double d, ItemEntity itemEntity) {
         EntityDropItemEvent event = new EntityDropItemEvent(((EntityBridge) entity).bridge$getBukkitEntity(), (Item) ((EntityBridge) itemEntity).bridge$getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {

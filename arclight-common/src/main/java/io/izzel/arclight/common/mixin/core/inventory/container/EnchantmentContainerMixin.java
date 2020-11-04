@@ -70,7 +70,7 @@ public abstract class EnchantmentContainerMixin extends ContainerMixin implement
     private PlayerInventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/util/IWorldPosCallable;)V", at = @At("RETURN"))
-    public void arclight$init(int p_i50086_1_, PlayerInventory playerInventory, IWorldPosCallable p_i50086_3_, CallbackInfo ci) {
+    public void arclight$init(int id, PlayerInventory playerInventory, IWorldPosCallable worldPosCallable, CallbackInfo ci) {
         this.playerInventory = playerInventory;
     }
 

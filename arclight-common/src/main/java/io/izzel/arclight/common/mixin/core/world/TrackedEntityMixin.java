@@ -76,22 +76,22 @@ public abstract class TrackedEntityMixin implements TrackedEntityBridge {
     @Shadow @Final private boolean sendVelocityUpdates;
     @Shadow private Vector3d velocity;
     @Shadow private int encodedRotationYawHead;
-    @Shadow protected abstract void sendPacket(IPacket<?> p_219451_1_);
+    @Shadow protected abstract void sendPacket(IPacket<?> packet);
     // @formatter:on
 
     private Set<ServerPlayerEntity> trackedPlayers;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void arclight$init(ServerWorld p_i50704_1_, Entity p_i50704_2_, int p_i50704_3_, boolean p_i50704_4_, Consumer<IPacket<?>> p_i50704_5_, CallbackInfo ci) {
+    private void arclight$init(ServerWorld serverWorld, Entity entity, int updateFrequency, boolean sendVelocityUpdates, Consumer<IPacket<?>> packetConsumer, CallbackInfo ci) {
         trackedPlayers = new HashSet<>();
     }
 
-    public void arclight$constructor(ServerWorld p_i50704_1_, Entity p_i50704_2_, int p_i50704_3_, boolean p_i50704_4_, Consumer<IPacket<?>> p_i50704_5_) {
+    public void arclight$constructor(ServerWorld serverWorld, Entity entity, int updateFrequency, boolean sendVelocityUpdates, Consumer<IPacket<?>> packetConsumer) {
         throw new NullPointerException();
     }
 
-    public void arclight$constructor(ServerWorld p_i50704_1_, Entity p_i50704_2_, int p_i50704_3_, boolean p_i50704_4_, Consumer<IPacket<?>> p_i50704_5_, Set<ServerPlayerEntity> set) {
-        arclight$constructor(p_i50704_1_, p_i50704_2_, p_i50704_3_, p_i50704_4_, p_i50704_5_);
+    public void arclight$constructor(ServerWorld serverWorld, Entity entity, int updateFrequency, boolean sendVelocityUpdates, Consumer<IPacket<?>> packetConsumer, Set<ServerPlayerEntity> set) {
+        arclight$constructor(serverWorld, entity, updateFrequency, sendVelocityUpdates, packetConsumer);
         this.trackedPlayers = set;
     }
 

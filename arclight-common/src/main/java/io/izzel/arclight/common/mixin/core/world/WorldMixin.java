@@ -74,19 +74,19 @@ public abstract class WorldMixin implements WorldBridge {
     protected org.bukkit.World.Environment environment;
     public org.spigotmc.SpigotWorldConfig spigotConfig;
 
-    public void arclight$constructor(ISpawnWorldInfo p_i241925_1_, RegistryKey<World> p_i241925_2_, final DimensionType p_i241925_3_, Supplier<IProfiler> p_i241925_4_, boolean p_i241925_5_, boolean p_i241925_6_, long p_i241925_7_) {
+    public void arclight$constructor(ISpawnWorldInfo worldInfo, RegistryKey<World> dimension, final DimensionType dimensionType, Supplier<IProfiler> profiler, boolean isRemote, boolean isDebug, long seed) {
         throw new RuntimeException();
     }
 
-    public void arclight$constructor(ISpawnWorldInfo p_i241925_1_, RegistryKey<World> p_i241925_2_, final DimensionType p_i241925_3_, Supplier<IProfiler> p_i241925_4_, boolean p_i241925_5_, boolean p_i241925_6_, long p_i241925_7_, org.bukkit.generator.ChunkGenerator gen, org.bukkit.World.Environment env) {
-        arclight$constructor(p_i241925_1_, p_i241925_2_, p_i241925_3_, p_i241925_4_, p_i241925_5_, p_i241925_6_, p_i241925_7_);
+    public void arclight$constructor(ISpawnWorldInfo worldInfo, RegistryKey<World> dimension, final DimensionType dimensionType, Supplier<IProfiler> profiler, boolean isRemote, boolean isDebug, long seed, org.bukkit.generator.ChunkGenerator gen, org.bukkit.World.Environment env) {
+        arclight$constructor(worldInfo, dimension, dimensionType, profiler, isRemote, isDebug, seed);
         this.generator = gen;
         this.environment = env;
         bridge$getWorld();
     }
 
     @Inject(method = "<init>(Lnet/minecraft/world/storage/ISpawnWorldInfo;Lnet/minecraft/util/RegistryKey;Lnet/minecraft/world/DimensionType;Ljava/util/function/Supplier;ZZJ)V", at = @At("RETURN"))
-    private void arclight$init(ISpawnWorldInfo info, RegistryKey<World> p_i241925_2_, DimensionType dimType, Supplier<IProfiler> p_i241925_4_, boolean p_i241925_5_, boolean p_i241925_6_, long p_i241925_7_, CallbackInfo ci) {
+    private void arclight$init(ISpawnWorldInfo info, RegistryKey<World> dimension, DimensionType dimType, Supplier<IProfiler> profiler, boolean isRemote, boolean isDebug, long seed, CallbackInfo ci) {
         this.spigotConfig = new SpigotWorldConfig(((IServerWorldInfo) info).getWorldName());
         ((WorldBorderBridge) this.worldBorder).bridge$setWorld((ServerWorld) (Object) this);
         this.ticksPerAnimalSpawns = this.getServer().getTicksPerAnimalSpawns();

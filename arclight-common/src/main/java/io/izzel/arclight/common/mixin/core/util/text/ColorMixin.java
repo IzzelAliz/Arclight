@@ -21,18 +21,18 @@ public class ColorMixin {
 
     public TextFormatting format;
 
-    public void arclight$constructor(int p_i232573_1_) {
+    public void arclight$constructor(int color) {
         throw new RuntimeException();
     }
 
-    public void arclight$constructor(int p_i232573_1_, String p_i232573_2_, TextFormatting textFormatting) {
-        arclight$constructor(p_i232573_1_);
-        this.name = p_i232573_2_;
+    public void arclight$constructor(int color, String name, TextFormatting textFormatting) {
+        arclight$constructor(color);
+        this.name = name;
         this.format = textFormatting;
     }
 
     @Inject(method = "<init>(ILjava/lang/String;)V", at = @At("RETURN"))
-    private void arclight$withFormat(int p_i232573_1_, String name, CallbackInfo ci) {
+    private void arclight$withFormat(int color, String name, CallbackInfo ci) {
         this.format = TextFormatting.getValueByName(name);
     }
 }

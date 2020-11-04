@@ -20,7 +20,7 @@ public interface IBlockReaderMixin extends IBlockReaderBridge {
     // @formatter:off
     @Shadow BlockState getBlockState(BlockPos pos);
     @Shadow FluidState getFluidState(BlockPos pos);
-    @Shadow @Nullable BlockRayTraceResult rayTraceBlocks(Vector3d p_217296_1_, Vector3d p_217296_2_, BlockPos p_217296_3_, VoxelShape p_217296_4_, BlockState p_217296_5_);
+    @Shadow @Nullable BlockRayTraceResult rayTraceBlocks(Vector3d startVec, Vector3d endVec, BlockPos pos, VoxelShape shape, BlockState state);
     // @formatter:on
 
     default BlockRayTraceResult rayTraceBlock(RayTraceContext context, BlockPos pos) {

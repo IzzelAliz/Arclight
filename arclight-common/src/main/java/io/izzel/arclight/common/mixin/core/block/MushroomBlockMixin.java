@@ -25,7 +25,7 @@ public class MushroomBlockMixin {
     }
 
     @SuppressWarnings("ConstantConditions")
-    @Inject(method = "grow(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Ljava/util/Random;)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/gen/feature/ConfiguredFeature;func_242765_a(Lnet/minecraft/world/ISeedReader;Lnet/minecraft/world/gen/ChunkGenerator;Ljava/util/Random;Lnet/minecraft/util/math/BlockPos;)Z"))
+    @Inject(method = "grow(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Ljava/util/Random;)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/gen/feature/ConfiguredFeature;generate(Lnet/minecraft/world/ISeedReader;Lnet/minecraft/world/gen/ChunkGenerator;Ljava/util/Random;Lnet/minecraft/util/math/BlockPos;)Z"))
     private void arclight$captureTree(ServerWorld world, BlockPos pos, BlockState state, Random rand, CallbackInfoReturnable<Boolean> cir) {
         if ((Object) this == Blocks.BROWN_MUSHROOM) {
             ArclightCaptures.captureTreeType(TreeType.BROWN_MUSHROOM);

@@ -38,7 +38,7 @@ public abstract class SheepEntityMixin extends AnimalEntityMixin {
     }
 
     @Inject(method = "createDyeColorCraftingInventory", locals = LocalCapture.CAPTURE_FAILHARD, at = @At("RETURN"))
-    private static void arclight$resultInv(DyeColor p_213611_0_, DyeColor p_213611_1_, CallbackInfoReturnable<CraftingInventory> cir, CraftingInventory craftingInventory) {
+    private static void arclight$resultInv(DyeColor color, DyeColor color1, CallbackInfoReturnable<CraftingInventory> cir, CraftingInventory craftingInventory) {
         ((CraftingInventoryBridge) craftingInventory).bridge$setResultInventory(new CraftResultInventory());
     }
 }

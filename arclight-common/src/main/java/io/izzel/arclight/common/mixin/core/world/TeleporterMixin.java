@@ -32,9 +32,9 @@ import java.util.Optional;
 public abstract class TeleporterMixin implements TeleporterBridge {
 
     // @formatter:off
-    @Shadow public abstract Optional<TeleportationRepositioner.Result> makePortal(BlockPos p_242956_1_, Direction.Axis p_242956_2_);
+    @Shadow public abstract Optional<TeleportationRepositioner.Result> makePortal(BlockPos pos, Direction.Axis axis);
     @Shadow @Final protected ServerWorld world;
-    @Shadow public abstract Optional<TeleportationRepositioner.Result> getExistingPortal(BlockPos p_242957_1_, boolean p_242957_2_);
+    @Shadow public abstract Optional<TeleportationRepositioner.Result> getExistingPortal(BlockPos pos, boolean isNether);
     // @formatter:on
 
     @ModifyVariable(method = "getExistingPortal", index = 4, at = @At(value = "INVOKE", target = "Lnet/minecraft/village/PointOfInterestManager;ensureLoadedAndValid(Lnet/minecraft/world/IWorldReader;Lnet/minecraft/util/math/BlockPos;I)V"))

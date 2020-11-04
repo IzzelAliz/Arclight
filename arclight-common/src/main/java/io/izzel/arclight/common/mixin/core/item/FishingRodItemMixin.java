@@ -38,8 +38,8 @@ public class FishingRodItemMixin extends Item {
         if (playerIn.fishingBobber != null) {
             if (!worldIn.isRemote) {
                 int i = playerIn.fishingBobber.handleHookRetraction(itemstack);
-                itemstack.damageItem(i, playerIn, (p_220000_1_) -> {
-                    p_220000_1_.sendBreakAnimation(handIn);
+                itemstack.damageItem(i, playerIn, (player) -> {
+                    player.sendBreakAnimation(handIn);
                 });
             }
 

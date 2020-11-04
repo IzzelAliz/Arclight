@@ -27,7 +27,7 @@ public abstract class LootTableMixin implements LootTableBridge {
     @Shadow @Final private static Logger LOGGER;
     @Shadow public abstract List<ItemStack> generate(LootContext context);
     @Shadow protected abstract List<Integer> getEmptySlotsRandomized(IInventory inventory, Random rand);
-    @Shadow protected abstract void shuffleItems(List<ItemStack> stacks, int p_186463_2_, Random rand);
+    @Shadow protected abstract void shuffleItems(List<ItemStack> stacks, int emptySlotsCount, Random rand);
     // @formatter:on
 
     @Eject(method = "fillInventory", at = @At(value = "INVOKE", target = "Lnet/minecraft/loot/LootTable;generate(Lnet/minecraft/loot/LootContext;)Ljava/util/List;"))

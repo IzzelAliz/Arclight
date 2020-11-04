@@ -117,7 +117,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
     @Shadow public abstract ServerWorld func_241755_D_();
     @Shadow @Final public Map<RegistryKey<World>, ServerWorld> worlds;
     @Shadow protected abstract void func_240778_a_(IServerConfiguration p_240778_1_);
-    @Shadow protected IServerConfiguration field_240768_i_;
+    @Shadow protected IServerConfiguration serverConfig;
     @Shadow private static void func_240786_a_(ServerWorld p_240786_0_, IServerWorldInfo p_240786_1_, boolean hasBonusChest, boolean p_240786_3_, boolean p_240786_4_) { }
     @Shadow @Deprecated public abstract void markWorldsDirty();
     // @formatter:on
@@ -155,7 +155,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    public void arclight$loadOptions(Thread p_i232576_1_, DynamicRegistries.Impl p_i232576_2_, SaveFormat.LevelSave p_i232576_3_, IServerConfiguration p_i232576_4_, ResourcePackList p_i232576_5_, Proxy p_i232576_6_, DataFixer p_i232576_7_, DataPackRegistries p_i232576_8_, MinecraftSessionService p_i232576_9_, GameProfileRepository p_i232576_10_, PlayerProfileCache p_i232576_11_, IChunkStatusListenerFactory p_i232576_12_, CallbackInfo ci) {
+    public void arclight$loadOptions(Thread serverThread, DynamicRegistries.Impl p_i232576_2_, SaveFormat.LevelSave anvilConverterForAnvilFile, IServerConfiguration p_i232576_4_, ResourcePackList dataPacks, Proxy serverProxy, DataFixer dataFixer, DataPackRegistries dataRegistries, MinecraftSessionService sessionService, GameProfileRepository profileRepo, PlayerProfileCache profileCache, IChunkStatusListenerFactory chunkStatusListenerFactory, CallbackInfo ci) {
         String[] arguments = ManagementFactory.getRuntimeMXBean().getInputArguments().toArray(new String[0]);
         OptionParser parser = new BukkitOptionParser();
         try {
@@ -388,7 +388,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
                 func_240786_a_(serverWorld, worldInfo, generatorSettings.hasBonusChest(), flag, true);
                 worldInfo.setInitialized(true);
                 if (flag) {
-                    this.func_240778_a_(this.field_240768_i_);
+                    this.func_240778_a_(this.serverConfig);
                 }
             } catch (Throwable throwable) {
                 CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Exception initializing level");

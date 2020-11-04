@@ -36,7 +36,7 @@ public class CarvedPumpkinBlockMixin {
     }
 
     @Inject(method = "trySpawnGolem", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
-    public void arclight$returnIfFail(World world, BlockPos p_196358_2_, CallbackInfo ci) {
+    public void arclight$returnIfFail(World world, BlockPos blockPos, CallbackInfo ci) {
         if (arclight$success) {
             if (arclight$populator != null) {
                 for (BlockPos pos : arclight$populator.getBlocks()) {

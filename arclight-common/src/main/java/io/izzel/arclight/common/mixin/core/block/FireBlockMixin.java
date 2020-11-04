@@ -32,7 +32,7 @@ import java.util.Random;
 public abstract class FireBlockMixin implements FireBlockBridge {
 
     // @formatter:off
-    @Shadow protected abstract BlockState getStateForPlacement(IBlockReader p_196448_1_, BlockPos p_196448_2_);
+    @Shadow protected abstract BlockState getStateForPlacement(IBlockReader blockReader, BlockPos pos);
     @Shadow @Final private Object2IntMap<net.minecraft.block.Block> flammabilities;
     // @formatter:on
 

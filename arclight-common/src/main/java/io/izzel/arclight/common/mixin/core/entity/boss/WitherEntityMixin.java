@@ -34,10 +34,10 @@ public abstract class WitherEntityMixin extends CreatureEntityMixin {
     @Shadow public abstract void setInvulTime(int time);
     @Shadow @Final private int[] nextHeadUpdate;
     @Shadow @Final private int[] idleHeadUpdates;
-    @Shadow protected abstract void launchWitherSkullToCoords(int p_82209_1_, double x, double y, double z, boolean invulnerable);
+    @Shadow protected abstract void launchWitherSkullToCoords(int head, double x, double y, double z, boolean invulnerable);
     @Shadow public abstract int getWatchedTargetId(int head);
     @Shadow public abstract void updateWatchedTargetId(int targetOffset, int newId);
-    @Shadow protected abstract void launchWitherSkullToEntity(int p_82216_1_, LivingEntity p_82216_2_);
+    @Shadow protected abstract void launchWitherSkullToEntity(int head, LivingEntity target);
     @Shadow @Final private static EntityPredicate ENEMY_CONDITION;
     @Shadow private int blockBreakCounter;
     @Shadow @Final public ServerBossInfo bossInfo;

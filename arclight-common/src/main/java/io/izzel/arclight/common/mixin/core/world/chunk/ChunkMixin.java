@@ -151,7 +151,7 @@ public abstract class ChunkMixin implements ChunkBridge {
 
     @Inject(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/world/chunk/ChunkPrimer;)V",
         at = @At("RETURN"))
-    public void arclight$setNeedsDecoration(World worldIn, ChunkPrimer p_i49947_2_, CallbackInfo ci) {
+    public void arclight$setNeedsDecoration(World worldIn, ChunkPrimer primer, CallbackInfo ci) {
         this.needsDecoration = true;
     }
 

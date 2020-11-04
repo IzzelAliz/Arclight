@@ -16,8 +16,8 @@ public abstract class RangedAttributeMixin extends Attribute implements RangedAt
     @Override @Accessor("maximumValue") public abstract void bridge$setMaximumValue(double maximumValue);
     // @formatter:on
 
-    protected RangedAttributeMixin(String p_i231500_1_, double p_i231500_2_) {
-        super(p_i231500_1_, p_i231500_2_);
+    protected RangedAttributeMixin(String attributeName, double defaultValue) {
+        super(attributeName, defaultValue);
     }
 
     @Inject(method = "clampValue", cancellable = true, at = @At("HEAD"))

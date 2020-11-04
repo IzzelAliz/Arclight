@@ -70,7 +70,7 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
                     LOGGER.info("Skipping loading recipe {} as it's serializer returned null", resourcelocation);
                     continue;
                 }
-                map.computeIfAbsent(irecipe.getType(), (p_223391_0_) -> new Object2ObjectLinkedOpenHashMap<>())
+                map.computeIfAbsent(irecipe.getType(), (recipeType) -> new Object2ObjectLinkedOpenHashMap<>())
                     .putAndMoveToFirst(resourcelocation, irecipe);
             } catch (IllegalArgumentException | JsonParseException jsonparseexception) {
                 LOGGER.error("Parsing error loading recipe {}", resourcelocation, jsonparseexception);
@@ -87,8 +87,8 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
      */
     @Overwrite
     public <C extends IInventory, T extends IRecipe<C>> Optional<T> getRecipe(IRecipeType<T> recipeTypeIn, C inventoryIn, World worldIn) {
-        Optional<T> optional = this.getRecipes(recipeTypeIn).values().stream().flatMap((p_215372_3_) -> {
-            return Util.streamOptional(recipeTypeIn.matches(p_215372_3_, worldIn, inventoryIn));
+        Optional<T> optional = this.getRecipes(recipeTypeIn).values().stream().flatMap((recipe) -> {
+            return Util.streamOptional(recipeTypeIn.matches(recipe, worldIn, inventoryIn));
         }).findFirst();
         ((IInventoryBridge) inventoryIn).setCurrentRecipe(optional.orElse(null));
         return optional;

@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class TripWireHookBlockMixin {
 
     @Inject(method = "calculateState", cancellable = true, at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/block/TripWireHookBlock;playSound(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;ZZZZ)V"))
-    public void arclight$blockRedstone(World worldIn, BlockPos pos, BlockState hookState, boolean p_176260_4_, boolean p_176260_5_, int p_176260_6_, BlockState p_176260_7_, CallbackInfo ci) {
+    public void arclight$blockRedstone(World worldIn, BlockPos pos, BlockState hookState, boolean attaching, boolean shouldNotifyNeighbours, int searchRange, BlockState state, CallbackInfo ci) {
         BlockRedstoneEvent event = new BlockRedstoneEvent(CraftBlock.at(worldIn, pos), 15, 0);
         Bukkit.getPluginManager().callEvent(event);
         if (event.getNewCurrent() > 0) {

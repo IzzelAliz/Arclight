@@ -36,7 +36,7 @@ public class FollowOwnerGoalMixin {
     }
 
     @Inject(method = "tryToTeleportToLocation", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/pathfinding/PathNavigator;clearPath()V"))
-    public void arclight$returnIfFail(int p_226328_1_, int p_226328_2_, int p_226328_3_, CallbackInfoReturnable<Boolean> cir) {
+    public void arclight$returnIfFail(int x, int y, int z, CallbackInfoReturnable<Boolean> cir) {
         if (arclight$cancelled) {
             cir.setReturnValue(false);
         }

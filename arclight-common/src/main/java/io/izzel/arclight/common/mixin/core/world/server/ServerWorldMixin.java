@@ -406,13 +406,13 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         }
     }
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;func_241114_a_(J)V"))
+    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setDayTime(J)V"))
     private void arclight$timeSkip(ServerWorld world, long time) {
         TimeSkipEvent event = new TimeSkipEvent(this.bridge$getWorld(), TimeSkipEvent.SkipReason.NIGHT_SKIP, (time - time % 24000L) - this.getDayTime());
         Bukkit.getPluginManager().callEvent(event);
         arclight$timeSkipCancelled = event.isCancelled();
         if (!event.isCancelled()) {
-            world.func_241114_a_(this.getDayTime() + event.getSkipAmount());
+            world.setDayTime(this.getDayTime() + event.getSkipAmount());
             this.allPlayersSleeping = this.players.stream().allMatch(LivingEntity::isSleeping);
         }
     }

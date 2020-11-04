@@ -30,7 +30,7 @@ public abstract class BeaconContainerMixin extends ContainerMixin {
     private PlayerInventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/inventory/IInventory;Lnet/minecraft/util/IIntArray;Lnet/minecraft/util/IWorldPosCallable;)V", at = @At("RETURN"))
-    public void arclight$init(int p_i50100_1_, IInventory inventory, IIntArray p_i50100_3_, IWorldPosCallable p_i50100_4_, CallbackInfo ci) {
+    public void arclight$init(int id, IInventory inventory, IIntArray p_i50100_3_, IWorldPosCallable worldPosCallable, CallbackInfo ci) {
         this.playerInventory = (PlayerInventory) inventory;
     }
 

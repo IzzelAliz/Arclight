@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class EntitySelectorMixin {
 
     @Redirect(method = "checkPermission", at = @At(value = "INVOKE", target = "Lnet/minecraft/command/CommandSource;hasPermissionLevel(I)Z"))
-    private boolean arclight$stringPermission(CommandSource commandSource, int p_197034_1_) {
-        return ((CommandSourceBridge) commandSource).bridge$hasPermission(p_197034_1_, "minecraft.command.selector");
+    private boolean arclight$stringPermission(CommandSource commandSource, int level) {
+        return ((CommandSourceBridge) commandSource).bridge$hasPermission(level, "minecraft.command.selector");
     }
 }

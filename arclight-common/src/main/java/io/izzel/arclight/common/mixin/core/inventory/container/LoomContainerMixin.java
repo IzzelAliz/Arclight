@@ -31,7 +31,7 @@ public abstract class LoomContainerMixin extends ContainerMixin implements PosCo
     private PlayerInventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/util/IWorldPosCallable;)V", at = @At("RETURN"))
-    public void arclight$init(int p_i50074_1_, PlayerInventory playerInventory, IWorldPosCallable p_i50074_3_, CallbackInfo ci) {
+    public void arclight$init(int id, PlayerInventory playerInventory, IWorldPosCallable worldCallable, CallbackInfo ci) {
         this.playerInventory = playerInventory;
     }
 

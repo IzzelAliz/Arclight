@@ -82,10 +82,10 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
      * @reason
      */
     @Overwrite
-    private void smelt(@Nullable IRecipe<?> p_214007_1_) {
-        if (p_214007_1_ != null && this.canSmelt(p_214007_1_)) {
+    private void smelt(@Nullable IRecipe<?> recipe) {
+        if (recipe != null && this.canSmelt(recipe)) {
             ItemStack itemstack = this.items.get(0);
-            ItemStack itemstack1 = p_214007_1_.getRecipeOutput();
+            ItemStack itemstack1 = recipe.getRecipeOutput();
             ItemStack itemstack2 = this.items.get(2);
 
             CraftItemStack source = CraftItemStack.asCraftMirror(itemstack);
@@ -112,7 +112,7 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
             }
 
             if (!this.world.isRemote) {
-                this.setRecipeUsed(p_214007_1_);
+                this.setRecipeUsed(recipe);
             }
 
             if (itemstack.getItem() == Blocks.WET_SPONGE.asItem() && !this.items.get(1).isEmpty() && this.items.get(1).getItem() == Items.BUCKET) {

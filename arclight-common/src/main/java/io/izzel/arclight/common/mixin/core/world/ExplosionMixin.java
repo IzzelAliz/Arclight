@@ -76,7 +76,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
     @Accessor("mode") public abstract Explosion.Mode bridge$getMode();
     @Shadow @Final private boolean causesFire;
     @Shadow @Final private Random random;
-    @Shadow private static void handleExplosionDrops(ObjectArrayList<Pair<ItemStack, BlockPos>> p_229976_0_, ItemStack p_229976_1_, BlockPos p_229976_2_) { }
+    @Shadow private static void handleExplosionDrops(ObjectArrayList<Pair<ItemStack, BlockPos>> dropPositionArray, ItemStack stack, BlockPos pos) { }
     // @formatter:on
 
     @Shadow @Final private ExplosionContext context;
@@ -241,8 +241,8 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                             lootcontext$builder.withParameter(LootParameters.EXPLOSION_RADIUS, 1.0F / yield);
                         }
 
-                        blockstate.getDrops(lootcontext$builder).forEach((p_229977_2_) -> {
-                            handleExplosionDrops(objectarraylist, p_229977_2_, blockpos1);
+                        blockstate.getDrops(lootcontext$builder).forEach((stack) -> {
+                            handleExplosionDrops(objectarraylist, stack, blockpos1);
                         });
                     }
 
@@ -269,7 +269,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
     }
 
     @Inject(method = "handleExplosionDrops", cancellable = true, at = @At("HEAD"))
-    private static void arclight$fix(ObjectArrayList<Pair<ItemStack, BlockPos>> p_229976_0_, ItemStack stack, BlockPos p_229976_2_, CallbackInfo ci) {
+    private static void arclight$fix(ObjectArrayList<Pair<ItemStack, BlockPos>> dropPositionArray, ItemStack stack, BlockPos pos, CallbackInfo ci) {
         if (stack.isEmpty()) ci.cancel();
     }
 

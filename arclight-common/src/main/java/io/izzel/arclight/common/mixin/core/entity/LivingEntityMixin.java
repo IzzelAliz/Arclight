@@ -166,7 +166,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public abstract boolean isPotionApplicable(EffectInstance potioneffectIn);
     @Shadow protected abstract void onNewPotionEffect(EffectInstance id);
     @Shadow @Nullable public abstract EffectInstance removeActivePotionEffect(@Nullable Effect potioneffectin);
-    @Shadow protected abstract void createWitherRose(@Nullable LivingEntity p_226298_1_);
+    @Shadow protected abstract void createWitherRose(@Nullable LivingEntity entitySource);
     @Shadow public abstract double getAttributeValue(Attribute attribute);
     @Shadow public abstract void applyKnockback(float strength, double ratioX, double ratioZ);
     @Shadow protected abstract void damageArmor(DamageSource damageSource, float damage);

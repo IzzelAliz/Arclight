@@ -53,9 +53,9 @@ public abstract class WorkbenchContainerMixin extends ContainerMixin implements 
         if (!bridge$isCheckReachable()) cir.setReturnValue(true);
     }
 
-    private static void a(int p_217066_0_, World p_217066_1_, PlayerEntity p_217066_2_, CraftingInventory p_217066_3_, CraftResultInventory p_217066_4_, Container container) {
+    private static void a(int id, World world, PlayerEntity player, CraftingInventory inventory, CraftResultInventory inventoryResult, Container container) {
         ArclightCaptures.captureWorkbenchContainer(container);
-        updateCraftingResult(p_217066_0_, p_217066_1_, p_217066_2_, p_217066_3_, p_217066_4_);
+        updateCraftingResult(id, world, player, inventory, inventoryResult);
     }
 
     @Inject(method = "onCraftMatrixChanged", at = @At("HEAD"))

@@ -26,7 +26,7 @@ public abstract class HorseInventoryContainerMixin extends ContainerMixin {
     PlayerInventory playerInventory;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    public void arclight$init(int p_i50077_1_, PlayerInventory playerInventory, IInventory p_i50077_3_, AbstractHorseEntity p_i50077_4_, CallbackInfo ci) {
+    public void arclight$init(int id, PlayerInventory playerInventory, IInventory horseInventory, AbstractHorseEntity horse, CallbackInfo ci) {
         this.playerInventory = playerInventory;
     }
 

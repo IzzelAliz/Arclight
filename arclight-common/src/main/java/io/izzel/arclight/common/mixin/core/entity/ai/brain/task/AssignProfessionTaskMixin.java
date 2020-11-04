@@ -32,15 +32,13 @@ public class AssignProfessionTaskMixin {
         worldIn.setEntityState(entityIn, (byte) 14);
         if (entityIn.getVillagerData().getProfession() == VillagerProfession.NONE) {
             MinecraftServer minecraftserver = worldIn.getServer();
-            Optional.ofNullable(minecraftserver.getWorld(globalpos.getDimension())).flatMap((p_241376_1_) -> {
-                return p_241376_1_.getPointOfInterestManager().getType(globalpos.getPos());
-            }).flatMap((p_220390_0_) -> {
-                return Registry.VILLAGER_PROFESSION.stream().filter((p_220389_1_) -> {
-                    return p_220389_1_.getPointOfInterest() == p_220390_0_;
+            Optional.ofNullable(minecraftserver.getWorld(globalpos.getDimension())).flatMap((world) -> {
+                return world.getPointOfInterestManager().getType(globalpos.getPos());
+            }).flatMap((poiType) -> {
+                return Registry.VILLAGER_PROFESSION.stream().filter((profession) -> {
+                    return profession.getPointOfInterest() == poiType;
                 }).findFirst();
-            }).ifPresent((p_220388_2_) -> {
-                VillagerData villagerData = entityIn.getVillagerData().withProfession(p_220388_2_);
-                VillagerProfession profession = villagerData.getProfession();
+            }).ifPresent((profession) -> {
                 VillagerCareerChangeEvent event = CraftEventFactory.callVillagerCareerChangeEvent(entityIn, CraftVillager.nmsToBukkitProfession(profession), VillagerCareerChangeEvent.ChangeReason.EMPLOYED);
                 if (!event.isCancelled()) {
                     VillagerData newData = entityIn.getVillagerData().withProfession(CraftVillager.bukkitToNmsProfession(event.getProfession()));

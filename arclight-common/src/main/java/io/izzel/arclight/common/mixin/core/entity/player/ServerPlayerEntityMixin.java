@@ -151,7 +151,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
     @Shadow public int currentWindowId;
     @Shadow public abstract void getNextWindowId();
     @Shadow(remap = false) private String language;
-    @Shadow public abstract void teleport(ServerWorld p_200619_1_, double x, double y, double z, float yaw, float pitch);
+    @Shadow public abstract void teleport(ServerWorld newWorld, double x, double y, double z, float yaw, float pitch);
     @Shadow public abstract void giveExperiencePoints(int p_195068_1_);
     @Shadow private RegistryKey<World> field_241137_cq_;
     @Shadow @Nullable public abstract BlockPos func_241140_K_();
@@ -480,7 +480,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
             PlayerList playerlist = this.server.getPlayerList();
             /*
             IWorldInfo iworldinfo = server.getWorldInfo();
-            this.connection.sendPacket(new SRespawnPacket(server.func_230315_m_(), server.getDimensionKey(), BiomeManager.func_235200_a_(server.getSeed()), this.interactionManager.getGameType(), this.interactionManager.func_241815_c_(), server.isDebug(), server.func_241109_A_(), true));
+            this.connection.sendPacket(new SRespawnPacket(server.getDimensionType(), server.getDimensionKey(), BiomeManager.getHashedSeed(server.getSeed()), this.interactionManager.getGameType(), this.interactionManager.func_241815_c_(), server.isDebug(), server.func_241109_A_(), true));
             this.connection.sendPacket(new SServerDifficultyPacket(iworldinfo.getDifficulty(), iworldinfo.isDifficultyLocked()));
             PlayerList playerlist = this.server.getPlayerList();
             playerlist.updatePermissionLevel((ServerPlayerEntity) (Object) this);
