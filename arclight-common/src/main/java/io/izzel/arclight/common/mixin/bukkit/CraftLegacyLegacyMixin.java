@@ -43,7 +43,7 @@ public class CraftLegacyLegacyMixin {
         } else {
             try {
                 Material material = Material.getMaterial(name);
-                if (((MaterialBridge) (Object) material).bridge$getType() == MaterialPropertySpec.MaterialType.FORGE) {
+                if (material != null && ((MaterialBridge) (Object) material).bridge$getType() == MaterialPropertySpec.MaterialType.FORGE) {
                     return material;
                 } else {
                     return Material.getMaterial("LEGACY_" + name);
@@ -65,7 +65,7 @@ public class CraftLegacyLegacyMixin {
         } else {
             try {
                 Material material = Material.matchMaterial(name);
-                if (((MaterialBridge) (Object) material).bridge$getType() == MaterialPropertySpec.MaterialType.FORGE) {
+                if (material != null && ((MaterialBridge) (Object) material).bridge$getType() == MaterialPropertySpec.MaterialType.FORGE) {
                     return material;
                 } else {
                     return Material.matchMaterial("LEGACY_" + name);
