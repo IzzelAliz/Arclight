@@ -39,7 +39,7 @@ public class ArclightServer {
                 ArclightMod.LOGGER.error("registry.error", t);
             }
         } else {
-            ((CraftServerBridge) (Object) server).bridge$setPlayerList(playerList);
+            ((CraftServerBridge) (Object) server).bridge$updatePlayerList(playerList);
         }
         return server;
     }

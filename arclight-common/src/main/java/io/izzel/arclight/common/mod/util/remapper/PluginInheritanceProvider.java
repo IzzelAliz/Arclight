@@ -6,6 +6,7 @@ import net.md_5.specialsource.repo.ClassRepo;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,7 +24,7 @@ public class PluginInheritanceProvider implements InheritanceProvider {
     @Override
     public Collection<String> getParents(String className) {
         ClassNode node = classRepo.findClass(className);
-        if (node == null) return null;
+        if (node == null) return Collections.emptyList();
 
         Collection<String> parents = new HashSet<>(node.interfaces);
         if (node.superName != null) {

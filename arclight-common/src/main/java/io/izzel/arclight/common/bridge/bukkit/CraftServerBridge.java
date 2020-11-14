@@ -5,7 +5,7 @@ import net.minecraft.world.server.ServerWorld;
 
 public interface CraftServerBridge {
 
-    void bridge$setPlayerList(PlayerList playerList);
+    void bridge$updatePlayerList(PlayerList playerList);
 
     void bridge$removeWorld(ServerWorld world);
 }

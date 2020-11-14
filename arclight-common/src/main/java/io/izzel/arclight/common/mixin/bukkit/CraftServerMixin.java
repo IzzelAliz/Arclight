@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
+import com.google.common.collect.Lists;
 import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
+import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.bridge.world.server.ServerChunkProviderBridge;
 import jline.console.ConsoleReader;
@@ -18,6 +20,7 @@ import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.command.BukkitCommandWrapper;
 import org.bukkit.craftbukkit.v.command.CraftCommandMap;
+import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.help.SimpleHelpMap;
 import org.bukkit.craftbukkit.v.util.permissions.CraftDefaultPermissions;
 import org.bukkit.event.world.WorldUnloadEvent;
@@ -36,6 +39,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -58,6 +63,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
     @Shadow public abstract World getWorld(UUID uid);
     @Shadow @Final private Map<String, World> worlds;
     @Shadow @Final private Logger logger;
+    @Mutable @Shadow @Final private List<CraftPlayer> playerView;
     // @formatter:on
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -132,8 +138,10 @@ public abstract class CraftServerMixin implements CraftServerBridge {
     }
 
     @Override
-    public void bridge$setPlayerList(PlayerList playerList) {
+    public void bridge$updatePlayerList(PlayerList playerList) {
         this.playerList = (DedicatedPlayerList) playerList;
+        this.playerView = Collections.unmodifiableList(Lists.transform(playerList.players,
+            player -> ((ServerPlayerEntityBridge) player).bridge$getBukkitEntity()));
     }
 
     /**
