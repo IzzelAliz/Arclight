@@ -2,7 +2,6 @@ package io.izzel.arclight.common.mixin.core.world.server;
 
 import com.google.common.collect.Lists;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.world.ExplosionBridge;
@@ -191,7 +190,7 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
             cause = arclight$cause;
             arclight$cause = null;
         }
-        LightningStrikeEvent lightning = new LightningStrikeEvent(this.bridge$getWorld(), (LightningStrike) ((LivingEntityBridge) entity).bridge$getBukkitEntity(), cause);
+        LightningStrikeEvent lightning = new LightningStrikeEvent(this.bridge$getWorld(), (LightningStrike) ((EntityBridge) entity).bridge$getBukkitEntity(), cause);
         Bukkit.getPluginManager().callEvent(lightning);
         if (lightning.isCancelled()) {
             return false;
