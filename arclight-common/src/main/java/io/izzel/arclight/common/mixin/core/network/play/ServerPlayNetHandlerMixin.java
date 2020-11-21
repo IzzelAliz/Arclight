@@ -29,14 +29,12 @@ import net.minecraft.entity.player.ChatVisibility;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.entity.projectile.AbstractArrowEntity;
-import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.MerchantContainer;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.item.WritableBookItem;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
@@ -143,6 +141,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -409,47 +408,57 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         CraftEventFactory.callTradeSelectEvent(this.player, i, (MerchantContainer) container);
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    public void processEditBook(CEditBookPacket packetplayinbedit) {
-        PacketThreadUtil.checkThreadAndEnqueue(packetplayinbedit, (ServerPlayNetHandler) (Object) this, this.player.getServerWorld());
-        if (lastBookTick == 0) lastBookTick = ArclightConstants.currentTick;
+    @Inject(method = "processEditBook", cancellable = true, at = @At("HEAD"))
+    private void arclight$editBookSpam(CEditBookPacket packetIn, CallbackInfo ci) {
         if (this.lastBookTick + 20 > ArclightConstants.currentTick) {
             this.disconnect("Book edited too quickly!");
             return;
         }
         this.lastBookTick = ArclightConstants.currentTick;
-        EquipmentSlotType enumitemslot = (packetplayinbedit.getHand() == Hand.MAIN_HAND) ? EquipmentSlotType.MAINHAND : EquipmentSlotType.OFFHAND;
-        ItemStack itemstack = packetplayinbedit.getStack();
-        if (!itemstack.isEmpty() && WritableBookItem.isNBTValid(itemstack.getTag())) {
-            ItemStack itemstack2 = this.player.getHeldItem(packetplayinbedit.getHand());
-            if (itemstack.getItem() == Items.WRITABLE_BOOK && itemstack2.getItem() == Items.WRITABLE_BOOK) {
-                if (packetplayinbedit.shouldUpdateAll()) {
-                    ItemStack itemstack3 = new ItemStack(Items.WRITTEN_BOOK);
-                    CompoundNBT nbttagcompound = itemstack2.getTag();
-                    if (nbttagcompound != null) {
-                        itemstack3.setTag(nbttagcompound.copy());
-                    }
-                    itemstack3.setTagInfo("author", StringNBT.valueOf(this.player.getName().getString()));
-                    itemstack3.setTagInfo("title", StringNBT.valueOf(itemstack.getTag().getString("title")));
-                    ListNBT nbttaglist = itemstack.getTag().getList("pages", 8);
-                    for (int i = 0; i < nbttaglist.size(); ++i) {
-                        String s = nbttaglist.getString(i);
-                        StringTextComponent chatcomponenttext = new StringTextComponent(s);
-                        s = ITextComponent.Serializer.toJson(chatcomponenttext);
-                        nbttaglist.set(i, StringNBT.valueOf(s));
-                    }
-                    itemstack3.setTagInfo("pages", nbttaglist);
-                    this.player.setHeldItem(packetplayinbedit.getHand(), CraftEventFactory.handleEditBookEvent(this.player, enumitemslot, itemstack2, itemstack3));
-                } else {
-                    ItemStack old = itemstack2.copy();
-                    itemstack2.setTagInfo("pages", itemstack.getTag().getList("pages", 8));
-                    CraftEventFactory.handleEditBookEvent(this.player, enumitemslot, old, itemstack2);
-                }
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    private void func_244536_a(List<String> p_244536_1_, int p_244536_2_) {
+        ItemStack itemstack = this.player.inventory.getStackInSlot(p_244536_2_);
+        if (itemstack.getItem() == Items.WRITABLE_BOOK) {
+            ListNBT listnbt = new ListNBT();
+            p_244536_1_.stream().map(StringNBT::valueOf).forEach(listnbt::add);
+            ItemStack old = itemstack.copy();
+            itemstack.setTagInfo("pages", listnbt);
+            CraftEventFactory.handleEditBookEvent(player, p_244536_2_, old, itemstack);
+        }
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    private void func_244534_a(String p_244534_1_, List<String> p_244534_2_, int p_244534_3_) {
+        ItemStack itemstack = this.player.inventory.getStackInSlot(p_244534_3_);
+        if (itemstack.getItem() == Items.WRITABLE_BOOK) {
+            ItemStack itemstack1 = new ItemStack(Items.WRITTEN_BOOK);
+            CompoundNBT compoundnbt = itemstack.getTag();
+            if (compoundnbt != null) {
+                itemstack1.setTag(compoundnbt.copy());
             }
+
+            itemstack1.setTagInfo("author", StringNBT.valueOf(this.player.getName().getString()));
+            itemstack1.setTagInfo("title", StringNBT.valueOf(p_244534_1_));
+            ListNBT listnbt = new ListNBT();
+
+            for (String s : p_244534_2_) {
+                ITextComponent itextcomponent = new StringTextComponent(s);
+                String s1 = ITextComponent.Serializer.toJson(itextcomponent);
+                listnbt.add(StringNBT.valueOf(s1));
+            }
+
+            itemstack1.setTagInfo("pages", listnbt);
+            this.player.inventory.setInventorySlotContents(p_244534_3_, CraftEventFactory.handleEditBookEvent(player, p_244534_3_, itemstack, itemstack1));
         }
     }
 
@@ -949,11 +958,11 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         if (!async && s.startsWith("/")) {
             this.handleSlashCommand(s);
         } else if (this.player.getChatVisibility() != ChatVisibility.SYSTEM) {
-            Player player = this.getPlayer();
-            AsyncPlayerChatEvent event = new AsyncPlayerChatEvent(async, player, s, new LazyPlayerSet(this.minecraftServer));
+            Player thisPlayer = this.getPlayer();
+            AsyncPlayerChatEvent event = new AsyncPlayerChatEvent(async, thisPlayer, s, new LazyPlayerSet(this.minecraftServer));
             this.server.getPluginManager().callEvent(event);
             if (PlayerChatEvent.getHandlerList().getRegisteredListeners().length != 0) {
-                PlayerChatEvent queueEvent = new PlayerChatEvent(player, event.getMessage(), event.getFormat(), event.getRecipients());
+                PlayerChatEvent queueEvent = new PlayerChatEvent(thisPlayer, event.getMessage(), event.getFormat(), event.getRecipients());
                 queueEvent.setCancelled(event.isCancelled());
                 class SyncChat extends Waitable {
 
@@ -969,11 +978,11 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                         Bukkit.getConsoleSender().sendMessage(CraftChatMessage.fromComponent(component));
                         if (((LazyPlayerSet) queueEvent.getRecipients()).isLazy()) {
                             for (ServerPlayerEntity player : minecraftServer.getPlayerList().players) {
-                                ((ServerPlayerEntityBridge) player).bridge$sendMessage(component);
+                                ((ServerPlayerEntityBridge) player).bridge$sendMessage(component, thisPlayer.getUniqueId());
                             }
                         } else {
                             for (Player player2 : queueEvent.getRecipients()) {
-                                ((ServerPlayerEntityBridge) ((CraftPlayer) player2).getHandle()).bridge$sendMessage(component);
+                                ((ServerPlayerEntityBridge) ((CraftPlayer) player2).getHandle()).bridge$sendMessage(component, thisPlayer.getUniqueId());
                             }
                         }
                         return null;
@@ -1010,11 +1019,11 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                     Bukkit.getConsoleSender().sendMessage(CraftChatMessage.fromComponent(component));
                     if (((LazyPlayerSet) event.getRecipients()).isLazy()) {
                         for (ServerPlayerEntity recipient : minecraftServer.getPlayerList().players) {
-                            ((ServerPlayerEntityBridge) recipient).bridge$sendMessage(component);
+                            ((ServerPlayerEntityBridge) recipient).bridge$sendMessage(component, thisPlayer.getUniqueId());
                         }
                     } else {
                         for (Player recipient2 : event.getRecipients()) {
-                            ((ServerPlayerEntityBridge) ((CraftPlayer) recipient2).getHandle()).bridge$sendMessage(component);
+                            ((ServerPlayerEntityBridge) ((CraftPlayer) recipient2).getHandle()).bridge$sendMessage(component, thisPlayer.getUniqueId());
                         }
                     }
                     return null;
@@ -1597,8 +1606,8 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         }
     }
 
-    @Inject(method = "processUpdateSign", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/ServerPlayerEntity;markPlayerActive()V"))
-    private void arclight$noSignEdit(CUpdateSignPacket packetIn, CallbackInfo ci) {
+    @Inject(method = "func_244542_a", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/ServerPlayerEntity;markPlayerActive()V"))
+    private void arclight$noSignEdit(CUpdateSignPacket p_244542_1_, List<String> p_244542_2_, CallbackInfo ci) {
         if (((ServerPlayerEntityBridge) player).bridge$isMovementBlocked()) {
             ci.cancel();
         }
@@ -1606,11 +1615,11 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
 
     private ITextComponent[] arclight$lines;
 
-    @Inject(method = "processUpdateSign", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/network/play/client/CUpdateSignPacket;getLines()[Ljava/lang/String;"))
-    public void arclight$onSignChangePre(CUpdateSignPacket packetIn, CallbackInfo ci) {
-        String[] lines = packetIn.getLines();
+    @Inject(method = "func_244542_a", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/tileentity/SignTileEntity;getIsEditable()Z"))
+    public void arclight$onSignChangePre(CUpdateSignPacket p_244542_1_, List<String> p_244542_2_, CallbackInfo ci) {
+        String[] lines = p_244542_2_.toArray(new String[0]);
         Player player = ((CraftServer) Bukkit.getServer()).getPlayer(this.player);
-        CraftBlock block = CraftBlock.at(this.player.world, packetIn.getPosition());
+        CraftBlock block = CraftBlock.at(this.player.world, p_244542_1_.getPosition());
         String[] bukkitLines = new String[lines.length];
         for (int i = 0; i < lines.length; i++) {
             bukkitLines[i] = TextFormatting.getTextWithoutFormattingCodes(
@@ -1630,7 +1639,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         }
     }
 
-    @Redirect(method = "processUpdateSign", at = @At(value = "INVOKE", target = "Lnet/minecraft/tileentity/SignTileEntity;setText(ILnet/minecraft/util/text/ITextComponent;)V"))
+    @Redirect(method = "func_244542_a", at = @At(value = "INVOKE", target = "Lnet/minecraft/tileentity/SignTileEntity;setText(ILnet/minecraft/util/text/ITextComponent;)V"))
     public void arclight$onSignChangePost(SignTileEntity signTileEntity, int line, ITextComponent signText) {
         if (arclight$lines != null) {
             signTileEntity.setText(line, arclight$lines[line]);

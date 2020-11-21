@@ -9,6 +9,7 @@ import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public interface ServerPlayerEntityBridge extends PlayerEntityBridge {
 
@@ -25,9 +26,9 @@ public interface ServerPlayerEntityBridge extends PlayerEntityBridge {
 
     void bridge$setCompassTarget(Location location);
 
-    void bridge$sendMessage(ITextComponent[] ichatbasecomponent);
+    void bridge$sendMessage(ITextComponent[] ichatbasecomponent, UUID uuid);
 
-    void bridge$sendMessage(ITextComponent component);
+    void bridge$sendMessage(ITextComponent component, UUID uuid);
 
     boolean bridge$isJoining();
 

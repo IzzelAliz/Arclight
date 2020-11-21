@@ -20,14 +20,14 @@ apply plugin: 'idea'
 apply plugin: 'io.izzel.arclight'
 
 ext {
-    minecraftVersion = '1.16.3'
-    forgeVersion = '34.1.25'
+    minecraftVersion = '1.16.4'
+    forgeVersion = '35.1.0'
 }
 
 arclight {
     mcVersion = minecraftVersion
     forgeVersion = project.ext.forgeVersion
-    bukkitVersion = 'v1_16_R2'
+    bukkitVersion = 'v1_16_R3'
     wipeVersion = true
     reobfVersion = false
     accessTransformer = project.file('bukkit.at')

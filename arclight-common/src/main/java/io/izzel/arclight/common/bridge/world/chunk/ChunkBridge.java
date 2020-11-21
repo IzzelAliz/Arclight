@@ -3,6 +3,7 @@ package io.izzel.arclight.common.bridge.world.chunk;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import org.bukkit.Chunk;
+import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataContainer;
 
 public interface ChunkBridge {
 
@@ -21,4 +22,6 @@ public interface ChunkBridge {
     void bridge$loadCallback();
 
     void bridge$unloadCallback();
+
+    CraftPersistentDataContainer bridge$getPersistentContainer();
 }

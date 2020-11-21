@@ -80,7 +80,7 @@ public abstract class TeleporterMixin implements TeleporterBridge {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    @Inject(method = "makePortal", at = @At("RETURN"))
+    @Inject(method = "makePortal", cancellable = true, at = @At("RETURN"))
     private void arclight$portalCreate(BlockPos pos, Direction.Axis axis, CallbackInfoReturnable<Optional<TeleportationRepositioner.Result>> cir) {
         CraftWorld craftWorld = ((WorldBridge) this.world).bridge$getWorld();
         List<org.bukkit.block.BlockState> blockStates;
@@ -92,7 +92,11 @@ public abstract class TeleporterMixin implements TeleporterBridge {
         PortalCreateEvent event = new PortalCreateEvent(blockStates, craftWorld, (this.arclight$entity == null) ? null : ((EntityBridge) this.arclight$entity).bridge$getBukkitEntity(), PortalCreateEvent.CreateReason.NETHER_PAIR);
 
         Bukkit.getPluginManager().callEvent(event);
-        if (!event.isCancelled() && this.arclight$populator != null) {
+        if (event.isCancelled()) {
+            cir.setReturnValue(Optional.empty());
+            return;
+        }
+        if (this.arclight$populator != null) {
             this.arclight$populator.updateList();
         }
     }

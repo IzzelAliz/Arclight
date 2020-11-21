@@ -183,7 +183,9 @@ public abstract class PlayerListMixin implements PlayerListBridge {
 
     @Inject(method = "playerLoggedOut", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/management/PlayerList;writePlayerData(Lnet/minecraft/entity/player/ServerPlayerEntity;)V"))
     private void arclight$playerQuitPre(ServerPlayerEntity playerIn, CallbackInfo ci) {
-        ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().closeInventory();
+        if (playerIn.container != playerIn.openContainer) {
+            ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().closeInventory();
+        }
         PlayerQuitEvent playerQuitEvent = new PlayerQuitEvent(cserver.getPlayer(playerIn), "\u00A7e" + playerIn.getScoreboardName() + " left the game");
         cserver.getPluginManager().callEvent(playerQuitEvent);
         ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().disconnect(playerQuitEvent.getQuitMessage());

@@ -720,20 +720,20 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
         this.lastExperience = -1;
     }
 
-    public void sendMessage(ITextComponent[] components) {
+    public void sendMessage(UUID uuid, ITextComponent[] components) {
         for (final ITextComponent component : components) {
-            this.sendMessage(component, Util.DUMMY_UUID);
+            this.sendMessage(component, uuid == null ? Util.DUMMY_UUID : uuid);
         }
     }
 
     @Override
-    public void bridge$sendMessage(ITextComponent[] components) {
-        sendMessage(components);
+    public void bridge$sendMessage(ITextComponent[] components, UUID uuid) {
+        sendMessage(uuid, components);
     }
 
     @Override
-    public void bridge$sendMessage(ITextComponent component) {
-        this.sendMessage(component, Util.DUMMY_UUID);
+    public void bridge$sendMessage(ITextComponent component, UUID uuid) {
+        this.sendMessage(component, uuid == null ? Util.DUMMY_UUID : uuid);
     }
 
     @Inject(method = "setGameType", cancellable = true, at = @At("HEAD"))

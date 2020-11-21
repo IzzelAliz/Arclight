@@ -17,6 +17,7 @@ import net.minecraft.network.login.server.SEnableCompressionPacket;
 import net.minecraft.network.login.server.SEncryptionRequestPacket;
 import net.minecraft.network.login.server.SLoginSuccessPacket;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.CryptException;
 import net.minecraft.util.CryptManager;
 import net.minecraft.util.DefaultUncaughtExceptionHandler;
 import net.minecraft.util.text.ITextComponent;
@@ -36,6 +37,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import javax.annotation.Nullable;
+import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -131,7 +133,7 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
         this.loginGameProfile = packetIn.getProfile();
         if (this.server.isServerInOnlineMode() && !this.networkManager.isLocalChannel()) {
             this.currentLoginState = ServerLoginNetHandler.State.KEY;
-            this.networkManager.sendPacket(new SEncryptionRequestPacket("", this.server.getKeyPair().getPublic(), this.verifyToken));
+            this.networkManager.sendPacket(new SEncryptionRequestPacket("", this.server.getKeyPair().getPublic().getEncoded(), this.verifyToken));
         } else {
             class Handler extends Thread {
 
@@ -180,60 +182,69 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
     public void processEncryptionResponse(CEncryptionResponsePacket packetIn) {
         Validate.validState(this.currentLoginState == ServerLoginNetHandler.State.KEY, "Unexpected key packet");
         PrivateKey privatekey = this.server.getKeyPair().getPrivate();
-        if (!Arrays.equals(this.verifyToken, packetIn.getVerifyToken(privatekey))) {
-            throw new IllegalStateException("Invalid nonce!");
-        } else {
-            this.secretKey = packetIn.getSecretKey(privatekey);
-            this.currentLoginState = ServerLoginNetHandler.State.AUTHENTICATING;
-            this.networkManager.enableEncryption(this.secretKey);
-            class Handler extends Thread {
 
-                Handler() {
-                    super(SidedThreadGroups.SERVER, "User Authenticator #" + AUTHENTICATOR_THREAD_ID.incrementAndGet());
-                }
-
-                public void run() {
-                    GameProfile gameprofile = loginGameProfile;
-
-                    try {
-                        String s = (new BigInteger(CryptManager.getServerIdHash("", server.getKeyPair().getPublic(), secretKey))).toString(16);
-                        loginGameProfile = server.getMinecraftSessionService().hasJoinedServer(new GameProfile(null, gameprofile.getName()), s, this.getAddress());
-                        if (loginGameProfile != null) {
-                            if (!networkManager.isChannelOpen()) {
-                                return;
-                            }
-                            arclight$preLogin();
-                        } else if (server.isSinglePlayer()) {
-                            LOGGER.warn("Failed to verify username but will let them in anyway!");
-                            loginGameProfile = getOfflineProfile(gameprofile);
-                            currentLoginState = ServerLoginNetHandler.State.NEGOTIATING;
-                        } else {
-                            disconnect(new TranslationTextComponent("multiplayer.disconnect.unverified_username"));
-                            LOGGER.error("Username '{}' tried to join with an invalid session", gameprofile.getName());
-                        }
-                    } catch (Exception var3) {
-                        if (server.isSinglePlayer()) {
-                            LOGGER.warn("Authentication servers are down but will let them in anyway!");
-                            loginGameProfile = getOfflineProfile(gameprofile);
-                            currentLoginState = ServerLoginNetHandler.State.NEGOTIATING;
-                        } else {
-                            disconnect(new TranslationTextComponent("multiplayer.disconnect.authservers_down"));
-                            LOGGER.error("Couldn't verify username because servers are unavailable");
-                        }
-                    }
-
-                }
-
-                @Nullable
-                private InetAddress getAddress() {
-                    SocketAddress socketaddress = networkManager.getRemoteAddress();
-                    return server.getPreventProxyConnections() && socketaddress instanceof InetSocketAddress ? ((InetSocketAddress) socketaddress).getAddress() : null;
-                }
+        final String s;
+        try {
+            if (!Arrays.equals(this.verifyToken, packetIn.getVerifyToken(privatekey))) {
+                throw new IllegalStateException("Protocol error");
             }
-            Thread thread = new Handler();
-            thread.setUncaughtExceptionHandler(new DefaultUncaughtExceptionHandler(LOGGER));
-            thread.start();
+
+            this.secretKey = packetIn.getSecretKey(privatekey);
+            Cipher cipher = CryptManager.createNetCipherInstance(2, this.secretKey);
+            Cipher cipher1 = CryptManager.createNetCipherInstance(1, this.secretKey);
+            s = (new BigInteger(CryptManager.getServerIdHash("", this.server.getKeyPair().getPublic(), this.secretKey))).toString(16);
+            this.currentLoginState = ServerLoginNetHandler.State.AUTHENTICATING;
+            this.networkManager.func_244777_a(cipher, cipher1);
+        } catch (CryptException cryptexception) {
+            throw new IllegalStateException("Protocol error", cryptexception);
         }
+
+        class Handler extends Thread {
+
+            Handler() {
+                super(SidedThreadGroups.SERVER, "User Authenticator #" + AUTHENTICATOR_THREAD_ID.incrementAndGet());
+            }
+
+            public void run() {
+                GameProfile gameprofile = loginGameProfile;
+
+                try {
+                    loginGameProfile = server.getMinecraftSessionService().hasJoinedServer(new GameProfile(null, gameprofile.getName()), s, this.getAddress());
+                    if (loginGameProfile != null) {
+                        if (!networkManager.isChannelOpen()) {
+                            return;
+                        }
+                        arclight$preLogin();
+                    } else if (server.isSinglePlayer()) {
+                        LOGGER.warn("Failed to verify username but will let them in anyway!");
+                        loginGameProfile = getOfflineProfile(gameprofile);
+                        currentLoginState = ServerLoginNetHandler.State.NEGOTIATING;
+                    } else {
+                        disconnect(new TranslationTextComponent("multiplayer.disconnect.unverified_username"));
+                        LOGGER.error("Username '{}' tried to join with an invalid session", gameprofile.getName());
+                    }
+                } catch (Exception var3) {
+                    if (server.isSinglePlayer()) {
+                        LOGGER.warn("Authentication servers are down but will let them in anyway!");
+                        loginGameProfile = getOfflineProfile(gameprofile);
+                        currentLoginState = ServerLoginNetHandler.State.NEGOTIATING;
+                    } else {
+                        disconnect(new TranslationTextComponent("multiplayer.disconnect.authservers_down"));
+                        LOGGER.error("Couldn't verify username because servers are unavailable");
+                    }
+                }
+
+            }
+
+            @Nullable
+            private InetAddress getAddress() {
+                SocketAddress socketaddress = networkManager.getRemoteAddress();
+                return server.getPreventProxyConnections() && socketaddress instanceof InetSocketAddress ? ((InetSocketAddress) socketaddress).getAddress() : null;
+            }
+        }
+        Thread thread = new Handler();
+        thread.setUncaughtExceptionHandler(new DefaultUncaughtExceptionHandler(LOGGER));
+        thread.start();
     }
 
     private void arclight$preLogin() throws Exception {
