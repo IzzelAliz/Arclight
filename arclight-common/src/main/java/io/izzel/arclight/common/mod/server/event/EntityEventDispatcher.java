@@ -23,9 +23,7 @@ public class EntityEventDispatcher {
     @SubscribeEvent(receiveCanceled = true, priority = EventPriority.LOWEST)
     public void onLivingDeath(LivingDropsEvent event) {
         if (event.getEntityLiving() instanceof ServerPlayerEntity) {
-            // recapture for ServerPlayerEntityMixin#onDeath
-            event.getEntityLiving().captureDrops(event.getDrops());
-            // handled at ServerPlayerEntityMixin
+            // handled at ServerPlayerEntityMixin#onDeath
             // Cancelled at io.izzel.arclight.common.mixin.core.entity.LivingEntityMixin#arclight$cancelEvent
             // event.setCanceled(true);
             return;
