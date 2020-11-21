@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mod.util;
 
 import com.mojang.serialization.Lifecycle;
 import io.izzel.arclight.common.bridge.world.storage.WorldInfoBridge;
-import io.izzel.arclight.common.mixin.core.world.storage.DerivedWorldInfoAccessor;
+import io.izzel.arclight.common.bridge.world.storage.DerivedWorldInfoBridge;
 import net.minecraft.command.TimerCallbackManager;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.server.MinecraftServer;
@@ -247,7 +247,7 @@ public class DelegateWorldInfo extends ServerWorldInfo {
         if (worldInfo instanceof ServerWorldInfo) {
             return ((WorldInfoBridge) worldInfo).bridge$getWorldSettings();
         } else {
-            return worldSettings(((DerivedWorldInfoAccessor) worldInfo).bridge$getDelegate());
+            return worldSettings(((DerivedWorldInfoBridge) worldInfo).bridge$getDelegate());
         }
     }
 
@@ -255,7 +255,7 @@ public class DelegateWorldInfo extends ServerWorldInfo {
         if (worldInfo instanceof ServerWorldInfo) {
             return ((ServerWorldInfo) worldInfo).getDimensionGeneratorSettings();
         } else {
-            return generatorSettings(((DerivedWorldInfoAccessor) worldInfo).bridge$getDelegate());
+            return generatorSettings(((DerivedWorldInfoBridge) worldInfo).bridge$getDelegate());
         }
     }
 
@@ -263,7 +263,7 @@ public class DelegateWorldInfo extends ServerWorldInfo {
         if (worldInfo instanceof ServerWorldInfo) {
             return ((WorldInfoBridge) worldInfo).bridge$getLifecycle();
         } else {
-            return lifecycle(((DerivedWorldInfoAccessor) worldInfo).bridge$getDelegate());
+            return lifecycle(((DerivedWorldInfoBridge) worldInfo).bridge$getDelegate());
         }
     }
 }

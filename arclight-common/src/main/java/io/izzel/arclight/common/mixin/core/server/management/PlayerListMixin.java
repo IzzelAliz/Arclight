@@ -284,7 +284,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                         Vector3d vec3d2 = Vector3d.copyCenteredHorizontally(pos).subtract(vec3d).normalize();
                         f2 = (float) MathHelper.wrapDegrees(MathHelper.atan2(vec3d2.z, vec3d2.x) * 57.2957763671875 - 90.0);
                     }
-                    playerIn.setLocationAndAngles(vec3d.x, vec3d.y, vec3d.z, f2, 0.0f);
+                    // playerIn.setLocationAndAngles(vec3d.x, vec3d.y, vec3d.z, f2, 0.0f);
                     playerIn.func_242111_a(spawnWorld.getDimensionKey(), pos, f, flag2, false);
                     flag3 = (!flag && flag4);
                     isBedSpawn = true;
@@ -385,7 +385,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             if (spawnWorld != null) {
                 Optional<Vector3d> optional;
                 if (pos != null) {
-                    optional = PlayerEntity.func_242374_a(spawnWorld, pos, f, flag2, flag2);
+                    optional = PlayerEntity.func_242374_a(spawnWorld, pos, f, flag2, conqueredEnd);
                 } else {
                     optional = Optional.empty();
                 }
@@ -400,7 +400,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                         Vector3d vec3d2 = Vector3d.copyCenteredHorizontally(pos).subtract(vec3d).normalize();
                         f2 = (float) MathHelper.wrapDegrees(MathHelper.atan2(vec3d2.z, vec3d2.x) * 57.2957763671875 - 90.0);
                     }
-                    playerIn.setLocationAndAngles(vec3d.x, vec3d.y, vec3d.z, f2, 0.0f);
+                    // playerIn.setLocationAndAngles(vec3d.x, vec3d.y, vec3d.z, f2, 0.0f);
                     playerIn.func_242111_a(spawnWorld.getDimensionKey(), pos, f, flag2, false);
                     flag3 = (!flag2 && flag4);
                     isBedSpawn = true;
@@ -421,7 +421,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                 return playerIn;
             }
             location = respawnEvent.getRespawnLocation();
-            if (!flag2) {
+            if (!conqueredEnd) {
                 ((ServerPlayerEntityBridge) playerIn).bridge$reset();
             }
         } else {
@@ -441,7 +441,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         // Forward to new player instance
         ((InternalEntityBridge) playerIn).internal$getBukkitEntity().setHandle(serverplayerentity);
         ((EntityBridge) serverplayerentity).bridge$setBukkitEntity(((InternalEntityBridge) playerIn).internal$getBukkitEntity());
-        if ((Object) serverplayerentity instanceof MobEntity) {
+        if ((Object) playerIn instanceof MobEntity) {
             ((MobEntity) (Object) playerIn).clearLeashed(true, false);
         }
 
@@ -455,8 +455,8 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             serverplayerentity.addTag(s);
         }
 
-        playerIn.setPositionAndRotation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
-        playerIn.connection.captureCurrentPosition();
+        serverplayerentity.setPositionAndRotation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+        serverplayerentity.connection.captureCurrentPosition();
 
         this.setPlayerGameTypeBasedOnOther(serverplayerentity, playerIn, serverWorld);
         while (avoidSuffocation && !serverWorld.hasNoCollisions(serverplayerentity) && serverplayerentity.getPosY() < 256.0D) {
@@ -474,7 +474,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         serverplayerentity.connection.sendPacket(new SSetExperiencePacket(serverplayerentity.experience, serverplayerentity.experienceTotal, serverplayerentity.experienceLevel));
         this.sendWorldInfo(serverplayerentity, serverWorld);
         this.updatePermissionLevel(serverplayerentity);
-        if (!((ServerPlayNetHandlerBridge) playerIn.connection).bridge$isDisconnected()) {
+        if (!((ServerPlayNetHandlerBridge) serverplayerentity.connection).bridge$isDisconnected()) {
             serverWorld.addRespawnedPlayer(serverplayerentity);
             this.addPlayer(serverplayerentity);
             this.uuidToPlayerMap.put(serverplayerentity.getUniqueID(), serverplayerentity);

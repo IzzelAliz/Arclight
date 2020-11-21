@@ -467,6 +467,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
         ServerWorld serverworld = this.getServerWorld();
         RegistryKey<DimensionType> registrykey = ((WorldBridge) serverworld).bridge$getTypeKey();
         if (registrykey == DimensionType.THE_END && ((WorldBridge) server).bridge$getTypeKey() == DimensionType.OVERWORLD && teleporter instanceof Teleporter) { //Forge: Fix non-vanilla teleporters triggering end credits
+            this.invulnerableDimensionChange = true;
             this.detach();
             this.getServerWorld().removePlayer((ServerPlayerEntity) (Object) this, true); //Forge: The player entity is cloned so keep the data until after cloning calls copyFrom
             if (!this.queuedEndExit) {

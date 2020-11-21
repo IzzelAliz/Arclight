@@ -33,7 +33,7 @@ import java.util.List;
 @Mixin(EnderDragonEntity.class)
 public abstract class EnderDragonEntityMixin extends MobEntityMixin {
 
-    private Explosion explosionSource = new Explosion(null, (EnderDragonEntity) (Object) this, Double.NaN, Double.NaN, Double.NaN, Float.NaN, true, Explosion.Mode.DESTROY);
+    private Explosion explosionSource = new Explosion(null, (EnderDragonEntity) (Object) this, null, null, Double.NaN, Double.NaN, Double.NaN, Float.NaN, true, Explosion.Mode.DESTROY);
 
     @Redirect(method = "livingTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/boss/dragon/phase/IPhase;getTargetLocation()Lnet/minecraft/util/math/vector/Vector3d;"))
     private Vector3d arclight$noMoveHovering(IPhase phase) {

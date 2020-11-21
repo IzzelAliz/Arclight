@@ -8,6 +8,7 @@ import io.izzel.arclight.common.bridge.world.ExplosionBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.bridge.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.bridge.world.server.ServerWorldBridge;
+import io.izzel.arclight.common.bridge.world.storage.DerivedWorldInfoBridge;
 import io.izzel.arclight.common.bridge.world.storage.MapDataBridge;
 import io.izzel.arclight.common.bridge.world.storage.WorldInfoBridge;
 import io.izzel.arclight.common.mixin.core.world.WorldMixin;
@@ -134,6 +135,7 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         } else if (worldInfo instanceof DerivedWorldInfo) {
             // damn spigot again
             this.$$worldDataServer = DelegateWorldInfo.wrap(((DerivedWorldInfo) worldInfo));
+            ((DerivedWorldInfoBridge) worldInfo).bridge$setDimType(this.getTypeKey());
         }
         ((ServerChunkProviderBridge) this.field_241102_C_).bridge$setViewDistance(spigotConfig.viewDistance);
         ((WorldInfoBridge) this.$$worldDataServer).bridge$setWorld((ServerWorld) (Object) this);

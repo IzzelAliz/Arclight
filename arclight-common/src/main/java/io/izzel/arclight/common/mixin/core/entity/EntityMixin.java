@@ -921,6 +921,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                         vector3d = new Vector3d(0.5D, 0.0D, 0.0D);
                     }
 
+                    ArclightCaptures.captureCraftPortalEvent(event);
                     return PortalSize.func_242963_a(worldFinal, p_242275_2_, direction$axis, vector3d, this.getSize(this.getPose()), this.getMotion(), this.rotationYaw, this.rotationPitch);
                 }).orElse(null);
             }
@@ -938,7 +939,10 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             }
             blockpos = new BlockPos(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
 
-            return new PortalInfo(new Vector3d((double) blockpos.getX() + 0.5D, blockpos.getY(), (double) blockpos.getZ() + 0.5D), this.getMotion(), this.rotationYaw, this.rotationPitch);
+            PortalInfo portalInfo = new PortalInfo(new Vector3d((double) blockpos.getX() + 0.5D, blockpos.getY(), (double) blockpos.getZ() + 0.5D), this.getMotion(), this.rotationYaw, this.rotationPitch);
+            ((PortalInfoBridge) portalInfo).bridge$setWorld(((CraftWorld) event.getTo().getWorld()).getHandle());
+            ((PortalInfoBridge) portalInfo).bridge$setPortalEventInfo(event);
+            return portalInfo;
         }
     }
 
