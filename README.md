@@ -6,7 +6,7 @@ A Bukkit server implementation utilizing Mixin.
 
 | Minecraft | Forge | Status | Build |
 | :----: | :----: | :---: | :---: |
-| 1.16.x | 34.1.25 | ACTIVE | [![1.16 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-16?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-16) |
+| 1.16.x | 35.1.0 | ACTIVE | [![1.16 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-16?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-16) |
 | 1.15.x | 31.2.45 | ACTIVE | [![1.15 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-15?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-15) |
 | 1.14.x | 28.2.0 | [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/1.0.6) | [![1.14 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight) |
 

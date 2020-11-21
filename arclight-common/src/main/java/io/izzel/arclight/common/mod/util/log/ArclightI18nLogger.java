@@ -17,7 +17,12 @@ public class ArclightI18nLogger extends ExtendedLoggerWrapper {
     }
 
     public static Logger getLogger(String name) {
-        return new ArclightI18nLogger((ExtendedLogger) LogManager.getLogger(name));
+        for (int i = 0; i < 10; i++) {
+            try {
+                return new ArclightI18nLogger((ExtendedLogger) LogManager.getLogger(name));
+            } catch (Throwable ignored) {}
+        }
+        throw new IllegalStateException("wtf");
     }
 
     @Override
