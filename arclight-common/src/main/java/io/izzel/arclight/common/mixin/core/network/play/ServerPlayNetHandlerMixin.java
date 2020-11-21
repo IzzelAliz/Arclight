@@ -697,7 +697,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         }
     }
 
-    @Inject(method = "processTryUseItemOnBlock", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/ServerPlayerEntity;getServerWorld()Lnet/minecraft/world/server/ServerWorld;"))
+    @Inject(method = "processTryUseItemOnBlock", cancellable = true, at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/entity/player/ServerPlayerEntity;getServerWorld()Lnet/minecraft/world/server/ServerWorld;"))
     private void arclight$frozenUseItem(CPlayerTryUseItemOnBlockPacket packetIn, CallbackInfo ci) {
         if (((ServerPlayerEntityBridge) this.player).bridge$isMovementBlocked()) {
             ci.cancel();
