@@ -18,8 +18,8 @@ public class ArclightLazyLogManager extends LogManager {
     @Override
     public Logger getLogger(String name) {
         tryGet();
-        if (delegate != null) return delegate.getLogger(name);
-        return super.getLogger(name);
+        if (delegate != null && !"jdk.event.security".equals(name)) return delegate.getLogger(name);
+        return Logger.getGlobal();
     }
 
     @Override
