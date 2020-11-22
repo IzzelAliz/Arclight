@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 
 public class ArclightLazyLogManager extends LogManager {
 
-    private static volatile LogManager delegate;
+    private volatile LogManager delegate;
 
     @Override
     public boolean addLogger(Logger logger) {
@@ -18,8 +18,8 @@ public class ArclightLazyLogManager extends LogManager {
     @Override
     public Logger getLogger(String name) {
         tryGet();
-        if (delegate != null) return delegate.getLogger(name);
-        return super.getLogger(name);
+        if (delegate != null && !"jdk.event.security".equals(name)) return delegate.getLogger(name);
+        return Logger.getGlobal();
     }
 
     @Override
@@ -29,12 +29,7 @@ public class ArclightLazyLogManager extends LogManager {
         return super.getLoggerNames();
     }
 
-    public static Class<ArclightLazyLogManager> initClass() {
-        tryGet();
-        return ArclightLazyLogManager.class;
-    }
-
-    private static void tryGet() {
+    private void tryGet() {
         if (delegate != null) return;
         try {
             Class<?> name = Class.forName("org.apache.logging.log4j.jul.LogManager");

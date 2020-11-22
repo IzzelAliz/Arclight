@@ -19,10 +19,10 @@ import java.util.jar.Manifest;
 public abstract class ArclightMain {
 
     public void run(String[] args) throws Throwable {
+        System.setProperty("java.util.logging.manager", ArclightLazyLogManager.class.getCanonicalName());
         System.setProperty("log4j.jul.LoggerAdapter", "io.izzel.arclight.common.mod.util.log.ArclightLoggerAdapter");
         ArclightLocale.info("i18n.using-language", ArclightConfig.spec().getLocale().getCurrent(), ArclightConfig.spec().getLocale().getFallback());
         this.afterSetup();
-        System.setProperty("java.util.logging.manager", ArclightLazyLogManager.initClass().getCanonicalName());
         try { // Java 9 & Java 兼容性
             int javaVersion = (int) Float.parseFloat(System.getProperty("java.class.version"));
             if (javaVersion == 53) {
