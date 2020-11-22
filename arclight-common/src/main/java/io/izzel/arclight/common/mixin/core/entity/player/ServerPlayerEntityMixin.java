@@ -119,6 +119,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -332,9 +333,12 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
         ITextComponent defaultMessage = this.getCombatTracker().getDeathMessage();
         String deathmessage = defaultMessage.getString();
         List<org.bukkit.inventory.ItemStack> loot = new ArrayList<>();
-        for (ItemEntity entity : this.captureDrops(null)) {
-            CraftItemStack craftItemStack = CraftItemStack.asCraftMirror(entity.getItem());
-            loot.add(craftItemStack);
+        Collection<ItemEntity> drops = this.captureDrops(null);
+        if (drops != null) {
+            for (ItemEntity entity : drops) {
+                CraftItemStack craftItemStack = CraftItemStack.asCraftMirror(entity.getItem());
+                loot.add(craftItemStack);
+            }
         }
         if (!keepInventory) {
             this.inventory.copyInventory(copyInv);
