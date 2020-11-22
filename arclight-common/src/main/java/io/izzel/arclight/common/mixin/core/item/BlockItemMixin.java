@@ -6,6 +6,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.BlockItemUseContext;
+import net.minecraft.item.LilyPadItem;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.state.Property;
 import net.minecraft.state.StateContainer;
@@ -41,7 +42,9 @@ public abstract class BlockItemMixin {
     @Inject(method = "tryPlace", locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/item/BlockItem;getStateForPlacement(Lnet/minecraft/item/BlockItemUseContext;)Lnet/minecraft/block/BlockState;"))
     private void arclight$prePlaceLilypad(BlockItemUseContext context, CallbackInfoReturnable<ActionResultType> cir, BlockItemUseContext context1) {
-        this.arclight$state = CraftBlockState.getBlockState(context1.getWorld(), context1.getPos());
+        if ((Object) this instanceof LilyPadItem) {
+            this.arclight$state = CraftBlockState.getBlockState(context1.getWorld(), context1.getPos());
+        }
     }
 
     @Inject(method = "tryPlace", locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true,
