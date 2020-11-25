@@ -36,7 +36,7 @@ public class CrossbowItemMixin {
     private static transient boolean arclight$capturedBoolean;
 
     @Eject(method = "fireProjectile", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
-    private static boolean arclight$addEntity(World world, Entity entityIn, World worldIn, LivingEntity shooter, CallbackInfo ci) {
+    private static boolean arclight$addEntity(World world, Entity entityIn, CallbackInfo ci, World worldIn, LivingEntity shooter) {
         if (arclight$capturedBoolean) {
             if (!world.addEntity(entityIn)) {
                 if (shooter instanceof ServerPlayerEntity) {
