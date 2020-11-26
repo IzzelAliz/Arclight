@@ -13,7 +13,6 @@ import io.izzel.arclight.common.mod.server.entity.ArclightModVillager;
 import net.minecraft.entity.AgeableEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.FlyingEntity;
-import net.minecraft.entity.IProjectile;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.item.minecart.AbstractMinecartEntity;
@@ -24,6 +23,7 @@ import net.minecraft.entity.passive.GolemEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.passive.horse.AbstractChestedHorseEntity;
 import net.minecraft.entity.passive.horse.AbstractHorseEntity;
+import net.minecraft.entity.projectile.ThrowableEntity;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftAgeable;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
@@ -88,7 +88,7 @@ public class CraftEntityMixin {
             cir.setReturnValue(new ArclightModMinecart(server, (AbstractMinecartEntity) entity));
             return;
         }
-        if (entity instanceof IProjectile) {
+        if (entity instanceof ThrowableEntity) {
             cir.setReturnValue(new ArclightModProjectile(server, entity));
             return;
         }
