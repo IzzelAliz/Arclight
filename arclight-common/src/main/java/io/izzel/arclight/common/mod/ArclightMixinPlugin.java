@@ -46,11 +46,11 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
                     ),
                     ImmutableList.of()
                 ))
-            .put("net.minecraft.world.storage.loot.LootParameters",
+            .put("net.minecraft.loot.LootParameters",
                 Maps.immutableEntry(
                     ImmutableList.of(
                         new FieldNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL, "LOOTING_MOD",
-                            "Lnet/minecraft/world/storage/loot/LootParameter;", null, null)
+                            "Lnet/minecraft/loot/LootParameter;", null, null)
                     ),
                     ImmutableList.of()
                 ))
