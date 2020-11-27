@@ -203,6 +203,7 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void arclight$init(MinecraftServer serverIn, Executor executor, SaveHandler saveHandler, WorldInfo worldInfo, DimensionType dimType, IProfiler profiler, IChunkStatusListener listener, CallbackInfo ci) {
+        this.pvpMode = serverIn.isPVPEnabled();
         ((WorldInfoBridge) worldInfo).bridge$setWorld((ServerWorld) (Object) this);
         if (this.wanderingTraderSpawner == null && ((DimensionTypeBridge) this.dimension.getType()).bridge$getType() == DimensionType.OVERWORLD) {
             this.wanderingTraderSpawner = new WanderingTraderSpawner((ServerWorld) (Object) this);
