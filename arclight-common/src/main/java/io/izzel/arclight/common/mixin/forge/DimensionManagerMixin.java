@@ -7,6 +7,9 @@ import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.DimensionManager;
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.v.CraftWorld;
+import org.bukkit.event.world.WorldInitEvent;
+import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -25,7 +28,12 @@ public abstract class DimensionManagerMixin {
 
     @Inject(method = "initWorld", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraftforge/eventbus/api/IEventBus;post(Lnet/minecraftforge/eventbus/api/Event;)Z"))
     private static void arclight$updateWorldInit(MinecraftServer server, DimensionType dim, CallbackInfoReturnable<ServerWorld> cir, ServerWorld overworld, ServerWorld world) {
-        ((WorldBridge) world).bridge$getWorld();
+        CraftWorld craftWorld = ((WorldBridge) world).bridge$getWorld();
+        if (((WorldBridge) world).bridge$getGenerator() != null) {
+            craftWorld.getPopulators().addAll(((WorldBridge) world).bridge$getGenerator().getDefaultPopulators(craftWorld));
+        }
+        Bukkit.getPluginManager().callEvent(new WorldInitEvent(craftWorld));
+        Bukkit.getPluginManager().callEvent(new WorldLoadEvent(craftWorld));
     }
 
     @Redirect(method = "unloadWorlds", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/common/DimensionManager;canUnloadWorld(Lnet/minecraft/world/server/ServerWorld;)Z"))
