@@ -514,7 +514,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         // CraftBukkit start - Reset world
         if ((Object) this instanceof ServerPlayerEntity) {
             Server server = Bukkit.getServer();
-            org.bukkit.World bworld = null;
+            org.bukkit.World bworld;
 
             String worldName = compound.getString("world");
 
@@ -525,11 +525,9 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                 bworld = server.getWorld(worldName);
             }
 
-            if (bworld == null) {
-                bworld = ((WorldBridge) ((CraftServer) server).getServer().getWorld(DimensionType.OVERWORLD)).bridge$getWorld();
+            if (bworld != null) {
+                setWorld(bworld == null ? null : ((CraftWorld) bworld).getHandle());
             }
-
-            setWorld(bworld == null ? null : ((CraftWorld) bworld).getHandle());
         }
         this.getBukkitEntity().readBukkitValues(compound);
         // CraftBukkit end
