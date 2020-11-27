@@ -482,7 +482,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
 
     @Inject(method = "setPositionAndRotation", at = @At("RETURN"))
     private void arclight$loadChunk(double x, double y, double z, float yaw, float pitch, CallbackInfo ci) {
-        this.world.getChunk((int) Math.floor(this.getPosX()) >> 4, (int) Math.floor(this.getPosZ()) >> 4);
+        if (this.valid) this.world.getChunk((int) Math.floor(this.getPosX()) >> 4, (int) Math.floor(this.getPosZ()) >> 4);
     }
 
     public boolean canCollideWith(Entity entity) {
