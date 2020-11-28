@@ -4,6 +4,7 @@ import io.izzel.arclight.common.bridge.world.storage.loot.LootTableBridge;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.storage.loot.LootContext;
+import net.minecraft.world.storage.loot.LootParameters;
 import net.minecraft.world.storage.loot.LootTable;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -36,11 +37,13 @@ public abstract class LootTableMixin implements LootTableBridge {
     public void fillInventory(IInventory inv, LootContext context) {
         List<ItemStack> list = this.generate(context);
         Random random = context.getRandom();
-        LootGenerateEvent event = CraftEventFactory.callLootGenerateEvent(inv, (LootTable) (Object) this, context, list, false);
-        if (event.isCancelled()) {
-            return;
+        if (context.has(LootParameters.POSITION)) {
+            LootGenerateEvent event = CraftEventFactory.callLootGenerateEvent(inv, (LootTable) (Object) this, context, list, false);
+            if (event.isCancelled()) {
+                return;
+            }
+            list = event.getLoot().stream().map(CraftItemStack::asNMSCopy).collect(Collectors.toList());
         }
-        list = event.getLoot().stream().map(CraftItemStack::asNMSCopy).collect(Collectors.toList());
         List<Integer> list1 = this.getEmptySlotsRandomized(inv, random);
         this.shuffleItems(list, list1.size(), random);
 
@@ -61,11 +64,13 @@ public abstract class LootTableMixin implements LootTableBridge {
     public void fillInventory(IInventory inv, LootContext context, boolean plugin) {
         List<ItemStack> list = this.generate(context);
         Random random = context.getRandom();
-        LootGenerateEvent event = CraftEventFactory.callLootGenerateEvent(inv, (LootTable) (Object) this, context, list, plugin);
-        if (event.isCancelled()) {
-            return;
+        if (context.has(LootParameters.POSITION)) {
+            LootGenerateEvent event = CraftEventFactory.callLootGenerateEvent(inv, (LootTable) (Object) this, context, list, plugin);
+            if (event.isCancelled()) {
+                return;
+            }
+            list = event.getLoot().stream().map(CraftItemStack::asNMSCopy).collect(Collectors.toList());
         }
-        list = event.getLoot().stream().map(CraftItemStack::asNMSCopy).collect(Collectors.toList());
         List<Integer> list1 = this.getEmptySlotsRandomized(inv, random);
         this.shuffleItems(list, list1.size(), random);
 
