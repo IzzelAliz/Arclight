@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
+import io.izzel.arclight.common.mod.server.entity.ArclightFakePlayer;
 import io.izzel.arclight.common.mod.server.entity.ArclightModChestedHorse;
 import io.izzel.arclight.common.mod.server.entity.ArclightModEntity;
 import io.izzel.arclight.common.mod.server.entity.ArclightModHorse;
@@ -24,6 +25,7 @@ import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.passive.horse.AbstractChestedHorseEntity;
 import net.minecraft.entity.passive.horse.AbstractHorseEntity;
 import net.minecraft.entity.projectile.ThrowableEntity;
+import net.minecraftforge.common.util.FakePlayer;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftAgeable;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
@@ -37,6 +39,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = CraftEntity.class, remap = false)
 public class CraftEntityMixin {
+
+    @Inject(method = "getEntity", cancellable = true, at = @At("HEAD"))
+    private static void arclight$fakePlayer(CraftServer server, Entity entity, CallbackInfoReturnable<CraftEntity> cir) {
+        if (entity instanceof FakePlayer) {
+            cir.setReturnValue(new ArclightFakePlayer(server, (FakePlayer) entity));
+        }
+    }
 
     @Inject(method = "getEntity", cancellable = true, at = @At(value = "NEW", target = "java/lang/AssertionError"))
     private static void arclight$modEntity(CraftServer server, Entity entity, CallbackInfoReturnable<CraftEntity> cir) {
