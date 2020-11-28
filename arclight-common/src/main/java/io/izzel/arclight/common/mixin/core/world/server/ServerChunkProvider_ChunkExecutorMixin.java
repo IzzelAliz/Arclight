@@ -1,7 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.server;
 
+import io.izzel.arclight.common.bridge.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.world.server.ChunkManagerBridge;
 import io.izzel.arclight.common.bridge.world.server.ServerChunkProviderBridge;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import net.minecraft.util.concurrent.ThreadTaskExecutor;
 import net.minecraft.world.server.ServerChunkProvider;
 import org.spongepowered.asm.mixin.Final;
@@ -35,6 +37,7 @@ public abstract class ServerChunkProvider_ChunkExecutorMixin extends ThreadTaskE
             }
         } finally {
             ((ChunkManagerBridge) outer.chunkManager).bridge$getCallbackExecutor().run();
+            ((MinecraftServerBridge) ArclightServer.getMinecraftServer()).bridge$drainQueuedTasks();
         }
     }
 }

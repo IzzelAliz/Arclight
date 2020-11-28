@@ -296,10 +296,15 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
 
     private void executeModerately() {
         this.drainTasks();
+        this.bridge$drainQueuedTasks();
+        java.util.concurrent.locks.LockSupport.parkNanos("executing tasks", 1000L);
+    }
+
+    @Override
+    public void bridge$drainQueuedTasks() {
         while (!processQueue.isEmpty()) {
             processQueue.remove().run();
         }
-        java.util.concurrent.locks.LockSupport.parkNanos("executing tasks", 1000L);
     }
 
     @Inject(method = "isAheadOfTime", cancellable = true, at = @At("HEAD"))
@@ -445,9 +450,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
     public void arclight$runScheduler(BooleanSupplier hasTimeLeft, CallbackInfo ci) {
         ArclightConstants.currentTick = (int) (System.currentTimeMillis() / 50);
         this.server.getScheduler().mainThreadHeartbeat(this.tickCounter);
-        while (!processQueue.isEmpty()) {
-            processQueue.remove().run();
-        }
+        this.bridge$drainQueuedTasks();
     }
 
     /**

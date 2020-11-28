@@ -18,5 +18,7 @@ public interface MinecraftServerBridge {
 
     void bridge$queuedProcess(Runnable runnable);
 
+    void bridge$drainQueuedTasks();
+
     boolean bridge$hasStopped();
 }
