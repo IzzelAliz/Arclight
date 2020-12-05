@@ -120,7 +120,6 @@ public abstract class PlayerListMixin implements PlayerListBridge {
     // @formatter:on
 
     private CraftServer cserver;
-    private ServerPlayerEntity arclight$playerJoin = null;
 
     @Override
     public CraftServer bridge$getCraftServer() {
@@ -484,23 +483,27 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         return new SChatPacket(CraftChatMessage.fixComponent(message), type);
     }
 
-    @Inject(method = "initializeConnectionToPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/management/PlayerList;sendMessage(Lnet/minecraft/util/text/ITextComponent;)V"))
-    public void arclight$playerJoinPre(NetworkManager netManager, ServerPlayerEntity playerIn, CallbackInfo ci) {
-        arclight$playerJoin = playerIn;
+    @Inject(method = "initializeConnectionToPlayer", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/management/PlayerList;sendMessage(Lnet/minecraft/util/text/ITextComponent;)V"))
+    private void arclight$playerJoinKick(NetworkManager netManager, ServerPlayerEntity playerIn, CallbackInfo ci) {
+        if (!playerIn.connection.netManager.isChannelOpen()) {
+            ci.cancel();
+        }
     }
 
-    @Inject(method = "sendMessage(Lnet/minecraft/util/text/ITextComponent;)V", cancellable = true, at = @At("HEAD"))
-    public void arclight$playerJoin(ITextComponent component, CallbackInfo ci) {
-        if (arclight$playerJoin != null) {
-            String joinMessage = CraftChatMessage.fromComponent(component);
-            PlayerJoinEvent playerJoinEvent = new PlayerJoinEvent(cserver.getPlayer(arclight$playerJoin), joinMessage);
-            cserver.getPluginManager().callEvent(playerJoinEvent);
-            ITextComponent[] postMessage = CraftChatMessage.fromString(playerJoinEvent.getJoinMessage());
-            for (ITextComponent textComponent : postMessage) {
-                this.sendMessage(textComponent, true);
-            }
-            arclight$playerJoin = null;
-            ci.cancel();
+    @Redirect(method = "initializeConnectionToPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/management/PlayerList;sendMessage(Lnet/minecraft/util/text/ITextComponent;)V"))
+    private void arclight$playerJoin(PlayerList playerList, ITextComponent component, NetworkManager netManager, ServerPlayerEntity playerIn) {
+        String joinMessage = CraftChatMessage.fromComponent(component);
+        PlayerJoinEvent playerJoinEvent = new PlayerJoinEvent(cserver.getPlayer(playerIn), joinMessage);
+        this.players.add(playerIn);
+        this.uuidToPlayerMap.put(playerIn.getUniqueID(), playerIn);
+        cserver.getPluginManager().callEvent(playerJoinEvent);
+        if (!playerIn.connection.netManager.isChannelOpen()) {
+            return;
+        }
+        this.players.remove(playerIn);
+        ITextComponent[] postMessage = CraftChatMessage.fromString(playerJoinEvent.getJoinMessage());
+        for (ITextComponent textComponent : postMessage) {
+            this.sendMessage(textComponent, true);
         }
     }
 
