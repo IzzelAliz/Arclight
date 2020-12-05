@@ -40,16 +40,10 @@ import java.util.jar.Manifest;
 public class ForgeInstaller {
 
     private static final String[] MAVEN_REPO = {
-        "https://bmclapi2.bangbang93.com/maven/",
-        "https://maven.aliyun.com/repository/public/",
-        "https://repo.spongepowered.org/maven/",
-        "https://oss.sonatype.org/content/repositories/snapshots/",
-        "https://hub.spigotmc.org/nexus/content/repositories/snapshots/",
-        "https://files.minecraftforge.net/maven/",
-        "https://repo1.maven.org/maven2/"
+        "https://arclight.mcxk.net/"
     };
-    private static final String INSTALLER_URL = "https://bmclapi2.bangbang93.com/maven/net/minecraftforge/forge/%s-%s/forge-%s-%s-installer.jar";
-    private static final String SERVER_URL = "https://bmclapi2.bangbang93.com/version/%s/server";
+    private static final String INSTALLER_URL = "https://arclight.mcxk.net/net/minecraftforge/forge/%s-%s/forge-%s-%s-installer.jar";
+    private static final String SERVER_URL = "https://arclight.mcxk.net/net/minecraft/server/minecraft_server.%s.jar";
     private static final Map<String, String> VERSION_HASH = ImmutableMap.of(
         "1.14.4", "3dc3d84a581f14691199cf6831b71ed1296a9fdf",
         "1.15.2", "bb2b6b1aefcd70dfd1892149ac3a215f6c636b07"
@@ -61,7 +55,7 @@ public class ForgeInstaller {
         List<Supplier<Path>> suppliers = checkMavenNoSource(installInfo.libraries);
         Path path = Paths.get(String.format("forge-%s-%s.jar", installInfo.installer.minecraft, installInfo.installer.forge));
         if (!suppliers.isEmpty() || !Files.exists(path)) {
-            ArclightLocale.info("downloader.info");
+            ArclightLocale.info("downloader.info2");
             ExecutorService pool = Executors.newFixedThreadPool(8);
             CompletableFuture<?>[] array = suppliers.stream().map(reportSupply(pool)).toArray(CompletableFuture[]::new);
             if (!Files.exists(path)) {
@@ -179,7 +173,6 @@ public class ForgeInstaller {
         Manifest manifest = jarFile.getManifest();
         String[] split = manifest.getMainAttributes().getValue("Class-Path").split(" ");
         for (String s : split) {
-            if (s.contains("eventbus-1.0.0-service")) continue;
             addToPath(Paths.get(s));
         }
         for (String library : installInfo.libraries.keySet()) {
