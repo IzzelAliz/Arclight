@@ -1,5 +1,6 @@
 package io.izzel.arclight.common;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.internal.bind.TypeAdapters;
 import com.google.gson.reflect.TypeToken;
 import io.izzel.arclight.api.EnumHelper;
@@ -13,6 +14,10 @@ import net.minecraftforge.server.ServerMain;
 
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.net.URI;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
@@ -54,7 +59,9 @@ public abstract class ArclightMain {
     }
 
     private void printLogo() throws Exception {
-        try (InputStream stream = getClass().getResourceAsStream("/META-INF/MANIFEST.MF")) {
+        URI uri = getClass().getProtectionDomain().getCodeSource().getLocation().toURI();
+        FileSystem fs = FileSystems.newFileSystem(URI.create("jar:" + uri), ImmutableMap.of("create", "true"));
+        try (InputStream stream = Files.newInputStream(fs.getPath("/META-INF/MANIFEST.MF"))) {
             Manifest manifest = new Manifest(stream);
             Attributes attributes = manifest.getMainAttributes();
             String version = attributes.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
