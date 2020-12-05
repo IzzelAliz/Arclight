@@ -5,6 +5,7 @@ import io.izzel.arclight.mixin.Eject;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.loot.LootContext;
+import net.minecraft.loot.LootParameters;
 import net.minecraft.loot.LootTable;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -33,6 +34,9 @@ public abstract class LootTableMixin implements LootTableBridge {
     @Eject(method = "fillInventory", at = @At(value = "INVOKE", target = "Lnet/minecraft/loot/LootTable;generate(Lnet/minecraft/loot/LootContext;)Ljava/util/List;"))
     private List<ItemStack> arclight$nonPluginEvent(LootTable lootTable, LootContext context, CallbackInfo ci, IInventory inv) {
         List<ItemStack> list = lootTable.generate(context);
+        if (!context.has(LootParameters.field_237457_g_) && !context.has(LootParameters.THIS_ENTITY)) {
+            return list;
+        }
         LootGenerateEvent event = CraftEventFactory.callLootGenerateEvent(inv, (LootTable) (Object) this, context, list, false);
         if (event.isCancelled()) {
             ci.cancel();
