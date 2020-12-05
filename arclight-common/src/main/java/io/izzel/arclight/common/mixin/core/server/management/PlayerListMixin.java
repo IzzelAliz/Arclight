@@ -154,11 +154,14 @@ public abstract class PlayerListMixin implements PlayerListBridge {
     @Eject(method = "initializeConnectionToPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/management/PlayerList;func_232641_a_(Lnet/minecraft/util/text/ITextComponent;Lnet/minecraft/util/text/ChatType;Ljava/util/UUID;)V"))
     private void arclight$playerJoin(PlayerList playerList, ITextComponent component, ChatType chatType, UUID uuid, CallbackInfo ci, NetworkManager netManager, ServerPlayerEntity playerIn) {
         PlayerJoinEvent playerJoinEvent = new PlayerJoinEvent(this.cserver.getPlayer(playerIn), CraftChatMessage.fromComponent(component));
+        this.players.add(playerIn);
+        this.uuidToPlayerMap.put(playerIn.getUniqueID(), playerIn);
         this.cserver.getPluginManager().callEvent(playerJoinEvent);
         if (!playerIn.connection.netManager.isChannelOpen()) {
             ci.cancel();
             return;
         }
+        this.players.remove(playerIn);
         String joinMessage = playerJoinEvent.getJoinMessage();
         if (joinMessage != null && joinMessage.length() > 0) {
             for (ITextComponent line : CraftChatMessage.fromString(joinMessage)) {
