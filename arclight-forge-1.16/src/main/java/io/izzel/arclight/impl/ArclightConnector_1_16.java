@@ -14,6 +14,9 @@ public class ArclightConnector_1_16 extends ArclightConnector {
         if (ArclightConfig.spec().getOptimization().isRemoveStream()) {
             Mixins.addConfiguration("mixins.arclight.impl.optimization.stream.1_16.json");
         }
+        if (ArclightConfig.spec().getOptimization().isDisableDFU()) {
+            Mixins.addConfiguration("mixins.arclight.impl.optimization.dfu.1_16.json");
+        }
         LOGGER.info("mixin-load.optimization");
     }
 }

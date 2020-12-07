@@ -12,11 +12,18 @@ public class OptimizationSpec {
     @Setting("cache-plugin-class")
     private boolean cachePluginClass;
 
+    @Setting("disable-data-fixer")
+    private boolean disableDFU;
+
     public boolean isRemoveStream() {
         return removeStream;
     }
 
     public boolean isCachePluginClass() {
         return cachePluginClass;
+    }
+
+    public boolean isDisableDFU() {
+        return disableDFU;
     }
 }
