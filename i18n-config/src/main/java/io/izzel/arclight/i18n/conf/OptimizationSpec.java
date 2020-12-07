@@ -9,7 +9,14 @@ public class OptimizationSpec {
     @Setting("remove-stream")
     private boolean removeStream;
 
+    @Setting("disable-data-fixer")
+    private boolean disableDFU;
+
     public boolean isRemoveStream() {
         return removeStream;
+    }
+
+    public boolean isDisableDFU() {
+        return disableDFU;
     }
 }
