@@ -322,11 +322,11 @@ public class ClassLoaderRemapper extends JarRemapper {
         }
 
         @Override
-        public String mapType(String internalName) {
+        public String map(String internalName) {
             if (internalName.equals(ORIGIN)) {
                 return internal;
             }
-            return super.mapType(internalName);
+            return super.map(internalName);
         }
     }
 

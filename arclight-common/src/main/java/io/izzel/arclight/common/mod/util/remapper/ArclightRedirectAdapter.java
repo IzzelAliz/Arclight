@@ -1,11 +1,15 @@
 package io.izzel.arclight.common.mod.util.remapper;
 
 import com.google.common.collect.ImmutableMap;
+import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.util.remapper.generated.ArclightReflectionHandler;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -20,6 +24,7 @@ import java.util.Objects;
 public class ArclightRedirectAdapter implements PluginTransformer {
 
     public static final ArclightRedirectAdapter INSTANCE = new ArclightRedirectAdapter();
+    private static final Marker MARKER = MarkerManager.getMarker("REDIRECT");
     private static final String REPLACED_NAME = Type.getInternalName(ArclightReflectionHandler.class);
     private static final Map<MethodInsnNode, MethodInsnNode> METHOD_REDIRECTS = ImmutableMap
         .<MethodInsnNode, MethodInsnNode>builder()
@@ -104,6 +109,8 @@ public class ArclightRedirectAdapter implements PluginTransformer {
             method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectClassLoaderLoadClass", ClassLoader.class, String.class)
         )
         .build();
+    private static final String METHOD_SIG = Type.getInternalName(Method.class);
+    private static final String INVOKE_SIG = Type.getMethodDescriptor(Type.getType(Object.class), Type.getType(Object.class), Type.getType(Object[].class));
 
     @Override
     public void handleClass(ClassNode node, ClassLoaderRemapper remapper) {
@@ -111,6 +118,7 @@ public class ArclightRedirectAdapter implements PluginTransformer {
     }
 
     private static void redirect(ClassNode classNode, String generatedOwner) {
+        boolean defineClassFound = false;
         for (MethodNode methodNode : classNode.methods) {
             ListIterator<AbstractInsnNode> iterator = methodNode.instructions.iterator();
             while (iterator.hasNext()) {
@@ -132,6 +140,25 @@ public class ArclightRedirectAdapter implements PluginTransformer {
                             } else {
                                 iterator.set(to);
                             }
+                        }
+                    }
+                } else if (insnNode.getOpcode() == Opcodes.LDC) {
+                    defineClassFound |= "defineClass".equals(((LdcInsnNode) insnNode).cst);
+                }
+            }
+        }
+        if (defineClassFound) {
+            for (MethodNode methodNode : classNode.methods) {
+                for (AbstractInsnNode insnNode : methodNode.instructions) {
+                    if (insnNode.getOpcode() == Opcodes.INVOKEVIRTUAL) {
+                        MethodInsnNode methodInsnNode = (MethodInsnNode) insnNode;
+                        if (methodInsnNode.owner.equals(METHOD_SIG) && methodInsnNode.name.equals("invoke") && methodInsnNode.desc.equals(INVOKE_SIG)) {
+                            methodInsnNode.setOpcode(Opcodes.INVOKESTATIC);
+                            methodInsnNode.owner = generatedOwner;
+                            methodInsnNode.name = "redirectDefineClassInvoke";
+                            methodInsnNode.desc = "(L" + METHOD_SIG + ";" + methodInsnNode.desc.substring(1);
+                            ArclightMod.LOGGER.debug(MARKER, "Redirect candidate defineClass method invoke in {}/{} {}"
+                                , classNode.name, methodNode.name, methodNode.desc);
                         }
                     }
                 }
