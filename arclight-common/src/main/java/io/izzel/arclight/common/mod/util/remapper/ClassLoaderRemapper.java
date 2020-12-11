@@ -359,7 +359,7 @@ public class ClassLoaderRemapper extends JarRemapper {
 
     }
 
-    private static class WrappedMethod {
+    static class WrappedMethod {
 
         private final String name;
         private final Class<?>[] pTypes;

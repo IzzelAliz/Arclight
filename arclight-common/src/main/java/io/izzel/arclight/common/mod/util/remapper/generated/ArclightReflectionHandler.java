@@ -1,5 +1,7 @@
 package io.izzel.arclight.common.mod.util.remapper.generated;
 
+import io.izzel.arclight.api.Unsafe;
+import io.izzel.arclight.common.mod.util.remapper.ClassLoaderAdapter;
 import io.izzel.arclight.common.mod.util.remapper.ClassLoaderRemapper;
 import org.objectweb.asm.Type;
 
@@ -8,9 +10,13 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
+import java.security.CodeSource;
+import java.security.Permissions;
+import java.security.ProtectionDomain;
 
 @SuppressWarnings("unused")
-public class ArclightReflectionHandler {
+public class ArclightReflectionHandler extends ClassLoader {
 
     private static final String PREFIX = "net.minecraft.";
 
@@ -46,6 +52,12 @@ public class ArclightReflectionHandler {
 
     // bukkit -> srg
     public static Method redirectGetMethod(Class<?> cl, String bukkitName, Class<?>... pTypes) throws NoSuchMethodException {
+        if (ClassLoaderAdapter.isDefineClassMethod(cl, bukkitName, pTypes)) {
+            Class<?>[] classes = new Class<?>[pTypes.length + 1];
+            classes[0] = ClassLoader.class;
+            System.arraycopy(pTypes, 0, classes, 1, pTypes.length);
+            return ArclightReflectionHandler.class.getMethod(bukkitName, classes);
+        }
         Method method = remapper.tryMapMethodToSrg(cl, bukkitName, pTypes);
         if (method != null) {
             return method;
@@ -56,6 +68,12 @@ public class ArclightReflectionHandler {
 
     // bukkit -> srg
     public static Method redirectGetDeclaredMethod(Class<?> cl, String bukkitName, Class<?>... pTypes) throws NoSuchMethodException {
+        if (ClassLoaderAdapter.isDefineClassMethod(cl, bukkitName, pTypes)) {
+            Class<?>[] classes = new Class<?>[pTypes.length + 1];
+            classes[0] = ClassLoader.class;
+            System.arraycopy(pTypes, 0, classes, 1, pTypes.length);
+            return ArclightReflectionHandler.class.getDeclaredMethod(bukkitName, classes);
+        }
         Method method = remapper.tryMapMethodToSrg(cl, bukkitName, pTypes);
         if (method != null) {
             return method;
@@ -147,6 +165,13 @@ public class ArclightReflectionHandler {
 
     // bukkit -> srg
     public static MethodHandle redirectFindVirtual(MethodHandles.Lookup lookup, Class<?> cl, String name, MethodType methodType) throws NoSuchMethodException, IllegalAccessException {
+        if (ClassLoaderAdapter.isDefineClassMethod(cl, name, methodType)) {
+            Class<?>[] pTypes = methodType.parameterArray();
+            Class<?>[] classes = new Class<?>[pTypes.length + 1];
+            classes[0] = ClassLoader.class;
+            System.arraycopy(pTypes, 0, classes, 1, pTypes.length);
+            return lookup.findStatic(ArclightReflectionHandler.class, name, MethodType.methodType(Class.class, classes));
+        }
         Method method = remapper.tryMapMethodToSrg(cl, name, methodType.parameterArray());
         if (method != null) {
             return lookup.findVirtual(cl, method.getName(), methodType);
@@ -196,5 +221,32 @@ public class ArclightReflectionHandler {
         }
         String replace = remapper.mapType(canonicalName.replace('.', '/')).replace('/', '.');
         return loader.loadClass(replace);
+    }
+
+    public static Class<?> defineClass(ClassLoader loader, byte[] b, int off, int len) {
+        return defineClass(loader, null, b, off, len);
+    }
+
+    public static Class<?> defineClass(ClassLoader loader, String name, byte[] b, int off, int len) {
+        return defineClass(loader, name, b, off, len, (ProtectionDomain) null);
+    }
+
+    public static Class<?> defineClass(ClassLoader loader, String name, byte[] b, int off, int len, ProtectionDomain pd) {
+        byte[] bytes = remapper.remapClass(b);
+        return Unsafe.defineClass(name, bytes, 0, bytes.length, loader, pd);
+    }
+
+    public static Class<?> defineClass(ClassLoader loader, String name, ByteBuffer b, ProtectionDomain pd) {
+        byte[] bytes = new byte[b.remaining()];
+        b.get(bytes);
+        return defineClass(loader, name, bytes, 0, bytes.length, pd);
+    }
+
+    public static Class<?> defineClass(ClassLoader loader, String name, byte[] b, int off, int len, CodeSource cs) {
+        return defineClass(loader, name, b, off, len, new ProtectionDomain(cs, new Permissions()));
+    }
+
+    public static Class<?> defineClass(ClassLoader loader, String name, ByteBuffer b, CodeSource cs) {
+        return defineClass(loader, name, b, new ProtectionDomain(cs, new Permissions()));
     }
 }

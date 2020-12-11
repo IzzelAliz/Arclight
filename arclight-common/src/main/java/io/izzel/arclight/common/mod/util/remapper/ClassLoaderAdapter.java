@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mod.util.remapper;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import cpw.mods.modlauncher.api.LamdbaExceptionUtils;
 import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.util.remapper.generated.RemappingURLClassLoader;
 import org.apache.logging.log4j.Marker;
@@ -21,11 +22,14 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
+import java.lang.invoke.MethodType;
 import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
 import java.security.SecureClassLoader;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ClassLoaderAdapter implements PluginTransformer {
 
@@ -44,6 +48,27 @@ public class ClassLoaderAdapter implements PluginTransformer {
     private final Map<String, String> classLoaderTypes = ImmutableMap.<String, String>builder()
         .put(Type.getInternalName(URLClassLoader.class), Type.getInternalName(RemappingURLClassLoader.class))
         .build();
+    private final Set<ClassLoaderRemapper.WrappedMethod> defineClassMethods = defineClassTypes.entrySet().stream()
+        .map(LamdbaExceptionUtils.rethrowFunction(entry -> {
+            MethodType type = MethodType.fromMethodDescriptorString(entry.getKey().getDescriptor(), getClass().getClassLoader());
+            return new ClassLoaderRemapper.WrappedMethod("defineClass", type.parameterArray());
+        })).collect(Collectors.toSet());
+
+    public static boolean isDefineClassMethod(Class<?> cl, String bukkitName, Class<?>[] pTypes) {
+        if (bukkitName.equals("defineClass") && ClassLoader.class.isAssignableFrom(cl)) {
+            return INSTANCE.defineClassMethods.contains(new ClassLoaderRemapper.WrappedMethod(bukkitName, pTypes));
+        } else {
+            return false;
+        }
+    }
+
+    public static boolean isDefineClassMethod(Class<?> cl, String bukkitName, MethodType methodType) {
+        if (bukkitName.equals("defineClass") && ClassLoader.class.isAssignableFrom(cl)) {
+            return INSTANCE.defineClassMethods.contains(new ClassLoaderRemapper.WrappedMethod(bukkitName, methodType.parameterArray()));
+        } else {
+            return false;
+        }
+    }
 
     @Override
     public void handleClass(ClassNode node, ClassLoaderRemapper remapper) {
