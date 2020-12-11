@@ -223,6 +223,15 @@ public class ArclightReflectionHandler extends ClassLoader {
         return loader.loadClass(replace);
     }
 
+    public static Object redirectDefineClassInvoke(Method method, Object src, Object[] param) throws Exception {
+        if (method.getDeclaringClass() == ArclightReflectionHandler.class && method.getName().equals("defineClass")) {
+            Object[] args = new Object[param.length + 1];
+            args[0] = src;
+            System.arraycopy(param, 0, args, 1, param.length);
+            return method.invoke(null, args);
+        } else return method.invoke(src, param);
+    }
+
     public static Class<?> defineClass(ClassLoader loader, byte[] b, int off, int len) {
         return defineClass(loader, null, b, off, len);
     }
