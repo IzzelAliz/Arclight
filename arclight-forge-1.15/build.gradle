@@ -22,7 +22,7 @@ apply plugin: 'maven-publish'
 
 ext {
     minecraftVersion = '1.15.2'
-    forgeVersion = '31.2.45'
+    forgeVersion = '31.2.47'
 }
 
 arclight {
