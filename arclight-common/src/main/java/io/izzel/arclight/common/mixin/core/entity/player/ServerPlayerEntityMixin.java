@@ -50,7 +50,6 @@ import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerInteractionManager;
-import net.minecraft.server.management.PlayerList;
 import net.minecraft.stats.Stat;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.CombatTracker;
@@ -225,7 +224,6 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
             serverworld.removeEntity((ServerPlayerEntity) (Object) this, true); //Forge: the player entity is moved to the new world, NOT cloned. So keep the data alive with no matching invalidate call.
             this.revive();
             */
-            PlayerList[] playerlist = new PlayerList[1];
 
             Entity e = teleporter.placeEntity((ServerPlayerEntity) (Object) this, serverworld, serverworld1[0], this.rotationYaw, spawnPortal -> {//Forge: Start vanilla logic
                 double d0 = this.getPosX();
@@ -359,8 +357,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
                 this.connection.sendPacket(new SRespawnPacket(destination[0], WorldInfo.byHashing(worldinfo.getSeed()), worldinfo.getGenerator(), this.interactionManager.getGameType()));
                 this.connection.sendPacket(new SServerDifficultyPacket(worldinfo.getDifficulty(), worldinfo.isDifficultyLocked()));
 
-                playerlist[0] = this.server.getPlayerList();
-                playerlist[0].updatePermissionLevel((ServerPlayerEntity) (Object) this);
+                this.server.getPlayerList().updatePermissionLevel((ServerPlayerEntity) (Object) this);
 
                 serverworld.removeEntity((ServerPlayerEntity) (Object) this, true); //Forge: the player entity is moved to the new world, NOT cloned. So keep the data alive with no matching invalidate call.
                 this.revive();
@@ -382,10 +379,10 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
             } else if (e != (Object) this) {
                 throw new IllegalArgumentException(String.format("Teleporter %s returned not the player entity but instead %s, expected PlayerEntity %s", teleporter, e, this));
             }
-            this.interactionManager.setWorld(serverworld1[0]);
+            this.interactionManager.setWorld(this.getServerWorld());
             this.connection.sendPacket(new SPlayerAbilitiesPacket(this.abilities));
-            playerlist[0].sendWorldInfo((ServerPlayerEntity) (Object) this, serverworld1[0]);
-            playerlist[0].sendInventory((ServerPlayerEntity) (Object) this);
+            this.server.getPlayerList().sendWorldInfo((ServerPlayerEntity) (Object) this, this.getServerWorld());
+            this.server.getPlayerList().sendInventory((ServerPlayerEntity) (Object) this);
 
             for (EffectInstance effectinstance : this.getActivePotionEffects()) {
                 this.connection.sendPacket(new SPlayEntityEffectPacket(this.getEntityId(), effectinstance));
