@@ -806,8 +806,8 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             if (serverworld1 == null) {
                 return null;
             }
-            //this.dimension = destination;
-            //this.detach();
+            this.dimension = destination;
+            this.detach();
             this.world.getProfiler().startSection("reposition");
             Entity transportedEntity = teleporter.placeEntity((Entity) (Object) this, serverworld, serverworld1[0], this.rotationYaw, spawnPortal -> { //Forge: Start vanilla logic
                 Vec3d vec3d = this.getMotion();
@@ -866,9 +866,6 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                     }
                 }
 
-                this.dimension = destination;
-                this.detach();
-
                 this.world.getProfiler().endStartSection("reloading");
                 Entity entity = this.getType().create(serverworld1[0]);
                 if (entity != null) {
@@ -876,15 +873,13 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                     entity.moveToBlockPosAndAngles(blockpos, entity.rotationYaw + f, entity.rotationPitch);
                     entity.setMotion(vec3d);
                     serverworld1[0].addFromAnotherDimension(entity);
-
-                    ((InternalEntityBridge) this).internal$getBukkitEntity().setHandle(entity);
-                    ((EntityBridge) entity).bridge$setBukkitEntity(((InternalEntityBridge) this).internal$getBukkitEntity());
-                    if ((Object) this instanceof MobEntity) {
-                        ((MobEntity) (Object) this).clearLeashed(true, false);
-                    }
                 }
                 return entity;
             });//Forge: End vanilla logic
+            if (transportedEntity == null) {
+                this.dimension = dimensiontype;
+                return null;
+            }
 
             this.remove(false);
             this.world.getProfiler().endSection();
@@ -894,6 +889,15 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             return transportedEntity;
         } else {
             return null;
+        }
+    }
+
+    @Inject(method = "copyDataFromOld", at = @At("HEAD"))
+    private void arclight$forwardHandle(Entity entityIn, CallbackInfo ci) {
+        ((InternalEntityBridge) entityIn).internal$getBukkitEntity().setHandle((Entity) (Object) this);
+        ((EntityBridge) this).bridge$setBukkitEntity(((InternalEntityBridge) entityIn).internal$getBukkitEntity());
+        if (entityIn instanceof MobEntity) {
+            ((MobEntity) entityIn).clearLeashed(true, false);
         }
     }
 }

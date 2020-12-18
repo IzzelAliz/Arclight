@@ -50,6 +50,7 @@ import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerInteractionManager;
+import net.minecraft.server.management.PlayerList;
 import net.minecraft.stats.Stat;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.CombatTracker;
@@ -211,19 +212,17 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
             return (ServerPlayerEntity) (Object) this;
         } else {
             ServerWorld serverworld = this.server.getWorld(dimensiontype);
-            // this.dimension = destination;
+            this.dimension = destination[0];
             ServerWorld[] serverworld1 = {this.server.getWorld(destination[0])};
 
-            /*
-            WorldInfo worldinfo = serverworld1.getWorldInfo();
+            WorldInfo preWorldInfo = serverworld1[0].getWorldInfo();
             NetworkHooks.sendDimensionDataPacket(this.connection.netManager, (ServerPlayerEntity) (Object) this);
-            this.connection.sendPacket(new SRespawnPacket(destination, WorldInfo.byHashing(worldinfo.getSeed()), worldinfo.getGenerator(), this.interactionManager.getGameType()));
-            this.connection.sendPacket(new SServerDifficultyPacket(worldinfo.getDifficulty(), worldinfo.isDifficultyLocked()));
+            this.connection.sendPacket(new SRespawnPacket(destination[0], WorldInfo.byHashing(preWorldInfo.getSeed()), preWorldInfo.getGenerator(), this.interactionManager.getGameType()));
+            this.connection.sendPacket(new SServerDifficultyPacket(preWorldInfo.getDifficulty(), preWorldInfo.isDifficultyLocked()));
             PlayerList playerlist = this.server.getPlayerList();
             playerlist.updatePermissionLevel((ServerPlayerEntity) (Object) this);
             serverworld.removeEntity((ServerPlayerEntity) (Object) this, true); //Forge: the player entity is moved to the new world, NOT cloned. So keep the data alive with no matching invalidate call.
             this.revive();
-            */
 
             Entity e = teleporter.placeEntity((ServerPlayerEntity) (Object) this, serverworld, serverworld1[0], this.rotationYaw, spawnPortal -> {//Forge: Start vanilla logic
                 double d0 = this.getPosX();
@@ -346,26 +345,29 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
                 if (exit == null) {
                     return null;
                 }
-                serverworld1[0] = ((CraftWorld) exit.getWorld()).getHandle();
                 this.invulnerableDimensionChange = true;
+                ServerWorld newWorld = ((CraftWorld) exit.getWorld()).getHandle();
+                if (newWorld != serverworld1[0]) {
+                    serverworld1[0].removePlayer((ServerPlayerEntity) (Object)this, true);
+                    this.revive();
+                    serverworld1[0] = newWorld;
 
-                destination[0] = serverworld1[0].getDimension().getType();
-                this.dimension = destination[0];
+                    destination[0] = newWorld.getDimension().getType();
+                    this.dimension = destination[0];
 
-                WorldInfo worldinfo = serverworld1[0].getWorldInfo();
-                NetworkHooks.sendDimensionDataPacket(this.connection.netManager, (ServerPlayerEntity) (Object) this);
-                this.connection.sendPacket(new SRespawnPacket(destination[0], WorldInfo.byHashing(worldinfo.getSeed()), worldinfo.getGenerator(), this.interactionManager.getGameType()));
-                this.connection.sendPacket(new SServerDifficultyPacket(worldinfo.getDifficulty(), worldinfo.isDifficultyLocked()));
+                    WorldInfo worldinfo = serverworld1[0].getWorldInfo();
+                    NetworkHooks.sendDimensionDataPacket(this.connection.netManager, (ServerPlayerEntity) (Object) this);
+                    this.connection.sendPacket(new SRespawnPacket(destination[0], WorldInfo.byHashing(worldinfo.getSeed()), worldinfo.getGenerator(), this.interactionManager.getGameType()));
+                    this.connection.sendPacket(new SServerDifficultyPacket(worldinfo.getDifficulty(), worldinfo.isDifficultyLocked()));
 
-                this.server.getPlayerList().updatePermissionLevel((ServerPlayerEntity) (Object) this);
+                    this.server.getPlayerList().updatePermissionLevel((ServerPlayerEntity) (Object) this);
 
-                serverworld.removeEntity((ServerPlayerEntity) (Object) this, true); //Forge: the player entity is moved to the new world, NOT cloned. So keep the data alive with no matching invalidate call.
-                this.revive();
+                }
 
                 this.setMotion(exitVelocity);
 
-                this.setWorld(serverworld1[0]);
-                serverworld1[0].addDuringPortalTeleport((ServerPlayerEntity) (Object) this);
+                this.setWorld(newWorld);
+                newWorld.addDuringPortalTeleport((ServerPlayerEntity) (Object) this);
                 this.func_213846_b(serverworld);
 
                 // this.connection.setPlayerLocation(this.getPosX(), this.getPosY(), this.getPosZ(), f1, f);
@@ -375,6 +377,8 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
                 return (ServerPlayerEntity) (Object) this;//forge: this is part of the ITeleporter patch
             });//Forge: End vanilla logic
             if (e == null) {
+                this.dimension = dimensiontype;
+                serverworld.addDuringPortalTeleport((ServerPlayerEntity) (Object) this);
                 return (ServerPlayerEntity) (Object) this;
             } else if (e != (Object) this) {
                 throw new IllegalArgumentException(String.format("Teleporter %s returned not the player entity but instead %s, expected PlayerEntity %s", teleporter, e, this));
