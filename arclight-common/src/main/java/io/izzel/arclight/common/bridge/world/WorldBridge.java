@@ -7,7 +7,7 @@ import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.generator.ChunkGenerator;
 import org.spigotmc.SpigotWorldConfig;
 
-public interface WorldBridge extends IWorldWriterBridge {
+public interface WorldBridge extends IWorldWriterBridge, IBlockReaderBridge {
 
     CraftServer bridge$getServer();
 

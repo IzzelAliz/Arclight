@@ -17,6 +17,8 @@ import net.minecraft.world.World;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.AbstractChunkProvider;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.dimension.Dimension;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
@@ -59,6 +61,7 @@ public abstract class WorldMixin implements WorldBridge {
     @Shadow public abstract WorldBorder getWorldBorder();
     @Shadow@Final private WorldBorder worldBorder;
     @Shadow public abstract long getDayTime();
+    @Shadow public abstract IChunk getChunk(int x, int z, ChunkStatus requiredStatus, boolean nonnull);
     @Accessor("mainThread") public abstract Thread arclight$getMainThread();
     // @formatter:on
 
@@ -243,5 +246,12 @@ public abstract class WorldMixin implements WorldBridge {
     @Override
     public ChunkGenerator bridge$getGenerator() {
         return generator;
+    }
+
+    @Override
+    @Nullable
+    public BlockState bridge$getBlockStateIfLoaded(BlockPos pos) {
+        IChunk chunk = this.getChunk(pos.getX() >> 4, pos.getZ() >> 4, ChunkStatus.FULL, false);
+        return chunk == null ? null : chunk.getBlockState(pos);
     }
 }

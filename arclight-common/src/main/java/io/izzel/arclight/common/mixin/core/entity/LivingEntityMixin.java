@@ -181,6 +181,13 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         this.collides = true;
     }
 
+    @Inject(method = "canEntityBeSeen", cancellable = true, at = @At("HEAD"))
+    private void arclight$preventChunkLoad(Entity entityIn, CallbackInfoReturnable<Boolean> cir) {
+        if (entityIn.getEntityWorld() != this.world) {
+            cir.setReturnValue(false);
+        }
+    }
+
     /**
      * @author IzzelAliz
      * @reason
