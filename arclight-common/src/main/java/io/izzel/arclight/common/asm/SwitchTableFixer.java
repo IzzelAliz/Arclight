@@ -2,6 +2,7 @@ package io.izzel.arclight.common.asm;
 
 import com.google.common.collect.ImmutableSet;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
+import io.izzel.arclight.common.mod.util.remapper.GlobalClassRepo;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.objectweb.asm.ClassReader;
@@ -37,6 +38,7 @@ public class SwitchTableFixer implements Implementer {
     public byte[] processClass(byte[] bytes) {
         ClassNode node = new ClassNode();
         new ClassReader(bytes).accept(node, ClassReader.SKIP_FRAMES);
+        GlobalClassRepo.INSTANCE.offerNode(node);
         processClass(node, null);
         ClassWriter writer = new ClassWriter(0);
         node.accept(writer);
