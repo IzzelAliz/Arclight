@@ -34,10 +34,14 @@ public interface IBlockReaderMixin extends IBlockReaderBridge {
      */
     @Overwrite
     default BlockRayTraceResult rayTraceBlocks(RayTraceContext context) {
-        return doRayTrace(context, this::rayTraceBlock, (p_217302_0_) -> {
-            Vec3d vec3d = p_217302_0_.getStartVec().subtract(p_217302_0_.getEndVec());
-            return BlockRayTraceResult.createMiss(p_217302_0_.getEndVec(), Direction.getFacingFromVector(vec3d.x, vec3d.y, vec3d.z), new BlockPos(p_217302_0_.getEndVec()));
-        });
+        class Func implements Function<RayTraceContext, BlockRayTraceResult> {
+
+            @Override public BlockRayTraceResult apply(RayTraceContext rayTraceContext) {
+                Vec3d vec3d = rayTraceContext.getStartVec().subtract(rayTraceContext.getEndVec());
+                return BlockRayTraceResult.createMiss(rayTraceContext.getEndVec(), Direction.getFacingFromVector(vec3d.x, vec3d.y, vec3d.z), new BlockPos(rayTraceContext.getEndVec()));
+            }
+        }
+        return doRayTrace(context, this::rayTraceBlock, new Func());
     }
 
     default BlockRayTraceResult rayTraceBlock(RayTraceContext context, BlockPos pos) {
