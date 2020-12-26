@@ -66,7 +66,7 @@ public class ArclightPluginPatcher implements PluginTransformer {
                 }
             }
         } catch (Throwable e) {
-            ArclightMod.LOGGER.error("patcher.load-error", e);
+            ArclightMod.LOGGER.debug("patcher.load-error", e);
         }
         return Optional.empty();
     }
