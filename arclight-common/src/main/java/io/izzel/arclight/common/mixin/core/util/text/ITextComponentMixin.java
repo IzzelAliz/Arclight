@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 @Mixin(ITextComponent.class)
@@ -19,7 +20,14 @@ public interface ITextComponentMixin extends ITextComponentBridge, Iterable<ITex
     // @formatter:on
 
     default Stream<ITextComponent> stream() {
-        return Streams.concat(Stream.of((ITextComponent) this), this.getSiblings().stream().flatMap(it -> ((ITextComponentBridge) it).bridge$stream()));
+        class Func implements Function<ITextComponent, Stream<? extends ITextComponent>> {
+
+            @Override
+            public Stream<? extends ITextComponent> apply(ITextComponent component) {
+                return ((ITextComponentBridge) component).bridge$stream();
+            }
+        }
+        return Streams.concat(Stream.of((ITextComponent) this), this.getSiblings().stream().flatMap(new Func()));
     }
 
     @Override
