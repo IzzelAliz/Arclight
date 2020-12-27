@@ -386,6 +386,7 @@
     "world.gen.WorldGenRegionMixin",
     "world.gen.feature.structure.StructureMixin",
     "world.gen.feature.structure.SwampHutPieceMixin",
+    "world.gen.feature.template.TemplateManagerMixin",
     "world.raid.RaidManagerMixin",
     "world.raid.RaidMixin",
     "world.server.ChunkHolderMixin",
