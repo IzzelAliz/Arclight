@@ -66,7 +66,7 @@ public abstract class ArmorStandEntityMixin extends LivingEntityMixin {
 
     @Redirect(method = "attackEntityFrom", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/item/ArmorStandEntity;canInteract:Z"))
     private boolean arclight$softenCondition(ArmorStandEntity entity) {
-        return true;
+        return false;
     }
 
     @Inject(method = "attackEntityFrom", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/entity/item/ArmorStandEntity;remove()V"))
