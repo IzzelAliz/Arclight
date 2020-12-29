@@ -42,7 +42,7 @@ public class ForgeInstaller {
     private static final String[] MAVEN_REPO = {
         "https://arclight.mcxk.net/"
     };
-    private static final String INSTALLER_URL = "https://arclight.mcxk.net/net/minecraftforge/forge/%s-%s/forge-%s-%s-installer.jar";
+    private static final String INSTALLER_URL = "https://files.minecraftforge.net/maven/net/minecraftforge/forge/%s-%s/forge-%s-%s-installer.jar";
     private static final String SERVER_URL = "https://arclight.mcxk.net/net/minecraft/server/minecraft_server.%s.jar";
     private static final Map<String, String> VERSION_HASH = ImmutableMap.of(
         "1.14.4", "3dc3d84a581f14691199cf6831b71ed1296a9fdf",
