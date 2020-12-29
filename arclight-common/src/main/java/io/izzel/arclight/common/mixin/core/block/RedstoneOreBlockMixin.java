@@ -39,7 +39,7 @@ public abstract class RedstoneOreBlockMixin {
         arclight$entity = player;
     }
 
-    @Inject(method = "onEntityWalk", at = @At(value = "HEAD"))
+    @Inject(method = "onEntityWalk", cancellable = true, at = @At(value = "HEAD"))
     public void arclight$entityInteract(World worldIn, BlockPos pos, Entity entityIn, CallbackInfo ci) {
         if (entityIn instanceof PlayerEntity) {
             PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(((PlayerEntity) entityIn), Action.PHYSICAL, pos, null, null, null);
