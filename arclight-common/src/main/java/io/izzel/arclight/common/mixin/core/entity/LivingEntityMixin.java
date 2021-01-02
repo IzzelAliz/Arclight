@@ -102,7 +102,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public PlayerEntity attackingPlayer;
     @Shadow public int deathTime;
     @Shadow protected boolean dead;
-    @Shadow(remap = false) public void remove(boolean keepData) { }
     @Shadow public abstract ModifiableAttributeInstance getAttribute(Attribute attribute);
     @Shadow public boolean potionsNeedUpdate;
     @Shadow public abstract boolean removePotionEffect(Effect effectIn);

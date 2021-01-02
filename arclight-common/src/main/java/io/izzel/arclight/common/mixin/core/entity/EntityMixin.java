@@ -126,7 +126,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow @Nullable public abstract MinecraftServer getServer();
     @Shadow public abstract Vector3d getMotion();
     @Shadow public abstract EntityType<?> getType();
-    @Shadow(remap = false) public abstract void remove(boolean keepData);
+    @Shadow(remap = false) public void remove(boolean keepData) { }
     @Shadow @Final protected Random rand;
     @Shadow public abstract float getWidth();
     @Shadow public abstract float getHeight();
