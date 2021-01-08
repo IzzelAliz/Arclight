@@ -73,6 +73,10 @@ public class ArclightRedirectAdapter implements PluginTransformer {
             method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectForName", String.class, boolean.class, ClassLoader.class)
         )
         .put(
+            method(Opcodes.INVOKEVIRTUAL, Package.class, "getName"),
+            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectPackageGetName", Package.class)
+        )
+        .put(
             method(Opcodes.INVOKESTATIC, MethodType.class, "fromMethodDescriptorString", String.class, ClassLoader.class),
             method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectFromDescStr", String.class, ClassLoader.class)
         )

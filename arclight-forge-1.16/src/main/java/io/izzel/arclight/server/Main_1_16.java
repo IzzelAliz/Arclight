@@ -12,7 +12,7 @@ public class Main_1_16 extends ArclightMain {
 
     @Override
     protected void afterSetup() throws Throwable {
-        ArclightVersion.setVersion(ArclightVersion.v1_16);
+        ArclightVersion.setVersion(ArclightVersion.v1_16_4);
         ForgeInstaller.install();
     }
 }
