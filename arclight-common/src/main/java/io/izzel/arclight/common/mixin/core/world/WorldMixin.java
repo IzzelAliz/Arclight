@@ -88,7 +88,7 @@ public abstract class WorldMixin implements WorldBridge {
     @Inject(method = "<init>(Lnet/minecraft/world/storage/ISpawnWorldInfo;Lnet/minecraft/util/RegistryKey;Lnet/minecraft/world/DimensionType;Ljava/util/function/Supplier;ZZJ)V", at = @At("RETURN"))
     private void arclight$init(ISpawnWorldInfo info, RegistryKey<World> dimension, DimensionType dimType, Supplier<IProfiler> profiler, boolean isRemote, boolean isDebug, long seed, CallbackInfo ci) {
         this.spigotConfig = new SpigotWorldConfig(((IServerWorldInfo) info).getWorldName());
-        ((WorldBorderBridge) this.worldBorder).bridge$setWorld((ServerWorld) (Object) this);
+        ((WorldBorderBridge) this.worldBorder).bridge$setWorld((World) (Object) this);
         this.ticksPerAnimalSpawns = this.getServer().getTicksPerAnimalSpawns();
         this.ticksPerMonsterSpawns = this.getServer().getTicksPerMonsterSpawns();
         this.ticksPerWaterSpawns = this.getServer().getTicksPerWaterSpawns();
