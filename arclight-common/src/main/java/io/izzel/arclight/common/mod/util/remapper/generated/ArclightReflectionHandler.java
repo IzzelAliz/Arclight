@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mod.util.remapper.generated;
 
+import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.util.remapper.ClassLoaderAdapter;
 import io.izzel.arclight.common.mod.util.remapper.ClassLoaderRemapper;
@@ -144,6 +145,16 @@ public class ArclightReflectionHandler extends ClassLoader {
             String outer = redirectClassGetName(enclosingClass);
             String inner = redirectClassGetName(cl);
             return inner.substring(outer.length() + 1);
+        }
+    }
+
+    // srg -> bukkit
+    public static String redirectPackageGetName(Package pkg) {
+        String name = pkg.getName();
+        if (name.startsWith(PREFIX)) {
+            return PREFIX + "server." + ArclightVersion.current().packageName();
+        } else {
+            return name;
         }
     }
 
