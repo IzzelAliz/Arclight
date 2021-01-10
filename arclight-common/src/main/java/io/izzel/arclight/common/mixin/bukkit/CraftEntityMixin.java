@@ -10,7 +10,6 @@ import io.izzel.arclight.common.mod.server.entity.ArclightModMinecartContainer;
 import io.izzel.arclight.common.mod.server.entity.ArclightModMob;
 import io.izzel.arclight.common.mod.server.entity.ArclightModProjectile;
 import io.izzel.arclight.common.mod.server.entity.ArclightModRaider;
-import io.izzel.arclight.common.mod.server.entity.ArclightModVillager;
 import net.minecraft.entity.AgeableEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.FlyingEntity;
@@ -18,7 +17,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.item.minecart.AbstractMinecartEntity;
 import net.minecraft.entity.item.minecart.ContainerMinecartEntity;
-import net.minecraft.entity.merchant.villager.AbstractVillagerEntity;
 import net.minecraft.entity.monster.AbstractRaiderEntity;
 import net.minecraft.entity.passive.GolemEntity;
 import net.minecraft.entity.passive.TameableEntity;
@@ -33,12 +31,15 @@ import org.bukkit.craftbukkit.v.entity.CraftFlying;
 import org.bukkit.craftbukkit.v.entity.CraftGolem;
 import org.bukkit.craftbukkit.v.entity.CraftTameableAnimal;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = CraftEntity.class, remap = false)
 public class CraftEntityMixin {
+
+    @Shadow protected Entity entity;
 
     @Inject(method = "getEntity", cancellable = true, at = @At("HEAD"))
     private static void arclight$fakePlayer(CraftServer server, Entity entity, CallbackInfoReturnable<CraftEntity> cir) {
@@ -58,10 +59,6 @@ public class CraftEntityMixin {
                             return;
                         }
                         cir.setReturnValue(new ArclightModHorse(server, (AbstractHorseEntity) entity));
-                        return;
-                    }
-                    if (entity instanceof AbstractVillagerEntity) {
-                        cir.setReturnValue(new ArclightModVillager(server, (AbstractVillagerEntity) entity));
                         return;
                     }
                     if (entity instanceof TameableEntity) {
