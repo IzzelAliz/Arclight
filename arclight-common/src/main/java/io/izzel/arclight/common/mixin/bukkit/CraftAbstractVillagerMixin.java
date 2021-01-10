@@ -5,7 +5,7 @@ import org.bukkit.craftbukkit.v.entity.CraftAbstractVillager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-@Mixin(CraftAbstractVillager.class)
+@Mixin(value = CraftAbstractVillager.class, remap = false)
 public class CraftAbstractVillagerMixin extends CraftEntityMixin {
 
     /**
