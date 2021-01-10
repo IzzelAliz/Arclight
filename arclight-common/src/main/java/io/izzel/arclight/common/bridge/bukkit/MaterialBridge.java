@@ -16,6 +16,8 @@ public interface MaterialBridge {
 
     void bridge$setupBlock(ResourceLocation key, Block block, MaterialPropertySpec spec);
 
+    void bridge$setupVanillaBlock(MaterialPropertySpec spec);
+
     void bridge$setupItem(ResourceLocation key, Item item, MaterialPropertySpec spec);
 
     void bridge$setBlock();
