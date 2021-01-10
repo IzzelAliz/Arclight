@@ -16,6 +16,8 @@ public interface MaterialBridge {
 
     void bridge$setupBlock(ResourceLocation key, Block block, MaterialPropertySpec spec);
 
+    void bridge$setupVanillaBlock(MaterialPropertySpec spec);
+
     void bridge$setupItem(ResourceLocation key, Item item, MaterialPropertySpec spec);
 
     void bridge$setBlock();
@@ -34,4 +36,6 @@ public interface MaterialBridge {
     Function<CraftBlock, BlockState> bridge$blockStateFactory();
 
     void bridge$setBlockStateFactory(Function<CraftBlock, BlockState> func);
+
+    boolean bridge$shouldApplyStateFactory();
 }

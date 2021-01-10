@@ -222,6 +222,8 @@ public class BukkitRegistry {
                 blocks++;
                 ArclightMod.LOGGER.debug("Registered {} as block {}", location, material);
                 list.add(material);
+            } else {
+                ((MaterialBridge) (Object) material).bridge$setupVanillaBlock(matSpec(location));
             }
             BLOCK_MATERIAL.put(block, material);
             MATERIAL_BLOCK.put(material, block);

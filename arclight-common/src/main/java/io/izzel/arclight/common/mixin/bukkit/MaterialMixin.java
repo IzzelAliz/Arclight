@@ -257,11 +257,25 @@ public abstract class MaterialMixin implements MaterialBridge {
     }
 
     @Override
+    public void bridge$setupVanillaBlock(MaterialPropertySpec spec) {
+        if (spec != MaterialPropertySpec.EMPTY) {
+            this.arclight$spec = spec.clone();
+            this.setupBlockStateFunc();
+        }
+    }
+
+    @Override
     public void bridge$setupItem(ResourceLocation key, Item item, MaterialPropertySpec spec) {
         this.arclight$spec = spec.clone();
         arclight$type = MaterialPropertySpec.MaterialType.FORGE;
         arclight$item = true;
         arclight$setupCommon(key, null, item);
+    }
+
+    @Override
+    public boolean bridge$shouldApplyStateFactory() {
+        return this.arclight$type != MaterialPropertySpec.MaterialType.VANILLA ||
+            (this.arclight$spec != null && this.arclight$spec.blockStateClass != null);
     }
 
     @SuppressWarnings("unchecked")
@@ -338,7 +352,7 @@ public abstract class MaterialMixin implements MaterialBridge {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private void setupBlockStateFunc() {
-        if (arclight$spec.blockStateClass != null) {
+        if (arclight$spec.blockStateClass != null && !arclight$spec.blockStateClass.equalsIgnoreCase("auto")) {
             try {
                 Class<?> cl = Class.forName(arclight$spec.blockStateClass);
                 if (!CraftBlockState.class.isAssignableFrom(cl)) {
