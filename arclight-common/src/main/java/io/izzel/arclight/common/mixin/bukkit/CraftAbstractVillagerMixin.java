@@ -8,6 +8,10 @@ import org.spongepowered.asm.mixin.Overwrite;
 @Mixin(CraftAbstractVillager.class)
 public class CraftAbstractVillagerMixin extends CraftEntityMixin {
 
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
     @Overwrite
     public AbstractVillagerEntity getHandle() {
         return (AbstractVillagerEntity) this.entity;
