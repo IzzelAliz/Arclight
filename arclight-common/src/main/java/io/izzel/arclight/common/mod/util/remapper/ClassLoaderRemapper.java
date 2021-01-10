@@ -34,7 +34,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ClassLoaderRemapper extends JarRemapper {
+public class ClassLoaderRemapper extends LenientJarRemapper {
 
     private static final Logger LOGGER = LogManager.getLogger("Arclight");
     private static final String PREFIX = "net/minecraft/";
@@ -51,7 +51,7 @@ public class ClassLoaderRemapper extends JarRemapper {
         this.jarMapping.setInheritanceMap(ArclightRemapper.INSTANCE.inheritanceMap);
         this.jarMapping.setFallbackInheritanceProvider(GlobalClassRepo.inheritanceProvider());
         this.toBukkitMapping.setFallbackInheritanceProvider(GlobalClassRepo.inheritanceProvider());
-        this.toBukkitRemapper = new JarRemapper(this.toBukkitMapping);
+        this.toBukkitRemapper = new LenientJarRemapper(this.toBukkitMapping);
         this.generatedHandler = generateReflectionHandler();
         GlobalClassRepo.INSTANCE.addRepo(new ClassLoaderRepo(this.classLoader));
     }
