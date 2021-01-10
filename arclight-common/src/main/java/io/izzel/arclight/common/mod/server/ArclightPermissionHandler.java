@@ -24,13 +24,13 @@ public class ArclightPermissionHandler implements IPermissionHandler {
 
     public static final ArclightPermissionHandler INSTANCE = new ArclightPermissionHandler();
 
-    private final List<Permission> list = new LinkedList<>();
+    private final List<Perm> list = new LinkedList<>();
     private final AtomicBoolean initialized = new AtomicBoolean(false);
 
     public void initialize() {
         if (!initialized.getAndSet(true)) {
-            for (Permission permission : this.list) {
-                DefaultPermissions.registerPermission(permission);
+            for (Perm permission : this.list) {
+                DefaultPermissions.registerPermission(permission.toBukkit());
             }
             this.list.clear();
         }
@@ -49,7 +49,7 @@ public class ArclightPermissionHandler implements IPermissionHandler {
         if (initialized.get()) {
             DefaultPermissions.registerPermission(node, desc, bukkit);
         } else {
-            this.list.add(new Permission(node, desc, bukkit));
+            this.list.add(new Perm(node, desc, bukkit));
         }
     }
 
@@ -58,7 +58,7 @@ public class ArclightPermissionHandler implements IPermissionHandler {
         if (initialized.get()) {
             return Bukkit.getPluginManager().getPermissions().stream().map(Permission::getName).collect(Collectors.toList());
         } else {
-            return this.list.stream().map(Permission::getName).collect(Collectors.toList());
+            return this.list.stream().map(it -> it.node).collect(Collectors.toList());
         }
     }
 
@@ -91,6 +91,23 @@ public class ArclightPermissionHandler implements IPermissionHandler {
         } else {
             Permission permission = Bukkit.getPluginManager().getPermission(node);
             return permission == null ? "" : permission.getDescription();
+        }
+    }
+
+    private static class Perm {
+
+        private final String node;
+        private final String desc;
+        private final PermissionDefault level;
+
+        public Perm(String node, String desc, PermissionDefault level) {
+            this.node = node;
+            this.desc = desc;
+            this.level = level;
+        }
+
+        public Permission toBukkit() {
+            return new Permission(node, desc, level);
         }
     }
 }
