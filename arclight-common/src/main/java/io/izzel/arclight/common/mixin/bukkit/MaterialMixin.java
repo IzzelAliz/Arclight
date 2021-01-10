@@ -264,6 +264,11 @@ public abstract class MaterialMixin implements MaterialBridge {
         arclight$setupCommon(key, null, item);
     }
 
+    @Override
+    public boolean bridge$shouldApplyStateFactory() {
+        return this.arclight$type != MaterialPropertySpec.MaterialType.VANILLA || this.arclight$spec.blockStateClass != null;
+    }
+
     @SuppressWarnings("unchecked")
     private void arclight$setupCommon(ResourceLocation key, Block block, Item item) {
         this.key = CraftNamespacedKey.fromMinecraft(key);

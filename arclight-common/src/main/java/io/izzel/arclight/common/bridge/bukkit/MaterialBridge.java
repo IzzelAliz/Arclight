@@ -34,4 +34,6 @@ public interface MaterialBridge {
     Function<CraftBlock, BlockState> bridge$blockStateFactory();
 
     void bridge$setBlockStateFactory(Function<CraftBlock, BlockState> func);
+
+    boolean bridge$shouldApplyStateFactory();
 }
