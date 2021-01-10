@@ -266,7 +266,8 @@ public abstract class MaterialMixin implements MaterialBridge {
 
     @Override
     public boolean bridge$shouldApplyStateFactory() {
-        return this.arclight$type != MaterialPropertySpec.MaterialType.VANILLA || this.arclight$spec.blockStateClass != null;
+        return this.arclight$type != MaterialPropertySpec.MaterialType.VANILLA ||
+            (this.arclight$spec != null && this.arclight$spec.blockStateClass != null);
     }
 
     @SuppressWarnings("unchecked")
