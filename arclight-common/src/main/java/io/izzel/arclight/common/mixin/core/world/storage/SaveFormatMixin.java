@@ -17,7 +17,9 @@ public abstract class SaveFormatMixin implements SaveFormatBridge {
     // @formatter:on
 
     public SaveFormat.LevelSave getLevelSave(String saveName, RegistryKey<Dimension> world) throws IOException {
-        return getLevelSave(saveName);
+        SaveFormat.LevelSave save = getLevelSave(saveName);
+        ((LevelSaveBridge) save).bridge$setDimType(world);
+        return save;
     }
 
     // mock

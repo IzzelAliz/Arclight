@@ -216,8 +216,15 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
     }
 
     @Inject(method = "save", at = @At(value = "JUMP", ordinal = 0, opcode = Opcodes.IFNULL))
-    public void arclight$worldSave(IProgressUpdate progress, boolean flush, boolean skipSave, CallbackInfo ci) {
+    private void arclight$worldSaveEvent(IProgressUpdate progress, boolean flush, boolean skipSave, CallbackInfo ci) {
         Bukkit.getPluginManager().callEvent(new WorldSaveEvent(bridge$getWorld()));
+    }
+
+    @Inject(method = "save", at = @At("RETURN"))
+    private void arclight$saveLevelDat(IProgressUpdate progress, boolean flush, boolean skipSave, CallbackInfo ci) {
+        this.$$worldDataServer.setWorldBorderSerializer(this.getWorldBorder().getSerializer());
+        this.$$worldDataServer.setCustomBossEventData(this.shadow$getServer().getCustomBossEvents().write());
+        this.convertable.saveLevel(this.shadow$getServer().field_240767_f_, this.$$worldDataServer, this.shadow$getServer().getPlayerList().getHostPlayerData());
     }
 
     @Inject(method = "onChunkUnloading", at = @At("HEAD"))

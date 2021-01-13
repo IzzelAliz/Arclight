@@ -9,4 +9,9 @@ import java.io.IOException;
 public interface SaveFormatBridge {
 
     SaveFormat.LevelSave bridge$getLevelSave(String saveName, RegistryKey<Dimension> world) throws IOException;
+
+    interface LevelSaveBridge {
+
+        void bridge$setDimType(RegistryKey<Dimension> typeKey);
+    }
 }

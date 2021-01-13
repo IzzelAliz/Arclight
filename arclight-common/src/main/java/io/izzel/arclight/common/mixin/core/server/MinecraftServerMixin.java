@@ -71,6 +71,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -415,6 +416,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
         if (!((WorldBridge) serverWorld).bridge$getWorld().getKeepSpawnInMemory()) {
             return;
         }
+        this.forceTicks = true;
         LOGGER.info("Preparing start region for dimension {}", serverWorld.getDimensionKey().getLocation());
         BlockPos blockpos = serverWorld.getSpawnPoint();
         listener.start(new ChunkPos(blockpos));
@@ -451,6 +453,11 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
         ArclightConstants.currentTick = (int) (System.currentTimeMillis() / 50);
         this.server.getScheduler().mainThreadHeartbeat(this.tickCounter);
         this.bridge$drainQueuedTasks();
+    }
+
+    @Inject(method = "save", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;func_241755_D_()Lnet/minecraft/world/server/ServerWorld;"))
+    private void arclight$skipSave(boolean suppressLog, boolean flush, boolean forced, CallbackInfoReturnable<Boolean> cir, boolean flag) {
+        cir.setReturnValue(flag);
     }
 
     /**

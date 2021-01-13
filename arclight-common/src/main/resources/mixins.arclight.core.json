@@ -432,6 +432,7 @@
     "world.storage.MapData_MapInfoMixin",
     "world.storage.MapDataMixin",
     "world.storage.PlayerDataMixin",
+    "world.storage.SaveFormat_LevelSaveMixin",
     "world.storage.SaveFormatMixin",
     "world.storage.ServerWorldInfoMixin"
   ]
