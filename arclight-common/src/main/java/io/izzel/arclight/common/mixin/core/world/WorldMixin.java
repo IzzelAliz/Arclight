@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world;
 
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.bridge.world.border.WorldBorderBridge;
+import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.block.Block;
@@ -12,6 +13,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
@@ -95,7 +97,13 @@ public abstract class WorldMixin implements WorldBridge {
         this.ticksPerWaterAmbientSpawns = this.getServer().getTicksPerWaterAmbientSpawns();
         this.ticksPerAmbientSpawns = this.getServer().getTicksPerAmbientSpawns();
         this.typeKey = this.getServer().getHandle().getServer().func_244267_aX().func_230520_a_().getOptionalKey(dimensionType)
-            .orElseThrow(() -> new IllegalStateException("Unregistered dimension type: " + dimType));
+            .orElseGet(() -> {
+                Registry<DimensionType> registry = this.getServer().getHandle().getServer().func_244267_aX().func_230520_a_();
+                Registry.register(registry, dimension.getLocation(), dimType);
+                RegistryKey<DimensionType> typeRegistryKey = registry.getOptionalKey(dimType).orElseThrow(() -> new IllegalStateException("Cannot register dimension type: " + dimType));
+                ArclightMod.LOGGER.warn("Registered unknown dimension type {} as {}", dimType, typeRegistryKey);
+                return typeRegistryKey;
+            });
     }
 
     @Override
