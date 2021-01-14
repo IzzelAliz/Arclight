@@ -99,9 +99,8 @@ public abstract class WorldMixin implements WorldBridge {
         this.typeKey = this.getServer().getHandle().getServer().func_244267_aX().func_230520_a_().getOptionalKey(dimensionType)
             .orElseGet(() -> {
                 Registry<DimensionType> registry = this.getServer().getHandle().getServer().func_244267_aX().func_230520_a_();
-                Registry.register(registry, dimension.getLocation(), dimType);
-                RegistryKey<DimensionType> typeRegistryKey = registry.getOptionalKey(dimType).orElseThrow(() -> new IllegalStateException("Cannot register dimension type: " + dimType));
-                ArclightMod.LOGGER.warn("Registered unknown dimension type {} as {}", dimType, typeRegistryKey);
+                RegistryKey<DimensionType> typeRegistryKey = RegistryKey.getOrCreateKey(registry.getRegistryKey(), dimension.getLocation());
+                ArclightMod.LOGGER.warn("Assign {} to unknown dimension type {} as {}", typeRegistryKey, dimType);
                 return typeRegistryKey;
             });
     }
