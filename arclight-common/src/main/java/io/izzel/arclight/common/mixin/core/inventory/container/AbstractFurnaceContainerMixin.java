@@ -11,8 +11,10 @@ import net.minecraft.item.crafting.AbstractCookingRecipe;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.tileentity.AbstractFurnaceTileEntity;
 import net.minecraft.util.IIntArray;
+import org.bukkit.craftbukkit.v.inventory.CraftInventory;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryFurnace;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
+import org.bukkit.inventory.Inventory;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -47,8 +49,13 @@ public abstract class AbstractFurnaceContainerMixin extends ContainerMixin {
             return bukkitEntity;
         }
 
-        CraftInventoryFurnace inventory = new CraftInventoryFurnace((AbstractFurnaceTileEntity) this.furnaceInventory);
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
+        Inventory viewing;
+        if (this.furnaceInventory instanceof AbstractFurnaceTileEntity) {
+            viewing = new CraftInventoryFurnace((AbstractFurnaceTileEntity) this.furnaceInventory);
+        } else {
+            viewing = new CraftInventory(this.furnaceInventory);
+        }
+        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), viewing, (Container) (Object) this);
         return bukkitEntity;
     }
 }
