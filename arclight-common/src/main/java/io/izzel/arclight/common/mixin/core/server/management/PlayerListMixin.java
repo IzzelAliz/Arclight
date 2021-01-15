@@ -25,7 +25,6 @@ import net.minecraft.network.login.ServerLoginNetHandler;
 import net.minecraft.network.play.server.SChangeGameStatePacket;
 import net.minecraft.network.play.server.SChatPacket;
 import net.minecraft.network.play.server.SEntityStatusPacket;
-import net.minecraft.network.play.server.SJoinGamePacket;
 import net.minecraft.network.play.server.SPlayEntityEffectPacket;
 import net.minecraft.network.play.server.SPlaySoundEffectPacket;
 import net.minecraft.network.play.server.SRespawnPacket;
@@ -45,7 +44,6 @@ import net.minecraft.server.management.PlayerList;
 import net.minecraft.server.management.ProfileBanEntry;
 import net.minecraft.stats.ServerStatisticsManager;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.RegistryKey;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.Util;
@@ -56,9 +54,7 @@ import net.minecraft.util.registry.DynamicRegistries;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.DimensionType;
 import net.minecraft.world.GameRules;
-import net.minecraft.world.GameType;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.server.ServerWorld;
@@ -97,7 +93,6 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 @Mixin(PlayerList.class)
@@ -146,9 +141,9 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().sendSupportedChannels();
     }
 
-    @Redirect(method = "initializeConnectionToPlayer", at = @At(value = "NEW", target = "net/minecraft/network/play/server/SJoinGamePacket"))
-    private SJoinGamePacket arclight$spawnPacket(int p_i242082_1_, GameType p_i242082_2_, GameType p_i242082_3_, long p_i242082_4_, boolean p_i242082_6_, Set<RegistryKey<World>> p_i242082_7_, DynamicRegistries.Impl p_i242082_8_, DimensionType p_i242082_9_, RegistryKey<World> p_i242082_10_, int p_i242082_11_, int p_i242082_12_, boolean p_i242082_13_, boolean p_i242082_14_, boolean p_i242082_15_, boolean p_i242082_16_, NetworkManager netManager, ServerPlayerEntity playerIn) {
-        return new SJoinGamePacket(p_i242082_1_, p_i242082_2_, p_i242082_3_, p_i242082_4_, p_i242082_6_, p_i242082_7_, p_i242082_8_, p_i242082_9_, p_i242082_10_, p_i242082_11_, ((WorldBridge) playerIn.getServerWorld()).bridge$spigotConfig().viewDistance, p_i242082_13_, p_i242082_14_, p_i242082_15_, p_i242082_16_);
+    @Redirect(method = "initializeConnectionToPlayer", at = @At(value = "FIELD", target = "Lnet/minecraft/server/management/PlayerList;viewDistance:I"))
+    private int arclight$spigotViewDistance(PlayerList playerList, NetworkManager netManager, ServerPlayerEntity playerIn) {
+        return ((WorldBridge) playerIn.getServerWorld()).bridge$spigotConfig().viewDistance;
     }
 
     @Eject(method = "initializeConnectionToPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/management/PlayerList;func_232641_a_(Lnet/minecraft/util/text/ITextComponent;Lnet/minecraft/util/text/ChatType;Ljava/util/UUID;)V"))
