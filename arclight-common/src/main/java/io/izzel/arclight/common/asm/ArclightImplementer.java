@@ -42,6 +42,7 @@ public class ArclightImplementer implements ILaunchPluginService {
         this.implementers.put("inventory", new InventoryImplementer());
         this.implementers.put("switch", SwitchTableFixer.INSTANCE);
         this.implementers.put("async", AsyncCatcher.INSTANCE);
+        this.implementers.put("entitytype", EntityTypePatcher.INSTANCE);
     }
 
     @Override

@@ -10,6 +10,7 @@ import io.izzel.arclight.common.mod.server.entity.ArclightModMinecartContainer;
 import io.izzel.arclight.common.mod.server.entity.ArclightModMob;
 import io.izzel.arclight.common.mod.server.entity.ArclightModProjectile;
 import io.izzel.arclight.common.mod.server.entity.ArclightModRaider;
+import io.izzel.arclight.common.mod.util.ResourceLocationUtil;
 import net.minecraft.entity.AgeableEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.FlyingEntity;
@@ -23,23 +24,46 @@ import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.passive.horse.AbstractChestedHorseEntity;
 import net.minecraft.entity.passive.horse.AbstractHorseEntity;
 import net.minecraft.entity.projectile.ThrowableEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftAgeable;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.craftbukkit.v.entity.CraftFlying;
 import org.bukkit.craftbukkit.v.entity.CraftGolem;
 import org.bukkit.craftbukkit.v.entity.CraftTameableAnimal;
+import org.bukkit.entity.EntityType;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.Locale;
+import java.util.Objects;
+
 @Mixin(value = CraftEntity.class, remap = false)
-public class CraftEntityMixin {
+public abstract class CraftEntityMixin implements org.bukkit.entity.Entity {
 
     @Shadow protected Entity entity;
+
+    private EntityType arclight$type;
+
+    @Override
+    public @NotNull EntityType getType() {
+        if (this.arclight$type == null) {
+            ResourceLocation location = ForgeRegistries.ENTITIES.getKey(entity.getType());
+            if (location == null) throw new IllegalArgumentException("Unregistered entity type " + entity.getType());
+            if (location.getNamespace().equals("minecraft")) {
+                this.arclight$type = Objects.requireNonNull(EntityType.fromName(location.getPath().toUpperCase(Locale.ROOT)));
+            } else {
+                this.arclight$type = EntityType.valueOf(ResourceLocationUtil.standardize(location));
+            }
+        }
+        return this.arclight$type;
+    }
 
     @Inject(method = "getEntity", cancellable = true, at = @At("HEAD"))
     private static void arclight$fakePlayer(CraftServer server, Entity entity, CallbackInfoReturnable<CraftEntity> cir) {
