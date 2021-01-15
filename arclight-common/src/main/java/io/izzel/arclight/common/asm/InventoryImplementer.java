@@ -64,7 +64,7 @@ public class InventoryImplementer implements Implementer {
         }
     }
 
-    private boolean isInventoryClass(ClassNode node, ILaunchPluginService.ITransformerLoader transformerLoader) {
+    private boolean isInventoryClass(ClassNode node, ILaunchPluginService.ITransformerLoader transformerLoader) throws Throwable {
         if (node.interfaces.contains(INV_TYPE)) {
             map.put(node.name, true);
             return true;
@@ -74,11 +74,7 @@ public class InventoryImplementer implements Implementer {
                 map.put(node.name, b);
                 return b;
             } else {
-                try {
-                    return isInventoryClass(findClass(node.superName, transformerLoader), transformerLoader);
-                } catch (Throwable t) {
-                    throw LocalizedException.unchecked("implementer.error", t);
-                }
+                return isInventoryClass(findClass(node.superName, transformerLoader), transformerLoader);
             }
         }
     }
