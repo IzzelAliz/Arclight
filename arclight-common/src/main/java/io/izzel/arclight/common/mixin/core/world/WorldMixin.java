@@ -5,6 +5,7 @@ import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.bridge.world.border.WorldBorderBridge;
 import io.izzel.arclight.common.bridge.world.dimension.DimensionTypeBridge;
 import io.izzel.arclight.common.bridge.world.storage.DerivedWorldInfoBridge;
+import io.izzel.arclight.common.mod.server.world.WrappedWorlds;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -42,6 +43,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Field;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 @Mixin(World.class)
@@ -80,7 +83,7 @@ public abstract class WorldMixin implements WorldBridge {
             ((DerivedWorldInfoBridge) info).bridge$setDimension(dimType);
         }
         spigotConfig = new SpigotWorldConfig(info.getWorldName());
-        ((WorldBorderBridge) this.worldBorder).bridge$setWorld((ServerWorld) (Object) this);
+        ((WorldBorderBridge) this.worldBorder).bridge$setWorld((World) (Object) this);
         this.ticksPerAnimalSpawns = this.getServer().getTicksPerAnimalSpawns();
         this.ticksPerMonsterSpawns = this.getServer().getTicksPerMonsterSpawns();
         if (ArclightVersion.atLeast(ArclightVersion.v1_15)) {
@@ -189,6 +192,14 @@ public abstract class WorldMixin implements WorldBridge {
 
     public CraftWorld getWorld() {
         if (this.world == null) {
+            Optional<Field> delegate = WrappedWorlds.getDelegate(this.getClass());
+            if (delegate.isPresent()) {
+                try {
+                    return ((WorldBridge) delegate.get().get(this)).bridge$getWorld();
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
             if (generator == null) {
                 generator = getServer().getGenerator(getWorldInfo().getWorldName());
             }

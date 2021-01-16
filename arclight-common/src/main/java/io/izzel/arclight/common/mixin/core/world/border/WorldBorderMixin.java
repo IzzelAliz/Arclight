@@ -1,22 +1,22 @@
 package io.izzel.arclight.common.mixin.core.world.border;
 
 import io.izzel.arclight.common.bridge.world.border.WorldBorderBridge;
+import net.minecraft.world.World;
 import net.minecraft.world.border.WorldBorder;
-import net.minecraft.world.server.ServerWorld;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(WorldBorder.class)
 public class WorldBorderMixin implements WorldBorderBridge {
 
-    public ServerWorld world;
+    public World world;
 
     @Override
-    public ServerWorld bridge$getWorld() {
+    public World bridge$getWorld() {
         return this.world;
     }
 
     @Override
-    public void bridge$setWorld(ServerWorld world) {
+    public void bridge$setWorld(World world) {
         this.world = world;
     }
 }
