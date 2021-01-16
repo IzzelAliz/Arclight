@@ -4,6 +4,7 @@ import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.bridge.world.border.WorldBorderBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.server.ArclightServer;
+import io.izzel.arclight.common.mod.server.world.WrappedWorlds;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -43,6 +44,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Field;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 @Mixin(World.class)
@@ -193,6 +196,14 @@ public abstract class WorldMixin implements WorldBridge {
 
     public CraftWorld getWorld() {
         if (this.world == null) {
+            Optional<Field> delegate = WrappedWorlds.getDelegate(this.getClass());
+            if (delegate.isPresent()) {
+                try {
+                    return ((WorldBridge) delegate.get().get(this)).bridge$getWorld();
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
             if (generator == null) {
                 generator = getServer().getGenerator(((IServerWorldInfo) this.getWorldInfo()).getWorldName());
             }
