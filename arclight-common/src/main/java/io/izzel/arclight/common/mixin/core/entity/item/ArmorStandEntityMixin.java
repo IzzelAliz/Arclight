@@ -122,7 +122,13 @@ public abstract class ArmorStandEntityMixin extends LivingEntityMixin {
 
     private Collection<ItemEntity> arclight$drops() {
         Collection<ItemEntity> drops = this.captureDrops();
-        return drops == null ? this.captureDrops(new ArrayList<>()) : drops;
+        if (drops == null) {
+            ArrayList<ItemEntity> list = new ArrayList<>();
+            this.captureDrops(list);
+            return list;
+        } else {
+            return drops;
+        }
     }
 
     private void arclight$callEntityDeath() {
