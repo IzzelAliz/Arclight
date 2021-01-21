@@ -90,7 +90,7 @@ public class ForgeInstaller {
         FileDownloader fd = new FileDownloader(format, dist, info.installer.hash);
         CompletableFuture<?> installerFuture = reportSupply(pool).apply(fd).thenAccept(path -> {
             try {
-                FileSystem system = FileSystems.newFileSystem(path, null);
+                FileSystem system = FileSystems.newFileSystem(path, (ClassLoader) null);
                 Map<String, Map.Entry<String, String>> map = new HashMap<>();
                 Path profile = system.getPath("install_profile.json");
                 map.putAll(profileLibraries(profile));
@@ -186,7 +186,12 @@ public class ForgeInstaller {
 
     private static void addToPath(Path path) throws Throwable {
         ClassLoader loader = ForgeInstaller.class.getClassLoader();
-        Field ucpField = loader.getClass().getDeclaredField("ucp");
+        Field ucpField;
+        try {
+            ucpField = loader.getClass().getDeclaredField("ucp");
+        } catch (NoSuchFieldException e) {
+            ucpField = loader.getClass().getSuperclass().getDeclaredField("ucp");
+        }
         long offset = Unsafe.objectFieldOffset(ucpField);
         Object ucp = Unsafe.getObject(loader, offset);
         Method method = ucp.getClass().getDeclaredMethod("addURL", URL.class);
