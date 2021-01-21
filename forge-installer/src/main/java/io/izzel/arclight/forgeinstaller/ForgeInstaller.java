@@ -48,7 +48,8 @@ public class ForgeInstaller {
         "1.14.4", "3dc3d84a581f14691199cf6831b71ed1296a9fdf",
         "1.15.2", "bb2b6b1aefcd70dfd1892149ac3a215f6c636b07",
         "1.16.3", "f02f4473dbf152c23d7d484952121db0b36698cb",
-        "1.16.4", "35139deedbd5182953cf1caa23835da59ca3d7cd"
+        "1.16.4", "35139deedbd5182953cf1caa23835da59ca3d7cd",
+        "1.16.5", "1b557e7b033b583cd9f66746b7a9ab1ec1673ced"
     );
 
     public static void install() throws Throwable {

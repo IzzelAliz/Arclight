@@ -1,5 +1,7 @@
 package io.izzel.arclight.common.bridge.entity;
 
+import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
@@ -9,6 +11,10 @@ import org.bukkit.event.entity.EntityRegainHealthEvent;
 import java.util.Optional;
 
 public interface LivingEntityBridge extends EntityBridge {
+
+    void bridge$setSlot(EquipmentSlotType slotIn, ItemStack stack, boolean silent);
+
+    void bridge$playEquipSound(ItemStack stack, boolean silent);
 
     boolean bridge$canPickUpLoot();
 

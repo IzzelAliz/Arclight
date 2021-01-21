@@ -21,8 +21,8 @@ apply plugin: 'io.izzel.arclight'
 apply plugin: 'maven-publish'
 
 ext {
-    minecraftVersion = '1.16.4'
-    forgeVersion = '35.1.29'
+    minecraftVersion = '1.16.5'
+    forgeVersion = '36.0.1'
 }
 
 arclight {
@@ -58,9 +58,9 @@ repositories {
     maven { url = 'https://jitpack.io/' }
 }
 
-def embedLibs = [/*'org.spongepowered:mixin:0.8.1',*/ 'org.ow2.asm:asm-util:8.0.1',
-                 'org.ow2.asm:asm-analysis:8.0.1', 'org.yaml:snakeyaml:1.26',
-                 'org.xerial:sqlite-jdbc:3.32.3', 'mysql:mysql-connector-java:5.1.49',
+def embedLibs = [/*'org.spongepowered:mixin:0.8.1',*/ 'org.ow2.asm:asm-util:9.0',
+                 'org.ow2.asm:asm-analysis:9.0', 'org.yaml:snakeyaml:1.27',
+                 'org.xerial:sqlite-jdbc:3.34.0', 'mysql:mysql-connector-java:5.1.49',
                  'commons-lang:commons-lang:2.6', 'com.googlecode.json-simple:json-simple:1.1.1',
                  'org.apache.logging.log4j:log4j-jul:2.11.2', 'net.md-5:SpecialSource:1.8.6',
                  'org.jline:jline-terminal-jansi:3.12.1', 'org.fusesource.jansi:jansi:1.18',
@@ -78,7 +78,7 @@ dependencies {
     for (def lib : embedLibs) {
         arclight lib
     }
-    embed 'net.md-5:bungeecord-chat:1.16-R0.3@jar'
+    embed 'net.md-5:bungeecord-chat:1.16-R0.4@jar'
     embed "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
     embed 'com.github.ArclightTeam:mixin-tools:1.0.0@jar'
 }

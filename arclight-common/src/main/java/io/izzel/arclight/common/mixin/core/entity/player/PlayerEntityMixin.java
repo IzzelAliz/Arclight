@@ -27,6 +27,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.EnderChestInventory;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.PlayerContainer;
 import net.minecraft.item.ItemStack;
@@ -491,5 +492,19 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
     @Override
     public CraftHumanEntity bridge$getBukkitEntity() {
         return (CraftHumanEntity) ((InternalEntityBridge) this).internal$getBukkitEntity();
+    }
+
+    @Override
+    public void setSlot(EquipmentSlotType slotIn, ItemStack stack, boolean silent) {
+        if (slotIn == EquipmentSlotType.MAINHAND) {
+            this.bridge$playEquipSound(stack, silent);
+            this.inventory.mainInventory.set(this.inventory.currentItem, stack);
+        } else if (slotIn == EquipmentSlotType.OFFHAND) {
+            this.bridge$playEquipSound(stack, silent);
+            this.inventory.offHandInventory.set(0, stack);
+        } else if (slotIn.getSlotType() == EquipmentSlotType.Group.ARMOR) {
+            this.bridge$playEquipSound(stack, silent);
+            this.inventory.armorInventory.set(slotIn.getIndex(), stack);
+        }
     }
 }

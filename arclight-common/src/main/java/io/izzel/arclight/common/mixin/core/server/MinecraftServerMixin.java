@@ -120,7 +120,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
     @Shadow protected abstract void func_240778_a_(IServerConfiguration p_240778_1_);
     @Shadow protected IServerConfiguration serverConfig;
     @Shadow private static void func_240786_a_(ServerWorld p_240786_0_, IServerWorldInfo p_240786_1_, boolean hasBonusChest, boolean p_240786_3_, boolean p_240786_4_) { }
-    @Shadow @Deprecated public abstract void markWorldsDirty();
+    @Shadow(remap = false) @Deprecated public abstract void markWorldsDirty();
     // @formatter:on
 
     public MinecraftServerMixin(String name) {

@@ -18,5 +18,10 @@
   "net/minecraft/world/server/ChunkManager": {
     "func_219210_a(Lnet/minecraft/entity/Entity;)V": "entity track",
     "func_219231_b(Lnet/minecraft/entity/Entity;)V": "entity untrack"
+  },
+  "net/minecraft/world/chunk/Chunk": {
+    "func_177414_a(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/AxisAlignedBB;Ljava/util/List;Ljava/util/function/Predicate;)V": "chunk entity get",
+    "func_217313_a(Lnet/minecraft/entity/EntityType;Lnet/minecraft/util/math/AxisAlignedBB;Ljava/util/List;Ljava/util/function/Predicate;)V": "chunk entity get",
+    "func_177430_a(Ljava/lang/Class;Lnet/minecraft/util/math/AxisAlignedBB;Ljava/util/List;Ljava/util/function/Predicate;)V": "chunk entity get"
   }
 }

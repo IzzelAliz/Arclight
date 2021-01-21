@@ -11,6 +11,7 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Hand;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
@@ -22,6 +23,7 @@ import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -41,6 +43,8 @@ public abstract class ArmorStandEntityMixin extends LivingEntityMixin {
     // @formatter:off
     @Shadow private boolean canInteract;
     @Shadow public abstract ItemStack getItemStackFromSlot(EquipmentSlotType slotIn);
+    @Shadow @Final private NonNullList<ItemStack> handItems;
+    @Shadow @Final private NonNullList<ItemStack> armorItems;
     // @formatter:on
 
     @Override
@@ -156,5 +160,19 @@ public abstract class ArmorStandEntityMixin extends LivingEntityMixin {
         if (event.isCancelled()) {
             cir.setReturnValue(true);
         }
+    }
+
+    @Override
+    public void setSlot(EquipmentSlotType slotIn, ItemStack stack, boolean silent) {
+        switch (slotIn.getSlotType()) {
+            case HAND:
+                this.bridge$playEquipSound(stack, silent);
+                this.handItems.set(slotIn.getIndex(), stack);
+                break;
+            case ARMOR:
+                this.bridge$playEquipSound(stack, silent);
+                this.armorItems.set(slotIn.getIndex(), stack);
+        }
+
     }
 }
