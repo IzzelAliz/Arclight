@@ -3,7 +3,7 @@ allprojects {
     version '1.0.12-SNAPSHOT'
 
     ext {
-        agpVersion = '1.9'
+        agpVersion = '1.12'
     }
 
     task cleanBuild {

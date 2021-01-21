@@ -4,12 +4,12 @@ buildscript {
         maven { url = 'https://repo.spongepowered.org/maven' }
         jcenter()
         mavenCentral()
-        maven { url = 'https://jitpack.io' }
+        maven { url = 'https://maven.izzel.io/releases' }
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
         classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
-        classpath "com.github.ArclightTeam:arclight-gradle-plugin:$agpVersion"
+        classpath "io.izzel.arclight:arclight-gradle-plugin:$agpVersion"
     }
 }
 
@@ -45,9 +45,7 @@ repositories {
     maven { url = 'https://repo.spongepowered.org/maven' }
     maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
     maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
-    maven { url = 'https://repo.codemc.io/repository/nms/' }
     maven { url = 'https://files.minecraftforge.net/maven/' }
-    maven { url = 'https://www.dogforce-games.com/maven/' }
     maven { url = 'https://jitpack.io/' }
 }
 
