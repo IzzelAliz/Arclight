@@ -358,6 +358,7 @@
     "network.rcon.RConConsoleSourceMixin",
     "network.status.ServerStatusNetHandlerMixin",
     "potion.EffectMixin",
+    "scoreboard.ServerScoreboardMixin",
     "server.CustomServerBossInfoMixin",
     "server.MainMixin",
     "server.MinecraftServerMixin",
