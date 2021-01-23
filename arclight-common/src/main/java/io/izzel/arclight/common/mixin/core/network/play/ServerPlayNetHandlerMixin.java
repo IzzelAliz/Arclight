@@ -199,7 +199,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     private int allowedPlayerTicks;
     private int dropCount;
     private int lastTick;
-    private int lastBookTick;
+    private volatile int lastBookTick;
     private int lastDropTick;
 
     private double lastPosX;
@@ -411,6 +411,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     @Inject(method = "processEditBook", cancellable = true, at = @At("HEAD"))
     private void arclight$editBookSpam(CEditBookPacket packetIn, CallbackInfo ci) {
         if (this.lastBookTick + 20 > ArclightConstants.currentTick) {
+            PacketThreadUtil.checkThreadAndEnqueue(packetIn, (ServerPlayNetHandler) (Object) this, this.minecraftServer);
             this.disconnect("Book edited too quickly!");
             return;
         }
