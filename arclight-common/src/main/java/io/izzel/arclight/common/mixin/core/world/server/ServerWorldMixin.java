@@ -103,6 +103,7 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
     @Shadow @Final private ServerChunkProvider field_241102_C_;
     @Shadow protected abstract boolean hasDuplicateEntity(Entity entityIn);
     @Shadow @Final public static BlockPos field_241108_a_;
+    @Shadow @Final public IServerWorldInfo field_241103_E_;
     // @formatter:on
 
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
@@ -222,6 +223,9 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
 
     @Inject(method = "save", at = @At("RETURN"))
     private void arclight$saveLevelDat(IProgressUpdate progress, boolean flush, boolean skipSave, CallbackInfo ci) {
+        if (this.field_241103_E_ instanceof DerivedWorldInfo) {
+            return;
+        }
         this.$$worldDataServer.setWorldBorderSerializer(this.getWorldBorder().getSerializer());
         this.$$worldDataServer.setCustomBossEventData(this.shadow$getServer().getCustomBossEvents().write());
         this.convertable.saveLevel(this.shadow$getServer().field_240767_f_, this.$$worldDataServer, this.shadow$getServer().getPlayerList().getHostPlayerData());
