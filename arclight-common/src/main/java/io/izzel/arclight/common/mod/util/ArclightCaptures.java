@@ -230,6 +230,20 @@ public class ArclightCaptures {
         }
     }
 
+    private static transient boolean worldGenAdd;
+
+    public static void captureWorldGenAddEntity() {
+        worldGenAdd = true;
+    }
+
+    public static boolean isWorldGenAdd() {
+        return worldGenAdd;
+    }
+
+    public static void resetWorldGenAddEntity() {
+        worldGenAdd = false;
+    }
+
     private static void recapture(String type) {
         throw new IllegalStateException("Recapturing " + type);
     }

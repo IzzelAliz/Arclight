@@ -164,6 +164,16 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         return this.convertable;
     }
 
+    @Inject(method = "addEntityIfNotDuplicate", at = @At("HEAD"))
+    private void arclight$worldGenAddStart(Entity entityIn, CallbackInfoReturnable<Boolean> cir) {
+        ArclightCaptures.captureWorldGenAddEntity();
+    }
+
+    @Inject(method = "addEntityIfNotDuplicate", at = @At("RETURN"))
+    private void arclight$worldGenAddEnd(Entity entityIn, CallbackInfoReturnable<Boolean> cir) {
+        ArclightCaptures.resetWorldGenAddEntity();
+    }
+
     @Inject(method = "onEntityAdded", at = @At("RETURN"))
     private void arclight$validEntity(Entity entityIn, CallbackInfo ci) {
         ((EntityBridge) entityIn).bridge$setValid(true);
