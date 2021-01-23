@@ -5,10 +5,12 @@ import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.util.remapper.generated.ArclightReflectionHandler;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InvokeDynamicInsnNode;
 import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -129,20 +131,22 @@ public class ArclightRedirectAdapter implements PluginTransformer {
                 AbstractInsnNode insnNode = iterator.next();
                 if (insnNode instanceof MethodInsnNode) {
                     MethodInsnNode from = (MethodInsnNode) insnNode;
-                    for (Map.Entry<MethodInsnNode, MethodInsnNode> entry : METHOD_REDIRECTS.entrySet()) {
-                        MethodInsnNode key = entry.getKey();
-                        if (
-                            key.getOpcode() == from.getOpcode() &&
-                                Objects.equals(key.owner, from.owner) &&
-                                Objects.equals(key.name, from.name) &&
-                                Objects.equals(key.desc, from.desc)) {
-                            MethodInsnNode to = entry.getValue();
-                            if (REPLACED_NAME.equals(to.owner)) {
-                                MethodInsnNode clone = (MethodInsnNode) to.clone(ImmutableMap.of());
-                                clone.owner = generatedOwner;
-                                iterator.set(clone);
-                            } else {
-                                iterator.set(to);
+                    MethodInsnNode newNode = find(from, generatedOwner);
+                    if (newNode != null) {
+                        iterator.set(newNode);
+                    }
+                } else if (insnNode.getOpcode() == Opcodes.INVOKEDYNAMIC) {
+                    InvokeDynamicInsnNode invokeDynamic = (InvokeDynamicInsnNode) insnNode;
+                    Object[] bsmArgs = invokeDynamic.bsmArgs;
+                    for (int i = 0; i < bsmArgs.length; i++) {
+                        Object bsmArg = bsmArgs[i];
+                        if (bsmArg instanceof Handle) {
+                            Handle handle = (Handle) bsmArg;
+                            if (toOpcode(handle.getTag()) != -1) {
+                                MethodInsnNode node = find(handle, generatedOwner);
+                                if (node != null) {
+                                    bsmArgs[i] = new Handle(toHandle(node.getOpcode()), node.owner, node.name, node.desc, node.itf);
+                                }
                             }
                         }
                     }
@@ -170,6 +174,48 @@ public class ArclightRedirectAdapter implements PluginTransformer {
         }
     }
 
+    private static MethodInsnNode find(Handle handle, String generatedOwner) {
+        for (Map.Entry<MethodInsnNode, MethodInsnNode> entry : METHOD_REDIRECTS.entrySet()) {
+            MethodInsnNode key = entry.getKey();
+            if (
+                key.getOpcode() == toOpcode(handle.getTag()) &&
+                    Objects.equals(key.owner, handle.getOwner()) &&
+                    Objects.equals(key.name, handle.getName()) &&
+                    Objects.equals(key.desc, handle.getDesc())) {
+                MethodInsnNode to = entry.getValue();
+                if (REPLACED_NAME.equals(to.owner)) {
+                    MethodInsnNode clone = (MethodInsnNode) to.clone(ImmutableMap.of());
+                    clone.owner = generatedOwner;
+                    return clone;
+                } else {
+                    return to;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static MethodInsnNode find(MethodInsnNode from, String generatedOwner) {
+        for (Map.Entry<MethodInsnNode, MethodInsnNode> entry : METHOD_REDIRECTS.entrySet()) {
+            MethodInsnNode key = entry.getKey();
+            if (
+                key.getOpcode() == from.getOpcode() &&
+                    Objects.equals(key.owner, from.owner) &&
+                    Objects.equals(key.name, from.name) &&
+                    Objects.equals(key.desc, from.desc)) {
+                MethodInsnNode to = entry.getValue();
+                if (REPLACED_NAME.equals(to.owner)) {
+                    MethodInsnNode clone = (MethodInsnNode) to.clone(ImmutableMap.of());
+                    clone.owner = generatedOwner;
+                    return clone;
+                } else {
+                    return to;
+                }
+            }
+        }
+        return null;
+    }
+
     private static MethodInsnNode method(int opcode, Class<?> cl, String name, Class<?>... pTypes) {
         try {
             return method(opcode, cl.getMethod(name, pTypes));
@@ -187,5 +233,31 @@ public class ArclightRedirectAdapter implements PluginTransformer {
         String name = method.getName();
         String desc = Type.getMethodDescriptor(method);
         return new MethodInsnNode(opcode, owner, name, desc);
+    }
+
+    private static int toOpcode(int handleType) {
+        switch (handleType) {
+            case Opcodes.H_INVOKEINTERFACE:
+                return Opcodes.INVOKEINTERFACE;
+            case Opcodes.H_INVOKEVIRTUAL:
+                return Opcodes.INVOKEVIRTUAL;
+            case Opcodes.H_INVOKESTATIC:
+                return Opcodes.INVOKESTATIC;
+            default:
+                return -1;
+        }
+    }
+
+    private static int toHandle(int opcode) {
+        switch (opcode) {
+            case Opcodes.INVOKEINTERFACE:
+                return Opcodes.H_INVOKEINTERFACE;
+            case Opcodes.INVOKESTATIC:
+                return Opcodes.H_INVOKESTATIC;
+            case Opcodes.INVOKEVIRTUAL:
+                return Opcodes.H_INVOKEVIRTUAL;
+            default:
+                return -1;
+        }
     }
 }
