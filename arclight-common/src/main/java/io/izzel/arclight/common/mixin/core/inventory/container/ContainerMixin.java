@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mixin.core.inventory.container;
 
-import com.google.common.base.Preconditions;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.inventory.container.ContainerBridge;
 import io.izzel.arclight.common.bridge.inventory.container.SlotBridge;
@@ -99,7 +98,6 @@ public abstract class ContainerMixin implements ContainerBridge {
     }
 
     public final void setTitle(ITextComponent title) {
-        Preconditions.checkState(this.title == null, "Title already set");
         this.title = title;
     }
 
