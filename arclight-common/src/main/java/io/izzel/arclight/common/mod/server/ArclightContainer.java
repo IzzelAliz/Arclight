@@ -106,7 +106,7 @@ public class ArclightContainer {
         if (candidate == null) {
             throw new RuntimeException("candidate cannot be null, " + container + "/" + container.getClass());
         }
-        if (bottomBegin < bottomEnd) {
+        if (bottomBegin < bottomEnd || bottomBegin == -1) {
             bottomBegin = container.inventorySlots.size();
         }
         Inventory viewing = new CraftInventory(new ContainerInvWrapper(container, bottomBegin, candidate));

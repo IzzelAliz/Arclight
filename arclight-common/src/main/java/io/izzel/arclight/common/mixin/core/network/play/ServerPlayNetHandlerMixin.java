@@ -1208,9 +1208,8 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     private void arclight$invClose(CCloseWindowPacket packetIn, CallbackInfo ci) {
         if (((ServerPlayerEntityBridge) this.player).bridge$isMovementBlocked()) {
             ci.cancel();
-            return;
         }
-        CraftEventFactory.handleInventoryCloseEvent(this.player);
+        // CraftEventFactory.handleInventoryCloseEvent(this.player); handled in ServerPlayerEntity#closeContainer
     }
 
     /**

@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.forge;
 
 import io.izzel.arclight.common.bridge.inventory.container.ContainerBridge;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Container;
@@ -24,7 +25,9 @@ public class NetworkHooksMixin {
     private static void arclight$openContainer(ServerPlayerEntity player, INamedContainerProvider containerSupplier, Consumer<PacketBuffer> extraDataWriter, CallbackInfo ci,
                                                int currentId, PacketBuffer extraData, PacketBuffer output, Container container) {
         ((ContainerBridge) container).bridge$setTitle(containerSupplier.getDisplayName());
+        ArclightCaptures.captureContainerOwner(player);
         container = CraftEventFactory.callInventoryOpenEvent(player, container);
+        ArclightCaptures.resetContainerOwner();
         if (container == null) {
             if (containerSupplier instanceof IInventory) {
                 ((IInventory) containerSupplier).closeInventory(player);

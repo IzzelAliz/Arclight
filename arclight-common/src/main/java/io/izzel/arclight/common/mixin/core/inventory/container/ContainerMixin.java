@@ -87,18 +87,20 @@ public abstract class ContainerMixin implements ContainerBridge {
 
     public final ITextComponent getTitle() {
         if (this.title == null) {
-            if (this.containerType != null && this.containerType.getRegistryName() != null) {
-                this.title = new StringTextComponent(this.containerType.getRegistryName().toString());
-            } else {
-                this.title = new StringTextComponent(this.toString());
-            }
             ArclightMod.LOGGER.warn("Container {}/{} has no title.", this, this.getClass().getName());
+            if (this.containerType != null && this.containerType.getRegistryName() != null) {
+                return new StringTextComponent(this.containerType.getRegistryName().toString());
+            } else {
+                return new StringTextComponent(this.toString());
+            }
         }
         return this.title;
     }
 
     public final void setTitle(ITextComponent title) {
-        this.title = title;
+        if (this.title == null) {
+            this.title = title;
+        }
     }
 
     @Redirect(method = "onContainerClosed", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;dropItem(Lnet/minecraft/item/ItemStack;Z)Lnet/minecraft/entity/item/ItemEntity;"))
