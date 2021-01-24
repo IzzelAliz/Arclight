@@ -1229,7 +1229,9 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             if (packet.getSlotId() < -1 && packet.getSlotId() != -999) {
                 return;
             }
+            ArclightCaptures.captureContainerOwner(this.player);
             InventoryView inventory = ((ContainerBridge) this.player.openContainer).bridge$getBukkitView();
+            ArclightCaptures.resetContainerOwner();
             InventoryType.SlotType type = inventory.getSlotType(packet.getSlotId());
             org.bukkit.event.inventory.ClickType click = org.bukkit.event.inventory.ClickType.UNKNOWN;
             InventoryAction action = InventoryAction.UNKNOWN;
