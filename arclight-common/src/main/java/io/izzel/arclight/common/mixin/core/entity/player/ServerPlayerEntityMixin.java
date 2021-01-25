@@ -11,6 +11,7 @@ import io.izzel.arclight.common.bridge.util.FoodStatsBridge;
 import io.izzel.arclight.common.bridge.world.TeleporterBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import io.izzel.arclight.common.mod.util.BlackholeNetHandler;
 import io.izzel.arclight.common.mod.util.ChestBlockDoubleInventoryHacks;
 import net.minecraft.block.NetherPortalBlock;
 import net.minecraft.block.PortalInfo;
@@ -192,6 +193,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
         this.canPickUpLoot = true;
         this.maxHealthCache = this.getMaxHealth();
         this.arclight$initialized = true;
+        this.connection = new BlackholeNetHandler(this.getServer(), (ServerPlayerEntity) (Object) this);
     }
 
     @Override
