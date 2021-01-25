@@ -254,11 +254,6 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         }
     }
 
-    @Inject(method = "removeEntityComplete", remap = false, at = @At("RETURN"))
-    public void arclight$invalidateEntity(Entity entityIn, boolean keepData, CallbackInfo ci) {
-        ((EntityBridge) entityIn).bridge$setValid(false);
-    }
-
     private transient boolean arclight$force;
 
     @Redirect(method = "spawnParticle(Lnet/minecraft/particles/IParticleData;DDDIDDDD)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;sendPacketWithinDistance(Lnet/minecraft/entity/player/ServerPlayerEntity;ZDDDLnet/minecraft/network/IPacket;)Z"))

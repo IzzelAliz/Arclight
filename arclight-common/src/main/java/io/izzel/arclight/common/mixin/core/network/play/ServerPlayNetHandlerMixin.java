@@ -393,7 +393,9 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         at = @At(value = "FIELD", shift = At.Shift.AFTER, target = "Lnet/minecraft/network/play/ServerPlayNetHandler;targetPos:Lnet/minecraft/util/math/vector/Vector3d;"),
         slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/ServerPlayerEntity;isInvulnerableDimensionChange()Z")))
     private void arclight$updateLoc(CConfirmTeleportPacket packetIn, CallbackInfo ci) {
-        this.player.getServerWorld().getChunkProvider().updatePlayerPosition(this.player);
+        if (((ServerPlayerEntityBridge) this.player).bridge$isValid()) {
+            this.player.getServerWorld().getChunkProvider().updatePlayerPosition(this.player);
+        }
     }
 
     @Inject(method = "processConfirmTeleport", cancellable = true, at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/ServerPlayNetHandler;teleportId:I"))
