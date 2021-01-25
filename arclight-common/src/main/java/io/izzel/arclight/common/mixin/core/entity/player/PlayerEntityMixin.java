@@ -122,6 +122,7 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
     @Shadow protected EnderChestInventory enterChestInventory;
     @Shadow public abstract Either<PlayerEntity.SleepResult, Unit> trySleep(BlockPos at);
     @Shadow public int sleepTimer;
+    @Shadow public abstract GameProfile getGameProfile();
     // @formatter:on
 
     public boolean fauxSleeping;

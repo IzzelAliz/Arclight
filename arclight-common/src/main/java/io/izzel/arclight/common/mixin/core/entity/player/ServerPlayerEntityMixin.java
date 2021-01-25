@@ -189,7 +189,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void arclight$init(CallbackInfo ci) {
-        this.displayName = getScoreboardName();
+        this.displayName = this.getGameProfile() != null ? getScoreboardName() : "~FakePlayer~";
         this.canPickUpLoot = true;
         this.maxHealthCache = this.getMaxHealth();
         this.arclight$initialized = true;
