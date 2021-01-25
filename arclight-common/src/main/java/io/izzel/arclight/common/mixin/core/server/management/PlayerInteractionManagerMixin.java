@@ -265,7 +265,7 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
                 return ActionResultType.PASS;
             }
         } else {
-            net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock event = ForgeHooks.onRightClickBlock(playerIn, handIn, blockpos, blockRaytraceResultIn.getFace());
+            net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock event = ForgeHooks.onRightClickBlock(playerIn, handIn, blockpos, blockRaytraceResultIn);
             if (event.isCanceled()) return event.getCancellationResult();
             ItemUseContext itemusecontext = new ItemUseContext(playerIn, handIn, blockRaytraceResultIn);
             if (event.getUseItem() != net.minecraftforge.eventbus.api.Event.Result.DENY) {
@@ -275,14 +275,14 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
             boolean flag = !playerIn.getHeldItemMainhand().isEmpty() || !playerIn.getHeldItemOffhand().isEmpty();
             boolean flag1 = (playerIn.isSecondaryUseActive() && flag) && !(playerIn.getHeldItemMainhand().doesSneakBypassUse(worldIn, blockpos, playerIn) && playerIn.getHeldItemOffhand().doesSneakBypassUse(worldIn, blockpos, playerIn));
             ItemStack itemstack = stackIn.copy();
-            if (event.getUseBlock() != net.minecraftforge.eventbus.api.Event.Result.DENY && !flag1) {
+            if (event.getUseBlock() == net.minecraftforge.eventbus.api.Event.Result.ALLOW || (event.getUseBlock() != net.minecraftforge.eventbus.api.Event.Result.DENY && !flag1)) {
                 resultType = blockstate.onBlockActivated(worldIn, playerIn, handIn, blockRaytraceResultIn);
                 if (resultType.isSuccessOrConsume()) {
                     CriteriaTriggers.RIGHT_CLICK_BLOCK_WITH_ITEM.test(playerIn, blockpos, itemstack);
                     return resultType;
                 }
             }
-            if (!stackIn.isEmpty() && resultType != ActionResultType.SUCCESS && !bridge$getInteractResult()) {
+            if (event.getUseItem() == net.minecraftforge.eventbus.api.Event.Result.ALLOW || (!stackIn.isEmpty() && resultType != ActionResultType.SUCCESS && !bridge$getInteractResult())) {
                 if (event.getUseItem() == net.minecraftforge.eventbus.api.Event.Result.DENY) {
                     return ActionResultType.PASS;
                 }
