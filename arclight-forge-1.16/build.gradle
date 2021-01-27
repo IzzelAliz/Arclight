@@ -7,7 +7,7 @@ buildscript {
         maven { url = 'https://maven.izzel.io/releases' }
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: "${forge_gradle_version}"
         classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
         classpath "io.izzel.arclight:arclight-gradle-plugin:$agpVersion"
     }
@@ -165,7 +165,7 @@ task sourceJar(type: Jar) {
 publishing {
     repositories {
         maven {
-            name = "IzzelAliz Repo"
+            name = "IzzelAliz"
             url = uri('https://maven.izzel.io/' + (project.version.toString().endsWith('SNAPSHOT') ? 'snapshots' : 'releases'))
             credentials {
                 username = project.findProperty("mavenUser") ?: System.getenv("ARCLIGHT_USER")

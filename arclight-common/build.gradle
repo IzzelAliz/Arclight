@@ -7,7 +7,7 @@ buildscript {
         maven { url = 'https://maven.izzel.io/releases' }
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: "${forge_gradle_version}"
         classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
         classpath "io.izzel.arclight:arclight-gradle-plugin:$agpVersion"
     }
@@ -54,6 +54,7 @@ dependencies {
     compile "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
     compile 'org.jetbrains:annotations:19.0.0'
     compile 'org.spongepowered:mixin:0.8.2'
+    annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
     compile 'com.github.ArclightTeam:mixin-tools:1.0.0'
     compile 'jline:jline:2.12.1'
     compile 'net.md-5:SpecialSource:1.8.6'
