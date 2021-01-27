@@ -27,6 +27,13 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
 
     private final Map<String, Map.Entry<List<FieldNode>, List<MethodNode>>> accessTransformer =
         ImmutableMap.<String, Map.Entry<List<FieldNode>, List<MethodNode>>>builder()
+            .put("net.minecraft.world.World",
+                Maps.immutableEntry(
+                    ImmutableList.of(
+                        new FieldNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "lastPhysicsProblem", "Lnet/minecraft/util/math/BlockPos;", null, null)
+                    ),
+                    ImmutableList.of()
+                ))
             .put("net.minecraft.server.MinecraftServer",
                 Maps.immutableEntry(
                     ImmutableList.of(
