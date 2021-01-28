@@ -7,7 +7,7 @@ buildscript {
         maven { url = 'https://maven.izzel.io/releases' }
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: "${forge_gradle_version}"
         classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
         classpath "io.izzel.arclight:arclight-gradle-plugin:$agpVersion"
     }
@@ -51,18 +51,23 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
-    compile "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
-    compile 'org.jetbrains:annotations:19.0.0'
-    compile 'org.spongepowered:mixin:0.8.2'
-    compile 'com.github.ArclightTeam:mixin-tools:1.0.0'
-    compile 'jline:jline:2.12.1'
-    compile 'net.md-5:SpecialSource:1.8.6'
-    compile 'org.apache.logging.log4j:log4j-jul:2.11.2'
-    compile 'net.md-5:bungeecord-chat:1.16-R0.4'
-    compile 'mysql:mysql-connector-java:5.1.49'
-    compile 'org.yaml:snakeyaml:1.27'
-    compile project(':arclight-api')
-    compile project(':i18n-config')
+    implementation "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
+    implementation 'org.jetbrains:annotations:19.0.0'
+    
+    implementation 'org.spongepowered:mixin:0.8.2'
+    annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
+    
+    implementation 'com.github.ArclightTeam:mixin-tools:1.0.0'
+    annotationProcessor 'com.github.ArclightTeam:mixin-tools:1.0.0'
+    
+    implementation 'jline:jline:2.12.1'
+    implementation 'net.md-5:SpecialSource:1.8.6'
+    implementation 'org.apache.logging.log4j:log4j-jul:2.11.2'
+    implementation 'net.md-5:bungeecord-chat:1.16-R0.4'
+    implementation 'mysql:mysql-connector-java:5.1.49'
+    implementation 'org.yaml:snakeyaml:1.27'
+    implementation project(':arclight-api')
+    implementation project(':i18n-config')
 }
 
 remapSpigotJar {

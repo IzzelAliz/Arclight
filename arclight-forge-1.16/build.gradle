@@ -7,7 +7,7 @@ buildscript {
         maven { url = 'https://maven.izzel.io/releases' }
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: "${forge_gradle_version}"
         classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
         classpath "io.izzel.arclight:arclight-gradle-plugin:$agpVersion"
     }
@@ -38,7 +38,7 @@ sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = co
 
 configurations {
     embed
-    compile.extendsFrom(embed)
+    implementation.extendsFrom(embed)
 }
 
 minecraft {
@@ -69,8 +69,8 @@ def embedLibs = [/*'org.spongepowered:mixin:0.8.1',*/ 'org.ow2.asm:asm-util:9.0'
 
 dependencies {
     minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
-    compile group: 'org.jetbrains', name: 'annotations', version: '19.0.0'
-    compile(project(':arclight-common')) {
+    implementation group: 'org.jetbrains', name: 'annotations', version: '19.0.0'
+    implementation(project(':arclight-common')) {
         exclude module: 'forge'
     }
     embed project(':i18n-config')
@@ -80,7 +80,7 @@ dependencies {
     }
     embed 'net.md-5:bungeecord-chat:1.16-R0.4@jar'
     embed "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
-    embed 'com.github.ArclightTeam:mixin-tools:1.0.0@jar'
+    embed 'com.github.ArclightTeam:mixin-tools:1.0.0@jar'    
 }
 
 def getGitHash = { ->
@@ -165,7 +165,7 @@ task sourceJar(type: Jar) {
 publishing {
     repositories {
         maven {
-            name = "IzzelAliz Repo"
+            name = "IzzelAliz"
             url = uri('https://maven.izzel.io/' + (project.version.toString().endsWith('SNAPSHOT') ? 'snapshots' : 'releases'))
             credentials {
                 username = project.findProperty("mavenUser") ?: System.getenv("ARCLIGHT_USER")

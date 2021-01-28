@@ -78,6 +78,8 @@ public abstract class WorldMixin implements WorldBridge {
     public org.bukkit.generator.ChunkGenerator generator;
     protected org.bukkit.World.Environment environment;
     public org.spigotmc.SpigotWorldConfig spigotConfig;
+    @SuppressWarnings("unused") // Access transformed to public by ArclightMixinPlugin
+    private static BlockPos lastPhysicsProblem; // Spigot
 
     public void arclight$constructor(ISpawnWorldInfo worldInfo, RegistryKey<World> dimension, final DimensionType dimensionType, Supplier<IProfiler> profiler, boolean isRemote, boolean isDebug, long seed) {
         throw new RuntimeException();
@@ -167,12 +169,16 @@ public abstract class WorldMixin implements WorldBridge {
 
     @Inject(method = "markAndNotifyBlock", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;updateNeighbours(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;II)V"))
     private void arclight$callBlockPhysics(BlockPos pos, Chunk chunk, BlockState blockstate, BlockState state, int flags, int recursionLeft, CallbackInfo ci) {
-        if (this.world != null) {
-            BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at((IWorld) this, pos), CraftBlockData.fromData(state));
-            Bukkit.getPluginManager().callEvent(event);
-            if (event.isCancelled()) {
-                ci.cancel();
+        try {
+            if (this.world != null) {
+                BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at((IWorld) this, pos), CraftBlockData.fromData(state));
+                Bukkit.getPluginManager().callEvent(event);
+                if (event.isCancelled()) {
+                    ci.cancel();
+                }
             }
+        } catch(StackOverflowError e) {
+            lastPhysicsProblem = pos;
         }
     }
 
@@ -180,13 +186,17 @@ public abstract class WorldMixin implements WorldBridge {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;neighborChanged(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/Block;Lnet/minecraft/util/math/BlockPos;Z)V"),
         locals = LocalCapture.CAPTURE_FAILHARD)
     private void arclight$callBlockPhysics2(BlockPos pos, Block blockIn, BlockPos fromPos, CallbackInfo ci, BlockState blockState) {
-        if (this.world != null) {
-            IWorld iWorld = (IWorld) this;
-            BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at(iWorld, pos), CraftBlockData.fromData(blockState), CraftBlock.at(iWorld, fromPos));
-            Bukkit.getPluginManager().callEvent(event);
-            if (event.isCancelled()) {
-                ci.cancel();
+        try {
+            if (this.world != null) {
+                IWorld iWorld = (IWorld) this;
+                BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at(iWorld, pos), CraftBlockData.fromData(blockState), CraftBlock.at(iWorld, fromPos));
+                Bukkit.getPluginManager().callEvent(event);
+                if (event.isCancelled()) {
+                    ci.cancel();
+                }
             }
+        } catch(StackOverflowError e) {
+            lastPhysicsProblem = pos;
         }
     }
 
