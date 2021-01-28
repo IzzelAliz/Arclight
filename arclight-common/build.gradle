@@ -75,8 +75,6 @@ remapSpigotJar {
     includes.add('net/minecraft/tileentity/LecternTileEntity$LecternInventory')
 }
 
-remapSpigotJar.finalizedBy('reobfJar') 
-
 generateArclightMeta {
     doFirst {
         throw new StopExecutionException()

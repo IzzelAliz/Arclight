@@ -120,8 +120,6 @@ remapSpigotJar {
     includes.add('net/minecraft/tileentity/LecternTileEntity$LecternInventory')
 }
 
-remapSpigotJar.finalizedBy('reobfJar') 
-
 mixin {
     // add sourceSets.main, 'mixins.arclight.impl.refmap.1_15.json'
 }
@@ -153,8 +151,6 @@ task spigotJar(type: Jar) {
     }
     classifier = 'spigot'
 }
-
-spigotJar.finalizedBy('reobfJar') 
 
 task sourceJar(type: Jar) {
     from(sourceSets.main.allSource)
