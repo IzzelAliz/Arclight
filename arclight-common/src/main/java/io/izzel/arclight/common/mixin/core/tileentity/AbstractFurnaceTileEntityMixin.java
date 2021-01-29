@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.tileentity;
 
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.tileentity.AbstractFurnaceTileEntityBridge;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -10,6 +11,7 @@ import net.minecraft.item.Items;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.tileentity.AbstractFurnaceTileEntity;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
@@ -23,6 +25,7 @@ import org.bukkit.event.inventory.FurnaceBurnEvent;
 import org.bukkit.event.inventory.FurnaceExtractEvent;
 import org.bukkit.event.inventory.FurnaceSmeltEvent;
 import org.bukkit.inventory.InventoryHolder;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -46,6 +49,7 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
     @Shadow protected abstract boolean canSmelt(@Nullable IRecipe<?> recipeIn);
     @Shadow public abstract void setRecipeUsed(@Nullable IRecipe<?> recipe);
     @Shadow public abstract List<IRecipe<?>> grantStoredRecipeExperience(World world, Vector3d pos);
+    @Shadow @Final private Object2IntOpenHashMap<ResourceLocation> recipes;
     // @formatter:on
 
     public List<HumanEntity> transaction = new ArrayList<>();
@@ -134,7 +138,10 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
             arclight$captureAmount = amount;
             arclight$captureFurnace = (AbstractFurnaceTileEntity) (Object) this;
             arclight$capturePlayer = entity;
-            return this.grantStoredRecipeExperience(world, pos);
+            List<IRecipe<?>> list = this.grantStoredRecipeExperience(world, pos);
+            entity.unlockRecipes(list);
+            this.recipes.clear();
+            return list;
         } finally {
             arclight$item = null;
             arclight$captureAmount = 0;
