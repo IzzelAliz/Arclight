@@ -1199,9 +1199,8 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     private void arclight$invClose(CCloseWindowPacket packetIn, CallbackInfo ci) {
         if (((ServerPlayerEntityBridge) this.player).bridge$isMovementBlocked()) {
             ci.cancel();
-            return;
         }
-        CraftEventFactory.handleInventoryCloseEvent(this.player);
+        // CraftEventFactory.handleInventoryCloseEvent(this.player); handled in ServerPlayerEntity#closeContainer
     }
 
     /**
@@ -1222,7 +1221,9 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 if (packet.getSlotId() < -1 && packet.getSlotId() != -999) {
                     return;
                 }
+                ArclightCaptures.captureContainerOwner(this.player);
                 InventoryView inventory = ((ContainerBridge) this.player.openContainer).bridge$getBukkitView();
+                ArclightCaptures.resetContainerOwner();
                 InventoryType.SlotType type = inventory.getSlotType(packet.getSlotId());
                 org.bukkit.event.inventory.ClickType click = org.bukkit.event.inventory.ClickType.UNKNOWN;
                 InventoryAction action = InventoryAction.UNKNOWN;

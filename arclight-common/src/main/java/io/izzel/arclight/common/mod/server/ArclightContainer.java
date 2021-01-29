@@ -2,29 +2,36 @@ package io.izzel.arclight.common.mod.server;
 
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
+import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.CraftResultInventory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.SlotItemHandler;
 import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 import net.minecraftforge.items.wrapper.InvWrapper;
 import net.minecraftforge.items.wrapper.RangedWrapper;
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v.inventory.CraftInventory;
-import org.bukkit.craftbukkit.v.inventory.CraftInventoryCustom;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.InventoryView;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
 
 public class ArclightContainer {
 
@@ -76,50 +83,154 @@ public class ArclightContainer {
 
     // todo check this
     public static InventoryView createInvView(Container container) {
-        PlayerEntity candidate = null;
-        Set<IInventory> set = new HashSet<>();
-        for (Slot slot : container.inventorySlots) {
+        PlayerEntity candidate = ArclightCaptures.getContainerOwner();
+        int bottomBegin = -1, bottomEnd = -1;
+        for (ListIterator<Slot> iterator = container.inventorySlots.listIterator(); iterator.hasNext(); ) {
+            Slot slot = iterator.next();
             IInventory inventory = getActualInventoryForSlot(slot);
-            if (inventory != null) {
-                if (inventory instanceof PlayerInventory) {
-                    if (candidate != null && ((PlayerInventory) inventory).player != candidate) {
-                        ArclightMod.LOGGER.warn("Multiple player found in {}/{}, previous {}, new {}", container, container.getClass(), candidate, ((PlayerInventory) inventory).player);
-                    }
-                    candidate = ((PlayerInventory) inventory).player;
+            if (inventory instanceof PlayerInventory) {
+                if (candidate != null && ((PlayerInventory) inventory).player != candidate) {
+                    ArclightMod.LOGGER.warn("Multiple player found in {}/{}, previous {}, new {}", container, container.getClass(), candidate, ((PlayerInventory) inventory).player);
                 }
-                set.add(inventory);
+                candidate = ((PlayerInventory) inventory).player;
+                if (bottomBegin == -1 || bottomBegin < bottomEnd) {
+                    bottomBegin = iterator.previousIndex();
+                }
+            } else {
+                if (bottomEnd < bottomBegin) {
+                    bottomEnd = iterator.previousIndex();
+                }
             }
         }
         if (candidate == null) {
-            if (ArclightCaptures.getContainerOwner() != null) {
-                candidate = ArclightCaptures.getContainerOwner();
-            } else {
-                throw new RuntimeException("candidate cannot be null, " + container + "/" + container.getClass());
+            throw new RuntimeException("candidate cannot be null, " + container + "/" + container.getClass());
+        }
+        if (bottomBegin < bottomEnd || bottomBegin == -1) {
+            bottomBegin = container.inventorySlots.size();
+        }
+        Inventory viewing = new CraftInventory(new ContainerInvWrapper(container, bottomBegin, candidate));
+        return new CraftInventoryView(((PlayerEntityBridge) candidate).bridge$getBukkitEntity(), viewing, container);
+    }
+
+    private static class ContainerInvWrapper implements IInventory, IInventoryBridge {
+
+        private final Container container;
+        private final int size;
+        private InventoryHolder owner;
+        private final List<HumanEntity> viewers = new ArrayList<>();
+
+        public ContainerInvWrapper(Container container, int size, PlayerEntity owner) {
+            this.container = container;
+            this.size = size;
+            this.owner = ((PlayerEntityBridge) owner).bridge$getBukkitEntity();
+        }
+
+        @Override
+        public int getSizeInventory() {
+            return size;
+        }
+
+        @Override
+        public boolean isEmpty() {
+            for (Slot slot : container.inventorySlots) {
+                if (!slot.getStack().isEmpty()) return false;
+            }
+            return true;
+        }
+
+        @Override
+        public @NotNull ItemStack getStackInSlot(int index) {
+            if (index >= size) return ItemStack.EMPTY;
+            return container.getSlot(index).getStack();
+        }
+
+        @Override
+        public @NotNull ItemStack decrStackSize(int index, int count) {
+            if (index >= size) return ItemStack.EMPTY;
+            return container.getSlot(index).decrStackSize(count);
+        }
+
+        @Override
+        public @NotNull ItemStack removeStackFromSlot(int index) {
+            if (index >= size) return ItemStack.EMPTY;
+            return container.getSlot(index).decrStackSize(Integer.MAX_VALUE);
+        }
+
+        @Override
+        public void setInventorySlotContents(int index, @NotNull ItemStack stack) {
+            if (index >= size) return;
+            container.putStackInSlot(index, stack);
+        }
+
+        @Override
+        public int getInventoryStackLimit() {
+            if (size <= 0) return 0;
+            return container.getSlot(0).getSlotStackLimit();
+        }
+
+        @Override
+        public void markDirty() {
+        }
+
+        @Override
+        public boolean isUsableByPlayer(@NotNull PlayerEntity player) {
+            return this.container.canInteractWith(player);
+        }
+
+        @Override
+        public void clear() {
+            for (Slot slot : this.container.inventorySlots) {
+                slot.decrStackSize(Integer.MAX_VALUE);
             }
         }
-        CraftResultInventory resultCandidate = null;
-        IInventory mainCandidate = null;
-        for (IInventory inventory : set) {
-            if (inventory instanceof CraftResultInventory) {
-                resultCandidate = (CraftResultInventory) inventory;
-            } else {
-                mainCandidate = inventory;
-            }
+
+        @Override
+        public List<ItemStack> getContents() {
+            container.detectAndSendChanges();
+            return container.inventoryItemStacks.subList(0, size);
         }
-        Inventory inv;
-        if (mainCandidate == null && resultCandidate != null) {
-            mainCandidate = resultCandidate;
-            resultCandidate = null;
+
+        @Override
+        public void onOpen(CraftHumanEntity who) {
+            viewers.add(who);
         }
-        if (mainCandidate != null) {
-            if (resultCandidate != null) {
-                inv = new org.bukkit.craftbukkit.v.inventory.CraftResultInventory(mainCandidate, resultCandidate);
-            } else {
-                inv = new CraftInventory(mainCandidate);
-            }
-        } else { // container has no slots
-            inv = new CraftInventoryCustom(((PlayerEntityBridge) candidate).bridge$getBukkitEntity(), 0);
+
+        @Override
+        public void onClose(CraftHumanEntity who) {
+            viewers.remove(who);
         }
-        return new CraftInventoryView(((PlayerEntityBridge) candidate).bridge$getBukkitEntity(), inv, container);
+
+        @Override
+        public List<HumanEntity> getViewers() {
+            return viewers;
+        }
+
+        @Override
+        public InventoryHolder getOwner() {
+            return owner;
+        }
+
+        @Override
+        public void setOwner(InventoryHolder owner) {
+            this.owner = owner;
+        }
+
+        @Override
+        public void setMaxStackSize(int size) {
+        }
+
+        @Override
+        public Location getLocation() {
+            return null;
+        }
+
+        @Override
+        public IRecipe<?> getCurrentRecipe() {
+            return null;
+        }
+
+        @Override
+        public void setCurrentRecipe(IRecipe<?> recipe) {
+        }
     }
 }

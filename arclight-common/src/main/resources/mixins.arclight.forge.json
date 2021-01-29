@@ -9,6 +9,7 @@
     "DimensionManagerMixin",
     "ForgeEventFactoryMixin",
     "ForgeHooksMixin",
-    "IForgeDimensionMixin"
+    "IForgeDimensionMixin",
+    "NetworkHooksMixin"
   ]
 }
