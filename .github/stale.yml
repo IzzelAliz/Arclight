@@ -11,7 +11,7 @@ pulls:
     for your contributions.
   closeComment: false
 issues:
-  daysUntilStale: 180
+  daysUntilStale: 90
   daysUntilClose: 14
   markComment: >
     This issue has been automatically marked as stale because it has not had
