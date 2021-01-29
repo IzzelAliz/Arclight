@@ -20,7 +20,7 @@ public class ServerRecipeBookMixin {
 
     @Redirect(method = "add", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/crafting/IRecipe;isDynamic()Z"))
     public boolean arclight$recipeUpdate(IRecipe<?> recipe, Collection<IRecipe<?>> collection, ServerPlayerEntity playerEntity) {
-        return !recipe.isDynamic() && CraftEventFactory.handlePlayerRecipeListUpdateEvent(playerEntity, recipe.getId());
+        return recipe.isDynamic() || !CraftEventFactory.handlePlayerRecipeListUpdateEvent(playerEntity, recipe.getId());
     }
 
     @Inject(method = "sendPacket", cancellable = true, at = @At("HEAD"))
