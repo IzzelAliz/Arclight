@@ -444,7 +444,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         }
 
         serverplayerentity.connection = playerIn.connection;
-        serverplayerentity.copyFrom(playerIn, true); // keep inventory here since inventory dropped at ServerPlayerEntity#onDeath
+        serverplayerentity.copyFrom(playerIn, conqueredEnd); // keep inventory here since inventory dropped at ServerPlayerEntity#onDeath
         playerIn.remove(false); // Forge: clone event had a chance to see old data, now discard it
         serverplayerentity.setEntityId(playerIn.getEntityId());
         serverplayerentity.setPrimaryHand(playerIn.getPrimaryHand());
