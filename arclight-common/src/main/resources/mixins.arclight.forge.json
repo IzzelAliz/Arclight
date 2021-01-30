@@ -9,6 +9,7 @@
     "ForgeEventFactoryMixin",
     "ForgeHooksMixin",
     "ForgeInternalHandlerMixin",
-    "NetworkHooksMixin"
+    "NetworkHooksMixin",
+    "PacketDistributorMixin"
   ]
 }
