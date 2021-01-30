@@ -81,6 +81,7 @@ import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.IWorldInfo;
 import net.minecraftforge.common.ForgeHooks;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.ITeleporter;
 import net.minecraftforge.fml.hooks.BasicEventHooks;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
@@ -193,7 +194,9 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
         this.canPickUpLoot = true;
         this.maxHealthCache = this.getMaxHealth();
         this.arclight$initialized = true;
-        this.connection = new BlackholeNetHandler(this.getServer(), (ServerPlayerEntity) (Object) this);
+        if ((Object) this instanceof FakePlayer) {
+            this.connection = new BlackholeNetHandler(this.getServer(), (ServerPlayerEntity) (Object) this);
+        }
     }
 
     @Override
