@@ -17,6 +17,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.IWorld;
+import net.minecraft.world.IWorldWriter;
 import net.minecraft.world.World;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.Chunk;
@@ -31,6 +32,7 @@ import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.block.BlockPhysicsEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.generator.ChunkGenerator;
 import org.spigotmc.SpigotWorldConfig;
 import org.spongepowered.asm.mixin.Final;
@@ -49,7 +51,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 @Mixin(World.class)
-public abstract class WorldMixin implements WorldBridge {
+public abstract class WorldMixin implements WorldBridge, IWorldWriter {
 
     // @formatter:off
     @Shadow @Nullable public TileEntity getTileEntity(BlockPos pos) { return null; }
@@ -177,7 +179,7 @@ public abstract class WorldMixin implements WorldBridge {
                     ci.cancel();
                 }
             }
-        } catch(StackOverflowError e) {
+        } catch (StackOverflowError e) {
             lastPhysicsProblem = pos;
         }
     }
@@ -195,7 +197,7 @@ public abstract class WorldMixin implements WorldBridge {
                     ci.cancel();
                 }
             }
-        } catch(StackOverflowError e) {
+        } catch (StackOverflowError e) {
             lastPhysicsProblem = pos;
         }
     }
@@ -268,5 +270,35 @@ public abstract class WorldMixin implements WorldBridge {
     @Override
     public ChunkGenerator bridge$getGenerator() {
         return generator;
+    }
+
+    @Override
+    public ServerWorld bridge$getMinecraftWorld() {
+        return getWorld().getHandle();
+    }
+
+    @Override
+    public boolean bridge$addEntity(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
+        if (getWorld().getHandle() != (Object) this) {
+            return ((WorldBridge) getWorld().getHandle()).bridge$addEntity(entity, reason);
+        } else {
+            this.bridge$pushAddEntityReason(reason);
+            return this.addEntity(entity);
+        }
+    }
+
+    @Override
+    public void bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason reason) {
+        if (getWorld().getHandle() != (Object) this) {
+            ((WorldBridge) getWorld().getHandle()).bridge$pushAddEntityReason(reason);
+        }
+    }
+
+    @Override
+    public CreatureSpawnEvent.SpawnReason bridge$getAddEntityReason() {
+        if (getWorld().getHandle() != (Object) this) {
+            return ((WorldBridge) getWorld().getHandle()).bridge$getAddEntityReason();
+        }
+        return null;
     }
 }
