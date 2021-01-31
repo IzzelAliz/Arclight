@@ -14,6 +14,7 @@ import net.minecraft.profiler.IProfiler;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorld;
+import net.minecraft.world.IWorldWriter;
 import net.minecraft.world.World;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.AbstractChunkProvider;
@@ -29,6 +30,7 @@ import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.block.BlockPhysicsEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.generator.ChunkGenerator;
 import org.spigotmc.SpigotWorldConfig;
 import org.spongepowered.asm.mixin.Final;
@@ -48,7 +50,7 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 
 @Mixin(World.class)
-public abstract class WorldMixin implements WorldBridge {
+public abstract class WorldMixin implements WorldBridge, IWorldWriter {
 
     // @formatter:off
     @Shadow @Nullable public TileEntity getTileEntity(BlockPos pos) { return null; }
@@ -254,5 +256,21 @@ public abstract class WorldMixin implements WorldBridge {
     @Override
     public ChunkGenerator bridge$getGenerator() {
         return generator;
+    }
+
+    @Override
+    public boolean bridge$addEntity(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
+        if (getWorld().getHandle() != (Object) this) {
+            return ((WorldBridge) getWorld().getHandle()).bridge$addEntity(entity, reason);
+        } else {
+            return addEntity(entity);
+        }
+    }
+
+    @Override
+    public void bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason reason) {
+        if (getWorld().getHandle() != (Object) this) {
+            ((WorldBridge) getWorld().getHandle()).bridge$pushAddEntityReason(reason);
+        }
     }
 }
