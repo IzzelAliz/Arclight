@@ -1,6 +1,6 @@
 allprojects {
     group 'io.izzel.arclight'
-    version '1.0.17-SNAPSHOT'
+    version '1.0.17'
 
     ext {
         agpVersion = '1.13'
