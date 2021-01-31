@@ -3,7 +3,6 @@ package io.izzel.arclight.common.mixin.core.inventory.container;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.inventory.container.ContainerBridge;
 import io.izzel.arclight.common.bridge.inventory.container.SlotBridge;
-import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.server.ArclightContainer;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -87,7 +86,6 @@ public abstract class ContainerMixin implements ContainerBridge {
 
     public final ITextComponent getTitle() {
         if (this.title == null) {
-            ArclightMod.LOGGER.debug("Container {}/{} has no title.", this, this.getClass().getName());
             if (this.containerType != null && this.containerType.getRegistryName() != null) {
                 return new StringTextComponent(this.containerType.getRegistryName().toString());
             } else {
