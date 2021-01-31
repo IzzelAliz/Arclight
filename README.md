@@ -27,18 +27,7 @@ QQ Group chat 3556966
 
 ## Contributing
 
-This project uses Gradle 4.9 as build tool with [arclight-gradle-plugin](https://github.com/IzzelAliz/arclight-gradle-plugin).
-
-To setup development workspace, clone this repository first, and type
-```
-./gradlew remapSpigotJar idea
-```
-
-This will generate proper spigot sources and srg mappings.
-
-Finally, import the project. IntelliJ IDEA is the recommended IDE.
-
-Due to a [MixinGradle bug](https://github.com/SpongePowered/MixinGradle/issues/9), you may build the project twice or the mixin shadows won't get reobfuscated.
+Please read this [wiki section](https://github.com/IzzelAliz/Arclight/wiki/Contributing).
 
 ## License
 
