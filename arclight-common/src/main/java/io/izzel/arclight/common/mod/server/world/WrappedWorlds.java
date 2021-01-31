@@ -27,7 +27,7 @@ public class WrappedWorlds {
                         return f;
                     }
                 }
-                Optional<Field> delegate = getDelegate(cl);
+                Optional<Field> delegate = getDelegate(cl.getSuperclass());
                 if (delegate.isPresent()) {
                     return delegate.get();
                 } else {
