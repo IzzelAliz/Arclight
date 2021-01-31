@@ -87,7 +87,7 @@ public abstract class ContainerMixin implements ContainerBridge {
 
     public final ITextComponent getTitle() {
         if (this.title == null) {
-            ArclightMod.LOGGER.warn("Container {}/{} has no title.", this, this.getClass().getName());
+            ArclightMod.LOGGER.debug("Container {}/{} has no title.", this, this.getClass().getName());
             if (this.containerType != null && this.containerType.getRegistryName() != null) {
                 return new StringTextComponent(this.containerType.getRegistryName().toString());
             } else {
@@ -99,7 +99,11 @@ public abstract class ContainerMixin implements ContainerBridge {
 
     public final void setTitle(ITextComponent title) {
         if (this.title == null) {
-            this.title = title;
+            if (title == null) {
+                this.title = getTitle();
+            } else {
+                this.title = title;
+            }
         }
     }
 
