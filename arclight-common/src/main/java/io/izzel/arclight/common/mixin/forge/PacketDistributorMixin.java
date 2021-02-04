@@ -12,6 +12,10 @@ import java.util.function.Supplier;
 @Mixin(PacketDistributor.class)
 public class PacketDistributorMixin {
 
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
     @Overwrite(remap = false)
     private Consumer<IPacket<?>> playerConsumer(Supplier<ServerPlayerEntity> entityPlayerMPSupplier) {
         return p -> {

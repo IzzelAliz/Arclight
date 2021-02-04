@@ -80,7 +80,9 @@ dependencies {
     }
     embed 'net.md-5:bungeecord-chat:1.16-R0.4@jar'
     embed "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
-    embed 'com.github.ArclightTeam:mixin-tools:1.0.0@jar'    
+    embed 'com.github.ArclightTeam:mixin-tools:1.0.0@jar'
+    annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
+    annotationProcessor 'com.github.ArclightTeam:mixin-tools:1.0.0'
 }
 
 def getGitHash = { ->
@@ -121,7 +123,7 @@ remapSpigotJar {
 }
 
 mixin {
-    // add sourceSets.main, 'mixins.arclight.impl.refmap.1_15.json'
+    add sourceSets.main, 'mixins.arclight.impl.refmap.1_16.json'
 }
 
 compileJava {
