@@ -6,6 +6,7 @@
   "mixins": [
     "ClassInheritanceMultiMapMixin",
     "VoxelShapesMixin",
+    "activationrange.ActivationRangeMixin",
     "activationrange.EntityMixin_ActivationRange",
     "activationrange.ServerWorldMixin_ActivationRange",
     "activationrange.entity.AbstractArrowEntityMixin_ActivationRange",

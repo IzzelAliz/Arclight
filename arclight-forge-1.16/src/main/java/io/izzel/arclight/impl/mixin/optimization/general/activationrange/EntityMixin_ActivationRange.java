@@ -1,9 +1,11 @@
 package io.izzel.arclight.impl.mixin.optimization.general.activationrange;
 
 import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.impl.bridge.EntityBridge_ActivationRange;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 import org.spigotmc.ActivationRange;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,6 +22,7 @@ public abstract class EntityMixin_ActivationRange implements EntityBridge_Activa
     @Shadow public int ticksExisted;
     @Shadow public abstract void remove();
     @Shadow public World world;
+    @Shadow public abstract AxisAlignedBB getBoundingBox();
     // @formatter:on
 
     public ActivationRange.ActivationType activationType;
@@ -42,5 +45,16 @@ public abstract class EntityMixin_ActivationRange implements EntityBridge_Activa
     @Override
     public void bridge$inactiveTick() {
         this.inactiveTick();
+    }
+
+    @Override
+    public void bridge$updateActivation() {
+        if (ArclightConstants.currentTick > this.activatedTick) {
+            if (this.defaultActivationState) {
+                this.activatedTick = ArclightConstants.currentTick;
+            } else if (this.activationType.boundingBox.intersects(this.getBoundingBox())) {
+                this.activatedTick = ArclightConstants.currentTick;
+            }
+        }
     }
 }
