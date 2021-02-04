@@ -54,6 +54,4 @@ public interface EntityBridge extends ICommandSourceBridge {
     int bridge$getRideCooldown();
 
     boolean bridge$canCollideWith(Entity entity);
-
-    void bridge$inactiveTick();
 }

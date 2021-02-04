@@ -5,6 +5,15 @@
   "refmap": "mixins.arclight.impl.refmap.1_16.json",
   "mixins": [
     "ClassInheritanceMultiMapMixin",
-    "VoxelShapesMixin"
+    "VoxelShapesMixin",
+    "activationrange.EntityMixin_ActivationRange",
+    "activationrange.ServerWorldMixin_ActivationRange",
+    "activationrange.entity.AbstractArrowEntityMixin_ActivationRange",
+    "activationrange.entity.AgeableEntityMixin_ActivationRange",
+    "activationrange.entity.AreaEffectCloudEntityMixin_ActivationRange",
+    "activationrange.entity.FireworkRocketEntityMixin_ActivationRange",
+    "activationrange.entity.ItemEntityMixin_ActivationRange",
+    "activationrange.entity.LivingEntityMixin_ActivationRange",
+    "activationrange.entity.VillagerEntityMixin_ActivationRange"
   ]
 }

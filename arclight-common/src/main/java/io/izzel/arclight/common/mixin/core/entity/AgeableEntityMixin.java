@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.entity;
 
+import io.izzel.arclight.common.bridge.entity.AgeableEntityBridge;
 import net.minecraft.entity.AgeableEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.world.World;
@@ -14,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import javax.annotation.Nullable;
 
 @Mixin(AgeableEntity.class)
-public abstract class AgeableEntityMixin extends CreatureEntityMixin {
+public abstract class AgeableEntityMixin extends CreatureEntityMixin implements AgeableEntityBridge {
 
     // @formatter:off
     @Shadow public abstract boolean isChild();
@@ -37,5 +38,10 @@ public abstract class AgeableEntityMixin extends CreatureEntityMixin {
     @Redirect(method = "livingTick", at = @At(value = "FIELD", target = "Lnet/minecraft/world/World;isRemote:Z"))
     private boolean arclight$tickIfNotLocked(World world) {
         return world.isRemote || ageLocked;
+    }
+
+    @Override
+    public boolean bridge$isAgeLocked() {
+        return this.ageLocked;
     }
 }
