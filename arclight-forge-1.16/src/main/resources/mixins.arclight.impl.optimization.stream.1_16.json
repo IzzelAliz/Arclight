@@ -4,6 +4,7 @@
   "target": "@env(DEFAULT)",
   "refmap": "mixins.arclight.impl.refmap.1_16.json",
   "mixins": [
+    "CommandNodeMixin_Optimization",
     "GoalSelectorMixin",
     "ITaskQueue_PriorityMixin"
   ]
