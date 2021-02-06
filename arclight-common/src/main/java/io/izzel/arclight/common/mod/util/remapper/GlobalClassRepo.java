@@ -11,13 +11,15 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public class GlobalClassRepo implements ClassRepo {
 
     public static final GlobalClassRepo INSTANCE = new GlobalClassRepo();
     private static final PluginInheritanceProvider PROVIDER = new PluginInheritanceProvider(INSTANCE);
 
-    private final LoadingCache<String, ClassNode> cache = CacheBuilder.newBuilder().maximumSize(65536).build(CacheLoader.from(this::findParallel));
+    private final LoadingCache<String, ClassNode> cache = CacheBuilder.newBuilder().maximumSize(256)
+        .expireAfterAccess(1, TimeUnit.MINUTES).build(CacheLoader.from(this::findParallel));
     private final Set<ClassRepo> repos = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     private GlobalClassRepo() {

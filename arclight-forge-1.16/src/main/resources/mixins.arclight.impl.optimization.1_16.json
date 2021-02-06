@@ -15,6 +15,7 @@
     "activationrange.entity.FireworkRocketEntityMixin_ActivationRange",
     "activationrange.entity.ItemEntityMixin_ActivationRange",
     "activationrange.entity.LivingEntityMixin_ActivationRange",
-    "activationrange.entity.VillagerEntityMixin_ActivationRange"
+    "activationrange.entity.VillagerEntityMixin_ActivationRange",
+    "trackingrange.ChunkManagerMixin_TrackingRange"
   ]
 }
