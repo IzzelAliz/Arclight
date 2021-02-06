@@ -26,7 +26,7 @@ public class ArclightReflectionHandler extends ClassLoader {
 
     // bukkit -> srg
     public static Class<?> redirectForName(String cl) throws ClassNotFoundException {
-        return redirectForName(cl, true, remapper.getClassLoader());
+        return redirectForName(cl, true, Unsafe.getCallerClass().getClassLoader());
     }
 
     // bukkit -> srg
@@ -93,7 +93,7 @@ public class ArclightReflectionHandler extends ClassLoader {
     public static String redirectClassGetName(Class<?> cl) {
         String internalName = Type.getInternalName(cl);
         Type type = Type.getObjectType(remapper.toBukkitRemapper().mapType(internalName));
-        return type.getClassName();
+        return type.getInternalName().replace('/', '.');
     }
 
     // srg -> bukkit
