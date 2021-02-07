@@ -1,7 +1,5 @@
 package io.izzel.arclight.api;
 
-import sun.reflect.CallerSensitive;
-
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
@@ -46,7 +44,6 @@ public class Unsafe {
         return lookup;
     }
 
-    @CallerSensitive
     public static sun.misc.Unsafe getUnsafe() {
         return unsafe;
     }
@@ -121,96 +118,6 @@ public class Unsafe {
 
     public static void putDouble(Object o, long l, double v) {
         unsafe.putDouble(o, l, v);
-    }
-
-    @Deprecated
-    public static int getInt(Object o, int i) {
-        return unsafe.getInt(o, i);
-    }
-
-    @Deprecated
-    public static void putInt(Object o, int i, int i1) {
-        unsafe.putInt(o, i, i1);
-    }
-
-    @Deprecated
-    public static Object getObject(Object o, int i) {
-        return unsafe.getObject(o, i);
-    }
-
-    @Deprecated
-    public static void putObject(Object o, int i, Object o1) {
-        unsafe.putObject(o, i, o1);
-    }
-
-    @Deprecated
-    public static boolean getBoolean(Object o, int i) {
-        return unsafe.getBoolean(o, i);
-    }
-
-    @Deprecated
-    public static void putBoolean(Object o, int i, boolean b) {
-        unsafe.putBoolean(o, i, b);
-    }
-
-    @Deprecated
-    public static byte getByte(Object o, int i) {
-        return unsafe.getByte(o, i);
-    }
-
-    @Deprecated
-    public static void putByte(Object o, int i, byte b) {
-        unsafe.putByte(o, i, b);
-    }
-
-    @Deprecated
-    public static short getShort(Object o, int i) {
-        return unsafe.getShort(o, i);
-    }
-
-    @Deprecated
-    public static void putShort(Object o, int i, short i1) {
-        unsafe.putShort(o, i, i1);
-    }
-
-    @Deprecated
-    public static char getChar(Object o, int i) {
-        return unsafe.getChar(o, i);
-    }
-
-    @Deprecated
-    public static void putChar(Object o, int i, char c) {
-        unsafe.putChar(o, i, c);
-    }
-
-    @Deprecated
-    public static long getLong(Object o, int i) {
-        return unsafe.getLong(o, i);
-    }
-
-    @Deprecated
-    public static void putLong(Object o, int i, long l) {
-        unsafe.putLong(o, i, l);
-    }
-
-    @Deprecated
-    public static float getFloat(Object o, int i) {
-        return unsafe.getFloat(o, i);
-    }
-
-    @Deprecated
-    public static void putFloat(Object o, int i, float v) {
-        unsafe.putFloat(o, i, v);
-    }
-
-    @Deprecated
-    public static double getDouble(Object o, int i) {
-        return unsafe.getDouble(o, i);
-    }
-
-    @Deprecated
-    public static void putDouble(Object o, int i, double v) {
-        unsafe.putDouble(o, i, v);
     }
 
     public static byte getByte(long l) {
@@ -305,16 +212,6 @@ public class Unsafe {
         unsafe.freeMemory(l);
     }
 
-    @Deprecated
-    public static int fieldOffset(Field field) {
-        return unsafe.fieldOffset(field);
-    }
-
-    @Deprecated
-    public static Object staticFieldBase(Class<?> aClass) {
-        return unsafe.staticFieldBase(aClass);
-    }
-
     public static long staticFieldOffset(Field field) {
         return unsafe.staticFieldOffset(field);
     }
@@ -353,7 +250,7 @@ public class Unsafe {
 
     public static Class<?> defineClass(String s, byte[] bytes, int i, int i1, ClassLoader classLoader, ProtectionDomain protectionDomain) {
         try {
-            return (Class<?>) defineClass.bindTo(classLoader).invoke(s, bytes, i , i1, protectionDomain);
+            return (Class<?>) defineClass.bindTo(classLoader).invoke(s, bytes, i, i1, protectionDomain);
         } catch (Throwable throwable) {
             throwException(throwable);
             return null;
@@ -366,21 +263,6 @@ public class Unsafe {
 
     public static Object allocateInstance(Class<?> aClass) throws InstantiationException {
         return unsafe.allocateInstance(aClass);
-    }
-
-    @Deprecated
-    public static void monitorEnter(Object o) {
-        unsafe.monitorEnter(o);
-    }
-
-    @Deprecated
-    public static void monitorExit(Object o) {
-        unsafe.monitorExit(o);
-    }
-
-    @Deprecated
-    public static boolean tryMonitorEnter(Object o) {
-        return unsafe.tryMonitorEnter(o);
     }
 
     public static void throwException(Throwable throwable) {
@@ -525,5 +407,19 @@ public class Unsafe {
 
     public static void fullFence() {
         unsafe.fullFence();
+    }
+
+    public static Class<?> getCallerClass() {
+        return INSTANCE.getClassContext()[3];
+    }
+
+    private static final CallerClass INSTANCE = new CallerClass();
+
+    private static class CallerClass extends SecurityManager {
+
+        @Override
+        public Class<?>[] getClassContext() {
+            return super.getClassContext();
+        }
     }
 }

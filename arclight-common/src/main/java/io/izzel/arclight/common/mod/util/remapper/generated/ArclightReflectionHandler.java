@@ -4,6 +4,7 @@ import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.util.remapper.ClassLoaderAdapter;
 import io.izzel.arclight.common.mod.util.remapper.ClassLoaderRemapper;
+import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Type;
 
 import java.lang.invoke.MethodHandle;
@@ -25,7 +26,7 @@ public class ArclightReflectionHandler extends ClassLoader {
 
     // bukkit -> srg
     public static Class<?> redirectForName(String cl) throws ClassNotFoundException {
-        return redirectForName(cl, true, remapper.getClassLoader());
+        return redirectForName(cl, true, Unsafe.getCallerClass().getClassLoader());
     }
 
     // bukkit -> srg
@@ -53,12 +54,6 @@ public class ArclightReflectionHandler extends ClassLoader {
 
     // bukkit -> srg
     public static Method redirectGetMethod(Class<?> cl, String bukkitName, Class<?>... pTypes) throws NoSuchMethodException {
-        if (ClassLoaderAdapter.isDefineClassMethod(cl, bukkitName, pTypes)) {
-            Class<?>[] classes = new Class<?>[pTypes.length + 1];
-            classes[0] = ClassLoader.class;
-            System.arraycopy(pTypes, 0, classes, 1, pTypes.length);
-            return ArclightReflectionHandler.class.getMethod(bukkitName, classes);
-        }
         Method method = remapper.tryMapMethodToSrg(cl, bukkitName, pTypes);
         if (method != null) {
             return method;
@@ -69,12 +64,6 @@ public class ArclightReflectionHandler extends ClassLoader {
 
     // bukkit -> srg
     public static Method redirectGetDeclaredMethod(Class<?> cl, String bukkitName, Class<?>... pTypes) throws NoSuchMethodException {
-        if (ClassLoaderAdapter.isDefineClassMethod(cl, bukkitName, pTypes)) {
-            Class<?>[] classes = new Class<?>[pTypes.length + 1];
-            classes[0] = ClassLoader.class;
-            System.arraycopy(pTypes, 0, classes, 1, pTypes.length);
-            return ArclightReflectionHandler.class.getDeclaredMethod(bukkitName, classes);
-        }
         Method method = remapper.tryMapMethodToSrg(cl, bukkitName, pTypes);
         if (method != null) {
             return method;
@@ -104,7 +93,7 @@ public class ArclightReflectionHandler extends ClassLoader {
     public static String redirectClassGetName(Class<?> cl) {
         String internalName = Type.getInternalName(cl);
         Type type = Type.getObjectType(remapper.toBukkitRemapper().mapType(internalName));
-        return type.getClassName();
+        return type.getInternalName().replace('/', '.');
     }
 
     // srg -> bukkit
@@ -236,6 +225,10 @@ public class ArclightReflectionHandler extends ClassLoader {
 
     public static Object redirectDefineClassInvoke(Method method, Object src, Object[] param) throws Exception {
         if (method.getDeclaringClass() == ArclightReflectionHandler.class && method.getName().equals("defineClass")) {
+            Class<?>[] classes = new Class<?>[method.getParameterCount() + 1];
+            classes[0] = ClassLoader.class;
+            System.arraycopy(method.getParameterTypes(), 0, classes, 1, method.getParameterCount());
+            method = ArclightReflectionHandler.class.getMethod(method.getName(), classes);
             Object[] args = new Object[param.length + 1];
             args[0] = src;
             System.arraycopy(param, 0, args, 1, param.length);
@@ -253,7 +246,7 @@ public class ArclightReflectionHandler extends ClassLoader {
 
     public static Class<?> defineClass(ClassLoader loader, String name, byte[] b, int off, int len, ProtectionDomain pd) {
         byte[] bytes = remapper.remapClass(b);
-        return Unsafe.defineClass(name, bytes, 0, bytes.length, loader, pd);
+        return Unsafe.defineClass(new ClassReader(bytes).getClassName().replace('/', '.'), bytes, 0, bytes.length, loader, pd);
     }
 
     public static Class<?> defineClass(ClassLoader loader, String name, ByteBuffer b, ProtectionDomain pd) {
