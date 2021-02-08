@@ -47,6 +47,7 @@ repositories {
     maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
     maven { url = 'https://files.minecraftforge.net/maven/' }
     maven { url = 'https://jitpack.io/' }
+    maven { url = 'https://maven.izzel.io/releases' }
 }
 
 dependencies {
@@ -66,6 +67,7 @@ dependencies {
     implementation 'net.md-5:bungeecord-chat:1.16-R0.4'
     implementation 'mysql:mysql-connector-java:5.1.49'
     implementation 'org.yaml:snakeyaml:1.27'
+    implementation 'io.izzel:tools:1.0.+'
     implementation project(':arclight-api')
     implementation project(':i18n-config')
 }

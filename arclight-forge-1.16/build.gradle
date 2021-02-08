@@ -56,6 +56,7 @@ repositories {
     maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
     maven { url = 'https://files.minecraftforge.net/maven/' }
     maven { url = 'https://jitpack.io/' }
+    maven { url = 'https://maven.izzel.io/releases' }
 }
 
 def embedLibs = [/*'org.spongepowered:mixin:0.8.1',*/ 'org.ow2.asm:asm-util:9.0',
@@ -81,6 +82,7 @@ dependencies {
     embed 'net.md-5:bungeecord-chat:1.16-R0.4@jar'
     embed "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
     embed 'com.github.ArclightTeam:mixin-tools:1.0.0@jar'
+    embed 'io.izzel:tools:1.0.+'
     annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
     annotationProcessor 'com.github.ArclightTeam:mixin-tools:1.0.0'
 }

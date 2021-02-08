@@ -1,8 +1,13 @@
 package io.izzel.arclight.common.mod.util.remapper;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
-import io.izzel.arclight.common.mod.ArclightMod;
+import com.google.common.collect.Multimap;
 import io.izzel.arclight.common.mod.util.remapper.generated.ArclightReflectionHandler;
+import io.izzel.arclight.common.util.ArrayUtil;
+import io.izzel.tools.product.Product;
+import io.izzel.tools.product.Product2;
+import io.izzel.tools.product.Product4;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.objectweb.asm.Handle;
@@ -10,131 +15,75 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.IntInsnNode;
 import org.objectweb.asm.tree.InvokeDynamicInsnNode;
 import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.TypeInsnNode;
+import org.spongepowered.asm.util.Bytecode;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ListIterator;
+import java.lang.reflect.Modifier;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class ArclightRedirectAdapter implements PluginTransformer {
 
     public static final ArclightRedirectAdapter INSTANCE = new ArclightRedirectAdapter();
     private static final Marker MARKER = MarkerManager.getMarker("REDIRECT");
     private static final String REPLACED_NAME = Type.getInternalName(ArclightReflectionHandler.class);
-    private static final Map<MethodInsnNode, MethodInsnNode> METHOD_REDIRECTS = ImmutableMap
-        .<MethodInsnNode, MethodInsnNode>builder()
-        .put(
-            method(Opcodes.INVOKEVIRTUAL, Field.class, "getName"),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectFieldGetName", Field.class)
-        )
-        .put(
-            method(Opcodes.INVOKEVIRTUAL, Class.class, "getField", String.class),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectGetField", Class.class, String.class)
-        )
-        .put(
-            method(Opcodes.INVOKEVIRTUAL, Class.class, "getDeclaredField", String.class),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectGetDeclaredField", Class.class, String.class)
-        )
-        .put(
-            method(Opcodes.INVOKEVIRTUAL, Class.class, "getName"),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectClassGetName", Class.class)
-        )
-        .put(
-            method(Opcodes.INVOKEVIRTUAL, Class.class, "getCanonicalName"),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectClassGetCanonicalName", Class.class)
-        )
-        .put(
-            method(Opcodes.INVOKEVIRTUAL, Class.class, "getSimpleName"),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectClassGetSimpleName", Class.class)
-        )
-        .put(
-            method(Opcodes.INVOKEVIRTUAL, Method.class, "getName"),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectMethodGetName", Method.class)
-        )
-        .put(
-            method(Opcodes.INVOKEVIRTUAL, Class.class, "getMethod", String.class, Class[].class),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectGetMethod", Class.class, String.class, Class[].class)
-        )
-        .put(
-            method(Opcodes.INVOKEVIRTUAL, Class.class, "getDeclaredMethod", String.class, Class[].class),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectGetDeclaredMethod", Class.class, String.class, Class[].class)
-        )
-        .put(
-            method(Opcodes.INVOKESTATIC, Class.class, "forName", String.class),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectForName", String.class)
-        )
-        .put(
-            method(Opcodes.INVOKESTATIC, Class.class, "forName", String.class, boolean.class, ClassLoader.class),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectForName", String.class, boolean.class, ClassLoader.class)
-        )
-        .put(
-            method(Opcodes.INVOKEVIRTUAL, Package.class, "getName"),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectPackageGetName", Package.class)
-        )
-        .put(
-            method(Opcodes.INVOKESTATIC, MethodType.class, "fromMethodDescriptorString", String.class, ClassLoader.class),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectFromDescStr", String.class, ClassLoader.class)
-        )
-        .put(
-            method(Opcodes.INVOKEVIRTUAL, MethodHandles.Lookup.class, "findStatic", Class.class, String.class, MethodType.class),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectFindStatic", MethodHandles.Lookup.class, Class.class, String.class, MethodType.class)
-        )
-        .put(
-            method(Opcodes.INVOKEVIRTUAL, MethodHandles.Lookup.class, "findVirtual", Class.class, String.class, MethodType.class),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectFindVirtual", MethodHandles.Lookup.class, Class.class, String.class, MethodType.class)
-        )
-        .put(
-            method(Opcodes.INVOKEVIRTUAL, MethodHandles.Lookup.class, "findSpecial", Class.class, String.class, MethodType.class, Class.class),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectFindSpecial", MethodHandles.Lookup.class, Class.class, String.class, MethodType.class, Class.class)
-        )
-        .put(
-            method(Opcodes.INVOKEVIRTUAL, MethodHandles.Lookup.class, "findGetter", Class.class, String.class, Class.class),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectFindGetter", MethodHandles.Lookup.class, Class.class, String.class, Class.class)
-        )
-        .put(
-            method(Opcodes.INVOKEVIRTUAL, MethodHandles.Lookup.class, "findSetter", Class.class, String.class, Class.class),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectFindSetter", MethodHandles.Lookup.class, Class.class, String.class, Class.class)
-        )
-        .put(
-            method(Opcodes.INVOKEVIRTUAL, MethodHandles.Lookup.class, "findStaticGetter", Class.class, String.class, Class.class),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectFindStaticGetter", MethodHandles.Lookup.class, Class.class, String.class, Class.class)
-        )
-        .put(
-            method(Opcodes.INVOKEVIRTUAL, MethodHandles.Lookup.class, "findStaticSetter", Class.class, String.class, Class.class),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectFindStaticSetter", MethodHandles.Lookup.class, Class.class, String.class, Class.class)
-        )
-        .put(
-            method(Opcodes.INVOKEVIRTUAL, ClassLoader.class, "loadClass", String.class),
-            method(Opcodes.INVOKESTATIC, ArclightReflectionHandler.class, "redirectClassLoaderLoadClass", ClassLoader.class, String.class)
-        )
-        .build();
-    private static final String METHOD_SIG = Type.getInternalName(Method.class);
-    private static final String INVOKE_SIG = Type.getMethodDescriptor(Type.getType(Object.class), Type.getType(Object.class), Type.getType(Object[].class));
+    private static final Multimap<String, Product2<String, MethodInsnNode>> METHOD_MODIFY = HashMultimap.create();
+    private static final Multimap<String, Product2<String, MethodInsnNode>> METHOD_REDIRECT = HashMultimap.create();
+    private static final Map<Method, Product4<String, Class<?>[], String, Class<?>[]>> METHOD_TO_HANDLER = new HashMap<>();
+
+    static {
+        redirect(Field.class, "getName", "fieldGetName");
+        redirect(Method.class, "getName", "methodGetName");
+        redirect(Class.class, "getCanonicalName", "classGetCanonicalName");
+        redirect(Class.class, "getSimpleName", "classGetSimpleName");
+        modify(Class.class, "getName", "classGetName");
+        modify(Package.class, "getName", "packageGetName");
+        modify(Class.class, "forName", "classForName", String.class);
+        modify(Class.class, "forName", "classForName", String.class, boolean.class, ClassLoader.class);
+        modify(Class.class, "getField", "classGetField", String.class);
+        modify(Class.class, "getDeclaredField", "classGetDeclaredField", String.class);
+        modify(Class.class, "getMethod", "classGetMethod", String.class, Class[].class);
+        modify(Class.class, "getDeclaredMethod", "classGetDeclaredMethod", String.class, Class[].class);
+        modify(MethodType.class, "fromMethodDescriptorString", "fromDescStr", String.class, ClassLoader.class);
+        modify(MethodHandles.Lookup.class, "findStatic", "lookupFindStatic", Class.class, String.class, MethodType.class);
+        modify(MethodHandles.Lookup.class, "findVirtual", "lookupFindVirtual", Class.class, String.class, MethodType.class);
+        modify(MethodHandles.Lookup.class, "findSpecial", "lookupFindSpecial", Class.class, String.class, MethodType.class, Class.class);
+        modify(MethodHandles.Lookup.class, "findGetter", "lookupFindGetter", Class.class, String.class, Class.class);
+        modify(MethodHandles.Lookup.class, "findSetter", "lookupFindSetter", Class.class, String.class, Class.class);
+        modify(MethodHandles.Lookup.class, "findStaticGetter", "lookupFindStaticGetter", Class.class, String.class, Class.class);
+        modify(MethodHandles.Lookup.class, "findStaticSetter", "lookupFindStaticSetter", Class.class, String.class, Class.class);
+        modify(ClassLoader.class, "loadClass", "classLoaderLoadClass", String.class);
+        // todo not enable this yet
+        //  modify(Method.class, "invoke", "methodInvoke", Object.class, Object[].class);
+    }
+
+    public static Product4<String, Class<?>[], String, Class<?>[]> getInvokeRule(Method method) {
+        return METHOD_TO_HANDLER.get(method);
+    }
 
     @Override
     public void handleClass(ClassNode node, ClassLoaderRemapper remapper) {
-        redirect(node, remapper.getGeneratedHandler());
+        redirect(node, remapper);
     }
 
-    private static void redirect(ClassNode classNode, String generatedOwner) {
-        boolean defineClassFound = false;
+    private static void redirect(ClassNode classNode, ClassLoaderRemapper remapper) {
         for (MethodNode methodNode : classNode.methods) {
-            ListIterator<AbstractInsnNode> iterator = methodNode.instructions.iterator();
-            while (iterator.hasNext()) {
-                AbstractInsnNode insnNode = iterator.next();
+            for (AbstractInsnNode insnNode : methodNode.instructions) {
                 if (insnNode instanceof MethodInsnNode) {
                     MethodInsnNode from = (MethodInsnNode) insnNode;
-                    MethodInsnNode newNode = find(from, generatedOwner);
-                    if (newNode != null) {
-                        iterator.set(newNode);
-                    }
+                    process(from, methodNode.instructions, remapper);
                 } else if (insnNode.getOpcode() == Opcodes.INVOKEDYNAMIC) {
                     InvokeDynamicInsnNode invokeDynamic = (InvokeDynamicInsnNode) insnNode;
                     Object[] bsmArgs = invokeDynamic.bsmArgs;
@@ -143,96 +92,185 @@ public class ArclightRedirectAdapter implements PluginTransformer {
                         if (bsmArg instanceof Handle) {
                             Handle handle = (Handle) bsmArg;
                             if (toOpcode(handle.getTag()) != -1) {
-                                MethodInsnNode node = find(handle, generatedOwner);
-                                if (node != null) {
-                                    bsmArgs[i] = new Handle(toHandle(node.getOpcode()), node.owner, node.name, node.desc, node.itf);
-                                }
+                                bsmArgs[i] = processHandle(handle, remapper);
                             }
                         }
                     }
-                } else if (insnNode.getOpcode() == Opcodes.LDC) {
-                    defineClassFound |= "defineClass".equals(((LdcInsnNode) insnNode).cst);
-                }
-            }
-        }
-        if (defineClassFound) {
-            for (MethodNode methodNode : classNode.methods) {
-                for (AbstractInsnNode insnNode : methodNode.instructions) {
-                    if (insnNode.getOpcode() == Opcodes.INVOKEVIRTUAL) {
-                        MethodInsnNode methodInsnNode = (MethodInsnNode) insnNode;
-                        if (methodInsnNode.owner.equals(METHOD_SIG) && methodInsnNode.name.equals("invoke") && methodInsnNode.desc.equals(INVOKE_SIG)) {
-                            methodInsnNode.setOpcode(Opcodes.INVOKESTATIC);
-                            methodInsnNode.owner = generatedOwner;
-                            methodInsnNode.name = "redirectDefineClassInvoke";
-                            methodInsnNode.desc = "(L" + METHOD_SIG + ";" + methodInsnNode.desc.substring(1);
-                            ArclightMod.LOGGER.debug(MARKER, "Redirect candidate defineClass method invoke in {}/{} {}"
-                                , classNode.name, methodNode.name, methodNode.desc);
-                        }
-                    }
                 }
             }
         }
     }
 
-    private static MethodInsnNode find(Handle handle, String generatedOwner) {
-        for (Map.Entry<MethodInsnNode, MethodInsnNode> entry : METHOD_REDIRECTS.entrySet()) {
-            MethodInsnNode key = entry.getKey();
-            if (
-                key.getOpcode() == toOpcode(handle.getTag()) &&
-                    Objects.equals(key.owner, handle.getOwner()) &&
-                    Objects.equals(key.name, handle.getName()) &&
-                    Objects.equals(key.desc, handle.getDesc())) {
-                MethodInsnNode to = entry.getValue();
-                if (REPLACED_NAME.equals(to.owner)) {
-                    MethodInsnNode clone = (MethodInsnNode) to.clone(ImmutableMap.of());
-                    clone.owner = generatedOwner;
-                    return clone;
+    private static Handle processHandle(Handle handle, ClassLoaderRemapper remapper) {
+        String key = handle.getName() + handle.getDesc();
+        Collection<Product2<String, MethodInsnNode>> col = METHOD_REDIRECT.get(key);
+        for (Product2<String, MethodInsnNode> methodRedirect : col) {
+            if (isSuperType(handle.getOwner(), methodRedirect._1)) {
+                MethodInsnNode node = methodRedirect._2;
+                String owner = REPLACED_NAME.equals(node.owner) ? remapper.getGeneratedHandler() : node.owner;
+                return new Handle(toHandle(node.getOpcode()), owner, node.name, node.desc, node.itf);
+            }
+        }
+        return handle;
+    }
+
+    private static void process(MethodInsnNode node, InsnList insnList, ClassLoaderRemapper remapper) {
+        String key = node.name + node.desc;
+        Collection<Product2<String, MethodInsnNode>> modifyArgsCol = METHOD_MODIFY.get(key);
+        for (Product2<String, MethodInsnNode> modifyArgs : modifyArgsCol) {
+            if (isSuperType(node.owner, modifyArgs._1)) {
+                MethodInsnNode handlerNode;
+                if (REPLACED_NAME.equals(modifyArgs._2.owner)) {
+                    handlerNode = (MethodInsnNode) modifyArgs._2.clone(ImmutableMap.of());
+                    handlerNode.owner = remapper.getGeneratedHandler();
                 } else {
-                    return to;
+                    handlerNode = modifyArgs._2;
                 }
+                processModify(node, insnList, handlerNode);
+                return;
             }
         }
-        return null;
-    }
-
-    private static MethodInsnNode find(MethodInsnNode from, String generatedOwner) {
-        for (Map.Entry<MethodInsnNode, MethodInsnNode> entry : METHOD_REDIRECTS.entrySet()) {
-            MethodInsnNode key = entry.getKey();
-            if (
-                key.getOpcode() == from.getOpcode() &&
-                    Objects.equals(key.owner, from.owner) &&
-                    Objects.equals(key.name, from.name) &&
-                    Objects.equals(key.desc, from.desc)) {
-                MethodInsnNode to = entry.getValue();
-                if (REPLACED_NAME.equals(to.owner)) {
-                    MethodInsnNode clone = (MethodInsnNode) to.clone(ImmutableMap.of());
-                    clone.owner = generatedOwner;
-                    return clone;
+        Collection<Product2<String, MethodInsnNode>> methodRedirectCol = METHOD_REDIRECT.get(key);
+        for (Product2<String, MethodInsnNode> methodRedirect : methodRedirectCol) {
+            if (isSuperType(node.owner, methodRedirect._1)) {
+                MethodInsnNode handlerNode;
+                if (REPLACED_NAME.equals(methodRedirect._2.owner)) {
+                    handlerNode = (MethodInsnNode) methodRedirect._2.clone(ImmutableMap.of());
+                    handlerNode.owner = remapper.getGeneratedHandler();
                 } else {
-                    return to;
+                    handlerNode = methodRedirect._2;
+                }
+                processMethodRedirect(node, insnList, handlerNode);
+                return;
+            }
+        }
+    }
+
+    private static boolean isSuperType(String sub, String sup) {
+        return sub.equals(sup) || GlobalClassRepo.inheritanceProvider().getAll(sub).contains(sup);
+    }
+
+    private static void processMethodRedirect(MethodInsnNode node, InsnList insnList, MethodInsnNode handlerNode) {
+        insnList.set(node, handlerNode);
+    }
+
+    private static void processModify(MethodInsnNode node, InsnList insnList, MethodInsnNode handlerNode) {
+        InsnList list = new InsnList();
+        list.add(handlerNode);
+        Type methodType = Type.getMethodType(node.desc);
+        Type[] types = methodType.getArgumentTypes();
+        if (node.getOpcode() != Opcodes.INVOKESTATIC) {
+            types = ArrayUtil.prepend(types, Type.getObjectType(node.owner), Type[]::new);
+        }
+        if (types.length == 1) {
+            if (node.desc.startsWith("()")) {
+                String retDesc = methodType.getReturnType().getDescriptor();
+                if (handlerNode.desc.equals("(" + retDesc + ")" + retDesc)) { // handle(obj.method())
+                    insnList.insert(node, handlerNode);
+                    return;
+                }
+            } else {
+                String desc = types[0].getDescriptor();
+                if (handlerNode.desc.equals("(" + desc + ")" + desc)) { // object.call(handle(arg0))
+                    insnList.insertBefore(node, handlerNode);
+                    return;
                 }
             }
         }
-        return null;
+        for (int i = 0, argumentTypesLength = types.length; i < argumentTypesLength; i++) {
+            Type type = types[i];
+            if (i > 0) {
+                swap(list, types[i - 1]);
+            }
+            if (argumentTypesLength > 1 && i != argumentTypesLength - 1) {
+                list.add(new InsnNode(Opcodes.DUP));
+            }
+            list.add(loadInt(i));
+            list.add(new InsnNode(Opcodes.AALOAD));
+            cast(list, type);
+        }
+        insnList.insertBefore(node, list);
     }
 
-    private static MethodInsnNode method(int opcode, Class<?> cl, String name, Class<?>... pTypes) {
+    private static void swap(InsnList list, Type top) {
+        if (top.getSize() == 1) {
+            list.add(new InsnNode(Opcodes.SWAP));
+        } else {
+            list.add(new InsnNode(Opcodes.DUP2_X1));
+            list.add(new InsnNode(Opcodes.POP2));
+        }
+    }
+
+    private static void cast(InsnList list, Type type) {
+        if (type.getSort() == Type.OBJECT || type.getSort() == Type.ARRAY) {
+            String internalName = type.getInternalName();
+            if (!"java/lang/Object".equals(internalName)) {
+                list.add(new TypeInsnNode(Opcodes.CHECKCAST, internalName));
+            }
+        } else {
+            String boxingType = Bytecode.getBoxingType(type);
+            String unboxingMethod = Bytecode.getUnboxingMethod(type);
+            list.add(new TypeInsnNode(Opcodes.CHECKCAST, boxingType));
+            list.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, boxingType, unboxingMethod, "()" + type.getDescriptor(), false));
+        }
+    }
+
+    private static void modify(Class<?> owner, String name, String handlerName, Class<?>... args) {
+        addRule(true, owner, name, handlerName, args);
+    }
+
+    private static void redirect(Class<?> owner, String name, String handlerName, Class<?>... args) {
+        addRule(false, owner, name, handlerName, args);
+    }
+
+    private static void addRule(boolean modifyArgs, Class<?> owner, String name, String handlerName, Class<?>... args) {
+        Method original = methodOf(owner, name, args);
+        Class<?>[] handlerArgs;
+        if (!Modifier.isStatic(original.getModifiers())) {
+            handlerArgs = ArrayUtil.prepend(args, owner, Class[]::new);
+        } else {
+            handlerArgs = args;
+        }
+        Method handler = methodOf(ArclightReflectionHandler.class, "redirect" + capitalize(handlerName), handlerArgs);
+        METHOD_REDIRECT.put(name + Type.getMethodDescriptor(original), Product.of(Type.getInternalName(owner), methodNodeOf(handler)));
+        Product2<String, Class<?>[]> handleProd;
+        if (modifyArgs) {
+            Method modifyHandler;
+            try {
+                modifyHandler = methodOf(ArclightReflectionHandler.class, "handle" + capitalize(handlerName), handlerArgs);
+            } catch (RuntimeException e) {
+                handlerArgs[0] = original.getReturnType();
+                modifyHandler = methodOf(ArclightReflectionHandler.class, "handle" + capitalize(handlerName), handlerArgs);
+            }
+            METHOD_MODIFY.put(name + Type.getMethodDescriptor(original), Product.of(Type.getInternalName(owner), methodNodeOf(modifyHandler)));
+            handleProd = Product.of("handle" + capitalize(handlerName), handlerArgs);
+        } else {
+            handleProd = Product.of(null, null);
+        }
+        METHOD_TO_HANDLER.put(original, Product.of("redirect" + capitalize(handlerName), handlerArgs, handleProd._1, handleProd._2));
+    }
+
+    private static String capitalize(String name) {
+        return Character.toUpperCase(name.charAt(0)) + name.substring(1);
+    }
+
+    private static Method methodOf(Class<?> owner, String name, Class<?>... args) {
         try {
-            return method(opcode, cl.getMethod(name, pTypes));
+            return owner.getMethod(name, args);
         } catch (Exception e) {
             try {
-                return method(opcode, cl.getDeclaredMethod(name, pTypes));
-            } catch (NoSuchMethodException ex) {
-                throw new RuntimeException(ex);
+                return owner.getDeclaredMethod(name, args);
+            } catch (NoSuchMethodException e2) {
+                throw new RuntimeException(e2);
             }
         }
     }
 
-    private static MethodInsnNode method(int opcode, Method method) {
+    private static MethodInsnNode methodNodeOf(Method method) {
         String owner = Type.getInternalName(method.getDeclaringClass());
         String name = method.getName();
         String desc = Type.getMethodDescriptor(method);
-        return new MethodInsnNode(opcode, owner, name, desc);
+        return new MethodInsnNode(Opcodes.INVOKESTATIC, owner, name, desc);
     }
 
     private static int toOpcode(int handleType) {
@@ -258,6 +296,18 @@ public class ArclightRedirectAdapter implements PluginTransformer {
                 return Opcodes.H_INVOKEVIRTUAL;
             default:
                 return -1;
+        }
+    }
+
+    static AbstractInsnNode loadInt(int i) {
+        if (i >= -1 && i < 6) {
+            return new InsnNode(Opcodes.ICONST_0 + i);
+        } else if (i >= -128 && i < 128) {
+            return new IntInsnNode(Opcodes.BIPUSH, i);
+        } else if (i >= -32768 && i < 32768) {
+            return new IntInsnNode(Opcodes.SIPUSH, i);
+        } else {
+            return new LdcInsnNode(i);
         }
     }
 }

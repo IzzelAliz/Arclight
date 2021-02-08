@@ -9,8 +9,10 @@ import net.md_5.specialsource.InheritanceMap;
 import net.md_5.specialsource.JarMapping;
 import net.md_5.specialsource.provider.ClassLoaderProvider;
 import net.md_5.specialsource.provider.JointProvider;
+import org.apache.commons.io.FileUtils;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,11 +20,22 @@ import java.util.List;
 public class ArclightRemapper {
 
     public static final ArclightRemapper INSTANCE;
+    public static final File DUMP;
 
     static {
         ArclightI18nLogger.getLogger("Arclight").info("loading-mapping");
         try {
             INSTANCE = new ArclightRemapper();
+            String property = System.getProperty("arclight.remapper.dump");
+            if (property != null) {
+                DUMP = new File(property);
+                if (!DUMP.exists()) {
+                    DUMP.mkdirs();
+                }
+                FileUtils.forceDelete(DUMP);
+            } else {
+                DUMP = null;
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

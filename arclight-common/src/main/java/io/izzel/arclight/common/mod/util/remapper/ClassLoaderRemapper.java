@@ -23,9 +23,11 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.spongepowered.asm.service.MixinService;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -43,6 +45,7 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
     private final JarRemapper toBukkitRemapper;
     private final ClassLoader classLoader;
     private final String generatedHandler;
+    private final Class<?> generatedHandlerClass;
 
     public ClassLoaderRemapper(JarMapping jarMapping, JarMapping toBukkitMapping, ClassLoader classLoader) {
         super(jarMapping);
@@ -52,7 +55,8 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
         this.jarMapping.setFallbackInheritanceProvider(GlobalClassRepo.inheritanceProvider());
         this.toBukkitMapping.setFallbackInheritanceProvider(GlobalClassRepo.inheritanceProvider());
         this.toBukkitRemapper = new LenientJarRemapper(this.toBukkitMapping);
-        this.generatedHandler = generateReflectionHandler();
+        this.generatedHandlerClass = generateReflectionHandler();
+        this.generatedHandler = Type.getInternalName(generatedHandlerClass);
         GlobalClassRepo.INSTANCE.addRepo(new ClassLoaderRepo(this.classLoader));
     }
 
@@ -74,6 +78,10 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
 
     public String getGeneratedHandler() {
         return generatedHandler;
+    }
+
+    public Class<?> getGeneratedHandlerClass() {
+        return generatedHandlerClass;
     }
 
     // BiMap: srg -> bukkit
@@ -286,12 +294,12 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
         ClassWriter wr = new PluginClassWriter(ClassWriter.COMPUTE_FRAMES);
         node.accept(wr);
 
-        return wr.toByteArray();
+        return dump(wr.toByteArray());
     }
 
     private static final AtomicInteger COUNTER = new AtomicInteger();
 
-    private String generateReflectionHandler() {
+    private Class<?> generateReflectionHandler() {
         try {
             ClassNode node = MixinService.getService().getBytecodeProvider().getClassNode(Type.getInternalName(ArclightReflectionHandler.class));
             Preconditions.checkNotNull(node, "node");
@@ -300,12 +308,13 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
             ClassVisitor visitor = new ClassRemapper(writer, new NameRemapper(name));
             node.accept(visitor);
             byte[] bytes = writer.toByteArray();
+            dump(bytes);
             Class<?> cl = Unsafe.defineClass(name.replace('/', '.'), bytes, 0, bytes.length, getClass().getClassLoader(), getClass().getProtectionDomain());
             Unsafe.ensureClassInitialized(cl);
 
             Field remapper = cl.getField("remapper");
             remapper.set(null, this);
-            return name;
+            return cl;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -384,5 +393,24 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
             result = 31 * result + Arrays.hashCode(pTypes);
             return result;
         }
+    }
+
+    private static byte[] dump(byte[] bytes) {
+        try {
+            if (ArclightRemapper.DUMP != null) {
+                String className = new ClassReader(bytes).getClassName() + ".class";
+                int index = className.lastIndexOf('/');
+                if (index != -1) {
+                    File file = new File(ArclightRemapper.DUMP, className.substring(0, index));
+                    file.mkdirs();
+                    Files.write(file.toPath().resolve(className.substring(index + 1)), bytes);
+                } else {
+                    Files.write(ArclightRemapper.DUMP.toPath().resolve(className), bytes);
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to dump class " + new ClassReader(bytes).getClassName(), e);
+        }
+        return bytes;
     }
 }
