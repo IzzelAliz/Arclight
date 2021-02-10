@@ -16,13 +16,13 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLConnection;
 import java.security.CodeSigner;
 import java.security.CodeSource;
 import java.util.Map;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 @Mixin(targets = "org.bukkit.plugin.java.PluginClassLoader", remap = false)
@@ -31,7 +31,6 @@ public class PluginClassLoaderMixin extends URLClassLoader implements RemappingC
     // @formatter:off
     @Shadow @Final private Map<String, Class<?>> classes;
     @Shadow @Final private JavaPluginLoader loader;
-    @Shadow @Final private JarFile jar;
     @Shadow @Final private PluginDescriptionFile description;
     @Shadow @Final private Manifest manifest;
     @Shadow @Final private URL url;
@@ -69,15 +68,27 @@ public class PluginClassLoaderMixin extends URLClassLoader implements RemappingC
 
             if (result == null) {
                 String path = name.replace('.', '/').concat(".class");
-                JarEntry entry = jar.getJarEntry(path);
+                URL url = this.findResource(path);
 
-                if (entry != null) {
+                if (url != null) {
                     byte[] classBytes;
 
-                    try (InputStream is = jar.getInputStream(entry)) {
-                        classBytes = ByteStreams.toByteArray(is);
-                    } catch (IOException ex) {
-                        throw new ClassNotFoundException(name, ex);
+                    URLConnection connection;
+                    CodeSigner[] signers;
+                    try {
+                        connection = url.openConnection();
+                        try (InputStream is = connection.getInputStream()) {
+                            classBytes = ByteStreams.toByteArray(is);
+                            if (connection instanceof JarURLConnection) {
+                                signers = ((JarURLConnection) connection).getJarEntry().getCodeSigners();
+                            } else {
+                                signers = new CodeSigner[0];
+                            }
+                        } catch (IOException ex) {
+                            throw new ClassNotFoundException(name, ex);
+                        }
+                    } catch (IOException e) {
+                        throw new ClassNotFoundException(name, e);
                     }
 
                     classBytes = SwitchTableFixer.INSTANCE.processClass(classBytes);
@@ -90,7 +101,7 @@ public class PluginClassLoaderMixin extends URLClassLoader implements RemappingC
                         if (getPackage(pkgName) == null) {
                             try {
                                 if (manifest != null) {
-                                    definePackage(pkgName, manifest, url);
+                                    definePackage(pkgName, manifest, this.url);
                                 } else {
                                     definePackage(pkgName, null, null, null, null, null, null, null);
                                 }
@@ -102,8 +113,7 @@ public class PluginClassLoaderMixin extends URLClassLoader implements RemappingC
                         }
                     }
 
-                    CodeSigner[] signers = entry.getCodeSigners();
-                    CodeSource source = new CodeSource(url, signers);
+                    CodeSource source = new CodeSource(this.url, signers);
 
                     result = defineClass(name, classBytes, 0, classBytes.length, source);
                 }
