@@ -291,7 +291,7 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
         }
 
         // 有的插件的编译器奇奇怪怪的，所以在这里要重新计算 frame
-        ClassWriter wr = new PluginClassWriter(node.version == Opcodes.V1_5 ? 0 : ClassWriter.COMPUTE_FRAMES);
+        ClassWriter wr = new PluginClassWriter(node.version == Opcodes.V1_5 ? ClassWriter.COMPUTE_MAXS : ClassWriter.COMPUTE_FRAMES);
         node.accept(wr);
 
         return dump(wr.toByteArray());
