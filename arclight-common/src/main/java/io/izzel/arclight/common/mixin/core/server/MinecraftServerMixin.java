@@ -135,6 +135,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
     public RemoteConsoleCommandSender remoteConsole;
     public java.util.Queue<Runnable> processQueue = new java.util.concurrent.ConcurrentLinkedQueue<>();
     public int autosavePeriod;
+    public Commands vanillaCommandDispatcher;
     private boolean hasStopped = false;
     private final Object stopLock = new Object();
 
@@ -165,6 +166,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
             e.printStackTrace();
         }
         this.datapackconfiguration = ArclightCaptures.getDatapackConfig();
+        this.vanillaCommandDispatcher = dataRegistries.getCommandManager();
     }
 
     /**
@@ -506,6 +508,11 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
     @Override
     public CommandSender bridge$getBukkitSender(CommandSource wrapper) {
         return getBukkitSender(wrapper);
+    }
+
+    @Override
+    public Commands bridge$getVanillaCommands() {
+        return this.vanillaCommandDispatcher;
     }
 
     public boolean isDebugging() {

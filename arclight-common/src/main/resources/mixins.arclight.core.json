@@ -16,6 +16,7 @@
   "mixinPriority": 500,
   "mixins": [
     "advancements.AdvancementMixin",
+    "advancements.FunctionManagerMixin",
     "advancements.PlayerAdvancementsMixin",
     "block.AbstractBlock_AbstractBlockStateMixin",
     "block.AbstractBlockMixin",

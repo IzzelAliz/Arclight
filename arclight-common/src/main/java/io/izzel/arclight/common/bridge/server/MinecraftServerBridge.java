@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.bridge.server;
 
+import net.minecraft.command.Commands;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.craftbukkit.v.CraftServer;
@@ -21,4 +22,6 @@ public interface MinecraftServerBridge {
     void bridge$drainQueuedTasks();
 
     boolean bridge$hasStopped();
+
+    Commands bridge$getVanillaCommands();
 }

@@ -233,12 +233,12 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
 
     @Inject(method = "save", at = @At("RETURN"))
     private void arclight$saveLevelDat(IProgressUpdate progress, boolean flush, boolean skipSave, CallbackInfo ci) {
-        if (this.field_241103_E_ instanceof DerivedWorldInfo) {
-            return;
+        if (this.field_241103_E_ instanceof ServerWorldInfo) {
+            ServerWorldInfo worldInfo = (ServerWorldInfo) this.field_241103_E_;
+            worldInfo.setWorldBorderSerializer(this.getWorldBorder().getSerializer());
+            worldInfo.setCustomBossEventData(this.shadow$getServer().getCustomBossEvents().write());
+            this.convertable.saveLevel(this.shadow$getServer().field_240767_f_, worldInfo, this.shadow$getServer().getPlayerList().getHostPlayerData());
         }
-        this.$$worldDataServer.setWorldBorderSerializer(this.getWorldBorder().getSerializer());
-        this.$$worldDataServer.setCustomBossEventData(this.shadow$getServer().getCustomBossEvents().write());
-        this.convertable.saveLevel(this.shadow$getServer().field_240767_f_, this.$$worldDataServer, this.shadow$getServer().getPlayerList().getHostPlayerData());
     }
 
     @Inject(method = "onChunkUnloading", at = @At("HEAD"))

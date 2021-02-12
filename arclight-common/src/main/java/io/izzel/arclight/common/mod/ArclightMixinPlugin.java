@@ -132,6 +132,7 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
         .add("net.minecraft.network.play.client.CCloseWindowPacket")
         .add("net.minecraft.world.dimension.DimensionType")
         .add("net.minecraft.util.text.Color")
+        .add("net.minecraft.command.Commands")
         .build();
 
     @Override

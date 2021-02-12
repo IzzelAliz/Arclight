@@ -6,6 +6,7 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
 import net.minecraft.network.rcon.RConConsoleSource;
 import net.minecraft.server.dedicated.DedicatedServer;
+import net.minecraft.server.dedicated.PendingCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.command.CraftRemoteConsoleCommandSender;
@@ -48,10 +49,13 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin {
 
     @Redirect(method = "executePendingCommands", at = @At(value = "INVOKE", target = "Lnet/minecraft/command/Commands;handleCommand(Lnet/minecraft/command/CommandSource;Ljava/lang/String;)I"))
     private int arclight$serverCommandEvent(Commands commands, CommandSource source, String command) {
+        if (command.isEmpty()) {
+            return 0;
+        }
         ServerCommandEvent event = new ServerCommandEvent(console, command);
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
-            return commands.handleCommand(source, event.getCommand());
+            server.dispatchCommand(console, event.getCommand());
         }
         return 0;
     }
@@ -69,12 +73,7 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin {
             if (event.isCancelled()) {
                 return;
             }
-            ServerCommandEvent event2 = new ServerCommandEvent(console, event.getCommand());
-            Bukkit.getPluginManager().callEvent(event2);
-            if (event2.isCancelled()) {
-                return;
-            }
-            this.getCommandManager().handleCommand(this.rconConsoleSource.getCommandSource(), event2.getCommand());
+            this.server.dispatchServerCommand(remoteConsole, new PendingCommand(event.getCommand(), this.rconConsoleSource.getCommandSource()));
         });
         return this.rconConsoleSource.getLogContents();
     }

@@ -1057,7 +1057,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             return;
         }
         try {
-            minecraftServer.getCommandManager().handleCommand(((CraftPlayer) event.getPlayer()).getHandle().getCommandSource(), event.getMessage());
+            this.server.dispatchCommand(event.getPlayer(), event.getMessage().substring(1));
         } catch (CommandException ex) {
             player.sendMessage(ChatColor.RED + "An internal error occurred while attempting to perform this command");
             java.util.logging.Logger.getLogger(ServerPlayNetHandler.class.getName()).log(Level.SEVERE, null, ex);
