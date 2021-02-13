@@ -48,6 +48,7 @@ import net.minecraft.world.storage.IServerConfiguration;
 import net.minecraft.world.storage.IServerWorldInfo;
 import net.minecraft.world.storage.SaveFormat;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.world.StructureSpawnManager;
 import net.minecraftforge.fml.BrandingControl;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.Logger;
@@ -342,6 +343,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
      */
     @Overwrite
     public void loadInitialChunks(IChunkStatusListener listener) {
+        StructureSpawnManager.gatherEntitySpawns();
         ServerWorld serverworld = this.func_241755_D_();
         this.forceTicks = true;
         LOGGER.info("Preparing start region for dimension {}", serverworld.getDimensionKey().getLocation());
