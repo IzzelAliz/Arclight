@@ -75,7 +75,6 @@ import net.minecraft.util.text.event.HoverEvent;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.GameType;
-import net.minecraft.world.Teleporter;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.server.ServerWorld;
@@ -475,7 +474,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
         // this.invulnerableDimensionChange = true;
         ServerWorld serverworld = this.getServerWorld();
         RegistryKey<DimensionType> registrykey = ((WorldBridge) serverworld).bridge$getTypeKey();
-        if (registrykey == DimensionType.THE_END && ((WorldBridge) server).bridge$getTypeKey() == DimensionType.OVERWORLD && teleporter instanceof Teleporter) { //Forge: Fix non-vanilla teleporters triggering end credits
+        if (registrykey == DimensionType.THE_END && ((WorldBridge) server).bridge$getTypeKey() == DimensionType.OVERWORLD && teleporter.isVanilla()) { //Forge: Fix non-vanilla teleporters triggering end credits
             this.invulnerableDimensionChange = true;
             this.detach();
             this.getServerWorld().removePlayer((ServerPlayerEntity) (Object) this, true); //Forge: The player entity is cloned so keep the data until after cloning calls copyFrom
@@ -487,8 +486,6 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
 
             return (ServerPlayerEntity) (Object) this;
         } else {
-            PlayerList playerlist = this.server.getPlayerList();
-            /*
             IWorldInfo iworldinfo = server.getWorldInfo();
             this.connection.sendPacket(new SRespawnPacket(server.getDimensionType(), server.getDimensionKey(), BiomeManager.getHashedSeed(server.getSeed()), this.interactionManager.getGameType(), this.interactionManager.func_241815_c_(), server.isDebug(), server.func_241109_A_(), true));
             this.connection.sendPacket(new SServerDifficultyPacket(iworldinfo.getDifficulty(), iworldinfo.isDifficultyLocked()));
@@ -496,7 +493,6 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
             playerlist.updatePermissionLevel((ServerPlayerEntity) (Object) this);
             serverworld.removeEntity((ServerPlayerEntity) (Object) this, true); //Forge: the player entity is moved to the new world, NOT cloned. So keep the data alive with no matching invalidate call.
             this.revive();
-            */
             PortalInfo portalinfo = teleporter.getPortalInfo((ServerPlayerEntity) (Object) this, server, this::func_241829_a);
             ServerWorld[] exitWorld = new ServerWorld[]{server};
             if (portalinfo != null) {
@@ -520,18 +516,18 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
                         return null;
                     }
                     exit = tpEvent.getTo();
-                    exitWorld[0] = ((CraftWorld) exit.getWorld()).getHandle();
 
                     serverworld.getProfiler().endSection();
                     serverworld.getProfiler().startSection("placing");
 
                     this.invulnerableDimensionChange = true;
-                    IWorldInfo iworldinfo = exitWorld[0].getWorldInfo();
-                    this.connection.sendPacket(new SRespawnPacket(exitWorld[0].getDimensionType(), exitWorld[0].getDimensionKey(), BiomeManager.getHashedSeed(exitWorld[0].getSeed()), this.interactionManager.getGameType(), this.interactionManager.func_241815_c_(), exitWorld[0].isDebug(), exitWorld[0].func_241109_A_(), true));
-                    this.connection.sendPacket(new SServerDifficultyPacket(iworldinfo.getDifficulty(), iworldinfo.isDifficultyLocked()));
-                    playerlist.updatePermissionLevel((ServerPlayerEntity) (Object) this);
-                    serverworld.removeEntity((ServerPlayerEntity) (Object) this, true); //Forge: the player entity is moved to the new world, NOT cloned. So keep the data alive with no matching invalidate call.
-                    this.revive();
+                    ServerWorld newWorld = ((CraftWorld) exit.getWorld()).getHandle();
+                    if (newWorld != exitWorld[0]) {
+                        exitWorld[0] = newWorld;
+                        IWorldInfo newWorldInfo = exitWorld[0].getWorldInfo();
+                        this.connection.sendPacket(new SRespawnPacket(exitWorld[0].getDimensionType(), exitWorld[0].getDimensionKey(), BiomeManager.getHashedSeed(exitWorld[0].getSeed()), this.interactionManager.getGameType(), this.interactionManager.func_241815_c_(), exitWorld[0].isDebug(), exitWorld[0].func_241109_A_(), true));
+                        this.connection.sendPacket(new SServerDifficultyPacket(newWorldInfo.getDifficulty(), newWorldInfo.isDifficultyLocked()));
+                    }
 
                     this.setWorld(exitWorld[0]);
                     exitWorld[0].addDuringPortalTeleport((ServerPlayerEntity) (Object) this);
@@ -544,7 +540,8 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
                     return (ServerPlayerEntity) (Object) this;//forge: this is part of the ITeleporter patch
                 });//Forge: End vanilla logic
                 if (e == null) {
-                    return null;
+                    serverworld.addDuringPortalTeleport((ServerPlayerEntity) (Object) this);
+                    return (ServerPlayerEntity) (Object) this;
                 } else if (e != (Object) this) {
                     throw new IllegalArgumentException(String.format("Teleporter %s returned not the player entity but instead %s, expected PlayerEntity %s", teleporter, e, this));
                 }
@@ -565,8 +562,6 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
                 BasicEventHooks.firePlayerChangedDimensionEvent((ServerPlayerEntity) (Object) this, serverworld.getDimensionKey(), exitWorld[0].getDimensionKey());
                 PlayerChangedWorldEvent changeEvent = new PlayerChangedWorldEvent(this.getBukkitEntity(), ((WorldBridge) serverworld).bridge$getWorld());
                 Bukkit.getPluginManager().callEvent(changeEvent);
-            } else {
-                return null;
             }
 
             return (ServerPlayerEntity) (Object) this;
@@ -667,7 +662,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
         if (container != null) {
             ((ContainerBridge) container).bridge$setTitle(itileinventory.getDisplayName());
             boolean cancelled = false;
-            ArclightCaptures.captureContainerOwner((ServerPlayerEntity)(Object)this);
+            ArclightCaptures.captureContainerOwner((ServerPlayerEntity) (Object) this);
             container = CraftEventFactory.callInventoryOpenEvent((ServerPlayerEntity) (Object) this, container, cancelled);
             ArclightCaptures.resetContainerOwner();
             if (container == null && !cancelled) {

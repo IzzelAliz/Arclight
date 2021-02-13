@@ -458,7 +458,8 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
 
     @Inject(method = "setPositionAndRotation", at = @At("RETURN"))
     private void arclight$loadChunk(double x, double y, double z, float yaw, float pitch, CallbackInfo ci) {
-        if (this.valid) this.world.getChunk((int) Math.floor(this.getPosX()) >> 4, (int) Math.floor(this.getPosZ()) >> 4);
+        if (this.valid)
+            this.world.getChunk((int) Math.floor(this.getPosX()) >> 4, (int) Math.floor(this.getPosZ()) >> 4);
     }
 
     public boolean canCollideWith(Entity entity) {
@@ -828,12 +829,6 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                             ArclightCaptures.captureEndPortalEntity((Entity) (Object) this, spawnPortal);
                             ServerWorld.func_241121_a_(world);
                         }
-
-                        this.getBukkitEntity().setHandle(entity);
-                        ((EntityBridge) entity).bridge$setBukkitEntity(this.bridge$getBukkitEntity());
-                        if ((Object) this instanceof MobEntity) {
-                            ((MobEntity) (Object) this).clearLeashed(true, false);
-                        }
                     }
                     return entity;
                 }); //Forge: End vanilla logic
@@ -847,6 +842,15 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             }
         } else {
             return null;
+        }
+    }
+
+    @Inject(method = "copyDataFromOld", at = @At("HEAD"))
+    private void arclight$forwardHandle(Entity entityIn, CallbackInfo ci) {
+        ((InternalEntityBridge) entityIn).internal$getBukkitEntity().setHandle((Entity) (Object) this);
+        ((EntityBridge) this).bridge$setBukkitEntity(((InternalEntityBridge) entityIn).internal$getBukkitEntity());
+        if (entityIn instanceof MobEntity) {
+            ((MobEntity) entityIn).clearLeashed(true, false);
         }
     }
 
