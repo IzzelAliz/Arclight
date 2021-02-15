@@ -205,7 +205,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
 
     public final BlockPos getSpawnPoint(ServerWorld worldserver) {
         BlockPos blockposition = worldserver.getSpawnPoint();
-        if (worldserver.getDimensionType().hasSkyLight() && worldserver.field_241103_E_.getGameType() != GameType.ADVENTURE) {
+        if (worldserver.getDimensionType().hasSkyLight() && worldserver.serverWorldInfo.getGameType() != GameType.ADVENTURE) {
             long k;
             long l;
             int i = Math.max(0, this.server.getSpawnRadius(worldserver));
@@ -480,14 +480,14 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
             this.getServerWorld().removePlayer((ServerPlayerEntity) (Object) this, true); //Forge: The player entity is cloned so keep the data until after cloning calls copyFrom
             if (!this.queuedEndExit) {
                 this.queuedEndExit = true;
-                this.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.field_241768_e_, this.seenCredits ? 0.0F : 1.0F));
+                this.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.PERFORM_RESPAWN, this.seenCredits ? 0.0F : 1.0F));
                 this.seenCredits = true;
             }
 
             return (ServerPlayerEntity) (Object) this;
         } else {
             IWorldInfo iworldinfo = server.getWorldInfo();
-            this.connection.sendPacket(new SRespawnPacket(server.getDimensionType(), server.getDimensionKey(), BiomeManager.getHashedSeed(server.getSeed()), this.interactionManager.getGameType(), this.interactionManager.func_241815_c_(), server.isDebug(), server.func_241109_A_(), true));
+            this.connection.sendPacket(new SRespawnPacket(server.getDimensionType(), server.getDimensionKey(), BiomeManager.getHashedSeed(server.getSeed()), this.interactionManager.getGameType(), this.interactionManager.func_241815_c_(), server.isDebug(), server.isFlatWorld(), true));
             this.connection.sendPacket(new SServerDifficultyPacket(iworldinfo.getDifficulty(), iworldinfo.isDifficultyLocked()));
             PlayerList playerlist = this.server.getPlayerList();
             playerlist.updatePermissionLevel((ServerPlayerEntity) (Object) this);
@@ -525,7 +525,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
                     if (newWorld != exitWorld[0]) {
                         exitWorld[0] = newWorld;
                         IWorldInfo newWorldInfo = exitWorld[0].getWorldInfo();
-                        this.connection.sendPacket(new SRespawnPacket(exitWorld[0].getDimensionType(), exitWorld[0].getDimensionKey(), BiomeManager.getHashedSeed(exitWorld[0].getSeed()), this.interactionManager.getGameType(), this.interactionManager.func_241815_c_(), exitWorld[0].isDebug(), exitWorld[0].func_241109_A_(), true));
+                        this.connection.sendPacket(new SRespawnPacket(exitWorld[0].getDimensionType(), exitWorld[0].getDimensionKey(), BiomeManager.getHashedSeed(exitWorld[0].getSeed()), this.interactionManager.getGameType(), this.interactionManager.func_241815_c_(), exitWorld[0].isDebug(), exitWorld[0].isFlatWorld(), true));
                         this.connection.sendPacket(new SServerDifficultyPacket(newWorldInfo.getDifficulty(), newWorldInfo.isDifficultyLocked()));
                     }
 
@@ -586,7 +586,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
         if (optional.isPresent() || !canCreatePortal) {
             return optional;
         }
-        Direction.Axis enumdirection_enumaxis = this.world.getBlockState(this.field_242271_ac).func_235903_d_(NetherPortalBlock.AXIS).orElse(Direction.Axis.X);
+        Direction.Axis enumdirection_enumaxis = this.world.getBlockState(this.entityBlockPosition).func_235903_d_(NetherPortalBlock.AXIS).orElse(Direction.Axis.X);
         Optional<TeleportationRepositioner.Result> optional1 = ((TeleporterBridge) worldserver.getDefaultTeleporter()).bridge$createPortal(blockposition, enumdirection_enumaxis, (ServerPlayerEntity) (Object) this, createRadius);
         if (!optional1.isPresent()) {
             LOGGER.error("Unable to create a portal, likely target out of worldborder");
@@ -843,25 +843,25 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
             this.weather = type;
         }
         if (type == WeatherType.DOWNFALL) {
-            this.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.field_241766_c_, 0.0f));
+            this.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.CLEAR, 0.0f));
         } else {
-            this.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.field_241765_b_, 0.0f));
+            this.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.RAINING, 0.0f));
         }
     }
 
     public void updateWeather(float oldRain, float newRain, float oldThunder, float newThunder) {
         if (this.weather == null) {
             if (oldRain != newRain) {
-                this.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.field_241771_h_, newRain));
+                this.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.SET_RAIN_STRENGTH, newRain));
             }
         } else if (this.pluginRainPositionPrevious != this.pluginRainPosition) {
-            this.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.field_241771_h_, this.pluginRainPosition));
+            this.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.SET_RAIN_STRENGTH, this.pluginRainPosition));
         }
         if (oldThunder != newThunder) {
             if (this.weather == WeatherType.DOWNFALL || this.weather == null) {
-                this.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.field_241772_i_, newThunder));
+                this.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.SET_THUNDER_STRENGTH, newThunder));
             } else {
-                this.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.field_241772_i_, 0.0f));
+                this.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.SET_THUNDER_STRENGTH, 0.0f));
             }
         }
     }

@@ -19,12 +19,12 @@ public abstract class LightningBoltEntityMixin extends EntityMixin {
 
     public boolean isSilent = false;
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;func_241841_a(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/entity/effect/LightningBoltEntity;)V"))
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;causeLightningStrike(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/entity/effect/LightningBoltEntity;)V"))
     private void arclight$captureEntity(CallbackInfo ci) {
         ArclightCaptures.captureDamageEventEntity((Entity) (Object) this);
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/entity/Entity;func_241841_a(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/entity/effect/LightningBoltEntity;)V"))
+    @Inject(method = "tick", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/entity/Entity;causeLightningStrike(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/entity/effect/LightningBoltEntity;)V"))
     private void arclight$resetEntity(CallbackInfo ci) {
         ArclightCaptures.captureDamageEventEntity(null);
     }

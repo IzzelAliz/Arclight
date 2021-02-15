@@ -288,7 +288,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                     isBedSpawn = true;
                     location = new Location(((WorldBridge) spawnWorld).bridge$getWorld(), vec3d.x, vec3d.y, vec3d.z);
                 } else if (pos != null) {
-                    playerIn.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.field_241764_a_, 0.0f));
+                    playerIn.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.SPAWN_NOT_VALID, 0.0f));
                 }
             }
             if (location == null) {
@@ -316,12 +316,12 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             playerIn.setPosition(playerIn.getPosX(), playerIn.getPosY() + 1.0, playerIn.getPosZ());
         }
         IWorldInfo worlddata = serverWorld.getWorldInfo();
-        playerIn.connection.sendPacket(new SRespawnPacket(serverWorld.getDimensionType(), serverWorld.getDimensionKey(), BiomeManager.getHashedSeed(serverWorld.getSeed()), playerIn.interactionManager.getGameType(), playerIn.interactionManager.func_241815_c_(), serverWorld.isDebug(), serverWorld.func_241109_A_(), flag));
+        playerIn.connection.sendPacket(new SRespawnPacket(serverWorld.getDimensionType(), serverWorld.getDimensionKey(), BiomeManager.getHashedSeed(serverWorld.getSeed()), playerIn.interactionManager.getGameType(), playerIn.interactionManager.func_241815_c_(), serverWorld.isDebug(), serverWorld.isFlatWorld(), flag));
         playerIn.connection.sendPacket(new SUpdateViewDistancePacket(((WorldBridge) serverWorld).bridge$spigotConfig().viewDistance));
         playerIn.setWorld(serverWorld);
         ((ServerPlayNetHandlerBridge) playerIn.connection).bridge$teleport(new Location(((WorldBridge) serverWorld).bridge$getWorld(), playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ(), playerIn.rotationYaw, playerIn.rotationPitch));
         playerIn.setSneaking(false);
-        playerIn.connection.sendPacket(new SWorldSpawnChangedPacket(serverWorld.getSpawnPoint(), serverWorld.func_242107_v()));
+        playerIn.connection.sendPacket(new SWorldSpawnChangedPacket(serverWorld.getSpawnPoint(), serverWorld.getSpawnAngle()));
         playerIn.connection.sendPacket(new SServerDifficultyPacket(worlddata.getDifficulty(), worlddata.isDifficultyLocked()));
         playerIn.connection.sendPacket(new SSetExperiencePacket(playerIn.experience, playerIn.experienceTotal, playerIn.experienceLevel));
         this.sendWorldInfo(playerIn, serverWorld);
@@ -404,7 +404,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                     isBedSpawn = true;
                     location = new Location(((WorldBridge) spawnWorld).bridge$getWorld(), vec3d.x, vec3d.y, vec3d.z);
                 } else if (pos != null) {
-                    playerIn.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.field_241764_a_, 0.0f));
+                    playerIn.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.SPAWN_NOT_VALID, 0.0f));
                 }
             }
             if (location == null) {
@@ -465,12 +465,12 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         }
 
         IWorldInfo iworldinfo = serverplayerentity.world.getWorldInfo();
-        serverplayerentity.connection.sendPacket(new SRespawnPacket(serverplayerentity.world.getDimensionType(), serverplayerentity.world.getDimensionKey(), BiomeManager.getHashedSeed(serverplayerentity.getServerWorld().getSeed()), serverplayerentity.interactionManager.getGameType(), serverplayerentity.interactionManager.func_241815_c_(), serverplayerentity.getServerWorld().isDebug(), serverplayerentity.getServerWorld().func_241109_A_(), conqueredEnd));
+        serverplayerentity.connection.sendPacket(new SRespawnPacket(serverplayerentity.world.getDimensionType(), serverplayerentity.world.getDimensionKey(), BiomeManager.getHashedSeed(serverplayerentity.getServerWorld().getSeed()), serverplayerentity.interactionManager.getGameType(), serverplayerentity.interactionManager.func_241815_c_(), serverplayerentity.getServerWorld().isDebug(), serverplayerentity.getServerWorld().isFlatWorld(), conqueredEnd));
         serverplayerentity.connection.sendPacket(new SUpdateViewDistancePacket(((WorldBridge) serverWorld).bridge$spigotConfig().viewDistance));
         serverplayerentity.setWorld(serverWorld);
         ((ServerPlayNetHandlerBridge) serverplayerentity.connection).bridge$teleport(new Location(((WorldBridge) serverWorld).bridge$getWorld(), serverplayerentity.getPosX(), serverplayerentity.getPosY(), serverplayerentity.getPosZ(), serverplayerentity.rotationYaw, serverplayerentity.rotationPitch));
         serverplayerentity.setSneaking(false);
-        serverplayerentity.connection.sendPacket(new SWorldSpawnChangedPacket(serverWorld.getSpawnPoint(), serverWorld.func_242107_v()));
+        serverplayerentity.connection.sendPacket(new SWorldSpawnChangedPacket(serverWorld.getSpawnPoint(), serverWorld.getSpawnAngle()));
         serverplayerentity.connection.sendPacket(new SServerDifficultyPacket(iworldinfo.getDifficulty(), iworldinfo.isDifficultyLocked()));
         serverplayerentity.connection.sendPacket(new SSetExperiencePacket(serverplayerentity.experience, serverplayerentity.experienceTotal, serverplayerentity.experienceLevel));
         this.sendWorldInfo(serverplayerentity, serverWorld);
@@ -529,7 +529,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         playerEntity.connection.sendPacket(new SEntityStatusPacket(playerEntity, (byte) i));
         if (ArclightVersion.atLeast(ArclightVersion.v1_15)) {
             float immediateRespawn = playerEntity.world.getGameRules().getBoolean(GameRules.DO_IMMEDIATE_RESPAWN) ? 1.0f : 0.0f;
-            playerEntity.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.field_241775_l_, immediateRespawn));
+            playerEntity.connection.sendPacket(new SChangeGameStatePacket(SChangeGameStatePacket.SHOW_DEATH_SCREEN, immediateRespawn));
         }
     }
 

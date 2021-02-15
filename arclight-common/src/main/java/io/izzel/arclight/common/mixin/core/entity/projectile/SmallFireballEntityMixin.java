@@ -24,7 +24,7 @@ public abstract class SmallFireballEntityMixin extends AbstractFireballEntityMix
 
     @Inject(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;DDD)V", at = @At("RETURN"))
     private void arclight$init(World worldIn, LivingEntity shooter, double accelX, double accelY, double accelZ, CallbackInfo ci) {
-        if (this.func_234616_v_() != null && this.func_234616_v_() instanceof MobEntity) {
+        if (this.getShooter() != null && this.getShooter() instanceof MobEntity) {
             this.isIncendiary = this.world.getGameRules().getBoolean(GameRules.MOB_GRIEFING);
         }
     }

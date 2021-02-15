@@ -14,8 +14,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ParrotEntity.class)
 public abstract class ParrotEntityMixin extends AnimalEntityMixin {
 
-    @Inject(method = "func_230254_b_", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/ParrotEntity;addPotionEffect(Lnet/minecraft/potion/EffectInstance;)Z"))
-    private void arclight$feed(PlayerEntity p_230254_1_, Hand p_230254_2_, CallbackInfoReturnable<ActionResultType> cir) {
+    @Inject(method = "getEntityInteractionResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/ParrotEntity;addPotionEffect(Lnet/minecraft/potion/EffectInstance;)Z"))
+    private void arclight$feed(PlayerEntity playerIn, Hand hand, CallbackInfoReturnable<ActionResultType> cir) {
         bridge$pushEffectCause(EntityPotionEffectEvent.Cause.FOOD);
     }
 

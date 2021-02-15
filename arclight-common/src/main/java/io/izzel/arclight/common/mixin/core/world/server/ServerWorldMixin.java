@@ -100,10 +100,10 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
     @Shadow public abstract ServerChunkProvider getChunkProvider();
     @Shadow private boolean allPlayersSleeping;
     @Shadow protected abstract void wakeUpAllPlayers();
-    @Shadow @Final private ServerChunkProvider field_241102_C_;
+    @Shadow @Final private ServerChunkProvider serverChunkProvider;
     @Shadow protected abstract boolean hasDuplicateEntity(Entity entityIn);
-    @Shadow @Final public static BlockPos field_241108_a_;
-    @Shadow @Final public IServerWorldInfo field_241103_E_;
+    @Shadow @Final public static BlockPos END_SPAWN_AREA;
+    @Shadow @Final public IServerWorldInfo serverWorldInfo;
     // @formatter:on
 
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
@@ -111,26 +111,26 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
     public SaveFormat.LevelSave convertable;
     public UUID uuid;
 
-    public void arclight$constructor(MinecraftServer p_i241885_1_, Executor p_i241885_2_, SaveFormat.LevelSave p_i241885_3_, IServerWorldInfo p_i241885_4_, RegistryKey<World> p_i241885_5_, DimensionType p_i241885_6_, IChunkStatusListener p_i241885_7_, ChunkGenerator p_i241885_8_, boolean p_i241885_9_, long p_i241885_10_, List<ISpecialSpawner> p_i241885_12_, boolean p_i241885_13_) {
+    public void arclight$constructor(MinecraftServer server, Executor backgroundExecutor, SaveFormat.LevelSave levelSave, IServerWorldInfo serverWorldInfo, RegistryKey<World> dimension, DimensionType dimensionType, IChunkStatusListener statusListener, ChunkGenerator chunkGenerator, boolean isDebug, long seed, List<ISpecialSpawner> specialSpawners, boolean shouldBeTicking) {
         throw new RuntimeException();
     }
 
-    public void arclight$constructor(MinecraftServer p_i241885_1_, Executor p_i241885_2_, SaveFormat.LevelSave p_i241885_3_, IServerWorldInfo p_i241885_4_, RegistryKey<World> p_i241885_5_, DimensionType p_i241885_6_, IChunkStatusListener p_i241885_7_, ChunkGenerator p_i241885_8_, boolean p_i241885_9_, long p_i241885_10_, List<ISpecialSpawner> p_i241885_12_, boolean p_i241885_13_, org.bukkit.World.Environment env, org.bukkit.generator.ChunkGenerator gen) {
-        arclight$constructor(p_i241885_1_, p_i241885_2_, p_i241885_3_, p_i241885_4_, p_i241885_5_, p_i241885_6_, p_i241885_7_, p_i241885_8_, p_i241885_9_, p_i241885_10_, p_i241885_12_, p_i241885_13_);
+    public void arclight$constructor(MinecraftServer server, Executor backgroundExecutor, SaveFormat.LevelSave levelSave, IServerWorldInfo serverWorldInfo, RegistryKey<World> dimension, DimensionType dimensionType, IChunkStatusListener statusListener, ChunkGenerator chunkGenerator, boolean isDebug, long seed, List<ISpecialSpawner> specialSpawners, boolean shouldBeTicking, org.bukkit.World.Environment env, org.bukkit.generator.ChunkGenerator gen) {
+        arclight$constructor(server, backgroundExecutor, levelSave, serverWorldInfo, dimension, dimensionType, statusListener, chunkGenerator, isDebug, seed, specialSpawners, shouldBeTicking);
         this.generator = gen;
         this.environment = env;
         if (gen != null) {
-            CustomChunkGenerator generator = new CustomChunkGenerator((ServerWorld) (Object) this, this.field_241102_C_.getChunkGenerator(), gen);
-            ((ServerChunkProviderBridge) this.field_241102_C_).bridge$setChunkGenerator(generator);
+            CustomChunkGenerator generator = new CustomChunkGenerator((ServerWorld) (Object) this, this.serverChunkProvider.getChunkGenerator(), gen);
+            ((ServerChunkProviderBridge) this.serverChunkProvider).bridge$setChunkGenerator(generator);
         }
         bridge$getWorld();
     }
 
     @Inject(method = "<init>(Lnet/minecraft/server/MinecraftServer;Ljava/util/concurrent/Executor;Lnet/minecraft/world/storage/SaveFormat$LevelSave;Lnet/minecraft/world/storage/IServerWorldInfo;Lnet/minecraft/util/RegistryKey;Lnet/minecraft/world/DimensionType;Lnet/minecraft/world/chunk/listener/IChunkStatusListener;Lnet/minecraft/world/gen/ChunkGenerator;ZJLjava/util/List;Z)V", at = @At("RETURN"))
-    private void arclight$init(MinecraftServer minecraftServer, Executor p_i241885_2_, SaveFormat.LevelSave p_i241885_3_, IServerWorldInfo worldInfo, RegistryKey<World> p_i241885_5_, DimensionType p_i241885_6_, IChunkStatusListener p_i241885_7_, ChunkGenerator p_i241885_8_, boolean p_i241885_9_, long p_i241885_10_, List<ISpecialSpawner> p_i241885_12_, boolean p_i241885_13_, CallbackInfo ci) {
+    private void arclight$init(MinecraftServer minecraftServer, Executor backgroundExecutor, SaveFormat.LevelSave levelSave, IServerWorldInfo worldInfo, RegistryKey<World> dimension, DimensionType dimensionType, IChunkStatusListener statusListener, ChunkGenerator chunkGenerator, boolean isDebug, long seed, List<ISpecialSpawner> specialSpawners, boolean shouldBeTicking, CallbackInfo ci) {
         this.pvpMode = minecraftServer.isPVPEnabled();
-        this.convertable = p_i241885_3_;
-        this.uuid = WorldUUID.getUUID(p_i241885_3_.getDimensionFolder(this.getDimensionKey()));
+        this.convertable = levelSave;
+        this.uuid = WorldUUID.getUUID(levelSave.getDimensionFolder(this.getDimensionKey()));
         if (worldInfo instanceof ServerWorldInfo) {
             this.$$worldDataServer = (ServerWorldInfo) worldInfo;
         } else if (worldInfo instanceof DerivedWorldInfo) {
@@ -138,12 +138,12 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
             this.$$worldDataServer = DelegateWorldInfo.wrap(((DerivedWorldInfo) worldInfo));
             ((DerivedWorldInfoBridge) worldInfo).bridge$setDimType(this.getTypeKey());
         }
-        ((ServerChunkProviderBridge) this.field_241102_C_).bridge$setViewDistance(spigotConfig.viewDistance);
+        ((ServerChunkProviderBridge) this.serverChunkProvider).bridge$setViewDistance(spigotConfig.viewDistance);
         ((WorldInfoBridge) this.$$worldDataServer).bridge$setWorld((ServerWorld) (Object) this);
     }
 
     public Chunk getChunkIfLoaded(int x, int z) {
-        return this.field_241102_C_.getChunk(x, z, false);
+        return this.serverChunkProvider.getChunk(x, z, false);
     }
 
     public <T extends IParticleData> int sendParticles(final ServerPlayerEntity sender, final T t0, final double d0, final double d1, final double d2, final int i, final double d3, final double d4, final double d5, final double d6, final boolean force) {
@@ -233,11 +233,11 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
 
     @Inject(method = "save", at = @At("RETURN"))
     private void arclight$saveLevelDat(IProgressUpdate progress, boolean flush, boolean skipSave, CallbackInfo ci) {
-        if (this.field_241103_E_ instanceof ServerWorldInfo) {
-            ServerWorldInfo worldInfo = (ServerWorldInfo) this.field_241103_E_;
+        if (this.serverWorldInfo instanceof ServerWorldInfo) {
+            ServerWorldInfo worldInfo = (ServerWorldInfo) this.serverWorldInfo;
             worldInfo.setWorldBorderSerializer(this.getWorldBorder().getSerializer());
             worldInfo.setCustomBossEventData(this.shadow$getServer().getCustomBossEvents().write());
-            this.convertable.saveLevel(this.shadow$getServer().field_240767_f_, worldInfo, this.shadow$getServer().getPlayerList().getHostPlayerData());
+            this.convertable.saveLevel(this.shadow$getServer().dynamicRegistries, worldInfo, this.shadow$getServer().getPlayerList().getHostPlayerData());
         }
     }
 
@@ -366,8 +366,8 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         }, mapName);
     }
 
-    @Inject(method = "func_230547_a_", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;notifyNeighborsOfStateChange(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/Block;)V"))
-    private void arclight$returnIfPopulate(BlockPos p_230547_1_, Block p_230547_2_, CallbackInfo ci) {
+    @Inject(method = "updateBlock", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;notifyNeighborsOfStateChange(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/Block;)V"))
+    private void arclight$returnIfPopulate(BlockPos pos, Block block, CallbackInfo ci) {
         if (populating) {
             ci.cancel();
         }
@@ -465,17 +465,17 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Overwrite
-    public static void func_241121_a_(ServerWorld world) {
-        BlockPos blockpos = field_241108_a_;
+    public static void setupEndSpawnPlatform(ServerWorld world) {
+        BlockPos blockpos = END_SPAWN_AREA;
         int i = blockpos.getX();
         int j = blockpos.getY() - 2;
         int k = blockpos.getZ();
         BlockStateListPopulator blockList = new BlockStateListPopulator(world);
-        BlockPos.getAllInBoxMutable(i - 2, j + 1, k - 2, i + 2, j + 3, k + 2).forEach((p_241122_1_) -> {
-            blockList.setBlockState(p_241122_1_, Blocks.OBSIDIAN.getDefaultState(), 3);
+        BlockPos.getAllInBoxMutable(i - 2, j + 1, k - 2, i + 2, j + 3, k + 2).forEach((pos) -> {
+            blockList.setBlockState(pos, Blocks.OBSIDIAN.getDefaultState(), 3);
         });
-        BlockPos.getAllInBoxMutable(i - 2, j, k - 2, i + 2, j, k + 2).forEach((p_241122_1_) -> {
-            blockList.setBlockState(p_241122_1_, Blocks.OBSIDIAN.getDefaultState(), 3);
+        BlockPos.getAllInBoxMutable(i - 2, j, k - 2, i + 2, j, k + 2).forEach((pos) -> {
+            blockList.setBlockState(pos, Blocks.OBSIDIAN.getDefaultState(), 3);
         });
         CraftWorld bworld = ((WorldBridge) world).bridge$getWorld();
         boolean spawnPortal = ArclightCaptures.getEndPortalSpawn();

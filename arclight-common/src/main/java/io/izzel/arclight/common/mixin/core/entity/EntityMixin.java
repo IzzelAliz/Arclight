@@ -188,7 +188,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow public abstract boolean canBePushed();
     @Shadow protected abstract void setDead();
     @Shadow protected abstract Optional<TeleportationRepositioner.Result> func_241830_a(ServerWorld p_241830_1_, BlockPos p_241830_2_, boolean p_241830_3_);
-    @Shadow protected BlockPos field_242271_ac;
+    @Shadow protected BlockPos entityBlockPosition;
     @Shadow protected abstract Vector3d func_241839_a(Direction.Axis axis, TeleportationRepositioner.Result result);
     @Shadow public abstract EntitySize getSize(Pose poseIn);
     @Shadow protected abstract boolean func_233566_aG_();
@@ -727,7 +727,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         // CraftBukkit end
     }
 
-    @Redirect(method = "func_241841_a", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;setFire(I)V"))
+    @Redirect(method = "causeLightningStrike", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;setFire(I)V"))
     public void arclight$onStruckByLightning$EntityCombustByEntityEvent0(Entity entity, int seconds) {
         final org.bukkit.entity.Entity thisBukkitEntity = this.getBukkitEntity();
         final org.bukkit.entity.Entity stormBukkitEntity = ((EntityBridge) entity).bridge$getBukkitEntity();
@@ -741,7 +741,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         // CraftBukkit end
     }
 
-    @Redirect(method = "func_241841_a", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;attackEntityFrom(Lnet/minecraft/util/DamageSource;F)Z"))
+    @Redirect(method = "causeLightningStrike", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;attackEntityFrom(Lnet/minecraft/util/DamageSource;F)Z"))
     public boolean arclight$onStruckByLightning$EntityCombustByEntityEvent1(Entity entity, DamageSource source, float amount) {
         final org.bukkit.entity.Entity thisBukkitEntity = this.getBukkitEntity();
         final org.bukkit.entity.Entity stormBukkitEntity = ((EntityBridge) entity).bridge$getBukkitEntity();
@@ -827,7 +827,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                         world.addFromAnotherDimension(entity);
                         if (((WorldBridge) world).bridge$getTypeKey() == DimensionType.THE_END) {
                             ArclightCaptures.captureEndPortalEntity((Entity) (Object) this, spawnPortal);
-                            ServerWorld.func_241121_a_(world);
+                            ServerWorld.setupEndSpawnPlatform(world);
                         }
                     }
                     return entity;
@@ -886,14 +886,14 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                 ServerWorld worldFinal = world = ((CraftWorld) event.getTo().getWorld()).getHandle();
                 blockpos1 = new BlockPos(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
 
-                return this.findOrCreatePortal(world, blockpos1, flag2, event.getSearchRadius(), event.getCanCreatePortal(), event.getCreationRadius()).map((p_242275_2_) -> {
-                    BlockState blockstate = this.world.getBlockState(this.field_242271_ac);
+                return this.findOrCreatePortal(world, blockpos1, flag2, event.getSearchRadius(), event.getCanCreatePortal(), event.getCreationRadius()).map((result) -> {
+                    BlockState blockstate = this.world.getBlockState(this.entityBlockPosition);
                     Direction.Axis direction$axis;
                     Vector3d vector3d;
                     if (blockstate.hasProperty(BlockStateProperties.HORIZONTAL_AXIS)) {
                         direction$axis = blockstate.get(BlockStateProperties.HORIZONTAL_AXIS);
-                        TeleportationRepositioner.Result teleportationrepositioner$result = TeleportationRepositioner.findLargestRectangle(this.field_242271_ac, direction$axis, 21, Direction.Axis.Y, 21, (p_242276_2_) -> {
-                            return this.world.getBlockState(p_242276_2_) == blockstate;
+                        TeleportationRepositioner.Result teleportationrepositioner$result = TeleportationRepositioner.findLargestRectangle(this.entityBlockPosition, direction$axis, 21, Direction.Axis.Y, 21, (pos) -> {
+                            return this.world.getBlockState(pos) == blockstate;
                         });
                         vector3d = this.func_241839_a(direction$axis, teleportationrepositioner$result);
                     } else {
@@ -902,13 +902,13 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                     }
 
                     ArclightCaptures.captureCraftPortalEvent(event);
-                    return PortalSize.func_242963_a(worldFinal, p_242275_2_, direction$axis, vector3d, this.getSize(this.getPose()), this.getMotion(), this.rotationYaw, this.rotationPitch);
+                    return PortalSize.func_242963_a(worldFinal, result, direction$axis, vector3d, this.getSize(this.getPose()), this.getMotion(), this.rotationYaw, this.rotationPitch);
                 }).orElse(null);
             }
         } else {
             BlockPos blockpos;
             if (flag1) {
-                blockpos = ServerWorld.field_241108_a_;
+                blockpos = ServerWorld.END_SPAWN_AREA;
             } else {
                 blockpos = world.getHeight(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, world.getSpawnPoint());
             }

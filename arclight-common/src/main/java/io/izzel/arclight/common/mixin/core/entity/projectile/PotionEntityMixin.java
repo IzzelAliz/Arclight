@@ -77,7 +77,7 @@ public abstract class PotionEntityMixin extends ProjectileItemEntityMixin {
                 double d2 = event.getIntensity(victim);
                 for (EffectInstance mobeffect : list) {
                     Effect mobeffectlist = mobeffect.getPotion();
-                    if (!((WorldBridge) this.world).bridge$isPvpMode() && this.func_234616_v_() instanceof ServerPlayerEntity && entityliving2 instanceof ServerPlayerEntity && entityliving2 != this.func_234616_v_()) {
+                    if (!((WorldBridge) this.world).bridge$isPvpMode() && this.getShooter() instanceof ServerPlayerEntity && entityliving2 instanceof ServerPlayerEntity && entityliving2 != this.getShooter()) {
                         int i = Effect.getId(mobeffectlist);
                         if (i == 2 || i == 4 || i == 7 || i == 15 || i == 17 || i == 18) {
                             continue;
@@ -87,7 +87,7 @@ public abstract class PotionEntityMixin extends ProjectileItemEntityMixin {
                         }
                     }
                     if (mobeffectlist.isInstant()) {
-                        mobeffectlist.affectEntity((PotionEntity) (Object) this, this.func_234616_v_(), entityliving2, mobeffect.getAmplifier(), d2);
+                        mobeffectlist.affectEntity((PotionEntity) (Object) this, this.getShooter(), entityliving2, mobeffect.getAmplifier(), d2);
                     } else {
                         int i = (int) (d2 * mobeffect.getDuration() + 0.5);
                         if (i <= 20) {

@@ -107,7 +107,7 @@ public abstract class EnderDragonEntityMixin extends MobEntityMixin {
                 final net.minecraft.block.Block nmsBlock = craftBlock.getNMS().getBlock();
                 if (nmsBlock.canDropFromExplosion(this.explosionSource)) {
                     TileEntity tileentity = nmsBlock.hasTileEntity(craftBlock.getNMS()) ? this.world.getTileEntity(blockposition2) : null;
-                    LootContext.Builder loottableinfo_builder = new LootContext.Builder((ServerWorld)this.world).withRandom(this.world.rand).withParameter(LootParameters.field_237457_g_, Vector3d.copyCentered(blockposition2)).withParameter(LootParameters.TOOL, ItemStack.EMPTY).withParameter(LootParameters.EXPLOSION_RADIUS, 1.0f / event.getYield()).withNullableParameter(LootParameters.BLOCK_ENTITY, tileentity);
+                    LootContext.Builder loottableinfo_builder = new LootContext.Builder((ServerWorld)this.world).withRandom(this.world.rand).withParameter(LootParameters.ORIGIN, Vector3d.copyCentered(blockposition2)).withParameter(LootParameters.TOOL, ItemStack.EMPTY).withParameter(LootParameters.EXPLOSION_RADIUS, 1.0f / event.getYield()).withNullableParameter(LootParameters.BLOCK_ENTITY, tileentity);
                     for (ItemStack stack : craftBlock.getNMS().getDrops(loottableinfo_builder)) {
                         Block.spawnAsEntity(this.world, blockposition2, stack);
                     }

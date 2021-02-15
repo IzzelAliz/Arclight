@@ -32,7 +32,7 @@ public abstract class FoxEntity_MateGoalMixin extends BreedGoal {
     @Overwrite
     protected void spawnBaby() {
         ServerWorld serverworld = (ServerWorld) this.world;
-        FoxEntity foxentity = (FoxEntity) this.animal.func_241840_a(serverworld, this.targetMate);
+        FoxEntity foxentity = (FoxEntity) this.animal.createChild(serverworld, this.targetMate);
         final BabyEntitySpawnEvent event = new BabyEntitySpawnEvent(animal, targetMate, foxentity);
         final boolean cancelled = MinecraftForge.EVENT_BUS.post(event);
         foxentity = (FoxEntity) event.getChild();

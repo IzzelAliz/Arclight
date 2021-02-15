@@ -143,7 +143,7 @@ public abstract class TrackedEntityMixin implements TrackedEntityBridge {
                 ++this.ticksSinceAbsoluteTeleport;
                 int l = MathHelper.floor(this.trackedEntity.rotationYaw * 256.0F / 360.0F);
                 int k1 = MathHelper.floor(this.trackedEntity.rotationPitch * 256.0F / 360.0F);
-                Vector3d vector3d = this.trackedEntity.getPositionVec().subtract(SEntityPacket.func_218744_a(this.encodedPosX, this.encodedPosY, this.encodedPosZ));
+                Vector3d vector3d = this.trackedEntity.getPositionVec().subtract(SEntityPacket.decodePosition(this.encodedPosX, this.encodedPosY, this.encodedPosZ));
                 boolean flag3 = vector3d.lengthSquared() >= (double) 7.6293945E-6F;
                 IPacket<?> ipacket1 = null;
                 boolean flag4 = flag3 || this.updateCounter % 60 == 0;

@@ -53,6 +53,6 @@ public abstract class WorldGenRegionMixin implements WorldBridge {
      */
     @Overwrite
     public Stream<? extends StructureStart<?>> func_241827_a(SectionPos p_241827_1_, Structure<?> p_241827_2_) {
-        return this.world.func_241112_a_().getStructureManager((WorldGenRegion) (Object) this).func_235011_a_(p_241827_1_, p_241827_2_);
+        return this.world.getStructureManager().getStructureManager((WorldGenRegion) (Object) this).func_235011_a_(p_241827_1_, p_241827_2_);
     }
 }

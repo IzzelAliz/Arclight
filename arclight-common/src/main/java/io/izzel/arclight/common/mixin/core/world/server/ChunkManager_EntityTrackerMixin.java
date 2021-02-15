@@ -23,7 +23,7 @@ public abstract class ChunkManager_EntityTrackerMixin {
     // @formatter:on
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void arclight$setTrackedPlayers(ChunkManager outer, Entity entity, int p_i50468_3_, int updateFrequency, boolean sendVelocityUpdates, CallbackInfo ci) {
+    private void arclight$setTrackedPlayers(ChunkManager outer, Entity entity, int range, int updateFrequency, boolean sendVelocityUpdates, CallbackInfo ci) {
         ((TrackedEntityBridge) this.entry).bridge$setTrackedPlayers(this.trackingPlayers);
     }
 }

@@ -22,7 +22,7 @@ public abstract class CowEntityMixin extends AnimalEntityMixin {
      * @reason
      */
     @Overwrite
-    public ActionResultType func_230254_b_(PlayerEntity playerEntity, Hand hand) {
+    public ActionResultType getEntityInteractionResult(PlayerEntity playerEntity, Hand hand) {
         ItemStack itemstack = playerEntity.getHeldItem(hand);
         if (itemstack.getItem() == Items.BUCKET && !this.isChild()) {
             playerEntity.playSound(SoundEvents.ENTITY_COW_MILK, 1.0F, 1.0F);
@@ -35,7 +35,7 @@ public abstract class CowEntityMixin extends AnimalEntityMixin {
             playerEntity.setHeldItem(hand, itemstack1);
             return ActionResultType.func_233537_a_(this.world.isRemote);
         } else {
-            return super.func_230254_b_(playerEntity, hand);
+            return super.getEntityInteractionResult(playerEntity, hand);
         }
     }
 }

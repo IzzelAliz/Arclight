@@ -36,7 +36,7 @@ arclight {
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
 
 minecraft {
-    mappings channel: 'snapshot', version: "20201028-1.16.3"
+    mappings channel: 'snapshot', version: "20210215-1.16.3"
     accessTransformer = project.file('src/main/resources/META-INF/accesstransformer.cfg')
 }
 

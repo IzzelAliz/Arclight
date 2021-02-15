@@ -34,7 +34,7 @@ public class EnderPearlItemMixin extends Item {
         if (!worldIn.isRemote) {
             EnderPearlEntity enderpearlentity = new EnderPearlEntity(worldIn, playerIn);
             enderpearlentity.setItem(itemstack);
-            enderpearlentity.func_234612_a_(playerIn, playerIn.rotationPitch, playerIn.rotationYaw, 0.0F, 1.5F, 1.0F);
+            enderpearlentity.setDirectionAndMovement(playerIn, playerIn.rotationPitch, playerIn.rotationYaw, 0.0F, 1.5F, 1.0F);
             if (!worldIn.addEntity(enderpearlentity)) {
                 if (playerIn instanceof ServerPlayerEntityBridge) {
                     ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().updateInventory();

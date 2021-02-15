@@ -568,7 +568,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             if ((Object) this instanceof AnimalEntity) {
                 ((AnimalEntity) (Object) this).resetInLove();
                 if ((Object) this instanceof TameableEntity) {
-                    ((TameableEntity) (Object) this).func_233687_w_(false);
+                    ((TameableEntity) (Object) this).setSitting(false);
                 }
             }
 

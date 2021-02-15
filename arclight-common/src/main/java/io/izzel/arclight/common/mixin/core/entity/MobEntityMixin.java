@@ -257,7 +257,7 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
         }
     }
 
-    @Inject(method = "func_233661_c_", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/MobEntity;setLeashHolder(Lnet/minecraft/entity/Entity;Z)V"))
+    @Inject(method = "processInteract", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/MobEntity;setLeashHolder(Lnet/minecraft/entity/Entity;Z)V"))
     private void arclight$leash(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResultType> cir) {
         if (CraftEventFactory.callPlayerLeashEntityEvent((MobEntity) (Object) this, player, player).isCancelled()) {
             ((ServerPlayerEntity) player).connection.sendPacket(new SMountEntityPacket((MobEntity) (Object) this, this.getLeashHolder()));

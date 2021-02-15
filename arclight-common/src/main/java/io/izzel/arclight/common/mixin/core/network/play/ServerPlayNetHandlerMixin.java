@@ -829,7 +829,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         }
         if (packetIn instanceof SWorldSpawnChangedPacket) {
             SWorldSpawnChangedPacket packet6 = (SWorldSpawnChangedPacket) packetIn;
-            ((ServerPlayerEntityBridge) this.player).bridge$setCompassTarget(new Location(this.getPlayer().getWorld(), packet6.field_240831_a_.getX(), packet6.field_240831_a_.getY(), packet6.field_240831_a_.getZ()));
+            ((ServerPlayerEntityBridge) this.player).bridge$setCompassTarget(new Location(this.getPlayer().getWorld(), packet6.spawnPos.getX(), packet6.spawnPos.getY(), packet6.spawnPos.getZ()));
         }
     }
 
@@ -1139,7 +1139,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             return;
         }
         this.player.markPlayerActive();
-        this.player.setSneaking(packetIn.func_241792_e_());
+        this.player.setSneaking(packetIn.isSneaking());
         if (entity != null) {
             double d0 = 36.0D;
             if (this.player.getDistanceSq(entity) < 36.0D) {

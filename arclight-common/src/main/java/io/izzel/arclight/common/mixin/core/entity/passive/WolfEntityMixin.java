@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(WolfEntity.class)
 public abstract class WolfEntityMixin extends TameableEntityMixin {
 
-    @Redirect(method = "attackEntityFrom", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/WolfEntity;func_233687_w_(Z)V"))
+    @Redirect(method = "attackEntityFrom", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/WolfEntity;setSitting(Z)V"))
     private void arclight$handledBy(WolfEntity wolfEntity, boolean p_233687_1_) {
     }
 
@@ -27,12 +27,12 @@ public abstract class WolfEntityMixin extends TameableEntityMixin {
         }
     }
 
-    @Inject(method = "func_230254_b_", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/WolfEntity;heal(F)V"))
+    @Inject(method = "getEntityInteractionResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/WolfEntity;heal(F)V"))
     private void arclight$healReason(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResultType> cir) {
         bridge$pushHealReason(EntityRegainHealthEvent.RegainReason.EATING);
     }
 
-    @Inject(method = "func_230254_b_", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/WolfEntity;setAttackTarget(Lnet/minecraft/entity/LivingEntity;)V"))
+    @Inject(method = "getEntityInteractionResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/WolfEntity;setAttackTarget(Lnet/minecraft/entity/LivingEntity;)V"))
     private void arclight$attackReason(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResultType> cir) {
         bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.FORGOT_TARGET, true);
     }

@@ -23,7 +23,7 @@ public class TemplateManagerMixin {
     @Shadow @Final @Mutable private Map<ResourceLocation, Template> templates;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void arclight$init(IResourceManager p_i232119_1_, SaveFormat.LevelSave p_i232119_2_, DataFixer p_i232119_3_, CallbackInfo ci) {
+    private void arclight$init(IResourceManager p_i232119_1_, SaveFormat.LevelSave p_i232119_2_, DataFixer fixer, CallbackInfo ci) {
         this.templates = Collections.synchronizedMap(this.templates);
     }
 }

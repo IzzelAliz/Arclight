@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
 public abstract class ProjectileEntityMixin extends EntityMixin {
 
     // @formatter:off
-    @Shadow @Nullable public abstract Entity func_234616_v_();
+    @Shadow @Nullable public abstract Entity getShooter();
     @Shadow protected void onImpact(RayTraceResult result) { }
     // @formatter:on
 

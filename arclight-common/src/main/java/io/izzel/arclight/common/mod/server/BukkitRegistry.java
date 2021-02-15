@@ -131,7 +131,7 @@ public class BukkitRegistry {
     public static void registerEnvironments() {
         int i = World.Environment.values().length;
         List<World.Environment> newTypes = new ArrayList<>();
-        Registry<DimensionType> registry = ArclightServer.getMinecraftServer().func_244267_aX().getRegistry(Registry.DIMENSION_TYPE_KEY);
+        Registry<DimensionType> registry = ArclightServer.getMinecraftServer().getDynamicRegistries().getRegistry(Registry.DIMENSION_TYPE_KEY);
         for (Map.Entry<RegistryKey<DimensionType>, DimensionType> entry : registry.getEntries()) {
             RegistryKey<DimensionType> key = entry.getKey();
             World.Environment environment = DIM_MAP.get(key);

@@ -36,7 +36,7 @@ public abstract class EggEntityMixin extends ThrowableEntityMixin {
                 b0 = 0;
             }
             org.bukkit.entity.EntityType hatchingType = org.bukkit.entity.EntityType.CHICKEN;
-            Entity shooter = this.func_234616_v_();
+            Entity shooter = this.getShooter();
             if (shooter instanceof ServerPlayerEntity) {
                 PlayerEggThrowEvent event = new PlayerEggThrowEvent(((ServerPlayerEntityBridge) shooter).bridge$getBukkitEntity(), (Egg) this.getBukkitEntity(), hatching, b0, hatchingType);
                 Bukkit.getPluginManager().callEvent(event);

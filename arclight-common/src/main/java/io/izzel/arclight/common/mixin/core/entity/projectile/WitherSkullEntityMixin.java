@@ -21,7 +21,7 @@ public abstract class WitherSkullEntityMixin extends DamagingProjectileEntityMix
 
     @Inject(method = "onEntityHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;heal(F)V"))
     private void arclight$heal(EntityRayTraceResult result, CallbackInfo ci) {
-        ((LivingEntityBridge) this.func_234616_v_()).bridge$pushHealReason(EntityRegainHealthEvent.RegainReason.WITHER);
+        ((LivingEntityBridge) this.getShooter()).bridge$pushHealReason(EntityRegainHealthEvent.RegainReason.WITHER);
     }
 
     @Inject(method = "onEntityHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;addPotionEffect(Lnet/minecraft/potion/EffectInstance;)Z"))

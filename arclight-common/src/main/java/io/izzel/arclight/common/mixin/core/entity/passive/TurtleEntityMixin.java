@@ -32,13 +32,13 @@ public abstract class TurtleEntityMixin extends AnimalEntityMixin implements Tur
         forceDrops = false;
     }
 
-    @Inject(method = "func_241841_a", at = @At("HEAD"))
-    private void arclight$lightning(ServerWorld p_241841_1_, LightningBoltEntity lightningBolt, CallbackInfo ci) {
+    @Inject(method = "causeLightningStrike", at = @At("HEAD"))
+    private void arclight$lightning(ServerWorld world, LightningBoltEntity lightningBolt, CallbackInfo ci) {
         CraftEventFactory.entityDamage = lightningBolt;
     }
 
-    @Inject(method = "func_241841_a", at = @At("RETURN"))
-    private void arclight$lightningReset(ServerWorld p_241841_1_, LightningBoltEntity lightningBolt, CallbackInfo ci) {
+    @Inject(method = "causeLightningStrike", at = @At("RETURN"))
+    private void arclight$lightningReset(ServerWorld world, LightningBoltEntity lightningBolt, CallbackInfo ci) {
         CraftEventFactory.entityDamage = null;
     }
 }

@@ -36,9 +36,9 @@ public abstract class InteractWithDoorTaskMixin {
     @Overwrite
     protected void startExecuting(ServerWorld worldIn, LivingEntity entityIn, long gameTimeIn) {
         Path path = entityIn.getBrain().getMemory(MemoryModuleType.PATH).get();
-        this.field_242292_b = path.func_237225_h_();
+        this.field_242292_b = path.getCurrentPoint();
         PathPoint pathpoint = path.func_242950_i();
-        PathPoint pathpoint1 = path.func_237225_h_();
+        PathPoint pathpoint1 = path.getCurrentPoint();
         BlockPos blockpos = pathpoint.func_224759_a();
         BlockState blockstate = worldIn.getBlockState(blockpos);
         if (blockstate.isIn(BlockTags.WOODEN_DOORS)) {

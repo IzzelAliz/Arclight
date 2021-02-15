@@ -26,7 +26,7 @@ public interface IAngerableMixin extends MobEntityBridge {
      * @reason
      */
     @Overwrite
-    default void func_241356_K__() {
+    default void resetTargets() {
         this.setRevengeTarget(null);
         this.setAngerTarget(null);
         this.bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.FORGOT_TARGET, true);

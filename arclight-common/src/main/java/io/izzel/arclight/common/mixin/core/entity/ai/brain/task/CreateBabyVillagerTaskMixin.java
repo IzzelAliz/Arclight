@@ -14,9 +14,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(CreateBabyVillagerTask.class)
 public class CreateBabyVillagerTaskMixin {
 
-    @Redirect(method = "createChild", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/merchant/villager/VillagerEntity;func_241840_a(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/entity/AgeableEntity;)Lnet/minecraft/entity/merchant/villager/VillagerEntity;"))
+    @Redirect(method = "createChild", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/merchant/villager/VillagerEntity;createChild(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/entity/AgeableEntity;)Lnet/minecraft/entity/merchant/villager/VillagerEntity;"))
     private VillagerEntity arclight$entityBreed(VillagerEntity lona, ServerWorld world, AgeableEntity anonymous) {
-        VillagerEntity child = lona.func_241840_a(world, anonymous);
+        VillagerEntity child = lona.createChild(world, anonymous);
         if (child != null && !CraftEventFactory.callEntityBreedEvent(child, lona, anonymous, null, null, 0).isCancelled()) {
             ((WorldBridge) world).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.BREEDING);
             return child;

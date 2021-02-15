@@ -82,8 +82,8 @@ public abstract class FishingBobberEntityMixin extends ProjectileEntityMixin {
                 this.world.setEntityState((FishingBobberEntity) (Object)this, (byte) 31);
                 i = this.caughtEntity instanceof ItemEntity ? 3 : 5;
             } else if (this.ticksCatchable > 0) {
-                LootContext.Builder lootcontext$builder = (new LootContext.Builder((ServerWorld) this.world)).withParameter(LootParameters.field_237457_g_, this.getPositionVec()).withParameter(LootParameters.TOOL, p_146034_1_).withParameter(LootParameters.THIS_ENTITY, (FishingBobberEntity) (Object) this).withRandom(this.rand).withLuck((float) this.luck + playerentity.getLuck());
-                lootcontext$builder.withParameter(LootParameters.KILLER_ENTITY, this.func_234616_v_()).withParameter(LootParameters.THIS_ENTITY, (FishingBobberEntity) (Object) this);
+                LootContext.Builder lootcontext$builder = (new LootContext.Builder((ServerWorld) this.world)).withParameter(LootParameters.ORIGIN, this.getPositionVec()).withParameter(LootParameters.TOOL, p_146034_1_).withParameter(LootParameters.THIS_ENTITY, (FishingBobberEntity) (Object) this).withRandom(this.rand).withLuck((float) this.luck + playerentity.getLuck());
+                lootcontext$builder.withParameter(LootParameters.KILLER_ENTITY, this.getShooter()).withParameter(LootParameters.THIS_ENTITY, (FishingBobberEntity) (Object) this);
                 LootTable loottable = this.world.getServer().getLootTableManager().getLootTableFromLocation(LootTables.GAMEPLAY_FISHING);
                 List<ItemStack> list = loottable.generate(lootcontext$builder.build(LootParameterSets.FISHING));
                 event = new ItemFishedEvent(list, this.onGround ? 2 : 1, (FishingBobberEntity) (Object) this);

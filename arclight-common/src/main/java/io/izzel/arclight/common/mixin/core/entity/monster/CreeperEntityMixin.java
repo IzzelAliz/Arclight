@@ -37,7 +37,7 @@ public abstract class CreeperEntityMixin extends CreatureEntityMixin implements 
     @Shadow private int timeSinceIgnited;
     // @formatter:on
 
-    @Inject(method = "func_241841_a", cancellable = true, at = @At(value = "FIELD", target = "Lnet/minecraft/entity/monster/CreeperEntity;dataManager:Lnet/minecraft/network/datasync/EntityDataManager;"))
+    @Inject(method = "causeLightningStrike", cancellable = true, at = @At(value = "FIELD", target = "Lnet/minecraft/entity/monster/CreeperEntity;dataManager:Lnet/minecraft/network/datasync/EntityDataManager;"))
     private void arclight$lightningBolt(ServerWorld world, LightningBoltEntity lightningBolt, CallbackInfo ci) {
         if (CraftEventFactory.callCreeperPowerEvent((CreeperEntity) (Object) this, lightningBolt, CreeperPowerEvent.PowerCause.LIGHTNING).isCancelled()) {
             ci.cancel();

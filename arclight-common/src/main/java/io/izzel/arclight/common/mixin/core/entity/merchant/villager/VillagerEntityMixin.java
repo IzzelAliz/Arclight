@@ -40,7 +40,7 @@ public abstract class VillagerEntityMixin extends AbstractVillagerEntityMixin {
         }
     }
 
-    @Inject(method = "func_241841_a", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;func_242417_l(Lnet/minecraft/entity/Entity;)V"))
+    @Inject(method = "causeLightningStrike", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;func_242417_l(Lnet/minecraft/entity/Entity;)V"))
     private void arclight$transformWitch(ServerWorld serverWorld, LightningBoltEntity lightningBolt, CallbackInfo ci, WitchEntity witchEntity) {
         if (CraftEventFactory.callEntityTransformEvent((VillagerEntity) (Object) this, witchEntity, EntityTransformEvent.TransformReason.LIGHTNING).isCancelled()) {
             ci.cancel();

@@ -103,9 +103,9 @@ public abstract class WorldMixin implements WorldBridge, IWorldWriter {
         this.ticksPerWaterSpawns = this.getServer().getTicksPerWaterSpawns();
         this.ticksPerWaterAmbientSpawns = this.getServer().getTicksPerWaterAmbientSpawns();
         this.ticksPerAmbientSpawns = this.getServer().getTicksPerAmbientSpawns();
-        this.typeKey = this.getServer().getHandle().getServer().func_244267_aX().func_230520_a_().getOptionalKey(dimensionType)
+        this.typeKey = this.getServer().getHandle().getServer().getDynamicRegistries().func_230520_a_().getOptionalKey(dimensionType)
             .orElseGet(() -> {
-                Registry<DimensionType> registry = this.getServer().getHandle().getServer().func_244267_aX().func_230520_a_();
+                Registry<DimensionType> registry = this.getServer().getHandle().getServer().getDynamicRegistries().func_230520_a_();
                 RegistryKey<DimensionType> typeRegistryKey = RegistryKey.getOrCreateKey(registry.getRegistryKey(), dimension.getLocation());
                 ArclightMod.LOGGER.warn("Assign {} to unknown dimension type {} as {}", typeRegistryKey, dimType);
                 return typeRegistryKey;

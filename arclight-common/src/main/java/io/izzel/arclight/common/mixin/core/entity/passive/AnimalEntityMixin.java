@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
 public abstract class AnimalEntityMixin extends AgeableEntityMixin implements AnimalEntityBridge {
 
     // @formatter:off
-    @Shadow public ActionResultType func_230254_b_(PlayerEntity p_230254_1_, Hand p_230254_2_) { return null; }
+    @Shadow public ActionResultType getEntityInteractionResult(PlayerEntity playerIn, Hand hand) { return null; }
     @Shadow public int inLove;
     @Shadow public abstract void resetInLove();
     @Shadow @Nullable public abstract ServerPlayerEntity getLoveCause();
@@ -82,8 +82,8 @@ public abstract class AnimalEntityMixin extends AgeableEntityMixin implements An
      * @reason
      */
     @Overwrite
-    public void func_234177_a_(ServerWorld world, AnimalEntity animalEntity) {
-        AgeableEntity child = this.func_241840_a(world, animalEntity);
+    public void spawnBabyAnimal(ServerWorld world, AnimalEntity animalEntity) {
+        AgeableEntity child = this.createChild(world, animalEntity);
         final BabyEntitySpawnEvent event = new BabyEntitySpawnEvent((AnimalEntity) (Object) this, animalEntity, child);
         final boolean cancelled = MinecraftForge.EVENT_BUS.post(event);
         child = event.getChild();

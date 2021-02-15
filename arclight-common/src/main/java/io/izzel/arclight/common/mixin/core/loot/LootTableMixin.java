@@ -34,7 +34,7 @@ public abstract class LootTableMixin implements LootTableBridge {
     @Eject(method = "fillInventory", at = @At(value = "INVOKE", target = "Lnet/minecraft/loot/LootTable;generate(Lnet/minecraft/loot/LootContext;)Ljava/util/List;"))
     private List<ItemStack> arclight$nonPluginEvent(LootTable lootTable, LootContext context, CallbackInfo ci, IInventory inv) {
         List<ItemStack> list = lootTable.generate(context);
-        if (!context.has(LootParameters.field_237457_g_) && !context.has(LootParameters.THIS_ENTITY)) {
+        if (!context.has(LootParameters.ORIGIN) && !context.has(LootParameters.THIS_ENTITY)) {
             return list;
         }
         LootGenerateEvent event = CraftEventFactory.callLootGenerateEvent(inv, (LootTable) (Object) this, context, list, false);

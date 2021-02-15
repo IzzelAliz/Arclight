@@ -19,7 +19,7 @@ public abstract class AgeableEntityMixin extends CreatureEntityMixin implements 
 
     // @formatter:off
     @Shadow public abstract boolean isChild();
-    @Shadow @Nullable public abstract AgeableEntity func_241840_a(ServerWorld p_241840_1_, AgeableEntity p_241840_2_);
+    @Shadow @Nullable public abstract AgeableEntity createChild(ServerWorld world, AgeableEntity mate);
     @Shadow public abstract void setGrowingAge(int age);
     // @formatter:on
 

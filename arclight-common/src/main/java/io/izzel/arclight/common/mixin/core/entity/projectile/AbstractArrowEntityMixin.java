@@ -61,7 +61,7 @@ public abstract class AbstractArrowEntityMixin extends ProjectileEntityMixin {
                 }
                 itemstack = item.getItem();
             }
-            boolean flag = this.pickupStatus == AbstractArrowEntity.PickupStatus.ALLOWED || (this.pickupStatus == AbstractArrowEntity.PickupStatus.CREATIVE_ONLY && playerEntity.abilities.isCreativeMode) || (this.getNoClip() && this.func_234616_v_().getUniqueID() == playerEntity.getUniqueID());
+            boolean flag = this.pickupStatus == AbstractArrowEntity.PickupStatus.ALLOWED || (this.pickupStatus == AbstractArrowEntity.PickupStatus.CREATIVE_ONLY && playerEntity.abilities.isCreativeMode) || (this.getNoClip() && this.getShooter().getUniqueID() == playerEntity.getUniqueID());
             if (this.pickupStatus == AbstractArrowEntity.PickupStatus.ALLOWED && !playerEntity.inventory.addItemStackToInventory(itemstack)) {
                 flag = false;
             }
