@@ -1,17 +1,29 @@
 package io.izzel.arclight.common.bridge.util;
 
 import io.izzel.arclight.common.bridge.world.WorldBridge;
+import net.minecraft.util.IWorldPosCallable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.bukkit.Location;
+import org.bukkit.craftbukkit.v.CraftWorld;
 
 public interface IWorldPosCallableBridge {
 
-    World bridge$getWorld();
+    default World bridge$getWorld() {
+        return ((IWorldPosCallable) this).apply((a, b) -> a).orElse(null);
+    }
 
-    BlockPos bridge$getPosition();
+    default BlockPos bridge$getPosition() {
+        return ((IWorldPosCallable) this).apply((a, b) -> b).orElse(null);
+    }
 
     default Location bridge$getLocation() {
-        return new Location(((WorldBridge) bridge$getWorld()).bridge$getWorld(), bridge$getPosition().getX(), bridge$getPosition().getY(), bridge$getPosition().getZ());
+        CraftWorld world = ((WorldBridge) bridge$getWorld()).bridge$getWorld();
+        BlockPos blockPos = bridge$getPosition();
+        if (blockPos == null) {
+            return null;
+        } else {
+            return new Location(world, blockPos.getX(), blockPos.getY(), blockPos.getZ());
+        }
     }
 }
