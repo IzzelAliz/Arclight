@@ -27,3 +27,4 @@ public org/bukkit/craftbukkit/v/inventory/CraftMetaTropicalFishBucket/<init>(Lor
 public org/bukkit/craftbukkit/v/inventory/CraftMetaCrossbow/<init>(Lorg/bukkit/craftbukkit/v/inventory/CraftMetaItem;)V
 public org/bukkit/craftbukkit/v/inventory/CraftMetaSuspiciousStew/<init>(Lorg/bukkit/craftbukkit/v/inventory/CraftMetaItem;)V
 public org/spigotmc/ActivationRange$ActivationType/boundingBox
+public org/bukkit/craftbukkit/v/inventory/CraftMetaItem/<init>(Lnet/minecraft/nbt/CompoundNBT;)V

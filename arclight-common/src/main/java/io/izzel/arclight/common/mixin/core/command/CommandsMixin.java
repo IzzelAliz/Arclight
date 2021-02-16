@@ -17,6 +17,7 @@ import org.bukkit.event.player.PlayerCommandSendEvent;
 import org.spigotmc.SpigotConfig;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
@@ -28,11 +29,9 @@ public abstract class CommandsMixin {
 
     // @formatter:off
     @Shadow public abstract int handleCommand(CommandSource source, String command);
-    @Shadow @Final private CommandDispatcher<CommandSource> dispatcher;
+    @Mutable @Shadow @Final private CommandDispatcher<CommandSource> dispatcher;
+    @Shadow protected abstract void commandSourceNodesToSuggestionNodes(CommandNode<CommandSource> rootCommandSource, CommandNode<ISuggestionProvider> rootSuggestion, CommandSource source, Map<CommandNode<CommandSource>, CommandNode<ISuggestionProvider>> commandNodeToSuggestionNode);
     // @formatter:on
-
-    @Shadow
-    protected abstract void commandSourceNodesToSuggestionNodes(CommandNode<CommandSource> rootCommandSource, CommandNode<ISuggestionProvider> rootSuggestion, CommandSource source, Map<CommandNode<CommandSource>, CommandNode<ISuggestionProvider>> commandNodeToSuggestionNode);
 
     public void arclight$constructor() {
         this.dispatcher = new CommandDispatcher<>();
