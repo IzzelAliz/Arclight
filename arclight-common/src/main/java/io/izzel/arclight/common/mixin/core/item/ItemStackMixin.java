@@ -7,6 +7,9 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraftforge.common.capabilities.CapabilityProvider;
+import net.minecraftforge.registries.IRegistryDelegate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -25,12 +28,31 @@ import java.util.Random;
 import java.util.function.Consumer;
 
 @Mixin(ItemStack.class)
-public abstract class ItemStackMixin implements ItemStackBridge {
+public abstract class ItemStackMixin extends CapabilityProvider<ItemStack> implements ItemStackBridge {
 
     // @formatter:off
     @Shadow @Deprecated private Item item;
     @Shadow private int count;
+    @Shadow(remap = false) private CompoundNBT capNBT;
+    @Shadow(remap = false) private IRegistryDelegate<Item> delegate;
     // @formatter:on
+
+    protected ItemStackMixin(Class<ItemStack> baseClass) {
+        super(baseClass);
+    }
+
+    @Override
+    public CompoundNBT bridge$getForgeCaps() {
+        return this.serializeCaps();
+    }
+
+    @Override
+    public void bridge$setForgeCaps(CompoundNBT caps) {
+        this.capNBT = caps;
+        if (caps != null) {
+            this.deserializeCaps(caps);
+        }
+    }
 
     private static final Logger LOG = LogManager.getLogger("Arclight");
 
@@ -72,5 +94,6 @@ public abstract class ItemStackMixin implements ItemStackBridge {
     @Deprecated
     public void setItem(Item item) {
         this.item = item;
+        this.delegate = item.delegate;
     }
 }
