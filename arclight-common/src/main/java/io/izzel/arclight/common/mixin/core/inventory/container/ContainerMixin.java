@@ -65,12 +65,21 @@ public abstract class ContainerMixin implements ContainerBridge {
 
     public boolean checkReachable = true;
     private InventoryView bukkitView;
+    private long bukkitViewHash = 0;
 
     public InventoryView getBukkitView() {
+        if (bukkitViewHash != bukkitViewHash()) {
+            bukkitView = null;
+        }
         if (bukkitView == null) {
             bukkitView = ArclightContainer.createInvView((Container) (Object) this);
+            bukkitViewHash = bukkitViewHash();
         }
         return bukkitView;
+    }
+
+    private long bukkitViewHash() {
+        return (((long) this.inventorySlots.size()) << 32) | System.identityHashCode(this.inventorySlots);
     }
 
     public void transferTo(Container other, CraftHumanEntity player) {
