@@ -68,8 +68,9 @@ public abstract class ContainerMixin implements ContainerBridge {
     private long bukkitViewHash = 0;
 
     public InventoryView getBukkitView() {
-        if (bukkitViewHash != bukkitViewHash()) {
-            bukkitView = null;
+        if (bukkitView != null && bukkitViewHash != bukkitViewHash()) {
+            ArclightContainer.updateView((Container) (Object) this, bukkitView);
+            bukkitViewHash = bukkitViewHash();
         }
         if (bukkitView == null) {
             bukkitView = ArclightContainer.createInvView((Container) (Object) this);
