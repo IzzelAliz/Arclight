@@ -30,6 +30,10 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.ByteBuffer;
+import java.security.CodeSource;
+import java.security.ProtectionDomain;
+import java.security.SecureClassLoader;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,8 +54,8 @@ public class ArclightRedirectAdapter implements PluginTransformer {
         redirect(Class.class, "getSimpleName", "classGetSimpleName");
         modify(Class.class, "getName", "classGetName");
         modify(Package.class, "getName", "packageGetName");
-        modify(Class.class, "forName", "classForName", String.class);
-        modify(Class.class, "forName", "classForName", String.class, boolean.class, ClassLoader.class);
+        redirect(Class.class, "forName", "classForName", String.class);
+        redirect(Class.class, "forName", "classForName", String.class, boolean.class, ClassLoader.class);
         modify(Class.class, "getField", "classGetField", String.class);
         modify(Class.class, "getDeclaredField", "classGetDeclaredField", String.class);
         modify(Class.class, "getMethod", "classGetMethod", String.class, Class[].class);
@@ -65,8 +69,18 @@ public class ArclightRedirectAdapter implements PluginTransformer {
         modify(MethodHandles.Lookup.class, "findStaticGetter", "lookupFindStaticGetter", Class.class, String.class, Class.class);
         modify(MethodHandles.Lookup.class, "findStaticSetter", "lookupFindStaticSetter", Class.class, String.class, Class.class);
         modify(ClassLoader.class, "loadClass", "classLoaderLoadClass", String.class);
-        // todo not enable this yet
-        //  modify(Method.class, "invoke", "methodInvoke", Object.class, Object[].class);
+        redirect(Class.class, "getResource", "classGetResource", String.class);
+        redirect(Class.class, "getResourceAsStream", "classGetResourceAsStream", String.class);
+        redirect(ClassLoader.class, "getResource", "classLoaderGetResource", String.class);
+        redirect(ClassLoader.class, "getResources", "classLoaderGetResources", String.class);
+        redirect(ClassLoader.class, "getResourceAsStream", "classLoaderGetResourceAsStream", String.class);
+        modify(Method.class, "invoke", "methodInvoke", Object.class, Object[].class);
+        modify(ClassLoader.class, "defineClass", byte[].class, int.class, int.class);
+        modify(ClassLoader.class, "defineClass", String.class, byte[].class, int.class, int.class);
+        modify(ClassLoader.class, "defineClass", String.class, byte[].class, int.class, int.class, ProtectionDomain.class);
+        modify(ClassLoader.class, "defineClass", String.class, ByteBuffer.class, ProtectionDomain.class);
+        modify(SecureClassLoader.class, "defineClass", String.class, byte[].class, int.class, int.class, CodeSource.class);
+        modify(SecureClassLoader.class, "defineClass", String.class, ByteBuffer.class, CodeSource.class);
     }
 
     public static Product4<String, Class<?>[], String, Class<?>[]> getInvokeRule(Method method) {
@@ -213,6 +227,10 @@ public class ArclightRedirectAdapter implements PluginTransformer {
             list.add(new TypeInsnNode(Opcodes.CHECKCAST, boxingType));
             list.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, boxingType, unboxingMethod, "()" + type.getDescriptor(), false));
         }
+    }
+
+    private static void modify(Class<?> owner, String name, Class<?>... args) {
+        modify(owner, name, name, args);
     }
 
     private static void modify(Class<?> owner, String name, String handlerName, Class<?>... args) {
