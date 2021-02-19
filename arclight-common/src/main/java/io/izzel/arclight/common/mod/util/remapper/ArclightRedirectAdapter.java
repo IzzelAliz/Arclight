@@ -3,13 +3,17 @@ package io.izzel.arclight.common.mod.util.remapper;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
+import io.izzel.arclight.api.Unsafe;
+import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.util.remapper.generated.ArclightReflectionHandler;
 import io.izzel.arclight.common.util.ArrayUtil;
+import io.izzel.tools.func.Func4;
 import io.izzel.tools.product.Product;
 import io.izzel.tools.product.Product2;
-import io.izzel.tools.product.Product4;
+import org.apache.commons.lang3.ClassUtils;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
+import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -34,9 +38,11 @@ import java.nio.ByteBuffer;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.ListIterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ArclightRedirectAdapter implements PluginTransformer {
 
@@ -45,7 +51,7 @@ public class ArclightRedirectAdapter implements PluginTransformer {
     private static final String REPLACED_NAME = Type.getInternalName(ArclightReflectionHandler.class);
     private static final Multimap<String, Product2<String, MethodInsnNode>> METHOD_MODIFY = HashMultimap.create();
     private static final Multimap<String, Product2<String, MethodInsnNode>> METHOD_REDIRECT = HashMultimap.create();
-    private static final Map<Method, Product4<String, Class<?>[], String, Class<?>[]>> METHOD_TO_HANDLER = new HashMap<>();
+    private static final Map<String, Func4<ClassLoaderRemapper, Method, Object, Object[], Object[]>> METHOD_TO_HANDLER = new ConcurrentHashMap<>();
 
     static {
         redirect(Field.class, "getName", "fieldGetName");
@@ -81,10 +87,69 @@ public class ArclightRedirectAdapter implements PluginTransformer {
         modify(ClassLoader.class, "defineClass", String.class, ByteBuffer.class, ProtectionDomain.class);
         modify(SecureClassLoader.class, "defineClass", String.class, byte[].class, int.class, int.class, CodeSource.class);
         modify(SecureClassLoader.class, "defineClass", String.class, ByteBuffer.class, CodeSource.class);
+        modify(classOf("sun.misc.Unsafe"), "defineClass", "unsafeDefineClass", String.class, byte[].class, int.class, int.class, ClassLoader.class, ProtectionDomain.class);
+        modify(classOf("jdk.internal.misc.Unsafe"), "defineClass", "unsafeDefineClass", String.class, byte[].class, int.class, int.class, ClassLoader.class, ProtectionDomain.class);
+        modify(classOf("jdk.internal.misc.Unsafe"), "defineClass0", "unsafeDefineClass", String.class, byte[].class, int.class, int.class, ClassLoader.class, ProtectionDomain.class);
     }
 
-    public static Product4<String, Class<?>[], String, Class<?>[]> getInvokeRule(Method method) {
-        return METHOD_TO_HANDLER.get(method);
+    public static Object[] runHandle(ClassLoaderRemapper remapper, Method method, Object src, Object[] param) {
+        Func4<ClassLoaderRemapper, Method, Object, Object[], Object[]> handler = METHOD_TO_HANDLER.get(methodToString(method));
+        if (handler != null) {
+            return handler.apply(remapper, method, src, param);
+        }
+        return null;
+    }
+
+    public static Object runRedirect(ClassLoaderRemapper remapper, Method method, Object src, Object[] param) throws Throwable {
+        Func4<ClassLoaderRemapper, Method, Object, Object[], Object[]> handler = METHOD_TO_HANDLER.get(methodToString(method));
+        if (handler != null) {
+            Object[] ret = handler.apply(remapper, method, src, param);
+            return ((Method) ret[0]).invoke(ret[1], (Object[]) ret[2]);
+        }
+        return remapper;
+    }
+
+    public static void scanMethod(byte[] bytes) {
+        ClassReader reader = new ClassReader(bytes);
+        ArclightMod.LOGGER.debug(MARKER, "Scanning {}", reader.getClassName());
+        ClassNode node = new ClassNode();
+        reader.accept(node, ClassReader.SKIP_FRAMES | ClassReader.SKIP_DEBUG);
+        for (MethodNode method : node.methods) {
+            for (ListIterator<AbstractInsnNode> iterator = method.instructions.iterator(); iterator.hasNext(); ) {
+                AbstractInsnNode instruction = iterator.next();
+                int opcode = instruction.getOpcode();
+                if (opcode >= Opcodes.INVOKEVIRTUAL && opcode <= Opcodes.INVOKEINTERFACE) {
+                    if (iterator.nextIndex() < method.instructions.size() - 1) {
+                        break;
+                    }
+                    MethodInsnNode insnNode = (MethodInsnNode) instruction;
+                    String key = insnNode.name + insnNode.desc;
+                    if (METHOD_MODIFY.containsKey(key) || METHOD_REDIRECT.containsKey(key)) {
+                        try {
+                            Class<?> cl = Class.forName(insnNode.owner.replace('/', '.'));
+                            Type[] argumentTypes = Type.getMethodType(insnNode.desc).getArgumentTypes();
+                            Class<?>[] paramTypes = new Class<?>[argumentTypes.length];
+                            for (int i = 0, argumentTypesLength = argumentTypes.length; i < argumentTypesLength; i++) {
+                                Type type = argumentTypes[i];
+                                paramTypes[i] = ClassUtils.getClass(type.getClassName());
+                            }
+                            Method target = methodOf(cl, insnNode.name, paramTypes);
+                            if (target != null) {
+                                Func4<ClassLoaderRemapper, Method, Object, Object[], Object[]> bridge = METHOD_TO_HANDLER.get(methodToString(target));
+                                if (bridge != null) {
+                                    ArclightMod.LOGGER.debug(MARKER, "Creating bridge handler {}/{}{} to {}", node.name, method.name, method.desc, methodToString(target));
+                                    METHOD_TO_HANDLER.put(node.name + '/' + method.name + method.desc, new BridgeHandler(bridge, target));
+                                }
+                            }
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else if (opcode < Opcodes.ILOAD || opcode > Opcodes.ALOAD) {
+                    break;
+                }
+            }
+        }
     }
 
     @Override
@@ -242,7 +307,9 @@ public class ArclightRedirectAdapter implements PluginTransformer {
     }
 
     private static void addRule(boolean modifyArgs, Class<?> owner, String name, String handlerName, Class<?>... args) {
+        if (owner == null) return;
         Method original = methodOf(owner, name, args);
+        if (original == null) return;
         Class<?>[] handlerArgs;
         if (!Modifier.isStatic(original.getModifiers())) {
             handlerArgs = ArrayUtil.prepend(args, owner, Class[]::new);
@@ -250,26 +317,38 @@ public class ArclightRedirectAdapter implements PluginTransformer {
             handlerArgs = args;
         }
         Method handler = methodOf(ArclightReflectionHandler.class, "redirect" + capitalize(handlerName), handlerArgs);
+        while (handler == null) {
+            handlerArgs[0] = handlerArgs[0].getSuperclass();
+            handler = methodOf(ArclightReflectionHandler.class, "redirect" + capitalize(handlerName), handlerArgs);
+        }
         METHOD_REDIRECT.put(name + Type.getMethodDescriptor(original), Product.of(Type.getInternalName(owner), methodNodeOf(handler)));
-        Product2<String, Class<?>[]> handleProd;
+        String key = methodToString(original);
         if (modifyArgs) {
-            Method modifyHandler;
-            try {
-                modifyHandler = methodOf(ArclightReflectionHandler.class, "handle" + capitalize(handlerName), handlerArgs);
-            } catch (RuntimeException e) {
+            Method modifyHandler = methodOf(ArclightReflectionHandler.class, "handle" + capitalize(handlerName), handlerArgs);
+            if (modifyHandler == null) {
                 handlerArgs[0] = original.getReturnType();
                 modifyHandler = methodOf(ArclightReflectionHandler.class, "handle" + capitalize(handlerName), handlerArgs);
             }
+            if (modifyHandler == null) {
+                throw new RuntimeException("No handler for " + original);
+            }
             METHOD_MODIFY.put(name + Type.getMethodDescriptor(original), Product.of(Type.getInternalName(owner), methodNodeOf(modifyHandler)));
-            handleProd = Product.of("handle" + capitalize(handlerName), handlerArgs);
+            METHOD_TO_HANDLER.put(key, new ModifyHandler("handle" + capitalize(handlerName), handlerArgs));
         } else {
-            handleProd = Product.of(null, null);
+            METHOD_TO_HANDLER.put(key, new RedirectHandler("redirect" + capitalize(handlerName), handlerArgs));
         }
-        METHOD_TO_HANDLER.put(original, Product.of("redirect" + capitalize(handlerName), handlerArgs, handleProd._1, handleProd._2));
     }
 
     private static String capitalize(String name) {
         return Character.toUpperCase(name.charAt(0)) + name.substring(1);
+    }
+
+    private static Class<?> classOf(String cl) {
+        try {
+            return Class.forName(cl);
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
     }
 
     private static Method methodOf(Class<?> owner, String name, Class<?>... args) {
@@ -279,7 +358,7 @@ public class ArclightRedirectAdapter implements PluginTransformer {
             try {
                 return owner.getDeclaredMethod(name, args);
             } catch (NoSuchMethodException e2) {
-                throw new RuntimeException(e2);
+                return null;
             }
         }
     }
@@ -289,6 +368,10 @@ public class ArclightRedirectAdapter implements PluginTransformer {
         String name = method.getName();
         String desc = Type.getMethodDescriptor(method);
         return new MethodInsnNode(Opcodes.INVOKESTATIC, owner, name, desc);
+    }
+
+    private static String methodToString(Method method) {
+        return Type.getInternalName(method.getDeclaringClass()) + "/" + method.getName() + Type.getMethodDescriptor(method);
     }
 
     private static int toOpcode(int handleType) {
@@ -326,6 +409,82 @@ public class ArclightRedirectAdapter implements PluginTransformer {
             return new IntInsnNode(Opcodes.SIPUSH, i);
         } else {
             return new LdcInsnNode(i);
+        }
+    }
+
+    private static class ModifyHandler implements Func4<ClassLoaderRemapper, Method, Object, Object[], Object[]> {
+
+        private final String handlerName;
+        private final Class<?>[] handlerArgs;
+
+        public ModifyHandler(String handlerName, Class<?>[] handlerArgs) {
+            this.handlerName = handlerName;
+            this.handlerArgs = handlerArgs;
+        }
+
+        @Override
+        public Object[] apply(ClassLoaderRemapper remapper, Method method, Object src, Object[] param) {
+            try {
+                Method handleMethod = remapper.getGeneratedHandlerClass().getMethod(handlerName, handlerArgs);
+                if (method.getParameterCount() > 0) {
+                    if (handleMethod.getReturnType().isArray() && !Modifier.isStatic(method.getModifiers())) {
+                        Object[] invoke = (Object[]) handleMethod.invoke(null, ArrayUtil.prepend(param, src));
+                        return new Object[]{method, invoke[0], Arrays.copyOfRange(invoke, 1, invoke.length)};
+                    } else {
+                        return new Object[]{method, src, handleMethod.invoke(null, param)};
+                    }
+                } else {
+                    return new Object[]{handleMethod, null, new Object[]{method.invoke(src, param)}};
+                }
+            } catch (Exception e) {
+                Unsafe.throwException(e);
+            }
+            return null;
+        }
+    }
+
+    private static class RedirectHandler implements Func4<ClassLoaderRemapper, Method, Object, Object[], Object[]> {
+
+        private final String handlerName;
+        private final Class<?>[] handlerArgs;
+
+        public RedirectHandler(String handlerName, Class<?>[] handlerArgs) {
+            this.handlerName = handlerName;
+            this.handlerArgs = handlerArgs;
+        }
+
+        @Override
+        public Object[] apply(ClassLoaderRemapper remapper, Method method, Object src, Object[] param) {
+            try {
+                Method redirectMethod = remapper.getGeneratedHandlerClass().getMethod(handlerName, handlerArgs);
+                return new Object[]{redirectMethod, null, Modifier.isStatic(method.getModifiers()) ? param : ArrayUtil.prepend(param, src)};
+            } catch (Exception e) {
+                Unsafe.throwException(e);
+                return null;
+            }
+        }
+    }
+
+    private static class BridgeHandler implements Func4<ClassLoaderRemapper, Method, Object, Object[], Object[]> {
+
+        private final Func4<ClassLoaderRemapper, Method, Object, Object[], Object[]> bridge;
+        private final Method targetMethod;
+
+        private BridgeHandler(Func4<ClassLoaderRemapper, Method, Object, Object[], Object[]> bridge, Method targetMethod) {
+            this.bridge = bridge;
+            this.targetMethod = targetMethod;
+        }
+
+        @Override
+        public Object[] apply(ClassLoaderRemapper remapper, Method method, Object src, Object[] param) {
+            boolean bridgeStatic = Modifier.isStatic(targetMethod.getModifiers());
+            if (bridgeStatic) {
+                Object[] ret = bridge.apply(remapper, this.targetMethod, null, param);
+                return new Object[]{method, src, ret[2]};
+            } else {
+                Object[] ret = bridge.apply(remapper, this.targetMethod, param[0], Arrays.copyOfRange(param, 1, param.length));
+                return new Object[]{method, src, ArrayUtil.prepend((Object[]) ret[2], ret[1])};
+            }
         }
     }
 }

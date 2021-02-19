@@ -3,7 +3,9 @@ package io.izzel.arclight.api;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
+import java.util.Objects;
 
 @SuppressWarnings("all")
 public class Unsafe {
@@ -22,7 +24,18 @@ public class Unsafe {
             Object base = unsafe.staticFieldBase(field);
             long offset = unsafe.staticFieldOffset(field);
             lookup = (MethodHandles.Lookup) unsafe.getObject(base, offset);
-            defineClass = lookup.unreflect(ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class, ProtectionDomain.class));
+            MethodHandle mh;
+            try {
+                Method sunMisc = unsafe.getClass().getMethod("defineClass", String.class, byte[].class, int.class, int.class, ClassLoader.class, ProtectionDomain.class);
+                mh = lookup.unreflect(sunMisc).bindTo(unsafe);
+            } catch (Exception e) {
+                Class<?> jdkInternalUnsafe = Class.forName("jdk.internal.misc.Unsafe");
+                Field internalUnsafeField = jdkInternalUnsafe.getDeclaredField("theUnsafe");
+                Object internalUnsafe = unsafe.getObject(unsafe.staticFieldBase(internalUnsafeField), unsafe.staticFieldOffset(internalUnsafeField));
+                Method internalDefineClass = jdkInternalUnsafe.getMethod("defineClass", String.class, byte[].class, int.class, int.class, ClassLoader.class, ProtectionDomain.class);
+                mh = lookup.unreflect(internalDefineClass).bindTo(internalUnsafe);
+            }
+            defineClass = Objects.requireNonNull(mh);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -250,7 +263,7 @@ public class Unsafe {
 
     public static Class<?> defineClass(String s, byte[] bytes, int i, int i1, ClassLoader classLoader, ProtectionDomain protectionDomain) {
         try {
-            return (Class<?>) defineClass.bindTo(classLoader).invoke(s, bytes, i, i1, protectionDomain);
+            return (Class<?>) defineClass.invokeExact(s, bytes, i, i1, classLoader, protectionDomain);
         } catch (Throwable throwable) {
             throwException(throwable);
             return null;

@@ -5,8 +5,7 @@ import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.util.remapper.ArclightRedirectAdapter;
 import io.izzel.arclight.common.mod.util.remapper.ClassLoaderRemapper;
-import io.izzel.arclight.common.util.ArrayUtil;
-import io.izzel.tools.product.Product4;
+import io.izzel.arclight.common.mod.util.remapper.RemappingClassLoader;
 import org.apache.commons.collections.iterators.IteratorEnumeration;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Type;
@@ -17,9 +16,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -27,7 +24,6 @@ import java.security.CodeSource;
 import java.security.Permissions;
 import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
-import java.util.Arrays;
 import java.util.Enumeration;
 
 @SuppressWarnings("unused")
@@ -378,52 +374,26 @@ public class ArclightReflectionHandler extends ClassLoader {
         }
     }
 
-    public static Object[] handleMethodInvoke(Method method, Object src, Object[] param) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        Product4<String, Class<?>[], String, Class<?>[]> invokeRule = ArclightRedirectAdapter.getInvokeRule(method);
-        if (invokeRule != null) {
-            if (invokeRule._3 != null && method.getParameterCount() > 0) {
-                Method handleMethod = remapper.getGeneratedHandlerClass().getMethod(invokeRule._3, invokeRule._4);
-                if (handleMethod.getReturnType().isArray() && !Modifier.isStatic(method.getModifiers())) {
-                    Object[] invoke = (Object[]) handleMethod.invoke(null, ArrayUtil.prepend(param, src));
-                    return new Object[]{method, invoke[0], Arrays.copyOfRange(invoke, 1, invoke.length)};
-                } else {
-                    return new Object[]{method, src, handleMethod.invoke(null, param)};
-                }
-            } else {
-                Method redirectMethod = remapper.getGeneratedHandlerClass().getMethod(invokeRule._1, invokeRule._2);
-                return new Object[]{redirectMethod, null, ArrayUtil.prepend(param, src)};
-            }
+    public static Object[] handleMethodInvoke(Method method, Object src, Object[] param) throws Throwable {
+        Object[] ret = ArclightRedirectAdapter.runHandle(remapper, method, src, param);
+        if (ret != null) {
+            return ret;
         } else {
             return new Object[]{method, src, param};
         }
     }
 
     public static Object redirectMethodInvoke(Method method, Object src, Object[] param) throws Throwable {
-        Product4<String, Class<?>[], String, Class<?>[]> invokeRule = ArclightRedirectAdapter.getInvokeRule(method);
-        if (invokeRule != null) {
-            if (invokeRule._3 != null && method.getParameterCount() > 0) {
-                Method handleMethod = remapper.getGeneratedHandlerClass().getMethod(invokeRule._3, invokeRule._4);
-                if (handleMethod.getReturnType().isArray()) {
-                    if (Modifier.isStatic(method.getModifiers())) {
-                        return method.invoke(src, (Object[]) handleMethod.invoke(null, param));
-                    } else {
-                        Object[] result = (Object[]) handleMethod.invoke(null, ArrayUtil.prepend(param, src));
-                        return method.invoke(result[0], Arrays.copyOfRange(result, 1, result.length));
-                    }
-                } else {
-                    return method.invoke(src, handleMethod.invoke(null, param));
-                }
-            } else {
-                Method redirectMethod = remapper.getGeneratedHandlerClass().getMethod(invokeRule._1, invokeRule._2);
-                return redirectMethod.invoke(null, ArrayUtil.prepend(param, src));
-            }
+        Object ret = ArclightRedirectAdapter.runRedirect(remapper, method, src, param);
+        if (ret != remapper) {
+            return ret;
         } else {
             return method.invoke(src, param);
         }
     }
 
     public static Object[] handleDefineClass(ClassLoader loader, byte[] b, int off, int len) {
-        byte[] bytes = remapper.remapClass(b);
+        byte[] bytes = transformOrAdd(loader, b);
         return new Object[]{loader, bytes, 0, bytes.length};
     }
 
@@ -432,28 +402,28 @@ public class ArclightReflectionHandler extends ClassLoader {
     }
 
     public static Object[] handleDefineClass(ClassLoader loader, String name, byte[] b, int off, int len) {
-        byte[] bytes = remapper.remapClass(b);
+        byte[] bytes = transformOrAdd(loader, b);
         return new Object[]{loader, new ClassReader(bytes).getClassName().replace('/', '.'), bytes, 0, bytes.length};
     }
 
     public static Class<?> redirectDefineClass(ClassLoader loader, String name, byte[] b, int off, int len) {
-        return redirectDefineClass(loader, name, b, off, len, (ProtectionDomain) null);
+        return redirectDefineClass(loader, name, b, off, len, null);
     }
 
     public static Object[] handleDefineClass(ClassLoader loader, String name, byte[] b, int off, int len, ProtectionDomain pd) {
-        byte[] bytes = remapper.remapClass(b);
+        byte[] bytes = transformOrAdd(loader, b);
         return new Object[]{loader, new ClassReader(bytes).getClassName().replace('/', '.'), bytes, 0, bytes.length, pd};
     }
 
     public static Class<?> redirectDefineClass(ClassLoader loader, String name, byte[] b, int off, int len, ProtectionDomain pd) {
-        byte[] bytes = remapper.remapClass(b);
+        byte[] bytes = transformOrAdd(loader, b);
         return Unsafe.defineClass(new ClassReader(bytes).getClassName().replace('/', '.'), bytes, 0, bytes.length, loader, pd);
     }
 
     public static Object[] handleDefineClass(ClassLoader loader, String name, ByteBuffer b, ProtectionDomain pd) {
         byte[] bytes = new byte[b.remaining()];
         b.get(bytes);
-        bytes = remapper.remapClass(bytes);
+        bytes = transformOrAdd(loader, bytes);
         return new Object[]{loader, new ClassReader(bytes).getClassName().replace('/', '.'), ByteBuffer.wrap(bytes), pd};
     }
 
@@ -464,7 +434,7 @@ public class ArclightReflectionHandler extends ClassLoader {
     }
 
     public static Object[] handleDefineClass(SecureClassLoader loader, String name, byte[] b, int off, int len, CodeSource cs) {
-        byte[] bytes = remapper.remapClass(b);
+        byte[] bytes = transformOrAdd(loader, b);
         return new Object[]{loader, new ClassReader(bytes).getClassName().replace('/', '.'), bytes, 0, bytes.length, cs};
     }
 
@@ -475,11 +445,38 @@ public class ArclightReflectionHandler extends ClassLoader {
     public static Object[] handleDefineClass(SecureClassLoader loader, String name, ByteBuffer b, CodeSource cs) {
         byte[] bytes = new byte[b.remaining()];
         b.get(bytes);
-        bytes = remapper.remapClass(bytes);
+        bytes = transformOrAdd(loader, bytes);
         return new Object[]{loader, new ClassReader(bytes).getClassName().replace('/', '.'), ByteBuffer.wrap(bytes), cs};
     }
 
     public static Class<?> redirectDefineClass(SecureClassLoader loader, String name, ByteBuffer b, CodeSource cs) {
         return redirectDefineClass(loader, name, b, new ProtectionDomain(cs, new Permissions()));
+    }
+
+    public static Object[] handleUnsafeDefineClass(Object unsafe, String name, byte[] bytes, int off, int len, ClassLoader loader, ProtectionDomain pd) {
+        bytes = transformOrAdd(loader, bytes);
+        return new Object[]{unsafe, new ClassReader(bytes).getClassName().replace('/', '.'), bytes, 0, bytes.length, loader, pd};
+    }
+
+    public static Class<?> redirectUnsafeDefineClass(Object unsafe, String name, byte[] bytes, int off, int len, ClassLoader loader, ProtectionDomain pd) {
+        return redirectDefineClass(loader, name, bytes, off, len, pd);
+    }
+
+    public static byte[] transformOrAdd(ClassLoader loader, byte[] bytes) {
+        RemappingClassLoader rcl = null;
+        while (loader != null) {
+            if (loader instanceof RemappingClassLoader) {
+                rcl = ((RemappingClassLoader) loader);
+                break;
+            } else {
+                loader = loader.getParent();
+            }
+        }
+        if (rcl != null) {
+            return rcl.getRemapper().remapClass(bytes);
+        } else {
+            ArclightRedirectAdapter.scanMethod(bytes);
+            return bytes;
+        }
     }
 }
