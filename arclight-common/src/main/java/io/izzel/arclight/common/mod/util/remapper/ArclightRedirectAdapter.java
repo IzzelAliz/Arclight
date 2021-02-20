@@ -162,7 +162,7 @@ public class ArclightRedirectAdapter implements PluginTransformer {
             for (AbstractInsnNode insnNode : methodNode.instructions) {
                 if (insnNode instanceof MethodInsnNode) {
                     MethodInsnNode from = (MethodInsnNode) insnNode;
-                    process(from, methodNode.instructions, remapper);
+                    process(from, methodNode.instructions, remapper, classNode);
                 } else if (insnNode.getOpcode() == Opcodes.INVOKEDYNAMIC) {
                     InvokeDynamicInsnNode invokeDynamic = (InvokeDynamicInsnNode) insnNode;
                     Object[] bsmArgs = invokeDynamic.bsmArgs;
@@ -193,7 +193,7 @@ public class ArclightRedirectAdapter implements PluginTransformer {
         return handle;
     }
 
-    private static void process(MethodInsnNode node, InsnList insnList, ClassLoaderRemapper remapper) {
+    private static void process(MethodInsnNode node, InsnList insnList, ClassLoaderRemapper remapper, ClassNode classNode) {
         String key = node.name + node.desc;
         Collection<Product2<String, MethodInsnNode>> modifyArgsCol = METHOD_MODIFY.get(key);
         for (Product2<String, MethodInsnNode> modifyArgs : modifyArgsCol) {
@@ -205,7 +205,7 @@ public class ArclightRedirectAdapter implements PluginTransformer {
                 } else {
                     handlerNode = modifyArgs._2;
                 }
-                processModify(node, insnList, handlerNode);
+                processModify(node, insnList, handlerNode, classNode);
                 return;
             }
         }
@@ -233,13 +233,19 @@ public class ArclightRedirectAdapter implements PluginTransformer {
         insnList.set(node, handlerNode);
     }
 
-    private static void processModify(MethodInsnNode node, InsnList insnList, MethodInsnNode handlerNode) {
+    private static void processModify(MethodInsnNode node, InsnList insnList, MethodInsnNode handlerNode, ClassNode classNode) {
         InsnList list = new InsnList();
         list.add(handlerNode);
         Type methodType = Type.getMethodType(node.desc);
         Type[] types = methodType.getArgumentTypes();
         if (node.getOpcode() != Opcodes.INVOKESTATIC) {
-            types = ArrayUtil.prepend(types, Type.getObjectType(node.owner), Type[]::new);
+            Type selfType;
+            if (node.getOpcode() == Opcodes.INVOKESPECIAL) {
+                selfType = Type.getObjectType(classNode.name);
+            } else {
+                selfType = Type.getObjectType(node.owner);
+            }
+            types = ArrayUtil.prepend(types, selfType, Type[]::new);
         }
         if (types.length == 1) {
             if (node.desc.startsWith("()")) {
