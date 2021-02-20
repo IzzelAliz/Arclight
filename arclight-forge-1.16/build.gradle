@@ -19,11 +19,6 @@ apply plugin: 'idea'
 apply plugin: 'io.izzel.arclight'
 apply plugin: 'maven-publish'
 
-ext {
-    minecraftVersion = '1.16.5'
-    forgeVersion = '36.0.14'
-}
-
 arclight {
     mcVersion = minecraftVersion
     forgeVersion = project.ext.forgeVersion

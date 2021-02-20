@@ -9,6 +9,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.common.capabilities.CapabilityProvider;
+import net.minecraftforge.registries.IRegistryDelegate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -16,7 +17,9 @@ import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -33,6 +36,7 @@ public abstract class ItemStackMixin extends CapabilityProvider<ItemStack> imple
     @Shadow @Deprecated private Item item;
     @Shadow private int count;
     @Shadow(remap = false) private CompoundNBT capNBT;
+    @Mutable @Shadow @Final private IRegistryDelegate<Item> delegate;
     // @formatter:on
 
     protected ItemStackMixin(Class<ItemStack> baseClass) {
@@ -92,5 +96,6 @@ public abstract class ItemStackMixin extends CapabilityProvider<ItemStack> imple
     @Deprecated
     public void setItem(Item item) {
         this.item = item;
+        this.delegate = item.delegate;
     }
 }

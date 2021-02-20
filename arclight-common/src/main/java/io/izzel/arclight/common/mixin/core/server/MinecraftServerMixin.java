@@ -371,6 +371,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
                         ChunkPos chunkpos = new ChunkPos(i);
                         serverWorld.getChunkProvider().forceChunk(chunkpos, true);
                     }
+                    net.minecraftforge.common.world.ForgeChunkManager.reinstatePersistentChunks(serverWorld, forcedchunkssavedata);
                 }
             }
             Bukkit.getPluginManager().callEvent(new WorldLoadEvent(((WorldBridge) serverWorld).bridge$getWorld()));
@@ -444,6 +445,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
                 ChunkPos chunkpos = new ChunkPos(i);
                 serverWorld.getChunkProvider().forceChunk(chunkpos, true);
             }
+            net.minecraftforge.common.world.ForgeChunkManager.reinstatePersistentChunks(serverWorld, forcedchunkssavedata);
         }
         this.executeModerately();
         listener.stop();
