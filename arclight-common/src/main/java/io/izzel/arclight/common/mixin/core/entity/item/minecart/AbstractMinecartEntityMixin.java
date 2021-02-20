@@ -284,7 +284,7 @@ public abstract class AbstractMinecartEntityMixin extends EntityMixin {
         return this.isBeingRidden() || !this.slowWhenEmpty;
     }
 
-    @Inject(method = "applyEntityCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/item/minecart/AbstractMinecartEntity;isPassenger(Lnet/minecraft/entity/Entity;)Z"))
+    @Inject(method = "applyEntityCollision", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/item/minecart/AbstractMinecartEntity;isPassenger(Lnet/minecraft/entity/Entity;)Z"))
     private void arclight$vehicleCollide(Entity entityIn, CallbackInfo ci) {
         if (!this.isPassenger(entityIn)) {
             VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), ((EntityBridge) entityIn).bridge$getBukkitEntity());

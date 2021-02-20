@@ -62,7 +62,7 @@ public abstract class BeehiveTileEntityMixin extends TileEntityMixin {
         return list;
     }
 
-    @Inject(method = "tryEnterHive(Lnet/minecraft/entity/Entity;ZI)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;stopRiding()V"))
+    @Inject(method = "tryEnterHive(Lnet/minecraft/entity/Entity;ZI)V", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;stopRiding()V"))
     private void arclight$beeEnterBlock(Entity entity, boolean p_226962_2_, int p_226962_3_, CallbackInfo ci) {
         if (this.world != null) {
             EntityEnterBlockEvent event = new EntityEnterBlockEvent(((EntityBridge) entity).bridge$getBukkitEntity(), CraftBlock.at(this.world, this.getPos()));

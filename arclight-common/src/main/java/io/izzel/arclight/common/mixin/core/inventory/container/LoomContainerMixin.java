@@ -35,7 +35,7 @@ public abstract class LoomContainerMixin extends ContainerMixin implements PosCo
         this.playerInventory = playerInventory;
     }
 
-    @Inject(method = "canInteractWith", at = @At("HEAD"))
+    @Inject(method = "canInteractWith", cancellable = true, at = @At("HEAD"))
     public void arclight$unreachable(PlayerEntity playerIn, CallbackInfoReturnable<Boolean> cir) {
         if (!bridge$isCheckReachable()) {
             cir.setReturnValue(true);

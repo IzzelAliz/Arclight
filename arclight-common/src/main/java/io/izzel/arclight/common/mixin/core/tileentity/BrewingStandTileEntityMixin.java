@@ -64,7 +64,7 @@ public abstract class BrewingStandTileEntityMixin extends LockableTileEntityMixi
         arclight$consume = false;
     }
 
-    @Inject(method = "brewPotions", at = @At("HEAD"))
+    @Inject(method = "brewPotions", cancellable = true, at = @At("HEAD"))
     public void arclight$brewPotion(CallbackInfo ci) {
         InventoryHolder owner = this.getOwner();
         if (owner != null) {
