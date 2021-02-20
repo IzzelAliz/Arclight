@@ -1,12 +1,11 @@
 package io.izzel.arclight.common.mod.util.remapper.generated;
 
-import com.google.common.collect.Iterators;
 import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.util.remapper.ArclightRedirectAdapter;
 import io.izzel.arclight.common.mod.util.remapper.ClassLoaderRemapper;
 import io.izzel.arclight.common.mod.util.remapper.RemappingClassLoader;
-import org.apache.commons.collections.iterators.IteratorEnumeration;
+import io.izzel.arclight.common.util.Enumerations;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Type;
 
@@ -359,9 +358,8 @@ public class ArclightReflectionHandler extends ClassLoader {
         if (mappedResource == null) {
             return loader.getResources(name);
         } else {
-            URL resource = loader.getResource(mappedResource);
-            return resource == null ? null : new IteratorEnumeration(
-                Iterators.singletonIterator(new URL("remap:" + resource)));
+            Enumeration<URL> resources = loader.getResources(mappedResource);
+            return Enumerations.remapped(resources);
         }
     }
 
