@@ -410,6 +410,7 @@
     "world.biome.BiomeContainerMixin",
     "world.border.WorldBorderMixin",
     "world.chunk.ChunkMixin",
+    "world.chunk.storage.ChunkLoaderMixin",
     "world.chunk.storage.RegionFileCacheMixin",
     "world.gen.WorldGenRegionMixin",
     "world.gen.feature.structure.StructureManagerMixin",
