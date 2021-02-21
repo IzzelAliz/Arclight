@@ -5,6 +5,8 @@ import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import io.izzel.tools.product.Product;
+import io.izzel.tools.product.Product2;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.IInventory;
@@ -81,8 +83,26 @@ public class ArclightContainer {
         }
     }
 
-    // todo check this
     public static InventoryView createInvView(Container container) {
+        Product2<PlayerEntity, Integer> containerInfo = getContainerInfo(container);
+        Inventory viewing = new CraftInventory(new ContainerInvWrapper(container, containerInfo._2, containerInfo._1));
+        return new CraftInventoryView(((PlayerEntityBridge) containerInfo._1).bridge$getBukkitEntity(), viewing, container);
+    }
+
+    public static void updateView(Container container, InventoryView inventoryView) {
+        Inventory topInventory = inventoryView.getTopInventory();
+        if (topInventory instanceof CraftInventory) {
+            IInventory inventory = ((CraftInventory) topInventory).getInventory();
+            if (inventory instanceof ContainerInvWrapper) {
+                Product2<PlayerEntity, Integer> containerInfo = getContainerInfo(container);
+                ((ContainerInvWrapper) inventory).setOwner(((PlayerEntityBridge) containerInfo._1).bridge$getBukkitEntity());
+                ((ContainerInvWrapper) inventory).setSize(containerInfo._2);
+            }
+        }
+    }
+
+    // todo check this
+    private static Product2<PlayerEntity, Integer> getContainerInfo(Container container) {
         PlayerEntity candidate = ArclightCaptures.getContainerOwner();
         int bottomBegin = -1, bottomEnd = -1;
         for (ListIterator<Slot> iterator = container.inventorySlots.listIterator(); iterator.hasNext(); ) {
@@ -108,14 +128,13 @@ public class ArclightContainer {
         if (bottomBegin < bottomEnd || bottomBegin == -1) {
             bottomBegin = container.inventorySlots.size();
         }
-        Inventory viewing = new CraftInventory(new ContainerInvWrapper(container, bottomBegin, candidate));
-        return new CraftInventoryView(((PlayerEntityBridge) candidate).bridge$getBukkitEntity(), viewing, container);
+        return Product.of(candidate, bottomBegin);
     }
 
     private static class ContainerInvWrapper implements IInventory, IInventoryBridge {
 
         private final Container container;
-        private final int size;
+        private int size;
         private InventoryHolder owner;
         private final List<HumanEntity> viewers = new ArrayList<>();
 
@@ -123,6 +142,10 @@ public class ArclightContainer {
             this.container = container;
             this.size = size;
             this.owner = ((PlayerEntityBridge) owner).bridge$getBukkitEntity();
+        }
+
+        public void setSize(int size) {
+            this.size = size;
         }
 
         @Override

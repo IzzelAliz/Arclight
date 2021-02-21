@@ -2,7 +2,6 @@ buildscript {
     repositories {
         maven { url = 'https://files.minecraftforge.net/maven' }
         maven { url = 'https://repo.spongepowered.org/maven' }
-        jcenter()
         mavenCentral()
         maven { url = 'https://maven.izzel.io/releases' }
     }
@@ -41,11 +40,11 @@ minecraft {
 }
 
 repositories {
-    jcenter()
     maven { url = 'https://repo.spongepowered.org/maven' }
     maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
     maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
     maven { url = 'https://files.minecraftforge.net/maven/' }
+    maven { url = 'https://maven.izzel.io/releases' }
 }
 
 dependencies {
@@ -59,6 +58,7 @@ dependencies {
     compile 'net.md-5:bungeecord-chat:1.13-SNAPSHOT'
     compile 'mysql:mysql-connector-java:5.1.47'
     compile 'org.yaml:snakeyaml:1.23'
+    compile 'io.izzel:tools:1.0.+'
     compile project(':arclight-api')
     compile project(':i18n-config')
 }
