@@ -670,7 +670,9 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
         if (container != null) {
             ((ContainerBridge) container).bridge$setTitle(itileinventory.getDisplayName());
             boolean cancelled = false;
+            ArclightCaptures.captureContainerOwner((ServerPlayerEntity)(Object)this);
             container = CraftEventFactory.callInventoryOpenEvent((ServerPlayerEntity) (Object) this, container, cancelled);
+            ArclightCaptures.resetContainerOwner();
             if (container == null && !cancelled) {
                 if (itileinventory instanceof IInventory) {
                     ((IInventory) itileinventory).closeInventory((ServerPlayerEntity) (Object) this);
