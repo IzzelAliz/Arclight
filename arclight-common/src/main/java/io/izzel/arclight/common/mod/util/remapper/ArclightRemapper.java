@@ -5,12 +5,17 @@ import com.google.common.collect.HashBiMap;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.util.log.ArclightI18nLogger;
 import io.izzel.arclight.common.mod.util.remapper.patcher.ArclightPluginPatcher;
+import io.izzel.arclight.common.mod.util.remapper.resource.RemapSourceHandler;
 import net.md_5.specialsource.InheritanceMap;
 import net.md_5.specialsource.JarMapping;
+import net.md_5.specialsource.JarRemapper;
 import net.md_5.specialsource.provider.ClassLoaderProvider;
 import net.md_5.specialsource.provider.JointProvider;
+import org.apache.commons.io.FileUtils;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,11 +23,25 @@ import java.util.List;
 public class ArclightRemapper {
 
     public static final ArclightRemapper INSTANCE;
+    public static final File DUMP;
 
     static {
         ArclightI18nLogger.getLogger("Arclight").info("loading-mapping");
         try {
             INSTANCE = new ArclightRemapper();
+            String property = System.getProperty("arclight.remapper.dump");
+            if (property != null) {
+                DUMP = new File(property);
+                if (!DUMP.exists()) {
+                    DUMP.mkdirs();
+                }
+                try {
+                    FileUtils.forceDelete(DUMP);
+                } catch (IOException ignored) {
+                }
+            } else {
+                DUMP = null;
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -32,6 +51,7 @@ public class ArclightRemapper {
     private final JarMapping toBukkitMapping;
     public final InheritanceMap inheritanceMap;
     private final List<PluginTransformer> transformerList = new ArrayList<>();
+    private final JarRemapper toBukkitRemapper;
 
     public ArclightRemapper() throws Exception {
         this.toNmsMapping = new JarMapping();
@@ -58,10 +78,17 @@ public class ArclightRemapper {
         this.transformerList.add(ArclightRedirectAdapter.INSTANCE);
         this.transformerList.add(ClassLoaderAdapter.INSTANCE);
         ArclightPluginPatcher.load(this.transformerList);
+        toBukkitMapping.setFallbackInheritanceProvider(GlobalClassRepo.inheritanceProvider());
+        this.toBukkitRemapper = new LenientJarRemapper(toBukkitMapping);
+        RemapSourceHandler.register();
     }
 
     public static ClassLoaderRemapper createClassLoaderRemapper(ClassLoader classLoader) {
         return new ClassLoaderRemapper(INSTANCE.copyOf(INSTANCE.toNmsMapping), INSTANCE.copyOf(INSTANCE.toBukkitMapping), classLoader);
+    }
+
+    public static JarRemapper getResourceMapper() {
+        return INSTANCE.toBukkitRemapper;
     }
 
     public List<PluginTransformer> getTransformerList() {

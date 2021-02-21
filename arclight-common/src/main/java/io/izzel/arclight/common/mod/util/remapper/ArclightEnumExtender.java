@@ -11,7 +11,6 @@ import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.InsnNode;
-import org.objectweb.asm.tree.IntInsnNode;
 import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -24,6 +23,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+
+import static io.izzel.arclight.common.mod.util.remapper.ArclightRedirectAdapter.loadInt;
 
 // 你好
 // 不要抄（笑）
@@ -86,18 +87,6 @@ public class ArclightEnumExtender {
                     }
                 }
             }
-        }
-    }
-
-    private static AbstractInsnNode loadInt(int i) {
-        if (i >= -1 && i < 6) {
-            return new InsnNode(Opcodes.ICONST_0 + i);
-        } else if (i >= -128 && i < 128) {
-            return new IntInsnNode(Opcodes.BIPUSH, i);
-        } else if (i >= -32768 && i < 32768) {
-            return new IntInsnNode(Opcodes.SIPUSH, i);
-        } else {
-            return new LdcInsnNode(i);
         }
     }
 
