@@ -1,10 +1,13 @@
 package io.izzel.arclight.common.mixin.core.world.chunk;
 
+import com.google.common.collect.Lists;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.bridge.world.chunk.ChunkBridge;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.palette.UpgradeData;
@@ -27,6 +30,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
 
 @Mixin(Chunk.class)
@@ -39,6 +44,7 @@ public abstract class ChunkMixin implements ChunkBridge {
     @Shadow private volatile boolean dirty;
     @Shadow private boolean hasEntities;
     @Shadow private long lastSaveTime;
+    @Shadow @Final public ClassInheritanceMultiMap<Entity>[] entityLists;
     // @formatter:on
 
     public org.bukkit.Chunk bukkitChunk;
@@ -49,6 +55,11 @@ public abstract class ChunkMixin implements ChunkBridge {
     @Inject(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/util/math/ChunkPos;Lnet/minecraft/world/biome/BiomeContainer;Lnet/minecraft/util/palette/UpgradeData;Lnet/minecraft/world/ITickList;Lnet/minecraft/world/ITickList;J[Lnet/minecraft/world/chunk/ChunkSection;Ljava/util/function/Consumer;)V", at = @At("RETURN"))
     private void arclight$init(World worldIn, ChunkPos chunkPosIn, BiomeContainer biomeContainerIn, UpgradeData upgradeDataIn, ITickList<Block> tickBlocksIn, ITickList<Fluid> tickFluidsIn, long inhabitedTimeIn, ChunkSection[] sectionsIn, Consumer<Chunk> postLoadConsumerIn, CallbackInfo ci) {
         bridge$setBukkitChunk(new CraftChunk((Chunk) (Object) this));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Entity>[] getEntitySlices() {
+        return Arrays.stream(this.entityLists).map(Lists::newArrayList).toArray(List[]::new);
     }
 
     public org.bukkit.Chunk getBukkitChunk() {
