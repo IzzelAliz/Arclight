@@ -85,7 +85,7 @@ public class CraftLegacyLegacyMixin {
         if (((MaterialBridge) (Object) material).bridge$getType() == MaterialPropertySpec.MaterialType.FORGE) {
             return material.name();
         } else {
-            return material.name().substring("LEGACY_".length());
+            return material.name().replaceAll("^LEGACY_", "");
         }
     }
 }
