@@ -6,6 +6,9 @@
   "refmap": "mixins.arclight.refmap.json",
   "setSourceFile": true,
   "plugin": "io.izzel.arclight.common.mod.ArclightMixinPlugin",
+  "injectors": {
+    "defaultRequire": 1
+  },
   "mixins": [
     "BukkitCommandWrapperMixin",
     "ColouredConsoleSenderMixin",

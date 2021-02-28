@@ -41,7 +41,8 @@ public abstract class CraftItemStackMixin {
         }
     }
 
-    @Inject(method = "setItemMeta(Lnet/minecraft/item/ItemStack;Lorg/bukkit/inventory/meta/ItemMeta;)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/ItemStack;convertStack(I)V"))
+    // check when update
+    @Inject(method = "setItemMeta(Lnet/minecraft/item/ItemStack;Lorg/bukkit/inventory/meta/ItemMeta;)Z", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/item/ItemStack;func_77973_b()Lnet/minecraft/item/Item;"))
     private static void arclight$setCaps(ItemStack item, ItemMeta itemMeta, CallbackInfoReturnable<Boolean> cir) {
         CompoundNBT forgeCaps = ((ItemMetaBridge) itemMeta).bridge$getForgeCaps();
         if (forgeCaps != null) {
