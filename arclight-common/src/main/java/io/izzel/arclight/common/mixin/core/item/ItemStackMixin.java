@@ -36,7 +36,7 @@ public abstract class ItemStackMixin extends CapabilityProvider<ItemStack> imple
     @Shadow @Deprecated private Item item;
     @Shadow private int count;
     @Shadow(remap = false) private CompoundNBT capNBT;
-    @Mutable @Shadow @Final private IRegistryDelegate<Item> delegate;
+    @Mutable @Shadow(remap = false) @Final private IRegistryDelegate<Item> delegate;
     // @formatter:on
 
     protected ItemStackMixin(Class<ItemStack> baseClass) {
