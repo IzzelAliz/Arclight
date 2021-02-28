@@ -1,18 +1,27 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
+import com.mojang.brigadier.ParseResults;
+import com.mojang.brigadier.StringReader;
 import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import jline.console.ConsoleReader;
+import net.minecraft.command.CommandSource;
 import net.minecraft.server.dedicated.DedicatedPlayerList;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.management.PlayerList;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
+import org.bukkit.craftbukkit.v.command.CraftBlockCommandSender;
 import org.bukkit.craftbukkit.v.command.CraftCommandMap;
+import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.craftbukkit.v.help.SimpleHelpMap;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.SimplePluginManager;
@@ -24,6 +33,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -84,6 +94,42 @@ public abstract class CraftServerMixin implements CraftServerBridge {
     private void arclight$unloadForge(World world, boolean save, CallbackInfoReturnable<Boolean> cir) {
         MinecraftForge.EVENT_BUS.post(new WorldEvent.Unload(((CraftWorld) world).getHandle()));
         this.console.markWorldsDirty();
+    }
+
+    @ModifyVariable(method = "dispatchCommand", remap = false, index = 2, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lorg/spigotmc/AsyncCatcher;catchOp(Ljava/lang/String;)V"))
+    private String arclight$forgeCommandEvent(String commandLine, CommandSender sender) {
+        CommandSource commandSource;
+        if (sender instanceof CraftEntity) {
+            commandSource = ((CraftEntity) sender).getHandle().getCommandSource();
+        } else if (sender == Bukkit.getConsoleSender()) {
+            commandSource = ArclightServer.getMinecraftServer().getCommandSource();
+        } else if (sender instanceof CraftBlockCommandSender) {
+            commandSource = ((CraftBlockCommandSender) sender).getWrapper();
+        } else {
+            return commandLine;
+        }
+        StringReader stringreader = new StringReader("/" + commandLine);
+        if (stringreader.canRead() && stringreader.peek() == '/') {
+            stringreader.skip();
+        }
+        ParseResults<CommandSource> parse = ArclightServer.getMinecraftServer().getCommandManager()
+            .getDispatcher().parse(stringreader, commandSource);
+        CommandEvent event = new CommandEvent(parse);
+        if (MinecraftForge.EVENT_BUS.post(event)) {
+            return null;
+        } else if (event.getException() != null) {
+            return null;
+        } else {
+            String s = event.getParseResults().getReader().getString();
+            return s.startsWith("/") ? s.substring(1) : s;
+        }
+    }
+
+    @Inject(method = "dispatchCommand", remap = false, cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lorg/spigotmc/AsyncCatcher;catchOp(Ljava/lang/String;)V"))
+    private void arclight$returnIfFail(CommandSender sender, String commandLine, CallbackInfoReturnable<Boolean> cir) {
+        if (commandLine == null) {
+            cir.setReturnValue(false);
+        }
     }
 
     @Override
