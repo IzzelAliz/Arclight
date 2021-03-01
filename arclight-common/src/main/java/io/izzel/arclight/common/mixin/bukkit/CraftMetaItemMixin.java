@@ -144,10 +144,12 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
     }
 
     @Inject(method = "<init>*", at = @At("RETURN"))
-    private void arclight$copyForgeCaps( CraftMetaItem meta, CallbackInfo ci) {
-        CompoundNBT forgeCaps = ((ItemMetaBridge) meta).bridge$getForgeCaps();
-        if (forgeCaps != null) {
-            this.forgeCaps = forgeCaps.copy();
+    private void arclight$copyForgeCaps(CraftMetaItem meta, CallbackInfo ci) {
+        if (meta != null) {
+            CompoundNBT forgeCaps = ((ItemMetaBridge) meta).bridge$getForgeCaps();
+            if (forgeCaps != null) {
+                this.forgeCaps = forgeCaps.copy();
+            }
         }
     }
 }
