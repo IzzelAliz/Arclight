@@ -412,6 +412,9 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
 
     @Inject(method = "processEditBook", cancellable = true, at = @At("HEAD"))
     private void arclight$editBookSpam(CEditBookPacket packetIn, CallbackInfo ci) {
+        if (this.lastBookTick == 0) {
+            this.lastBookTick = ArclightConstants.currentTick - 20;
+        }
         if (this.lastBookTick + 20 > ArclightConstants.currentTick) {
             PacketThreadUtil.checkThreadAndEnqueue(packetIn, (ServerPlayNetHandler) (Object) this, this.minecraftServer);
             this.disconnect("Book edited too quickly!");
