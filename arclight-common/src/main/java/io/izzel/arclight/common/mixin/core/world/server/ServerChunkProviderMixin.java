@@ -70,6 +70,7 @@ public abstract class ServerChunkProviderMixin implements ServerChunkProviderBri
     @Override
     public void bridge$setChunkGenerator(ChunkGenerator chunkGenerator) {
         this.generator = chunkGenerator;
+        ((ChunkManagerBridge) this.chunkManager).bridge$setChunkGenerator(chunkGenerator);
     }
 
     @Override

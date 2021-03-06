@@ -6,10 +6,13 @@ import io.izzel.arclight.common.mod.util.ArclightCallbackExecutor;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.DimensionType;
+import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerWorld;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,6 +29,7 @@ public abstract class ChunkManagerMixin implements ChunkManagerBridge {
     @Shadow protected abstract Iterable<ChunkHolder> getLoadedChunksIterable();
     @Shadow abstract boolean isOutsideSpawningRadius(ChunkPos chunkPosIn);
     @Shadow protected abstract void tickEntityTracker();
+    @Shadow @Final @Mutable public ChunkGenerator generator;
     @Invoker("tick") public abstract void bridge$tick(BooleanSupplier hasMoreTime);
     @Invoker("setViewDistance") public abstract void bridge$setViewDistance(int i);
     // @formatter:on
@@ -60,5 +64,10 @@ public abstract class ChunkManagerMixin implements ChunkManagerBridge {
     @Override
     public void bridge$tickEntityTracker() {
         this.tickEntityTracker();
+    }
+
+    @Override
+    public void bridge$setChunkGenerator(ChunkGenerator generator) {
+        this.generator = generator;
     }
 }

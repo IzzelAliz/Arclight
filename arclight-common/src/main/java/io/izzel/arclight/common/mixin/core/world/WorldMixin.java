@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world;
 
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.bridge.world.border.WorldBorderBridge;
+import io.izzel.arclight.common.bridge.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.server.world.WrappedWorlds;
@@ -31,6 +32,7 @@ import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.generator.CustomChunkGenerator;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.generator.ChunkGenerator;
@@ -218,6 +220,11 @@ public abstract class WorldMixin implements WorldBridge, IWorldWriter {
             }
             if (generator == null) {
                 generator = getServer().getGenerator(((IServerWorldInfo) this.getWorldInfo()).getWorldName());
+                if (generator != null && (Object) this instanceof ServerWorld) {
+                    ServerWorld serverWorld = (ServerWorld) (Object) this;
+                    CustomChunkGenerator gen = new CustomChunkGenerator(serverWorld, serverWorld.getChunkProvider().getChunkGenerator(), generator);
+                    ((ServerChunkProviderBridge) serverWorld.getChunkProvider()).bridge$setChunkGenerator(gen);
+                }
             }
             if (environment == null) {
                 environment = ArclightServer.getEnvironment(this.typeKey);
