@@ -55,7 +55,7 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin {
         ServerCommandEvent event = new ServerCommandEvent(console, command);
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
-            server.dispatchCommand(console, event.getCommand());
+            server.dispatchServerCommand(console, new PendingCommand(event.getCommand(), source));
         }
         return 0;
     }
