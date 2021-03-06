@@ -18,6 +18,7 @@ import io.izzel.arclight.i18n.conf.EntityPropertySpec;
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.item.PaintingType;
 import net.minecraft.entity.merchant.villager.VillagerProfession;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
@@ -30,6 +31,7 @@ import net.minecraftforge.fml.CrashReportExtender;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistry;
 import net.minecraftforge.registries.IForgeRegistry;
+import org.bukkit.Art;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -47,6 +49,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -69,6 +72,8 @@ public class BukkitRegistry {
             .put(DimensionType.THE_NETHER, World.Environment.NETHER)
             .put(DimensionType.THE_END, World.Environment.THE_END)
             .build());
+    private static final Map<String, Art> ART_BY_NAME = Unsafe.getStatic(Art.class, "BY_NAME");
+    private static final Map<Integer, Art> ART_BY_ID = Unsafe.getStatic(Art.class, "BY_ID");
 
     public static void registerAll() {
         CrashReportExtender.registerCrashCallable("Arclight", () -> new CraftCrashReport().call().toString());
@@ -78,6 +83,29 @@ public class BukkitRegistry {
         loadEntities();
         loadVillagerProfessions();
         loadBiomes();
+        loadArts();
+    }
+
+    private static void loadArts() {
+        int i = Art.values().length;
+        List<Art> newTypes = new ArrayList<>();
+        Field key = Arrays.stream(Art.class.getDeclaredFields()).filter(it -> it.getName().equals("key")).findAny().orElse(null);
+        long keyOffset = Unsafe.objectFieldOffset(key);
+        for (PaintingType paintingType : ForgeRegistries.PAINTING_TYPES) {
+            String lookupName = paintingType.getRegistryName().getPath().toLowerCase(Locale.ROOT);
+            Art bukkit = Art.getByName(lookupName);
+            if (bukkit == null) {
+                String standardName = ResourceLocationUtil.standardize(paintingType.getRegistryName());
+                bukkit = EnumHelper.makeEnum(Art.class, standardName, i, ImmutableList.of(int.class, int.class, int.class), ImmutableList.of(i, paintingType.getWidth(), paintingType.getHeight()));
+                newTypes.add(bukkit);
+                Unsafe.putObject(bukkit, keyOffset, CraftNamespacedKey.fromMinecraft(paintingType.getRegistryName()));
+                ART_BY_ID.put(i, bukkit);
+                ART_BY_NAME.put(lookupName, bukkit);
+                ArclightMod.LOGGER.debug("Registered {} as art {}", paintingType.getRegistryName(), bukkit);
+                i++;
+            }
+        }
+        EnumHelper.addEnums(Art.class, newTypes);
     }
 
     private static void loadBiomes() {
