@@ -22,11 +22,19 @@ public class RecipeIteratorMixin {
     @Shadow @Final private Iterator<Map.Entry<IRecipeType<?>, Map<ResourceLocation, IRecipe<?>>>> recipes;
     // @formatter:on
 
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
     @Overwrite
     public boolean hasNext() {
         return (current != null && current.hasNext()) || recipes.hasNext();
     }
 
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
     @Overwrite
     public Recipe next() {
         if (current == null || !current.hasNext()) {
