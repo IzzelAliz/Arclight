@@ -208,10 +208,14 @@ public class BukkitRegistry {
         int size = ForgeRegistries.ENCHANTMENTS.getEntries().size();
         putBool(Enchantment.class, "acceptingNew", true);
         for (net.minecraft.enchantment.Enchantment enc : ForgeRegistries.ENCHANTMENTS) {
-            String name = ResourceLocationUtil.standardize(enc.getRegistryName());
-            ArclightEnchantment enchantment = new ArclightEnchantment(enc, name);
-            Enchantment.registerEnchantment(enchantment);
-            ArclightMod.LOGGER.debug("Registered {} as enchantment {}", enc.getRegistryName(), enchantment);
+            try {
+                String name = ResourceLocationUtil.standardize(enc.getRegistryName());
+                ArclightEnchantment enchantment = new ArclightEnchantment(enc, name);
+                Enchantment.registerEnchantment(enchantment);
+                ArclightMod.LOGGER.debug("Registered {} as enchantment {}", enc.getRegistryName(), enchantment);
+            } catch (Exception e) {
+                ArclightMod.LOGGER.error("Failed to register enchantment {}: {}", enc.getRegistryName(), e);
+            }
         }
         Enchantment.stopAcceptingRegistrations();
         ArclightMod.LOGGER.info("registry.enchantment", size - origin);
@@ -220,14 +224,19 @@ public class BukkitRegistry {
     private static void loadPotions() {
         int origin = PotionEffectType.values().length;
         int size = ForgeRegistries.POTIONS.getEntries().size();
-        PotionEffectType[] types = new PotionEffectType[size + 1];
+        int maxId = ForgeRegistries.POTIONS.getValues().stream().mapToInt(Effect::getId).max().orElse(0);
+        PotionEffectType[] types = new PotionEffectType[maxId + 1];
         putStatic(PotionEffectType.class, "byId", types);
         putBool(PotionEffectType.class, "acceptingNew", true);
         for (Effect eff : ForgeRegistries.POTIONS) {
-            String name = ResourceLocationUtil.standardize(eff.getRegistryName());
-            ArclightPotionEffect effect = new ArclightPotionEffect(eff, name);
-            PotionEffectType.registerPotionEffectType(effect);
-            ArclightMod.LOGGER.debug("Registered {} as potion {}", eff.getRegistryName(), effect);
+            try {
+                String name = ResourceLocationUtil.standardize(eff.getRegistryName());
+                ArclightPotionEffect effect = new ArclightPotionEffect(eff, name);
+                PotionEffectType.registerPotionEffectType(effect);
+                ArclightMod.LOGGER.debug("Registered {} as potion {}", eff.getRegistryName(), effect);
+            } catch (Exception e) {
+                ArclightMod.LOGGER.error("Failed to register potion type {}: {}", eff.getRegistryName(), e);
+            }
         }
         PotionEffectType.stopAcceptingRegistrations();
         ArclightMod.LOGGER.info("registry.potion", size - origin);
