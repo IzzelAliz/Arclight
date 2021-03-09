@@ -54,7 +54,6 @@ public class ServerHandshakeNetHandlerMixin {
             case LOGIN: {
                 this.networkManager.setConnectionState(ProtocolType.LOGIN);
 
-                // todo forge use ip field for storing forge data, this may be an issue
                 try {
                     long currentTime = System.currentTimeMillis();
                     long connectionThrottle = Bukkit.getServer().getConnectionThrottle();
