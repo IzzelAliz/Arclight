@@ -133,6 +133,7 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
         .add("net.minecraft.world.dimension.DimensionType")
         .add("net.minecraft.util.text.Color")
         .add("net.minecraft.command.Commands")
+        .add("net.minecraft.world.storage.SaveFormat$LevelSave")
         .build();
 
     @Override

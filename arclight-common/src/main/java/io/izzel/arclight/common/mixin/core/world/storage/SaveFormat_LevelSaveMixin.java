@@ -22,6 +22,15 @@ public class SaveFormat_LevelSaveMixin implements SaveFormatBridge.LevelSaveBrid
 
     private RegistryKey<Dimension> dimensionType;
 
+    public void arclight$constructor(SaveFormat saveFormat, String saveName) {
+        throw new RuntimeException();
+    }
+
+    public void arclight$constructor(SaveFormat saveFormat, String saveName, RegistryKey<Dimension> dimensionType) {
+        arclight$constructor(saveFormat, saveName);
+        this.dimensionType = dimensionType;
+    }
+
     @Override
     public void bridge$setDimType(RegistryKey<Dimension> typeKey) {
         this.dimensionType = typeKey;
