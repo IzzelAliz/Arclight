@@ -7,6 +7,7 @@ import net.minecraft.command.Commands;
 import net.minecraft.network.rcon.RConConsoleSource;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.dedicated.PendingCommand;
+import net.minecrell.terminalconsole.TerminalConsoleAppender;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.command.CraftRemoteConsoleCommandSender;
@@ -22,6 +23,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.io.IOException;
 
 @Mixin(DedicatedServer.class)
 public abstract class DedicatedServerMixin extends MinecraftServerMixin {
@@ -80,15 +83,12 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin {
 
     @Inject(method = "systemExitNow", at = @At("RETURN"))
     public void arclight$exitNow(CallbackInfo ci) {
-        new Thread(() -> {
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException ignored) {
-            } finally {
-                Runtime.getRuntime().halt(0);
-            }
-        }, "Exit Thread").start();
-        System.exit(0);
+        try {
+            TerminalConsoleAppender.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        new Thread(() -> System.exit(0), "Exit Thread").start();
     }
 
     /**
