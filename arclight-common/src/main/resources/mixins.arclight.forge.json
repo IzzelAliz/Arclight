@@ -5,10 +5,12 @@
   "target": "@env(DEFAULT)",
   "refmap": "mixins.arclight.refmap.json",
   "setSourceFile": true,
+  "injectors": {
+    "defaultRequire": 1
+  },
   "mixins": [
     "ForgeEventFactoryMixin",
     "ForgeHooksMixin",
-    "ForgeInternalHandlerMixin",
     "NetworkHooksMixin",
     "PacketDistributorMixin"
   ]

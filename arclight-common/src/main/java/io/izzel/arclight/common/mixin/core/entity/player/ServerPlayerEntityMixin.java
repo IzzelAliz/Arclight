@@ -765,11 +765,11 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
             PlayerChangedMainHandEvent event = new PlayerChangedMainHandEvent(this.getBukkitEntity(), (this.getPrimaryHand() == HandSide.LEFT) ? MainHand.LEFT : MainHand.RIGHT);
             Bukkit.getPluginManager().callEvent(event);
         }
-        if (!this.language.equals(packetIn.getLanguage())) {
-            PlayerLocaleChangeEvent event2 = new PlayerLocaleChangeEvent(this.getBukkitEntity(), packetIn.getLanguage());
+        if (!this.language.equals(packetIn.getLang())) {
+            PlayerLocaleChangeEvent event2 = new PlayerLocaleChangeEvent(this.getBukkitEntity(), packetIn.getLang());
             Bukkit.getPluginManager().callEvent(event2);
         }
-        this.locale = packetIn.getLanguage();
+        this.locale = packetIn.getLang();
         this.clientViewDistance = packetIn.view;
     }
 
