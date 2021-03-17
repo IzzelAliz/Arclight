@@ -555,7 +555,9 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
                     this.connection.sendPacket(new SPlayEntityEffectPacket(this.getEntityId(), effectinstance));
                 }
 
-                this.connection.sendPacket(new SPlaySoundEventPacket(1032, BlockPos.ZERO, 0, false));
+                if (teleporter.playTeleportSound((ServerPlayerEntity) (Object) this, serverworld, exitWorld[0])) {
+                    this.connection.sendPacket(new SPlaySoundEventPacket(1032, BlockPos.ZERO, 0, false));
+                }
                 this.lastExperience = -1;
                 this.lastHealth = -1.0F;
                 this.lastFoodLevel = -1;
