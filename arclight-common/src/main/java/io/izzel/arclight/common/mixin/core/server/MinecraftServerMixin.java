@@ -354,7 +354,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
         this.serverTime = Util.milliTime();
         serverchunkprovider.registerTicket(TicketType.START, new ChunkPos(blockpos), 11, Unit.INSTANCE);
 
-        while (serverchunkprovider.getLoadedChunksCount() != 441) {
+        while (serverchunkprovider.getLoadedChunksCount() < 441) {
             this.executeModerately();
         }
 
@@ -430,7 +430,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
         this.serverTime = Util.milliTime();
         serverchunkprovider.registerTicket(TicketType.START, new ChunkPos(blockpos), 11, Unit.INSTANCE);
 
-        while (serverchunkprovider.getLoadedChunksCount() != 441) {
+        while (serverchunkprovider.getLoadedChunksCount() < 441) {
             this.executeModerately();
         }
 
