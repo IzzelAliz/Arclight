@@ -136,11 +136,6 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         cserver = ArclightServer.createOrLoad((DedicatedServer) minecraftServer, (PlayerList) (Object) this);
     }
 
-    @Inject(method = "initializeConnectionToPlayer", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/fml/network/NetworkHooks;sendMCRegistryPackets(Lnet/minecraft/network/NetworkManager;Ljava/lang/String;)V"))
-    private void arclight$sendChannel(NetworkManager netManager, ServerPlayerEntity playerIn, CallbackInfo ci) {
-        ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().sendSupportedChannels();
-    }
-
     @Redirect(method = "initializeConnectionToPlayer", at = @At(value = "FIELD", target = "Lnet/minecraft/server/management/PlayerList;viewDistance:I"))
     private int arclight$spigotViewDistance(PlayerList playerList, NetworkManager netManager, ServerPlayerEntity playerIn) {
         return ((WorldBridge) playerIn.getServerWorld()).bridge$spigotConfig().viewDistance;
