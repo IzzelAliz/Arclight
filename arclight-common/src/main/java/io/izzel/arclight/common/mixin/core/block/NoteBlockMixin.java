@@ -49,7 +49,7 @@ public abstract class NoteBlockMixin implements NoteBlockBridge {
         this.play(worldIn, pos, state);
     }
 
-    @Inject(method = "triggerNote", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addBlockEvent(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/Block;II)V"))
+    @Inject(method = "triggerNote", cancellable = true, require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addBlockEvent(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/Block;II)V"))
     private void arclight$notePlay(World worldIn, BlockPos pos, CallbackInfo ci) {
         NotePlayEvent event = CraftEventFactory.callNotePlayEvent(worldIn, pos, arclight$state.get(NoteBlock.INSTRUMENT), arclight$state.get(NoteBlock.NOTE));
         if (event.isCancelled()) {
