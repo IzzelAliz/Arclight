@@ -116,6 +116,13 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
         return 61 * hash + (this.forgeCaps != null ? this.forgeCaps.hashCode() : 0);
     }
 
+    @Inject(method = "isEmpty", cancellable = true,at = @At("HEAD"))
+    private void arclight$forgeCapsEmpty(CallbackInfoReturnable<Boolean> cir) {
+        if (this.forgeCaps != null && !this.forgeCaps.isEmpty()) {
+            cir.setReturnValue(false);
+        }
+    }
+
     @Inject(method = "equalsCommon", cancellable = true, at = @At("HEAD"))
     private void arclight$forgeCapsEquals(CraftMetaItem that, CallbackInfoReturnable<Boolean> cir) {
         CompoundNBT forgeCaps = ((ItemMetaBridge) that).bridge$getForgeCaps();
