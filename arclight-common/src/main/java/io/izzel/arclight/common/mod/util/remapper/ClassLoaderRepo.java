@@ -2,6 +2,9 @@ package io.izzel.arclight.common.mod.util.remapper;
 
 import net.md_5.specialsource.repo.ClassRepo;
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.commons.ClassRemapper;
+import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.io.IOException;
@@ -29,7 +32,18 @@ public class ClassLoaderRepo implements ClassRepo {
             try (InputStream inputStream = connection.getInputStream()) {
                 ClassReader reader = new ClassReader(inputStream);
                 ClassNode classNode = new ClassNode();
-                reader.accept(classNode, ClassReader.SKIP_CODE);
+                ClassVisitor cv;
+                if (classLoader instanceof RemappingClassLoader) {
+                    cv = new ClassRemapper(classNode, new Remapper() {
+                        @Override
+                        public String map(String internalName) {
+                            return ((RemappingClassLoader) classLoader).getRemapper().map(internalName);
+                        }
+                    });
+                } else {
+                    cv = classNode;
+                }
+                reader.accept(cv, ClassReader.SKIP_CODE);
                 return classNode;
             }
         } catch (IOException ignored) {

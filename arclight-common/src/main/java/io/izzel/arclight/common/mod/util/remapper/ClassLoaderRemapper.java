@@ -362,7 +362,10 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
 
         private String getSuper(final String typeName) {
             ClassNode node = GlobalClassRepo.INSTANCE.findClass(typeName);
-            if (node == null) return "java/lang/Object";
+            if (node == null) {
+                LOGGER.warn("Failed to find class {}", typeName);
+                return "java/lang/Object";
+            }
             return node.superName;
         }
 
