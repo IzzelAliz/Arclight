@@ -214,6 +214,13 @@ public abstract class MaterialMixin implements MaterialBridge {
         }
     }
 
+    @Inject(method = "getMaxStackSize", cancellable = true, at = @At("HEAD"))
+    private void arclight$getMaxStackSize(CallbackInfoReturnable<Integer> cir) {
+        if (arclight$spec != null) {
+            cir.setReturnValue(arclight$spec.maxStack);
+        }
+    }
+
     @Override
     public MaterialPropertySpec bridge$getSpec() {
         return arclight$spec;
