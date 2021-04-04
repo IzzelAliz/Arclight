@@ -347,11 +347,11 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
 
         @Override
         protected String getCommonSuperClass(String type1, String type2) {
-            Collection<String> parents = GlobalClassRepo.inheritanceProvider().getAll(type2);
+            Collection<String> parents = GlobalClassRepo.remappingProvider().getAll(type2);
             if (parents.contains(type1)) {
                 return type1;
             }
-            if (GlobalClassRepo.inheritanceProvider().getAll(type1).contains(type2)) {
+            if (GlobalClassRepo.remappingProvider().getAll(type1).contains(type2)) {
                 return type2;
             }
             do {
@@ -366,7 +366,7 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
                 LOGGER.warn("Failed to find class {}", typeName);
                 return "java/lang/Object";
             }
-            return node.superName;
+            return ArclightRemapper.getNmsMapper().map(node.superName);
         }
 
     }

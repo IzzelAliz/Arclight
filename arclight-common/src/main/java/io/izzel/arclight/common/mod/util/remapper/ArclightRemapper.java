@@ -52,6 +52,7 @@ public class ArclightRemapper {
     public final InheritanceMap inheritanceMap;
     private final List<PluginTransformer> transformerList = new ArrayList<>();
     private final JarRemapper toBukkitRemapper;
+    private final JarRemapper toNmsRemapper;
 
     public ArclightRemapper() throws Exception {
         this.toNmsMapping = new JarMapping();
@@ -80,6 +81,7 @@ public class ArclightRemapper {
         ArclightPluginPatcher.load(this.transformerList);
         toBukkitMapping.setFallbackInheritanceProvider(GlobalClassRepo.inheritanceProvider());
         this.toBukkitRemapper = new LenientJarRemapper(toBukkitMapping);
+        this.toNmsRemapper = new LenientJarRemapper(toNmsMapping);
         RemapSourceHandler.register();
     }
 
@@ -89,6 +91,10 @@ public class ArclightRemapper {
 
     public static JarRemapper getResourceMapper() {
         return INSTANCE.toBukkitRemapper;
+    }
+
+    public static JarRemapper getNmsMapper() {
+        return INSTANCE.toNmsRemapper;
     }
 
     public List<PluginTransformer> getTransformerList() {

@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class PluginInheritanceProvider implements InheritanceProvider {
 
@@ -51,5 +52,25 @@ public class PluginInheritanceProvider implements InheritanceProvider {
 
         SHARED_INHERITANCE_MAP.put(className, parents);
         return parents;
+    }
+
+    static class Remapping extends PluginInheritanceProvider {
+
+        private final PluginInheritanceProvider provider;
+
+        public Remapping(ClassRepo classRepo, PluginInheritanceProvider provider) {
+            super(classRepo);
+            this.provider = provider;
+        }
+
+        @Override
+        public Collection<String> getAll(String className) {
+            return provider.getAll(className).stream().map(ArclightRemapper.getNmsMapper()::map).collect(Collectors.toSet());
+        }
+
+        @Override
+        public Collection<String> getParents(String className) {
+            return provider.getParents(className).stream().map(ArclightRemapper.getNmsMapper()::map).collect(Collectors.toSet());
+        }
     }
 }

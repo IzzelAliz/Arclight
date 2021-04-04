@@ -17,6 +17,7 @@ public class GlobalClassRepo implements ClassRepo {
 
     public static final GlobalClassRepo INSTANCE = new GlobalClassRepo();
     private static final PluginInheritanceProvider PROVIDER = new PluginInheritanceProvider(INSTANCE);
+    private static final PluginInheritanceProvider REMAPPING = new PluginInheritanceProvider.Remapping(INSTANCE, PROVIDER);
 
     private final LoadingCache<String, ClassNode> cache = CacheBuilder.newBuilder().maximumSize(256)
         .expireAfterAccess(1, TimeUnit.MINUTES).build(CacheLoader.from(this::findParallel));
@@ -60,5 +61,9 @@ public class GlobalClassRepo implements ClassRepo {
 
     public static PluginInheritanceProvider inheritanceProvider() {
         return PROVIDER;
+    }
+
+    public static PluginInheritanceProvider remappingProvider() {
+        return REMAPPING;
     }
 }
