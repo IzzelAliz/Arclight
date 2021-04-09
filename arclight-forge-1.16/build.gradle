@@ -102,6 +102,8 @@ jar {
     manifest.attributes 'Implementation-Version': "arclight-$minecraftVersion-${project.version}-${getGitHash()}"
     manifest.attributes 'Implementation-Vendor': 'Arclight Team'
     manifest.attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd HH:mm:ss")
+    manifest.attributes 'Add-Opens': 'java.base/sun.security.util java.base/java.util.jar'
+    manifest.attributes 'Add-Exports': 'java.base/sun.security.util'
     from(configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }) {
         exclude "META-INF/MANIFEST.MF"
         exclude "META-INF/*.SF"
