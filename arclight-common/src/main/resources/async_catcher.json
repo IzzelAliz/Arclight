@@ -23,5 +23,8 @@
     "func_177414_a(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/AxisAlignedBB;Ljava/util/List;Ljava/util/function/Predicate;)V": "chunk entity get",
     "func_217313_a(Lnet/minecraft/entity/EntityType;Lnet/minecraft/util/math/AxisAlignedBB;Ljava/util/List;Ljava/util/function/Predicate;)V": "chunk entity get",
     "func_177430_a(Ljava/lang/Class;Lnet/minecraft/util/math/AxisAlignedBB;Ljava/util/List;Ljava/util/function/Predicate;)V": "chunk entity get"
+  },
+  "net/minecraft/loot/LootTable": {
+    "func_216118_a(Lnet/minecraft/inventory/IInventory;Lnet/minecraft/loot/LootContext;)V": "loot generate"
   }
 }
