@@ -499,11 +499,14 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
                 Entity e = teleporter.placeEntity((ServerPlayerEntity) (Object) this, serverworld, exitWorld[0], this.rotationYaw, spawnPortal -> {//Forge: Start vanilla logic
                     serverworld.getProfiler().startSection("moving");
 
-                    exitWorld[0] = ((PortalInfoBridge) portalinfo).bridge$getWorld();
+                    if (((PortalInfoBridge) portalinfo).bridge$getWorld() != null) {
+                        exitWorld[0] = ((PortalInfoBridge) portalinfo).bridge$getWorld();
+                    }
                     if (exitWorld[0] != null) {
                         if (registrykey == DimensionType.OVERWORLD && ((WorldBridge) exitWorld[0]).bridge$getTypeKey() == DimensionType.THE_NETHER) {
                             this.enteredNetherPosition = this.getPositionVec();
-                        } else if (spawnPortal && ((WorldBridge) exitWorld[0]).bridge$getTypeKey() == DimensionType.THE_END && ((PortalInfoBridge) portalinfo).bridge$getPortalEventInfo().getCanCreatePortal()) {
+                        } else if (spawnPortal && ((WorldBridge) exitWorld[0]).bridge$getTypeKey() == DimensionType.THE_END
+                            && (((PortalInfoBridge) portalinfo).bridge$getPortalEventInfo() == null || ((PortalInfoBridge) portalinfo).bridge$getPortalEventInfo().getCanCreatePortal())) {
                             this.func_242110_a(exitWorld[0], new BlockPos(portalinfo.pos));
                         }
                     }
