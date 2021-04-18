@@ -17,6 +17,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -65,11 +66,19 @@ public class ForgeInstaller {
                 CompletableFuture<?>[] futures = installForge(installInfo, pool);
                 handleFutures(futures);
                 ArclightLocale.info("downloader.forge-install");
-                ProcessBuilder builder = new ProcessBuilder();
-                builder.command("java", "-Djava.net.useSystemProxies=true", "-jar", String.format("forge-%s-%s-installer.jar", installInfo.installer.minecraft, installInfo.installer.forge), "--installServer", ".");
-                builder.inheritIO();
-                Process process = builder.start();
-                process.waitFor();
+                try {
+                    ProcessBuilder builder = new ProcessBuilder();
+                    builder.command("java", "-Djava.net.useSystemProxies=true", "-jar", String.format("forge-%s-%s-installer.jar", installInfo.installer.minecraft, installInfo.installer.forge), "--installServer", ".");
+                    builder.inheritIO();
+                    Process process = builder.start();
+                    process.waitFor();
+                } catch (IOException e) {
+                    URLClassLoader loader = new URLClassLoader(
+                        new URL[]{new File(String.format("forge-%s-%s-installer.jar", installInfo.installer.minecraft, installInfo.installer.forge)).toURI().toURL()},
+                        ForgeInstaller.class.getClassLoader().getParent());
+                    Method method = loader.loadClass("net.minecraftforge.installer.SimpleInstaller").getMethod("main", String[].class);
+                    method.invoke(null, (Object) new String[]{"--installServer", "."});
+                }
             }
             handleFutures(array);
             pool.shutdownNow();
