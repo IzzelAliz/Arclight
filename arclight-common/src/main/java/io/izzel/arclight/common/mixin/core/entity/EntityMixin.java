@@ -814,11 +814,10 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             if (portalinfo == null) {
                 return null;
             } else {
-                server = ((PortalInfoBridge) portalinfo).bridge$getWorld();
+                ServerWorld world = ((PortalInfoBridge) portalinfo).bridge$getWorld() == null ? server : ((PortalInfoBridge) portalinfo).bridge$getWorld();
                 this.detach();
                 Entity transportedEntity = teleporter.placeEntity((Entity) (Object) this, (ServerWorld) this.world, server, this.rotationYaw, spawnPortal -> { //Forge: Start vanilla logic
                     this.world.getProfiler().endStartSection("reloading");
-                    ServerWorld world = ((PortalInfoBridge) portalinfo).bridge$getWorld();
                     Entity entity = this.getType().create(world);
                     if (entity != null) {
                         entity.copyDataFromOld((Entity) (Object) this);
@@ -836,7 +835,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                 this.setDead();
                 this.world.getProfiler().endSection();
                 ((ServerWorld) this.world).resetUpdateEntityTick();
-                server.resetUpdateEntityTick();
+                world.resetUpdateEntityTick();
                 this.world.getProfiler().endSection();
                 return transportedEntity;
             }
