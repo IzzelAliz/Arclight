@@ -23,6 +23,7 @@ import java.net.URLConnection;
 import java.security.CodeSigner;
 import java.security.CodeSource;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.jar.Manifest;
 
 @Mixin(targets = "org.bukkit.plugin.java.PluginClassLoader", remap = false)
@@ -71,29 +72,31 @@ public class PluginClassLoaderMixin extends URLClassLoader implements RemappingC
                 URL url = this.findResource(path);
 
                 if (url != null) {
-                    byte[] classBytes;
 
                     URLConnection connection;
                     CodeSigner[] signers;
+                    Callable<byte[]> byteSource;
                     try {
                         connection = url.openConnection();
-                        try (InputStream is = connection.getInputStream()) {
-                            classBytes = ByteStreams.toByteArray(is);
-                            if (connection instanceof JarURLConnection) {
-                                signers = ((JarURLConnection) connection).getJarEntry().getCodeSigners();
-                            } else {
-                                signers = new CodeSigner[0];
-                            }
-                        } catch (IOException ex) {
-                            throw new ClassNotFoundException(name, ex);
+                        connection.connect();
+                        if (connection instanceof JarURLConnection) {
+                            signers = ((JarURLConnection) connection).getJarEntry().getCodeSigners();
+                        } else {
+                            signers = new CodeSigner[0];
                         }
+                        byteSource = () -> {
+                            try (InputStream is = connection.getInputStream()) {
+                                byte[] classBytes = ByteStreams.toByteArray(is);
+                                classBytes = SwitchTableFixer.INSTANCE.processClass(classBytes);
+                                classBytes = Bukkit.getUnsafe().processClass(description, path, classBytes);
+                                return classBytes;
+                            }
+                        };
                     } catch (IOException e) {
                         throw new ClassNotFoundException(name, e);
                     }
 
-                    classBytes = SwitchTableFixer.INSTANCE.processClass(classBytes);
-                    classBytes = Bukkit.getUnsafe().processClass(description, path, classBytes);
-                    classBytes = this.getRemapper().remapClass(classBytes);
+                    byte[] classBytes = this.getRemapper().remapClass(name, byteSource, connection);
 
                     int dot = name.lastIndexOf('.');
                     if (dot != -1) {

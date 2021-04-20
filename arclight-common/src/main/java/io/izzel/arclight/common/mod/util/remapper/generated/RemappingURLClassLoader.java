@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mod.util.remapper.generated;
 import com.google.common.io.ByteStreams;
 import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
 import io.izzel.arclight.common.mod.util.remapper.ClassLoaderRemapper;
+import io.izzel.arclight.common.mod.util.remapper.GlobalClassRepo;
 import io.izzel.arclight.common.mod.util.remapper.RemappingClassLoader;
 
 import java.io.IOException;
@@ -39,7 +40,7 @@ public class RemappingURLClassLoader extends URLClassLoader implements Remapping
         if (resource != null) {
             try {
                 URLConnection connection = resource.openConnection();
-                byte[] bytes = getRemapper().remapClass(ByteStreams.toByteArray(connection.getInputStream()));
+                byte[] bytes = getRemapper().remapClassFile(ByteStreams.toByteArray(connection.getInputStream()), GlobalClassRepo.INSTANCE);
                 int i = name.lastIndexOf('.');
                 if (i != -1) {
                     String pkgName = name.substring(0, i);
