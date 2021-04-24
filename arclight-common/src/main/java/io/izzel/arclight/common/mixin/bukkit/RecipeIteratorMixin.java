@@ -28,7 +28,14 @@ public class RecipeIteratorMixin {
      */
     @Overwrite
     public boolean hasNext() {
-        return (current != null && current.hasNext()) || recipes.hasNext();
+        if (current != null && current.hasNext()) {
+            return true;
+        }
+        if (recipes.hasNext()) {
+            current = recipes.next().getValue().values().iterator();
+            return hasNext();
+        }
+        return false;
     }
 
     /**
