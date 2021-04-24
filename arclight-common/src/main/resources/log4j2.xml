@@ -29,6 +29,8 @@
                                   pattern="%highlight{[%d{HH:mm:ss}] [%t/%level] [minecraft/%logger{1}]: %minecraftFormatting{%msg}%n%tEx}{INFO=normal}"/>
                     <PatternMatch key="com.mojang."
                                   pattern="%highlight{[%d{HH:mm:ss}] [%t/%level] [mojang/%logger{1}]: %minecraftFormatting{%msg}%n%tEx}{INFO=normal}"/>
+                    <PatternMatch key="net.minecraftforge."
+                                  pattern="%highlight{[%d{HH:mm:ss}] [%t/%level] [forge/%logger{1}]: %minecraftFormatting{%msg}%n%tEx}{INFO=normal}"/>
                 </LoggerNamePatternSelector>
             </PatternLayout>
         </TerminalConsole>
