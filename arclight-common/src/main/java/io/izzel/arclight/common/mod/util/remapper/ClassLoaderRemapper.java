@@ -40,6 +40,7 @@ import java.security.CodeSource;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -292,7 +293,7 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
         return this.secureJarInfo.computeIfAbsent(jarFile.getName(), key ->
             jarFile.stream().anyMatch(it -> {
                 if (it.isDirectory()) return false;
-                String name = it.getName();
+                String name = it.getName().toUpperCase(Locale.ROOT);
                 return name.startsWith("META-INF") && (name.endsWith(".DSA") ||
                     name.endsWith(".RSA") ||
                     name.endsWith(".EC") ||
