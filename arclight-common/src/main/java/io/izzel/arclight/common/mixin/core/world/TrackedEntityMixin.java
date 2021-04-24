@@ -115,7 +115,7 @@ public abstract class TrackedEntityMixin implements TrackedEntityBridge {
             ItemFrameEntity itemframeentity = (ItemFrameEntity) this.trackedEntity;
             ItemStack itemstack = itemframeentity.getDisplayedItem();
             MapData mapdata = FilledMapItem.getMapData(itemstack, this.world);
-            if (this.updateCounter % 10 == 0 && mapdata != null) {
+            if (this.updateCounter % 10 == 0 && mapdata != null && itemstack.getItem() instanceof FilledMapItem) {
                 for (ServerPlayerEntity serverplayerentity : this.trackedPlayers) {
                     mapdata.updateVisiblePlayers(serverplayerentity, itemstack);
                     IPacket<?> ipacket = ((FilledMapItem) itemstack.getItem()).getUpdatePacket(itemstack, this.world, serverplayerentity);
