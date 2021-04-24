@@ -4,9 +4,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
+import com.google.common.io.ByteStreams;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.util.remapper.generated.ArclightReflectionHandler;
 import io.izzel.arclight.i18n.ArclightConfig;
+import io.izzel.tools.product.Product;
+import io.izzel.tools.product.Product2;
 import net.md_5.specialsource.JarMapping;
 import net.md_5.specialsource.JarRemapper;
 import net.md_5.specialsource.RemappingClassAdapter;
@@ -28,8 +31,12 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.JarURLConnection;
+import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
+import java.security.CodeSigner;
+import java.security.CodeSource;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,6 +46,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.jar.JarFile;
 
 public class ClassLoaderRemapper extends LenientJarRemapper {
 
@@ -52,6 +60,7 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
     private final String generatedHandler;
     private final Class<?> generatedHandlerClass;
     private final GeneratedHandlerAdapter generatedHandlerAdapter;
+    private final Map<String, Boolean> secureJarInfo = new ConcurrentHashMap<>();
 
     public ClassLoaderRemapper(JarMapping jarMapping, JarMapping toBukkitMapping, ClassLoader classLoader) {
         super(jarMapping);
@@ -279,7 +288,19 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
         return Maps.immutableEntry(owner, mapped);
     }
 
-    public byte[] remapClass(String className, Callable<byte[]> byteSource, URLConnection connection) throws ClassNotFoundException {
+    private boolean isSecureJar(JarFile jarFile) {
+        return this.secureJarInfo.computeIfAbsent(jarFile.getName(), key ->
+            jarFile.stream().anyMatch(it -> {
+                if (it.isDirectory()) return false;
+                String name = it.getName();
+                return name.startsWith("META-INF") && (name.endsWith(".DSA") ||
+                    name.endsWith(".RSA") ||
+                    name.endsWith(".EC") ||
+                    name.endsWith(".SF"));
+            }));
+    }
+
+    public Product2<byte[], CodeSource> remapClass(String className, Callable<byte[]> byteSource, URLConnection connection) throws ClassNotFoundException {
         try {
             ArclightClassCache.CacheSegment segment = ArclightClassCache.instance().makeSegment(connection);
             Optional<byte[]> optional = segment.findByName(className);
@@ -287,7 +308,21 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
                 byte[] bytes = optional.get();
                 ClassWriter cw = new ClassWriter(0);
                 new ClassReader(bytes).accept(new ClassRemapper(cw, generatedHandlerAdapter), 0);
-                return cw.toByteArray();
+                URL url;
+                CodeSigner[] signers;
+                if (connection instanceof JarURLConnection) {
+                    url = ((JarURLConnection) connection).getJarFileURL();
+                    if (isSecureJar(((JarURLConnection) connection).getJarFile())) {
+                        ByteStreams.exhaust(connection.getInputStream()); // must read before asking signers
+                        signers = ((JarURLConnection) connection).getJarEntry().getCodeSigners();
+                    } else {
+                        signers = null;
+                    }
+                } else {
+                    url = connection.getURL();
+                    signers = null;
+                }
+                return Product.of(cw.toByteArray(), new CodeSource(url, signers));
             } else {
                 byte[] bytes = remapClassFile(byteSource.call(), GlobalClassRepo.INSTANCE);
                 if (ArclightConfig.spec().getOptimization().isCachePluginClass()) {
@@ -296,7 +331,16 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
                     byte[] store = cw.toByteArray();
                     segment.addToCache(className, store);
                 }
-                return bytes;
+                URL url;
+                CodeSigner[] signers;
+                if (connection instanceof JarURLConnection) {
+                    url = ((JarURLConnection) connection).getJarFileURL();
+                    signers = ((JarURLConnection) connection).getJarEntry().getCodeSigners();
+                } else {
+                    url = connection.getURL();
+                    signers = null;
+                }
+                return Product.of(bytes, new CodeSource(url, signers));
             }
         } catch (Exception e) {
             throw new ClassNotFoundException(className, e);
