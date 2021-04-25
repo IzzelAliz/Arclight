@@ -280,6 +280,7 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
                     flag2 = true;
                 }
                 boolean flag3 = flag && this.fallDistance > 0.0f && !this.onGround && !this.isOnLadder() && !this.isInWater() && !this.isPotionActive(Effects.BLINDNESS) && !this.isPassenger() && entity instanceof LivingEntity;
+                flag3 = flag3 && !this.isSprinting();
                 net.minecraftforge.event.entity.player.CriticalHitEvent hitResult = net.minecraftforge.common.ForgeHooks.getCriticalHit((PlayerEntity) (Object) this, entity, flag3, flag3 ? 1.5F : 1.0F);
                 flag3 = hitResult != null;
                 if (flag3) {
