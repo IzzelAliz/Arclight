@@ -9,6 +9,7 @@
     "defaultRequire": 1
   },
   "mixins": [
+    "FMLWorldPersistenceHookMixin",
     "ForgeEventFactoryMixin",
     "ForgeHooksMixin",
     "NetworkHooksMixin",
