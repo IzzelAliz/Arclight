@@ -1684,7 +1684,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     private static final ResourceLocation CUSTOM_REGISTER = new ResourceLocation("register");
     private static final ResourceLocation CUSTOM_UNREGISTER = new ResourceLocation("unregister");
 
-    @Inject(method = "processCustomPayload", at = @At("RETURN"))
+    @Inject(method = "processCustomPayload", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/fml/network/NetworkHooks;onCustomPayload(Lnet/minecraftforge/fml/network/ICustomPacket;Lnet/minecraft/network/NetworkManager;)Z"))
     private void arclight$customPayload(CCustomPayloadPacket packet, CallbackInfo ci) {
         if (packet.channel.equals(CUSTOM_REGISTER)) {
             try {
