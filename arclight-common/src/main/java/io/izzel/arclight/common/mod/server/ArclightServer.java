@@ -16,6 +16,7 @@ import org.bukkit.craftbukkit.v.command.ColouredConsoleSender;
 import java.io.File;
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.concurrent.locks.LockSupport;
 
 public class ArclightServer {
 
@@ -65,6 +66,9 @@ public class ArclightServer {
 
     public static void executeOnMainThread(Runnable runnable) {
         ((MinecraftServerBridge) getMinecraftServer()).bridge$queuedProcess(runnable);
+        if (LockSupport.getBlocker(getMinecraftServer().getExecutionThread()) == "waiting for tasks") {
+            LockSupport.unpark(getMinecraftServer().getExecutionThread());
+        }
     }
 
     public static Executor getMainThreadExecutor() {
