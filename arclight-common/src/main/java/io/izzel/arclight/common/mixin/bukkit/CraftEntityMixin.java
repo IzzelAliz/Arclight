@@ -35,6 +35,7 @@ import org.bukkit.craftbukkit.v.entity.CraftGolem;
 import org.bukkit.craftbukkit.v.entity.CraftTameableAnimal;
 import org.bukkit.entity.EntityType;
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -48,6 +49,7 @@ import java.util.Objects;
 public abstract class CraftEntityMixin implements org.bukkit.entity.Entity {
 
     @Shadow protected Entity entity;
+    @Shadow @Final protected CraftServer server;
 
     private EntityType arclight$type;
 

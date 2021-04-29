@@ -27,6 +27,7 @@
     "CraftLegacyUtilMixin",
     "CraftMagicNumbersMixin",
     "CraftMetaItemMixin",
+    "CraftPlayerMixin",
     "CraftServerMixin",
     "CraftVillagerMixin",
     "CraftWorldMixin",
