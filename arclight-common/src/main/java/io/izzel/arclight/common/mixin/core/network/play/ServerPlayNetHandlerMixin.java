@@ -405,6 +405,9 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     @Overwrite
     public void processEditBook(CEditBookPacket packetplayinbedit) {
         PacketThreadUtil.checkThreadAndEnqueue(packetplayinbedit, (ServerPlayNetHandler) (Object) this, this.player.getServerWorld());
+        if(this.lastBookTick == 0){
+            this.lastBookTick = ArclightConstants.currentTick - 20;
+        }
         if (this.lastBookTick + 20 > ArclightConstants.currentTick) {
             this.disconnect("Book edited too quickly!");
             return;
