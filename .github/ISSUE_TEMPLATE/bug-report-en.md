@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-<!-- This is a comment -->
+<!-- This is an example comment and it won't be displayed -->
 
 ### I am running
 
@@ -22,6 +22,8 @@ assignees: ''
 
 * **Operating System** [NAME & VERSION]
 
+  <!-- Provide your plugins' versions if possible and this gives your report higher processing priority -->
+
 * **Plugins** <!-- Run /plugins -->
 
 * **Mods** <!-- Run /forge mods -->
@@ -31,13 +33,16 @@ assignees: ''
 
 <!-- Please include as much information as possible. For the description, assume we have no idea how 
         mods work, be as detailed as possible and include a step by step reproduction. It is recommended 
-        you try to reproduce the issue you are having yourself with as few mods as possible. -->
+        you try to reproduce the issue you are having yourself with as few mods as possible. 
+        The clearer the description, the higher the report processing priority -->
 
 ### Step to reproduce
 
 1. Install something
 2. ....
 3. ....
+
+<!-- (Optional) Server pack link: --> <!-- If you have too much mods/plugins included and you are not able to minimize the reproducible list, you can upload your server pack to GoogleDrive/Mega maybe. -->
 
 <!-- If this is a mod related issue, test it in Forge without Arclight -->
 **Reproducible in Forge** [Y/N]
