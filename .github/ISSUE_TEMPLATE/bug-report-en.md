@@ -7,9 +7,7 @@ assignees: ''
 
 ---
 
-<!-- This is a comment -->
-
-<!-- Be careful! Please complete the following information, lack of details may cause the report to be processed with lower priority or not processed at all! -->
+<!-- This is an example comment and it won't be displayed -->
 
 ### I am running
 
@@ -24,7 +22,7 @@ assignees: ''
 
 * **Operating System** [NAME & VERSION]
 
-  <!-- Please fill in the Mods/ Plugins version, which will give this report higher processing priority -->
+  <!-- Provide your plugins' versions if possible and this gives your report higher processing priority -->
 
 * **Plugins** <!-- Run /plugins -->
 
@@ -44,7 +42,7 @@ assignees: ''
 2. ....
 3. ....
 
-<!-- The zip download link: --> <!-- If you can, please package all the mods/plugins and upload them to GoogleDrive/Mega for developers to download and test, if this option is provided. The report will be processed within 24 hours -->
+<!-- (Optional) Server pack link: --> <!-- If you have too much mods/plugins included and you are not able to minimize the reproducible list, you can upload your server pack to GoogleDrive/Mega maybe. -->
 
 <!-- If this is a mod related issue, test it in Forge without Arclight -->
 **Reproducible in Forge** [Y/N]
