@@ -35,7 +35,11 @@ public class EntityEventDispatcher {
         }
         List<ItemStack> itemStackList = XmapList.create((List<ItemEntity>) drops, ItemStack.class,
             (ItemEntity entity) -> CraftItemStack.asCraftMirror(entity.getItem()),
-            itemStack -> new ItemEntity(livingEntity.world, livingEntity.getPosX(), livingEntity.getPosY(), livingEntity.getPosZ(), CraftItemStack.asNMSCopy(itemStack)));
+            itemStack -> {
+                ItemEntity itemEntity = new ItemEntity(livingEntity.world, livingEntity.getPosX(), livingEntity.getPosY(), livingEntity.getPosZ(), CraftItemStack.asNMSCopy(itemStack));
+                itemEntity.setDefaultPickupDelay();
+                return itemEntity;
+            });
         ArclightEventFactory.callEntityDeathEvent(livingEntity, itemStackList);
         if (drops.isEmpty()) {
             event.setCanceled(true);
