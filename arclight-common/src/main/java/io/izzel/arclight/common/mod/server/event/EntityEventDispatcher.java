@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mod.server.event;
 
-import com.google.common.collect.Lists;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import io.izzel.tools.collection.XmapList;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -33,8 +33,9 @@ public class EntityEventDispatcher {
         if (!(drops instanceof ArrayList)) {
             drops = new ArrayList<>(drops);
         }
-        List<ItemStack> itemStackList = Lists.transform((List<ItemEntity>) drops,
-            (ItemEntity entity) -> CraftItemStack.asCraftMirror(entity.getItem()));
+        List<ItemStack> itemStackList = XmapList.create((List<ItemEntity>) drops, ItemStack.class,
+            (ItemEntity entity) -> CraftItemStack.asCraftMirror(entity.getItem()),
+            itemStack -> new ItemEntity(livingEntity.world, livingEntity.getPosX(), livingEntity.getPosY(), livingEntity.getPosZ(), CraftItemStack.asNMSCopy(itemStack)));
         ArclightEventFactory.callEntityDeathEvent(livingEntity, itemStackList);
         if (drops.isEmpty()) {
             event.setCanceled(true);
