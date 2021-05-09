@@ -59,6 +59,12 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
         "LodestonePos",
         "LodestoneTracked"
     );
+
+    @ModifyVariable(method = "<init>(Lnet/minecraft/nbt/CompoundNBT;)V", at = @At(value = "INVOKE", target = "Lorg/bukkit/UnsafeValues;getDataVersion()I"))
+    private CompoundNBT arclight$provideTag(CompoundNBT tag) {
+        return tag == null ? new CompoundNBT() : tag;
+    }
+
     private CompoundNBT forgeCaps;
 
     @Override
@@ -116,7 +122,7 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
         return 61 * hash + (this.forgeCaps != null ? this.forgeCaps.hashCode() : 0);
     }
 
-    @Inject(method = "isEmpty", cancellable = true,at = @At("HEAD"))
+    @Inject(method = "isEmpty", cancellable = true, at = @At("HEAD"))
     private void arclight$forgeCapsEmpty(CallbackInfoReturnable<Boolean> cir) {
         if (this.forgeCaps != null && !this.forgeCaps.isEmpty()) {
             cir.setReturnValue(false);

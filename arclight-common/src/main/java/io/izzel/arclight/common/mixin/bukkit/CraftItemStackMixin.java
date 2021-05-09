@@ -2,15 +2,11 @@ package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.common.bridge.bukkit.CraftItemStackBridge;
 import io.izzel.arclight.common.bridge.bukkit.ItemMetaBridge;
-import io.izzel.arclight.common.bridge.bukkit.MaterialBridge;
 import io.izzel.arclight.common.bridge.item.ItemStackBridge;
-import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v.inventory.CraftItemFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaItem;
 import org.bukkit.craftbukkit.v.legacy.CraftLegacy;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,34 +22,20 @@ import java.util.Objects;
 public abstract class CraftItemStackMixin implements CraftItemStackBridge {
 
     // @formatter:off
-    @Shadow static Material getType(ItemStack item) { return null; }
-    @Shadow static boolean hasItemMeta(ItemStack item) { return false; }
     @Shadow ItemStack handle;
     @Shadow public abstract Material getType();
     @Shadow public abstract short getDurability();
     @Shadow public abstract boolean hasItemMeta();
     // @formatter:on
 
-    @Inject(method = "getItemMeta(Lnet/minecraft/item/ItemStack;)Lorg/bukkit/inventory/meta/ItemMeta;",
-        cancellable = true, at = @At("HEAD"))
+    @Inject(method = "getItemMeta(Lnet/minecraft/item/ItemStack;)Lorg/bukkit/inventory/meta/ItemMeta;", at = @At("RETURN"))
     private static void arclight$offerCaps(ItemStack item, CallbackInfoReturnable<ItemMeta> cir) {
-        Material type = getType(item);
-        if (((MaterialBridge) (Object) type).bridge$getType() != MaterialPropertySpec.MaterialType.VANILLA) {
-            if (hasItemMeta(item)) {
-                CompoundNBT tag = item.getTag();
-                CraftMetaItem metaItem;
-                if (tag != null) {
-                    metaItem = new CraftMetaItem(tag);
-                    ((ItemMetaBridge) metaItem).bridge$offerUnhandledTags(tag);
-                } else {
-                    metaItem = new CraftMetaItem(new CompoundNBT());
-                }
-                ((ItemMetaBridge) metaItem).bridge$setForgeCaps(((ItemStackBridge) (Object) item).bridge$getForgeCaps());
-                cir.setReturnValue(metaItem);
-            } else {
-                cir.setReturnValue(CraftItemFactory.instance().getItemMeta(getType(item)));
-            }
+        ItemMeta meta = cir.getReturnValue();
+        CompoundNBT tag = item.getTag();
+        if (tag != null) {
+            ((ItemMetaBridge) meta).bridge$offerUnhandledTags(tag);
         }
+        ((ItemMetaBridge) meta).bridge$setForgeCaps(((ItemStackBridge) (Object) item).bridge$getForgeCaps());
     }
 
     // check when update
