@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.bridge.inventory;
 
 import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.common.mod.util.WrappedContents;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
@@ -17,7 +18,9 @@ public interface IInventoryBridge {
 
     int MAX_STACK = 64;
 
-    List<ItemStack> getContents();
+    default List<ItemStack> getContents() {
+        return new WrappedContents((IInventory) this);
+    }
 
     void onOpen(CraftHumanEntity who);
 
@@ -33,9 +36,12 @@ public interface IInventoryBridge {
 
     Location getLocation();
 
-    IRecipe<?> getCurrentRecipe();
+    default IRecipe<?> getCurrentRecipe() {
+        return null;
+    }
 
-    void setCurrentRecipe(IRecipe<?> recipe);
+    default void setCurrentRecipe(IRecipe<?> recipe) {
+    }
 
     default Inventory getOwnerInventory() {
         InventoryHolder owner = this.getOwner();
