@@ -15,13 +15,15 @@ import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.InsnNode;
-import org.objectweb.asm.tree.IntInsnNode;
+import org.objectweb.asm.tree.JumpInsnNode;
+import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
 import java.io.InputStream;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -29,8 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 
 public class InventoryImplementer implements Implementer {
 
@@ -38,17 +38,17 @@ public class InventoryImplementer implements Implementer {
     private static final String INV_TYPE = "net/minecraft/inventory/IInventory";
     private static final String BRIDGE_TYPE = "io/izzel/arclight/common/bridge/inventory/IInventoryBridge";
 
-    private final Map<String, Boolean> map = new ConcurrentHashMap<>();
+    private final Map<String, Integer> map = new ConcurrentHashMap<>();
 
     public InventoryImplementer() {
-        map.put(INV_TYPE, true);
-        map.put("java/lang/Object", false);
+        map.put(INV_TYPE, 1);
+        map.put("java/lang/Object", 0);
     }
 
     @Override
     public boolean processClass(ClassNode node, ILaunchPluginService.ITransformerLoader transformerLoader) {
         try {
-            if (node.interfaces.contains(BRIDGE_TYPE)) {
+            if (Modifier.isInterface(node.access) || node.interfaces.contains(BRIDGE_TYPE)) {
                 return false;
             }
             if (isInventoryClass(node, transformerLoader)) {
@@ -65,17 +65,26 @@ public class InventoryImplementer implements Implementer {
     }
 
     private boolean isInventoryClass(ClassNode node, ILaunchPluginService.ITransformerLoader transformerLoader) throws Throwable {
+        Integer ret = map.get(node.name);
+        if (ret != null) return ret > 1;
+        Integer i = map.get(node.superName);
+        if (i != null) {
+            if (i > 1) {
+                map.put(node.name, i + 1);
+                return true;
+            }
+        }
         if (node.interfaces.contains(INV_TYPE)) {
-            map.put(node.name, true);
+            map.put(node.name, 2);
             return true;
         } else {
-            Boolean b = map.get(node.superName);
-            if (b != null) {
-                map.put(node.name, b);
-                return b;
+            boolean b = isInventoryClass(findClass(node.superName, transformerLoader), transformerLoader);
+            if (b) {
+                map.put(node.name, map.get(node.superName) + 1);
             } else {
-                return isInventoryClass(findClass(node.superName, transformerLoader), transformerLoader);
+                map.put(node.name, 0);
             }
+            return b;
         }
     }
 
@@ -114,29 +123,12 @@ public class InventoryImplementer implements Implementer {
             node.interfaces.add(BRIDGE_TYPE);
             return false;
         } else {
-            List<FieldNode> list = findPossibleList(node);
-            if (list.size() != 1) {
-                if (list.size() > 1) {
-                    ArclightImplementer.LOGGER.warn(MARKER, "Found multiple possible fields in class {}: {}", node.name, list.stream().map(it -> it.name + it.desc).collect(Collectors.joining(", ")));
-                } else return false;
-            }
             ArclightImplementer.LOGGER.debug(MARKER, "Implementing inventory for class {}", node.name);
-            FieldNode stackList = list.get(0);
-            FieldNode transaction = new FieldNode(Opcodes.ACC_PRIVATE, "transaction", Type.getType(List.class).getDescriptor(), null, null);
-            FieldNode maxStack = new FieldNode(Opcodes.ACC_PRIVATE, "maxStack", "I", null, 64);
+            FieldNode transaction = new FieldNode(Opcodes.ACC_PRIVATE, "$transaction", Type.getType(List.class).getDescriptor(), null, null);
+            FieldNode maxStack = new FieldNode(Opcodes.ACC_PRIVATE, "$maxStack", "I", null, null);
             node.fields.add(transaction);
             node.fields.add(maxStack);
             node.interfaces.add(BRIDGE_TYPE);
-            InsnList initInsn = new InsnList();
-            {
-                MethodNode methodNode = new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC, "getContents", Type.getMethodDescriptor(Type.getType(List.class)), null, null);
-                InsnList insnList = new InsnList();
-                insnList.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                insnList.add(new FieldInsnNode(Opcodes.GETFIELD, node.name, stackList.name, stackList.desc));
-                insnList.add(new InsnNode(Opcodes.ARETURN));
-                methodNode.instructions = insnList;
-                node.methods.add(methodNode);
-            }
             {
                 MethodNode methodNode = new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC, "onOpen", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getObjectType("org/bukkit/craftbukkit/" + ArclightVersion.current().packageName() + "/entity/CraftHumanEntity")), null, null);
                 InsnList insnList = new InsnList();
@@ -170,25 +162,33 @@ public class InventoryImplementer implements Implementer {
                 methodNode.instructions = insnList;
                 node.methods.add(methodNode);
             }
-            {
-                MethodNode methodNode = new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC, "func_70297_j_", "()I", null, null);
-                InsnList insnList = new InsnList();
-                insnList.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                insnList.add(new FieldInsnNode(Opcodes.GETFIELD, node.name, maxStack.name, maxStack.desc));
-                insnList.add(new InsnNode(Opcodes.IRETURN));
-                methodNode.instructions = insnList;
-                node.methods.add(methodNode);
-            }
-            if (stackLimitMethod == null) {
-                initInsn.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                initInsn.add(new IntInsnNode(Opcodes.BIPUSH, 64));
-                initInsn.add(new FieldInsnNode(Opcodes.PUTFIELD, node.name, maxStack.name, maxStack.desc));
+            InsnList list = new InsnList();
+            LabelNode labelNode = new LabelNode();
+            list.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            list.add(new FieldInsnNode(Opcodes.GETFIELD, node.name, maxStack.name, maxStack.desc));
+            list.add(new InsnNode(Opcodes.ICONST_M1));
+            list.add(new JumpInsnNode(Opcodes.IF_ICMPEQ, labelNode));
+            list.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            list.add(new FieldInsnNode(Opcodes.GETFIELD, node.name, maxStack.name, maxStack.desc));
+            list.add(new InsnNode(Opcodes.IRETURN));
+            list.add(labelNode);
+            if (stackLimitMethod != null && !Modifier.isAbstract(stackLimitMethod.access)) {
+                stackLimitMethod.instructions.insert(list);
             } else {
-                stackLimitMethod.name += "$" + Integer.toHexString(ThreadLocalRandom.current().nextInt());
-                initInsn.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                initInsn.add(new InsnNode(Opcodes.DUP));
-                initInsn.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, node.name, stackLimitMethod.name, stackLimitMethod.desc, false));
-                initInsn.add(new FieldInsnNode(Opcodes.PUTFIELD, node.name, maxStack.name, maxStack.desc));
+                MethodNode methodNode = stackLimitMethod == null
+                    ? new MethodNode(0, "func_70297_j_", "()I", null, null)
+                    : stackLimitMethod;
+                methodNode.access = Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC;
+                int level = map.get(node.name);
+                list.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                if (level > 2) {
+                    list.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, node.superName, methodNode.name, methodNode.desc, false));
+                } else {
+                    list.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, INV_TYPE, methodNode.name, methodNode.desc, true));
+                }
+                list.add(new InsnNode(Opcodes.IRETURN));
+                methodNode.instructions.insert(list);
+                node.methods.add(methodNode);
             }
             {
                 MethodNode methodNode = new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC, "setMaxStackSize", "(I)V", null, null);
@@ -207,14 +207,15 @@ public class InventoryImplementer implements Implementer {
                         while (!(initNode.getOpcode() == Opcodes.INVOKESPECIAL && ((MethodInsnNode) initNode).name.equals("<init>"))) {
                             initNode = initNode.getNext();
                         }
-                        MethodNode mn = new MethodNode();
-                        initInsn.accept(mn);
-                        InsnList insnList = mn.instructions;
+                        InsnList insnList = new InsnList();
                         insnList.add(new VarInsnNode(Opcodes.ALOAD, 0));
                         insnList.add(new TypeInsnNode(Opcodes.NEW, Type.getInternalName(ArrayList.class)));
                         insnList.add(new InsnNode(Opcodes.DUP));
                         insnList.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, Type.getInternalName(ArrayList.class), "<init>", "()V", false));
                         insnList.add(new FieldInsnNode(Opcodes.PUTFIELD, node.name, transaction.name, transaction.desc));
+                        insnList.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                        insnList.add(new InsnNode(Opcodes.ICONST_M1));
+                        insnList.add(new FieldInsnNode(Opcodes.PUTFIELD, node.name, maxStack.name, maxStack.desc));
                         methodNode.instructions.insert(initNode, insnList);
                     }
                 }
