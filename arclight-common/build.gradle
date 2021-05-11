@@ -60,7 +60,7 @@ dependencies {
     implementation 'net.md-5:bungeecord-chat:1.16-R0.4'
     implementation 'mysql:mysql-connector-java:5.1.49'
     implementation 'org.yaml:snakeyaml:1.27'
-    implementation 'io.izzel:tools:1.0.+'
+    implementation 'io.izzel:tools:1.1.+'
     implementation project(':arclight-api')
     implementation project(':i18n-config')
 }

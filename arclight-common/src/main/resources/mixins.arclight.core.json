@@ -108,6 +108,7 @@
     "command.CommandsMixin",
     "command.CommandSourceMixin",
     "command.ICommandSourceMixin",
+    "command.arguments.ArgumentTypesMixin",
     "command.arguments.BlockStateParserMixin",
     "command.arguments.EntityArgumentMixin",
     "command.arguments.EntitySelectorMixin",

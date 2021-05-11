@@ -5,6 +5,7 @@
   "refmap": "mixins.arclight.impl.refmap.1_16.json",
   "mixins": [
     "ClassInheritanceMultiMapMixin",
+    "EntityDataManagerMixin_Optimize",
     "VoxelShapesMixin",
     "activationrange.ActivationRangeMixin",
     "activationrange.EntityMixin_ActivationRange",

@@ -100,8 +100,9 @@ public abstract class VineBlockMixin extends BlockMixin {
                 if (pos.getY() > 0) {
                     BlockPos blockpos1 = pos.down();
                     BlockState blockstate = worldIn.getBlockState(blockpos1);
-                    if (blockstate.isAir(worldIn, blockpos) || blockstate.isIn((Block) (Object) this)) {
-                        BlockState blockstate1 = blockstate.isAir() ? this.getDefaultState() : blockstate;
+                    boolean isAir = blockstate.isAir(worldIn, blockpos1);
+                    if (isAir || blockstate.isIn((Block) (Object) this)) {
+                        BlockState blockstate1 = isAir ? this.getDefaultState() : blockstate;
                         BlockState blockstate2 = this.func_196544_a(state, blockstate1, random);
                         if (blockstate1 != blockstate2 && this.isFacingCardinal(blockstate2)) {
                             CraftEventFactory.handleBlockSpreadEvent(worldIn, pos, blockpos1, blockstate2, 2);
