@@ -23,15 +23,19 @@ import java.util.jar.Manifest;
 
 public abstract class ArclightMain {
 
+    private static final int MIN_DEPRECATED_VERSION = 60;
+    private static final int MIN_DEPRECATED_JAVA_VERSION = 16;
+
     public void run(String[] args) throws Throwable {
         System.setProperty("java.util.logging.manager", ArclightLazyLogManager.class.getCanonicalName());
         System.setProperty("log4j.jul.LoggerAdapter", "io.izzel.arclight.common.mod.util.log.ArclightLoggerAdapter");
         ArclightLocale.info("i18n.using-language", ArclightConfig.spec().getLocale().getCurrent(), ArclightConfig.spec().getLocale().getFallback());
         this.afterSetup();
-        try { // Java 9 & Java 兼容性
+        try {
             int javaVersion = (int) Float.parseFloat(System.getProperty("java.class.version"));
-            if (javaVersion == 53) {
-                throw new Exception("Only Java 8 and Java 10+ is supported.");
+            if (javaVersion < MIN_DEPRECATED_VERSION) {
+                ArclightLocale.error("java.deprecated", System.getProperty("java.version"), MIN_DEPRECATED_JAVA_VERSION);
+                Thread.sleep(3000);
             }
             Unsafe.ensureClassInitialized(EnumHelper.class);
         } catch (Throwable t) {

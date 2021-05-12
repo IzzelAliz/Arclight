@@ -30,6 +30,15 @@ arclight {
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
 
+sourceSets {
+    applaunch {
+        java {
+            compileClasspath += main.output
+            runtimeClasspath += main.output
+        }
+    }
+}
+
 configurations {
     embed
     implementation.extendsFrom(embed)
@@ -97,7 +106,7 @@ processResources {
 
 jar {
     manifest.attributes 'MixinConnector': 'io.izzel.arclight.impl.ArclightConnector_1_16'
-    manifest.attributes 'Main-Class': 'io.izzel.arclight.server.Main_1_16'
+    manifest.attributes 'Main-Class': 'io.izzel.arclight.server.Launcher'
     manifest.attributes 'Implementation-Title': 'Arclight'
     manifest.attributes 'Implementation-Version': "arclight-$minecraftVersion-${project.version}-${getGitHash()}"
     manifest.attributes 'Implementation-Vendor': 'Arclight Team'
@@ -112,6 +121,7 @@ jar {
         exclude "LICENSE.txt"
     }
     from(project(':arclight-common').tasks.jar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) })
+    from sourceSets.applaunch.output.classesDirs
 }
 
 remapSpigotJar {
@@ -126,6 +136,10 @@ mixin {
 compileJava {
     options.compilerArgs << '-XDignore.symbol.file' << '-XDenableSunApiLintControl'
     options.encoding = 'UTF-8'
+}
+
+compileApplaunchJava {
+    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_6
 }
 
 task srgJar(type: Jar) {
