@@ -2,7 +2,7 @@
 name: Bug Report EN
 about: English template for bug reporting
 title: ''
-labels: ''
+labels: 'bug?'
 assignees: ''
 
 ---
