@@ -48,7 +48,6 @@ public abstract class JavaPluginLoaderMixin implements JavaPluginLoaderBridge {
 
     // @formatter:off
     @Shadow @Final Server server;
-    @Invoker("getClassByName") public abstract Class<?> bridge$getClassByName(final String name);
     @Invoker("setClass")  public abstract void bridge$setClass(final String name, final Class<?> clazz);
     @Accessor("loaders") public abstract List<URLClassLoader> bridge$getLoaders();
     // @formatter:on

@@ -7,6 +7,7 @@ import net.minecraft.inventory.container.AbstractRepairContainer;
 import net.minecraft.util.IWorldPosCallable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,7 +18,7 @@ public abstract class AbstractRepairContainerMixin extends ContainerMixin {
 
     // @formatter:off
     @Shadow @Final protected IWorldPosCallable field_234644_e_;
-    @Shadow @Final protected IInventory field_234643_d_;
+    @Shadow @Final @Mutable protected IInventory field_234643_d_;
     @Shadow @Final protected CraftResultInventory field_234642_c_;
     @Shadow @Final protected PlayerEntity field_234645_f_;
     // @formatter:on

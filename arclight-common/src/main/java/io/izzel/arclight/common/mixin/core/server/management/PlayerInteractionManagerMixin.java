@@ -14,6 +14,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
+import net.minecraft.item.TallBlockItem;
 import net.minecraft.network.play.client.CPlayerDiggingPacket;
 import net.minecraft.network.play.server.SChangeBlockPacket;
 import net.minecraft.network.play.server.SPlayerDiggingPacket;
@@ -253,6 +254,11 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
                 playerIn.connection.sendPacket(new SChangeBlockPacket(this.world, bottom ? blockpos.up() : blockpos.down()));
             } else if (blockstate.getBlock() instanceof CakeBlock) {
                 ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().sendHealthUpdate();
+            } else if (stackIn.getItem() instanceof TallBlockItem) {
+                // send a correcting update to the client, as it already placed the upper half of the bisected item
+                playerIn.connection.sendPacket(new SChangeBlockPacket(world, blockpos.offset(blockRaytraceResultIn.getFace()).up()));
+                // send a correcting update to the client for the block above as well, this because of replaceable blocks (such as grass, sea grass etc)
+                playerIn.connection.sendPacket(new SChangeBlockPacket(world, blockpos.up()));
             }
             ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().updateInventory();
             resultType = ((bukkitEvent.useItemInHand() != Event.Result.ALLOW) ? ActionResultType.SUCCESS : ActionResultType.PASS);

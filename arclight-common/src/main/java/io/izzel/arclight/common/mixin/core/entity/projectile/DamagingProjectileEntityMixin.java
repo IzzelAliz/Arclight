@@ -52,7 +52,7 @@ public abstract class DamagingProjectileEntityMixin extends ProjectileEntityMixi
 
     @Inject(method = "attackEntityFrom", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getLookVec()Lnet/minecraft/util/math/vector/Vector3d;"))
     private void arclight$nonLivingAttack(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        if (CraftEventFactory.handleNonLivingEntityDamageEvent((DamagingProjectileEntity) (Object) this, source, amount)) {
+        if (CraftEventFactory.handleNonLivingEntityDamageEvent((DamagingProjectileEntity) (Object) this, source, amount, false)) {
             cir.setReturnValue(false);
         }
     }

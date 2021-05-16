@@ -68,7 +68,16 @@ def embedLibs = [/*'org.spongepowered:mixin:0.8.1',*/ 'org.ow2.asm:asm-util:9.0'
                  'org.apache.logging.log4j:log4j-jul:2.11.2', 'net.md-5:SpecialSource:1.9.0',
                  'org.jline:jline-terminal-jansi:3.12.1', 'org.fusesource.jansi:jansi:1.18',
                  'org.jline:jline-terminal:3.12.1', 'org.jline:jline-reader:3.12.1',
-                 'jline:jline:2.12.1']
+                 'jline:jline:2.12.1', 'org.apache.maven:maven-resolver-provider:3.8.1',
+                 'org.apache.maven.resolver:maven-resolver-connector-basic:1.6.2', 'org.apache.maven.resolver:maven-resolver-transport-http:1.6.2',
+                 'org.apache.maven:maven-model:3.8.1', 'org.codehaus.plexus:plexus-utils:3.2.1',
+                 'org.apache.maven:maven-model-builder:3.8.1', 'org.codehaus.plexus:plexus-interpolation:1.25',
+                 'org.eclipse.sisu:org.eclipse.sisu.inject:0.3.4', 'org.apache.maven:maven-builder-support:3.8.1',
+                 'org.apache.maven:maven-repository-metadata:3.8.1', 'org.apache.maven.resolver:maven-resolver-api:1.6.2',
+                 'org.apache.maven.resolver:maven-resolver-spi:1.6.2', 'org.apache.maven.resolver:maven-resolver-util:1.6.2',
+                 'org.apache.maven.resolver:maven-resolver-impl:1.6.2', 'org.apache.httpcomponents:httpclient:4.5.12',
+                 'org.apache.httpcomponents:httpcore:4.4.13', 'commons-codec:commons-codec:1.11',
+                 'org.slf4j:jcl-over-slf4j:1.7.30']
 
 dependencies {
     minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
@@ -80,6 +89,9 @@ dependencies {
     embed project(':forge-installer')
     for (def lib : embedLibs) {
         arclight lib
+    }
+    embed('org.apache.logging.log4j:log4j-slf4j-impl:2.8.1') {
+        exclude module: 'log4j-api'
     }
     embed 'net.md-5:bungeecord-chat:1.16-R0.4@jar'
     embed "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"

@@ -4,9 +4,11 @@ import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.mixin.core.entity.EntityMixin;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.ProjectileEntity;
+import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.projectiles.ProjectileSource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -34,8 +36,21 @@ public abstract class ProjectileEntityMixin extends EntityMixin {
         }
     }
 
-    @Inject(method = "onImpact", at = @At("HEAD"))
+    private boolean hitCancelled = false;
+
+    @Inject(method = "onImpact", cancellable = true, at = @At("HEAD"))
     private void arclight$onHit(RayTraceResult result, CallbackInfo ci) {
-        CraftEventFactory.callProjectileHitEvent((ProjectileEntity) (Object) this, result);
+        ProjectileHitEvent event = CraftEventFactory.callProjectileHitEvent((ProjectileEntity) (Object) this, result);
+        hitCancelled = event != null && event.isCancelled();
+        if (!(result.getType() == RayTraceResult.Type.BLOCK || !hitCancelled)) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "func_230299_a_", cancellable = true, at = @At("HEAD"))
+    private void arclight$cancelBlockHit(BlockRayTraceResult result, CallbackInfo ci) {
+        if (hitCancelled) {
+            ci.cancel();
+        }
     }
 }

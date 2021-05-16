@@ -108,6 +108,7 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCreativeEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.SmithItemEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerChatEvent;
@@ -128,6 +129,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.Recipe;
+import org.bukkit.inventory.SmithingInventory;
 import org.bukkit.util.Vector;
 import org.spigotmc.SpigotConfig;
 import org.spongepowered.asm.mixin.Final;
@@ -1459,6 +1461,16 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                         }
                     }
                 }
+                if (packet.getSlotId() == 2 && top instanceof SmithingInventory) {
+                    org.bukkit.inventory.ItemStack result = ((SmithingInventory) top).getResult();
+                    if (result != null) {
+                        if (click == ClickType.NUMBER_KEY) {
+                            event = new SmithItemEvent(inventory, type, packet.getSlotId(), click, action, packet.getUsedButton());
+                        } else {
+                            event = new SmithItemEvent(inventory, type, packet.getSlotId(), click, action);
+                        }
+                    }
+                }
                 event.setCancelled(cancelled);
                 Container oldContainer = this.player.openContainer;
                 this.server.getPluginManager().callEvent(event);
@@ -1508,7 +1520,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                         return;
                     }
                 }
-                if (event instanceof CraftItemEvent) {
+                if (event instanceof CraftItemEvent || event instanceof SmithItemEvent) {
                     this.player.sendContainerToPlayer(this.player.openContainer);
                 }
             }

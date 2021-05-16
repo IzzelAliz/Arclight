@@ -5,6 +5,7 @@ import io.izzel.arclight.mixin.Eject;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.monster.ZombieVillagerEntity;
+import net.minecraft.world.server.ServerWorld;
 import org.bukkit.entity.ZombieVillager;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
@@ -40,5 +41,15 @@ public abstract class ZombieVillagerEntityMixin extends ZombieEntityMixin {
             ((LivingEntityBridge) t).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.CONVERSION);
         }
         return t;
+    }
+
+    @Inject(method = "cureZombie", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/monster/ZombieVillagerEntity;entityDropItem(Lnet/minecraft/item/ItemStack;)Lnet/minecraft/entity/item/ItemEntity;"))
+    private void arclight$dropPre(ServerWorld world, CallbackInfo ci) {
+        this.forceDrops = true;
+    }
+
+    @Inject(method = "cureZombie", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/entity/monster/ZombieVillagerEntity;entityDropItem(Lnet/minecraft/item/ItemStack;)Lnet/minecraft/entity/item/ItemEntity;"))
+    private void arclight$dropPost(ServerWorld world, CallbackInfo ci) {
+        this.forceDrops = false;
     }
 }

@@ -116,6 +116,7 @@
     "command.impl.EffectCommandMixin",
     "command.impl.GameRuleCommandMixin",
     "command.impl.ReloadCommandMixin",
+    "command.impl.SummonCommandMixin",
     "command.impl.TeleportCommandMixin",
     "command.impl.TimeCommandMixin",
     "enchantment.DamageEnchantmentMixin",

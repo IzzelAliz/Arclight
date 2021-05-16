@@ -55,72 +55,63 @@ public class PluginClassLoaderMixin extends URLClassLoader implements RemappingC
      * @reason
      */
     @Overwrite
-    Class<?> findClass(String name, boolean checkGlobal) throws ClassNotFoundException {
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
         if (name.startsWith("org.bukkit.") || name.startsWith("net.minecraft.")) {
             throw new ClassNotFoundException(name);
         }
         Class<?> result = classes.get(name);
 
         if (result == null) {
-            if (checkGlobal) {
-                result = ((JavaPluginLoaderBridge) (Object) loader).bridge$getClassByName(name);
-            }
+            String path = name.replace('.', '/').concat(".class");
+            URL url = this.findResource(path);
 
-            if (result == null) {
-                String path = name.replace('.', '/').concat(".class");
-                URL url = this.findResource(path);
+            if (url != null) {
 
-                if (url != null) {
+                URLConnection connection;
+                Callable<byte[]> byteSource;
+                try {
+                    connection = url.openConnection();
+                    connection.connect();
+                    byteSource = () -> {
+                        try (InputStream is = connection.getInputStream()) {
+                            byte[] classBytes = ByteStreams.toByteArray(is);
+                            classBytes = SwitchTableFixer.INSTANCE.processClass(classBytes);
+                            classBytes = Bukkit.getUnsafe().processClass(description, path, classBytes);
+                            return classBytes;
+                        }
+                    };
+                } catch (IOException e) {
+                    throw new ClassNotFoundException(name, e);
+                }
 
-                    URLConnection connection;
-                    Callable<byte[]> byteSource;
-                    try {
-                        connection = url.openConnection();
-                        connection.connect();
-                        byteSource = () -> {
-                            try (InputStream is = connection.getInputStream()) {
-                                byte[] classBytes = ByteStreams.toByteArray(is);
-                                classBytes = SwitchTableFixer.INSTANCE.processClass(classBytes);
-                                classBytes = Bukkit.getUnsafe().processClass(description, path, classBytes);
-                                return classBytes;
+                Product2<byte[], CodeSource> classBytes = this.getRemapper().remapClass(name, byteSource, connection);
+
+                int dot = name.lastIndexOf('.');
+                if (dot != -1) {
+                    String pkgName = name.substring(0, dot);
+                    if (getPackage(pkgName) == null) {
+                        try {
+                            if (manifest != null) {
+                                definePackage(pkgName, manifest, this.url);
+                            } else {
+                                definePackage(pkgName, null, null, null, null, null, null, null);
                             }
-                        };
-                    } catch (IOException e) {
-                        throw new ClassNotFoundException(name, e);
-                    }
-
-                    Product2<byte[], CodeSource> classBytes = this.getRemapper().remapClass(name, byteSource, connection);
-
-                    int dot = name.lastIndexOf('.');
-                    if (dot != -1) {
-                        String pkgName = name.substring(0, dot);
-                        if (getPackage(pkgName) == null) {
-                            try {
-                                if (manifest != null) {
-                                    definePackage(pkgName, manifest, this.url);
-                                } else {
-                                    definePackage(pkgName, null, null, null, null, null, null, null);
-                                }
-                            } catch (IllegalArgumentException ex) {
-                                if (getPackage(pkgName) == null) {
-                                    throw new IllegalStateException("Cannot find package " + pkgName);
-                                }
+                        } catch (IllegalArgumentException ex) {
+                            if (getPackage(pkgName) == null) {
+                                throw new IllegalStateException("Cannot find package " + pkgName);
                             }
                         }
                     }
-
-                    result = defineClass(name, classBytes._1, 0, classBytes._1.length, classBytes._2);
                 }
 
-                if (result == null) {
-                    result = super.findClass(name);
-                }
-
-                if (result != null) {
-                    ((JavaPluginLoaderBridge) (Object) loader).bridge$setClass(name, result);
-                }
+                result = defineClass(name, classBytes._1, 0, classBytes._1.length, classBytes._2);
             }
 
+            if (result == null) {
+                result = super.findClass(name);
+            }
+
+            ((JavaPluginLoaderBridge) (Object) loader).bridge$setClass(name, result);
             classes.put(name, result);
         }
 

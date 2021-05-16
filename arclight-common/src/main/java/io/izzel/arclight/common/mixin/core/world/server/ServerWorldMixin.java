@@ -213,8 +213,7 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
             cause = arclight$cause;
             arclight$cause = null;
         }
-        LightningStrikeEvent lightning = new LightningStrikeEvent(this.bridge$getWorld(), (LightningStrike) ((EntityBridge) entity).bridge$getBukkitEntity(), cause);
-        Bukkit.getPluginManager().callEvent(lightning);
+        LightningStrikeEvent lightning = CraftEventFactory.callLightningStrikeEvent((LightningStrike) ((EntityBridge) entity).bridge$getBukkitEntity(), cause);
         if (lightning.isCancelled()) {
             return false;
         }
@@ -425,7 +424,7 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         if (type.hasTileEntity(state)) {
             TileEntity replacement = type.createTileEntity(state, (IBlockReader) this);
             if (replacement == null) return found;
-            replacement.world = ((World) (Object) this);
+            replacement.setWorldAndPos(((World) (Object) this), pos);
             this.setTileEntity(pos, replacement);
             return replacement;
         } else {
