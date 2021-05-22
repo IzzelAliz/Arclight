@@ -36,7 +36,7 @@ jobs:
       run: chmod +x gradlew
     - name: Build
       run: |
-        ./gradlew cleanBuild remapSpigotJar idea --no-daemon -i --stacktrace
+        ./gradlew cleanBuild remapSpigotJar idea --no-daemon -i --stacktrace --refresh-dependencies
         ./gradlew build collect --no-daemon -i --stacktrace
     - name: Upload Artifact
       uses: actions/upload-artifact@v2

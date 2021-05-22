@@ -9,7 +9,7 @@ cache:
   - ./.gradle
 build_script:
   - cmd: |
-      gradlew cleanBuild idea remapSpigotJar --no-daemon -i --stacktrace
+      gradlew cleanBuild idea remapSpigotJar --no-daemon -i --stacktrace --refresh-dependencies
       gradlew build --no-daemon -i --stacktrace
       rem Due to a MixinGradle bug, we need to build it twice
       gradlew build collect --no-daemon -i --stacktrace
