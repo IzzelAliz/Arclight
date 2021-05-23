@@ -38,7 +38,7 @@ public abstract class CommandsMixin {
         this.dispatcher.setConsumer((context, b, i) -> context.getSource().onCommandComplete(context, b, i));
     }
 
-    public int a(CommandSource source, String command, String label) {
+    public int a(CommandSource source, String command, String label, boolean strip) {
         return this.handleCommand(source, command);
     }
 
