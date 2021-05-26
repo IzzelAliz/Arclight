@@ -5,7 +5,7 @@ allprojects {
     ext {
         agpVersion = '1.16'
         minecraftVersion = '1.16.5'
-        forgeVersion = '36.1.4'
+        forgeVersion = '36.1.24'
     }
 
     task cleanBuild {
