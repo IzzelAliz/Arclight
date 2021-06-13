@@ -97,8 +97,8 @@ dependencies {
     embed 'net.md-5:bungeecord-chat:1.16-R0.4@jar'
     embed "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
     embed 'com.github.ArclightTeam:mixin-tools:1.0.0@jar'
-    embed 'io.izzel:tools:1.1.+'
-    embed 'io.izzel.arclight:arclight-api:1.0.+'
+    embed "io.izzel:tools:$toolsVersion"
+    embed "io.izzel.arclight:arclight-api:$apiVersion"
     annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
     annotationProcessor 'com.github.ArclightTeam:mixin-tools:1.0.0'
 }

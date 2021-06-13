@@ -15,7 +15,7 @@ public class ArclightConnector implements IMixinConnector {
 
     public static final Logger LOGGER = ArclightI18nLogger.getLogger("Arclight");
     private static final List<String> FILTER_PACKAGE = Arrays.asList("com.google.common", "com.google.gson", "ninja.leaping.configurate",
-        "io.izzel.arclight.api", "io.izzel.arclight.i18n");
+        "io.izzel.arclight.i18n");
 
     @Override
     public void connect() {
@@ -26,6 +26,7 @@ public class ArclightConnector implements IMixinConnector {
         Mixins.addConfiguration("mixins.arclight.core.json");
         Mixins.addConfiguration("mixins.arclight.bukkit.json");
         Mixins.addConfiguration("mixins.arclight.forge.json");
+        Mixins.addConfiguration("mixins.arclight.api.json");
         LOGGER.info("mixin-load.core");
     }
 }

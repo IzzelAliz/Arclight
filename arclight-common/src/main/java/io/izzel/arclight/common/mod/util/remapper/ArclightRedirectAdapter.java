@@ -436,7 +436,7 @@ public class ArclightRedirectAdapter implements PluginTransformer {
         }
 
         @Override
-        public Object[] apply(ClassLoaderRemapper remapper, Method method, Object src, Object[] param) {
+        public Object[] apply4(ClassLoaderRemapper remapper, Method method, Object src, Object[] param) {
             try {
                 Method handleMethod = remapper.getGeneratedHandlerClass().getMethod(handlerName, handlerArgs);
                 if (method.getParameterCount() > 0) {
@@ -467,7 +467,7 @@ public class ArclightRedirectAdapter implements PluginTransformer {
         }
 
         @Override
-        public Object[] apply(ClassLoaderRemapper remapper, Method method, Object src, Object[] param) {
+        public Object[] apply4(ClassLoaderRemapper remapper, Method method, Object src, Object[] param) {
             try {
                 Method redirectMethod = remapper.getGeneratedHandlerClass().getMethod(handlerName, handlerArgs);
                 return new Object[]{redirectMethod, null, Modifier.isStatic(method.getModifiers()) ? param : ArrayUtil.prepend(param, src)};
@@ -489,7 +489,7 @@ public class ArclightRedirectAdapter implements PluginTransformer {
         }
 
         @Override
-        public Object[] apply(ClassLoaderRemapper remapper, Method method, Object src, Object[] param) {
+        public Object[] apply4(ClassLoaderRemapper remapper, Method method, Object src, Object[] param) {
             boolean bridgeStatic = Modifier.isStatic(targetMethod.getModifiers());
             if (bridgeStatic) {
                 Object[] ret = bridge.apply(remapper, this.targetMethod, null, param);

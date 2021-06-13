@@ -6,6 +6,8 @@ allprojects {
         agpVersion = '1.17'
         minecraftVersion = '1.16.5'
         forgeVersion = '36.1.24'
+        apiVersion = '1.0.+'
+        toolsVersion = '1.3.+'
     }
 
     task cleanBuild {
