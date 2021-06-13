@@ -62,7 +62,7 @@ dependencies {
     implementation 'mysql:mysql-connector-java:5.1.49'
     implementation 'org.yaml:snakeyaml:1.27'
     implementation 'io.izzel:tools:1.1.+'
-    implementation project(':arclight-api')
+    implementation 'io.izzel.arclight:arclight-api:1.0.+'
     implementation project(':i18n-config')
 }
 

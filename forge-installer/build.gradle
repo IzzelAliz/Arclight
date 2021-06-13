@@ -8,10 +8,11 @@ repositories {
         name = 'sponge'
         url = 'https://repo.spongepowered.org/maven'
     }
+    maven { url = 'https://maven.izzel.io/releases' }
 }
 
 dependencies {
     compile 'com.google.code.gson:gson:2.8.0'
-    compile project(':arclight-api')
+    compile 'io.izzel.arclight:arclight-api:1.0.+'
     compile project(':i18n-config')
 }

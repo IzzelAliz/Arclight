@@ -98,6 +98,7 @@ dependencies {
     embed "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
     embed 'com.github.ArclightTeam:mixin-tools:1.0.0@jar'
     embed 'io.izzel:tools:1.1.+'
+    embed 'io.izzel.arclight:arclight-api:1.0.+'
     annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
     annotationProcessor 'com.github.ArclightTeam:mixin-tools:1.0.0'
 }
@@ -186,7 +187,7 @@ task spigotJar(type: Jar) {
 
 task sourceJar(type: Jar) {
     from(sourceSets.main.allSource)
-    for (def s in [':arclight-api', ':i18n-config', ':arclight-common', ':forge-installer']) {
+    for (def s in [':i18n-config', ':arclight-common', ':forge-installer']) {
         from(project(s).sourceSets.main.allSource) {
             exclude 'io/izzel/arclight/common/mixin/**'
         }
