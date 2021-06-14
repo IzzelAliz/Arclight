@@ -7,6 +7,7 @@ import com.mojang.brigadier.tree.RootCommandNode;
 import io.izzel.arclight.common.bridge.command.CommandNodeBridge;
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.server.MinecraftServerBridge;
+import io.izzel.arclight.common.mod.util.BukkitDispatcher;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
 import net.minecraft.command.ISuggestionProvider;
@@ -34,7 +35,7 @@ public abstract class CommandsMixin {
     // @formatter:on
 
     public void arclight$constructor() {
-        this.dispatcher = new CommandDispatcher<>();
+        this.dispatcher = new BukkitDispatcher((Commands) (Object) this);
         this.dispatcher.setConsumer((context, b, i) -> context.getSource().onCommandComplete(context, b, i));
     }
 
