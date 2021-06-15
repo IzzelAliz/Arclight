@@ -65,6 +65,7 @@ public abstract class ItemEntityMixin extends EntityMixin {
     @Overwrite
     public void onCollideWithPlayer(final PlayerEntity entity) {
         if (!this.world.isRemote) {
+            if (this.pickupDelay > 0) return;
             final ItemStack itemstack = this.getItem();
             final net.minecraft.item.Item item = itemstack.getItem();
             final int i = itemstack.getCount();
