@@ -61,7 +61,7 @@ public abstract class RepairContainerMixin extends AbstractRepairContainerMixin 
             boolean flag = false;
 
             if (!itemstack2.isEmpty()) {
-                if (!ForgeHooks.onAnvilChange((RepairContainer) (Object) this, itemstack, itemstack2, field_234642_c_, repairedItemName, j))
+                if (!ForgeHooks.onAnvilChange((RepairContainer) (Object) this, itemstack, itemstack2, field_234642_c_, repairedItemName, j, this.field_234645_f_))
                     return;
                 flag = itemstack2.getItem() == Items.ENCHANTED_BOOK && !EnchantedBookItem.getEnchantments(itemstack2).isEmpty();
                 if (itemstack1.isDamageable() && itemstack1.getItem().getIsRepairable(itemstack, itemstack2)) {
