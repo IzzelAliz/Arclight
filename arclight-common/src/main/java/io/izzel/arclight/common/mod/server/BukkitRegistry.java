@@ -23,6 +23,8 @@ import net.minecraft.entity.merchant.villager.VillagerProfession;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.potion.Effect;
+import net.minecraft.stats.StatType;
+import net.minecraft.stats.Stats;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
@@ -34,9 +36,11 @@ import net.minecraftforge.registries.IForgeRegistry;
 import org.bukkit.Art;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Statistic;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.craftbukkit.v.CraftCrashReport;
+import org.bukkit.craftbukkit.v.CraftStatistic;
 import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -53,7 +57,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-@SuppressWarnings({"unchecked", "ConstantConditions"})
+@SuppressWarnings({"ConstantConditions", "deprecation"})
 public class BukkitRegistry {
 
     private static final List<Class<?>> MAT_CTOR = ImmutableList.of(int.class);
@@ -74,6 +78,7 @@ public class BukkitRegistry {
             .build());
     private static final Map<String, Art> ART_BY_NAME = Unsafe.getStatic(Art.class, "BY_NAME");
     private static final Map<Integer, Art> ART_BY_ID = Unsafe.getStatic(Art.class, "BY_ID");
+    private static final BiMap<ResourceLocation, Statistic> STATS = HashBiMap.create(Unsafe.getStatic(CraftStatistic.class, "statistics"));
 
     public static void registerAll() {
         CrashReportExtender.registerCrashCallable("Arclight", () -> new CraftCrashReport().call().toString());
@@ -84,6 +89,51 @@ public class BukkitRegistry {
         loadVillagerProfessions();
         loadBiomes();
         loadArts();
+        loadStats();
+    }
+
+    private static void loadStats() {
+        int i = Statistic.values().length;
+        List<Statistic> newTypes = new ArrayList<>();
+        Field key = Arrays.stream(Statistic.class.getDeclaredFields()).filter(it -> it.getName().equals("key")).findAny().orElse(null);
+        long keyOffset = Unsafe.objectFieldOffset(key);
+        for (StatType<?> statType : ForgeRegistries.STAT_TYPES) {
+            if (statType == Stats.CUSTOM) continue;
+            Statistic statistic = STATS.get(statType.getRegistryName());
+            if (statistic == null) {
+                String standardName = ResourceLocationUtil.standardize(statType.getRegistryName());
+                Statistic.Type type;
+                if (statType.getRegistry() == Registry.ENTITY_TYPE) {
+                    type = Statistic.Type.ENTITY;
+                } else if (statType.getRegistry() == Registry.BLOCK) {
+                    type = Statistic.Type.BLOCK;
+                } else if (statType.getRegistry() == Registry.ITEM) {
+                    type = Statistic.Type.ITEM;
+                } else {
+                    type = Statistic.Type.UNTYPED;
+                }
+                statistic = EnumHelper.makeEnum(Statistic.class, standardName, i, ImmutableList.of(Statistic.Type.class), ImmutableList.of(type));
+                Unsafe.putObject(statistic, keyOffset, statType.getRegistryName());
+                newTypes.add(statistic);
+                STATS.put(statType.getRegistryName(), statistic);
+                ArclightMod.LOGGER.debug("Registered {} as stats {}", statType.getRegistryName(), statistic);
+                i++;
+            }
+        }
+        for (ResourceLocation location : Registry.CUSTOM_STAT) {
+            Statistic statistic = STATS.get(location);
+            if (statistic == null) {
+                String standardName = ResourceLocationUtil.standardize(location);
+                statistic = EnumHelper.makeEnum(Statistic.class, standardName, i, ImmutableList.of(), ImmutableList.of());
+                Unsafe.putObject(statistic, keyOffset, location);
+                newTypes.add(statistic);
+                STATS.put(location, statistic);
+                ArclightMod.LOGGER.debug("Registered {} as custom stats {}", location, statistic);
+                i++;
+            }
+        }
+        EnumHelper.addEnums(Statistic.class, newTypes);
+        putStatic(CraftStatistic.class, "statistics", STATS);
     }
 
     private static void loadArts() {
