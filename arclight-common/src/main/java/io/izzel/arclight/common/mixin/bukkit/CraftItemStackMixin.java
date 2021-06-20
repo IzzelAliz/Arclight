@@ -30,6 +30,7 @@ public abstract class CraftItemStackMixin implements CraftItemStackBridge {
 
     @Inject(method = "getItemMeta(Lnet/minecraft/item/ItemStack;)Lorg/bukkit/inventory/meta/ItemMeta;", at = @At("RETURN"))
     private static void arclight$offerCaps(ItemStack item, CallbackInfoReturnable<ItemMeta> cir) {
+        if (item == null) return;
         ItemMeta meta = cir.getReturnValue();
         CompoundNBT tag = item.getTag();
         if (tag != null) {
