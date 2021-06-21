@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
@@ -48,12 +49,18 @@ public abstract class JavaPluginLoaderMixin implements JavaPluginLoaderBridge {
 
     // @formatter:off
     @Shadow @Final Server server;
-    @Invoker("setClass")  public abstract void bridge$setClass(final String name, final Class<?> clazz);
+    @Invoker("setClass") public abstract void bridge$setClass(final String name, final Class<?> clazz);
     @Accessor("loaders") public abstract List<URLClassLoader> bridge$getLoaders();
     // @formatter:on
 
     private static final AtomicInteger COUNTER = new AtomicInteger();
-    private static final Cache<Method, Class<? extends EventExecutor>> EXECUTOR_CACHE = CacheBuilder.newBuilder().build();
+    private static final Cache<Method, Class<? extends EventExecutor>> EXECUTOR_CACHE = CacheBuilder.newBuilder()
+        .expireAfterAccess(1, TimeUnit.HOURS)
+        .build();
+    private static final String HIDDEN_FORM =
+        Float.parseFloat(System.getProperty("java.class.version")) < 57
+            ? "Ljava/lang/invoke/LambdaForm$Hidden;"
+            : "Ljdk/internal/vm/annotation/Hidden;";
 
     /**
      * @author IzzelAliz
@@ -178,7 +185,7 @@ public abstract class JavaPluginLoaderMixin implements JavaPluginLoaderBridge {
             Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Listener.class), Type.getType(Event.class)),
             null, null
         );
-        mv.visitAnnotation("Ljava/lang/invoke/LambdaForm$Hidden;", true);
+        mv.visitAnnotation(HIDDEN_FORM, true);
 
         Label label0 = new Label();
         Label label1 = new Label();
