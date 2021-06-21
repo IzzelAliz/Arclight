@@ -7,7 +7,7 @@ import net.minecraftforge.forgespi.locating.IModFile;
 import java.io.File;
 import java.net.URISyntaxException;
 
-public class ArclightLocator_1_16 extends ArclightLocator {
+public class ArclightLocator_Forge extends ArclightLocator {
 
     @Override
     protected IModFile loadJars() {

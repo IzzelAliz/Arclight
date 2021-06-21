@@ -2,7 +2,7 @@
   "minVersion": "0.8",
   "package": "io.izzel.arclight.impl.mixin.optimization.dfu",
   "target": "@env(DEFAULT)",
-  "refmap": "mixins.arclight.impl.refmap.1_16.json",
+  "refmap": "mixins.arclight.impl.forge.refmap.json",
   "mixins": [
     "CraftMagicNumbersMixin",
     "DataFixerUpperMixin",

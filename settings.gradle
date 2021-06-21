@@ -1,6 +1,6 @@
 rootProject.name = 'arclight'
 include 'arclight-common'
 include 'forge-installer'
-include 'arclight-forge-1.16'
+include 'arclight-forge'
 include 'i18n-config'
 

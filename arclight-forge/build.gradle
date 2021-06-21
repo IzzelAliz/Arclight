@@ -29,6 +29,8 @@ arclight {
     packageName = 'spigot'
 }
 
+archivesBaseName = archivesBaseName + '-' + minecraftVersion
+
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
 
 sourceSets {
@@ -119,7 +121,7 @@ processResources {
 }
 
 jar {
-    manifest.attributes 'MixinConnector': 'io.izzel.arclight.impl.ArclightConnector_1_16'
+    manifest.attributes 'MixinConnector': 'io.izzel.arclight.impl.ArclightConnector_Forge'
     manifest.attributes 'Main-Class': 'io.izzel.arclight.server.Launcher'
     manifest.attributes 'Implementation-Title': 'Arclight'
     manifest.attributes 'Implementation-Version': "arclight-$minecraftVersion-${project.version}-${getGitHash()}"
@@ -150,7 +152,7 @@ processMapping {
 }
 
 mixin {
-    add sourceSets.main, 'mixins.arclight.impl.refmap.1_16.json'
+    add sourceSets.main, 'mixins.arclight.impl.forge.refmap.json'
 }
 
 compileJava {
