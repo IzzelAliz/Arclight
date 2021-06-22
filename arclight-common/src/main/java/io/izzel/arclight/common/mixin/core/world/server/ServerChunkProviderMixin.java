@@ -1,17 +1,13 @@
 package io.izzel.arclight.common.mixin.core.world.server;
 
-import com.mojang.datafixers.util.Either;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.bridge.world.server.ChunkHolderBridge;
 import io.izzel.arclight.common.bridge.world.server.ChunkManagerBridge;
 import io.izzel.arclight.common.bridge.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.bridge.world.server.TicketManagerBridge;
-import net.minecraft.profiler.IProfiler;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
@@ -19,21 +15,19 @@ import net.minecraft.world.server.ServerChunkProvider;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.server.ServerWorldLightManager;
 import net.minecraft.world.server.TicketManager;
-import net.minecraft.world.server.TicketType;
 import net.minecraft.world.storage.IWorldInfo;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 @Mixin(ServerChunkProvider.class)
@@ -78,37 +72,16 @@ public abstract class ServerChunkProviderMixin implements ServerChunkProviderBri
         ((ChunkManagerBridge) this.chunkManager).bridge$setViewDistance(viewDistance);
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    private CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> func_217233_c(int chunkX, int chunkZ, ChunkStatus requiredStatus, boolean load) {
-        ChunkPos chunkpos = new ChunkPos(chunkX, chunkZ);
-        long i = chunkpos.asLong();
-        int j = 33 + ChunkStatus.getDistance(requiredStatus);
-        ChunkHolder chunkholder = this.func_217213_a(i);
-        boolean unloading = false;
-        if (chunkholder != null) {
+    @ModifyVariable(method = "func_217233_c", index = 4, at = @At("HEAD"))
+    private boolean arclight$skipIfUnloading(boolean flag, int chunkX, int chunkZ) {
+        if (flag) {
+            ChunkHolder chunkholder = this.func_217213_a(ChunkPos.asLong(chunkX, chunkZ));
             ChunkHolder.LocationType chunkStatus = ChunkHolder.getLocationTypeFromLevel(((ChunkHolderBridge) chunkholder).bridge$getOldTicketLevel());
             ChunkHolder.LocationType currentStatus = ChunkHolder.getLocationTypeFromLevel(chunkholder.getChunkLevel());
-            unloading = chunkStatus.isAtLeast(ChunkHolder.LocationType.BORDER) && !currentStatus.isAtLeast(ChunkHolder.LocationType.BORDER);
+            return !chunkStatus.isAtLeast(ChunkHolder.LocationType.BORDER) || currentStatus.isAtLeast(ChunkHolder.LocationType.BORDER);
+        } else {
+            return false;
         }
-        if (load && !unloading) {
-            this.ticketManager.registerWithLevel(TicketType.UNKNOWN, chunkpos, j, chunkpos);
-            if (this.func_217224_a(chunkholder, j)) {
-                IProfiler iprofiler = this.world.getProfiler();
-                iprofiler.startSection("chunkLoad");
-                this.func_217235_l();
-                chunkholder = this.func_217213_a(i);
-                iprofiler.endSection();
-                if (this.func_217224_a(chunkholder, j)) {
-                    throw new IllegalStateException("No chunk holder after ticket has been added");
-                }
-            }
-        }
-
-        return this.func_217224_a(chunkholder, j) ? ChunkHolder.MISSING_CHUNK_FUTURE : chunkholder.func_219276_a(requiredStatus, this.chunkManager);
     }
 
     @Redirect(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/GameRules;getBoolean(Lnet/minecraft/world/GameRules$RuleKey;)Z"))
