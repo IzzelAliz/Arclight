@@ -1,0 +1,12 @@
+name: Issuebot
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  new_issue:
+    name: Run Issuebot on new Issue
+    runs-on: ubuntu-latest
+    steps:
+      - uses: timi137137/actions-arclight-issue-prefilter@main
