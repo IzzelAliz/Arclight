@@ -183,7 +183,7 @@ public abstract class WorldMixin implements WorldBridge, IWorldWriter {
         }
     }
 
-    @Redirect(method = "isNightTime", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/dimension/Dimension;getType()Lnet/minecraft/world/dimension/DimensionType;"))
+    @Redirect(method = "isNightTime", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/dimension/Dimension;getType()Lnet/minecraft/world/dimension/DimensionType;"))
     private DimensionType arclight$nightTimeType(Dimension dimension) {
         return ((DimensionTypeBridge) dimension.getType()).bridge$getType();
     }
