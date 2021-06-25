@@ -4,6 +4,7 @@
   "target": "@env(DEFAULT)",
   "refmap": "mixins.arclight.impl.refmap.1_15.json",
   "mixins": [
+    "CommandNodeMixin",
     "GoalSelectorMixin",
     "PathFinderMixin"
   ]
