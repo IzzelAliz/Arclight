@@ -59,6 +59,12 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
         "LodestonePos",
         "LodestoneTracked"
     );
+
+    @ModifyVariable(method = "<init>(Lnet/minecraft/nbt/CompoundNBT;)V", at = @At(value = "INVOKE", target = "Lorg/bukkit/UnsafeValues;getDataVersion()I"))
+    private CompoundNBT arclight$provideTag(CompoundNBT tag) {
+        return tag == null ? new CompoundNBT() : tag;
+    }
+
     private CompoundNBT forgeCaps;
 
     @Override
@@ -116,6 +122,13 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
         return 61 * hash + (this.forgeCaps != null ? this.forgeCaps.hashCode() : 0);
     }
 
+    @Inject(method = "isEmpty", cancellable = true, at = @At("HEAD"))
+    private void arclight$forgeCapsEmpty(CallbackInfoReturnable<Boolean> cir) {
+        if (this.forgeCaps != null && !this.forgeCaps.isEmpty()) {
+            cir.setReturnValue(false);
+        }
+    }
+
     @Inject(method = "equalsCommon", cancellable = true, at = @At("HEAD"))
     private void arclight$forgeCapsEquals(CraftMetaItem that, CallbackInfoReturnable<Boolean> cir) {
         CompoundNBT forgeCaps = ((ItemMetaBridge) that).bridge$getForgeCaps();
@@ -143,11 +156,13 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
         }
     }
 
-    @Inject(method = "<init>*", locals = LocalCapture.CAPTURE_FAILSOFT, at = @At("RETURN"))
-    private void arclight$copyForgeCaps(CallbackInfo ci, CraftMetaItem meta) {
-        CompoundNBT forgeCaps = ((ItemMetaBridge) meta).bridge$getForgeCaps();
-        if (forgeCaps != null) {
-            this.forgeCaps = forgeCaps.copy();
+    @Inject(method = "<init>*", at = @At("RETURN"))
+    private void arclight$copyForgeCaps(CraftMetaItem meta, CallbackInfo ci) {
+        if (meta != null) {
+            CompoundNBT forgeCaps = ((ItemMetaBridge) meta).bridge$getForgeCaps();
+            if (forgeCaps != null) {
+                this.forgeCaps = forgeCaps.copy();
+            }
         }
     }
 }
