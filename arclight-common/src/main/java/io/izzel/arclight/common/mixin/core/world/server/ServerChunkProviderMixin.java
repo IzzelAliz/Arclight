@@ -76,9 +76,13 @@ public abstract class ServerChunkProviderMixin implements ServerChunkProviderBri
     private boolean arclight$skipIfUnloading(boolean flag, int chunkX, int chunkZ) {
         if (flag) {
             ChunkHolder chunkholder = this.func_217213_a(ChunkPos.asLong(chunkX, chunkZ));
-            ChunkHolder.LocationType chunkStatus = ChunkHolder.getLocationTypeFromLevel(((ChunkHolderBridge) chunkholder).bridge$getOldTicketLevel());
-            ChunkHolder.LocationType currentStatus = ChunkHolder.getLocationTypeFromLevel(chunkholder.getChunkLevel());
-            return !chunkStatus.isAtLeast(ChunkHolder.LocationType.BORDER) || currentStatus.isAtLeast(ChunkHolder.LocationType.BORDER);
+            if (chunkholder != null) {
+                ChunkHolder.LocationType chunkStatus = ChunkHolder.getLocationTypeFromLevel(((ChunkHolderBridge) chunkholder).bridge$getOldTicketLevel());
+                ChunkHolder.LocationType currentStatus = ChunkHolder.getLocationTypeFromLevel(chunkholder.getChunkLevel());
+                return !chunkStatus.isAtLeast(ChunkHolder.LocationType.BORDER) || currentStatus.isAtLeast(ChunkHolder.LocationType.BORDER);
+            } else {
+                return true;
+            }
         } else {
             return false;
         }
