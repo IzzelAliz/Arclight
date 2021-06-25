@@ -52,9 +52,9 @@ public class MapData_MapInfoMixin {
         }
         if (this.isDirty) {
             this.isDirty = false;
-            return new SMapDataPacket(FilledMapItem.getMapId(stack), outerThis.scale, outerThis.trackingPosition, outerThis.locked, icons, outerThis.colors, this.minX, this.minY, this.maxX + 1 - this.minX, this.maxY + 1 - this.minY);
+            return new SMapDataPacket(FilledMapItem.getMapId(stack), outerThis.scale, outerThis.trackingPosition, outerThis.locked, icons, render.buffer, this.minX, this.minY, this.maxX + 1 - this.minX, this.maxY + 1 - this.minY);
         } else {
-            return this.tick++ % 5 == 0 ? new SMapDataPacket(FilledMapItem.getMapId(stack), outerThis.scale, outerThis.trackingPosition, outerThis.locked, icons, outerThis.colors, 0, 0, 0, 0) : null;
+            return this.tick++ % 5 == 0 ? new SMapDataPacket(FilledMapItem.getMapId(stack), outerThis.scale, outerThis.trackingPosition, outerThis.locked, icons, render.buffer, 0, 0, 0, 0) : null;
         }
     }
 }

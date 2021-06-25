@@ -108,11 +108,13 @@ public abstract class TrackedEntityMixin {
             ItemStack itemstack = entityitemframe.getDisplayedItem();
             if (this.updateCounter % 10 == 0 && itemstack.getItem() instanceof FilledMapItem) {
                 MapData worldmap = FilledMapItem.getMapData(itemstack, this.world);
-                for (ServerPlayerEntity entityplayer : this.trackedPlayers) {
-                    worldmap.updateVisiblePlayers(entityplayer, itemstack);
-                    IPacket<?> packet = ((FilledMapItem) itemstack.getItem()).getUpdatePacket(itemstack, this.world, entityplayer);
-                    if (packet != null) {
-                        entityplayer.connection.sendPacket(packet);
+                if (worldmap != null) {
+                    for (ServerPlayerEntity entityplayer : this.trackedPlayers) {
+                        worldmap.updateVisiblePlayers(entityplayer, itemstack);
+                        IPacket<?> packet = ((FilledMapItem) itemstack.getItem()).getUpdatePacket(itemstack, this.world, entityplayer);
+                        if (packet != null) {
+                            entityplayer.connection.sendPacket(packet);
+                        }
                     }
                 }
             }
