@@ -329,7 +329,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
         chunkProvider.getLightManager().func_215598_a(500);
         this.serverTime = Util.milliTime();
         chunkProvider.registerTicket(TicketType.START, new ChunkPos(pos), 11, Unit.INSTANCE);
-        while (chunkProvider.getLoadedChunksCount() != 441) {
+        while (chunkProvider.getLoadedChunksCount() < 441) {
             this.executeModerately();
         }
         this.executeModerately();
@@ -410,7 +410,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
         this.serverTime = Util.milliTime();
         serverchunkprovider.registerTicket(TicketType.START, new ChunkPos(blockpos), 11, Unit.INSTANCE);
 
-        while (serverchunkprovider.getLoadedChunksCount() != 441) {
+        while (serverchunkprovider.getLoadedChunksCount() < 441) {
             this.executeModerately();
         }
 
