@@ -42,6 +42,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ArclightRedirectAdapter implements PluginTransformer {
@@ -162,6 +163,12 @@ public class ArclightRedirectAdapter implements PluginTransformer {
             for (AbstractInsnNode insnNode : methodNode.instructions) {
                 if (insnNode instanceof MethodInsnNode) {
                     MethodInsnNode from = (MethodInsnNode) insnNode;
+                    if (from.getOpcode() == Opcodes.INVOKESPECIAL
+                        && Objects.equals(from.owner, classNode.superName)
+                        && Objects.equals(from.name, methodNode.name)
+                        && Objects.equals(from.desc, methodNode.desc)) {
+                        continue;
+                    }
                     process(from, methodNode.instructions, remapper, classNode);
                 } else if (insnNode.getOpcode() == Opcodes.INVOKEDYNAMIC) {
                     InvokeDynamicInsnNode invokeDynamic = (InvokeDynamicInsnNode) insnNode;

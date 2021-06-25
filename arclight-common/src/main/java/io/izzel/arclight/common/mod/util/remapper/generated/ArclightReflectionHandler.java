@@ -4,6 +4,7 @@ import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.util.remapper.ArclightRedirectAdapter;
 import io.izzel.arclight.common.mod.util.remapper.ClassLoaderRemapper;
+import io.izzel.arclight.common.mod.util.remapper.GlobalClassRepo;
 import io.izzel.arclight.common.mod.util.remapper.RemappingClassLoader;
 import io.izzel.arclight.common.util.Enumerations;
 import org.objectweb.asm.ClassReader;
@@ -471,7 +472,7 @@ public class ArclightReflectionHandler extends ClassLoader {
             }
         }
         if (rcl != null) {
-            return rcl.getRemapper().remapClass(bytes);
+            return rcl.getRemapper().remapClassFile(bytes, GlobalClassRepo.INSTANCE);
         } else {
             ArclightRedirectAdapter.scanMethod(bytes);
             return bytes;

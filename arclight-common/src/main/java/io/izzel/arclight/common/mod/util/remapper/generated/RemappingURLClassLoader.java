@@ -1,17 +1,21 @@
 package io.izzel.arclight.common.mod.util.remapper.generated;
 
 import com.google.common.io.ByteStreams;
+import io.izzel.arclight.common.asm.SwitchTableFixer;
 import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
 import io.izzel.arclight.common.mod.util.remapper.ClassLoaderRemapper;
 import io.izzel.arclight.common.mod.util.remapper.RemappingClassLoader;
+import io.izzel.tools.product.Product2;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.net.URLStreamHandlerFactory;
 import java.security.CodeSource;
+import java.util.concurrent.Callable;
 
 public class RemappingURLClassLoader extends URLClassLoader implements RemappingClassLoader {
 
@@ -38,8 +42,24 @@ public class RemappingURLClassLoader extends URLClassLoader implements Remapping
         URL resource = this.getResource(path);
         if (resource != null) {
             try {
-                URLConnection connection = resource.openConnection();
-                byte[] bytes = getRemapper().remapClass(ByteStreams.toByteArray(connection.getInputStream()));
+                URLConnection connection;
+                Callable<byte[]> byteSource;
+                try {
+                    connection = resource.openConnection();
+                    connection.connect();
+                    byteSource = () -> {
+                        try (InputStream is = connection.getInputStream()) {
+                            byte[] classBytes = ByteStreams.toByteArray(is);
+                            classBytes = SwitchTableFixer.INSTANCE.processClass(classBytes);
+                            return classBytes;
+                        }
+                    };
+                } catch (IOException e) {
+                    throw new ClassNotFoundException(name, e);
+                }
+
+                Product2<byte[], CodeSource> classBytes = this.getRemapper().remapClass(name, byteSource, connection);
+
                 int i = name.lastIndexOf('.');
                 if (i != -1) {
                     String pkgName = name.substring(0, i);
@@ -51,13 +71,7 @@ public class RemappingURLClassLoader extends URLClassLoader implements Remapping
                         }
                     }
                 }
-                CodeSource codeSource;
-                if (connection instanceof JarURLConnection) {
-                    codeSource = new CodeSource(((JarURLConnection) connection).getJarFileURL(), ((JarURLConnection) connection).getJarEntry().getCodeSigners());
-                } else {
-                    codeSource = null;
-                }
-                result = this.defineClass(name, bytes, 0, bytes.length, codeSource);
+                result = this.defineClass(name, classBytes._1, 0, classBytes._1.length, classBytes._2);
             } catch (IOException e) {
                 throw new ClassNotFoundException(name, e);
             }

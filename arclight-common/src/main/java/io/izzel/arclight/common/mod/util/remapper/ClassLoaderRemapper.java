@@ -6,6 +6,8 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.util.remapper.generated.ArclightReflectionHandler;
+import io.izzel.tools.product.Product;
+import io.izzel.tools.product.Product2;
 import net.md_5.specialsource.JarMapping;
 import net.md_5.specialsource.JarRemapper;
 import net.md_5.specialsource.RemappingClassAdapter;
@@ -27,12 +29,18 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.JarURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
+import java.security.CodeSigner;
+import java.security.CodeSource;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -272,8 +280,22 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
         return Maps.immutableEntry(owner, mapped);
     }
 
-    public byte[] remapClass(byte[] arr) {
-        return remapClassFile(arr, GlobalClassRepo.INSTANCE);
+    public Product2<byte[], CodeSource> remapClass(String className, Callable<byte[]> byteSource, URLConnection connection) throws ClassNotFoundException {
+        try {
+            byte[] bytes = remapClassFile(byteSource.call(), GlobalClassRepo.INSTANCE);
+            URL url;
+            CodeSigner[] signers;
+            if (connection instanceof JarURLConnection) {
+                url = ((JarURLConnection) connection).getJarFileURL();
+                signers = ((JarURLConnection) connection).getJarEntry().getCodeSigners();
+            } else {
+                url = connection.getURL();
+                signers = null;
+            }
+            return Product.of(bytes, new CodeSource(url, signers));
+        } catch (Exception e) {
+            throw new ClassNotFoundException(className, e);
+        }
     }
 
     @Override
@@ -347,11 +369,11 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
 
         @Override
         protected String getCommonSuperClass(String type1, String type2) {
-            Collection<String> parents = GlobalClassRepo.inheritanceProvider().getAll(type2);
+            Collection<String> parents = GlobalClassRepo.remappingProvider().getAll(type2);
             if (parents.contains(type1)) {
                 return type1;
             }
-            if (GlobalClassRepo.inheritanceProvider().getAll(type1).contains(type2)) {
+            if (GlobalClassRepo.remappingProvider().getAll(type1).contains(type2)) {
                 return type2;
             }
             do {
@@ -362,10 +384,12 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
 
         private String getSuper(final String typeName) {
             ClassNode node = GlobalClassRepo.INSTANCE.findClass(typeName);
-            if (node == null) return "java/lang/Object";
-            return node.superName;
+            if (node == null) {
+                LOGGER.warn("Failed to find class {}", typeName);
+                return "java/lang/Object";
+            }
+            return ArclightRemapper.getNmsMapper().map(node.superName);
         }
-
     }
 
     static class WrappedMethod {
