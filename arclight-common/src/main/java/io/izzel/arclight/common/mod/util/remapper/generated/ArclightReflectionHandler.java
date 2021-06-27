@@ -461,6 +461,16 @@ public class ArclightReflectionHandler extends ClassLoader {
         return redirectDefineClass(loader, name, bytes, off, len, pd);
     }
 
+    public static Object[] handleLookupDefineClass(MethodHandles.Lookup lookup, byte[] bytes) {
+        return new Object[]{lookup, transformOrAdd(lookup.lookupClass().getClassLoader(), bytes)};
+    }
+
+    public static Class<?> redirectLookupDefineClass(MethodHandles.Lookup lookup, byte[] bytes) throws Throwable {
+        byte[] transform = transformOrAdd(lookup.lookupClass().getClassLoader(), bytes);
+        MethodHandle mh = Unsafe.lookup().findVirtual(MethodHandles.Lookup.class, "defineClass", MethodType.methodType(Class.class, byte[].class));
+        return (Class<?>) mh.invokeExact(lookup, transform);
+    }
+
     public static byte[] transformOrAdd(ClassLoader loader, byte[] bytes) {
         RemappingClassLoader rcl = null;
         while (loader != null) {
