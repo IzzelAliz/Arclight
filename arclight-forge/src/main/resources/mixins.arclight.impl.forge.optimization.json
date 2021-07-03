@@ -17,6 +17,8 @@
     "activationrange.entity.ItemEntityMixin_ActivationRange",
     "activationrange.entity.LivingEntityMixin_ActivationRange",
     "activationrange.entity.VillagerEntityMixin_ActivationRange",
+    "realtime.ItemEntityMixin_Realtime",
+    "realtime.PlayerInteractionManagerMixin_Realtime",
     "trackingrange.ChunkManagerMixin_TrackingRange"
   ]
 }
