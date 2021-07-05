@@ -44,6 +44,7 @@ import net.minecraft.server.management.PlayerList;
 import net.minecraft.server.management.ProfileBanEntry;
 import net.minecraft.stats.ServerStatisticsManager;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.Util;
@@ -65,6 +66,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
+import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.util.CraftChatMessage;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
@@ -73,6 +75,7 @@ import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.spigotmc.SpigotConfig;
+import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -134,6 +137,18 @@ public abstract class PlayerListMixin implements PlayerListBridge {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$loadServer(MinecraftServer minecraftServer, DynamicRegistries.Impl p_i231425_2_, PlayerData p_i231425_3_, int p_i231425_4_, CallbackInfo ci) {
         cserver = ArclightServer.createOrLoad((DedicatedServer) minecraftServer, (PlayerList) (Object) this);
+    }
+
+    @Redirect(method = "initializeConnectionToPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;getWorld(Lnet/minecraft/util/RegistryKey;)Lnet/minecraft/world/server/ServerWorld;"))
+    private ServerWorld arclight$spawnLocationEvent(MinecraftServer minecraftServer, RegistryKey<World> dimension, NetworkManager netManager, ServerPlayerEntity playerIn) {
+        CraftPlayer player = ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity();
+        PlayerSpawnLocationEvent event = new PlayerSpawnLocationEvent(player, player.getLocation());
+        cserver.getPluginManager().callEvent(event);
+        Location loc = event.getSpawnLocation();
+        ServerWorld world = ((CraftWorld) loc.getWorld()).getHandle();
+        playerIn.setWorld(world);
+        playerIn.setPositionAndRotation(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch());
+        return world;
     }
 
     @Redirect(method = "initializeConnectionToPlayer", at = @At(value = "FIELD", target = "Lnet/minecraft/server/management/PlayerList;viewDistance:I"))
