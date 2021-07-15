@@ -15,6 +15,10 @@ public class CompatSpec {
     @Setting("entity-property-overrides")
     private Map<String, EntityPropertySpec> entities;
 
+    // todo Enable this by default in 1.17
+    @Setting("symlink-world")
+    private boolean symlinkWorld;
+
     public Map<String, MaterialPropertySpec> getMaterials() {
         return materials;
     }
@@ -29,5 +33,9 @@ public class CompatSpec {
 
     public Optional<EntityPropertySpec> getEntity(String key) {
         return Optional.ofNullable(entities.get(key));
+    }
+
+    public boolean isSymlinkWorld() {
+        return symlinkWorld;
     }
 }

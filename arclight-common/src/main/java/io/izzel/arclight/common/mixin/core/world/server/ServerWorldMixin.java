@@ -12,8 +12,10 @@ import io.izzel.arclight.common.bridge.world.storage.DerivedWorldInfoBridge;
 import io.izzel.arclight.common.bridge.world.storage.MapDataBridge;
 import io.izzel.arclight.common.bridge.world.storage.WorldInfoBridge;
 import io.izzel.arclight.common.mixin.core.world.WorldMixin;
+import io.izzel.arclight.common.mod.server.world.WorldSymlink;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.DelegateWorldInfo;
+import io.izzel.arclight.i18n.ArclightConfig;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -137,6 +139,9 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
             // damn spigot again
             this.$$worldDataServer = DelegateWorldInfo.wrap(((DerivedWorldInfo) worldInfo));
             ((DerivedWorldInfoBridge) worldInfo).bridge$setDimType(this.getTypeKey());
+            if (ArclightConfig.spec().getCompat().isSymlinkWorld()) {
+                WorldSymlink.create((DerivedWorldInfo) worldInfo, levelSave.getDimensionFolder(this.getDimensionKey()));
+            }
         }
         ((ServerChunkProviderBridge) this.serverChunkProvider).bridge$setViewDistance(spigotConfig.viewDistance);
         ((WorldInfoBridge) this.$$worldDataServer).bridge$setWorld((ServerWorld) (Object) this);

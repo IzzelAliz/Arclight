@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.storage;
 
 import io.izzel.arclight.common.bridge.world.storage.DerivedWorldInfoBridge;
+import io.izzel.arclight.i18n.ArclightConfig;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.storage.DerivedWorldInfo;
@@ -26,16 +27,29 @@ public class DerivedWorldInfoMixin implements DerivedWorldInfoBridge {
         if (typeKey == null || typeKey == DimensionType.OVERWORLD) {
             return this.delegate.getWorldName();
         } else {
-            String worldName = this.delegate.getWorldName() + "/";
-            String suffix;
-            if (typeKey == DimensionType.THE_END) {
-                suffix = "DIM1";
-            } else if (typeKey == DimensionType.THE_NETHER) {
-                suffix = "DIM-1";
+            if (ArclightConfig.spec().getCompat().isSymlinkWorld()) {
+                String worldName = this.delegate.getWorldName() + "_";
+                String suffix;
+                if (typeKey == DimensionType.THE_END) {
+                    suffix = "nether";
+                } else if (typeKey == DimensionType.THE_NETHER) {
+                    suffix = "the_end";
+                } else {
+                    suffix = (typeKey.getLocation().getNamespace() + "/" + typeKey.getLocation().getPath()).replace('/', '_');
+                }
+                return worldName + suffix;
             } else {
-                suffix = typeKey.getLocation().getNamespace() + "/" + typeKey.getLocation().getPath();
+                String worldName = this.delegate.getWorldName() + "/";
+                String suffix;
+                if (typeKey == DimensionType.THE_END) {
+                    suffix = "DIM1";
+                } else if (typeKey == DimensionType.THE_NETHER) {
+                    suffix = "DIM-1";
+                } else {
+                    suffix = typeKey.getLocation().getNamespace() + "/" + typeKey.getLocation().getPath();
+                }
+                return worldName + suffix;
             }
-            return worldName + suffix;
         }
     }
 
