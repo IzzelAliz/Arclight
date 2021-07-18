@@ -759,7 +759,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             return false;
         }
         CraftEventFactory.entityDamage = entity;
-        if (!this.attackEntityFrom(DamageSource.LIGHTNING_BOLT, 5.0F)) {
+        if (!this.attackEntityFrom(DamageSource.LIGHTNING_BOLT, amount)) {
             CraftEventFactory.entityDamage = null;
             return false;
         }

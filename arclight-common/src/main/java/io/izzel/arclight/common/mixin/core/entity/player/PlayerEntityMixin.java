@@ -272,8 +272,8 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Pla
             if (f > 0.0f || f2 > 0.0f) {
                 final boolean flag = f3 > 0.9f;
                 boolean flag2 = false;
-                final byte b0 = 0;
-                int i = b0 + EnchantmentHelper.getKnockbackModifier((PlayerEntity) (Object) this);
+                float i = (float)this.getAttributeValue(Attributes.ATTACK_KNOCKBACK); // Forge: Initialize this value to the attack knockback attribute of the player, which is by default 0
+                i += EnchantmentHelper.getKnockbackModifier((PlayerEntity) (Object) this);
                 if (this.isSprinting() && flag) {
                     this.world.playSound(null, this.getPosX(), this.getPosY(), this.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, this.getSoundCategory(), 1.0f, 1.0f);
                     ++i;

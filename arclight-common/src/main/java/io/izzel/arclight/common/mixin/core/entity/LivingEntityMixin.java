@@ -791,8 +791,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 // CraftBukkit end
                 float f3 = this.getHealth();
 
-                this.setHealth(f3 - f);
                 this.getCombatTracker().trackDamage(damagesource, f3, f);
+                this.setHealth(f3 - f); // Forge: moved to fix MC-121048
                 // CraftBukkit start
                 if (!human) {
                     this.setAbsorptionAmount(this.getAbsorptionAmount() - f);

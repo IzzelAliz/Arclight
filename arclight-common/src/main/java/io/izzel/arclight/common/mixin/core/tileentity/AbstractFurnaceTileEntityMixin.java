@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.crafting.IRecipe;
@@ -86,10 +87,11 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
      * @reason
      */
     @Overwrite
+    @SuppressWarnings("unchecked")
     private void smelt(@Nullable IRecipe<?> recipe) {
         if (recipe != null && this.canSmelt(recipe)) {
             ItemStack itemstack = this.items.get(0);
-            ItemStack itemstack1 = recipe.getRecipeOutput();
+            ItemStack itemstack1 = ((IRecipe<ISidedInventory>) recipe).getCraftingResult((AbstractFurnaceTileEntity)(Object)this);
             ItemStack itemstack2 = this.items.get(2);
 
             CraftItemStack source = CraftItemStack.asCraftMirror(itemstack);
