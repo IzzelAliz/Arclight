@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.bridge.world;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.world.Explosion;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Explosion;
 
 public interface ExplosionBridge {
 
@@ -11,7 +11,7 @@ public interface ExplosionBridge {
 
     void bridge$setSize(float size);
 
-    Explosion.Mode bridge$getMode();
+    Explosion.BlockInteraction bridge$getMode();
 
     boolean bridge$wasCancelled();
 }

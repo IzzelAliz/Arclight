@@ -16,19 +16,19 @@ import io.izzel.arclight.common.mod.util.types.ArclightPotionEffect;
 import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.arclight.i18n.conf.EntityPropertySpec;
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.item.PaintingType;
-import net.minecraft.entity.merchant.villager.VillagerProfession;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.potion.Effect;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.stats.StatType;
 import net.minecraft.stats.Stats;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.DimensionType;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.entity.decoration.Motive;
+import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraftforge.fml.CrashReportExtender;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistry;
@@ -70,11 +70,11 @@ public class BukkitRegistry {
     private static final Map<Material, Block> MATERIAL_BLOCK = Unsafe.getStatic(CraftMagicNumbers.class, "MATERIAL_BLOCK");
     private static final Map<String, EntityType> ENTITY_NAME_MAP = Unsafe.getStatic(EntityType.class, "NAME_MAP");
     private static final Map<Integer, World.Environment> ENVIRONMENT_MAP = Unsafe.getStatic(World.Environment.class, "lookup");
-    static final BiMap<RegistryKey<DimensionType>, World.Environment> DIM_MAP =
-        HashBiMap.create(ImmutableMap.<RegistryKey<DimensionType>, World.Environment>builder()
-            .put(DimensionType.OVERWORLD, World.Environment.NORMAL)
-            .put(DimensionType.THE_NETHER, World.Environment.NETHER)
-            .put(DimensionType.THE_END, World.Environment.THE_END)
+    static final BiMap<ResourceKey<DimensionType>, World.Environment> DIM_MAP =
+        HashBiMap.create(ImmutableMap.<ResourceKey<DimensionType>, World.Environment>builder()
+            .put(DimensionType.OVERWORLD_LOCATION, World.Environment.NORMAL)
+            .put(DimensionType.NETHER_LOCATION, World.Environment.NETHER)
+            .put(DimensionType.END_LOCATION, World.Environment.THE_END)
             .build());
     private static final Map<String, Art> ART_BY_NAME = Unsafe.getStatic(Art.class, "BY_NAME");
     private static final Map<Integer, Art> ART_BY_ID = Unsafe.getStatic(Art.class, "BY_ID");
@@ -141,7 +141,7 @@ public class BukkitRegistry {
         List<Art> newTypes = new ArrayList<>();
         Field key = Arrays.stream(Art.class.getDeclaredFields()).filter(it -> it.getName().equals("key")).findAny().orElse(null);
         long keyOffset = Unsafe.objectFieldOffset(key);
-        for (PaintingType paintingType : ForgeRegistries.PAINTING_TYPES) {
+        for (Motive paintingType : ForgeRegistries.PAINTING_TYPES) {
             String lookupName = paintingType.getRegistryName().getPath().toLowerCase(Locale.ROOT);
             Art bukkit = Art.getByName(lookupName);
             if (bukkit == null) {
@@ -163,7 +163,7 @@ public class BukkitRegistry {
         List<Biome> newTypes = new ArrayList<>();
         Field key = Arrays.stream(Biome.class.getDeclaredFields()).filter(it -> it.getName().equals("key")).findAny().orElse(null);
         long keyOffset = Unsafe.objectFieldOffset(key);
-        for (net.minecraft.world.biome.Biome biome : ForgeRegistries.BIOMES) {
+        for (net.minecraft.world.level.biome.Biome biome : ForgeRegistries.BIOMES) {
             String name = ResourceLocationUtil.standardize(biome.getRegistryName());
             Biome bukkit;
             try {
@@ -209,17 +209,17 @@ public class BukkitRegistry {
     public static void registerEnvironments() {
         int i = World.Environment.values().length;
         List<World.Environment> newTypes = new ArrayList<>();
-        Registry<DimensionType> registry = ArclightServer.getMinecraftServer().getDynamicRegistries().getRegistry(Registry.DIMENSION_TYPE_KEY);
-        for (Map.Entry<RegistryKey<DimensionType>, DimensionType> entry : registry.getEntries()) {
-            RegistryKey<DimensionType> key = entry.getKey();
+        Registry<DimensionType> registry = ArclightServer.getMinecraftServer().registryAccess().registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY);
+        for (Map.Entry<ResourceKey<DimensionType>, DimensionType> entry : registry.entrySet()) {
+            ResourceKey<DimensionType> key = entry.getKey();
             World.Environment environment = DIM_MAP.get(key);
             if (environment == null) {
-                String name = ResourceLocationUtil.standardize(key.getLocation());
+                String name = ResourceLocationUtil.standardize(key.location());
                 environment = EnumHelper.makeEnum(World.Environment.class, name, i, ENV_CTOR, ImmutableList.of(i - 1));
                 newTypes.add(environment);
                 ENVIRONMENT_MAP.put(i - 1, environment);
                 DIM_MAP.put(key, environment);
-                ArclightMod.LOGGER.debug("Registered {} as environment {}", key.getLocation(), environment);
+                ArclightMod.LOGGER.debug("Registered {} as environment {}", key.location(), environment);
                 i++;
             }
         }
@@ -231,7 +231,7 @@ public class BukkitRegistry {
         int origin = EntityType.values().length;
         int i = origin;
         List<EntityType> newTypes = new ArrayList<>(ForgeRegistries.ENTITIES.getEntries().size() - origin + 1); // UNKNOWN
-        for (net.minecraft.entity.EntityType<?> type : ForgeRegistries.ENTITIES) {
+        for (net.minecraft.world.entity.EntityType<?> type : ForgeRegistries.ENTITIES) {
             ResourceLocation location = type.getRegistryName();
             EntityType entityType = null;
             boolean found = false;
@@ -257,7 +257,7 @@ public class BukkitRegistry {
         int origin = Enchantment.values().length;
         int size = ForgeRegistries.ENCHANTMENTS.getEntries().size();
         putBool(Enchantment.class, "acceptingNew", true);
-        for (net.minecraft.enchantment.Enchantment enc : ForgeRegistries.ENCHANTMENTS) {
+        for (net.minecraft.world.item.enchantment.Enchantment enc : ForgeRegistries.ENCHANTMENTS) {
             try {
                 String name = ResourceLocationUtil.standardize(enc.getRegistryName());
                 ArclightEnchantment enchantment = new ArclightEnchantment(enc, name);
@@ -274,11 +274,11 @@ public class BukkitRegistry {
     private static void loadPotions() {
         int origin = PotionEffectType.values().length;
         int size = ForgeRegistries.POTIONS.getEntries().size();
-        int maxId = ForgeRegistries.POTIONS.getValues().stream().mapToInt(Effect::getId).max().orElse(0);
+        int maxId = ForgeRegistries.POTIONS.getValues().stream().mapToInt(MobEffect::getId).max().orElse(0);
         PotionEffectType[] types = new PotionEffectType[maxId + 1];
         putStatic(PotionEffectType.class, "byId", types);
         putBool(PotionEffectType.class, "acceptingNew", true);
-        for (Effect eff : ForgeRegistries.POTIONS) {
+        for (MobEffect eff : ForgeRegistries.POTIONS) {
             try {
                 String name = ResourceLocationUtil.standardize(eff.getRegistryName());
                 ArclightPotionEffect effect = new ArclightPotionEffect(eff, name);

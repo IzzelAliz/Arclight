@@ -1,14 +1,14 @@
 package io.izzel.arclight.common.mixin.core.loot.conditions;
 
-import net.minecraft.loot.LootContext;
-import net.minecraft.loot.LootParameters;
-import net.minecraft.loot.conditions.SurvivesExplosion;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 import java.util.Random;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.level.storage.loot.predicates.ExplosionCondition;
 
-@Mixin(SurvivesExplosion.class)
+@Mixin(ExplosionCondition.class)
 public class SurvivesExplosionMixin {
 
     /**
@@ -17,7 +17,7 @@ public class SurvivesExplosionMixin {
      */
     @Overwrite
     public boolean test(LootContext context) {
-        Float f = context.get(LootParameters.EXPLOSION_RADIUS);
+        Float f = context.getParamOrNull(LootContextParams.EXPLOSION_RADIUS);
         if (f != null) {
             Random random = context.getRandom();
             float f1 = 1.0F / f;

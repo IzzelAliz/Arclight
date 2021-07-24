@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.bridge.util;
 
-import net.minecraft.util.DamageSource;
+import net.minecraft.world.damagesource.DamageSource;
 
 public interface DamageSourceBridge {
 

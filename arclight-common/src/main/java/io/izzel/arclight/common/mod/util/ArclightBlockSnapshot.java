@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mod.util;
 
-import net.minecraft.block.BlockState;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.util.BlockSnapshot;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 

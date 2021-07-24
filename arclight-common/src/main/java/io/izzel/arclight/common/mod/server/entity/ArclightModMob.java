@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mod.server.entity;
 
 import io.izzel.arclight.common.mod.util.ResourceLocationUtil;
-import net.minecraft.entity.MobEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftMob;
@@ -13,7 +13,7 @@ public class ArclightModMob extends CraftMob {
 
     private final EntityType entityType;
 
-    public ArclightModMob(CraftServer server, MobEntity entity) {
+    public ArclightModMob(CraftServer server, Mob entity) {
         super(server, entity);
         this.entityType = EntityType.valueOf(ResourceLocationUtil.standardize(ForgeRegistries.ENTITIES.getKey(entity.getType())));
     }

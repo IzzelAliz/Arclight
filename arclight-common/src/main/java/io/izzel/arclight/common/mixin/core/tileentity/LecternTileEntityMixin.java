@@ -3,22 +3,22 @@ package io.izzel.arclight.common.mixin.core.tileentity;
 import io.izzel.arclight.common.bridge.command.ICommandSourceBridge;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.inventory.container.LecternContainerBridge;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.ICommandSource;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.LecternContainer;
+import net.minecraft.commands.CommandSource;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.tileentity.LecternTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.IIntArray;
-import net.minecraft.util.math.vector.Vector2f;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.LecternMenu;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.LecternBlockEntity;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v.command.CraftBlockCommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -32,17 +32,17 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import javax.annotation.Nullable;
 import java.util.UUID;
 
-@Mixin(LecternTileEntity.class)
-public abstract class LecternTileEntityMixin extends TileEntityMixin implements ICommandSource, ICommandSourceBridge {
+@Mixin(LecternBlockEntity.class)
+public abstract class LecternTileEntityMixin extends TileEntityMixin implements CommandSource, ICommandSourceBridge {
 
     // @formatter:off
-    @Shadow @Final public IInventory inventory;
-    @Shadow @Final private IIntArray field_214049_b;
+    @Shadow @Final public Container bookAccess;
+    @Shadow @Final private ContainerData dataAccess;
     // @formatter:on
 
-    @Redirect(method = "createCommandSource", at = @At(value = "NEW", target = "net/minecraft/command/CommandSource"))
-    private CommandSource arclight$source(ICommandSource source, Vector3d vec3d, Vector2f vec2f, ServerWorld world, int i, String s, ITextComponent component, MinecraftServer server, @Nullable Entity entity) {
-        return new CommandSource(this, vec3d, vec2f, world, i, s, component, server, entity);
+    @Redirect(method = "createCommandSourceStack", at = @At(value = "NEW", target = "net/minecraft/commands/CommandSourceStack"))
+    private CommandSourceStack arclight$source(CommandSource source, Vec3 vec3d, Vec2 vec2f, ServerLevel world, int i, String s, Component component, MinecraftServer server, @Nullable Entity entity) {
+        return new CommandSourceStack(this, vec3d, vec2f, world, i, s, component, server, entity);
     }
 
     /**
@@ -50,37 +50,37 @@ public abstract class LecternTileEntityMixin extends TileEntityMixin implements 
      * @reason
      */
     @Overwrite
-    public Container createMenu(int i, PlayerInventory playerInventory, PlayerEntity entity) {
-        LecternContainer container = new LecternContainer(i, this.inventory, this.field_214049_b);
+    public AbstractContainerMenu createMenu(int i, Inventory playerInventory, Player entity) {
+        LecternMenu container = new LecternMenu(i, this.bookAccess, this.dataAccess);
         ((LecternContainerBridge) container).bridge$setPlayerInventory(playerInventory);
         return container;
     }
 
     @Override
-    public void sendMessage(@NotNull ITextComponent component, @NotNull UUID uuid) {
+    public void sendMessage(@NotNull Component component, @NotNull UUID uuid) {
     }
 
     @Override
-    public boolean shouldReceiveFeedback() {
+    public boolean acceptsSuccess() {
         return false;
     }
 
     @Override
-    public boolean shouldReceiveErrors() {
+    public boolean acceptsFailure() {
         return false;
     }
 
     @Override
-    public boolean allowLogging() {
+    public boolean shouldInformAdmins() {
         return false;
     }
 
-    public CommandSender getBukkitSender(CommandSource wrapper) {
-        return wrapper.getEntity() != null ? ((EntityBridge) wrapper.getEntity()).bridge$getBukkitSender(wrapper) : new CraftBlockCommandSender(wrapper, (TileEntity) (Object) this);
+    public CommandSender getBukkitSender(CommandSourceStack wrapper) {
+        return wrapper.getEntity() != null ? ((EntityBridge) wrapper.getEntity()).bridge$getBukkitSender(wrapper) : new CraftBlockCommandSender(wrapper, (BlockEntity) (Object) this);
     }
 
     @Override
-    public CommandSender bridge$getBukkitSender(CommandSource wrapper) {
+    public CommandSender bridge$getBukkitSender(CommandSourceStack wrapper) {
         return getBukkitSender(wrapper);
     }
 }

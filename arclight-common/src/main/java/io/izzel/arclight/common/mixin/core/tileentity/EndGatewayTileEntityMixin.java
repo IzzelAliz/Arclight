@@ -3,10 +3,10 @@ package io.izzel.arclight.common.mixin.core.tileentity;
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.network.play.ServerPlayNetHandlerBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.tileentity.EndGatewayTileEntity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.entity.TheEndGatewayBlockEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
@@ -18,18 +18,18 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-@Mixin(EndGatewayTileEntity.class)
+@Mixin(TheEndGatewayBlockEntity.class)
 public abstract class EndGatewayTileEntityMixin extends TileEntityMixin {
 
     // @formatter:off
     @Shadow public abstract void triggerCooldown();
     // @formatter:on
 
-    @Inject(method = "teleportEntity", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;teleportKeepLoaded(DDD)V"))
+    @Inject(method = "teleportEntity", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;teleportToWithTicket(DDD)V"))
     public void arclight$portal(Entity entityIn, CallbackInfo ci, BlockPos pos) {
-        if (entityIn instanceof ServerPlayerEntity) {
+        if (entityIn instanceof ServerPlayer) {
             CraftPlayer player = ((ServerPlayerEntityBridge) entityIn).bridge$getBukkitEntity();
-            Location location = new Location(((WorldBridge) world).bridge$getWorld(), pos.getX() + 0.5D, pos.getY() + 0.5D,  pos.getZ() + 0.5D);
+            Location location = new Location(((WorldBridge) level).bridge$getWorld(), pos.getX() + 0.5D, pos.getY() + 0.5D,  pos.getZ() + 0.5D);
             location.setPitch(player.getLocation().getPitch());
             location.setYaw(player.getLocation().getYaw());
 
@@ -40,7 +40,7 @@ public abstract class EndGatewayTileEntityMixin extends TileEntityMixin {
                 return;
             }
 
-            ((ServerPlayNetHandlerBridge) (((ServerPlayerEntity) entityIn)).connection).bridge$teleport(event.getTo());
+            ((ServerPlayNetHandlerBridge) (((ServerPlayer) entityIn)).connection).bridge$teleport(event.getTo());
             this.triggerCooldown(); // CraftBukkit - call at end of method
             ci.cancel();
         }

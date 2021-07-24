@@ -1,9 +1,5 @@
 package io.izzel.arclight.common.mixin.core.tileentity;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.ShulkerBoxTileEntity;
-import net.minecraft.util.NonNullList;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
@@ -15,31 +11,35 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity;
 
-@Mixin(ShulkerBoxTileEntity.class)
+@Mixin(ShulkerBoxBlockEntity.class)
 public abstract class ShulkerBoxTileEntityMixin extends LockableTileEntityMixin {
 
     // @formatter:off
-    @Shadow private NonNullList<ItemStack> items;
+    @Shadow private NonNullList<ItemStack> itemStacks;
     // @formatter:on
 
     public List<HumanEntity> transaction = new ArrayList<>();
     private int maxStack = MAX_STACK;
     public boolean opened;
 
-    @Inject(method = "openInventory", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addBlockEvent(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/Block;II)V"))
-    private void arclight$sound1(PlayerEntity player, CallbackInfo ci) {
+    @Inject(method = "startOpen", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;blockEvent(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;II)V"))
+    private void arclight$sound1(Player player, CallbackInfo ci) {
         if (opened) ci.cancel();
     }
 
-    @Inject(method = "closeInventory", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addBlockEvent(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/Block;II)V"))
-    private void arclight$sound2(PlayerEntity player, CallbackInfo ci) {
+    @Inject(method = "stopOpen", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;blockEvent(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;II)V"))
+    private void arclight$sound2(Player player, CallbackInfo ci) {
         if (opened) ci.cancel();
     }
 
     @Override
     public List<ItemStack> getContents() {
-        return this.items;
+        return this.itemStacks;
     }
 
     @Override
@@ -62,7 +62,7 @@ public abstract class ShulkerBoxTileEntityMixin extends LockableTileEntityMixin 
     }
 
     @Override
-    public int getInventoryStackLimit() {
+    public int getMaxStackSize() {
         if (maxStack == 0) maxStack = MAX_STACK;
         return maxStack;
     }

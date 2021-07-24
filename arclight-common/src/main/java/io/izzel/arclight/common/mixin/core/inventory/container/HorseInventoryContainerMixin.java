@@ -2,11 +2,11 @@ package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
-import net.minecraft.entity.passive.horse.AbstractHorseEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.HorseInventoryContainer;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.HorseInventoryMenu;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,18 +15,18 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(HorseInventoryContainer.class)
+@Mixin(HorseInventoryMenu.class)
 public abstract class HorseInventoryContainerMixin extends ContainerMixin {
 
     // @formatter:off
-    @Shadow @Final private IInventory horseInventory;
+    @Shadow @Final private Container horseContainer;
     // @formatter:on
 
     CraftInventoryView bukkitEntity;
-    PlayerInventory playerInventory;
+    Inventory playerInventory;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    public void arclight$init(int id, PlayerInventory playerInventory, IInventory horseInventory, AbstractHorseEntity horse, CallbackInfo ci) {
+    public void arclight$init(int id, Inventory playerInventory, Container horseInventory, AbstractHorse horse, CallbackInfo ci) {
         this.playerInventory = playerInventory;
     }
 
@@ -36,6 +36,6 @@ public abstract class HorseInventoryContainerMixin extends ContainerMixin {
             return bukkitEntity;
         }
         return bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) playerInventory.player).bridge$getBukkitEntity(),
-            ((IInventoryBridge) this.horseInventory).getOwner().getInventory(), (Container) (Object) this);
+            ((IInventoryBridge) this.horseContainer).getOwner().getInventory(), (AbstractContainerMenu) (Object) this);
     }
 }

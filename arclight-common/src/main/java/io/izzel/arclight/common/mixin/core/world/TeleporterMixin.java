@@ -3,13 +3,6 @@ package io.izzel.arclight.common.mixin.core.world;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.world.TeleporterBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.TeleportationRepositioner;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.Teleporter;
-import net.minecraft.world.server.ServerWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.util.BlockStateListPopulator;
@@ -27,34 +20,41 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import net.minecraft.BlockUtil;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.portal.PortalForcer;
 
-@Mixin(Teleporter.class)
+@Mixin(PortalForcer.class)
 public abstract class TeleporterMixin implements TeleporterBridge {
 
     // @formatter:off
-    @Shadow public abstract Optional<TeleportationRepositioner.Result> makePortal(BlockPos pos, Direction.Axis axis);
-    @Shadow @Final protected ServerWorld world;
-    @Shadow public abstract Optional<TeleportationRepositioner.Result> getExistingPortal(BlockPos pos, boolean isNether);
+    @Shadow public abstract Optional<BlockUtil.FoundRectangle> createPortal(BlockPos pos, Direction.Axis axis);
+    @Shadow @Final protected ServerLevel level;
+    @Shadow public abstract Optional<BlockUtil.FoundRectangle> findPortalAround(BlockPos pos, boolean isNether);
     // @formatter:on
 
-    @ModifyVariable(method = "getExistingPortal", index = 4, at = @At(value = "INVOKE", target = "Lnet/minecraft/village/PointOfInterestManager;ensureLoadedAndValid(Lnet/minecraft/world/IWorldReader;Lnet/minecraft/util/math/BlockPos;I)V"))
+    @ModifyVariable(method = "findPortalAround", index = 4, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ai/village/poi/PoiManager;ensureLoadedAndValid(Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/core/BlockPos;I)V"))
     private int arclight$useSearchRadius(int i) {
         return this.arclight$searchRadius == -1 ? i : this.arclight$searchRadius;
     }
 
     private transient int arclight$searchRadius = -1;
 
-    public Optional<TeleportationRepositioner.Result> findPortal(BlockPos pos, int searchRadius) {
+    public Optional<BlockUtil.FoundRectangle> findPortal(BlockPos pos, int searchRadius) {
         this.arclight$searchRadius = searchRadius;
         try {
-            return this.getExistingPortal(pos, false);
+            return this.findPortalAround(pos, false);
         } finally {
             this.arclight$searchRadius = -1;
         }
     }
 
     @Override
-    public Optional<TeleportationRepositioner.Result> bridge$findPortal(BlockPos pos, int searchRadius) {
+    public Optional<BlockUtil.FoundRectangle> bridge$findPortal(BlockPos pos, int searchRadius) {
         return findPortal(pos, searchRadius);
     }
 
@@ -63,26 +63,26 @@ public abstract class TeleporterMixin implements TeleporterBridge {
         return this.arclight$createRadius == -1 ? i : this.arclight$createRadius;
     }
 
-    @Redirect(method = "makePortal", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Z"))
-    private boolean arclight$captureBlocks1(ServerWorld serverWorld, BlockPos pos, BlockState state) {
+    @Redirect(method = "createPortal", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
+    private boolean arclight$captureBlocks1(ServerLevel serverWorld, BlockPos pos, BlockState state) {
         if (this.arclight$populator == null) {
             this.arclight$populator = new BlockStateListPopulator(serverWorld);
         }
-        return this.arclight$populator.setBlockState(pos, state, 3);
+        return this.arclight$populator.setBlock(pos, state, 3);
     }
 
-    @Redirect(method = "makePortal", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
-    private boolean arclight$captureBlocks2(ServerWorld serverWorld, BlockPos pos, BlockState state, int flags) {
+    @Redirect(method = "createPortal", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
+    private boolean arclight$captureBlocks2(ServerLevel serverWorld, BlockPos pos, BlockState state, int flags) {
         if (this.arclight$populator == null) {
             this.arclight$populator = new BlockStateListPopulator(serverWorld);
         }
-        return this.arclight$populator.setBlockState(pos, state, flags);
+        return this.arclight$populator.setBlock(pos, state, flags);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    @Inject(method = "makePortal", cancellable = true, at = @At("RETURN"))
-    private void arclight$portalCreate(BlockPos pos, Direction.Axis axis, CallbackInfoReturnable<Optional<TeleportationRepositioner.Result>> cir) {
-        CraftWorld craftWorld = ((WorldBridge) this.world).bridge$getWorld();
+    @Inject(method = "createPortal", cancellable = true, at = @At("RETURN"))
+    private void arclight$portalCreate(BlockPos pos, Direction.Axis axis, CallbackInfoReturnable<Optional<BlockUtil.FoundRectangle>> cir) {
+        CraftWorld craftWorld = ((WorldBridge) this.level).bridge$getWorld();
         List<org.bukkit.block.BlockState> blockStates;
         if (this.arclight$populator == null) {
             blockStates = new ArrayList<>();
@@ -105,11 +105,11 @@ public abstract class TeleporterMixin implements TeleporterBridge {
     private transient Entity arclight$entity;
     private transient int arclight$createRadius = -1;
 
-    public Optional<TeleportationRepositioner.Result> createPortal(BlockPos pos, Direction.Axis axis, Entity entity, int createRadius) {
+    public Optional<BlockUtil.FoundRectangle> createPortal(BlockPos pos, Direction.Axis axis, Entity entity, int createRadius) {
         this.arclight$entity = entity;
         this.arclight$createRadius = createRadius;
         try {
-            return this.makePortal(pos, axis);
+            return this.createPortal(pos, axis);
         } finally {
             this.arclight$entity = null;
             this.arclight$createRadius = -1;
@@ -117,7 +117,7 @@ public abstract class TeleporterMixin implements TeleporterBridge {
     }
 
     @Override
-    public Optional<TeleportationRepositioner.Result> bridge$createPortal(BlockPos pos, Direction.Axis axis, Entity entity, int createRadius) {
+    public Optional<BlockUtil.FoundRectangle> bridge$createPortal(BlockPos pos, Direction.Axis axis, Entity entity, int createRadius) {
         return createPortal(pos, axis, entity, createRadius);
     }
 }

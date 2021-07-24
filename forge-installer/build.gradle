@@ -12,7 +12,8 @@ repositories {
 }
 
 dependencies {
-    compile 'com.google.code.gson:gson:2.8.0'
-    compile "io.izzel.arclight:arclight-api:$apiVersion"
-    compile project(':i18n-config')
+    implementation 'com.google.code.gson:gson:2.8.0'
+    implementation 'com.google.guava:guava:30.1.1-jre'
+    implementation "io.izzel.arclight:arclight-api:$apiVersion"
+    implementation project(':i18n-config')
 }

@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.mod.util;
 
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.NetworkManager;
+import net.minecraft.network.Connection;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.util.CraftIconCache;
@@ -21,8 +21,8 @@ public class ArclightPingEvent extends ServerListPingEvent {
     public CraftIconCache icon;
     private final Object[] players;
 
-    public ArclightPingEvent(NetworkManager networkManager, MinecraftServer server) {
-        super(((InetSocketAddress) networkManager.getRemoteAddress()).getAddress(), server.getMOTD(), server.getPlayerList().getMaxPlayers());
+    public ArclightPingEvent(Connection networkManager, MinecraftServer server) {
+        super(((InetSocketAddress) networkManager.getRemoteAddress()).getAddress(), server.getMotd(), server.getPlayerList().getMaxPlayers());
         this.icon = ((CraftServer) Bukkit.getServer()).getServerIcon();
         this.players = server.getPlayerList().players.toArray();
     }
@@ -41,7 +41,7 @@ public class ArclightPingEvent extends ServerListPingEvent {
         return new Iterator<Player>() {
             int i;
             int ret = Integer.MIN_VALUE;
-            ServerPlayerEntity player;
+            ServerPlayer player;
 
             @Override
             public boolean hasNext() {
@@ -50,7 +50,7 @@ public class ArclightPingEvent extends ServerListPingEvent {
                 }
                 Object[] currentPlayers = players;
                 for (int length = currentPlayers.length, i = this.i; i < length; ++i) {
-                    ServerPlayerEntity player = (ServerPlayerEntity) currentPlayers[i];
+                    ServerPlayer player = (ServerPlayer) currentPlayers[i];
                     if (player != null) {
                         this.i = i + 1;
                         this.player = player;
@@ -65,7 +65,7 @@ public class ArclightPingEvent extends ServerListPingEvent {
                 if (!this.hasNext()) {
                     throw new NoSuchElementException();
                 }
-                ServerPlayerEntity player = this.player;
+                ServerPlayer player = this.player;
                 this.player = null;
                 this.ret = this.i - 1;
                 return ((ServerPlayerEntityBridge) player).bridge$getBukkitEntity();

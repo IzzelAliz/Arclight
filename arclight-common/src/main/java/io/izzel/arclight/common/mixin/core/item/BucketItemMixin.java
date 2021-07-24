@@ -1,23 +1,23 @@
 package io.izzel.arclight.common.mixin.core.item;
 
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.IBucketPickupHandler;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.BucketItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.play.server.SChangeBlockPacket;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BucketItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BucketPickup;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v.util.DummyGeneratorAccess;
@@ -36,34 +36,34 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 public abstract class BucketItemMixin {
 
     // @formatter:off
-    @Shadow public abstract boolean tryPlaceContainedLiquid(@javax.annotation.Nullable PlayerEntity player, World worldIn, BlockPos posIn, @javax.annotation.Nullable BlockRayTraceResult rayTrace);
+    @Shadow public abstract boolean emptyBucket(@javax.annotation.Nullable Player player, Level worldIn, BlockPos posIn, @javax.annotation.Nullable BlockHitResult rayTrace);
     // @formatter:on
 
-    @Inject(method = "onItemRightClick", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/block/IBucketPickupHandler;pickupFluid(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Lnet/minecraft/fluid/Fluid;"))
-    private void arclight$bucketFill(World worldIn, PlayerEntity playerIn, Hand handIn, CallbackInfoReturnable<ActionResult<ItemStack>> cir, ItemStack stack, RayTraceResult result) {
-        BlockPos pos = ((BlockRayTraceResult) result).getPos();
+    @Inject(method = "use", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/BucketPickup;takeLiquid(Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Lnet/minecraft/world/level/material/Fluid;"))
+    private void arclight$bucketFill(Level worldIn, Player playerIn, InteractionHand handIn, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir, ItemStack stack, HitResult result) {
+        BlockPos pos = ((BlockHitResult) result).getBlockPos();
         BlockState state = worldIn.getBlockState(pos);
-        Fluid dummyFluid = ((IBucketPickupHandler) state.getBlock()).pickupFluid(DummyGeneratorAccess.INSTANCE, pos, state);
-        PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent((ServerWorld) worldIn, playerIn, pos, pos, ((BlockRayTraceResult) result).getFace(), stack, dummyFluid.getFilledBucket());
+        Fluid dummyFluid = ((BucketPickup) state.getBlock()).takeLiquid(DummyGeneratorAccess.INSTANCE, pos, state);
+        PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent((ServerLevel) worldIn, playerIn, pos, pos, ((BlockHitResult) result).getDirection(), stack, dummyFluid.getBucket());
         if (event.isCancelled()) {
-            ((ServerPlayerEntity) playerIn).connection.sendPacket(new SChangeBlockPacket(worldIn, pos));
+            ((ServerPlayer) playerIn).connection.send(new ClientboundBlockUpdatePacket(worldIn, pos));
             ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().updateInventory();
-            cir.setReturnValue(new ActionResult<>(ActionResultType.FAIL, stack));
+            cir.setReturnValue(new InteractionResultHolder<>(InteractionResult.FAIL, stack));
         } else {
             arclight$captureItem = event.getItemStack();
         }
     }
 
-    @Inject(method = "onItemRightClick", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/item/BucketItem;tryPlaceContainedLiquid(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/util/math/BlockRayTraceResult;)Z"))
-    private void arclight$capture(World worldIn, PlayerEntity playerIn, Hand handIn, CallbackInfoReturnable<ActionResult<ItemStack>> cir, ItemStack stack, RayTraceResult result) {
-        BlockRayTraceResult blockRayTraceResult = (BlockRayTraceResult) result;
-        arclight$direction = blockRayTraceResult.getFace();
-        arclight$click = blockRayTraceResult.getPos();
+    @Inject(method = "use", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/BucketItem;emptyBucket(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/phys/BlockHitResult;)Z"))
+    private void arclight$capture(Level worldIn, Player playerIn, InteractionHand handIn, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir, ItemStack stack, HitResult result) {
+        BlockHitResult blockRayTraceResult = (BlockHitResult) result;
+        arclight$direction = blockRayTraceResult.getDirection();
+        arclight$click = blockRayTraceResult.getBlockPos();
         arclight$stack = stack;
     }
 
-    @Inject(method = "onItemRightClick", at = @At("RETURN"))
-    private void arclight$clean(World worldIn, PlayerEntity playerIn, Hand handIn, CallbackInfoReturnable<ActionResult<ItemStack>> cir) {
+    @Inject(method = "use", at = @At("RETURN"))
+    private void arclight$clean(Level worldIn, Player playerIn, InteractionHand handIn, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {
         arclight$captureItem = null;
         arclight$direction = null;
         arclight$click = null;
@@ -77,12 +77,12 @@ public abstract class BucketItemMixin {
         return arclight$captureItem == null ? itemStack : CraftItemStack.asNMSCopy(arclight$captureItem);
     }
 
-    public boolean a(PlayerEntity entity, World world, BlockPos pos, @Nullable BlockRayTraceResult result, Direction direction, BlockPos clicked, ItemStack itemstack) {
+    public boolean a(Player entity, Level world, BlockPos pos, @Nullable BlockHitResult result, Direction direction, BlockPos clicked, ItemStack itemstack) {
         arclight$direction = direction;
         arclight$click = clicked;
         arclight$stack = itemstack;
         try {
-            return this.tryPlaceContainedLiquid(entity, world, pos, result);
+            return this.emptyBucket(entity, world, pos, result);
         } finally {
             arclight$direction = null;
             arclight$click = null;
@@ -94,12 +94,12 @@ public abstract class BucketItemMixin {
     private transient BlockPos arclight$click;
     private transient ItemStack arclight$stack;
 
-    @Inject(method = "tryPlaceContainedLiquid", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/DimensionType;isUltrawarm()Z"))
-    private void arclight$bucketEmpty(PlayerEntity player, World worldIn, BlockPos posIn, BlockRayTraceResult rayTrace, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "emptyBucket", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/dimension/DimensionType;ultraWarm()Z"))
+    private void arclight$bucketEmpty(Player player, Level worldIn, BlockPos posIn, BlockHitResult rayTrace, CallbackInfoReturnable<Boolean> cir) {
         if (player != null) {
-            PlayerBucketEmptyEvent event = CraftEventFactory.callPlayerBucketEmptyEvent((ServerWorld) worldIn, player, posIn, arclight$click, arclight$direction, arclight$stack);
+            PlayerBucketEmptyEvent event = CraftEventFactory.callPlayerBucketEmptyEvent((ServerLevel) worldIn, player, posIn, arclight$click, arclight$direction, arclight$stack);
             if (event.isCancelled()) {
-                ((ServerPlayerEntity) player).connection.sendPacket(new SChangeBlockPacket(worldIn, posIn));
+                ((ServerPlayer) player).connection.send(new ClientboundBlockUpdatePacket(worldIn, posIn));
                 ((ServerPlayerEntityBridge) player).bridge$getBukkitEntity().updateInventory();
                 cir.setReturnValue(false);
             }

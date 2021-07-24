@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.bridge.server;
 
-import net.minecraft.command.Commands;
+import net.minecraft.commands.Commands;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.craftbukkit.v.CraftServer;

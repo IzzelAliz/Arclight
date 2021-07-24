@@ -1,23 +1,23 @@
 package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import io.izzel.arclight.common.bridge.inventory.container.LecternContainerBridge;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.ContainerType;
-import net.minecraft.inventory.container.LecternContainer;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.core.Registry;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.LecternMenu;
+import net.minecraft.world.inventory.MenuType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(ContainerType.class)
-public class ContainerTypeMixin<T extends Container> {
+@Mixin(MenuType.class)
+public class ContainerTypeMixin<T extends AbstractContainerMenu> {
 
     @Inject(method = "register", cancellable = true, at = @At("HEAD"))
-    private static <T extends Container> void arclight$replaceLectern(String key, ContainerType.IFactory<T> factory, CallbackInfoReturnable<ContainerType<T>> cir) {
+    private static <T extends AbstractContainerMenu> void arclight$replaceLectern(String key, MenuType.MenuSupplier<T> factory, CallbackInfoReturnable<MenuType<T>> cir) {
         if (key.equals("lectern")) {
-            cir.setReturnValue(Registry.register(Registry.MENU, key, new ContainerType<>((i, inv) -> {
-                LecternContainer container = new LecternContainer(i);
+            cir.setReturnValue(Registry.register(Registry.MENU, key, new MenuType<>((i, inv) -> {
+                LecternMenu container = new LecternMenu(i);
                 ((LecternContainerBridge) container).bridge$setPlayerInventory(inv);
                 return (T) container;
             })));

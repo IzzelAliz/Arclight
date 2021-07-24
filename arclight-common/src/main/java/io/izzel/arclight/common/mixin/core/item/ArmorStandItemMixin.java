@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.mixin.core.item;
 
-import net.minecraft.entity.item.ArmorStandEntity;
-import net.minecraft.item.ArmorStandItem;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.util.ActionResultType;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.item.ArmorStandItem;
+import net.minecraft.world.item.context.UseOnContext;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,18 +14,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ArmorStandItem.class)
 public class ArmorStandItemMixin {
 
-    private transient ArmorStandEntity arclight$entity;
+    private transient ArmorStand arclight$entity;
 
-    @Redirect(method = "onItemUse", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/item/ArmorStandEntity;setLocationAndAngles(DDDFF)V"))
-    public void arclight$captureEntity(ArmorStandEntity armorStandEntity, double x, double y, double z, float yaw, float pitch) {
-        armorStandEntity.setLocationAndAngles(x, y, z, yaw, pitch);
+    @Redirect(method = "useOn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/ArmorStand;moveTo(DDDFF)V"))
+    public void arclight$captureEntity(ArmorStand armorStandEntity, double x, double y, double z, float yaw, float pitch) {
+        armorStandEntity.moveTo(x, y, z, yaw, pitch);
         arclight$entity = armorStandEntity;
     }
 
-    @Inject(method = "onItemUse", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
-    public void arclight$entityPlace(ItemUseContext context, CallbackInfoReturnable<ActionResultType> cir) {
+    @Inject(method = "useOn", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
+    public void arclight$entityPlace(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
         if (CraftEventFactory.callEntityPlaceEvent(context, arclight$entity).isCancelled()) {
-            cir.setReturnValue(ActionResultType.FAIL);
+            cir.setReturnValue(InteractionResult.FAIL);
         }
         arclight$entity = null;
     }

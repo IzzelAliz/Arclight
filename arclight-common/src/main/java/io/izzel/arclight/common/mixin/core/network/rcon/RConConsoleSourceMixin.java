@@ -3,15 +3,15 @@ package io.izzel.arclight.common.mixin.core.network.rcon;
 import io.izzel.arclight.common.bridge.command.ICommandSourceBridge;
 import io.izzel.arclight.common.bridge.network.rcon.RConConsoleSourceBridge;
 import io.izzel.arclight.common.bridge.server.MinecraftServerBridge;
-import net.minecraft.command.CommandSource;
-import net.minecraft.network.rcon.RConConsoleSource;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.rcon.RconConsoleSource;
 import org.bukkit.command.CommandSender;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(RConConsoleSource.class)
+@Mixin(RconConsoleSource.class)
 public class RConConsoleSourceMixin implements ICommandSourceBridge, RConConsoleSourceBridge {
 
     // @formatter:off
@@ -28,7 +28,7 @@ public class RConConsoleSourceMixin implements ICommandSourceBridge, RConConsole
     }
 
     @Override
-    public CommandSender bridge$getBukkitSender(CommandSource wrapper) {
+    public CommandSender bridge$getBukkitSender(CommandSourceStack wrapper) {
         return getBukkitSender();
     }
 

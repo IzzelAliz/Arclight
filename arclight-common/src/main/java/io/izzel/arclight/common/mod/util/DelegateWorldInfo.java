@@ -3,45 +3,44 @@ package io.izzel.arclight.common.mod.util;
 import com.mojang.serialization.Lifecycle;
 import io.izzel.arclight.common.bridge.world.storage.WorldInfoBridge;
 import io.izzel.arclight.common.bridge.world.storage.DerivedWorldInfoBridge;
-import net.minecraft.command.TimerCallbackManager;
-import net.minecraft.crash.CrashReportCategory;
+import net.minecraft.CrashReportCategory;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.GameType;
-import net.minecraft.world.WorldSettings;
-import net.minecraft.world.border.WorldBorder;
-import net.minecraft.world.gen.settings.DimensionGeneratorSettings;
-import net.minecraft.world.storage.DerivedWorldInfo;
-import net.minecraft.world.storage.IServerWorldInfo;
-import net.minecraft.world.storage.ServerWorldInfo;
-
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.LevelSettings;
+import net.minecraft.world.level.border.WorldBorder;
+import net.minecraft.world.level.levelgen.WorldGenSettings;
+import net.minecraft.world.level.storage.DerivedLevelData;
+import net.minecraft.world.level.storage.PrimaryLevelData;
+import net.minecraft.world.level.storage.ServerLevelData;
+import net.minecraft.world.level.timers.TimerQueue;
 import java.util.UUID;
 
 @SuppressWarnings("all")
-public class DelegateWorldInfo extends ServerWorldInfo {
+public class DelegateWorldInfo extends PrimaryLevelData {
 
-    private final DerivedWorldInfo derivedWorldInfo;
+    private final DerivedLevelData derivedWorldInfo;
 
-    public DelegateWorldInfo(WorldSettings worldSettings, DimensionGeneratorSettings generatorSettings, Lifecycle lifecycle, DerivedWorldInfo derivedWorldInfo) {
+    public DelegateWorldInfo(LevelSettings worldSettings, WorldGenSettings generatorSettings, Lifecycle lifecycle, DerivedLevelData derivedWorldInfo) {
         super(worldSettings, generatorSettings, lifecycle);
         this.derivedWorldInfo = derivedWorldInfo;
     }
 
     @Override
-    public int getSpawnX() {
-        return derivedWorldInfo.getSpawnX();
+    public int getXSpawn() {
+        return derivedWorldInfo.getXSpawn();
     }
 
     @Override
-    public int getSpawnY() {
-        return derivedWorldInfo.getSpawnY();
+    public int getYSpawn() {
+        return derivedWorldInfo.getYSpawn();
     }
 
     @Override
-    public int getSpawnZ() {
-        return derivedWorldInfo.getSpawnZ();
+    public int getZSpawn() {
+        return derivedWorldInfo.getZSpawn();
     }
 
     @Override
@@ -60,8 +59,8 @@ public class DelegateWorldInfo extends ServerWorldInfo {
     }
 
     @Override
-    public String getWorldName() {
-        return derivedWorldInfo.getWorldName();
+    public String getLevelName() {
+        return derivedWorldInfo.getLevelName();
     }
 
     @Override
@@ -100,18 +99,18 @@ public class DelegateWorldInfo extends ServerWorldInfo {
     }
 
     @Override
-    public void setSpawnX(int x) {
-        derivedWorldInfo.setSpawnX(x);
+    public void setXSpawn(int x) {
+        derivedWorldInfo.setXSpawn(x);
     }
 
     @Override
-    public void setSpawnY(int y) {
-        derivedWorldInfo.setSpawnY(y);
+    public void setYSpawn(int y) {
+        derivedWorldInfo.setYSpawn(y);
     }
 
     @Override
-    public void setSpawnZ(int z) {
-        derivedWorldInfo.setSpawnZ(z);
+    public void setZSpawn(int z) {
+        derivedWorldInfo.setZSpawn(z);
     }
 
     @Override
@@ -165,8 +164,8 @@ public class DelegateWorldInfo extends ServerWorldInfo {
     }
 
     @Override
-    public boolean areCommandsAllowed() {
-        return derivedWorldInfo.areCommandsAllowed();
+    public boolean getAllowCommands() {
+        return derivedWorldInfo.getAllowCommands();
     }
 
     @Override
@@ -180,18 +179,18 @@ public class DelegateWorldInfo extends ServerWorldInfo {
     }
 
     @Override
-    public GameRules getGameRulesInstance() {
-        return derivedWorldInfo.getGameRulesInstance();
+    public GameRules getGameRules() {
+        return derivedWorldInfo.getGameRules();
     }
 
     @Override
-    public WorldBorder.Serializer getWorldBorderSerializer() {
-        return derivedWorldInfo.getWorldBorderSerializer();
+    public WorldBorder.Settings getWorldBorder() {
+        return derivedWorldInfo.getWorldBorder();
     }
 
     @Override
-    public void setWorldBorderSerializer(WorldBorder.Serializer serializer) {
-        derivedWorldInfo.setWorldBorderSerializer(serializer);
+    public void setWorldBorder(WorldBorder.Settings serializer) {
+        derivedWorldInfo.setWorldBorder(serializer);
     }
 
     @Override
@@ -205,7 +204,7 @@ public class DelegateWorldInfo extends ServerWorldInfo {
     }
 
     @Override
-    public TimerCallbackManager<MinecraftServer> getScheduledEvents() {
+    public TimerQueue<MinecraftServer> getScheduledEvents() {
         return derivedWorldInfo.getScheduledEvents();
     }
 
@@ -230,37 +229,37 @@ public class DelegateWorldInfo extends ServerWorldInfo {
     }
 
     @Override
-    public void setWanderingTraderID(UUID id) {
-        derivedWorldInfo.setWanderingTraderID(id);
+    public void setWanderingTraderId(UUID id) {
+        derivedWorldInfo.setWanderingTraderId(id);
     }
 
     @Override
-    public void addToCrashReport(CrashReportCategory category) {
-        derivedWorldInfo.addToCrashReport(category);
+    public void fillCrashReportCategory(CrashReportCategory category) {
+        derivedWorldInfo.fillCrashReportCategory(category);
     }
 
-    public static DelegateWorldInfo wrap(DerivedWorldInfo worldInfo) {
+    public static DelegateWorldInfo wrap(DerivedLevelData worldInfo) {
         return new DelegateWorldInfo(worldSettings(worldInfo), generatorSettings(worldInfo), lifecycle(worldInfo), worldInfo);
     }
 
-    private static WorldSettings worldSettings(IServerWorldInfo worldInfo) {
-        if (worldInfo instanceof ServerWorldInfo) {
+    private static LevelSettings worldSettings(ServerLevelData worldInfo) {
+        if (worldInfo instanceof PrimaryLevelData) {
             return ((WorldInfoBridge) worldInfo).bridge$getWorldSettings();
         } else {
             return worldSettings(((DerivedWorldInfoBridge) worldInfo).bridge$getDelegate());
         }
     }
 
-    private static DimensionGeneratorSettings generatorSettings(IServerWorldInfo worldInfo) {
-        if (worldInfo instanceof ServerWorldInfo) {
-            return ((ServerWorldInfo) worldInfo).getDimensionGeneratorSettings();
+    private static WorldGenSettings generatorSettings(ServerLevelData worldInfo) {
+        if (worldInfo instanceof PrimaryLevelData) {
+            return ((PrimaryLevelData) worldInfo).worldGenSettings();
         } else {
             return generatorSettings(((DerivedWorldInfoBridge) worldInfo).bridge$getDelegate());
         }
     }
 
-    private static Lifecycle lifecycle(IServerWorldInfo worldInfo) {
-        if (worldInfo instanceof ServerWorldInfo) {
+    private static Lifecycle lifecycle(ServerLevelData worldInfo) {
+        if (worldInfo instanceof PrimaryLevelData) {
             return ((WorldInfoBridge) worldInfo).bridge$getLifecycle();
         } else {
             return lifecycle(((DerivedWorldInfoBridge) worldInfo).bridge$getDelegate());

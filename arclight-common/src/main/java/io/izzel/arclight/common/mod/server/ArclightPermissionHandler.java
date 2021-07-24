@@ -2,7 +2,6 @@ package io.izzel.arclight.common.mod.server;
 
 import com.mojang.authlib.GameProfile;
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraftforge.server.permission.DefaultPermissionLevel;
 import net.minecraftforge.server.permission.IPermissionHandler;
 import net.minecraftforge.server.permission.context.IContext;
@@ -65,7 +64,7 @@ public class ArclightPermissionHandler implements IPermissionHandler {
     @Override
     public boolean hasPermission(@NotNull GameProfile profile, @NotNull String node, @Nullable IContext context) {
         if (context != null) {
-            PlayerEntity player = context.getPlayer();
+            net.minecraft.world.entity.player.Player player = context.getPlayer();
             if (player != null) {
                 return ((PlayerEntityBridge) player).bridge$getBukkitEntity().hasPermission(node);
             }
@@ -75,7 +74,7 @@ public class ArclightPermissionHandler implements IPermissionHandler {
             return player.hasPermission(node);
         } else {
             Permission perm = Bukkit.getServer().getPluginManager().getPermission(node);
-            boolean isOp = ArclightServer.getMinecraftServer().getPlayerList().canSendCommands(profile);
+            boolean isOp = ArclightServer.getMinecraftServer().getPlayerList().isOp(profile);
             if (perm != null) {
                 return perm.getDefault().getValue(isOp);
             } else {

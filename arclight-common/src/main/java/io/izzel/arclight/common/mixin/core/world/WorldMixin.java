@@ -7,25 +7,25 @@ import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.server.world.WrappedWorlds;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.profiler.IProfiler;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.DimensionType;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldWriter;
-import net.minecraft.world.World;
-import net.minecraft.world.border.WorldBorder;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.IServerWorldInfo;
-import net.minecraft.world.storage.ISpawnWorldInfo;
-import net.minecraft.world.storage.IWorldInfo;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelWriter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.border.WorldBorder;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.storage.LevelData;
+import net.minecraft.world.level.storage.ServerLevelData;
+import net.minecraft.world.level.storage.WritableLevelData;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
@@ -52,24 +52,24 @@ import java.lang.reflect.Field;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-@Mixin(World.class)
-public abstract class WorldMixin implements WorldBridge, IWorldWriter {
+@Mixin(Level.class)
+public abstract class WorldMixin implements WorldBridge, LevelWriter {
 
     // @formatter:off
-    @Shadow @Nullable public TileEntity getTileEntity(BlockPos pos) { return null; }
+    @Shadow @Nullable public BlockEntity getBlockEntity(BlockPos pos) { return null; }
     @Shadow public abstract BlockState getBlockState(BlockPos pos);
-    @Shadow public abstract void setTileEntity(BlockPos pos, @Nullable TileEntity tileEntityIn);
+    @Shadow public abstract void setBlockEntity(BlockPos pos, @Nullable BlockEntity tileEntityIn);
     @Shadow public abstract WorldBorder getWorldBorder();
     @Shadow @Final private WorldBorder worldBorder;
     @Shadow public abstract long getDayTime();
     @Shadow public abstract MinecraftServer shadow$getServer();
     @Shadow @Final private DimensionType dimensionType;
-    @Shadow public abstract IWorldInfo getWorldInfo();
-    @Shadow public abstract RegistryKey<World> getDimensionKey();
-    @Accessor("mainThread") public abstract Thread arclight$getMainThread();
+    @Shadow public abstract LevelData getLevelData();
+    @Shadow public abstract ResourceKey<Level> dimension();
+    @Accessor("thread") public abstract Thread arclight$getMainThread();
     // @formatter:on
 
-    private RegistryKey<DimensionType> typeKey;
+    private ResourceKey<DimensionType> typeKey;
     protected CraftWorld world;
     public boolean pvpMode;
     public boolean keepSpawnInMemory = true;
@@ -85,30 +85,30 @@ public abstract class WorldMixin implements WorldBridge, IWorldWriter {
     @SuppressWarnings("unused") // Access transformed to public by ArclightMixinPlugin
     private static BlockPos lastPhysicsProblem; // Spigot
 
-    public void arclight$constructor(ISpawnWorldInfo worldInfo, RegistryKey<World> dimension, final DimensionType dimensionType, Supplier<IProfiler> profiler, boolean isRemote, boolean isDebug, long seed) {
+    public void arclight$constructor(WritableLevelData worldInfo, ResourceKey<Level> dimension, final DimensionType dimensionType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed) {
         throw new RuntimeException();
     }
 
-    public void arclight$constructor(ISpawnWorldInfo worldInfo, RegistryKey<World> dimension, final DimensionType dimensionType, Supplier<IProfiler> profiler, boolean isRemote, boolean isDebug, long seed, org.bukkit.generator.ChunkGenerator gen, org.bukkit.World.Environment env) {
+    public void arclight$constructor(WritableLevelData worldInfo, ResourceKey<Level> dimension, final DimensionType dimensionType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed, org.bukkit.generator.ChunkGenerator gen, org.bukkit.World.Environment env) {
         arclight$constructor(worldInfo, dimension, dimensionType, profiler, isRemote, isDebug, seed);
         this.generator = gen;
         this.environment = env;
         bridge$getWorld();
     }
 
-    @Inject(method = "<init>(Lnet/minecraft/world/storage/ISpawnWorldInfo;Lnet/minecraft/util/RegistryKey;Lnet/minecraft/world/DimensionType;Ljava/util/function/Supplier;ZZJ)V", at = @At("RETURN"))
-    private void arclight$init(ISpawnWorldInfo info, RegistryKey<World> dimension, DimensionType dimType, Supplier<IProfiler> profiler, boolean isRemote, boolean isDebug, long seed, CallbackInfo ci) {
-        this.spigotConfig = new SpigotWorldConfig(((IServerWorldInfo) info).getWorldName());
-        ((WorldBorderBridge) this.worldBorder).bridge$setWorld((World) (Object) this);
+    @Inject(method = "<init>(Lnet/minecraft/world/level/storage/WritableLevelData;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/dimension/DimensionType;Ljava/util/function/Supplier;ZZJ)V", at = @At("RETURN"))
+    private void arclight$init(WritableLevelData info, ResourceKey<Level> dimension, DimensionType dimType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed, CallbackInfo ci) {
+        this.spigotConfig = new SpigotWorldConfig(((ServerLevelData) info).getLevelName());
+        ((WorldBorderBridge) this.worldBorder).bridge$setWorld((Level) (Object) this);
         this.ticksPerAnimalSpawns = this.getServer().getTicksPerAnimalSpawns();
         this.ticksPerMonsterSpawns = this.getServer().getTicksPerMonsterSpawns();
         this.ticksPerWaterSpawns = this.getServer().getTicksPerWaterSpawns();
         this.ticksPerWaterAmbientSpawns = this.getServer().getTicksPerWaterAmbientSpawns();
         this.ticksPerAmbientSpawns = this.getServer().getTicksPerAmbientSpawns();
-        this.typeKey = this.getServer().getHandle().getServer().getDynamicRegistries().func_230520_a_().getOptionalKey(dimensionType)
+        this.typeKey = this.getServer().getHandle().getServer().registryAccess().dimensionTypes().getResourceKey(dimensionType)
             .orElseGet(() -> {
-                Registry<DimensionType> registry = this.getServer().getHandle().getServer().getDynamicRegistries().func_230520_a_();
-                RegistryKey<DimensionType> typeRegistryKey = RegistryKey.getOrCreateKey(registry.getRegistryKey(), dimension.getLocation());
+                Registry<DimensionType> registry = this.getServer().getHandle().getServer().registryAccess().dimensionTypes();
+                ResourceKey<DimensionType> typeRegistryKey = ResourceKey.create(registry.key(), dimension.location());
                 ArclightMod.LOGGER.warn("Assign {} to unknown dimension type {} as {}", typeRegistryKey, dimType);
                 return typeRegistryKey;
             });
@@ -139,12 +139,12 @@ public abstract class WorldMixin implements WorldBridge, IWorldWriter {
         return ticksPerWaterAmbientSpawns;
     }
 
-    public RegistryKey<DimensionType> getTypeKey() {
+    public ResourceKey<DimensionType> getTypeKey() {
         return this.typeKey;
     }
 
     @Override
-    public RegistryKey<DimensionType> bridge$getTypeKey() {
+    public ResourceKey<DimensionType> bridge$getTypeKey() {
         return getTypeKey();
     }
 
@@ -153,7 +153,7 @@ public abstract class WorldMixin implements WorldBridge, IWorldWriter {
         return this.spigotConfig;
     }
 
-    @Inject(method = "setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z",
+    @Inject(method = "setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z",
         at = @At("HEAD"), cancellable = true)
     private void arclight$hooks(BlockPos pos, BlockState newState, int flags, CallbackInfoReturnable<Boolean> cir) {
         if (!processCaptures(pos, newState, flags)) {
@@ -171,11 +171,11 @@ public abstract class WorldMixin implements WorldBridge, IWorldWriter {
         return true;
     }
 
-    @Inject(method = "markAndNotifyBlock", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;updateNeighbours(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;II)V"))
-    private void arclight$callBlockPhysics(BlockPos pos, Chunk chunk, BlockState blockstate, BlockState state, int flags, int recursionLeft, CallbackInfo ci) {
+    @Inject(method = "markAndNotifyBlock", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;updateNeighbours(Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;II)V"))
+    private void arclight$callBlockPhysics(BlockPos pos, LevelChunk chunk, BlockState blockstate, BlockState state, int flags, int recursionLeft, CallbackInfo ci) {
         try {
             if (this.world != null) {
-                BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at((IWorld) this, pos), CraftBlockData.fromData(state));
+                BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at((LevelAccessor) this, pos), CraftBlockData.fromData(state));
                 Bukkit.getPluginManager().callEvent(event);
                 if (event.isCancelled()) {
                     ci.cancel();
@@ -187,12 +187,12 @@ public abstract class WorldMixin implements WorldBridge, IWorldWriter {
     }
 
     @Inject(method = "neighborChanged", cancellable = true,
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;neighborChanged(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/Block;Lnet/minecraft/util/math/BlockPos;Z)V"),
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;neighborChanged(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;Lnet/minecraft/core/BlockPos;Z)V"),
         locals = LocalCapture.CAPTURE_FAILHARD)
     private void arclight$callBlockPhysics2(BlockPos pos, Block blockIn, BlockPos fromPos, CallbackInfo ci, BlockState blockState) {
         try {
             if (this.world != null) {
-                IWorld iWorld = (IWorld) this;
+                LevelAccessor iWorld = (LevelAccessor) this;
                 BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at(iWorld, pos), CraftBlockData.fromData(blockState), CraftBlock.at(iWorld, fromPos));
                 Bukkit.getPluginManager().callEvent(event);
                 if (event.isCancelled()) {
@@ -219,28 +219,28 @@ public abstract class WorldMixin implements WorldBridge, IWorldWriter {
                 }
             }
             if (generator == null) {
-                generator = getServer().getGenerator(((IServerWorldInfo) this.getWorldInfo()).getWorldName());
-                if (generator != null && (Object) this instanceof ServerWorld) {
-                    ServerWorld serverWorld = (ServerWorld) (Object) this;
-                    CustomChunkGenerator gen = new CustomChunkGenerator(serverWorld, serverWorld.getChunkProvider().getChunkGenerator(), generator);
-                    ((ServerChunkProviderBridge) serverWorld.getChunkProvider()).bridge$setChunkGenerator(gen);
+                generator = getServer().getGenerator(((ServerLevelData) this.getLevelData()).getLevelName());
+                if (generator != null && (Object) this instanceof ServerLevel) {
+                    ServerLevel serverWorld = (ServerLevel) (Object) this;
+                    CustomChunkGenerator gen = new CustomChunkGenerator(serverWorld, serverWorld.getChunkSource().getGenerator(), generator);
+                    ((ServerChunkProviderBridge) serverWorld.getChunkSource()).bridge$setChunkGenerator(gen);
                 }
             }
             if (environment == null) {
                 environment = ArclightServer.getEnvironment(this.typeKey);
             }
-            this.world = new CraftWorld((ServerWorld) (Object) this, generator, environment);
+            this.world = new CraftWorld((ServerLevel) (Object) this, generator, environment);
             getServer().addWorld(this.world);
         }
         return this.world;
     }
 
-    public TileEntity getTileEntity(BlockPos pos, boolean validate) {
-        return getTileEntity(pos);
+    public BlockEntity getTileEntity(BlockPos pos, boolean validate) {
+        return getBlockEntity(pos);
     }
 
     @Override
-    public TileEntity bridge$getTileEntity(BlockPos pos, boolean validate) {
+    public BlockEntity bridge$getTileEntity(BlockPos pos, boolean validate) {
         return getTileEntity(pos, validate);
     }
 
@@ -280,7 +280,7 @@ public abstract class WorldMixin implements WorldBridge, IWorldWriter {
     }
 
     @Override
-    public ServerWorld bridge$getMinecraftWorld() {
+    public ServerLevel bridge$getMinecraftWorld() {
         return getWorld().getHandle();
     }
 
@@ -290,7 +290,7 @@ public abstract class WorldMixin implements WorldBridge, IWorldWriter {
             return ((WorldBridge) getWorld().getHandle()).bridge$addEntity(entity, reason);
         } else {
             this.bridge$pushAddEntityReason(reason);
-            return this.addEntity(entity);
+            return this.addFreshEntity(entity);
         }
     }
 

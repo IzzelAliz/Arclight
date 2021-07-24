@@ -2,10 +2,10 @@ package io.izzel.arclight.common.mixin.core.inventory;
 
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EnderChestInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.tileentity.EnderChestTileEntity;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.PlayerEnderChestContainer;
+import net.minecraft.world.level.block.entity.EnderChestBlockEntity;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
@@ -14,20 +14,20 @@ import org.bukkit.inventory.InventoryHolder;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(EnderChestInventory.class)
-public abstract class EnderChestInventoryMixin extends InventoryMixin implements IInventoryBridge, IInventory {
+@Mixin(PlayerEnderChestContainer.class)
+public abstract class EnderChestInventoryMixin extends InventoryMixin implements IInventoryBridge, Container {
 
     // @formatter:off
-    @Shadow private EnderChestTileEntity associatedChest;
+    @Shadow private EnderChestBlockEntity activeChest;
     // @formatter:on
 
-    private PlayerEntity owner;
+    private Player owner;
 
     public void arclight$constructor$super(int numSlots, InventoryHolder owner) {
         throw new RuntimeException();
     }
 
-    public void arclight$constructor(PlayerEntity owner) {
+    public void arclight$constructor(Player owner) {
         arclight$constructor$super(27, ((PlayerEntityBridge) owner).bridge$getBukkitEntity());
         this.owner = owner;
     }
@@ -50,6 +50,6 @@ public abstract class EnderChestInventoryMixin extends InventoryMixin implements
 
     @Override
     public Location getLocation() {
-        return CraftBlock.at(this.associatedChest.getWorld(), this.associatedChest.getPos()).getLocation();
+        return CraftBlock.at(this.activeChest.getLevel(), this.activeChest.getBlockPos()).getLocation();
     }
 }

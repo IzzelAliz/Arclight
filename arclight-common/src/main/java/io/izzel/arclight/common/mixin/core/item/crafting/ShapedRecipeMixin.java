@@ -1,10 +1,10 @@
 package io.izzel.arclight.common.mixin.core.item.crafting;
 
 import io.izzel.arclight.common.bridge.item.crafting.IRecipeBridge;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.item.crafting.ShapedRecipe;
-import net.minecraft.util.NonNullList;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.ShapedRecipe;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
 import org.bukkit.craftbukkit.v.inventory.CraftShapedRecipe;
@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.Shadow;
 public abstract class ShapedRecipeMixin implements IRecipeBridge {
 
     // @formatter:off
-    @Shadow @Final private ItemStack recipeOutput;
+    @Shadow @Final private ItemStack result;
     @Shadow @Final private String group;
     @Shadow @Final private NonNullList<Ingredient> recipeItems;
     @Shadow public abstract int getHeight();
@@ -27,7 +27,7 @@ public abstract class ShapedRecipeMixin implements IRecipeBridge {
 
     @Override
     public Recipe bridge$toBukkitRecipe() {
-        CraftItemStack result = CraftItemStack.asCraftMirror(this.recipeOutput);
+        CraftItemStack result = CraftItemStack.asCraftMirror(this.result);
         CraftShapedRecipe recipe = new CraftShapedRecipe(result, (ShapedRecipe) (Object) this);
         recipe.setGroup(this.group);
 

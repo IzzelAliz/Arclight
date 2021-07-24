@@ -2,10 +2,10 @@ package io.izzel.arclight.common.mixin.core.network.datasync;
 
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.network.datasync.EntityDataManagerBridge;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,32 +14,32 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(EntityDataManager.class)
+@Mixin(SynchedEntityData.class)
 public abstract class EntityDataManagerMixin implements EntityDataManagerBridge {
 
     // @formatter:off
-    @Shadow protected abstract <T> EntityDataManager.DataEntry<T> getEntry(DataParameter<T> key);
-    @Shadow private boolean dirty;
+    @Shadow protected abstract <T> SynchedEntityData.DataItem<T> getItem(EntityDataAccessor<T> key);
+    @Shadow private boolean isDirty;
     @Shadow @Final private Entity entity;
     // @formatter:on
 
     @Inject(method = "set", at = @At("HEAD"))
-    private <T> void arclight$syncHealth(DataParameter<T> key, T value, CallbackInfo ci) {
-        if (key == LivingEntity.HEALTH && this.entity instanceof ServerPlayerEntityBridge
+    private <T> void arclight$syncHealth(EntityDataAccessor<T> key, T value, CallbackInfo ci) {
+        if (key == LivingEntity.DATA_HEALTH_ID && this.entity instanceof ServerPlayerEntityBridge
             && ((ServerPlayerEntityBridge) this.entity).bridge$initialized()) {
             CraftPlayer player = ((ServerPlayerEntityBridge) this.entity).bridge$getBukkitEntity();
             player.setRealHealth(((Float) value));
         }
     }
 
-    public <T> void markDirty(DataParameter<T> key) {
-        EntityDataManager.DataEntry<T> entry = this.getEntry(key);
+    public <T> void markDirty(EntityDataAccessor<T> key) {
+        SynchedEntityData.DataItem<T> entry = this.getItem(key);
         entry.setDirty(true);
-        this.dirty = true;
+        this.isDirty = true;
     }
 
     @Override
-    public <T> void bridge$markDirty(DataParameter<T> key) {
+    public <T> void bridge$markDirty(EntityDataAccessor<T> key) {
         this.markDirty(key);
     }
 }

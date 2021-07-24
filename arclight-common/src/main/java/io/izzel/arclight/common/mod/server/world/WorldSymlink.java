@@ -1,18 +1,18 @@
 package io.izzel.arclight.common.mod.server.world;
 
 import io.izzel.arclight.common.mod.ArclightMod;
-import net.minecraft.world.storage.DerivedWorldInfo;
 import org.bukkit.Bukkit;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import net.minecraft.world.level.storage.DerivedLevelData;
 
 public class WorldSymlink {
 
-    public static void create(DerivedWorldInfo worldInfo, File dimensionFolder) {
-        String name = worldInfo.getWorldName();
+    public static void create(DerivedLevelData worldInfo, File dimensionFolder) {
+        String name = worldInfo.getLevelName();
         Path source = new File(Bukkit.getWorldContainer(), name).toPath();
         Path dest = dimensionFolder.toPath();
         try {

@@ -2,11 +2,6 @@ package io.izzel.arclight.common.mixin.core.loot;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.loot.LootTable;
-import net.minecraft.loot.LootTableManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,20 +9,25 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Map;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.LootTables;
 
-@Mixin(LootTableManager.class)
+@Mixin(LootTables.class)
 public class LootTableManagerMixin {
 
     // @formatter:off
-    @Shadow private Map<ResourceLocation, LootTable> registeredLootTables;
+    @Shadow private Map<ResourceLocation, LootTable> tables;
     // @formatter:on
 
     public Map<LootTable, ResourceLocation> lootTableToKey = ImmutableMap.of();
 
     @Inject(method = "apply", at = @At("RETURN"))
-    private void arclight$buildRev(Map<ResourceLocation, JsonObject> objectIn, IResourceManager resourceManagerIn, IProfiler profilerIn, CallbackInfo ci) {
+    private void arclight$buildRev(Map<ResourceLocation, JsonObject> objectIn, ResourceManager resourceManagerIn, ProfilerFiller profilerIn, CallbackInfo ci) {
         ImmutableMap.Builder<LootTable, ResourceLocation> lootTableToKeyBuilder = ImmutableMap.builder();
-        this.registeredLootTables.forEach((lootTable, key) -> lootTableToKeyBuilder.put(key, lootTable));
+        this.tables.forEach((lootTable, key) -> lootTableToKeyBuilder.put(key, lootTable));
         this.lootTableToKey = lootTableToKeyBuilder.build();
     }
 }

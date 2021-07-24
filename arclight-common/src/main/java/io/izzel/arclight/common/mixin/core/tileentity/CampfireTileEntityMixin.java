@@ -1,15 +1,15 @@
 package io.izzel.arclight.common.mixin.core.tileentity;
 
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.InventoryHelper;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.tileentity.CampfireTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.Container;
+import net.minecraft.world.Containers;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.CampfireBlockEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
@@ -19,17 +19,17 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(CampfireTileEntity.class)
-public abstract class CampfireTileEntityMixin extends TileEntity {
+@Mixin(CampfireBlockEntity.class)
+public abstract class CampfireTileEntityMixin extends BlockEntity {
 
     // @formatter:off
-    @Shadow @Final private NonNullList<ItemStack> inventory;
-    @Shadow @Final public int[] cookingTimes;
-    @Shadow @Final public int[] cookingTotalTimes;
-    @Shadow protected abstract void inventoryChanged();
+    @Shadow @Final private NonNullList<ItemStack> items;
+    @Shadow @Final public int[] cookingProgress;
+    @Shadow @Final public int[] cookingTime;
+    @Shadow protected abstract void markUpdated();
     // @formatter:on
 
-    public CampfireTileEntityMixin(TileEntityType<?> tileEntityTypeIn) {
+    public CampfireTileEntityMixin(BlockEntityType<?> tileEntityTypeIn) {
         super(tileEntityTypeIn);
     }
 
@@ -38,29 +38,29 @@ public abstract class CampfireTileEntityMixin extends TileEntity {
      * @reason
      */
     @Overwrite
-    private void cookAndDrop() {
-        for (int i = 0; i < this.inventory.size(); ++i) {
-            ItemStack before = this.inventory.get(i);
+    private void cook() {
+        for (int i = 0; i < this.items.size(); ++i) {
+            ItemStack before = this.items.get(i);
             if (!before.isEmpty()) {
-                ++this.cookingTimes[i];
-                if (this.cookingTimes[i] >= this.cookingTotalTimes[i]) {
-                    IInventory iinventory = new Inventory(before);
-                    ItemStack after = this.world.getRecipeManager().getRecipe(IRecipeType.CAMPFIRE_COOKING, iinventory,
-                        this.world).map((cookingRecipe) -> cookingRecipe.getCraftingResult(iinventory)).orElse(before);
-                    BlockPos blockpos = this.getPos();
+                ++this.cookingProgress[i];
+                if (this.cookingProgress[i] >= this.cookingTime[i]) {
+                    Container iinventory = new SimpleContainer(before);
+                    ItemStack after = this.level.getRecipeManager().getRecipeFor(RecipeType.CAMPFIRE_COOKING, iinventory,
+                        this.level).map((cookingRecipe) -> cookingRecipe.assemble(iinventory)).orElse(before);
+                    BlockPos blockpos = this.getBlockPos();
 
                     CraftItemStack craftBefore = CraftItemStack.asCraftMirror(before);
                     org.bukkit.inventory.ItemStack bukkitAfter = CraftItemStack.asBukkitCopy(after);
-                    BlockCookEvent event = new BlockCookEvent(CraftBlock.at(this.world, this.pos), craftBefore, bukkitAfter);
+                    BlockCookEvent event = new BlockCookEvent(CraftBlock.at(this.level, this.worldPosition), craftBefore, bukkitAfter);
                     Bukkit.getPluginManager().callEvent(event);
                     if (event.isCancelled()) {
                         continue;
                     }
                     ItemStack cookFinal = CraftItemStack.asNMSCopy(event.getResult());
 
-                    InventoryHelper.spawnItemStack(this.world, blockpos.getX(), blockpos.getY(), blockpos.getZ(), cookFinal);
-                    this.inventory.set(i, ItemStack.EMPTY);
-                    this.inventoryChanged();
+                    Containers.dropItemStack(this.level, blockpos.getX(), blockpos.getY(), blockpos.getZ(), cookFinal);
+                    this.items.set(i, ItemStack.EMPTY);
+                    this.markUpdated();
                 }
             }
         }

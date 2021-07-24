@@ -1,6 +1,6 @@
 buildscript {
     repositories {
-        maven { url = 'https://files.minecraftforge.net/maven' }
+        maven { url = 'https://maven.minecraftforge.net' }
         maven { url = 'https://repo.spongepowered.org/maven' }
         mavenCentral()
         maven { url = 'https://maven.izzel.io/releases' }
@@ -21,17 +21,17 @@ apply plugin: 'io.izzel.arclight'
 arclight {
     mcVersion = minecraftVersion
     forgeVersion = project.ext.forgeVersion
-    bukkitVersion = 'v1_16_R3'
+    bukkitVersion = 'v1_17_R1'
     wipeVersion = true
     reobfVersion = false
     accessTransformer = project.file('bukkit.at')
-    packageName = 'spigot'
+    // packageName = 'spigot'
 }
 
-sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+// sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '11'
 
 minecraft {
-    mappings channel: 'snapshot', version: "20210215-1.16.3"
+    mappings channel: 'official', version: minecraftVersion
     accessTransformer = project.file('src/main/resources/META-INF/accesstransformer.cfg')
 }
 
@@ -48,13 +48,13 @@ dependencies {
     minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
     implementation "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
     implementation 'org.jetbrains:annotations:19.0.0'
-    
+
     implementation 'org.spongepowered:mixin:0.8.2'
     annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
-    
+
     implementation 'com.github.ArclightTeam:mixin-tools:1.0.0'
     annotationProcessor 'com.github.ArclightTeam:mixin-tools:1.0.0'
-    
+
     implementation 'jline:jline:2.12.1'
     implementation 'net.md-5:SpecialSource:1.9.0'
     implementation 'org.apache.logging.log4j:log4j-jul:2.11.2'
@@ -69,12 +69,6 @@ dependencies {
 remapSpigotJar {
     includes.add('net/minecraft/block/ChestBlock$DoubleInventory')
     includes.add('net/minecraft/tileentity/LecternTileEntity$LecternInventory')
-}
-
-processMapping {
-    process { csrg, srg ->
-        csrg.classes.put('net/minecraft/world/level/ColorResolver', "net/minecraft/server/$bukkitVersion/ColorResolver".toString())
-    }
 }
 
 generateArclightMeta {

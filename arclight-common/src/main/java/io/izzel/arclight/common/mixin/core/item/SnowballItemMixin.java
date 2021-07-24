@@ -1,19 +1,19 @@
 package io.izzel.arclight.common.mixin.core.item;
 
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.entity.projectile.SnowballEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.SnowballItem;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Snowball;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SnowballItem;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -30,23 +30,23 @@ public class SnowballItemMixin extends Item {
      * @reason
      */
     @Overwrite
-    public @NotNull ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, @NotNull Hand handIn) {
-        ItemStack itemstack = playerIn.getHeldItem(handIn);
-        if (!worldIn.isRemote) {
-            SnowballEntity snowballentity = new SnowballEntity(worldIn, playerIn);
+    public @NotNull InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, @NotNull InteractionHand handIn) {
+        ItemStack itemstack = playerIn.getItemInHand(handIn);
+        if (!worldIn.isClientSide) {
+            Snowball snowballentity = new Snowball(worldIn, playerIn);
             snowballentity.setItem(itemstack);
-            if (worldIn.addEntity(snowballentity)) {
-                if (!playerIn.abilities.isCreativeMode) {
+            if (worldIn.addFreshEntity(snowballentity)) {
+                if (!playerIn.abilities.instabuild) {
                     itemstack.shrink(1);
                 }
-                worldIn.playSound(null, playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ(), SoundEvents.ENTITY_SNOWBALL_THROW, SoundCategory.NEUTRAL, 0.5F, 0.4F / (random.nextFloat() * 0.4F + 0.8F));
-                snowballentity.setDirectionAndMovement(playerIn, playerIn.rotationPitch, playerIn.rotationYaw, 0.0F, 1.5F, 1.0F);
-            } else if (playerIn instanceof ServerPlayerEntity) {
+                worldIn.playSound(null, playerIn.getX(), playerIn.getY(), playerIn.getZ(), SoundEvents.SNOWBALL_THROW, SoundSource.NEUTRAL, 0.5F, 0.4F / (random.nextFloat() * 0.4F + 0.8F));
+                snowballentity.shootFromRotation(playerIn, playerIn.xRot, playerIn.yRot, 0.0F, 1.5F, 1.0F);
+            } else if (playerIn instanceof ServerPlayer) {
                 ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().updateInventory();
             }
         }
 
-        playerIn.addStat(Stats.ITEM_USED.get(this));
-        return new ActionResult<>(ActionResultType.SUCCESS, itemstack);
+        playerIn.awardStat(Stats.ITEM_USED.get(this));
+        return new InteractionResultHolder<>(InteractionResult.SUCCESS, itemstack);
     }
 }

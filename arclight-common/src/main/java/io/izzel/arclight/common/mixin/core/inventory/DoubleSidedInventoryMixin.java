@@ -1,10 +1,6 @@
 package io.izzel.arclight.common.mixin.core.inventory;
 
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
-import net.minecraft.inventory.DoubleSidedInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
@@ -15,35 +11,39 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.world.CompoundContainer;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
 
-@Mixin(DoubleSidedInventory.class)
-public abstract class DoubleSidedInventoryMixin implements IInventoryBridge, IInventory {
+@Mixin(CompoundContainer.class)
+public abstract class DoubleSidedInventoryMixin implements IInventoryBridge, Container {
 
-    @Shadow @Final public IInventory upperChest;
-    @Shadow @Final public IInventory lowerChest;
+    @Shadow @Final public Container container1;
+    @Shadow @Final public Container container2;
     private List<HumanEntity> transactions = new ArrayList<>();
 
     @Override
     public List<ItemStack> getContents() {
-        int size = this.getSizeInventory();
+        int size = this.getContainerSize();
         List<ItemStack> ret = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
-            ret.add(this.getStackInSlot(i));
+            ret.add(this.getItem(i));
         }
         return ret;
     }
 
     @Override
     public void onOpen(CraftHumanEntity who) {
-        ((IInventoryBridge) this.upperChest).onOpen(who);
-        ((IInventoryBridge) this.lowerChest).onOpen(who);
+        ((IInventoryBridge) this.container1).onOpen(who);
+        ((IInventoryBridge) this.container2).onOpen(who);
         this.transactions.add(who);
     }
 
     @Override
     public void onClose(CraftHumanEntity who) {
-        ((IInventoryBridge) this.upperChest).onClose(who);
-        ((IInventoryBridge) this.lowerChest).onClose(who);
+        ((IInventoryBridge) this.container1).onClose(who);
+        ((IInventoryBridge) this.container2).onClose(who);
         this.transactions.remove(who);
     }
 
@@ -59,24 +59,24 @@ public abstract class DoubleSidedInventoryMixin implements IInventoryBridge, IIn
     public void setOwner(InventoryHolder owner) { }
 
     @Override
-    public int getInventoryStackLimit() {
-        return Math.min(this.upperChest.getInventoryStackLimit(), this.lowerChest.getInventoryStackLimit());
+    public int getMaxStackSize() {
+        return Math.min(this.container1.getMaxStackSize(), this.container2.getMaxStackSize());
     }
 
     @Override
     public void setMaxStackSize(int size) {
-        ((IInventoryBridge) this.upperChest).setMaxStackSize(size);
-        ((IInventoryBridge) this.lowerChest).setMaxStackSize(size);
+        ((IInventoryBridge) this.container1).setMaxStackSize(size);
+        ((IInventoryBridge) this.container2).setMaxStackSize(size);
     }
 
     @Override
     public Location getLocation() {
-        return ((IInventoryBridge) this.upperChest).getLocation();
+        return ((IInventoryBridge) this.container1).getLocation();
     }
 
     @Override
-    public IRecipe<?> getCurrentRecipe() { return null; }
+    public Recipe<?> getCurrentRecipe() { return null; }
 
     @Override
-    public void setCurrentRecipe(IRecipe<?> recipe) { }
+    public void setCurrentRecipe(Recipe<?> recipe) { }
 }

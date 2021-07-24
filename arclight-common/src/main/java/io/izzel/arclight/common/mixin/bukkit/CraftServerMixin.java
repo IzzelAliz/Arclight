@@ -6,11 +6,11 @@ import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import jline.console.ConsoleReader;
-import net.minecraft.command.CommandSource;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.dedicated.DedicatedPlayerList;
 import net.minecraft.server.dedicated.DedicatedServer;
-import net.minecraft.server.management.PlayerList;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.players.PlayerList;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -90,7 +90,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
         this.playerList = (DedicatedPlayerList) playerList;
     }
 
-    @Inject(method = "unloadWorld(Lorg/bukkit/World;Z)Z", require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;getChunkProvider()Lnet/minecraft/world/server/ServerChunkProvider;"))
+    @Inject(method = "unloadWorld(Lorg/bukkit/World;Z)Z", require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;getChunkSource()Lnet/minecraft/server/level/ServerChunkCache;"))
     private void arclight$unloadForge(World world, boolean save, CallbackInfoReturnable<Boolean> cir) {
         MinecraftForge.EVENT_BUS.post(new WorldEvent.Unload(((CraftWorld) world).getHandle()));
         this.console.markWorldsDirty();
@@ -98,11 +98,11 @@ public abstract class CraftServerMixin implements CraftServerBridge {
 
     @ModifyVariable(method = "dispatchCommand", remap = false, index = 2, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lorg/spigotmc/AsyncCatcher;catchOp(Ljava/lang/String;)V"))
     private String arclight$forgeCommandEvent(String commandLine, CommandSender sender) {
-        CommandSource commandSource;
+        CommandSourceStack commandSource;
         if (sender instanceof CraftEntity) {
-            commandSource = ((CraftEntity) sender).getHandle().getCommandSource();
+            commandSource = ((CraftEntity) sender).getHandle().createCommandSourceStack();
         } else if (sender == Bukkit.getConsoleSender()) {
-            commandSource = ArclightServer.getMinecraftServer().getCommandSource();
+            commandSource = ArclightServer.getMinecraftServer().createCommandSourceStack();
         } else if (sender instanceof CraftBlockCommandSender) {
             commandSource = ((CraftBlockCommandSender) sender).getWrapper();
         } else {
@@ -112,7 +112,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
         if (stringreader.canRead() && stringreader.peek() == '/') {
             stringreader.skip();
         }
-        ParseResults<CommandSource> parse = ArclightServer.getMinecraftServer().getCommandManager()
+        ParseResults<CommandSourceStack> parse = ArclightServer.getMinecraftServer().getCommands()
             .getDispatcher().parse(stringreader, commandSource);
         CommandEvent event = new CommandEvent(parse);
         if (MinecraftForge.EVENT_BUS.post(event)) {
@@ -133,7 +133,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
     }
 
     @Override
-    public void bridge$removeWorld(ServerWorld world) {
+    public void bridge$removeWorld(ServerLevel world) {
         if (world == null) {
             return;
         }

@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.bridge.world.server;
 
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.server.Ticket;
-import net.minecraft.world.server.TicketType;
+import net.minecraft.server.level.Ticket;
+import net.minecraft.server.level.TicketType;
+import net.minecraft.world.level.ChunkPos;
 
 public interface TicketManagerBridge {
 

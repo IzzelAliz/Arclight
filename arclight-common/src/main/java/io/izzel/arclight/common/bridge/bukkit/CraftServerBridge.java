@@ -1,11 +1,11 @@
 package io.izzel.arclight.common.bridge.bukkit;
 
-import net.minecraft.server.management.PlayerList;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.players.PlayerList;
 
 public interface CraftServerBridge {
 
     void bridge$setPlayerList(PlayerList playerList);
 
-    void bridge$removeWorld(ServerWorld world);
+    void bridge$removeWorld(ServerLevel world);
 }

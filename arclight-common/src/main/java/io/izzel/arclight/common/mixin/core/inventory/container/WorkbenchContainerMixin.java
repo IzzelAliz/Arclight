@@ -5,20 +5,6 @@ import io.izzel.arclight.common.bridge.inventory.CraftingInventoryBridge;
 import io.izzel.arclight.common.bridge.inventory.container.ContainerBridge;
 import io.izzel.arclight.common.bridge.inventory.container.PosContainerBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.CraftResultInventory;
-import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.WorkbenchContainer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.ICraftingRecipe;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.network.play.server.SSetSlotPacket;
-import net.minecraft.util.IWorldPosCallable;
-import net.minecraft.world.World;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryCrafting;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
@@ -34,33 +20,47 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Optional;
+import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.inventory.CraftingMenu;
+import net.minecraft.world.inventory.ResultContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.Level;
 
 // todo 实现
-@Mixin(WorkbenchContainer.class)
+@Mixin(CraftingMenu.class)
 public abstract class WorkbenchContainerMixin extends ContainerMixin implements PosContainerBridge {
 
     // @formatter:off
-    @Mutable @Shadow @Final private CraftingInventory craftMatrix;
-    @Shadow @Final private CraftResultInventory craftResult;
-    @Accessor("worldPosCallable") public abstract IWorldPosCallable bridge$getWorldPos();
+    @Mutable @Shadow @Final private CraftingContainer craftSlots;
+    @Shadow @Final private ResultContainer resultSlots;
+    @Accessor("access") public abstract ContainerLevelAccess bridge$getWorldPos();
     // @formatter:on
 
     private CraftInventoryView bukkitEntity;
-    private PlayerInventory playerInventory;
+    private Inventory playerInventory;
 
-    @Inject(method = "canInteractWith", cancellable = true, at = @At("HEAD"))
-    public void arclight$unreachable(PlayerEntity playerIn, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "stillValid", cancellable = true, at = @At("HEAD"))
+    public void arclight$unreachable(Player playerIn, CallbackInfoReturnable<Boolean> cir) {
         if (!bridge$isCheckReachable()) cir.setReturnValue(true);
     }
 
-    private static void a(int id, World world, PlayerEntity player, CraftingInventory inventory, CraftResultInventory inventoryResult, Container container) {
+    private static void a(int id, Level world, Player player, CraftingContainer inventory, ResultContainer inventoryResult, AbstractContainerMenu container) {
         ArclightCaptures.captureWorkbenchContainer(container);
-        updateCraftingResult(id, world, player, inventory, inventoryResult);
+        slotChangedCraftingGrid(id, world, player, inventory, inventoryResult);
     }
 
-    @Inject(method = "onCraftMatrixChanged", at = @At("HEAD"))
-    public void arclight$capture(IInventory inventoryIn, CallbackInfo ci) {
-        ArclightCaptures.captureWorkbenchContainer((WorkbenchContainer) (Object) this);
+    @Inject(method = "slotsChanged", at = @At("HEAD"))
+    public void arclight$capture(Container inventoryIn, CallbackInfo ci) {
+        ArclightCaptures.captureWorkbenchContainer((CraftingMenu) (Object) this);
     }
 
     /**
@@ -68,30 +68,30 @@ public abstract class WorkbenchContainerMixin extends ContainerMixin implements 
      * @reason
      */
     @Overwrite
-    public static void updateCraftingResult(int i, World world, PlayerEntity playerEntity, CraftingInventory inventory, CraftResultInventory resultInventory) {
-        Container container = ArclightCaptures.getWorkbenchContainer();
-        if (!world.isRemote) {
-            ServerPlayerEntity serverplayerentity = (ServerPlayerEntity) playerEntity;
+    public static void slotChangedCraftingGrid(int i, Level world, Player playerEntity, CraftingContainer inventory, ResultContainer resultInventory) {
+        AbstractContainerMenu container = ArclightCaptures.getWorkbenchContainer();
+        if (!world.isClientSide) {
+            ServerPlayer serverplayerentity = (ServerPlayer) playerEntity;
             ItemStack itemstack = ItemStack.EMPTY;
-            Optional<ICraftingRecipe> optional = world.getServer().getRecipeManager().getRecipe(IRecipeType.CRAFTING, inventory, world);
+            Optional<CraftingRecipe> optional = world.getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, inventory, world);
             if (optional.isPresent()) {
-                ICraftingRecipe icraftingrecipe = optional.get();
-                if (resultInventory.canUseRecipe(world, serverplayerentity, icraftingrecipe)) {
-                    itemstack = icraftingrecipe.getCraftingResult(inventory);
+                CraftingRecipe icraftingrecipe = optional.get();
+                if (resultInventory.setRecipeUsed(world, serverplayerentity, icraftingrecipe)) {
+                    itemstack = icraftingrecipe.assemble(inventory);
                 }
             }
 
             itemstack = CraftEventFactory.callPreCraftEvent(inventory, resultInventory, itemstack, ((ContainerBridge) container).bridge$getBukkitView(), false);
 
-            resultInventory.setInventorySlotContents(0, itemstack);
-            serverplayerentity.connection.sendPacket(new SSetSlotPacket(i, 0, itemstack));
+            resultInventory.setItem(0, itemstack);
+            serverplayerentity.connection.send(new ClientboundContainerSetSlotPacket(i, 0, itemstack));
         }
     }
 
-    @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/util/IWorldPosCallable;)V", at = @At("RETURN"))
-    public void arclight$init(int i, PlayerInventory playerInventory, IWorldPosCallable callable, CallbackInfo ci) {
-        ((CraftingInventoryBridge) this.craftMatrix).bridge$setOwner(playerInventory.player);
-        ((CraftingInventoryBridge) this.craftMatrix).bridge$setResultInventory(this.craftResult);
+    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/inventory/ContainerLevelAccess;)V", at = @At("RETURN"))
+    public void arclight$init(int i, Inventory playerInventory, ContainerLevelAccess callable, CallbackInfo ci) {
+        ((CraftingInventoryBridge) this.craftSlots).bridge$setOwner(playerInventory.player);
+        ((CraftingInventoryBridge) this.craftSlots).bridge$setResultInventory(this.resultSlots);
         this.playerInventory = playerInventory;
     }
 
@@ -101,8 +101,8 @@ public abstract class WorkbenchContainerMixin extends ContainerMixin implements 
             return bukkitEntity;
         }
 
-        CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftMatrix, this.craftResult);
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
+        CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftSlots, this.resultSlots);
+        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (AbstractContainerMenu) (Object) this);
         return bukkitEntity;
     }
 }

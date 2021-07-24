@@ -2,15 +2,6 @@ package io.izzel.arclight.common.mixin.core.tileentity;
 
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.item.minecart.HopperMinecartEntity;
-import net.minecraft.inventory.DoubleSidedInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.HopperTileEntity;
-import net.minecraft.tileentity.IHopper;
-import net.minecraft.util.Direction;
-import net.minecraft.util.NonNullList;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryDoubleChest;
@@ -31,14 +22,23 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.CompoundContainer;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.vehicle.MinecartHopper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.Hopper;
+import net.minecraft.world.level.block.entity.HopperBlockEntity;
 
-@Mixin(HopperTileEntity.class)
+@Mixin(HopperBlockEntity.class)
 public abstract class HopperTileEntityMixin extends LockableTileEntityMixin {
 
     // @formatter:off
-    @Shadow private NonNullList<ItemStack> inventory;
-    @Shadow public abstract void setTransferCooldown(int ticks);
-    @Shadow public abstract void setInventorySlotContents(int index, ItemStack stack);
+    @Shadow private NonNullList<ItemStack> items;
+    @Shadow public abstract void setCooldown(int ticks);
+    @Shadow public abstract void setItem(int index, ItemStack stack);
     // @formatter:on
 
     public List<HumanEntity> transaction = new ArrayList<>();
@@ -46,23 +46,23 @@ public abstract class HopperTileEntityMixin extends LockableTileEntityMixin {
 
     private static transient boolean arclight$moveItem;
 
-    @Inject(method = "transferItemsOut", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/tileentity/HopperTileEntity;putStackInInventoryAllSlots(Lnet/minecraft/inventory/IInventory;Lnet/minecraft/inventory/IInventory;Lnet/minecraft/item/ItemStack;Lnet/minecraft/util/Direction;)Lnet/minecraft/item/ItemStack;"))
-    public void arclight$returnIfMoveFail(CallbackInfoReturnable<Boolean> cir, IInventory inv, Direction direction, int i, ItemStack itemStack) {
+    @Inject(method = "ejectItems", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/world/level/block/entity/HopperBlockEntity;addItem(Lnet/minecraft/world/Container;Lnet/minecraft/world/Container;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/core/Direction;)Lnet/minecraft/world/item/ItemStack;"))
+    public void arclight$returnIfMoveFail(CallbackInfoReturnable<Boolean> cir, Container inv, Direction direction, int i, ItemStack itemStack) {
         if (arclight$moveItem) {
-            this.setInventorySlotContents(i, itemStack);
+            this.setItem(i, itemStack);
             cir.setReturnValue(false);
         }
         arclight$moveItem = false;
     }
 
-    @Redirect(method = "transferItemsOut", at = @At(value = "INVOKE", target = "Lnet/minecraft/tileentity/HopperTileEntity;putStackInInventoryAllSlots(Lnet/minecraft/inventory/IInventory;Lnet/minecraft/inventory/IInventory;Lnet/minecraft/item/ItemStack;Lnet/minecraft/util/Direction;)Lnet/minecraft/item/ItemStack;"))
-    public ItemStack arclight$moveItem(IInventory source, IInventory destination, ItemStack stack, Direction direction) {
+    @Redirect(method = "ejectItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/HopperBlockEntity;addItem(Lnet/minecraft/world/Container;Lnet/minecraft/world/Container;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/core/Direction;)Lnet/minecraft/world/item/ItemStack;"))
+    public ItemStack arclight$moveItem(Container source, Container destination, ItemStack stack, Direction direction) {
         CraftItemStack original = CraftItemStack.asCraftMirror(stack);
 
         Inventory destinationInventory;
         // Have to special case large chests as they work oddly
-        if (destination instanceof DoubleSidedInventory) {
-            destinationInventory = new CraftInventoryDoubleChest(((DoubleSidedInventory) destination));
+        if (destination instanceof CompoundContainer) {
+            destinationInventory = new CraftInventoryDoubleChest(((CompoundContainer) destination));
         } else {
             destinationInventory = ((IInventoryBridge) destination).getOwnerInventory();
         }
@@ -70,29 +70,29 @@ public abstract class HopperTileEntityMixin extends LockableTileEntityMixin {
         InventoryMoveItemEvent event = new InventoryMoveItemEvent(this.getOwner().getInventory(), original.clone(), destinationInventory, true);
         Bukkit.getPluginManager().callEvent(event);
         if (arclight$moveItem = event.isCancelled()) {
-            this.setTransferCooldown(8); // Delay hopper checks
+            this.setCooldown(8); // Delay hopper checks
             return null;
         }
-        return HopperTileEntity.putStackInInventoryAllSlots(source, destination, CraftItemStack.asNMSCopy(event.getItem()), direction);
+        return HopperBlockEntity.addItem(source, destination, CraftItemStack.asNMSCopy(event.getItem()), direction);
     }
 
-    @Inject(method = "pullItemFromSlot", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/tileentity/HopperTileEntity;putStackInInventoryAllSlots(Lnet/minecraft/inventory/IInventory;Lnet/minecraft/inventory/IInventory;Lnet/minecraft/item/ItemStack;Lnet/minecraft/util/Direction;)Lnet/minecraft/item/ItemStack;"))
-    private static void arclight$returnIfPullFail(IHopper hopper, IInventory inventoryIn, int index, Direction direction, CallbackInfoReturnable<Boolean> cir, ItemStack item, ItemStack item1) {
+    @Inject(method = "tryTakeInItemFromSlot", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/world/level/block/entity/HopperBlockEntity;addItem(Lnet/minecraft/world/Container;Lnet/minecraft/world/Container;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/core/Direction;)Lnet/minecraft/world/item/ItemStack;"))
+    private static void arclight$returnIfPullFail(Hopper hopper, Container inventoryIn, int index, Direction direction, CallbackInfoReturnable<Boolean> cir, ItemStack item, ItemStack item1) {
         if (arclight$moveItem) {
-            inventoryIn.setInventorySlotContents(index, item1);
+            inventoryIn.setItem(index, item1);
             cir.setReturnValue(false);
         }
         arclight$moveItem = false;
     }
 
-    @Redirect(method = "pullItemFromSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/tileentity/HopperTileEntity;putStackInInventoryAllSlots(Lnet/minecraft/inventory/IInventory;Lnet/minecraft/inventory/IInventory;Lnet/minecraft/item/ItemStack;Lnet/minecraft/util/Direction;)Lnet/minecraft/item/ItemStack;"))
-    private static ItemStack arclight$pullItem(IInventory source, IInventory destination, ItemStack stack, Direction direction) {
+    @Redirect(method = "tryTakeInItemFromSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/HopperBlockEntity;addItem(Lnet/minecraft/world/Container;Lnet/minecraft/world/Container;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/core/Direction;)Lnet/minecraft/world/item/ItemStack;"))
+    private static ItemStack arclight$pullItem(Container source, Container destination, ItemStack stack, Direction direction) {
         CraftItemStack original = CraftItemStack.asCraftMirror(stack);
 
         Inventory sourceInventory;
         // Have to special case large chests as they work oddly
-        if (source instanceof DoubleSidedInventory) {
-            sourceInventory = new CraftInventoryDoubleChest(((DoubleSidedInventory) source));
+        if (source instanceof CompoundContainer) {
+            sourceInventory = new CraftInventoryDoubleChest(((CompoundContainer) source));
         } else {
             sourceInventory = ((IInventoryBridge) source).getOwnerInventory();
         }
@@ -100,18 +100,18 @@ public abstract class HopperTileEntityMixin extends LockableTileEntityMixin {
         InventoryMoveItemEvent event = new InventoryMoveItemEvent(sourceInventory, original.clone(), ((IInventoryBridge) destination).getOwnerInventory(), false);
         Bukkit.getPluginManager().callEvent(event);
         if (arclight$moveItem = event.isCancelled()) {
-            if (destination instanceof HopperTileEntity) {
-                ((HopperTileEntity) destination).setTransferCooldown(8); // Delay hopper checks
-            } else if (destination instanceof HopperMinecartEntity) {
-                ((HopperMinecartEntity) destination).setTransferTicker(4); // Delay hopper minecart checks
+            if (destination instanceof HopperBlockEntity) {
+                ((HopperBlockEntity) destination).setCooldown(8); // Delay hopper checks
+            } else if (destination instanceof MinecartHopper) {
+                ((MinecartHopper) destination).setCooldown(4); // Delay hopper minecart checks
             }
             return null;
         }
-        return HopperTileEntity.putStackInInventoryAllSlots(source, destination, CraftItemStack.asNMSCopy(event.getItem()), direction);
+        return HopperBlockEntity.addItem(source, destination, CraftItemStack.asNMSCopy(event.getItem()), direction);
     }
 
-    @Inject(method = "captureItem", cancellable = true, at = @At("HEAD"))
-    private static void arclight$pickupItem(IInventory inventory, ItemEntity itemEntity, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "addItem", cancellable = true, at = @At("HEAD"))
+    private static void arclight$pickupItem(Container inventory, ItemEntity itemEntity, CallbackInfoReturnable<Boolean> cir) {
         InventoryPickupItemEvent event = new InventoryPickupItemEvent(((IInventoryBridge) inventory).getOwnerInventory(), (Item) ((EntityBridge) itemEntity).bridge$getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
@@ -121,7 +121,7 @@ public abstract class HopperTileEntityMixin extends LockableTileEntityMixin {
 
     @Override
     public List<ItemStack> getContents() {
-        return this.inventory;
+        return this.items;
     }
 
     @Override
@@ -144,7 +144,7 @@ public abstract class HopperTileEntityMixin extends LockableTileEntityMixin {
     }
 
     @Override
-    public int getInventoryStackLimit() {
+    public int getMaxStackSize() {
         if (maxStack == 0) maxStack = MAX_STACK;
         return maxStack;
     }

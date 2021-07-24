@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mod.util.types;
 
-import net.minecraft.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.Enchantment;
 import org.bukkit.craftbukkit.v.enchantments.CraftEnchantment;
 import org.jetbrains.annotations.NotNull;
 

@@ -1,10 +1,10 @@
 package io.izzel.arclight.common.mixin.core.item;
 
-import net.minecraft.item.FireChargeItem;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.FireChargeItem;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,14 +16,14 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 @Mixin(FireChargeItem.class)
 public class FireChargeItemMixin {
 
-    @Inject(method = "onItemUse", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/item/FireChargeItem;playUseSound(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V"))
-    public void arclight$blockIgnite(ItemUseContext context, CallbackInfoReturnable<ActionResultType> cir, World world, BlockPos blockPos) {
+    @Inject(method = "useOn", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/FireChargeItem;playSound(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)V"))
+    public void arclight$blockIgnite(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir, Level world, BlockPos blockPos) {
         if (CraftEventFactory.callBlockIgniteEvent(world, blockPos, BlockIgniteEvent.IgniteCause.FIREBALL, context.getPlayer()).isCancelled()) {
-            if (!context.getPlayer().abilities.isCreativeMode) {
-                context.getItem().shrink(1);
+            if (!context.getPlayer().abilities.instabuild) {
+                context.getItemInHand().shrink(1);
             }
-            cir.setReturnValue(ActionResultType.PASS);
+            cir.setReturnValue(InteractionResult.PASS);
         }
     }
 }

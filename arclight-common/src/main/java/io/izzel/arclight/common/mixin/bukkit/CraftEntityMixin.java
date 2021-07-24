@@ -11,20 +11,20 @@ import io.izzel.arclight.common.mod.server.entity.ArclightModMob;
 import io.izzel.arclight.common.mod.server.entity.ArclightModProjectile;
 import io.izzel.arclight.common.mod.server.entity.ArclightModRaider;
 import io.izzel.arclight.common.mod.util.ResourceLocationUtil;
-import net.minecraft.entity.AgeableEntity;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.FlyingEntity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.item.minecart.AbstractMinecartEntity;
-import net.minecraft.entity.item.minecart.ContainerMinecartEntity;
-import net.minecraft.entity.monster.AbstractRaiderEntity;
-import net.minecraft.entity.passive.GolemEntity;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.entity.passive.horse.AbstractChestedHorseEntity;
-import net.minecraft.entity.passive.horse.AbstractHorseEntity;
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.AgableMob;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.FlyingMob;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.animal.AbstractGolem;
+import net.minecraft.world.entity.animal.horse.AbstractChestedHorse;
+import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.entity.raid.Raider;
+import net.minecraft.world.entity.vehicle.AbstractMinecart;
+import net.minecraft.world.entity.vehicle.AbstractMinecartContainer;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.craftbukkit.v.CraftServer;
@@ -77,50 +77,50 @@ public abstract class CraftEntityMixin implements org.bukkit.entity.Entity {
     @Inject(method = "getEntity", cancellable = true, at = @At(value = "NEW", target = "java/lang/AssertionError"))
     private static void arclight$modEntity(CraftServer server, Entity entity, CallbackInfoReturnable<CraftEntity> cir) {
         if (entity instanceof LivingEntity) {
-            if (entity instanceof MobEntity) {
-                if (entity instanceof AgeableEntity) {
-                    if (entity instanceof AbstractHorseEntity) {
-                        if (entity instanceof AbstractChestedHorseEntity) {
-                            cir.setReturnValue(new ArclightModChestedHorse(server, (AbstractChestedHorseEntity) entity));
+            if (entity instanceof Mob) {
+                if (entity instanceof AgableMob) {
+                    if (entity instanceof AbstractHorse) {
+                        if (entity instanceof AbstractChestedHorse) {
+                            cir.setReturnValue(new ArclightModChestedHorse(server, (AbstractChestedHorse) entity));
                             return;
                         }
-                        cir.setReturnValue(new ArclightModHorse(server, (AbstractHorseEntity) entity));
+                        cir.setReturnValue(new ArclightModHorse(server, (AbstractHorse) entity));
                         return;
                     }
-                    if (entity instanceof TameableEntity) {
-                        cir.setReturnValue(new CraftTameableAnimal(server, (TameableEntity) entity));
+                    if (entity instanceof TamableAnimal) {
+                        cir.setReturnValue(new CraftTameableAnimal(server, (TamableAnimal) entity));
                         return;
                     }
-                    cir.setReturnValue(new CraftAgeable(server, (AgeableEntity) entity));
+                    cir.setReturnValue(new CraftAgeable(server, (AgableMob) entity));
                     return;
                 }
-                if (entity instanceof FlyingEntity) {
-                    cir.setReturnValue(new CraftFlying(server, (FlyingEntity) entity));
+                if (entity instanceof FlyingMob) {
+                    cir.setReturnValue(new CraftFlying(server, (FlyingMob) entity));
                     return;
                 }
-                if (entity instanceof AbstractRaiderEntity) {
-                    cir.setReturnValue(new ArclightModRaider(server, (AbstractRaiderEntity) entity));
+                if (entity instanceof Raider) {
+                    cir.setReturnValue(new ArclightModRaider(server, (Raider) entity));
                     return;
                 }
-                if (entity instanceof GolemEntity) {
-                    cir.setReturnValue(new CraftGolem(server, (GolemEntity) entity));
+                if (entity instanceof AbstractGolem) {
+                    cir.setReturnValue(new CraftGolem(server, (AbstractGolem) entity));
                     return;
                 }
-                cir.setReturnValue(new ArclightModMob(server, (MobEntity) entity));
+                cir.setReturnValue(new ArclightModMob(server, (Mob) entity));
                 return;
             }
             cir.setReturnValue(new ArclightModLivingEntity(server, (LivingEntity) entity));
             return;
         }
-        if (entity instanceof AbstractMinecartEntity) {
-            if (entity instanceof ContainerMinecartEntity) {
-                cir.setReturnValue(new ArclightModMinecartContainer(server, (ContainerMinecartEntity) entity));
+        if (entity instanceof AbstractMinecart) {
+            if (entity instanceof AbstractMinecartContainer) {
+                cir.setReturnValue(new ArclightModMinecartContainer(server, (AbstractMinecartContainer) entity));
                 return;
             }
-            cir.setReturnValue(new ArclightModMinecart(server, (AbstractMinecartEntity) entity));
+            cir.setReturnValue(new ArclightModMinecart(server, (AbstractMinecart) entity));
             return;
         }
-        if (entity instanceof ProjectileEntity) {
+        if (entity instanceof Projectile) {
             cir.setReturnValue(new ArclightModProjectile(server, entity));
             return;
         }

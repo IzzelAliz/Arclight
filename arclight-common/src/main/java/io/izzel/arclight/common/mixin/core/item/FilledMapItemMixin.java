@@ -1,14 +1,14 @@
 package io.izzel.arclight.common.mixin.core.item;
 
 import io.izzel.arclight.common.bridge.world.storage.MapDataBridge;
-import net.minecraft.item.FilledMapItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.MapData;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.MapItem;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import org.bukkit.Bukkit;
 import org.bukkit.event.server.MapInitializeEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,17 +19,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-@Mixin(FilledMapItem.class)
+@Mixin(MapItem.class)
 public abstract class FilledMapItemMixin {
 
     // @formatter:off
-    @Shadow private static MapData createMapData(ItemStack stack, World worldIn, int x, int z, int scale, boolean trackingPosition, boolean unlimitedTracking, RegistryKey<World> dimensionTypeIn) { return null; }
+    @Shadow private static MapItemSavedData createAndStoreSavedData(ItemStack stack, Level worldIn, int x, int z, int scale, boolean trackingPosition, boolean unlimitedTracking, ResourceKey<Level> dimensionTypeIn) { return null; }
     // @formatter:on
 
-    @Inject(method = "createMapData", locals = LocalCapture.CAPTURE_FAILHARD, at = @At("RETURN"))
-    private static void arclight$mapInit(ItemStack stack, World worldIn, int x, int z, int scale, boolean trackingPosition,
-                                         boolean unlimitedTracking, RegistryKey<World> dimensionTypeIn, CallbackInfoReturnable<MapData> cir,
-                                         int i, MapData mapData) {
+    @Inject(method = "createAndStoreSavedData", locals = LocalCapture.CAPTURE_FAILHARD, at = @At("RETURN"))
+    private static void arclight$mapInit(ItemStack stack, Level worldIn, int x, int z, int scale, boolean trackingPosition,
+                                         boolean unlimitedTracking, ResourceKey<Level> dimensionTypeIn, CallbackInfoReturnable<MapItemSavedData> cir,
+                                         int i, MapItemSavedData mapData) {
         MapInitializeEvent event = new MapInitializeEvent(((MapDataBridge) mapData).bridge$getMapView());
         Bukkit.getPluginManager().callEvent(event);
     }
@@ -40,16 +40,16 @@ public abstract class FilledMapItemMixin {
      */
     @Overwrite
     public static int getMapId(ItemStack stack) {
-        CompoundNBT compoundnbt = stack.getTag();
+        CompoundTag compoundnbt = stack.getTag();
         return compoundnbt != null && compoundnbt.contains("map", 99) ? compoundnbt.getInt("map") : -1;
     }
 
-    @Inject(method = "getMapData", cancellable = true, at = @At("HEAD"))
-    private static void arclight$nonFilledMap(ItemStack stack, World worldIn, CallbackInfoReturnable<MapData> cir) {
-        if (stack != null && worldIn instanceof ServerWorld && stack.getItem() == Items.MAP) {
-            MapData mapdata = FilledMapItem.getData(stack, worldIn);
+    @Inject(method = "getOrCreateSavedData", cancellable = true, at = @At("HEAD"))
+    private static void arclight$nonFilledMap(ItemStack stack, Level worldIn, CallbackInfoReturnable<MapItemSavedData> cir) {
+        if (stack != null && worldIn instanceof ServerLevel && stack.getItem() == Items.MAP) {
+            MapItemSavedData mapdata = MapItem.getSavedData(stack, worldIn);
             if (mapdata == null) {
-                mapdata = createMapData(stack, worldIn, worldIn.getWorldInfo().getSpawnX(), worldIn.getWorldInfo().getSpawnZ(), 3, false, false, worldIn.getDimensionKey());
+                mapdata = createAndStoreSavedData(stack, worldIn, worldIn.getLevelData().getXSpawn(), worldIn.getLevelData().getZSpawn(), 3, false, false, worldIn.dimension());
             }
             cir.setReturnValue(mapdata);
         }

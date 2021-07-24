@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
@@ -27,7 +27,7 @@ public abstract class CraftHumanEntityMixin extends CraftEntity {
     @Override
     public void setHandle(Entity entity) {
         super.setHandle(entity);
-        this.inventory = new CraftInventoryPlayer(((PlayerEntity) entity).inventory);
-        this.enderChest = new CraftInventory(((PlayerEntity) entity).getInventoryEnderChest());
+        this.inventory = new CraftInventoryPlayer(((Player) entity).inventory);
+        this.enderChest = new CraftInventory(((Player) entity).getEnderChestInventory());
     }
 }

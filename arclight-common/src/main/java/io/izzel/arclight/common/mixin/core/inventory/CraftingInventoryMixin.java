@@ -4,13 +4,6 @@ import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.inventory.CraftingInventoryBridge;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.inventory.container.PosContainerBridge;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.util.NonNullList;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
@@ -22,48 +15,55 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
 
-@Mixin(CraftingInventory.class)
-public abstract class CraftingInventoryMixin implements CraftingInventoryBridge, IInventory {
+@Mixin(CraftingContainer.class)
+public abstract class CraftingInventoryMixin implements CraftingInventoryBridge, Container {
 
     // @formatter:off
-    @Shadow @Final private NonNullList<ItemStack> stackList;
-    @Shadow @Final public Container eventHandler;
+    @Shadow @Final private NonNullList<ItemStack> items;
+    @Shadow @Final public AbstractContainerMenu menu;
     // @formatter:on
 
     public List<HumanEntity> transaction = new ArrayList<>();
-    private IRecipe<?> currentRecipe;
-    public IInventory resultInventory;
-    private PlayerEntity owner;
+    private Recipe<?> currentRecipe;
+    public Container resultInventory;
+    private Player owner;
     private InventoryHolder bukkitOwner;
     private int maxStack = MAX_STACK;
 
-    public void arclight$constructor(Container eventHandlerIn, int width, int height) {
+    public void arclight$constructor(AbstractContainerMenu eventHandlerIn, int width, int height) {
         throw new RuntimeException();
     }
 
-    public void arclight$constructor(Container eventHandlerIn, int width, int height, PlayerEntity owner) {
+    public void arclight$constructor(AbstractContainerMenu eventHandlerIn, int width, int height, Player owner) {
         arclight$constructor(eventHandlerIn, width, height);
         this.owner = owner;
     }
 
     public InventoryType getInvType() {
-        return this.stackList.size() == 4 ? InventoryType.CRAFTING : InventoryType.WORKBENCH;
+        return this.items.size() == 4 ? InventoryType.CRAFTING : InventoryType.WORKBENCH;
     }
 
     @Override
-    public void bridge$setResultInventory(IInventory resultInventory) {
+    public void bridge$setResultInventory(Container resultInventory) {
         this.resultInventory = resultInventory;
     }
 
     @Override
-    public void bridge$setOwner(PlayerEntity owner) {
+    public void bridge$setOwner(Player owner) {
         this.owner = owner;
     }
 
     @Override
     public List<ItemStack> getContents() {
-        return this.stackList;
+        return this.items;
     }
 
     @Override
@@ -95,7 +95,7 @@ public abstract class CraftingInventoryMixin implements CraftingInventoryBridge,
     }
 
     @Override
-    public int getInventoryStackLimit() {
+    public int getMaxStackSize() {
         if (maxStack == 0) maxStack = MAX_STACK;
         return this.maxStack;
     }
@@ -108,18 +108,18 @@ public abstract class CraftingInventoryMixin implements CraftingInventoryBridge,
 
     @Override
     public Location getLocation() {
-        return this.eventHandler instanceof PosContainerBridge
-            ? ((PosContainerBridge) eventHandler).bridge$getWorldLocation()
+        return this.menu instanceof PosContainerBridge
+            ? ((PosContainerBridge) menu).bridge$getWorldLocation()
             : ((PlayerEntityBridge) owner).bridge$getBukkitEntity().getLocation();
     }
 
     @Override
-    public IRecipe<?> getCurrentRecipe() {
+    public Recipe<?> getCurrentRecipe() {
         return this.currentRecipe;
     }
 
     @Override
-    public void setCurrentRecipe(IRecipe<?> recipe) {
+    public void setCurrentRecipe(Recipe<?> recipe) {
         this.currentRecipe = recipe;
     }
 }

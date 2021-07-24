@@ -2,10 +2,11 @@ package io.izzel.arclight.common.bridge.entity.player;
 
 import com.mojang.datafixers.util.Either;
 import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Unit;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.entity.player.Player;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
+import org.bukkit.event.entity.EntityExhaustionEvent;
 
 public interface PlayerEntityBridge extends LivingEntityBridge {
 
@@ -14,5 +15,7 @@ public interface PlayerEntityBridge extends LivingEntityBridge {
     @Override
     CraftHumanEntity bridge$getBukkitEntity();
 
-    Either<PlayerEntity.SleepResult, Unit> bridge$trySleep(BlockPos at, boolean force);
+    Either<Player.BedSleepingProblem, Unit> bridge$trySleep(BlockPos at, boolean force);
+
+    void bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason reason);
 }

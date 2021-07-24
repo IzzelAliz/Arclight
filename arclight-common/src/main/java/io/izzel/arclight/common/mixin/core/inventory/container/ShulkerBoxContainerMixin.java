@@ -1,10 +1,10 @@
 package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.ShulkerBoxContainer;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ShulkerBoxMenu;
 import org.bukkit.craftbukkit.v.inventory.CraftInventory;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
 import org.spongepowered.asm.mixin.Final;
@@ -14,18 +14,18 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(ShulkerBoxContainer.class)
+@Mixin(ShulkerBoxMenu.class)
 public abstract class ShulkerBoxContainerMixin extends ContainerMixin {
 
     // @formatter:off
-    @Shadow @Final private IInventory inventory;
+    @Shadow @Final private Container container;
     // @formatter:on
 
     private CraftInventoryView bukkitEntity;
-    private PlayerInventory playerInventory;
+    private Inventory playerInventory;
 
-    @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/inventory/IInventory;)V", at = @At("RETURN"))
-    public void arclight$init(int id, PlayerInventory playerInventory, IInventory inventory, CallbackInfo ci) {
+    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;)V", at = @At("RETURN"))
+    public void arclight$init(int id, Inventory playerInventory, Container inventory, CallbackInfo ci) {
         this.playerInventory = playerInventory;
     }
 
@@ -35,7 +35,7 @@ public abstract class ShulkerBoxContainerMixin extends ContainerMixin {
             return bukkitEntity;
         }
 
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), new CraftInventory(this.inventory), (Container) (Object) this);
+        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), new CraftInventory(this.container), (AbstractContainerMenu) (Object) this);
         return bukkitEntity;
     }
 }

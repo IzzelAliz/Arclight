@@ -1,17 +1,17 @@
 package io.izzel.arclight.common.mixin.core.loot.conditions;
 
 import io.izzel.arclight.common.mod.ArclightConstants;
-import net.minecraft.loot.LootContext;
-import net.minecraft.loot.conditions.RandomChanceWithLooting;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.predicates.LootItemRandomChanceWithLootingCondition;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(RandomChanceWithLooting.class)
+@Mixin(LootItemRandomChanceWithLootingCondition.class)
 public class RandomChanceWithLootingMixin {
 
-    @Shadow @Final private float chance;
+    @Shadow @Final private float percent;
     @Shadow @Final private float lootingMultiplier;
 
     /**
@@ -22,9 +22,9 @@ public class RandomChanceWithLootingMixin {
     public boolean test(LootContext context) {
         int i = context.getLootingModifier();
 
-        if (context.has(ArclightConstants.LOOTING_MOD)) {
-            i = context.get(ArclightConstants.LOOTING_MOD);
+        if (context.hasParam(ArclightConstants.LOOTING_MOD)) {
+            i = context.getParamOrNull(ArclightConstants.LOOTING_MOD);
         }
-        return context.getRandom().nextFloat() < this.chance + (float) i * this.lootingMultiplier;
+        return context.getRandom().nextFloat() < this.percent + (float) i * this.lootingMultiplier;
     }
 }

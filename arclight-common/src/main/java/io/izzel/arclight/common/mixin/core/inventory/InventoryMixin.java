@@ -1,11 +1,11 @@
 package io.izzel.arclight.common.mixin.core.inventory;
 
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.util.NonNullList;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
@@ -17,11 +17,11 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.ArrayList;
 import java.util.List;
 
-@Mixin(Inventory.class)
-public abstract class InventoryMixin implements IInventory, IInventoryBridge {
+@Mixin(SimpleContainer.class)
+public abstract class InventoryMixin implements Container, IInventoryBridge {
 
     // @formatter:off
-    @Shadow @Final public NonNullList<ItemStack> inventoryContents;
+    @Shadow @Final public NonNullList<ItemStack> items;
     // @formatter:on
 
     private static final int MAX_STACK = 64;
@@ -41,7 +41,7 @@ public abstract class InventoryMixin implements IInventory, IInventoryBridge {
 
     @Override
     public List<ItemStack> getContents() {
-        return this.inventoryContents;
+        return this.items;
     }
 
     @Override
@@ -70,7 +70,7 @@ public abstract class InventoryMixin implements IInventory, IInventoryBridge {
     }
 
     @Override
-    public int getInventoryStackLimit() {
+    public int getMaxStackSize() {
         if (maxStack == 0) maxStack = MAX_STACK;
         return maxStack;
     }
@@ -86,12 +86,12 @@ public abstract class InventoryMixin implements IInventory, IInventoryBridge {
     }
 
     @Override
-    public IRecipe<?> getCurrentRecipe() {
+    public Recipe<?> getCurrentRecipe() {
         return null;
     }
 
     @Override
-    public void setCurrentRecipe(IRecipe<?> recipe) {
+    public void setCurrentRecipe(Recipe<?> recipe) {
 
     }
 }

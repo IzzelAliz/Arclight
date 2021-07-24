@@ -1,19 +1,19 @@
 package io.izzel.arclight.common.mixin.core.world.gen.feature.structure;
 
 import io.izzel.arclight.common.bridge.world.IWorldBridge;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
-import net.minecraft.world.gen.feature.structure.StructureManager;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.StructureFeatureManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(StructureManager.class)
+@Mixin(StructureFeatureManager.class)
 public class StructureManagerMixin {
 
-    @Shadow @Final private IWorld world;
+    @Shadow @Final private LevelAccessor level;
 
-    public World getWorld() {
-        return ((IWorldBridge) this.world).bridge$getMinecraftWorld();
+    public Level getWorld() {
+        return ((IWorldBridge) this.level).bridge$getMinecraftWorld();
     }
 }

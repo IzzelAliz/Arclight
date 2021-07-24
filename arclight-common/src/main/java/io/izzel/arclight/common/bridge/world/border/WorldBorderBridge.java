@@ -1,10 +1,10 @@
 package io.izzel.arclight.common.bridge.world.border;
 
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 
 public interface WorldBorderBridge {
 
-    World bridge$getWorld();
+    Level bridge$getWorld();
 
-    void bridge$setWorld(World world);
+    void bridge$setWorld(Level world);
 }

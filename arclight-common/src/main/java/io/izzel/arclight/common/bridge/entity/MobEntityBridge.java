@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.bridge.entity;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
 
@@ -25,9 +25,4 @@ public interface MobEntityBridge extends LivingEntityBridge {
     void bridge$setAware(boolean aware);
 
     void bridge$captureItemDrop(ItemEntity itemEntity);
-
-    interface Hack {
-
-        ResourceLocation getLootTable();
-    }
 }

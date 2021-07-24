@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mod.compat;
 
-import net.minecraft.entity.Entity;
+import net.minecraft.world.entity.Entity;
 
 public class AstralSorceryHooks {
 

@@ -2,12 +2,12 @@ package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.inventory.container.PosContainerBridge;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.LoomContainer;
-import net.minecraft.util.IWorldPosCallable;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.inventory.LoomMenu;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryLoom;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
 import org.spongepowered.asm.mixin.Final;
@@ -18,25 +18,25 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(LoomContainer.class)
+@Mixin(LoomMenu.class)
 public abstract class LoomContainerMixin extends ContainerMixin implements PosContainerBridge {
 
     // @formatter:off
-    @Shadow @Final private IInventory inputInventory;
-    @Shadow @Final private IInventory outputInventory;
-    @Shadow @Final private IWorldPosCallable worldPos;
+    @Shadow @Final private Container inputContainer;
+    @Shadow @Final private Container outputContainer;
+    @Shadow @Final private ContainerLevelAccess access;
     // @formatter:on
 
     private CraftInventoryView bukkitEntity;
-    private PlayerInventory playerInventory;
+    private Inventory playerInventory;
 
-    @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/util/IWorldPosCallable;)V", at = @At("RETURN"))
-    public void arclight$init(int id, PlayerInventory playerInventory, IWorldPosCallable worldCallable, CallbackInfo ci) {
+    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/inventory/ContainerLevelAccess;)V", at = @At("RETURN"))
+    public void arclight$init(int id, Inventory playerInventory, ContainerLevelAccess worldCallable, CallbackInfo ci) {
         this.playerInventory = playerInventory;
     }
 
-    @Inject(method = "canInteractWith", cancellable = true, at = @At("HEAD"))
-    public void arclight$unreachable(PlayerEntity playerIn, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "stillValid", cancellable = true, at = @At("HEAD"))
+    public void arclight$unreachable(Player playerIn, CallbackInfoReturnable<Boolean> cir) {
         if (!bridge$isCheckReachable()) {
             cir.setReturnValue(true);
         }
@@ -48,13 +48,13 @@ public abstract class LoomContainerMixin extends ContainerMixin implements PosCo
             return bukkitEntity;
         }
 
-        CraftInventoryLoom inventory = new CraftInventoryLoom(this.inputInventory, this.outputInventory);
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
+        CraftInventoryLoom inventory = new CraftInventoryLoom(this.inputContainer, this.outputContainer);
+        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (AbstractContainerMenu) (Object) this);
         return bukkitEntity;
     }
 
     @Override
-    public IWorldPosCallable bridge$getWorldPos() {
-        return this.worldPos;
+    public ContainerLevelAccess bridge$getWorldPos() {
+        return this.access;
     }
 }

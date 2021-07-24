@@ -11,7 +11,6 @@ import com.mojang.authlib.GameProfile;
 import com.mysql.jdbc.StringUtils;
 import io.izzel.arclight.common.bridge.server.MinecraftServerBridge;
 import io.izzel.arclight.common.mod.util.ArclightHeadLoader;
-import net.minecraft.tileentity.SkullTileEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,12 +23,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import net.minecraft.world.level.block.entity.SkullBlockEntity;
 
-@Mixin(SkullTileEntity.class)
+@Mixin(SkullBlockEntity.class)
 public abstract class SkullTileEntityMixin extends TileEntityMixin {
 
     // @formatter:off
-    @Shadow public GameProfile playerProfile;
+    @Shadow public GameProfile owner;
     // @formatter:on
 
     private static ExecutorService executor = Executors.newFixedThreadPool(3,
@@ -45,10 +45,10 @@ public abstract class SkullTileEntityMixin extends TileEntityMixin {
      * @reason
      */
     @Overwrite
-    private void updatePlayerProfile() {
-        GameProfile profile = this.playerProfile;
+    private void updateOwnerProfile() {
+        GameProfile profile = this.owner;
         b(profile, input -> {
-            playerProfile = input;
+            owner = input;
             markDirty();
             return false;
         }, false);

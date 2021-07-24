@@ -1,12 +1,12 @@
 package io.izzel.arclight.common.bridge.world.storage;
 
-import net.minecraft.util.RegistryKey;
-import net.minecraft.world.DimensionType;
-import net.minecraft.world.storage.IServerWorldInfo;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.storage.ServerLevelData;
 
 public interface DerivedWorldInfoBridge {
 
-    IServerWorldInfo bridge$getDelegate();
+    ServerLevelData bridge$getDelegate();
 
-    void bridge$setDimType(RegistryKey<DimensionType> typeKey);
+    void bridge$setDimType(ResourceKey<DimensionType> typeKey);
 }

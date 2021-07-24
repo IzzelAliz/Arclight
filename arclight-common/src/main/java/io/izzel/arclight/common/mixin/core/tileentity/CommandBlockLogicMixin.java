@@ -2,11 +2,11 @@ package io.izzel.arclight.common.mixin.core.tileentity;
 
 import com.google.common.base.Joiner;
 import io.izzel.arclight.common.bridge.command.CommandSourceBridge;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.tileentity.CommandBlockLogic;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.level.BaseCommandBlock;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.event.server.ServerCommandEvent;
@@ -17,15 +17,15 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(CommandBlockLogic.class)
+@Mixin(BaseCommandBlock.class)
 public class CommandBlockLogicMixin {
 
     // @formatter:off
-    @Shadow private ITextComponent customName;
+    @Shadow private Component name;
     // @formatter:on
 
-    @Redirect(method = "trigger", at = @At(value = "INVOKE", target = "Lnet/minecraft/command/Commands;handleCommand(Lnet/minecraft/command/CommandSource;Ljava/lang/String;)I"))
-    private int arclight$serverCommand(Commands commands, CommandSource sender, String command) {
+    @Redirect(method = "performCommand", at = @At(value = "INVOKE", target = "Lnet/minecraft/commands/Commands;performCommand(Lnet/minecraft/commands/CommandSourceStack;Ljava/lang/String;)I"))
+    private int arclight$serverCommand(Commands commands, CommandSourceStack sender, String command) {
         Joiner joiner = Joiner.on(" ");
         if (command.startsWith("/")) {
             command = command.substring(1);
@@ -54,13 +54,13 @@ public class CommandBlockLogicMixin {
             args[0] = "minecraft:" + args[0];
         }
 
-        return commands.handleCommand(sender, joiner.join(args));
+        return commands.performCommand(sender, joiner.join(args));
     }
 
     @Inject(method = "setName", at = @At("RETURN"))
-    public void arclight$setName(ITextComponent nameIn, CallbackInfo ci) {
-        if (this.customName == null) {
-            this.customName = new StringTextComponent("@");
+    public void arclight$setName(Component nameIn, CallbackInfo ci) {
+        if (this.name == null) {
+            this.name = new TextComponent("@");
         }
     }
 }

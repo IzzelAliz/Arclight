@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.forge;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.IPacket;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.fml.network.PacketDistributor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -17,11 +17,11 @@ public class PacketDistributorMixin {
      * @reason
      */
     @Overwrite(remap = false)
-    private Consumer<IPacket<?>> playerConsumer(Supplier<ServerPlayerEntity> entityPlayerMPSupplier) {
+    private Consumer<Packet<?>> playerConsumer(Supplier<ServerPlayer> entityPlayerMPSupplier) {
         return p -> {
-            ServerPlayerEntity entity = entityPlayerMPSupplier.get();
-            if (entity.connection != null && entity.connection.netManager != null) {
-                entity.connection.netManager.sendPacket(p);
+            ServerPlayer entity = entityPlayerMPSupplier.get();
+            if (entity.connection != null && entity.connection.connection != null) {
+                entity.connection.connection.send(p);
             }
         };
     }

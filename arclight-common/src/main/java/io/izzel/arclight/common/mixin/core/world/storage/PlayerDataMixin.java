@@ -2,11 +2,6 @@ package io.izzel.arclight.common.mixin.core.world.storage;
 
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.world.storage.PlayerDataBridge;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.world.storage.PlayerData;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.spongepowered.asm.mixin.Final;
@@ -18,21 +13,26 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.File;
 import java.io.FileInputStream;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.storage.PlayerDataStorage;
 
-@Mixin(PlayerData.class)
+@Mixin(PlayerDataStorage.class)
 public class PlayerDataMixin implements PlayerDataBridge {
 
     // @formatter:off
-    @Shadow @Final private File playerDataFolder;
+    @Shadow @Final private File playerDir;
     @Shadow @Final private static Logger LOGGER;
     // @formatter:on
 
-    @Inject(method = "loadPlayerData", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundNBT;contains(Ljava/lang/String;I)Z"))
-    private void arclight$lastSeenTime(PlayerEntity player, CallbackInfoReturnable<CompoundNBT> cir) {
-        if (player instanceof ServerPlayerEntity) {
+    @Inject(method = "load", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundTag;contains(Ljava/lang/String;I)Z"))
+    private void arclight$lastSeenTime(Player player, CallbackInfoReturnable<CompoundTag> cir) {
+        if (player instanceof ServerPlayer) {
             CraftPlayer craftPlayer = ((ServerPlayerEntityBridge) player).bridge$getBukkitEntity();
             // Only update first played if it is older than the one we have
-            long modified = new File(this.playerDataFolder, player.getUniqueID().toString() + ".dat").lastModified();
+            long modified = new File(this.playerDir, player.getUUID().toString() + ".dat").lastModified();
             if (modified < craftPlayer.getFirstPlayed()) {
                 craftPlayer.setFirstPlayed(modified);
             }
@@ -40,14 +40,14 @@ public class PlayerDataMixin implements PlayerDataBridge {
     }
 
     public File getPlayerDir() {
-        return this.playerDataFolder;
+        return this.playerDir;
     }
 
-    public CompoundNBT getPlayerData(String uuid) {
+    public CompoundTag getPlayerData(String uuid) {
         try {
-            final File file1 = new File(this.playerDataFolder, uuid + ".dat");
+            final File file1 = new File(this.playerDir, uuid + ".dat");
             if (file1.exists()) {
-                return CompressedStreamTools.readCompressed(new FileInputStream(file1));
+                return NbtIo.readCompressed(new FileInputStream(file1));
             }
         } catch (Exception exception) {
             LOGGER.warn("Failed to load player data for " + uuid);
@@ -61,7 +61,7 @@ public class PlayerDataMixin implements PlayerDataBridge {
     }
 
     @Override
-    public CompoundNBT bridge$getPlayerData(String uuid) {
+    public CompoundTag bridge$getPlayerData(String uuid) {
         return getPlayerData(uuid);
     }
 }

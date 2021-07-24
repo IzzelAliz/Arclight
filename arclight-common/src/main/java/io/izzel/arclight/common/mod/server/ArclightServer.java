@@ -3,11 +3,11 @@ package io.izzel.arclight.common.mod.server;
 import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
 import io.izzel.arclight.common.bridge.server.MinecraftServerBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.dedicated.DedicatedServer;
-import net.minecraft.server.management.PlayerList;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.world.DimensionType;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.v.CraftServer;
@@ -54,7 +54,7 @@ public class ArclightServer {
 
     public static boolean isPrimaryThread() {
         if (server == null) {
-            return Thread.currentThread().equals(getMinecraftServer().getExecutionThread());
+            return Thread.currentThread().equals(getMinecraftServer().getRunningThread());
         } else {
             return server.isPrimaryThread();
         }
@@ -66,8 +66,8 @@ public class ArclightServer {
 
     public static void executeOnMainThread(Runnable runnable) {
         ((MinecraftServerBridge) getMinecraftServer()).bridge$queuedProcess(runnable);
-        if (LockSupport.getBlocker(getMinecraftServer().getExecutionThread()) == "waiting for tasks") {
-            LockSupport.unpark(getMinecraftServer().getExecutionThread());
+        if (LockSupport.getBlocker(getMinecraftServer().getRunningThread()) == "waiting for tasks") {
+            LockSupport.unpark(getMinecraftServer().getRunningThread());
         }
     }
 
@@ -75,11 +75,11 @@ public class ArclightServer {
         return mainThreadExecutor;
     }
 
-    public static World.Environment getEnvironment(RegistryKey<DimensionType> key) {
+    public static World.Environment getEnvironment(ResourceKey<DimensionType> key) {
         return BukkitRegistry.DIM_MAP.get(key);
     }
 
-    public static RegistryKey<DimensionType> getDimensionType(World.Environment environment) {
+    public static ResourceKey<DimensionType> getDimensionType(World.Environment environment) {
         return BukkitRegistry.DIM_MAP.inverse().get(environment);
     }
 }

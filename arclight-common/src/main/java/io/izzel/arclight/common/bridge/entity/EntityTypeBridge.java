@@ -1,17 +1,17 @@
 package io.izzel.arclight.common.bridge.entity;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.server.ServerWorld;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 
 import javax.annotation.Nullable;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.player.Player;
 
 public interface EntityTypeBridge<T extends Entity> {
 
-    T bridge$spawnCreature(ServerWorld worldIn, @Nullable CompoundNBT compound, @Nullable ITextComponent customName, @Nullable PlayerEntity playerIn, BlockPos pos, SpawnReason reason, boolean flag, boolean flag1, CreatureSpawnEvent.SpawnReason spawnReason);
+    T bridge$spawnCreature(ServerLevel worldIn, @Nullable CompoundTag compound, @Nullable Component customName, @Nullable Player playerIn, BlockPos pos, MobSpawnType reason, boolean flag, boolean flag1, CreatureSpawnEvent.SpawnReason spawnReason);
 }

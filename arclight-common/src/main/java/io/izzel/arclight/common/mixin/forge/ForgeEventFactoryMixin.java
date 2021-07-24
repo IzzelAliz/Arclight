@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.forge;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.util.Direction;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.event.ForgeEventFactory;
 import org.spongepowered.asm.mixin.Mixin;

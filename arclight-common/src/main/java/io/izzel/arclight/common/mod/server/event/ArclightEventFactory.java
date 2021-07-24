@@ -1,7 +1,6 @@
 package io.izzel.arclight.common.mod.server.event;
 
 import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
-import net.minecraft.entity.LivingEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.entity.Entity;
@@ -13,6 +12,7 @@ import org.bukkit.event.entity.EntityResurrectEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
+import net.minecraft.world.entity.LivingEntity;
 
 public abstract class ArclightEventFactory {
 

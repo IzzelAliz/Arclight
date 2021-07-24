@@ -2,12 +2,12 @@ package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.inventory.container.LecternContainerBridge;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.LecternContainer;
-import net.minecraft.util.IIntArray;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.LecternMenu;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryLectern;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
@@ -19,36 +19,36 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(LecternContainer.class)
+@Mixin(LecternMenu.class)
 public abstract class LecternContainerMixin extends ContainerMixin implements LecternContainerBridge {
 
     // @formatter:off
-    @Shadow @Final private IInventory lecternInventory;
+    @Shadow @Final private Container lectern;
     // @formatter:on
 
     private CraftInventoryView bukkitEntity;
-    private PlayerInventory playerInventory;
+    private Inventory playerInventory;
 
     public void arclight$constructor(int i) {
         throw new RuntimeException();
     }
 
-    public void arclight$constructor(int i, IInventory inventory, IIntArray intArray) {
+    public void arclight$constructor(int i, Container inventory, ContainerData intArray) {
         throw new RuntimeException();
     }
 
-    public void arclight$constructor(int i, PlayerInventory playerInventory) {
+    public void arclight$constructor(int i, Inventory playerInventory) {
         arclight$constructor(i);
         this.playerInventory = playerInventory;
     }
 
-    public void arclight$constructor(int i, IInventory inventory, IIntArray intArray, PlayerInventory playerInventory) {
+    public void arclight$constructor(int i, Container inventory, ContainerData intArray, Inventory playerInventory) {
         arclight$constructor(i, inventory, intArray);
         this.playerInventory = playerInventory;
     }
 
-    @Inject(method = "enchantItem", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/inventory/IInventory;removeStackFromSlot(I)Lnet/minecraft/item/ItemStack;"))
-    public void arclight$takeBook(PlayerEntity playerIn, int id, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "clickMenuButton", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/Container;removeItemNoUpdate(I)Lnet/minecraft/world/item/ItemStack;"))
+    public void arclight$takeBook(Player playerIn, int id, CallbackInfoReturnable<Boolean> cir) {
         PlayerTakeLecternBookEvent event = new PlayerTakeLecternBookEvent(((ServerPlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), ((CraftInventoryLectern) getBukkitView().getTopInventory()).getHolder());
         Bukkit.getServer().getPluginManager().callEvent(event);
         if (event.isCancelled()) {
@@ -56,8 +56,8 @@ public abstract class LecternContainerMixin extends ContainerMixin implements Le
         }
     }
 
-    @Inject(method = "canInteractWith", cancellable = true, at = @At("HEAD"))
-    public void arclight$unreachable(PlayerEntity playerIn, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "stillValid", cancellable = true, at = @At("HEAD"))
+    public void arclight$unreachable(Player playerIn, CallbackInfoReturnable<Boolean> cir) {
         if (!bridge$isCheckReachable()) cir.setReturnValue(true);
     }
 
@@ -66,13 +66,13 @@ public abstract class LecternContainerMixin extends ContainerMixin implements Le
         if (bukkitEntity != null) {
             return bukkitEntity;
         }
-        CraftInventoryLectern inventory = new CraftInventoryLectern(this.lecternInventory);
-        bukkitEntity = new CraftInventoryView(((ServerPlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
+        CraftInventoryLectern inventory = new CraftInventoryLectern(this.lectern);
+        bukkitEntity = new CraftInventoryView(((ServerPlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (AbstractContainerMenu) (Object) this);
         return bukkitEntity;
     }
 
     @Override
-    public void bridge$setPlayerInventory(PlayerInventory playerInventory) {
+    public void bridge$setPlayerInventory(Inventory playerInventory) {
         this.playerInventory = playerInventory;
     }
 }

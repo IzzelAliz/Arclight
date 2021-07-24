@@ -1,10 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.storage;
 
 import io.izzel.arclight.common.bridge.world.storage.SaveFormatBridge;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.world.Dimension;
-import net.minecraft.world.World;
-import net.minecraft.world.storage.SaveFormat;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -14,36 +10,40 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.File;
 import java.nio.file.Path;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.LevelStem;
+import net.minecraft.world.level.storage.LevelStorageSource;
 
-@Mixin(SaveFormat.LevelSave.class)
+@Mixin(LevelStorageSource.LevelStorageAccess.class)
 public class SaveFormat_LevelSaveMixin implements SaveFormatBridge.LevelSaveBridge {
 
-    @Shadow @Final public Path saveDir;
+    @Shadow @Final public Path levelPath;
 
-    private RegistryKey<Dimension> dimensionType;
+    private ResourceKey<LevelStem> dimensionType;
 
-    public void arclight$constructor(SaveFormat saveFormat, String saveName) {
+    public void arclight$constructor(LevelStorageSource saveFormat, String saveName) {
         throw new RuntimeException();
     }
 
-    public void arclight$constructor(SaveFormat saveFormat, String saveName, RegistryKey<Dimension> dimensionType) {
+    public void arclight$constructor(LevelStorageSource saveFormat, String saveName, ResourceKey<LevelStem> dimensionType) {
         arclight$constructor(saveFormat, saveName);
         this.dimensionType = dimensionType;
     }
 
     @Override
-    public void bridge$setDimType(RegistryKey<Dimension> typeKey) {
+    public void bridge$setDimType(ResourceKey<LevelStem> typeKey) {
         this.dimensionType = typeKey;
     }
 
-    @Inject(method = "getDimensionFolder", cancellable = true, at = @At("HEAD"))
-    private void arclight$useActualType(RegistryKey<World> dimensionKey, CallbackInfoReturnable<File> cir) {
-        if (dimensionType == Dimension.OVERWORLD) {
-            cir.setReturnValue(this.saveDir.toFile());
-        } else if (dimensionType == Dimension.THE_NETHER) {
-            cir.setReturnValue(new File(this.saveDir.toFile(), "DIM-1"));
-        } else if (dimensionType == Dimension.THE_END) {
-            cir.setReturnValue(new File(this.saveDir.toFile(), "DIM1"));
+    @Inject(method = "getDimensionPath", cancellable = true, at = @At("HEAD"))
+    private void arclight$useActualType(ResourceKey<Level> dimensionKey, CallbackInfoReturnable<File> cir) {
+        if (dimensionType == LevelStem.OVERWORLD) {
+            cir.setReturnValue(this.levelPath.toFile());
+        } else if (dimensionType == LevelStem.NETHER) {
+            cir.setReturnValue(new File(this.levelPath.toFile(), "DIM-1"));
+        } else if (dimensionType == LevelStem.END) {
+            cir.setReturnValue(new File(this.levelPath.toFile(), "DIM1"));
         }
     }
 }

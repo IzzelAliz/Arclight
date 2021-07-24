@@ -2,12 +2,12 @@ package io.izzel.arclight.common.mixin.core.item;
 
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.item.ItemStackBridge;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.capabilities.CapabilityProvider;
 import net.minecraftforge.registries.IRegistryDelegate;
 import org.apache.logging.log4j.LogManager;
@@ -35,7 +35,7 @@ public abstract class ItemStackMixin extends CapabilityProvider<ItemStack> imple
     // @formatter:off
     @Shadow @Deprecated private Item item;
     @Shadow private int count;
-    @Shadow(remap = false) private CompoundNBT capNBT;
+    @Shadow(remap = false) private CompoundTag capNBT;
     @Mutable @Shadow(remap = false) @Final private IRegistryDelegate<Item> delegate;
     // @formatter:on
 
@@ -44,12 +44,12 @@ public abstract class ItemStackMixin extends CapabilityProvider<ItemStack> imple
     }
 
     @Override
-    public CompoundNBT bridge$getForgeCaps() {
+    public CompoundTag bridge$getForgeCaps() {
         return this.serializeCaps();
     }
 
     @Override
-    public void bridge$setForgeCaps(CompoundNBT caps) {
+    public void bridge$setForgeCaps(CompoundTag caps) {
         this.capNBT = caps;
         if (caps != null) {
             this.deserializeCaps(caps);
@@ -69,8 +69,8 @@ public abstract class ItemStackMixin extends CapabilityProvider<ItemStack> imple
         this.convertStack(version);
     }
 
-    @ModifyVariable(method = "attemptDamageItem", index = 1, name = "amount", at = @At(value = "JUMP", opcode = Opcodes.IFGT, ordinal = 0))
-    private int arclight$itemDamage(int i, int amount, Random rand, ServerPlayerEntity damager) {
+    @ModifyVariable(method = "hurt", index = 1, name = "amount", at = @At(value = "JUMP", opcode = Opcodes.IFGT, ordinal = 0))
+    private int arclight$itemDamage(int i, int amount, Random rand, ServerPlayer damager) {
         if (damager != null) {
             PlayerItemDamageEvent event = new PlayerItemDamageEvent(((ServerPlayerEntityBridge) damager).bridge$getBukkitEntity(), CraftItemStack.asCraftMirror((ItemStack) (Object) this), i);
             event.getPlayer().getServer().getPluginManager().callEvent(event);
@@ -86,10 +86,10 @@ public abstract class ItemStackMixin extends CapabilityProvider<ItemStack> imple
         return i;
     }
 
-    @Inject(method = "damageItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;shrink(I)V"))
+    @Inject(method = "hurtAndBreak", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;shrink(I)V"))
     private <T extends LivingEntity> void arclight$itemBreak(int amount, T entityIn, Consumer<T> onBroken, CallbackInfo ci) {
-        if (this.count == 1 && entityIn instanceof PlayerEntity) {
-            CraftEventFactory.callPlayerItemBreakEvent(((PlayerEntity) entityIn), (ItemStack) (Object) this);
+        if (this.count == 1 && entityIn instanceof Player) {
+            CraftEventFactory.callPlayerItemBreakEvent(((Player) entityIn), (ItemStack) (Object) this);
         }
     }
 

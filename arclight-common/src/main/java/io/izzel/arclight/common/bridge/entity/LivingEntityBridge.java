@@ -1,18 +1,18 @@
 package io.izzel.arclight.common.bridge.entity;
 
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 
 import java.util.Optional;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ItemStack;
 
 public interface LivingEntityBridge extends EntityBridge {
 
-    void bridge$setSlot(EquipmentSlotType slotIn, ItemStack stack, boolean silent);
+    void bridge$setSlot(EquipmentSlot slotIn, ItemStack stack, boolean silent);
 
     void bridge$playEquipSound(ItemStack stack, boolean silent);
 
@@ -32,9 +32,9 @@ public interface LivingEntityBridge extends EntityBridge {
 
     void bridge$pushEffectCause(EntityPotionEffectEvent.Cause cause);
 
-    boolean bridge$addEffect(EffectInstance effect, EntityPotionEffectEvent.Cause cause);
+    boolean bridge$addEffect(MobEffectInstance effect, EntityPotionEffectEvent.Cause cause);
 
-    boolean bridge$removeEffect(Effect effect, EntityPotionEffectEvent.Cause cause);
+    boolean bridge$removeEffect(MobEffect effect, EntityPotionEffectEvent.Cause cause);
 
     boolean bridge$removeAllEffects(EntityPotionEffectEvent.Cause cause);
 

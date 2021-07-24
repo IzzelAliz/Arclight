@@ -1,8 +1,5 @@
 package io.izzel.arclight.common.mixin.core.tileentity;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.BrewingStandTileEntity;
-import net.minecraft.util.NonNullList;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
@@ -22,12 +19,15 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 
-@Mixin(BrewingStandTileEntity.class)
+@Mixin(BrewingStandBlockEntity.class)
 public abstract class BrewingStandTileEntityMixin extends LockableTileEntityMixin {
 
     // @formatter:off
-    @Shadow private NonNullList<ItemStack> brewingItemStacks;
+    @Shadow private NonNullList<ItemStack> items;
     @Shadow public int fuel;
     // @formatter:on
 
@@ -38,9 +38,9 @@ public abstract class BrewingStandTileEntityMixin extends LockableTileEntityMixi
     private transient boolean arclight$consume;
 
     @Inject(method = "tick", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
-        at = @At(value = "FIELD", ordinal = 1, target = "Lnet/minecraft/tileentity/BrewingStandTileEntity;fuel:I"))
+        at = @At(value = "FIELD", ordinal = 1, target = "Lnet/minecraft/world/level/block/entity/BrewingStandBlockEntity;fuel:I"))
     public void arclight$brewFuel(CallbackInfo ci, ItemStack itemStack) {
-        BrewingStandFuelEvent event = new BrewingStandFuelEvent(CraftBlock.at(this.world, this.pos), CraftItemStack.asCraftMirror(itemStack), 20);
+        BrewingStandFuelEvent event = new BrewingStandFuelEvent(CraftBlock.at(this.level, this.worldPosition), CraftItemStack.asCraftMirror(itemStack), 20);
         Bukkit.getServer().getPluginManager().callEvent(event);
 
         if (event.isCancelled()) {
@@ -52,7 +52,7 @@ public abstract class BrewingStandTileEntityMixin extends LockableTileEntityMixi
         }
     }
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;shrink(I)V"))
+    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;shrink(I)V"))
     public void arclight$brewFuel(ItemStack itemStack, int count) {
         if (arclight$fuel != null) {
             this.fuel = arclight$fuel;
@@ -64,11 +64,11 @@ public abstract class BrewingStandTileEntityMixin extends LockableTileEntityMixi
         arclight$consume = false;
     }
 
-    @Inject(method = "brewPotions", cancellable = true, at = @At("HEAD"))
+    @Inject(method = "doBrew", cancellable = true, at = @At("HEAD"))
     public void arclight$brewPotion(CallbackInfo ci) {
         InventoryHolder owner = this.getOwner();
         if (owner != null) {
-            BrewEvent event = new BrewEvent(CraftBlock.at(world, pos), (BrewerInventory) owner.getInventory(), this.fuel);
+            BrewEvent event = new BrewEvent(CraftBlock.at(level, worldPosition), (BrewerInventory) owner.getInventory(), this.fuel);
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
                 ci.cancel();
@@ -78,7 +78,7 @@ public abstract class BrewingStandTileEntityMixin extends LockableTileEntityMixi
 
     @Override
     public List<ItemStack> getContents() {
-        return this.brewingItemStacks;
+        return this.items;
     }
 
     @Override
@@ -101,7 +101,7 @@ public abstract class BrewingStandTileEntityMixin extends LockableTileEntityMixi
     }
 
     @Override
-    public int getInventoryStackLimit() {
+    public int getMaxStackSize() {
         if (maxStack == 0) maxStack = MAX_STACK;
         return maxStack;
     }

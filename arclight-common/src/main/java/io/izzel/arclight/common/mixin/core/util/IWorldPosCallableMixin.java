@@ -1,20 +1,20 @@
 package io.izzel.arclight.common.mixin.core.util;
 
 import io.izzel.arclight.common.bridge.util.IWorldPosCallableBridge;
-import net.minecraft.util.IWorldPosCallable;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import org.bukkit.Location;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 import java.util.Optional;
 import java.util.function.BiFunction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.level.Level;
 
-@Mixin(IWorldPosCallable.class)
+@Mixin(ContainerLevelAccess.class)
 public interface IWorldPosCallableMixin extends IWorldPosCallableBridge {
 
-    default World getWorld() {
+    default Level getWorld() {
         return bridge$getWorld();
     }
 
@@ -31,16 +31,16 @@ public interface IWorldPosCallableMixin extends IWorldPosCallableBridge {
      * @reason
      */
     @Overwrite
-    static IWorldPosCallable of(final World world, final BlockPos pos) {
-        class Anonymous implements IWorldPosCallable, IWorldPosCallableBridge {
+    static ContainerLevelAccess create(final Level world, final BlockPos pos) {
+        class Anonymous implements ContainerLevelAccess, IWorldPosCallableBridge {
 
             @Override
-            public <T> Optional<T> apply(BiFunction<World, BlockPos, T> worldPosConsumer) {
+            public <T> Optional<T> evaluate(BiFunction<Level, BlockPos, T> worldPosConsumer) {
                 return Optional.of(worldPosConsumer.apply(world, pos));
             }
 
             @Override
-            public World bridge$getWorld() {
+            public Level bridge$getWorld() {
                 return world;
             }
 

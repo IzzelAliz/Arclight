@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mod.server.entity;
 
 import io.izzel.arclight.common.mod.util.ResourceLocationUtil;
-import net.minecraft.entity.passive.horse.AbstractHorseEntity;
+import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftAbstractHorse;
@@ -14,7 +14,7 @@ public class ArclightModHorse extends CraftAbstractHorse {
 
     private final EntityType entityType;
 
-    public ArclightModHorse(CraftServer server, AbstractHorseEntity entity) {
+    public ArclightModHorse(CraftServer server, AbstractHorse entity) {
         super(server, entity);
         this.entityType = EntityType.valueOf(ResourceLocationUtil.standardize(ForgeRegistries.ENTITIES.getKey(entity.getType())));
     }

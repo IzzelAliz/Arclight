@@ -1,20 +1,20 @@
 package io.izzel.arclight.common.mixin.core.item.crafting;
 
 import io.izzel.arclight.common.bridge.item.crafting.IngredientBridge;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.Ingredient;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import javax.annotation.Nullable;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
 
 @Mixin(Ingredient.class)
 public abstract class IngredientMixin implements IngredientBridge {
 
     // @formatter:off
-    @Shadow  public abstract void determineMatchingStacks();
-    @Shadow public ItemStack[] matchingStacks;
+    @Shadow  public abstract void dissolve();
+    @Shadow public ItemStack[] itemStacks;
     // @formatter:on
 
     public boolean exact;
@@ -28,13 +28,13 @@ public abstract class IngredientMixin implements IngredientBridge {
         if (stack == null) {
             return false;
         } else {
-            this.determineMatchingStacks();
-            if (this.matchingStacks.length == 0) {
+            this.dissolve();
+            if (this.itemStacks.length == 0) {
                 return stack.isEmpty();
             } else {
-                for (ItemStack itemstack : this.matchingStacks) {
+                for (ItemStack itemstack : this.itemStacks) {
                     if (exact) {
-                        if (itemstack.getItem() == stack.getItem() && ItemStack.areItemsEqual(itemstack, stack)) {
+                        if (itemstack.getItem() == stack.getItem() && ItemStack.isSame(itemstack, stack)) {
                             return true;
                         }
                         continue;

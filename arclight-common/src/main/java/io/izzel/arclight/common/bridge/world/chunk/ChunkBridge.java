@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.bridge.world.chunk;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.Chunk;
 import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataContainer;
 

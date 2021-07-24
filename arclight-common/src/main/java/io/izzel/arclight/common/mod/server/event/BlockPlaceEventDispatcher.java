@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.mod.server.event;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -27,17 +27,17 @@ public class BlockPlaceEventDispatcher {
     @SubscribeEvent(receiveCanceled = true)
     public void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
         Entity entity = event.getEntity();
-        if (entity instanceof ServerPlayerEntity) {
-            ServerPlayerEntity playerEntity = (ServerPlayerEntity) entity;
+        if (entity instanceof ServerPlayer) {
+            ServerPlayer playerEntity = (ServerPlayer) entity;
             Player player = ((CraftServer) Bukkit.getServer()).getPlayer(playerEntity);
             Direction direction = ArclightCaptures.getPlaceEventDirection();
             if (direction != null) {
-                Hand hand = ArclightCaptures.getPlaceEventHand(Hand.MAIN_HAND);
+                InteractionHand hand = ArclightCaptures.getPlaceEventHand(InteractionHand.MAIN_HAND);
                 CraftBlock placedBlock = ArclightBlockSnapshot.fromBlockSnapshot(event.getBlockSnapshot(), true);
-                CraftBlock againstBlock = CraftBlock.at(event.getWorld(), event.getPos().offset(direction.getOpposite()));
+                CraftBlock againstBlock = CraftBlock.at(event.getWorld(), event.getPos().relative(direction.getOpposite()));
                 ItemStack bukkitStack;
                 EquipmentSlot bukkitHand;
-                if (hand == Hand.MAIN_HAND) {
+                if (hand == InteractionHand.MAIN_HAND) {
                     bukkitStack = player.getInventory().getItemInMainHand();
                     bukkitHand = EquipmentSlot.HAND;
                 } else {
@@ -63,19 +63,19 @@ public class BlockPlaceEventDispatcher {
     @SubscribeEvent(receiveCanceled = true)
     public void onMultiPlace(BlockEvent.EntityMultiPlaceEvent event) {
         Entity entity = event.getEntity();
-        if (entity instanceof ServerPlayerEntity) {
-            ServerPlayerEntity playerEntity = (ServerPlayerEntity) entity;
+        if (entity instanceof ServerPlayer) {
+            ServerPlayer playerEntity = (ServerPlayer) entity;
             Player player = ((CraftServer) Bukkit.getServer()).getPlayer(playerEntity);
             Direction direction = ArclightCaptures.getPlaceEventDirection();
             if (direction != null) {
-                Hand hand = ArclightCaptures.getPlaceEventHand(Hand.MAIN_HAND);
+                InteractionHand hand = ArclightCaptures.getPlaceEventHand(InteractionHand.MAIN_HAND);
                 List<BlockState> placedBlocks = new ArrayList<>(event.getReplacedBlockSnapshots().size());
                 for (BlockSnapshot snapshot : event.getReplacedBlockSnapshots()) {
                     placedBlocks.add(ArclightBlockSnapshot.fromBlockSnapshot(snapshot, true).getState());
                 }
-                CraftBlock againstBlock = CraftBlock.at(event.getWorld(), event.getPos().offset(direction.getOpposite()));
+                CraftBlock againstBlock = CraftBlock.at(event.getWorld(), event.getPos().relative(direction.getOpposite()));
                 ItemStack bukkitStack;
-                if (hand == Hand.MAIN_HAND) {
+                if (hand == InteractionHand.MAIN_HAND) {
                     bukkitStack = player.getInventory().getItemInMainHand();
                 } else {
                     bukkitStack = player.getInventory().getItemInOffHand();

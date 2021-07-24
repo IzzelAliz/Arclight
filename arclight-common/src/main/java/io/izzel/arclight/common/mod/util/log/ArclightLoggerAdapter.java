@@ -3,7 +3,6 @@ package io.izzel.arclight.common.mod.util.log;
 import org.apache.logging.log4j.jul.ApiLogger;
 import org.apache.logging.log4j.jul.CoreLoggerAdapter;
 import org.apache.logging.log4j.spi.LoggerContext;
-import sun.reflect.CallerSensitive;
 
 import java.util.ResourceBundle;
 import java.util.function.Supplier;
@@ -34,12 +33,10 @@ public class ArclightLoggerAdapter extends CoreLoggerAdapter {
             this.logger = logger;
         }
 
-        @CallerSensitive
         public static Logger getLogger(String name) {
             return Logger.getLogger(name);
         }
 
-        @CallerSensitive
         public static Logger getLogger(String name, String resourceBundleName) {
             return Logger.getLogger(name, resourceBundleName);
         }
@@ -48,7 +45,6 @@ public class ArclightLoggerAdapter extends CoreLoggerAdapter {
             return Logger.getAnonymousLogger();
         }
 
-        @CallerSensitive
         public static Logger getAnonymousLogger(String resourceBundleName) {
             return Logger.getAnonymousLogger(resourceBundleName);
         }

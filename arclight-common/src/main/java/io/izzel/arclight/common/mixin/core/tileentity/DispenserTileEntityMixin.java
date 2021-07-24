@@ -1,8 +1,5 @@
 package io.izzel.arclight.common.mixin.core.tileentity;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.DispenserTileEntity;
-import net.minecraft.util.NonNullList;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
@@ -11,12 +8,15 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.DispenserBlockEntity;
 
-@Mixin(DispenserTileEntity.class)
+@Mixin(DispenserBlockEntity.class)
 public abstract class DispenserTileEntityMixin extends LockableTileEntityMixin {
 
     // @formatter:off
-    @Shadow private NonNullList<ItemStack> stacks;
+    @Shadow private NonNullList<ItemStack> items;
     // @formatter:on
 
     public List<HumanEntity> transaction = new ArrayList<>();
@@ -24,7 +24,7 @@ public abstract class DispenserTileEntityMixin extends LockableTileEntityMixin {
 
     @Override
     public List<ItemStack> getContents() {
-        return this.stacks;
+        return this.items;
     }
 
     @Override
@@ -47,7 +47,7 @@ public abstract class DispenserTileEntityMixin extends LockableTileEntityMixin {
     }
 
     @Override
-    public int getInventoryStackLimit() {
+    public int getMaxStackSize() {
         if (maxStack == 0) maxStack = MAX_STACK;
         return maxStack;
     }

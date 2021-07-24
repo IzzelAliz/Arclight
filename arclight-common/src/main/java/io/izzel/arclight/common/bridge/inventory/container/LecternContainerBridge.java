@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.bridge.inventory.container;
 
-import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.world.entity.player.Inventory;
 
 public interface LecternContainerBridge {
 
-    void bridge$setPlayerInventory(PlayerInventory playerInventory);
+    void bridge$setPlayerInventory(Inventory playerInventory);
 }

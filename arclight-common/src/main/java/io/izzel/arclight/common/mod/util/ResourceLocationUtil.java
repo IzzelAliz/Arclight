@@ -1,11 +1,11 @@
 package io.izzel.arclight.common.mod.util;
 
 import com.google.common.base.Preconditions;
-import net.minecraft.util.ResourceLocation;
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.Contract;
 
 import java.util.Locale;
+import net.minecraft.resources.ResourceLocation;
 
 public class ResourceLocationUtil {
 

@@ -3,8 +3,6 @@ package io.izzel.arclight.common.mixin.bukkit;
 import io.izzel.arclight.common.bridge.bukkit.CraftItemStackBridge;
 import io.izzel.arclight.common.bridge.bukkit.ItemMetaBridge;
 import io.izzel.arclight.common.bridge.item.ItemStackBridge;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v.legacy.CraftLegacy;
@@ -17,6 +15,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Objects;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
 
 @Mixin(value = CraftItemStack.class, remap = false)
 public abstract class CraftItemStackMixin implements CraftItemStackBridge {
@@ -28,11 +28,11 @@ public abstract class CraftItemStackMixin implements CraftItemStackBridge {
     @Shadow public abstract boolean hasItemMeta();
     // @formatter:on
 
-    @Inject(method = "getItemMeta(Lnet/minecraft/item/ItemStack;)Lorg/bukkit/inventory/meta/ItemMeta;", at = @At("RETURN"))
+    @Inject(method = "getItemMeta(Lnet/minecraft/world/item/ItemStack;)Lorg/bukkit/inventory/meta/ItemMeta;", at = @At("RETURN"))
     private static void arclight$offerCaps(ItemStack item, CallbackInfoReturnable<ItemMeta> cir) {
         if (item == null) return;
         ItemMeta meta = cir.getReturnValue();
-        CompoundNBT tag = item.getTag();
+        CompoundTag tag = item.getTag();
         if (tag != null) {
             ((ItemMetaBridge) meta).bridge$offerUnhandledTags(tag);
         }
@@ -40,9 +40,9 @@ public abstract class CraftItemStackMixin implements CraftItemStackBridge {
     }
 
     // check when update
-    @Inject(method = "setItemMeta(Lnet/minecraft/item/ItemStack;Lorg/bukkit/inventory/meta/ItemMeta;)Z", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/item/ItemStack;func_77973_b()Lnet/minecraft/item/Item;"))
+    @Inject(method = "setItemMeta(Lnet/minecraft/world/item/ItemStack;Lorg/bukkit/inventory/meta/ItemMeta;)Z", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/item/ItemStack;func_77973_b()Lnet/minecraft/world/item/Item;"))
     private static void arclight$setCaps(ItemStack item, ItemMeta itemMeta, CallbackInfoReturnable<Boolean> cir) {
-        CompoundNBT forgeCaps = ((ItemMetaBridge) itemMeta).bridge$getForgeCaps();
+        CompoundTag forgeCaps = ((ItemMetaBridge) itemMeta).bridge$getForgeCaps();
         if (forgeCaps != null) {
             ((ItemStackBridge)(Object) item).bridge$setForgeCaps(forgeCaps.copy());
         }
@@ -82,10 +82,10 @@ public abstract class CraftItemStackMixin implements CraftItemStackBridge {
             : !that.hasItemMeta();
     }
 
-    @Inject(method = "hasItemMeta(Lnet/minecraft/item/ItemStack;)Z", cancellable = true, at = @At("HEAD"))
+    @Inject(method = "hasItemMeta(Lnet/minecraft/world/item/ItemStack;)Z", cancellable = true, at = @At("HEAD"))
     private static void arclight$hasMeta(ItemStack item, CallbackInfoReturnable<Boolean> cir) {
         if (item != null) {
-            CompoundNBT forgeCaps = ((ItemStackBridge) (Object) item).bridge$getForgeCaps();
+            CompoundTag forgeCaps = ((ItemStackBridge) (Object) item).bridge$getForgeCaps();
             if (forgeCaps != null && !forgeCaps.isEmpty()) {
                 cir.setReturnValue(true);
             }

@@ -2,40 +2,40 @@ package io.izzel.arclight.common.mod.util;
 
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.IPacket;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.PacketDirection;
-import net.minecraft.network.play.ServerPlayNetHandler;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import org.jetbrains.annotations.Nullable;
 
-public class BlackholeNetHandler extends ServerPlayNetHandler {
+public class BlackholeNetHandler extends ServerGamePacketListenerImpl {
 
-    public BlackholeNetHandler(MinecraftServer server, ServerPlayerEntity playerIn) {
+    public BlackholeNetHandler(MinecraftServer server, ServerPlayer playerIn) {
         super(server, new BlackholeNetworkManager(), playerIn);
     }
 
     @Override
-    public void sendPacket(IPacket<?> packetIn) {
+    public void send(Packet<?> packetIn) {
     }
 
     @Override
-    public void sendPacket(IPacket<?> packetIn, @Nullable GenericFutureListener<? extends Future<? super Void>> futureListeners) {
+    public void send(Packet<?> packetIn, @Nullable GenericFutureListener<? extends Future<? super Void>> futureListeners) {
     }
 
-    private static class BlackholeNetworkManager extends NetworkManager {
+    private static class BlackholeNetworkManager extends Connection {
 
         public BlackholeNetworkManager() {
-            super(PacketDirection.SERVERBOUND);
+            super(PacketFlow.SERVERBOUND);
         }
 
         @Override
-        public void sendPacket(IPacket<?> packetIn) {
+        public void send(Packet<?> packetIn) {
         }
 
         @Override
-        public void sendPacket(IPacket<?> packetIn, @Nullable GenericFutureListener<? extends Future<? super Void>> p_201058_2_) {
+        public void send(Packet<?> packetIn, @Nullable GenericFutureListener<? extends Future<? super Void>> p_201058_2_) {
         }
     }
 }

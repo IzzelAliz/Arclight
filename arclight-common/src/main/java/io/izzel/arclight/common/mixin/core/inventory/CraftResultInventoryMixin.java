@@ -1,11 +1,6 @@
 package io.izzel.arclight.common.mixin.core.inventory;
 
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
-import net.minecraft.inventory.CraftResultInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.util.NonNullList;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
@@ -16,19 +11,24 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.ResultContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
 
-@Mixin(CraftResultInventory.class)
-public abstract class CraftResultInventoryMixin implements IInventoryBridge, IInventory {
+@Mixin(ResultContainer.class)
+public abstract class CraftResultInventoryMixin implements IInventoryBridge, Container {
 
     // @formatter:off
-    @Shadow @Final private NonNullList<ItemStack> stackResult;
+    @Shadow @Final private NonNullList<ItemStack> itemStacks;
     // @formatter:on
 
     private int maxStack = MAX_STACK;
 
     @Override
     public List<ItemStack> getContents() {
-        return this.stackResult;
+        return this.itemStacks;
     }
 
     @Override
@@ -49,7 +49,7 @@ public abstract class CraftResultInventoryMixin implements IInventoryBridge, IIn
     public void setOwner(InventoryHolder owner) { }
 
     @Override
-    public int getInventoryStackLimit() {
+    public int getMaxStackSize() {
         if (maxStack == 0) maxStack = MAX_STACK;
         return this.maxStack;
     }
@@ -63,8 +63,8 @@ public abstract class CraftResultInventoryMixin implements IInventoryBridge, IIn
     public Location getLocation() { return null; }
 
     @Override
-    public IRecipe<?> getCurrentRecipe() { return null; }
+    public Recipe<?> getCurrentRecipe() { return null; }
 
     @Override
-    public void setCurrentRecipe(IRecipe<?> recipe) { }
+    public void setCurrentRecipe(Recipe<?> recipe) { }
 }

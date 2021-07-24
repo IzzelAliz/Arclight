@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mod.server.entity;
 
 import io.izzel.arclight.common.mod.util.ResourceLocationUtil;
-import net.minecraft.entity.monster.AbstractRaiderEntity;
+import net.minecraft.world.entity.raid.Raider;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftRaider;
@@ -13,7 +13,7 @@ public class ArclightModRaider extends CraftRaider {
 
     private final EntityType entityType;
 
-    public ArclightModRaider(CraftServer server, AbstractRaiderEntity entity) {
+    public ArclightModRaider(CraftServer server, Raider entity) {
         super(server, entity);
         this.entityType = EntityType.valueOf(ResourceLocationUtil.standardize(ForgeRegistries.ENTITIES.getKey(entity.getType())));
     }

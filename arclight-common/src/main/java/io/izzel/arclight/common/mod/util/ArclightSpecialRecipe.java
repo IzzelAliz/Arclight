@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mod.util;
 
 import io.izzel.arclight.common.bridge.item.crafting.RecipeManagerBridge;
-import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
 import org.bukkit.NamespacedKey;
 import org.bukkit.craftbukkit.v.inventory.CraftComplexRecipe;
@@ -12,16 +12,16 @@ import org.jetbrains.annotations.NotNull;
 
 public class ArclightSpecialRecipe extends CraftComplexRecipe {
 
-    private final IRecipe<?> recipe;
+    private final Recipe<?> recipe;
 
-    public ArclightSpecialRecipe(IRecipe<?> recipe) {
+    public ArclightSpecialRecipe(Recipe<?> recipe) {
         super(null);
         this.recipe = recipe;
     }
 
     @Override
     public @NotNull ItemStack getResult() {
-        return CraftItemStack.asCraftMirror(this.recipe.getRecipeOutput());
+        return CraftItemStack.asCraftMirror(this.recipe.getResultItem());
     }
 
     @Override

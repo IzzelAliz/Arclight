@@ -1,8 +1,7 @@
 package io.izzel.arclight.common.bridge.world.chunk.storage;
 
-import net.minecraft.util.math.ChunkPos;
-
 import java.io.IOException;
+import net.minecraft.world.level.ChunkPos;
 
 public interface RegionFileCacheBridge {
 

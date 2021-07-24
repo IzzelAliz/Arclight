@@ -3,12 +3,12 @@ package io.izzel.arclight.common.mixin.core.loot;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import net.minecraft.loot.LootEntry;
+import net.minecraft.world.level.storage.loot.entries.LootPoolEntryContainer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(LootEntry.Serializer.class)
-public abstract class LootEntry_SerializerMixin<T extends LootEntry> {
+@Mixin(LootPoolEntryContainer.Serializer.class)
+public abstract class LootEntry_SerializerMixin<T extends LootPoolEntryContainer> {
 
     // @formatter:off
     @Shadow public abstract void serialize(JsonObject p_230424_1_, T p_230424_2_, JsonSerializationContext p_230424_3_);

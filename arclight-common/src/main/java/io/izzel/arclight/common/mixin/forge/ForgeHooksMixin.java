@@ -1,12 +1,12 @@
 package io.izzel.arclight.common.mixin.forge;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.ForgeHooks;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,18 +18,18 @@ import io.izzel.arclight.common.mod.util.ArclightCaptures;
 public class ForgeHooksMixin {
 
     @Inject(method = "onPlaceItemIntoWorld", remap = false, at = @At("HEAD"))
-    private static void arclight$captureHand(ItemUseContext context, CallbackInfoReturnable<ActionResultType> cir) {
+    private static void arclight$captureHand(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
         ArclightCaptures.capturePlaceEventHand(context.getHand());
     }
 
     @Inject(method = "onPlaceItemIntoWorld", remap = false, at = @At("RETURN"))
-    private static void arclight$removeHand(ItemUseContext context, CallbackInfoReturnable<ActionResultType> cir) {
-        ArclightCaptures.getPlaceEventHand(Hand.MAIN_HAND);
+    private static void arclight$removeHand(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
+        ArclightCaptures.getPlaceEventHand(InteractionHand.MAIN_HAND);
     }
 
     @Inject(method = "canEntityDestroy", cancellable = true, remap = false, at = @At("HEAD"))
-    private static void arclight$returnIfNotLoaded(World world, BlockPos pos, LivingEntity entity, CallbackInfoReturnable<Boolean> cir) {
-        if (!world.getChunkProvider().isChunkLoaded(new ChunkPos(pos.getX() >> 4, pos.getZ() >> 4))) {
+    private static void arclight$returnIfNotLoaded(Level world, BlockPos pos, LivingEntity entity, CallbackInfoReturnable<Boolean> cir) {
+        if (!world.getChunkSource().isEntityTickingChunk(new ChunkPos(pos.getX() >> 4, pos.getZ() >> 4))) {
             cir.setReturnValue(false);
         }
     }

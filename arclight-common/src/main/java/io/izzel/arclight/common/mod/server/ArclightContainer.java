@@ -8,13 +8,12 @@ import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.tools.product.Product;
 import io.izzel.tools.product.Product2;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.SlotItemHandler;
@@ -54,21 +53,21 @@ public class ArclightContainer {
         }
     }
 
-    private static IInventory getActualInventoryForSlot(Slot slot) {
+    private static Container getActualInventoryForSlot(Slot slot) {
         if (slot instanceof SlotItemHandler) {
             return getInventoryFromWrapper(((SlotItemHandler) slot).getItemHandler());
         } else {
-            return slot.inventory;
+            return slot.container;
         }
     }
 
-    private static IInventory getInventoryFromWrapper(IItemHandler handler) {
+    private static Container getInventoryFromWrapper(IItemHandler handler) {
         if (handler instanceof CombinedInvWrapper) {
             IItemHandlerModifiable[] handlers = ((IItemHandlerModifiable[]) Unsafe.getObject(handler, HANDLERS_OFFSET));
-            IInventory last = null;
+            Container last = null;
             for (IItemHandlerModifiable modifiable : handlers) {
-                IInventory inventory = getInventoryFromWrapper(modifiable);
-                if (inventory instanceof PlayerInventory) {
+                Container inventory = getInventoryFromWrapper(modifiable);
+                if (inventory instanceof net.minecraft.world.entity.player.Inventory) {
                     return inventory;
                 } else {
                     last = inventory;
@@ -84,18 +83,18 @@ public class ArclightContainer {
         }
     }
 
-    public static InventoryView createInvView(Container container) {
-        Product2<PlayerEntity, Integer> containerInfo = getContainerInfo(container);
+    public static InventoryView createInvView(AbstractContainerMenu container) {
+        Product2<Player, Integer> containerInfo = getContainerInfo(container);
         Inventory viewing = new CraftInventory(new ContainerInvWrapper(container, containerInfo._2, containerInfo._1));
         return new CraftInventoryView(((PlayerEntityBridge) containerInfo._1).bridge$getBukkitEntity(), viewing, container);
     }
 
-    public static void updateView(Container container, InventoryView inventoryView) {
+    public static void updateView(AbstractContainerMenu container, InventoryView inventoryView) {
         Inventory topInventory = inventoryView.getTopInventory();
         if (topInventory instanceof CraftInventory) {
-            IInventory inventory = ((CraftInventory) topInventory).getInventory();
+            Container inventory = ((CraftInventory) topInventory).getInventory();
             if (inventory instanceof ContainerInvWrapper) {
-                Product2<PlayerEntity, Integer> containerInfo = getContainerInfo(container);
+                Product2<Player, Integer> containerInfo = getContainerInfo(container);
                 ((ContainerInvWrapper) inventory).setOwner(((PlayerEntityBridge) containerInfo._1).bridge$getBukkitEntity());
                 ((ContainerInvWrapper) inventory).setSize(containerInfo._2);
             }
@@ -103,17 +102,17 @@ public class ArclightContainer {
     }
 
     // todo check this
-    private static Product2<PlayerEntity, Integer> getContainerInfo(Container container) {
-        PlayerEntity candidate = ArclightCaptures.getContainerOwner();
+    private static Product2<Player, Integer> getContainerInfo(AbstractContainerMenu container) {
+        Player candidate = ArclightCaptures.getContainerOwner();
         int bottomBegin = -1, bottomEnd = -1;
-        for (ListIterator<Slot> iterator = container.inventorySlots.listIterator(); iterator.hasNext(); ) {
+        for (ListIterator<Slot> iterator = container.slots.listIterator(); iterator.hasNext(); ) {
             Slot slot = iterator.next();
-            IInventory inventory = getActualInventoryForSlot(slot);
-            if (inventory instanceof PlayerInventory) {
-                if (candidate != null && ((PlayerInventory) inventory).player != candidate) {
-                    ArclightMod.LOGGER.warn("Multiple player found in {}/{}, previous {}, new {}", container, container.getClass(), candidate, ((PlayerInventory) inventory).player);
+            Container inventory = getActualInventoryForSlot(slot);
+            if (inventory instanceof net.minecraft.world.entity.player.Inventory) {
+                if (candidate != null && ((net.minecraft.world.entity.player.Inventory) inventory).player != candidate) {
+                    ArclightMod.LOGGER.warn("Multiple player found in {}/{}, previous {}, new {}", container, container.getClass(), candidate, ((net.minecraft.world.entity.player.Inventory) inventory).player);
                 }
-                candidate = ((PlayerInventory) inventory).player;
+                candidate = ((net.minecraft.world.entity.player.Inventory) inventory).player;
                 if (bottomBegin == -1 || bottomBegin < bottomEnd) {
                     bottomBegin = iterator.previousIndex();
                 }
@@ -127,19 +126,19 @@ public class ArclightContainer {
             throw new RuntimeException("candidate cannot be null, " + container + "/" + container.getClass());
         }
         if (bottomBegin < bottomEnd || bottomBegin == -1) {
-            bottomBegin = container.inventorySlots.size();
+            bottomBegin = container.slots.size();
         }
         return Product.of(candidate, bottomBegin);
     }
 
-    private static class ContainerInvWrapper implements IInventory, IInventoryBridge {
+    private static class ContainerInvWrapper implements Container, IInventoryBridge {
 
-        private final Container container;
+        private final AbstractContainerMenu container;
         private int size;
         private InventoryHolder owner;
         private final List<HumanEntity> viewers = new ArrayList<>();
 
-        public ContainerInvWrapper(Container container, int size, PlayerEntity owner) {
+        public ContainerInvWrapper(AbstractContainerMenu container, int size, Player owner) {
             this.container = container;
             this.size = size;
             this.owner = ((PlayerEntityBridge) owner).bridge$getBukkitEntity();
@@ -150,68 +149,68 @@ public class ArclightContainer {
         }
 
         @Override
-        public int getSizeInventory() {
+        public int getContainerSize() {
             return size;
         }
 
         @Override
         public boolean isEmpty() {
-            for (Slot slot : container.inventorySlots) {
-                if (!slot.getStack().isEmpty()) return false;
+            for (Slot slot : container.slots) {
+                if (!slot.getItem().isEmpty()) return false;
             }
             return true;
         }
 
         @Override
-        public @NotNull ItemStack getStackInSlot(int index) {
+        public @NotNull ItemStack getItem(int index) {
             if (index >= size) return ItemStack.EMPTY;
-            return container.getSlot(index).getStack();
+            return container.getSlot(index).getItem();
         }
 
         @Override
-        public @NotNull ItemStack decrStackSize(int index, int count) {
+        public @NotNull ItemStack removeItem(int index, int count) {
             if (index >= size) return ItemStack.EMPTY;
-            return container.getSlot(index).decrStackSize(count);
+            return container.getSlot(index).remove(count);
         }
 
         @Override
-        public @NotNull ItemStack removeStackFromSlot(int index) {
+        public @NotNull ItemStack removeItemNoUpdate(int index) {
             if (index >= size) return ItemStack.EMPTY;
-            return container.getSlot(index).decrStackSize(Integer.MAX_VALUE);
+            return container.getSlot(index).remove(Integer.MAX_VALUE);
         }
 
         @Override
-        public void setInventorySlotContents(int index, @NotNull ItemStack stack) {
+        public void setItem(int index, @NotNull ItemStack stack) {
             if (index >= size) return;
-            container.putStackInSlot(index, stack);
+            container.setItem(index, stack);
         }
 
         @Override
-        public int getInventoryStackLimit() {
+        public int getMaxStackSize() {
             if (size <= 0) return 0;
-            return container.getSlot(0).getSlotStackLimit();
+            return container.getSlot(0).getMaxStackSize();
         }
 
         @Override
-        public void markDirty() {
+        public void setChanged() {
         }
 
         @Override
-        public boolean isUsableByPlayer(@NotNull PlayerEntity player) {
-            return this.container.canInteractWith(player);
+        public boolean stillValid(@NotNull Player player) {
+            return this.container.stillValid(player);
         }
 
         @Override
-        public void clear() {
-            for (Slot slot : this.container.inventorySlots) {
-                slot.decrStackSize(Integer.MAX_VALUE);
+        public void clearContent() {
+            for (Slot slot : this.container.slots) {
+                slot.remove(Integer.MAX_VALUE);
             }
         }
 
         @Override
         public List<ItemStack> getContents() {
-            container.detectAndSendChanges();
-            return container.inventoryItemStacks.subList(0, size);
+            container.broadcastChanges();
+            return container.lastSlots.subList(0, size);
         }
 
         @Override
@@ -252,12 +251,12 @@ public class ArclightContainer {
         }
 
         @Override
-        public IRecipe<?> getCurrentRecipe() {
+        public Recipe<?> getCurrentRecipe() {
             return null;
         }
 
         @Override
-        public void setCurrentRecipe(IRecipe<?> recipe) {
+        public void setCurrentRecipe(Recipe<?> recipe) {
         }
     }
 }

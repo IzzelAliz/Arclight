@@ -1,13 +1,13 @@
 package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.container.BeaconContainer;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.util.IIntArray;
-import net.minecraft.util.IWorldPosCallable;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.BeaconMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.ContainerLevelAccess;
 import org.bukkit.craftbukkit.v.inventory.CraftInventory;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryBeacon;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
@@ -19,23 +19,23 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(BeaconContainer.class)
+@Mixin(BeaconMenu.class)
 public abstract class BeaconContainerMixin extends ContainerMixin {
 
     // @formatter:off
-    @Shadow @Final private IInventory tileBeacon;
+    @Shadow @Final private Container beacon;
     // @formatter:on
 
     private CraftInventoryView bukkitEntity;
-    private PlayerInventory playerInventory;
+    private Inventory playerInventory;
 
-    @Inject(method = "<init>(ILnet/minecraft/inventory/IInventory;Lnet/minecraft/util/IIntArray;Lnet/minecraft/util/IWorldPosCallable;)V", at = @At("RETURN"))
-    public void arclight$init(int id, IInventory inventory, IIntArray p_i50100_3_, IWorldPosCallable worldPosCallable, CallbackInfo ci) {
-        this.playerInventory = (PlayerInventory) inventory;
+    @Inject(method = "<init>(ILnet/minecraft/world/Container;Lnet/minecraft/world/inventory/ContainerData;Lnet/minecraft/world/inventory/ContainerLevelAccess;)V", at = @At("RETURN"))
+    public void arclight$init(int id, Container inventory, ContainerData p_i50100_3_, ContainerLevelAccess worldPosCallable, CallbackInfo ci) {
+        this.playerInventory = (Inventory) inventory;
     }
 
-    @Inject(method = "canInteractWith", cancellable = true, at = @At("HEAD"))
-    public void arclight$unreachable(PlayerEntity playerIn, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "stillValid", cancellable = true, at = @At("HEAD"))
+    public void arclight$unreachable(Player playerIn, CallbackInfoReturnable<Boolean> cir) {
         if (!bridge$isCheckReachable()) cir.setReturnValue(true);
     }
 
@@ -45,8 +45,8 @@ public abstract class BeaconContainerMixin extends ContainerMixin {
             return bukkitEntity;
         }
 
-        CraftInventory inventory = new CraftInventoryBeacon(this.tileBeacon);
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (Container) (Object) this);
+        CraftInventory inventory = new CraftInventoryBeacon(this.beacon);
+        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (AbstractContainerMenu) (Object) this);
         return bukkitEntity;
     }
 }

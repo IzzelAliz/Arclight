@@ -1,16 +1,16 @@
 package io.izzel.arclight.common.bridge.world.storage;
 
 import com.mojang.serialization.Lifecycle;
-import net.minecraft.world.WorldSettings;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.LevelSettings;
 
 public interface WorldInfoBridge {
 
-    void bridge$setWorld(ServerWorld world);
+    void bridge$setWorld(ServerLevel world);
 
-    ServerWorld bridge$getWorld();
+    ServerLevel bridge$getWorld();
 
-    WorldSettings bridge$getWorldSettings();
+    LevelSettings bridge$getWorldSettings();
 
     Lifecycle bridge$getLifecycle();
 }

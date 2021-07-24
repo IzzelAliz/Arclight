@@ -1,27 +1,27 @@
 package io.izzel.arclight.common.mixin.core.world;
 
 import io.izzel.arclight.common.bridge.world.server.ServerWorldBridge;
-import net.minecraft.entity.Entity;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.server.ServerWorld;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Iterator;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.ServerLevelAccessor;
 
-@Mixin(IServerWorld.class)
-public interface IServerWorldMixin extends IWorld, ServerWorldBridge {
+@Mixin(ServerLevelAccessor.class)
+public interface IServerWorldMixin extends LevelAccessor, ServerWorldBridge {
 
     // @formatter:off
-    @Shadow ServerWorld getWorld();
+    @Shadow ServerLevel getLevel();
     // @formatter:on
 
     @Override
-    default ServerWorld bridge$getMinecraftWorld() {
-        return this.getWorld();
+    default ServerLevel bridge$getMinecraftWorld() {
+        return this.getLevel();
     }
 
     /**
@@ -29,13 +29,13 @@ public interface IServerWorldMixin extends IWorld, ServerWorldBridge {
      * @reason
      */
     @Overwrite
-    default void func_242417_l(Entity entity) {
+    default void addFreshEntityWithPassengers(Entity entity) {
         CreatureSpawnEvent.SpawnReason spawnReason = bridge$getAddEntityReason();
         Iterator<Entity> iterator = entity.getSelfAndPassengers().iterator();
         while (iterator.hasNext()) {
             Entity next = iterator.next();
             bridge$pushAddEntityReason(spawnReason);
-            this.addEntity(next);
+            this.addFreshEntity(next);
         }
     }
 
@@ -44,7 +44,7 @@ public interface IServerWorldMixin extends IWorld, ServerWorldBridge {
         while (iterator.hasNext()) {
             Entity next = iterator.next();
             bridge$pushAddEntityReason(reason);
-            this.addEntity(next);
+            this.addFreshEntity(next);
         }
         return !entity.removed;
     }

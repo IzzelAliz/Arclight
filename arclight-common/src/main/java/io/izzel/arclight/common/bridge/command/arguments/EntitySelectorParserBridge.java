@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.bridge.command.arguments;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.command.arguments.EntitySelector;
+import net.minecraft.commands.arguments.selector.EntitySelector;
 
 public interface EntitySelectorParserBridge {
 

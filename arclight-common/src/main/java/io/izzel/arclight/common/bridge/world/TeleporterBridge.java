@@ -1,15 +1,14 @@
 package io.izzel.arclight.common.bridge.world;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.TeleportationRepositioner;
-import net.minecraft.util.math.BlockPos;
-
 import java.util.Optional;
+import net.minecraft.BlockUtil;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.Entity;
 
 public interface TeleporterBridge {
 
-    Optional<TeleportationRepositioner.Result> bridge$findPortal(BlockPos pos, int searchRadius);
+    Optional<BlockUtil.FoundRectangle> bridge$findPortal(BlockPos pos, int searchRadius);
 
-    Optional<TeleportationRepositioner.Result> bridge$createPortal(BlockPos pos, Direction.Axis axis, Entity entity, int createRadius);
+    Optional<BlockUtil.FoundRectangle> bridge$createPortal(BlockPos pos, Direction.Axis axis, Entity entity, int createRadius);
 }

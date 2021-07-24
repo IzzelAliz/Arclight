@@ -1,11 +1,10 @@
 package io.izzel.arclight.common.bridge.world.server;
 
 import io.izzel.arclight.common.mod.util.ArclightCallbackExecutor;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.gen.ChunkGenerator;
-import net.minecraft.world.server.ChunkHolder;
-
 import java.util.function.BooleanSupplier;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 
 public interface ChunkManagerBridge {
 

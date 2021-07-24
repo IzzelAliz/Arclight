@@ -3,19 +3,6 @@ package io.izzel.arclight.common.mixin.core.tileentity;
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.tileentity.AbstractFurnaceTileEntityBridge;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.item.ExperienceOrbEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.ISidedInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.tileentity.AbstractFurnaceTileEntity;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
@@ -36,21 +23,34 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.WorldlyContainer;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.List;
 
-@Mixin(AbstractFurnaceTileEntity.class)
+@Mixin(AbstractFurnaceBlockEntity.class)
 public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityMixin implements AbstractFurnaceTileEntityBridge {
 
     // @formatter:off
     @Shadow protected NonNullList<ItemStack> items;
-    @Shadow protected abstract int getBurnTime(ItemStack stack);
-    @Shadow public int burnTime;
-    @Shadow protected abstract boolean isBurning();
-    @Shadow protected abstract boolean canSmelt(@Nullable IRecipe<?> recipeIn);
-    @Shadow public abstract void setRecipeUsed(@Nullable IRecipe<?> recipe);
-    @Shadow public abstract List<IRecipe<?>> grantStoredRecipeExperience(World world, Vector3d pos);
-    @Shadow @Final private Object2IntOpenHashMap<ResourceLocation> recipes;
+    @Shadow protected abstract int getBurnDuration(ItemStack stack);
+    @Shadow public int litTime;
+    @Shadow protected abstract boolean isLit();
+    @Shadow protected abstract boolean canBurn(@Nullable Recipe<?> recipeIn);
+    @Shadow public abstract void setRecipeUsed(@Nullable Recipe<?> recipe);
+    @Shadow public abstract List<Recipe<?>> getRecipesToAwardAndPopExperience(Level world, Vec3 pos);
+    @Shadow @Final private Object2IntOpenHashMap<ResourceLocation> recipesUsed;
     // @formatter:on
 
     public List<HumanEntity> transaction = new ArrayList<>();
@@ -58,12 +58,12 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
 
     private transient FurnaceBurnEvent arclight$burnEvent;
 
-    @Inject(method = "tick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/tileentity/AbstractFurnaceTileEntity;getBurnTime(Lnet/minecraft/item/ItemStack;)I"))
+    @Inject(method = "tick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;getBurnDuration(Lnet/minecraft/world/item/ItemStack;)I"))
     public void arclight$furnaceBurn(CallbackInfo ci) {
         ItemStack itemStack = this.items.get(1);
         CraftItemStack fuel = CraftItemStack.asCraftMirror(itemStack);
 
-        arclight$burnEvent = new FurnaceBurnEvent(CraftBlock.at(this.world, this.pos), fuel, getBurnTime(itemStack));
+        arclight$burnEvent = new FurnaceBurnEvent(CraftBlock.at(this.level, this.worldPosition), fuel, getBurnDuration(itemStack));
         Bukkit.getPluginManager().callEvent(arclight$burnEvent);
 
         if (arclight$burnEvent.isCancelled()) {
@@ -72,11 +72,11 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
         }
     }
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", ordinal = 4, target = "Lnet/minecraft/tileentity/AbstractFurnaceTileEntity;isBurning()Z"))
-    public boolean arclight$setBurnTime(AbstractFurnaceTileEntity furnace) {
-        this.burnTime = arclight$burnEvent.getBurnTime();
+    @Redirect(method = "tick", at = @At(value = "INVOKE", ordinal = 4, target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;isLit()Z"))
+    public boolean arclight$setBurnTime(AbstractFurnaceBlockEntity furnace) {
+        this.litTime = arclight$burnEvent.getBurnTime();
         try {
-            return this.isBurning() && arclight$burnEvent.isBurning();
+            return this.isLit() && arclight$burnEvent.isBurning();
         } finally {
             arclight$burnEvent = null;
         }
@@ -88,16 +88,16 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
      */
     @Overwrite
     @SuppressWarnings("unchecked")
-    private void smelt(@Nullable IRecipe<?> recipe) {
-        if (recipe != null && this.canSmelt(recipe)) {
+    private void burn(@Nullable Recipe<?> recipe) {
+        if (recipe != null && this.canBurn(recipe)) {
             ItemStack itemstack = this.items.get(0);
-            ItemStack itemstack1 = ((IRecipe<ISidedInventory>) recipe).getCraftingResult((AbstractFurnaceTileEntity)(Object)this);
+            ItemStack itemstack1 = ((Recipe<WorldlyContainer>) recipe).assemble((AbstractFurnaceBlockEntity)(Object)this);
             ItemStack itemstack2 = this.items.get(2);
 
             CraftItemStack source = CraftItemStack.asCraftMirror(itemstack);
             org.bukkit.inventory.ItemStack result = CraftItemStack.asBukkitCopy(itemstack1);
 
-            FurnaceSmeltEvent event = new FurnaceSmeltEvent(CraftBlock.at(world, pos), source, result);
+            FurnaceSmeltEvent event = new FurnaceSmeltEvent(CraftBlock.at(level, worldPosition), source, result);
             Bukkit.getPluginManager().callEvent(event);
 
             if (event.isCancelled()) {
@@ -117,7 +117,7 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
                 }
             }
 
-            if (!this.world.isRemote) {
+            if (!this.level.isClientSide) {
                 this.setRecipeUsed(recipe);
             }
 
@@ -129,20 +129,20 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
         }
     }
 
-    private static AbstractFurnaceTileEntity arclight$captureFurnace;
-    private static PlayerEntity arclight$capturePlayer;
+    private static AbstractFurnaceBlockEntity arclight$captureFurnace;
+    private static Player arclight$capturePlayer;
     private static ItemStack arclight$item;
     private static int arclight$captureAmount;
 
-    public List<IRecipe<?>> a(World world, Vector3d pos, PlayerEntity entity, ItemStack itemStack, int amount) {
+    public List<Recipe<?>> a(Level world, Vec3 pos, Player entity, ItemStack itemStack, int amount) {
         try {
             arclight$item = itemStack;
             arclight$captureAmount = amount;
-            arclight$captureFurnace = (AbstractFurnaceTileEntity) (Object) this;
+            arclight$captureFurnace = (AbstractFurnaceBlockEntity) (Object) this;
             arclight$capturePlayer = entity;
-            List<IRecipe<?>> list = this.grantStoredRecipeExperience(world, pos);
-            entity.unlockRecipes(list);
-            this.recipes.clear();
+            List<Recipe<?>> list = this.getRecipesToAwardAndPopExperience(world, pos);
+            entity.awardRecipes(list);
+            this.recipesUsed.clear();
             return list;
         } finally {
             arclight$item = null;
@@ -153,7 +153,7 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
     }
 
     @Override
-    public List<IRecipe<?>> bridge$dropExp(World world, Vector3d pos, PlayerEntity entity, ItemStack itemStack, int amount) {
+    public List<Recipe<?>> bridge$dropExp(Level world, Vec3 pos, Player entity, ItemStack itemStack, int amount) {
         return a(world, pos, entity, itemStack, amount);
     }
 
@@ -162,24 +162,24 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
      * @reason
      */
     @Overwrite
-    private static void splitAndSpawnExperience(World world, Vector3d pos, int craftedAmount, float experience) {
-        int i = MathHelper.floor((float) craftedAmount * experience);
-        float f = MathHelper.frac((float) craftedAmount * experience);
+    private static void createExperience(Level world, Vec3 pos, int craftedAmount, float experience) {
+        int i = Mth.floor((float) craftedAmount * experience);
+        float f = Mth.frac((float) craftedAmount * experience);
         if (f != 0.0F && Math.random() < (double) f) {
             ++i;
         }
 
         if (arclight$capturePlayer != null && arclight$captureAmount != 0) {
             FurnaceExtractEvent event = new FurnaceExtractEvent(((ServerPlayerEntityBridge) arclight$capturePlayer).bridge$getBukkitEntity(),
-                CraftBlock.at(world, arclight$captureFurnace.getPos()), CraftMagicNumbers.getMaterial(arclight$item.getItem()), arclight$captureAmount, i);
+                CraftBlock.at(world, arclight$captureFurnace.getBlockPos()), CraftMagicNumbers.getMaterial(arclight$item.getItem()), arclight$captureAmount, i);
             Bukkit.getPluginManager().callEvent(event);
             i = event.getExpToDrop();
         }
 
         while (i > 0) {
-            int j = ExperienceOrbEntity.getXPSplit(i);
+            int j = ExperienceOrb.getExperienceValue(i);
             i -= j;
-            world.addEntity(new ExperienceOrbEntity(world, pos.x, pos.y, pos.z, j));
+            world.addFreshEntity(new ExperienceOrb(world, pos.x, pos.y, pos.z, j));
         }
     }
 
@@ -208,7 +208,7 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
     }
 
     @Override
-    public int getInventoryStackLimit() {
+    public int getMaxStackSize() {
         if (maxStack == 0) maxStack = MAX_STACK;
         return maxStack;
     }

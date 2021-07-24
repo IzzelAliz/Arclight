@@ -1,12 +1,12 @@
 package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.merchant.IMerchant;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.MerchantInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.MerchantContainer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.MerchantContainer;
+import net.minecraft.world.inventory.MerchantMenu;
+import net.minecraft.world.item.trading.Merchant;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryMerchant;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
 import org.spongepowered.asm.mixin.Final;
@@ -16,25 +16,25 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(MerchantContainer.class)
+@Mixin(MerchantMenu.class)
 public abstract class MerchantContainerMixin extends ContainerMixin {
 
     // @formatter:off
-    @Shadow @Final private IMerchant merchant;
-    @Shadow @Final private MerchantInventory merchantInventory;
+    @Shadow @Final private Merchant trader;
+    @Shadow @Final private MerchantContainer tradeContainer;
     // @formatter:on
 
     private CraftInventoryView bukkitEntity = null;
-    private PlayerInventory playerInventory;
+    private Inventory playerInventory;
 
-    @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/entity/merchant/IMerchant;)V", at = @At("RETURN"))
-    public void arclight$init(int id, PlayerInventory playerInventoryIn, IMerchant merchantIn, CallbackInfo ci) {
+    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/item/trading/Merchant;)V", at = @At("RETURN"))
+    public void arclight$init(int id, Inventory playerInventoryIn, Merchant merchantIn, CallbackInfo ci) {
         this.playerInventory = playerInventoryIn;
     }
 
-    @Inject(method = "playMerchantYesSound", cancellable = true, at = @At("HEAD"))
+    @Inject(method = "playTradeSound", cancellable = true, at = @At("HEAD"))
     public void arclight$returnIfFail(CallbackInfo ci) {
-        if (!(this.merchant instanceof Entity)) {
+        if (!(this.trader instanceof Entity)) {
             ci.cancel();
         }
     }
@@ -42,7 +42,7 @@ public abstract class MerchantContainerMixin extends ContainerMixin {
     @Override
     public CraftInventoryView getBukkitView() {
         if (bukkitEntity == null) {
-            bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), new CraftInventoryMerchant(this.merchant, this.merchantInventory), (Container) (Object) this);
+            bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), new CraftInventoryMerchant(this.trader, this.tradeContainer), (AbstractContainerMenu) (Object) this);
         }
         return bukkitEntity;
     }

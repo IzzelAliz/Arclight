@@ -3,9 +3,6 @@ package io.izzel.arclight.common.mixin.bukkit;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.izzel.arclight.common.bridge.bukkit.ItemMetaBridge;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.INBT;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.bukkit.craftbukkit.v.inventory.CraftMetaItem;
@@ -24,12 +21,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.Tag;
 
 @Mixin(value = CraftMetaItem.class, remap = false)
 public class CraftMetaItemMixin implements ItemMetaBridge {
 
     // @formatter:off
-    @Shadow(remap = false) @Final private Map<String, INBT> unhandledTags;
+    @Shadow(remap = false) @Final private Map<String, Tag> unhandledTags;
     // @formatter:on
 
     private static final Set<String> EXTEND_TAGS = ImmutableSet.of(
@@ -60,27 +60,27 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
         "LodestoneTracked"
     );
 
-    @ModifyVariable(method = "<init>(Lnet/minecraft/nbt/CompoundNBT;)V", at = @At(value = "INVOKE", target = "Lorg/bukkit/UnsafeValues;getDataVersion()I"))
-    private CompoundNBT arclight$provideTag(CompoundNBT tag) {
-        return tag == null ? new CompoundNBT() : tag;
+    @ModifyVariable(method = "<init>(Lnet/minecraft/nbt/CompoundTag;)V", at = @At(value = "INVOKE", target = "Lorg/bukkit/UnsafeValues;getDataVersion()I"))
+    private CompoundTag arclight$provideTag(CompoundTag tag) {
+        return tag == null ? new CompoundTag() : tag;
     }
 
-    private CompoundNBT forgeCaps;
+    private CompoundTag forgeCaps;
 
     @Override
-    public CompoundNBT bridge$getForgeCaps() {
+    public CompoundTag bridge$getForgeCaps() {
         return this.forgeCaps;
     }
 
     @Override
-    public void bridge$setForgeCaps(CompoundNBT nbt) {
+    public void bridge$setForgeCaps(CompoundTag nbt) {
         this.forgeCaps = nbt;
     }
 
     @Override
-    public void bridge$offerUnhandledTags(CompoundNBT nbt) {
+    public void bridge$offerUnhandledTags(CompoundTag nbt) {
         if (getClass().equals(CraftMetaItem.class)) {
-            for (String s : nbt.keySet()) {
+            for (String s : nbt.getAllKeys()) {
                 if (EXTEND_TAGS.contains(s)) {
                     this.unhandledTags.put(s, nbt.get(s));
                 }
@@ -89,12 +89,12 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
     }
 
     @Override
-    public Map<String, INBT> bridge$getUnhandledTags() {
+    public Map<String, Tag> bridge$getUnhandledTags() {
         return this.unhandledTags;
     }
 
     @Override
-    public void bridge$setUnhandledTags(Map<String, INBT> tags) {
+    public void bridge$setUnhandledTags(Map<String, Tag> tags) {
         this.unhandledTags.putAll(tags);
     }
 
@@ -102,7 +102,7 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
     private void arclight$serializeForgeCaps(ImmutableMap.Builder<String, Object> builder, CallbackInfoReturnable<ImmutableMap.Builder<String, Object>> cir) throws IOException {
         if (this.forgeCaps != null) {
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
-            CompressedStreamTools.writeCompressed(this.forgeCaps, buf);
+            NbtIo.writeCompressed(this.forgeCaps, buf);
             builder.put("forgeCaps", Base64.encodeBase64String(buf.toByteArray()));
         }
     }
@@ -131,7 +131,7 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
 
     @Inject(method = "equalsCommon", cancellable = true, at = @At("HEAD"))
     private void arclight$forgeCapsEquals(CraftMetaItem that, CallbackInfoReturnable<Boolean> cir) {
-        CompoundNBT forgeCaps = ((ItemMetaBridge) that).bridge$getForgeCaps();
+        CompoundTag forgeCaps = ((ItemMetaBridge) that).bridge$getForgeCaps();
         boolean ret;
         if (this.forgeCaps == null) {
             ret = forgeCaps != null && forgeCaps.size() != 0;
@@ -149,7 +149,7 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
             Object forgeCaps = map.get("forgeCaps");
             try {
                 ByteArrayInputStream buf = new ByteArrayInputStream(Base64.decodeBase64(forgeCaps.toString()));
-                this.forgeCaps = CompressedStreamTools.readCompressed(buf);
+                this.forgeCaps = NbtIo.readCompressed(buf);
             } catch (IOException e) {
                 LogManager.getLogger(getClass()).error("Reading forge caps", e);
             }
@@ -159,7 +159,7 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
     @Inject(method = "<init>*", at = @At("RETURN"))
     private void arclight$copyForgeCaps(CraftMetaItem meta, CallbackInfo ci) {
         if (meta != null) {
-            CompoundNBT forgeCaps = ((ItemMetaBridge) meta).bridge$getForgeCaps();
+            CompoundTag forgeCaps = ((ItemMetaBridge) meta).bridge$getForgeCaps();
             if (forgeCaps != null) {
                 this.forgeCaps = forgeCaps.copy();
             }

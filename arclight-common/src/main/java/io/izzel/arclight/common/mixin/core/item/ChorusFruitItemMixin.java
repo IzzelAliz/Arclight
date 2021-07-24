@@ -1,18 +1,17 @@
 package io.izzel.arclight.common.mixin.core.item;
 
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.passive.FoxEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ChorusFruitItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.Fox;
+import net.minecraft.world.item.ChorusFruitItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -33,19 +32,19 @@ public class ChorusFruitItemMixin extends Item {
      * @reason
      */
     @Overwrite
-    public @NotNull ItemStack onItemUseFinish(@NotNull ItemStack stack, @NotNull World worldIn, @NotNull LivingEntity entityLiving) {
-        ItemStack itemstack = super.onItemUseFinish(stack, worldIn, entityLiving);
-        if (!worldIn.isRemote) {
-            double d0 = entityLiving.getPosX();
-            double d1 = entityLiving.getPosY();
-            double d2 = entityLiving.getPosZ();
+    public @NotNull ItemStack finishUsingItem(@NotNull ItemStack stack, @NotNull Level worldIn, @NotNull LivingEntity entityLiving) {
+        ItemStack itemstack = super.finishUsingItem(stack, worldIn, entityLiving);
+        if (!worldIn.isClientSide) {
+            double d0 = entityLiving.getX();
+            double d1 = entityLiving.getY();
+            double d2 = entityLiving.getZ();
 
             for (int i = 0; i < 16; ++i) {
-                double d3 = entityLiving.getPosX() + (entityLiving.getRNG().nextDouble() - 0.5D) * 16.0D;
-                double d4 = MathHelper.clamp(entityLiving.getPosY() + (double) (entityLiving.getRNG().nextInt(16) - 8), 0.0D, worldIn.func_234938_ad_() - 1);
-                double d5 = entityLiving.getPosZ() + (entityLiving.getRNG().nextDouble() - 0.5D) * 16.0D;
+                double d3 = entityLiving.getX() + (entityLiving.getRandom().nextDouble() - 0.5D) * 16.0D;
+                double d4 = Mth.clamp(entityLiving.getY() + (double) (entityLiving.getRandom().nextInt(16) - 8), 0.0D, worldIn.getHeight() - 1);
+                double d5 = entityLiving.getZ() + (entityLiving.getRandom().nextDouble() - 0.5D) * 16.0D;
 
-                if (entityLiving instanceof ServerPlayerEntity) {
+                if (entityLiving instanceof ServerPlayer) {
                     Player player = ((ServerPlayerEntityBridge) entityLiving).bridge$getBukkitEntity();
                     PlayerTeleportEvent event = new PlayerTeleportEvent(player, player.getLocation(), new Location(player.getWorld(), d3, d4, d5), PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT);
                     Bukkit.getPluginManager().callEvent(event);
@@ -61,16 +60,16 @@ public class ChorusFruitItemMixin extends Item {
                     entityLiving.stopRiding();
                 }
 
-                if (entityLiving.attemptTeleport(d3, d4, d5, true)) {
-                    SoundEvent soundevent = entityLiving instanceof FoxEntity ? SoundEvents.ENTITY_FOX_TELEPORT : SoundEvents.ITEM_CHORUS_FRUIT_TELEPORT;
-                    worldIn.playSound(null, d0, d1, d2, soundevent, SoundCategory.PLAYERS, 1.0F, 1.0F);
+                if (entityLiving.randomTeleport(d3, d4, d5, true)) {
+                    SoundEvent soundevent = entityLiving instanceof Fox ? SoundEvents.FOX_TELEPORT : SoundEvents.CHORUS_FRUIT_TELEPORT;
+                    worldIn.playSound(null, d0, d1, d2, soundevent, SoundSource.PLAYERS, 1.0F, 1.0F);
                     entityLiving.playSound(soundevent, 1.0F, 1.0F);
                     break;
                 }
             }
 
-            if (entityLiving instanceof PlayerEntity) {
-                ((PlayerEntity) entityLiving).getCooldownTracker().setCooldown(this, 20);
+            if (entityLiving instanceof net.minecraft.world.entity.player.Player) {
+                ((net.minecraft.world.entity.player.Player) entityLiving).getCooldowns().addCooldown(this, 20);
             }
         }
 

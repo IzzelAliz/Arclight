@@ -1,10 +1,6 @@
 package io.izzel.arclight.common.mixin.core.tileentity;
 
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.BarrelTileEntity;
-import net.minecraft.util.NonNullList;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
@@ -13,12 +9,16 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BarrelBlockEntity;
 
-@Mixin(BarrelTileEntity.class)
-public abstract class BarrelTileEntityMixin extends LockableTileEntityMixin implements IInventoryBridge, IInventory {
+@Mixin(BarrelBlockEntity.class)
+public abstract class BarrelTileEntityMixin extends LockableTileEntityMixin implements IInventoryBridge, Container {
 
     // @formatter:off
-    @Shadow private NonNullList<ItemStack> barrelContents;
+    @Shadow private NonNullList<ItemStack> items;
     // @formatter:on
 
     public List<HumanEntity> transaction = new ArrayList<>();
@@ -26,7 +26,7 @@ public abstract class BarrelTileEntityMixin extends LockableTileEntityMixin impl
 
     @Override
     public List<ItemStack> getContents() {
-        return this.barrelContents;
+        return this.items;
     }
 
     @Override
@@ -45,7 +45,7 @@ public abstract class BarrelTileEntityMixin extends LockableTileEntityMixin impl
     }
 
     @Override
-    public int getInventoryStackLimit() {
+    public int getMaxStackSize() {
         if (maxStack == 0) maxStack = MAX_STACK;
         return maxStack;
     }

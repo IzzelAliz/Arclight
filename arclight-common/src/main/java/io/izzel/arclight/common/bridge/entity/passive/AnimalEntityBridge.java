@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.bridge.entity.passive;
 
-import net.minecraft.item.ItemStack;
 import io.izzel.arclight.common.bridge.entity.MobEntityBridge;
+import net.minecraft.world.item.ItemStack;
 
 public interface AnimalEntityBridge extends MobEntityBridge {
 

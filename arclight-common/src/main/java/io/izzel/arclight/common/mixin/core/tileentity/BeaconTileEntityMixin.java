@@ -1,10 +1,5 @@
 package io.izzel.arclight.common.mixin.core.tileentity;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.tileentity.BeaconTileEntity;
 import org.bukkit.craftbukkit.v.potion.CraftPotionUtil;
 import org.bukkit.potion.PotionEffect;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,32 +10,37 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import io.izzel.arclight.common.bridge.tileentity.BeaconTileEntityBridge;
 
 import javax.annotation.Nullable;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.level.block.entity.BeaconBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 
-@Mixin(BeaconTileEntity.class)
+@Mixin(BeaconBlockEntity.class)
 public abstract class BeaconTileEntityMixin implements BeaconTileEntityBridge {
 
     // @formatter:off
-    @Shadow @Nullable public Effect primaryEffect;
+    @Shadow @Nullable public MobEffect primaryPower;
     @Shadow public int levels;
-    @Shadow @Nullable public Effect secondaryEffect;
+    @Shadow @Nullable public MobEffect secondaryPower;
     // @formatter:on
 
-    @Inject(method = "read", at = @At("RETURN"))
-    public void arclight$level(BlockState state, CompoundNBT compound, CallbackInfo ci) {
+    @Inject(method = "load", at = @At("RETURN"))
+    public void arclight$level(BlockState state, CompoundTag compound, CallbackInfo ci) {
         this.levels = compound.getInt("Levels");
     }
 
     public PotionEffect getPrimaryEffect() {
-        return (this.primaryEffect != null) ? CraftPotionUtil.toBukkit(new EffectInstance(this.primaryEffect, this.getLevel(), this.getAmplification(), true, true)) : null;
+        return (this.primaryPower != null) ? CraftPotionUtil.toBukkit(new MobEffectInstance(this.primaryPower, this.getLevel(), this.getAmplification(), true, true)) : null;
     }
 
     public PotionEffect getSecondaryEffect() {
-        return (this.hasSecondaryEffect()) ? CraftPotionUtil.toBukkit(new EffectInstance(this.secondaryEffect, getLevel(), getAmplification(), true, true)) : null;
+        return (this.hasSecondaryEffect()) ? CraftPotionUtil.toBukkit(new MobEffectInstance(this.secondaryPower, getLevel(), getAmplification(), true, true)) : null;
     }
 
     private byte getAmplification() {
         byte b0 = 0;
-        if (this.levels >= 4 && this.primaryEffect == this.secondaryEffect) {
+        if (this.levels >= 4 && this.primaryPower == this.secondaryPower) {
             b0 = 1;
         }
         return b0;
@@ -52,7 +52,7 @@ public abstract class BeaconTileEntityMixin implements BeaconTileEntityBridge {
     }
 
     private boolean hasSecondaryEffect() {
-        if (this.levels >= 4 && this.primaryEffect != this.secondaryEffect && this.secondaryEffect != null) {
+        if (this.levels >= 4 && this.primaryPower != this.secondaryPower && this.secondaryPower != null) {
             return true;
         }
         return false;

@@ -1,12 +1,12 @@
 package io.izzel.arclight.common.mixin.core.loot;
 
-import net.minecraft.loot.LootParameter;
-import net.minecraft.loot.LootParameters;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParam;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import org.spongepowered.asm.mixin.Mixin;
 
-@Mixin(LootParameters.class)
+@Mixin(LootContextParams.class)
 public class LootParametersMixin {
 
-    private static final LootParameter<Integer> LOOTING_MOD = new LootParameter<>(new ResourceLocation("bukkit:looting_mod"));
+    private static final LootContextParam<Integer> LOOTING_MOD = new LootContextParam<>(new ResourceLocation("bukkit:looting_mod"));
 }

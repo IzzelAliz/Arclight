@@ -1,12 +1,12 @@
 package io.izzel.arclight.common.bridge.item;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 
 public interface ItemStackBridge {
 
     void bridge$convertStack(int version);
 
-    CompoundNBT bridge$getForgeCaps();
+    CompoundTag bridge$getForgeCaps();
 
-    void bridge$setForgeCaps(CompoundNBT caps);
+    void bridge$setForgeCaps(CompoundTag caps);
 }

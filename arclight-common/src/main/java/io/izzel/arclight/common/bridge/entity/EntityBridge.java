@@ -1,17 +1,17 @@
 package io.izzel.arclight.common.bridge.entity;
 
 import io.izzel.arclight.common.bridge.command.ICommandSourceBridge;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.server.ServerWorld;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 
 public interface EntityBridge extends ICommandSourceBridge {
 
-    Entity bridge$teleportTo(ServerWorld world, BlockPos blockPos);
+    Entity bridge$teleportTo(ServerLevel world, BlockPos blockPos);
 
     void bridge$setOnFire(int tick, boolean callEvent);
 

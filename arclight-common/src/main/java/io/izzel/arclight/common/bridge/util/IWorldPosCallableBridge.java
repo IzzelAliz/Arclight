@@ -1,20 +1,20 @@
 package io.izzel.arclight.common.bridge.util;
 
 import io.izzel.arclight.common.bridge.world.WorldBridge;
-import net.minecraft.util.IWorldPosCallable;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.level.Level;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.CraftWorld;
 
 public interface IWorldPosCallableBridge {
 
-    default World bridge$getWorld() {
-        return ((IWorldPosCallable) this).apply((a, b) -> a).orElse(null);
+    default Level bridge$getWorld() {
+        return ((ContainerLevelAccess) this).evaluate((a, b) -> a).orElse(null);
     }
 
     default BlockPos bridge$getPosition() {
-        return ((IWorldPosCallable) this).apply((a, b) -> b).orElse(null);
+        return ((ContainerLevelAccess) this).evaluate((a, b) -> b).orElse(null);
     }
 
     default Location bridge$getLocation() {

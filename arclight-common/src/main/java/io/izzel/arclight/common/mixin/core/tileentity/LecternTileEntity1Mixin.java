@@ -2,11 +2,6 @@ package io.izzel.arclight.common.mixin.core.tileentity;
 
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
-import net.minecraft.block.LecternBlock;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.tileentity.LecternTileEntity;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
@@ -18,21 +13,26 @@ import io.izzel.arclight.common.bridge.tileentity.TileEntityBridge;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.level.block.LecternBlock;
+import net.minecraft.world.level.block.entity.LecternBlockEntity;
 
-@Mixin(targets = "net/minecraft/tileentity/LecternTileEntity$1")
-public abstract class LecternTileEntity1Mixin implements IInventoryBridge, IInventory {
+@Mixin(targets = "net/minecraft/world/level/block/entity/LecternBlockEntity$1")
+public abstract class LecternTileEntity1Mixin implements IInventoryBridge, Container {
 
-    @Shadow(aliases = {"this$0", "field_214028_a"}, remap = false) private LecternTileEntity outerThis;
+    @Shadow(aliases = {"this$0", "field_214028_a"}, remap = false) private LecternBlockEntity outerThis;
 
     public List<HumanEntity> transaction = new ArrayList<>();
     private int maxStack = 1;
 
     @Override
-    public void setInventorySlotContents(int index, ItemStack stack) {
+    public void setItem(int index, ItemStack stack) {
         if (index == 0) {
             outerThis.setBook(stack);
-            if (outerThis.getWorld() != null) {
-                LecternBlock.setHasBook(outerThis.getWorld(), outerThis.getPos(), outerThis.getBlockState(), outerThis.hasBook());
+            if (outerThis.getLevel() != null) {
+                LecternBlock.resetBookState(outerThis.getLevel(), outerThis.getBlockPos(), outerThis.getBlockState(), outerThis.hasBook());
             }
         }
     }
@@ -67,7 +67,7 @@ public abstract class LecternTileEntity1Mixin implements IInventoryBridge, IInve
     }
 
     @Override
-    public int getInventoryStackLimit() {
+    public int getMaxStackSize() {
         if (maxStack == 0) maxStack = 1;
         return maxStack;
     }
@@ -79,15 +79,15 @@ public abstract class LecternTileEntity1Mixin implements IInventoryBridge, IInve
 
     @Override
     public Location getLocation() {
-        return new Location(((WorldBridge) outerThis.getWorld()).bridge$getWorld(), outerThis.getPos().getX(), outerThis.getPos().getY(), outerThis.getPos().getZ());
+        return new Location(((WorldBridge) outerThis.getLevel()).bridge$getWorld(), outerThis.getBlockPos().getX(), outerThis.getBlockPos().getY(), outerThis.getBlockPos().getZ());
     }
 
     @Override
-    public IRecipe<?> getCurrentRecipe() {
+    public Recipe<?> getCurrentRecipe() {
         return null;
     }
 
     @Override
-    public void setCurrentRecipe(IRecipe<?> recipe) {
+    public void setCurrentRecipe(Recipe<?> recipe) {
     }
 }

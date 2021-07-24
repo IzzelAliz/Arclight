@@ -2,14 +2,13 @@ package io.izzel.arclight.common.mixin.core.item;
 
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.item.LeashKnotEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.LeadItem;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.decoration.LeashFenceKnotEntity;
+import net.minecraft.world.item.LeadItem;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import org.bukkit.Bukkit;
 import org.bukkit.block.BlockFace;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
@@ -28,34 +27,34 @@ public class LeadItemMixin {
      * @reason
      */
     @Overwrite
-    public static ActionResultType bindPlayerMobs(PlayerEntity player, World worldIn, BlockPos fence) {
-        LeashKnotEntity leashknotentity = null;
+    public static InteractionResult bindPlayerMobs(net.minecraft.world.entity.player.Player player, Level worldIn, BlockPos fence) {
+        LeashFenceKnotEntity leashknotentity = null;
         boolean flag = false;
         double d0 = 7.0D;
         int i = fence.getX();
         int j = fence.getY();
         int k = fence.getZ();
 
-        for (MobEntity mobentity : worldIn.getEntitiesWithinAABB(MobEntity.class, new AxisAlignedBB((double) i - 7.0D, (double) j - 7.0D, (double) k - 7.0D, (double) i + 7.0D, (double) j + 7.0D, (double) k + 7.0D))) {
+        for (Mob mobentity : worldIn.getEntitiesOfClass(Mob.class, new AABB((double) i - 7.0D, (double) j - 7.0D, (double) k - 7.0D, (double) i + 7.0D, (double) j + 7.0D, (double) k + 7.0D))) {
             if (mobentity.getLeashHolder() == player) {
                 if (leashknotentity == null) {
-                    leashknotentity = LeashKnotEntity.create(worldIn, fence);
+                    leashknotentity = LeashFenceKnotEntity.getOrCreateKnot(worldIn, fence);
                     HangingPlaceEvent event = new HangingPlaceEvent((Hanging) ((EntityBridge) leashknotentity).bridge$getBukkitEntity(), player != null ? (Player) ((PlayerEntityBridge) player).bridge$getBukkitEntity() : null, CraftBlock.at(worldIn, fence), BlockFace.SELF);
                     Bukkit.getPluginManager().callEvent(event);
 
                     if (event.isCancelled()) {
                         leashknotentity.remove();
-                        return ActionResultType.PASS;
+                        return InteractionResult.PASS;
                     }
                 }
                 if (CraftEventFactory.callPlayerLeashEntityEvent(mobentity, leashknotentity, player).isCancelled()) {
                     continue;
                 }
-                mobentity.setLeashHolder(leashknotentity, true);
+                mobentity.setLeashedTo(leashknotentity, true);
                 flag = true;
             }
         }
 
-        return flag ? ActionResultType.SUCCESS : ActionResultType.PASS;
+        return flag ? InteractionResult.SUCCESS : InteractionResult.PASS;
     }
 }

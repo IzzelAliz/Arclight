@@ -1,9 +1,8 @@
 package io.izzel.arclight.common.bridge.world.server;
 
-import net.minecraft.world.gen.ChunkGenerator;
-import net.minecraft.world.server.ServerWorldLightManager;
-
 import java.io.IOException;
+import net.minecraft.server.level.ThreadedLevelLightEngine;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 
 public interface ServerChunkProviderBridge {
 
@@ -15,7 +14,7 @@ public interface ServerChunkProviderBridge {
 
     boolean bridge$isChunkLoaded(int x, int z);
 
-    ServerWorldLightManager bridge$getLightManager();
+    ThreadedLevelLightEngine bridge$getLightManager();
 
     void bridge$setChunkGenerator(ChunkGenerator chunkGenerator);
 

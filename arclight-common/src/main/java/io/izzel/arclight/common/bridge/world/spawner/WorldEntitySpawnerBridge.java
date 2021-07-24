@@ -1,19 +1,19 @@
 package io.izzel.arclight.common.bridge.world.spawner;
 
-import net.minecraft.entity.EntityClassification;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.chunk.IChunk;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.level.chunk.ChunkAccess;
 
 public interface WorldEntitySpawnerBridge {
 
     interface EntityDensityManagerBridge {
 
-        void bridge$updateDensity(MobEntity mobEntity, IChunk chunk);
+        void bridge$updateDensity(Mob mobEntity, ChunkAccess chunk);
 
-        boolean bridge$canSpawn(EntityClassification classification, int limit);
+        boolean bridge$canSpawn(MobCategory classification, int limit);
 
-        boolean bridge$canSpawn(EntityType<?> entityType, BlockPos pos, IChunk chunk);
+        boolean bridge$canSpawn(EntityType<?> entityType, BlockPos pos, ChunkAccess chunk);
     }
 }

@@ -1,13 +1,13 @@
 package io.izzel.arclight.common.mixin.core.network.play.client;
 
-import net.minecraft.network.play.client.CCloseWindowPacket;
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(CCloseWindowPacket.class)
+@Mixin(ServerboundContainerClosePacket.class)
 public class CCloseWindowPacketMixin {
 
-    @Shadow private int windowId;
+    @Shadow private int containerId;
 
     public void arclight$constructor() {
         throw new RuntimeException();
@@ -15,6 +15,6 @@ public class CCloseWindowPacketMixin {
 
     public void arclight$constructor(int id) {
         arclight$constructor();
-        this.windowId = id;
+        this.containerId = id;
     }
 }

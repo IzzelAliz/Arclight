@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mod.server.entity;
 
 import io.izzel.arclight.common.mod.util.ResourceLocationUtil;
-import net.minecraft.entity.passive.horse.AbstractChestedHorseEntity;
+import net.minecraft.world.entity.animal.horse.AbstractChestedHorse;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftChestedHorse;
@@ -14,7 +14,7 @@ public class ArclightModChestedHorse extends CraftChestedHorse {
 
     private final EntityType entityType;
 
-    public ArclightModChestedHorse(CraftServer server, AbstractChestedHorseEntity entity) {
+    public ArclightModChestedHorse(CraftServer server, AbstractChestedHorse entity) {
         super(server, entity);
         this.entityType = EntityType.valueOf(ResourceLocationUtil.standardize(ForgeRegistries.ENTITIES.getKey(entity.getType())));
     }

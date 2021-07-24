@@ -3,20 +3,20 @@ package io.izzel.arclight.common.mixin.core.world.spawner;
 import io.izzel.arclight.common.bridge.entity.MobEntityBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.bridge.world.server.ServerWorldBridge;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntitySpawnPlacementRegistry;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.util.WeightedSpawnerEntity;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.spawner.AbstractSpawner;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.SpawnPlacements;
+import net.minecraft.world.level.BaseSpawner;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.SpawnData;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -31,27 +31,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import java.util.Optional;
 
-@Mixin(AbstractSpawner.class)
+@Mixin(BaseSpawner.class)
 public abstract class AbstractSpawnerMixin {
 
     // @formatter:off
-    @Shadow public abstract World getWorld();
-    @Shadow @Final public List<WeightedSpawnerEntity> potentialSpawns;
-    @Shadow protected abstract boolean isActivated();
-    @Shadow private double prevMobRotation;
-    @Shadow private double mobRotation;
-    @Shadow public abstract BlockPos getSpawnerPosition();
+    @Shadow public abstract Level getLevel();
+    @Shadow @Final public List<SpawnData> spawnPotentials;
+    @Shadow protected abstract boolean isNearPlayer();
+    @Shadow private double oSpin;
+    @Shadow private double spin;
+    @Shadow public abstract BlockPos getPos();
     @Shadow public int spawnDelay;
-    @Shadow protected abstract void resetTimer();
+    @Shadow protected abstract void delay();
     @Shadow public int spawnCount;
-    @Shadow public WeightedSpawnerEntity spawnData;
+    @Shadow public SpawnData nextSpawnData;
     @Shadow public int spawnRange;
     @Shadow public int maxNearbyEntities;
     // @formatter:on
 
-    @Inject(method = "setEntityType", at = @At("RETURN"))
+    @Inject(method = "setEntityId", at = @At("RETURN"))
     public void arclight$clearMobs(EntityType<?> type, CallbackInfo ci) {
-        this.potentialSpawns.clear();
+        this.spawnPotentials.clear();
     }
 
     /**
@@ -60,26 +60,26 @@ public abstract class AbstractSpawnerMixin {
      */
     @Overwrite
     public void tick() {
-        if (!this.isActivated()) {
-            this.prevMobRotation = this.mobRotation;
+        if (!this.isNearPlayer()) {
+            this.oSpin = this.spin;
         } else {
-            World world = this.getWorld();
-            BlockPos blockpos = this.getSpawnerPosition();
-            if (!(world instanceof ServerWorld)) {
-                double d3 = (double) blockpos.getX() + world.rand.nextDouble();
-                double d4 = (double) blockpos.getY() + world.rand.nextDouble();
-                double d5 = (double) blockpos.getZ() + world.rand.nextDouble();
+            Level world = this.getLevel();
+            BlockPos blockpos = this.getPos();
+            if (!(world instanceof ServerLevel)) {
+                double d3 = (double) blockpos.getX() + world.random.nextDouble();
+                double d4 = (double) blockpos.getY() + world.random.nextDouble();
+                double d5 = (double) blockpos.getZ() + world.random.nextDouble();
                 world.addParticle(ParticleTypes.SMOKE, d3, d4, d5, 0.0D, 0.0D, 0.0D);
                 world.addParticle(ParticleTypes.FLAME, d3, d4, d5, 0.0D, 0.0D, 0.0D);
                 if (this.spawnDelay > 0) {
                     --this.spawnDelay;
                 }
 
-                this.prevMobRotation = this.mobRotation;
-                this.mobRotation = (this.mobRotation + (double) (1000.0F / ((float) this.spawnDelay + 200.0F))) % 360.0D;
+                this.oSpin = this.spin;
+                this.spin = (this.spin + (double) (1000.0F / ((float) this.spawnDelay + 200.0F))) % 360.0D;
             } else {
                 if (this.spawnDelay == -1) {
-                    this.resetTimer();
+                    this.delay();
                 }
 
                 if (this.spawnDelay > 0) {
@@ -90,70 +90,70 @@ public abstract class AbstractSpawnerMixin {
                 boolean flag = false;
 
                 for (int i = 0; i < this.spawnCount; ++i) {
-                    CompoundNBT compoundnbt = this.spawnData.getNbt();
-                    Optional<EntityType<?>> optional = EntityType.readEntityType(compoundnbt);
+                    CompoundTag compoundnbt = this.nextSpawnData.getTag();
+                    Optional<EntityType<?>> optional = EntityType.by(compoundnbt);
                     if (!optional.isPresent()) {
-                        this.resetTimer();
+                        this.delay();
                         return;
                     }
 
-                    ListNBT listnbt = compoundnbt.getList("Pos", 6);
+                    ListTag listnbt = compoundnbt.getList("Pos", 6);
                     int j = listnbt.size();
-                    double d0 = j >= 1 ? listnbt.getDouble(0) : (double) blockpos.getX() + (world.rand.nextDouble() - world.rand.nextDouble()) * (double) this.spawnRange + 0.5D;
-                    double d1 = j >= 2 ? listnbt.getDouble(1) : (double) (blockpos.getY() + world.rand.nextInt(3) - 1);
-                    double d2 = j >= 3 ? listnbt.getDouble(2) : (double) blockpos.getZ() + (world.rand.nextDouble() - world.rand.nextDouble()) * (double) this.spawnRange + 0.5D;
-                    if (world.hasNoCollisions(optional.get().getBoundingBoxWithSizeApplied(d0, d1, d2))) {
-                        ServerWorld serverworld = (ServerWorld) world;
-                        if (EntitySpawnPlacementRegistry.canSpawnEntity(optional.get(), serverworld, SpawnReason.SPAWNER, new BlockPos(d0, d1, d2), world.getRandom())) {
-                            Entity entity = EntityType.loadEntityAndExecute(compoundnbt, world, (p_221408_6_) -> {
-                                p_221408_6_.setLocationAndAngles(d0, d1, d2, p_221408_6_.rotationYaw, p_221408_6_.rotationPitch);
+                    double d0 = j >= 1 ? listnbt.getDouble(0) : (double) blockpos.getX() + (world.random.nextDouble() - world.random.nextDouble()) * (double) this.spawnRange + 0.5D;
+                    double d1 = j >= 2 ? listnbt.getDouble(1) : (double) (blockpos.getY() + world.random.nextInt(3) - 1);
+                    double d2 = j >= 3 ? listnbt.getDouble(2) : (double) blockpos.getZ() + (world.random.nextDouble() - world.random.nextDouble()) * (double) this.spawnRange + 0.5D;
+                    if (world.noCollision(optional.get().getAABB(d0, d1, d2))) {
+                        ServerLevel serverworld = (ServerLevel) world;
+                        if (SpawnPlacements.checkSpawnRules(optional.get(), serverworld, MobSpawnType.SPAWNER, new BlockPos(d0, d1, d2), world.getRandom())) {
+                            Entity entity = EntityType.loadEntityRecursive(compoundnbt, world, (p_221408_6_) -> {
+                                p_221408_6_.moveTo(d0, d1, d2, p_221408_6_.yRot, p_221408_6_.xRot);
                                 return p_221408_6_;
                             });
                             if (entity == null) {
-                                this.resetTimer();
+                                this.delay();
                                 return;
                             }
 
-                            int k = world.getEntitiesWithinAABB(entity.getClass(), (new AxisAlignedBB(blockpos.getX(), blockpos.getY(), blockpos.getZ(), blockpos.getX() + 1, blockpos.getY() + 1, blockpos.getZ() + 1)).grow(this.spawnRange)).size();
+                            int k = world.getEntitiesOfClass(entity.getClass(), (new AABB(blockpos.getX(), blockpos.getY(), blockpos.getZ(), blockpos.getX() + 1, blockpos.getY() + 1, blockpos.getZ() + 1)).inflate(this.spawnRange)).size();
                             if (k >= this.maxNearbyEntities) {
-                                this.resetTimer();
+                                this.delay();
                                 return;
                             }
 
-                            entity.setLocationAndAngles(entity.getPosX(), entity.getPosY(), entity.getPosZ(), world.rand.nextFloat() * 360.0F, 0.0F);
-                            if (entity instanceof MobEntity) {
-                                MobEntity mobentity = (MobEntity) entity;
-                                if (!ForgeEventFactory.canEntitySpawnSpawner(mobentity, world, (float) entity.getPosX(), (float) entity.getPosY(), (float) entity.getPosZ(), (AbstractSpawner) (Object) this)) {
+                            entity.moveTo(entity.getX(), entity.getY(), entity.getZ(), world.random.nextFloat() * 360.0F, 0.0F);
+                            if (entity instanceof Mob) {
+                                Mob mobentity = (Mob) entity;
+                                if (!ForgeEventFactory.canEntitySpawnSpawner(mobentity, world, (float) entity.getX(), (float) entity.getY(), (float) entity.getZ(), (BaseSpawner) (Object) this)) {
                                     continue;
                                 }
 
-                                if (this.spawnData.getNbt().size() == 1 && this.spawnData.getNbt().contains("id", 8)) {
-                                    if (!ForgeEventFactory.doSpecialSpawn(mobentity, world, (float) entity.getPosX(), (float) entity.getPosY(), (float) entity.getPosZ(), (AbstractSpawner) (Object) this, SpawnReason.SPAWNER))
-                                        ((MobEntity) entity).onInitialSpawn(serverworld, world.getDifficultyForLocation(entity.getPosition()), SpawnReason.SPAWNER, null, null);
+                                if (this.nextSpawnData.getTag().size() == 1 && this.nextSpawnData.getTag().contains("id", 8)) {
+                                    if (!ForgeEventFactory.doSpecialSpawn(mobentity, world, (float) entity.getX(), (float) entity.getY(), (float) entity.getZ(), (BaseSpawner) (Object) this, MobSpawnType.SPAWNER))
+                                        ((Mob) entity).finalizeSpawn(serverworld, world.getCurrentDifficultyAt(entity.blockPosition()), MobSpawnType.SPAWNER, null, null);
                                 }
-                                if (((WorldBridge) mobentity.world).bridge$spigotConfig().nerfSpawnerMobs) {
+                                if (((WorldBridge) mobentity.level).bridge$spigotConfig().nerfSpawnerMobs) {
                                     ((MobEntityBridge) mobentity).bridge$setAware(false);
                                 }
                             }
 
                             if (CraftEventFactory.callSpawnerSpawnEvent(entity, blockpos).isCancelled()) {
-                                Entity vehicle = entity.getRidingEntity();
+                                Entity vehicle = entity.getVehicle();
                                 if (vehicle != null) {
                                     vehicle.remove();
                                 }
-                                for (Entity passenger : entity.getRecursivePassengers()) {
+                                for (Entity passenger : entity.getIndirectPassengers()) {
                                     passenger.remove();
                                 }
                                 continue;
                             }
                             if (!((ServerWorldBridge) serverworld).bridge$addAllEntitiesSafely(entity, CreatureSpawnEvent.SpawnReason.SPAWNER)) {
-                                this.resetTimer();
+                                this.delay();
                                 return;
                             }
 
-                            world.playEvent(2004, blockpos, 0);
-                            if (entity instanceof MobEntity) {
-                                ((MobEntity) entity).spawnExplosionParticle();
+                            world.levelEvent(2004, blockpos, 0);
+                            if (entity instanceof Mob) {
+                                ((Mob) entity).spawnAnim();
                             }
 
                             flag = true;
@@ -162,7 +162,7 @@ public abstract class AbstractSpawnerMixin {
                 }
 
                 if (flag) {
-                    this.resetTimer();
+                    this.delay();
                 }
             }
         }

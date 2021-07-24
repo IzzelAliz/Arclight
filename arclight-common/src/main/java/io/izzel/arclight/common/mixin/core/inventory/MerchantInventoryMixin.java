@@ -2,13 +2,6 @@ package io.izzel.arclight.common.mixin.core.inventory;
 
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
-import net.minecraft.entity.merchant.IMerchant;
-import net.minecraft.entity.merchant.villager.AbstractVillagerEntity;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.MerchantInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.util.NonNullList;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftAbstractVillager;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
@@ -20,13 +13,20 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.npc.AbstractVillager;
+import net.minecraft.world.inventory.MerchantContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.trading.Merchant;
 
-@Mixin(MerchantInventory.class)
-public abstract class MerchantInventoryMixin implements IInventoryBridge, IInventory {
+@Mixin(MerchantContainer.class)
+public abstract class MerchantInventoryMixin implements IInventoryBridge, Container {
 
     // @formatter:off
-    @Shadow @Final private NonNullList<ItemStack> slots;
-    @Shadow @Final private IMerchant merchant;
+    @Shadow @Final private NonNullList<ItemStack> itemStacks;
+    @Shadow @Final private Merchant merchant;
     // @formatter:on
 
     private List<HumanEntity> transactions = new ArrayList<>();
@@ -34,7 +34,7 @@ public abstract class MerchantInventoryMixin implements IInventoryBridge, IInven
 
     @Override
     public List<ItemStack> getContents() {
-        return this.slots;
+        return this.itemStacks;
     }
 
     @Override
@@ -45,7 +45,7 @@ public abstract class MerchantInventoryMixin implements IInventoryBridge, IInven
     @Override
     public void onClose(CraftHumanEntity who) {
         transactions.remove(who);
-        this.merchant.setCustomer(null);
+        this.merchant.setTradingPlayer(null);
     }
 
     @Override
@@ -55,14 +55,14 @@ public abstract class MerchantInventoryMixin implements IInventoryBridge, IInven
 
     @Override
     public InventoryHolder getOwner() {
-        return this.merchant instanceof AbstractVillagerEntity ? ((CraftAbstractVillager) ((EntityBridge) this.merchant).bridge$getBukkitEntity()) : null;
+        return this.merchant instanceof AbstractVillager ? ((CraftAbstractVillager) ((EntityBridge) this.merchant).bridge$getBukkitEntity()) : null;
     }
 
     @Override
     public void setOwner(InventoryHolder owner) { }
 
     @Override
-    public int getInventoryStackLimit() {
+    public int getMaxStackSize() {
         if (maxStack == 0) maxStack = MAX_STACK;
         return this.maxStack;
     }
@@ -74,13 +74,13 @@ public abstract class MerchantInventoryMixin implements IInventoryBridge, IInven
 
     @Override
     public Location getLocation() {
-        return this.merchant instanceof AbstractVillagerEntity ? ((EntityBridge) this.merchant).bridge$getBukkitEntity().getLocation() : null;
+        return this.merchant instanceof AbstractVillager ? ((EntityBridge) this.merchant).bridge$getBukkitEntity().getLocation() : null;
     }
 
     @Override
-    public IRecipe<?> getCurrentRecipe() { return null; }
+    public Recipe<?> getCurrentRecipe() { return null; }
 
     @Override
-    public void setCurrentRecipe(IRecipe<?> recipe) {
+    public void setCurrentRecipe(Recipe<?> recipe) {
     }
 }

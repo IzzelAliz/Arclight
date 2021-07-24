@@ -13,40 +13,40 @@ import io.izzel.arclight.common.mod.util.BukkitOptionParser;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.crash.CrashReport;
-import net.minecraft.crash.ReportedException;
-import net.minecraft.network.ServerStatusResponse;
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.profiler.LongTickDetector;
-import net.minecraft.resources.DataPackRegistries;
-import net.minecraft.resources.ResourcePackList;
+import net.minecraft.CrashReport;
+import net.minecraft.ReportedException;
+import net.minecraft.SharedConstants;
+import net.minecraft.Util;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.protocol.status.ServerStatus;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.management.PlayerProfileCache;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.SharedConstants;
+import net.minecraft.server.ServerResources;
+import net.minecraft.server.TickTask;
+import net.minecraft.server.level.ServerChunkCache;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.TicketType;
+import net.minecraft.server.level.progress.ChunkProgressListener;
+import net.minecraft.server.level.progress.ChunkProgressListenerFactory;
+import net.minecraft.server.packs.repository.PackRepository;
+import net.minecraft.server.players.GameProfileCache;
 import net.minecraft.util.Unit;
-import net.minecraft.util.Util;
-import net.minecraft.util.concurrent.RecursiveEventLoop;
-import net.minecraft.util.concurrent.TickDelayedTask;
-import net.minecraft.util.datafix.codec.DatapackCodec;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.registry.DynamicRegistries;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.world.ForcedChunksSaveData;
-import net.minecraft.world.World;
-import net.minecraft.world.border.WorldBorder;
-import net.minecraft.world.chunk.listener.IChunkStatusListener;
-import net.minecraft.world.chunk.listener.IChunkStatusListenerFactory;
-import net.minecraft.world.gen.settings.DimensionGeneratorSettings;
-import net.minecraft.world.server.ServerChunkProvider;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.server.TicketType;
-import net.minecraft.world.storage.IServerConfiguration;
-import net.minecraft.world.storage.IServerWorldInfo;
-import net.minecraft.world.storage.SaveFormat;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.util.profiling.SingleTickProfiler;
+import net.minecraft.util.thread.ReentrantBlockableEventLoop;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.DataPackConfig;
+import net.minecraft.world.level.ForcedChunksSavedData;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.border.WorldBorder;
+import net.minecraft.world.level.levelgen.WorldGenSettings;
+import net.minecraft.world.level.storage.LevelStorageSource;
+import net.minecraft.world.level.storage.ServerLevelData;
+import net.minecraft.world.level.storage.WorldData;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.world.StructureSpawnManager;
 import net.minecraftforge.fml.BrandingControl;
@@ -86,41 +86,41 @@ import java.util.Map;
 import java.util.function.BooleanSupplier;
 
 @Mixin(MinecraftServer.class)
-public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelayedTask> implements MinecraftServerBridge, ICommandSourceBridge {
+public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<TickTask> implements MinecraftServerBridge, ICommandSourceBridge {
 
     // @formatter:off
-    @Shadow private int tickCounter;
-    @Shadow protected abstract boolean init() throws IOException;
-    @Shadow protected long serverTime;
-    @Shadow @Final private ServerStatusResponse statusResponse;
+    @Shadow private int tickCount;
+    @Shadow protected abstract boolean initServer() throws IOException;
+    @Shadow protected long nextTickTime;
+    @Shadow @Final private ServerStatus status;
     @Shadow @Nullable private String motd;
-    @Shadow protected abstract void applyServerIconToResponse(ServerStatusResponse response);
-    @Shadow private volatile boolean serverRunning;
-    @Shadow private long timeOfLastWarning;
+    @Shadow protected abstract void updateStatusIcon(ServerStatus response);
+    @Shadow private volatile boolean running;
+    @Shadow private long lastOverloadWarning;
     @Shadow @Final private static Logger LOGGER;
-    @Shadow private boolean startProfiling;
-    @Shadow protected abstract void tick(BooleanSupplier hasTimeLeft);
-    @Shadow protected abstract boolean isAheadOfTime();
-    @Shadow private boolean isRunningScheduledTasks;
-    @Shadow private long runTasksUntil;
-    @Shadow protected abstract void runScheduledTasks();
-    @Shadow private volatile boolean serverIsRunning;
-    @Shadow protected abstract void finalTick(CrashReport report);
-    @Shadow public abstract CrashReport addServerInfoToCrashReport(CrashReport report);
-    @Shadow public abstract File getDataDirectory();
-    @Shadow private boolean serverStopped;
+    @Shadow private boolean delayProfilerStart;
+    @Shadow protected abstract void tickServer(BooleanSupplier hasTimeLeft);
+    @Shadow protected abstract boolean haveTime();
+    @Shadow private boolean mayHaveDelayedTasks;
+    @Shadow private long delayedTasksMaxNextTickTime;
+    @Shadow protected abstract void waitUntilNextTick();
+    @Shadow private volatile boolean isReady;
+    @Shadow protected abstract void onServerCrash(CrashReport report);
+    @Shadow public abstract CrashReport fillReport(CrashReport report);
+    @Shadow public abstract File getServerDirectory();
+    @Shadow private boolean stopped;
     @Shadow protected abstract void stopServer();
-    @Shadow protected abstract void systemExitNow();
-    @Shadow public abstract Commands getCommandManager();
-    @Shadow protected abstract void func_240773_a_(@org.jetbrains.annotations.Nullable LongTickDetector p_240773_1_);
-    @Shadow private IProfiler profiler;
-    @Shadow protected abstract void func_240795_b_(@org.jetbrains.annotations.Nullable LongTickDetector p_240795_1_);
-    @Shadow protected abstract void func_240794_aZ_();
-    @Shadow public abstract ServerWorld func_241755_D_();
-    @Shadow @Final public Map<RegistryKey<World>, ServerWorld> worlds;
-    @Shadow protected abstract void func_240778_a_(IServerConfiguration p_240778_1_);
-    @Shadow protected IServerConfiguration serverConfig;
-    @Shadow private static void func_240786_a_(ServerWorld p_240786_0_, IServerWorldInfo p_240786_1_, boolean hasBonusChest, boolean p_240786_3_, boolean p_240786_4_) { }
+    @Shadow protected abstract void onServerExit();
+    @Shadow public abstract Commands getCommands();
+    @Shadow protected abstract void startProfilerTick(@org.jetbrains.annotations.Nullable SingleTickProfiler p_240773_1_);
+    @Shadow private ProfilerFiller profiler;
+    @Shadow protected abstract void endProfilerTick(@org.jetbrains.annotations.Nullable SingleTickProfiler p_240795_1_);
+    @Shadow protected abstract void updateMobSpawningFlags();
+    @Shadow public abstract ServerLevel overworld();
+    @Shadow @Final public Map<ResourceKey<Level>, ServerLevel> levels;
+    @Shadow protected abstract void setupDebugLevel(WorldData p_240778_1_);
+    @Shadow protected WorldData worldData;
+    @Shadow private static void setInitialSpawn(ServerLevel p_240786_0_, ServerLevelData p_240786_1_, boolean hasBonusChest, boolean p_240786_3_, boolean p_240786_4_) { }
     @Shadow(remap = false) @Deprecated public abstract void markWorldsDirty();
     // @formatter:on
 
@@ -128,7 +128,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
         super(name);
     }
 
-    public DatapackCodec datapackconfiguration;
+    public DataPackConfig datapackconfiguration;
     private boolean forceTicks;
     public CraftServer server;
     public OptionSet options;
@@ -158,7 +158,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    public void arclight$loadOptions(Thread serverThread, DynamicRegistries.Impl dynamicRegistries, SaveFormat.LevelSave anvilConverterForAnvilFile, IServerConfiguration serverConfig, ResourcePackList dataPacks, Proxy serverProxy, DataFixer dataFixer, DataPackRegistries dataRegistries, MinecraftSessionService sessionService, GameProfileRepository profileRepo, PlayerProfileCache profileCache, IChunkStatusListenerFactory chunkStatusListenerFactory, CallbackInfo ci) {
+    public void arclight$loadOptions(Thread serverThread, RegistryAccess.RegistryHolder dynamicRegistries, LevelStorageSource.LevelStorageAccess anvilConverterForAnvilFile, WorldData serverConfig, PackRepository dataPacks, Proxy serverProxy, DataFixer dataFixer, ServerResources dataRegistries, MinecraftSessionService sessionService, GameProfileRepository profileRepo, GameProfileCache profileCache, ChunkProgressListenerFactory chunkStatusListenerFactory, CallbackInfo ci) {
         String[] arguments = ManagementFactory.getRuntimeMXBean().getInputArguments().toArray(new String[0]);
         OptionParser parser = new BukkitOptionParser();
         try {
@@ -167,7 +167,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
             e.printStackTrace();
         }
         this.datapackconfiguration = ArclightCaptures.getDatapackConfig();
-        this.vanillaCommandDispatcher = dataRegistries.getCommandManager();
+        this.vanillaCommandDispatcher = dataRegistries.getCommands();
     }
 
     /**
@@ -175,29 +175,29 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
      * @reason
      */
     @Overwrite
-    protected void func_240802_v_() {
+    protected void runServer() {
         try {
-            if (this.init()) {
+            if (this.initServer()) {
                 ServerLifecycleHooks.handleServerStarted((MinecraftServer) (Object) this);
-                this.serverTime = Util.milliTime();
-                this.statusResponse.setServerDescription(new StringTextComponent(this.motd));
-                this.statusResponse.setVersion(new ServerStatusResponse.Version(SharedConstants.getVersion().getName(), SharedConstants.getVersion().getProtocolVersion()));
-                this.applyServerIconToResponse(this.statusResponse);
+                this.nextTickTime = Util.getMillis();
+                this.status.setDescription(new TextComponent(this.motd));
+                this.status.setVersion(new ServerStatus.Version(SharedConstants.getCurrentVersion().getName(), SharedConstants.getCurrentVersion().getProtocolVersion()));
+                this.updateStatusIcon(this.status);
 
                 Arrays.fill(recentTps, 20);
-                long curTime, tickSection = Util.milliTime(), tickCount = 1;
+                long curTime, tickSection = Util.getMillis(), tickCount = 1;
 
-                while (this.serverRunning) {
-                    long i = (curTime = Util.milliTime()) - this.serverTime;
-                    if (i > 2000L && this.serverTime - this.timeOfLastWarning >= 15000L) {
+                while (this.running) {
+                    long i = (curTime = Util.getMillis()) - this.nextTickTime;
+                    if (i > 2000L && this.nextTickTime - this.lastOverloadWarning >= 15000L) {
                         long j = i / 50L;
 
                         if (server.getWarnOnOverload()) {
                             LOGGER.warn("Can't keep up! Is the server overloaded? Running {}ms or {} ticks behind", i, j);
                         }
 
-                        this.serverTime += j * 50L;
-                        this.timeOfLastWarning = this.serverTime;
+                        this.nextTickTime += j * 50L;
+                        this.lastOverloadWarning = this.nextTickTime;
                     }
 
                     if (tickCount++ % SAMPLE_INTERVAL == 0) {
@@ -210,26 +210,26 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
 
                     currentTick = (int) (System.currentTimeMillis() / 50);
 
-                    this.serverTime += 50L;
-                    LongTickDetector longtickdetector = LongTickDetector.func_233524_a_("Server");
-                    this.func_240773_a_(longtickdetector);
+                    this.nextTickTime += 50L;
+                    SingleTickProfiler longtickdetector = SingleTickProfiler.createTickProfiler("Server");
+                    this.startProfilerTick(longtickdetector);
                     this.profiler.startTick();
-                    this.profiler.startSection("tick");
-                    this.tick(this::isAheadOfTime);
-                    this.profiler.endStartSection("nextTickWait");
-                    this.isRunningScheduledTasks = true;
-                    this.runTasksUntil = Math.max(Util.milliTime() + 50L, this.serverTime);
-                    this.runScheduledTasks();
-                    this.profiler.endSection();
+                    this.profiler.push("tick");
+                    this.tickServer(this::haveTime);
+                    this.profiler.popPush("nextTickWait");
+                    this.mayHaveDelayedTasks = true;
+                    this.delayedTasksMaxNextTickTime = Math.max(Util.getMillis() + 50L, this.nextTickTime);
+                    this.waitUntilNextTick();
+                    this.profiler.pop();
                     this.profiler.endTick();
-                    this.func_240795_b_(longtickdetector);
-                    this.serverIsRunning = true;
+                    this.endProfilerTick(longtickdetector);
+                    this.isReady = true;
                 }
                 ServerLifecycleHooks.handleServerStopping((MinecraftServer) (Object) this);
                 ServerLifecycleHooks.expectServerStopped(); // has to come before finalTick to avoid race conditions
             } else {
                 ServerLifecycleHooks.expectServerStopped(); // has to come before finalTick to avoid race conditions
-                this.finalTick(null);
+                this.onServerCrash(null);
             }
         } catch (Throwable throwable1) {
             LOGGER.error("Encountered an unexpected exception", throwable1);
@@ -240,12 +240,12 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
 
             CrashReport crashreport;
             if (throwable1 instanceof ReportedException) {
-                crashreport = this.addServerInfoToCrashReport(((ReportedException) throwable1).getCrashReport());
+                crashreport = this.fillReport(((ReportedException) throwable1).getReport());
             } else {
-                crashreport = this.addServerInfoToCrashReport(new CrashReport("Exception in server tick loop", throwable1));
+                crashreport = this.fillReport(new CrashReport("Exception in server tick loop", throwable1));
             }
 
-            File file1 = new File(new File(this.getDataDirectory(), "crash-reports"), "crash-" + (new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date()) + "-server.txt");
+            File file1 = new File(new File(this.getServerDirectory(), "crash-reports"), "crash-" + (new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date()) + "-server.txt");
             if (crashreport.saveToFile(file1)) {
                 LOGGER.error("This crash report has been saved to: {}", file1.getAbsolutePath());
             } else {
@@ -253,17 +253,17 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
             }
 
             ServerLifecycleHooks.expectServerStopped(); // has to come before finalTick to avoid race conditions
-            this.finalTick(crashreport);
+            this.onServerCrash(crashreport);
         } finally {
             try {
-                this.serverStopped = true;
+                this.stopped = true;
                 this.stopServer();
             } catch (Throwable throwable) {
                 LOGGER.error("Exception stopping the server", throwable);
             } finally {
                 WatchdogThread.doStop();
                 ServerLifecycleHooks.handleServerStopped((MinecraftServer) (Object) this);
-                this.systemExitNow();
+                this.onServerExit();
             }
         }
     }
@@ -290,8 +290,8 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
         }
     }
 
-    @Inject(method = "func_240787_a_", at = @At("RETURN"))
-    public void arclight$enablePlugins(IChunkStatusListener p_240787_1_, CallbackInfo ci) {
+    @Inject(method = "createLevels", at = @At("RETURN"))
+    public void arclight$enablePlugins(ChunkProgressListener p_240787_1_, CallbackInfo ci) {
         BukkitRegistry.unlockRegistries();
         this.server.enablePlugins(PluginLoadOrder.POSTWORLD);
         BukkitRegistry.lockRegistries();
@@ -299,7 +299,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
     }
 
     private void executeModerately() {
-        this.drainTasks();
+        this.runAllTasks();
         this.bridge$drainQueuedTasks();
         java.util.concurrent.locks.LockSupport.parkNanos("executing tasks", 1000L);
     }
@@ -311,20 +311,20 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
         }
     }
 
-    @Inject(method = "isAheadOfTime", cancellable = true, at = @At("HEAD"))
+    @Inject(method = "haveTime", cancellable = true, at = @At("HEAD"))
     private void arclight$forceAheadOfTime(CallbackInfoReturnable<Boolean> cir) {
         if (this.forceTicks) cir.setReturnValue(true);
     }
 
-    @Inject(method = "func_240787_a_", at = @At(value = "NEW", ordinal = 0, target = "net/minecraft/world/server/ServerWorld"))
-    private void arclight$registerEnv(IChunkStatusListener p_240787_1_, CallbackInfo ci) {
+    @Inject(method = "createLevels", at = @At(value = "NEW", ordinal = 0, target = "net/minecraft/server/level/ServerLevel"))
+    private void arclight$registerEnv(ChunkProgressListener p_240787_1_, CallbackInfo ci) {
         BukkitRegistry.registerEnvironments();
     }
 
-    @Redirect(method = "func_240787_a_", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
+    @Redirect(method = "createLevels", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
     private Object arclight$worldInit(Map<Object, Object> map, Object key, Object value) {
         Object ret = map.put(key, value);
-        ServerWorld serverWorld = (ServerWorld) value;
+        ServerLevel serverWorld = (ServerLevel) value;
         if (((CraftServer) Bukkit.getServer()).scoreboardManager == null) {
             ((CraftServer) Bukkit.getServer()).scoreboardManager = new CraftScoreboardManager((MinecraftServer) (Object) this, serverWorld.getScoreboard());
         }
@@ -342,34 +342,34 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
      * @reason
      */
     @Overwrite
-    public void loadInitialChunks(IChunkStatusListener listener) {
+    public void prepareLevels(ChunkProgressListener listener) {
         StructureSpawnManager.gatherEntitySpawns();
-        ServerWorld serverworld = this.func_241755_D_();
+        ServerLevel serverworld = this.overworld();
         this.forceTicks = true;
-        LOGGER.info("Preparing start region for dimension {}", serverworld.getDimensionKey().getLocation());
-        BlockPos blockpos = serverworld.getSpawnPoint();
-        listener.start(new ChunkPos(blockpos));
-        ServerChunkProvider serverchunkprovider = serverworld.getChunkProvider();
-        serverchunkprovider.getLightManager().func_215598_a(500);
-        this.serverTime = Util.milliTime();
-        serverchunkprovider.registerTicket(TicketType.START, new ChunkPos(blockpos), 11, Unit.INSTANCE);
+        LOGGER.info("Preparing start region for dimension {}", serverworld.dimension().location());
+        BlockPos blockpos = serverworld.getSharedSpawnPos();
+        listener.updateSpawnPos(new ChunkPos(blockpos));
+        ServerChunkCache serverchunkprovider = serverworld.getChunkSource();
+        serverchunkprovider.getLightEngine().setTaskPerBatch(500);
+        this.nextTickTime = Util.getMillis();
+        serverchunkprovider.addRegionTicket(TicketType.START, new ChunkPos(blockpos), 11, Unit.INSTANCE);
 
-        while (serverchunkprovider.getLoadedChunksCount() < 441) {
+        while (serverchunkprovider.getTickingGenerated() < 441) {
             this.executeModerately();
         }
 
         this.executeModerately();
 
-        for (ServerWorld serverWorld : this.worlds.values()) {
+        for (ServerLevel serverWorld : this.levels.values()) {
             if (((WorldBridge) serverWorld).bridge$getWorld().getKeepSpawnInMemory()) {
-                ForcedChunksSaveData forcedchunkssavedata = serverWorld.getSavedData().get(ForcedChunksSaveData::new, "chunks");
+                ForcedChunksSavedData forcedchunkssavedata = serverWorld.getDataStorage().get(ForcedChunksSavedData::new, "chunks");
                 if (forcedchunkssavedata != null) {
                     LongIterator longiterator = forcedchunkssavedata.getChunks().iterator();
 
                     while (longiterator.hasNext()) {
                         long i = longiterator.nextLong();
                         ChunkPos chunkpos = new ChunkPos(i);
-                        serverWorld.getChunkProvider().forceChunk(chunkpos, true);
+                        serverWorld.getChunkSource().updateChunkForced(chunkpos, true);
                     }
                     net.minecraftforge.common.world.ForgeChunkManager.reinstatePersistentChunks(serverWorld, forcedchunkssavedata);
                 }
@@ -379,32 +379,32 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
 
         this.executeModerately();
         listener.stop();
-        serverchunkprovider.getLightManager().func_215598_a(5);
-        this.func_240794_aZ_();
+        serverchunkprovider.getLightEngine().setTaskPerBatch(5);
+        this.updateMobSpawningFlags();
         this.forceTicks = false;
     }
 
     // bukkit methods
-    public void initWorld(ServerWorld serverWorld, IServerWorldInfo worldInfo, IServerConfiguration saveData, DimensionGeneratorSettings generatorSettings) {
-        boolean flag = generatorSettings.hasDebugChunkGenerator();
+    public void initWorld(ServerLevel serverWorld, ServerLevelData worldInfo, WorldData saveData, WorldGenSettings generatorSettings) {
+        boolean flag = generatorSettings.isDebug();
         if (((WorldBridge) serverWorld).bridge$getGenerator() != null) {
             ((WorldBridge) serverWorld).bridge$getWorld().getPopulators().addAll(
                 ((WorldBridge) serverWorld).bridge$getGenerator().getDefaultPopulators(
                     ((WorldBridge) serverWorld).bridge$getWorld()));
         }
         WorldBorder worldborder = serverWorld.getWorldBorder();
-        worldborder.deserialize(worldInfo.getWorldBorderSerializer());
+        worldborder.applySettings(worldInfo.getWorldBorder());
         if (!worldInfo.isInitialized()) {
             try {
-                func_240786_a_(serverWorld, worldInfo, generatorSettings.hasBonusChest(), flag, true);
+                setInitialSpawn(serverWorld, worldInfo, generatorSettings.generateBonusChest(), flag, true);
                 worldInfo.setInitialized(true);
                 if (flag) {
-                    this.func_240778_a_(this.serverConfig);
+                    this.setupDebugLevel(this.worldData);
                 }
             } catch (Throwable throwable) {
-                CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Exception initializing level");
+                CrashReport crashreport = CrashReport.forThrowable(throwable, "Exception initializing level");
                 try {
-                    serverWorld.fillCrashReport(crashreport);
+                    serverWorld.fillReportDetails(crashreport);
                 } catch (Throwable throwable2) {
                     // empty catch block
                 }
@@ -415,53 +415,53 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
     }
 
     // bukkit methods
-    public void loadSpawn(IChunkStatusListener listener, ServerWorld serverWorld) {
+    public void loadSpawn(ChunkProgressListener listener, ServerLevel serverWorld) {
         this.markWorldsDirty();
         MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.WorldEvent.Load(serverWorld));
         if (!((WorldBridge) serverWorld).bridge$getWorld().getKeepSpawnInMemory()) {
             return;
         }
         this.forceTicks = true;
-        LOGGER.info("Preparing start region for dimension {}", serverWorld.getDimensionKey().getLocation());
-        BlockPos blockpos = serverWorld.getSpawnPoint();
-        listener.start(new ChunkPos(blockpos));
-        ServerChunkProvider serverchunkprovider = serverWorld.getChunkProvider();
-        serverchunkprovider.getLightManager().func_215598_a(500);
-        this.serverTime = Util.milliTime();
-        serverchunkprovider.registerTicket(TicketType.START, new ChunkPos(blockpos), 11, Unit.INSTANCE);
+        LOGGER.info("Preparing start region for dimension {}", serverWorld.dimension().location());
+        BlockPos blockpos = serverWorld.getSharedSpawnPos();
+        listener.updateSpawnPos(new ChunkPos(blockpos));
+        ServerChunkCache serverchunkprovider = serverWorld.getChunkSource();
+        serverchunkprovider.getLightEngine().setTaskPerBatch(500);
+        this.nextTickTime = Util.getMillis();
+        serverchunkprovider.addRegionTicket(TicketType.START, new ChunkPos(blockpos), 11, Unit.INSTANCE);
 
-        while (serverchunkprovider.getLoadedChunksCount() < 441) {
+        while (serverchunkprovider.getTickingGenerated() < 441) {
             this.executeModerately();
         }
 
         this.executeModerately();
 
-        ForcedChunksSaveData forcedchunkssavedata = serverWorld.getSavedData().get(ForcedChunksSaveData::new, "chunks");
+        ForcedChunksSavedData forcedchunkssavedata = serverWorld.getDataStorage().get(ForcedChunksSavedData::new, "chunks");
         if (forcedchunkssavedata != null) {
             LongIterator longiterator = forcedchunkssavedata.getChunks().iterator();
 
             while (longiterator.hasNext()) {
                 long i = longiterator.nextLong();
                 ChunkPos chunkpos = new ChunkPos(i);
-                serverWorld.getChunkProvider().forceChunk(chunkpos, true);
+                serverWorld.getChunkSource().updateChunkForced(chunkpos, true);
             }
             net.minecraftforge.common.world.ForgeChunkManager.reinstatePersistentChunks(serverWorld, forcedchunkssavedata);
         }
         this.executeModerately();
         listener.stop();
-        serverchunkprovider.getLightManager().func_215598_a(5);
-        this.func_240794_aZ_();
+        serverchunkprovider.getLightEngine().setTaskPerBatch(5);
+        this.updateMobSpawningFlags();
         this.forceTicks = false;
     }
 
-    @Inject(method = "updateTimeLightAndEntities", at = @At("HEAD"))
+    @Inject(method = "tickChildren", at = @At("HEAD"))
     public void arclight$runScheduler(BooleanSupplier hasTimeLeft, CallbackInfo ci) {
         ArclightConstants.currentTick = (int) (System.currentTimeMillis() / 50);
-        this.server.getScheduler().mainThreadHeartbeat(this.tickCounter);
+        this.server.getScheduler().mainThreadHeartbeat(this.tickCount);
         this.bridge$drainQueuedTasks();
     }
 
-    @Inject(method = "save", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;func_241755_D_()Lnet/minecraft/world/server/ServerWorld;"))
+    @Inject(method = "saveAllChunks", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;overworld()Lnet/minecraft/server/level/ServerLevel;"))
     private void arclight$skipSave(boolean suppressLog, boolean flush, boolean forced, CallbackInfoReturnable<Boolean> cir, boolean flag) {
         cir.setReturnValue(flag);
     }
@@ -505,12 +505,12 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
         processQueue.add(runnable);
     }
 
-    public CommandSender getBukkitSender(CommandSource wrapper) {
+    public CommandSender getBukkitSender(CommandSourceStack wrapper) {
         return console;
     }
 
     @Override
-    public CommandSender bridge$getBukkitSender(CommandSource wrapper) {
+    public CommandSender bridge$getBukkitSender(CommandSourceStack wrapper) {
         return getBukkitSender(wrapper);
     }
 

@@ -2,11 +2,6 @@ package io.izzel.arclight.common.mixin.core.loot;
 
 import io.izzel.arclight.common.bridge.world.storage.loot.LootTableBridge;
 import io.izzel.arclight.mixin.Eject;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootContext;
-import net.minecraft.loot.LootParameters;
-import net.minecraft.loot.LootTable;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
@@ -20,21 +15,26 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 
 @Mixin(LootTable.class)
 public abstract class LootTableMixin implements LootTableBridge {
 
     // @formatter:off
     @Shadow @Final private static Logger LOGGER;
-    @Shadow public abstract List<ItemStack> generate(LootContext context);
-    @Shadow protected abstract List<Integer> getEmptySlotsRandomized(IInventory inventory, Random rand);
-    @Shadow protected abstract void shuffleItems(List<ItemStack> stacks, int emptySlotsCount, Random rand);
+    @Shadow public abstract List<ItemStack> getRandomItems(LootContext context);
+    @Shadow protected abstract List<Integer> getAvailableSlots(Container inventory, Random rand);
+    @Shadow protected abstract void shuffleAndSplitItems(List<ItemStack> stacks, int emptySlotsCount, Random rand);
     // @formatter:on
 
     @Eject(method = "fillInventory", at = @At(value = "INVOKE", target = "Lnet/minecraft/loot/LootTable;generate(Lnet/minecraft/loot/LootContext;)Ljava/util/List;"))
-    private List<ItemStack> arclight$nonPluginEvent(LootTable lootTable, LootContext context, CallbackInfo ci, IInventory inv) {
-        List<ItemStack> list = lootTable.generate(context);
-        if (!context.has(LootParameters.ORIGIN) && !context.has(LootParameters.THIS_ENTITY)) {
+    private List<ItemStack> arclight$nonPluginEvent(LootTable lootTable, LootContext context, CallbackInfo ci, Container inv) {
+        List<ItemStack> list = lootTable.getRandomItems(context);
+        if (!context.hasParam(LootContextParams.ORIGIN) && !context.hasParam(LootContextParams.THIS_ENTITY)) {
             return list;
         }
         LootGenerateEvent event = CraftEventFactory.callLootGenerateEvent(inv, (LootTable) (Object) this, context, list, false);
@@ -46,16 +46,16 @@ public abstract class LootTableMixin implements LootTableBridge {
         }
     }
 
-    public void fillInventory(IInventory inv, LootContext context, boolean plugin) {
-        List<ItemStack> list = this.generate(context);
+    public void fillInventory(Container inv, LootContext context, boolean plugin) {
+        List<ItemStack> list = this.getRandomItems(context);
         Random random = context.getRandom();
         LootGenerateEvent event = CraftEventFactory.callLootGenerateEvent(inv, (LootTable) (Object) this, context, list, plugin);
         if (event.isCancelled()) {
             return;
         }
         list = event.getLoot().stream().map(CraftItemStack::asNMSCopy).collect(Collectors.toList());
-        List<Integer> list1 = this.getEmptySlotsRandomized(inv, random);
-        this.shuffleItems(list, list1.size(), random);
+        List<Integer> list1 = this.getAvailableSlots(inv, random);
+        this.shuffleAndSplitItems(list, list1.size(), random);
 
         for (ItemStack itemstack : list) {
             if (list1.isEmpty()) {
@@ -64,15 +64,15 @@ public abstract class LootTableMixin implements LootTableBridge {
             }
 
             if (itemstack.isEmpty()) {
-                inv.setInventorySlotContents(list1.remove(list1.size() - 1), ItemStack.EMPTY);
+                inv.setItem(list1.remove(list1.size() - 1), ItemStack.EMPTY);
             } else {
-                inv.setInventorySlotContents(list1.remove(list1.size() - 1), itemstack);
+                inv.setItem(list1.remove(list1.size() - 1), itemstack);
             }
         }
     }
 
     @Override
-    public void bridge$fillInventory(IInventory inv, LootContext context, boolean plugin) {
+    public void bridge$fillInventory(Container inv, LootContext context, boolean plugin) {
         this.fillInventory(inv, context, plugin);
     }
 }

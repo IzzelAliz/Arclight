@@ -1,15 +1,6 @@
 package io.izzel.arclight.common.mixin.core.tileentity;
 
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.ChestTileEntity;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.entity.HumanEntity;
@@ -23,63 +14,72 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
 
-@Mixin(ChestTileEntity.class)
+@Mixin(ChestBlockEntity.class)
 public abstract class ChestTileEntityMixin extends LockableTileEntityMixin {
 
     // @formatter:off
-    @Shadow private NonNullList<ItemStack> chestContents;
-    @Shadow public int numPlayersUsing;
+    @Shadow private NonNullList<ItemStack> items;
+    @Shadow public int openCount;
     // @formatter:on
 
     public List<HumanEntity> transaction = new ArrayList<>();
     private int maxStack = IInventoryBridge.MAX_STACK;
     public boolean opened;
 
-    @Inject(method = "openInventory", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/tileentity/ChestTileEntity;onOpenOrClose()V"))
-    public void arclight$openRedstone(PlayerEntity player, CallbackInfo ci) {
-        if (this.world == null) {
+    @Inject(method = "startOpen", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/ChestBlockEntity;signalOpenCount()V"))
+    public void arclight$openRedstone(Player player, CallbackInfo ci) {
+        if (this.level == null) {
             ci.cancel();
             return;
         }
-        int oldPower = MathHelper.clamp(this.numPlayersUsing - 1, 0, 15);
+        int oldPower = Mth.clamp(this.openCount - 1, 0, 15);
         if (this.getBlockState().getBlock() == Blocks.TRAPPED_CHEST) {
-            int newPower = MathHelper.clamp(this.numPlayersUsing, 0, 15);
+            int newPower = Mth.clamp(this.openCount, 0, 15);
 
             if (oldPower != newPower) {
-                CraftEventFactory.callRedstoneChange(world, pos, oldPower, newPower);
+                CraftEventFactory.callRedstoneChange(level, worldPosition, oldPower, newPower);
             }
         }
     }
 
-    @Inject(method = "closeInventory", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/tileentity/ChestTileEntity;onOpenOrClose()V"))
-    public void arclight$closeRedstone(PlayerEntity player, CallbackInfo ci) {
-        int oldPower = MathHelper.clamp(this.numPlayersUsing + 1, 0, 15);
+    @Inject(method = "stopOpen", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/ChestBlockEntity;signalOpenCount()V"))
+    public void arclight$closeRedstone(Player player, CallbackInfo ci) {
+        int oldPower = Mth.clamp(this.openCount + 1, 0, 15);
         if (this.getBlockState().getBlock() == Blocks.TRAPPED_CHEST) {
-            int newPower = MathHelper.clamp(this.numPlayersUsing, 0, 15);
+            int newPower = Mth.clamp(this.openCount, 0, 15);
 
             if (oldPower != newPower) {
-                CraftEventFactory.callRedstoneChange(world, pos, oldPower, newPower);
+                CraftEventFactory.callRedstoneChange(level, worldPosition, oldPower, newPower);
             }
         }
     }
 
-    @Inject(method = "tick", cancellable = true, at = @At(value = "FIELD", shift = At.Shift.AFTER, target = "Lnet/minecraft/tileentity/ChestTileEntity;prevLidAngle:F"))
+    @Inject(method = "tick", cancellable = true, at = @At(value = "FIELD", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/level/block/entity/ChestBlockEntity;oOpenness:F"))
     private void arclight$openByApi(CallbackInfo ci) {
         if (opened) {
-            this.numPlayersUsing--;
+            this.openCount--;
             ci.cancel();
         }
     }
 
-    @Redirect(method = "onOpenOrClose", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addBlockEvent(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/Block;II)V"))
-    private void arclight$soundIfByPlayer(World world, BlockPos pos, Block blockIn, int eventID, int eventParam) {
-        if (!opened) world.addBlockEvent(pos, blockIn, eventID, eventParam);
+    @Redirect(method = "signalOpenCount", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;blockEvent(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;II)V"))
+    private void arclight$soundIfByPlayer(Level world, BlockPos pos, Block blockIn, int eventID, int eventParam) {
+        if (!opened) world.blockEvent(pos, blockIn, eventID, eventParam);
     }
 
     @Override
     public List<ItemStack> getContents() {
-        return this.chestContents;
+        return this.items;
     }
 
     @Override
@@ -102,7 +102,7 @@ public abstract class ChestTileEntityMixin extends LockableTileEntityMixin {
     }
 
     @Override
-    public int getInventoryStackLimit() {
+    public int getMaxStackSize() {
         if (maxStack == 0) maxStack = IInventoryBridge.MAX_STACK;
         return maxStack;
     }

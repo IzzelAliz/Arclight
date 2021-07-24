@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.mixin.core.item;
 
-import net.minecraft.entity.item.EnderCrystalEntity;
-import net.minecraft.item.EnderCrystalItem;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.util.ActionResultType;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.item.EndCrystalItem;
+import net.minecraft.world.item.context.UseOnContext;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -11,21 +11,21 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(EnderCrystalItem.class)
+@Mixin(EndCrystalItem.class)
 public class EnderCrystalItemMixin {
 
-    @Redirect(method = "onItemUse", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/item/EnderCrystalEntity;setShowBottom(Z)V"))
-    public void arclight$captureEntity(EnderCrystalEntity enderCrystalEntity, boolean showBottom) {
+    @Redirect(method = "useOn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/boss/enderdragon/EndCrystal;setShowBottom(Z)V"))
+    public void arclight$captureEntity(EndCrystal enderCrystalEntity, boolean showBottom) {
         arclight$enderCrystalEntity = enderCrystalEntity;
         enderCrystalEntity.setShowBottom(showBottom);
     }
 
-    private transient EnderCrystalEntity arclight$enderCrystalEntity;
+    private transient EndCrystal arclight$enderCrystalEntity;
 
-    @Inject(method = "onItemUse", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
-    public void arclight$entityPlace(ItemUseContext context, CallbackInfoReturnable<ActionResultType> cir) {
+    @Inject(method = "useOn", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
+    public void arclight$entityPlace(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
         if (CraftEventFactory.callEntityPlaceEvent(context, arclight$enderCrystalEntity).isCancelled()) {
-            cir.setReturnValue(ActionResultType.FAIL);
+            cir.setReturnValue(InteractionResult.FAIL);
         }
         arclight$enderCrystalEntity = null;
     }

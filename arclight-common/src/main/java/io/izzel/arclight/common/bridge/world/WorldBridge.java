@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.bridge.world;
 
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.DimensionType;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.dimension.DimensionType;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.generator.ChunkGenerator;
@@ -25,7 +25,7 @@ public interface WorldBridge extends IWorldWriterBridge, IWorldBridge {
 
     ChunkGenerator bridge$getGenerator();
 
-    TileEntity bridge$getTileEntity(BlockPos pos, boolean validate);
+    BlockEntity bridge$getTileEntity(BlockPos pos, boolean validate);
 
     SpigotWorldConfig bridge$spigotConfig();
 
@@ -39,5 +39,5 @@ public interface WorldBridge extends IWorldWriterBridge, IWorldBridge {
 
     long bridge$ticksPerWaterAmbientSpawns();
 
-    RegistryKey<DimensionType> bridge$getTypeKey();
+    ResourceKey<DimensionType> bridge$getTypeKey();
 }

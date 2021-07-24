@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.bridge.bukkit;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 
 public interface CraftItemStackBridge {
 

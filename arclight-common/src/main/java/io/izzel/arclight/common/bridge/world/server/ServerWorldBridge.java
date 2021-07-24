@@ -1,24 +1,24 @@
 package io.izzel.arclight.common.bridge.world.server;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.effect.LightningBoltEntity;
-import net.minecraft.particles.IParticleData;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.storage.SaveFormat;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LightningBolt;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.storage.LevelStorageSource;
 
 public interface ServerWorldBridge extends WorldBridge {
 
-    <T extends IParticleData> int bridge$sendParticles(T type, double posX, double posY, double posZ, int particleCount, double xOffset, double yOffset, double zOffset, double speed, boolean force);
+    <T extends ParticleOptions> int bridge$sendParticles(T type, double posX, double posY, double posZ, int particleCount, double xOffset, double yOffset, double zOffset, double speed, boolean force);
 
     void bridge$pushStrikeLightningCause(LightningStrikeEvent.Cause cause);
 
-    void bridge$strikeLightning(LightningBoltEntity entity, LightningStrikeEvent.Cause cause);
+    void bridge$strikeLightning(LightningBolt entity, LightningStrikeEvent.Cause cause);
 
-    TileEntity bridge$getTileEntity(BlockPos blockPos);
+    BlockEntity bridge$getTileEntity(BlockPos blockPos);
 
     boolean bridge$addEntitySerialized(Entity entity, CreatureSpawnEvent.SpawnReason reason);
 
@@ -26,10 +26,10 @@ public interface ServerWorldBridge extends WorldBridge {
 
     boolean bridge$addAllEntitiesSafely(Entity entity, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason reason);
 
-    SaveFormat.LevelSave bridge$getConvertable();
+    LevelStorageSource.LevelStorageAccess bridge$getConvertable();
 
     interface Hack {
 
-        TileEntity getTileEntity(BlockPos blockPos);
+        BlockEntity getTileEntity(BlockPos blockPos);
     }
 }

@@ -1,14 +1,13 @@
 package io.izzel.arclight.common.mod.server.world;
 
 import io.izzel.arclight.common.mod.ArclightMod;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
-
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.function.Function;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 
 public class WrappedWorlds {
 
@@ -16,12 +15,12 @@ public class WrappedWorlds {
     private static final HashMap<Class<?>, Field> FIELD = new HashMap<>();
 
     public static Optional<Field> getDelegate(Class<?> cl) {
-        if (cl.equals(ServerWorld.class)) {
+        if (cl.equals(ServerLevel.class)) {
             return Optional.empty();
         } else {
             return getOrCreate(cl, key -> {
                 for (Field f : cl.getDeclaredFields()) {
-                    if (World.class.isAssignableFrom(f.getType())) {
+                    if (Level.class.isAssignableFrom(f.getType())) {
                         ArclightMod.LOGGER.debug("{} delegates to field {}", cl, f.getName());
                         f.setAccessible(true);
                         return f;

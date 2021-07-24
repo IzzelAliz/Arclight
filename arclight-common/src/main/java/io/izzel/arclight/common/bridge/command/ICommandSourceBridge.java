@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.bridge.command;
 
-import net.minecraft.command.CommandSource;
+import net.minecraft.commands.CommandSourceStack;
 import org.bukkit.command.CommandSender;
 
 public interface ICommandSourceBridge {
 
-    CommandSender bridge$getBukkitSender(CommandSource wrapper);
+    CommandSender bridge$getBukkitSender(CommandSourceStack wrapper);
 }

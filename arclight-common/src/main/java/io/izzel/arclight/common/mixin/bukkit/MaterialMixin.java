@@ -7,14 +7,6 @@ import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.server.block.ArclightTileInventory;
 import io.izzel.arclight.i18n.LocalizedException;
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.FallingBlock;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ResourceLocation;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.BlockState;
@@ -54,6 +46,14 @@ import java.lang.reflect.Constructor;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.FallingBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 @Mixin(value = Material.class, remap = false)
 public abstract class MaterialMixin implements MaterialBridge {
@@ -313,13 +313,13 @@ public abstract class MaterialMixin implements MaterialBridge {
             arclight$spec.record = false;
         }
         if (arclight$spec.solid == null) {
-            arclight$spec.solid = block != null && block.getDefaultState().isSolid();
+            arclight$spec.solid = block != null && block.defaultBlockState().canOcclude();
         }
         if (arclight$spec.air == null) {
-            arclight$spec.air = block != null && block.getDefaultState().isAir();
+            arclight$spec.air = block != null && block.defaultBlockState().isAir();
         }
         if (arclight$spec.transparent == null) {
-            arclight$spec.transparent = block != null && block.getDefaultState().isTransparent();
+            arclight$spec.transparent = block != null && block.defaultBlockState().useShapeForLightOcclusion();
         }
         if (arclight$spec.flammable == null) {
             arclight$spec.flammable = block != null && ((FireBlockBridge) Blocks.FIRE).bridge$canBurn(block);
@@ -340,7 +340,7 @@ public abstract class MaterialMixin implements MaterialBridge {
             arclight$spec.interactable = true;
         }
         if (arclight$spec.hardness == null) {
-            arclight$spec.hardness = block != null ? block.getDefaultState().hardness : 0;
+            arclight$spec.hardness = block != null ? block.defaultBlockState().destroySpeed : 0;
         }
         if (arclight$spec.blastResistance == null) {
             arclight$spec.blastResistance = block != null ? block.getExplosionResistance() : 0;
@@ -391,8 +391,8 @@ public abstract class MaterialMixin implements MaterialBridge {
         }
         if (this.arclight$stateFunc == null) {
             this.arclight$stateFunc = b -> {
-                TileEntity tileEntity = b.getCraftWorld().getHandle().getTileEntity(b.getPosition());
-                if (tileEntity instanceof IInventory) {
+                BlockEntity tileEntity = b.getCraftWorld().getHandle().getBlockEntity(b.getPosition());
+                if (tileEntity instanceof Container) {
                     return new ArclightTileInventory(b, tileEntity.getClass());
                 }
                 return tileEntity == null ? new CraftBlockState(b) : new CraftBlockEntityState<>(b, tileEntity.getClass());

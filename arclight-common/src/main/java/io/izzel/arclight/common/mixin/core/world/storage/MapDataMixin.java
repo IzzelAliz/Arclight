@@ -1,10 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.storage;
 
 import io.izzel.arclight.common.bridge.world.storage.MapDataBridge;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.world.World;
-import net.minecraft.world.storage.MapData;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
@@ -20,12 +16,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 
-@Mixin(MapData.class)
+@Mixin(MapItemSavedData.class)
 public abstract class MapDataMixin implements MapDataBridge {
 
     // @formatter:off
-    @Shadow public RegistryKey<World> dimension;
+    @Shadow public ResourceKey<Level> dimension;
     // @formatter:on
 
     public CraftMapView mapView;
@@ -34,13 +34,13 @@ public abstract class MapDataMixin implements MapDataBridge {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void arclight$init(String mapname, CallbackInfo ci) {
-        this.mapView = new CraftMapView((MapData) (Object) this);
+        this.mapView = new CraftMapView((MapItemSavedData) (Object) this);
         this.server = (CraftServer) Bukkit.getServer();
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    @Redirect(method = "read", at = @At(value = "INVOKE", target = "Ljava/util/Optional;orElseThrow(Ljava/util/function/Supplier;)Ljava/lang/Object;"))
-    public Object arclight$customDimension(Optional<RegistryKey<World>> optional, Supplier<?> exceptionSupplier, CompoundNBT nbt) {
+    @Redirect(method = "load", at = @At(value = "INVOKE", target = "Ljava/util/Optional;orElseThrow(Ljava/util/function/Supplier;)Ljava/lang/Object;"))
+    public Object arclight$customDimension(Optional<ResourceKey<Level>> optional, Supplier<?> exceptionSupplier, CompoundTag nbt) {
         return optional.orElseGet(() -> {
             long least = nbt.getLong("UUIDLeast");
             long most = nbt.getLong("UUIDMost");
@@ -48,19 +48,19 @@ public abstract class MapDataMixin implements MapDataBridge {
                 this.uniqueId = new UUID(most, least);
                 CraftWorld world = (CraftWorld) this.server.getWorld(this.uniqueId);
                 if (world != null) {
-                    return world.getHandle().getDimensionKey();
+                    return world.getHandle().dimension();
                 }
             }
             throw new IllegalArgumentException("Invalid map dimension: " + nbt.get("dimension"));
         });
     }
 
-    @Inject(method = "write", at = @At("HEAD"))
-    public void arclight$storeDimension(CompoundNBT compound, CallbackInfoReturnable<CompoundNBT> cir) {
+    @Inject(method = "save", at = @At("HEAD"))
+    public void arclight$storeDimension(CompoundTag compound, CallbackInfoReturnable<CompoundTag> cir) {
         if (this.uniqueId == null) {
             for (org.bukkit.World world : this.server.getWorlds()) {
                 CraftWorld cWorld = (CraftWorld) world;
-                if (cWorld.getHandle().getDimensionKey() != this.dimension) continue;
+                if (cWorld.getHandle().dimension() != this.dimension) continue;
                 this.uniqueId = cWorld.getUID();
                 break;
             }

@@ -1,19 +1,18 @@
 package io.izzel.arclight.common.bridge.bukkit;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-
 import java.util.Map;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 
 public interface ItemMetaBridge {
 
-    CompoundNBT bridge$getForgeCaps();
+    CompoundTag bridge$getForgeCaps();
 
-    void bridge$setForgeCaps(CompoundNBT nbt);
+    void bridge$setForgeCaps(CompoundTag nbt);
 
-    void bridge$offerUnhandledTags(CompoundNBT nbt);
+    void bridge$offerUnhandledTags(CompoundTag nbt);
 
-    Map<String, INBT> bridge$getUnhandledTags();
+    Map<String, Tag> bridge$getUnhandledTags();
 
-    void bridge$setUnhandledTags(Map<String, INBT> tags);
+    void bridge$setUnhandledTags(Map<String, Tag> tags);
 }

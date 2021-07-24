@@ -3,15 +3,15 @@ package io.izzel.arclight.common.mod;
 import com.google.common.collect.ImmutableList;
 import io.izzel.arclight.api.EnumHelper;
 import io.izzel.arclight.api.Unsafe;
-import net.minecraft.loot.LootParameter;
-import net.minecraft.loot.LootParameters;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParam;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import org.bukkit.TreeType;
 
 public class ArclightConstants {
 
     public static final TreeType MOD = EnumHelper.addEnum(TreeType.class, "MOD", ImmutableList.of(), ImmutableList.of());
 
-    public static final LootParameter<Integer> LOOTING_MOD = Unsafe.getStatic(LootParameters.class, "LOOTING_MOD");
+    public static final LootContextParam<Integer> LOOTING_MOD = Unsafe.getStatic(LootContextParams.class, "LOOTING_MOD");
 
     /**
      * Arclight marker magic value for non-used custom dimension

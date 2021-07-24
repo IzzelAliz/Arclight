@@ -2,51 +2,51 @@ package io.izzel.arclight.common.mixin.core.world.storage;
 
 import io.izzel.arclight.common.bridge.world.storage.DerivedWorldInfoBridge;
 import io.izzel.arclight.i18n.ArclightConfig;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.world.DimensionType;
-import net.minecraft.world.storage.DerivedWorldInfo;
-import net.minecraft.world.storage.IServerWorldInfo;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.storage.DerivedLevelData;
+import net.minecraft.world.level.storage.ServerLevelData;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(DerivedWorldInfo.class)
+@Mixin(DerivedLevelData.class)
 public class DerivedWorldInfoMixin implements DerivedWorldInfoBridge {
 
-    @Shadow @Final private IServerWorldInfo delegate;
+    @Shadow @Final private ServerLevelData wrapped;
 
-    private RegistryKey<DimensionType> typeKey;
+    private ResourceKey<DimensionType> typeKey;
 
     /**
      * @author IzzelAliz
      * @reason
      */
     @Overwrite
-    public String getWorldName() {
-        if (typeKey == null || typeKey == DimensionType.OVERWORLD) {
-            return this.delegate.getWorldName();
+    public String getLevelName() {
+        if (typeKey == null || typeKey == DimensionType.OVERWORLD_LOCATION) {
+            return this.wrapped.getLevelName();
         } else {
             if (ArclightConfig.spec().getCompat().isSymlinkWorld()) {
-                String worldName = this.delegate.getWorldName() + "_";
+                String worldName = this.wrapped.getLevelName() + "_";
                 String suffix;
-                if (typeKey == DimensionType.THE_END) {
+                if (typeKey == DimensionType.END_LOCATION) {
                     suffix = "nether";
-                } else if (typeKey == DimensionType.THE_NETHER) {
+                } else if (typeKey == DimensionType.NETHER_LOCATION) {
                     suffix = "the_end";
                 } else {
-                    suffix = (typeKey.getLocation().getNamespace() + "/" + typeKey.getLocation().getPath()).replace('/', '_');
+                    suffix = (typeKey.location().getNamespace() + "/" + typeKey.location().getPath()).replace('/', '_');
                 }
                 return worldName + suffix;
             } else {
-                String worldName = this.delegate.getWorldName() + "/";
+                String worldName = this.wrapped.getLevelName() + "/";
                 String suffix;
-                if (typeKey == DimensionType.THE_END) {
+                if (typeKey == DimensionType.END_LOCATION) {
                     suffix = "DIM1";
-                } else if (typeKey == DimensionType.THE_NETHER) {
+                } else if (typeKey == DimensionType.NETHER_LOCATION) {
                     suffix = "DIM-1";
                 } else {
-                    suffix = typeKey.getLocation().getNamespace() + "/" + typeKey.getLocation().getPath();
+                    suffix = typeKey.location().getNamespace() + "/" + typeKey.location().getPath();
                 }
                 return worldName + suffix;
             }
@@ -54,12 +54,12 @@ public class DerivedWorldInfoMixin implements DerivedWorldInfoBridge {
     }
 
     @Override
-    public IServerWorldInfo bridge$getDelegate() {
-        return delegate;
+    public ServerLevelData bridge$getDelegate() {
+        return wrapped;
     }
 
     @Override
-    public void bridge$setDimType(RegistryKey<DimensionType> typeKey) {
+    public void bridge$setDimType(ResourceKey<DimensionType> typeKey) {
         this.typeKey = typeKey;
     }
 }

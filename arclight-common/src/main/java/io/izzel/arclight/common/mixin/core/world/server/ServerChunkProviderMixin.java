@@ -5,17 +5,6 @@ import io.izzel.arclight.common.bridge.world.server.ChunkHolderBridge;
 import io.izzel.arclight.common.bridge.world.server.ChunkManagerBridge;
 import io.izzel.arclight.common.bridge.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.bridge.world.server.TicketManagerBridge;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.gen.ChunkGenerator;
-import net.minecraft.world.server.ChunkHolder;
-import net.minecraft.world.server.ChunkManager;
-import net.minecraft.world.server.ServerChunkProvider;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.server.ServerWorldLightManager;
-import net.minecraft.world.server.TicketManager;
-import net.minecraft.world.storage.IWorldInfo;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -27,32 +16,43 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import javax.annotation.Nullable;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.server.level.DistanceManager;
+import net.minecraft.server.level.ServerChunkCache;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ThreadedLevelLightEngine;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.storage.LevelData;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-@Mixin(ServerChunkProvider.class)
+@Mixin(ServerChunkCache.class)
 public abstract class ServerChunkProviderMixin implements ServerChunkProviderBridge {
 
     // @formatter:off
     @Shadow public abstract void save(boolean flush);
-    @Shadow @Final private ServerWorldLightManager lightManager;
-    @Shadow @Final public ChunkManager chunkManager;
-    @Shadow @Final public ServerWorld world;
-    @Shadow @Final private TicketManager ticketManager;
-    @Shadow protected abstract void invalidateCaches();
-    @Shadow @Nullable protected abstract ChunkHolder func_217213_a(long chunkPosIn);
-    @Shadow protected abstract boolean func_217235_l();
-    @Shadow protected abstract boolean func_217224_a(@Nullable ChunkHolder chunkHolderIn, int p_217224_2_);
-    @Shadow public boolean spawnHostiles;
-    @Shadow public boolean spawnPassives;
-    @Shadow protected abstract void func_241098_a_(long p_241098_1_, Consumer<Chunk> p_241098_3_);
+    @Shadow @Final private ThreadedLevelLightEngine lightEngine;
+    @Shadow @Final public ChunkMap chunkMap;
+    @Shadow @Final public ServerLevel level;
+    @Shadow @Final private DistanceManager distanceManager;
+    @Shadow protected abstract void clearCache();
+    @Shadow @Nullable protected abstract ChunkHolder getVisibleChunkIfPresent(long chunkPosIn);
+    @Shadow protected abstract boolean runDistanceManagerUpdates();
+    @Shadow protected abstract boolean chunkAbsent(@Nullable ChunkHolder chunkHolderIn, int p_217224_2_);
+    @Shadow public boolean spawnEnemies;
+    @Shadow public boolean spawnFriendlies;
+    @Shadow protected abstract void getFullChunk(long p_241098_1_, Consumer<LevelChunk> p_241098_3_);
     @Shadow @Final @Mutable public ChunkGenerator generator;
-    @Invoker("func_217235_l") public abstract boolean bridge$tickDistanceManager();
-    @Accessor("lightManager") public abstract ServerWorldLightManager bridge$getLightManager();
+    @Invoker("runDistanceManagerUpdates") public abstract boolean bridge$tickDistanceManager();
+    @Accessor("lightEngine") public abstract ThreadedLevelLightEngine bridge$getLightManager();
     // @formatter:on
 
     public boolean isChunkLoaded(final int chunkX, final int chunkZ) {
-        final ChunkHolder chunk = ((ChunkManagerBridge) this.chunkManager).bridge$chunkHolderAt(ChunkPos.asLong(chunkX, chunkZ));
+        final ChunkHolder chunk = ((ChunkManagerBridge) this.chunkMap).bridge$chunkHolderAt(ChunkPos.asLong(chunkX, chunkZ));
         return chunk != null && ((ChunkHolderBridge) chunk).bridge$getFullChunk() != null;
     }
 
@@ -64,22 +64,22 @@ public abstract class ServerChunkProviderMixin implements ServerChunkProviderBri
     @Override
     public void bridge$setChunkGenerator(ChunkGenerator chunkGenerator) {
         this.generator = chunkGenerator;
-        ((ChunkManagerBridge) this.chunkManager).bridge$setChunkGenerator(chunkGenerator);
+        ((ChunkManagerBridge) this.chunkMap).bridge$setChunkGenerator(chunkGenerator);
     }
 
     @Override
     public void bridge$setViewDistance(int viewDistance) {
-        ((ChunkManagerBridge) this.chunkManager).bridge$setViewDistance(viewDistance);
+        ((ChunkManagerBridge) this.chunkMap).bridge$setViewDistance(viewDistance);
     }
 
-    @ModifyVariable(method = "func_217233_c", index = 4, at = @At("HEAD"))
+    @ModifyVariable(method = "getChunkFutureMainThread", index = 4, at = @At("HEAD"))
     private boolean arclight$skipIfUnloading(boolean flag, int chunkX, int chunkZ) {
         if (flag) {
-            ChunkHolder chunkholder = this.func_217213_a(ChunkPos.asLong(chunkX, chunkZ));
+            ChunkHolder chunkholder = this.getVisibleChunkIfPresent(ChunkPos.asLong(chunkX, chunkZ));
             if (chunkholder != null) {
-                ChunkHolder.LocationType chunkStatus = ChunkHolder.getLocationTypeFromLevel(((ChunkHolderBridge) chunkholder).bridge$getOldTicketLevel());
-                ChunkHolder.LocationType currentStatus = ChunkHolder.getLocationTypeFromLevel(chunkholder.getChunkLevel());
-                return !chunkStatus.isAtLeast(ChunkHolder.LocationType.BORDER) || currentStatus.isAtLeast(ChunkHolder.LocationType.BORDER);
+                ChunkHolder.FullChunkStatus chunkStatus = ChunkHolder.getFullChunkStatus(((ChunkHolderBridge) chunkholder).bridge$getOldTicketLevel());
+                ChunkHolder.FullChunkStatus currentStatus = ChunkHolder.getFullChunkStatus(chunkholder.getTicketLevel());
+                return !chunkStatus.isOrAfter(ChunkHolder.FullChunkStatus.BORDER) || currentStatus.isOrAfter(ChunkHolder.FullChunkStatus.BORDER);
             } else {
                 return true;
             }
@@ -88,15 +88,15 @@ public abstract class ServerChunkProviderMixin implements ServerChunkProviderBri
         }
     }
 
-    @Redirect(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/GameRules;getBoolean(Lnet/minecraft/world/GameRules$RuleKey;)Z"))
-    private boolean arclight$noPlayer(GameRules gameRules, GameRules.RuleKey<GameRules.BooleanValue> key) {
-        return gameRules.getBoolean(key) && !this.world.getPlayers().isEmpty();
+    @Redirect(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/GameRules;getBoolean(Lnet/minecraft/world/level/GameRules$Key;)Z"))
+    private boolean arclight$noPlayer(GameRules gameRules, GameRules.Key<GameRules.BooleanValue> key) {
+        return gameRules.getBoolean(key) && !this.level.players().isEmpty();
     }
 
-    @Redirect(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/storage/IWorldInfo;getGameTime()J"))
-    private long arclight$ticksPer(IWorldInfo worldInfo) {
+    @Redirect(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/LevelData;getGameTime()J"))
+    private long arclight$ticksPer(LevelData worldInfo) {
         long gameTime = worldInfo.getGameTime();
-        long ticksPer = ((WorldBridge) this.world).bridge$ticksPerAnimalSpawns();
+        long ticksPer = ((WorldBridge) this.level).bridge$ticksPerAnimalSpawns();
         return (ticksPer != 0L && gameTime % ticksPer == 0) ? 0 : 1;
     }
 
@@ -104,18 +104,18 @@ public abstract class ServerChunkProviderMixin implements ServerChunkProviderBri
         if (save) {
             this.save(true);
         }
-        this.lightManager.close();
-        this.chunkManager.close();
+        this.lightEngine.close();
+        this.chunkMap.close();
     }
 
     public void purgeUnload() {
-        this.world.getProfiler().startSection("purge");
-        ((TicketManagerBridge) this.ticketManager).bridge$tick();
+        this.level.getProfiler().push("purge");
+        ((TicketManagerBridge) this.distanceManager).bridge$tick();
         this.bridge$tickDistanceManager();
-        this.world.getProfiler().endStartSection("unload");
-        ((ChunkManagerBridge) this.chunkManager).bridge$tick(() -> true);
-        this.world.getProfiler().endSection();
-        this.invalidateCaches();
+        this.level.getProfiler().popPush("unload");
+        ((ChunkManagerBridge) this.chunkMap).bridge$tick(() -> true);
+        this.level.getProfiler().pop();
+        this.clearCache();
     }
 
     @Override
@@ -128,7 +128,7 @@ public abstract class ServerChunkProviderMixin implements ServerChunkProviderBri
         this.purgeUnload();
     }
 
-    @Redirect(method = "func_217224_a", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ChunkHolder;getChunkLevel()I"))
+    @Redirect(method = "chunkAbsent", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkHolder;getTicketLevel()I"))
     public int arclight$useOldTicketLevel(ChunkHolder chunkHolder) {
         return ((ChunkHolderBridge) chunkHolder).bridge$getOldTicketLevel();
     }

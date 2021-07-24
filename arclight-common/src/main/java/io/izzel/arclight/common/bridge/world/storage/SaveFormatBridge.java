@@ -1,17 +1,16 @@
 package io.izzel.arclight.common.bridge.world.storage;
 
-import net.minecraft.util.RegistryKey;
-import net.minecraft.world.Dimension;
-import net.minecraft.world.storage.SaveFormat;
-
 import java.io.IOException;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.dimension.LevelStem;
+import net.minecraft.world.level.storage.LevelStorageSource;
 
 public interface SaveFormatBridge {
 
-    SaveFormat.LevelSave bridge$getLevelSave(String saveName, RegistryKey<Dimension> world) throws IOException;
+    LevelStorageSource.LevelStorageAccess bridge$getLevelSave(String saveName, ResourceKey<LevelStem> world) throws IOException;
 
     interface LevelSaveBridge {
 
-        void bridge$setDimType(RegistryKey<Dimension> typeKey);
+        void bridge$setDimType(ResourceKey<LevelStem> typeKey);
     }
 }

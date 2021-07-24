@@ -1,38 +1,38 @@
 package io.izzel.arclight.common.mixin.core.scoreboard;
 
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.IPacket;
-import net.minecraft.scoreboard.ServerScoreboard;
-import net.minecraft.server.management.PlayerList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.server.ServerScoreboard;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
 
 @Mixin(ServerScoreboard.class)
 public class ServerScoreboardMixin {
 
-    @Redirect(method = "addObjective", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/management/PlayerList;getPlayers()Ljava/util/List;"))
-    private List<ServerPlayerEntity> arclight$filterAdd(PlayerList playerList) {
+    @Redirect(method = "addObjective", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;getPlayers()Ljava/util/List;"))
+    private List<ServerPlayer> arclight$filterAdd(PlayerList playerList) {
         return filterPlayer(playerList.getPlayers());
     }
 
-    @Redirect(method = "sendDisplaySlotRemovalPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/management/PlayerList;getPlayers()Ljava/util/List;"))
-    private List<ServerPlayerEntity> arclight$filterRemove(PlayerList playerList) {
+    @Redirect(method = "stopTrackingObjective", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;getPlayers()Ljava/util/List;"))
+    private List<ServerPlayer> arclight$filterRemove(PlayerList playerList) {
         return filterPlayer(playerList.getPlayers());
     }
 
-    @Redirect(method = "*", require = 11, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/management/PlayerList;sendPacketToAllPlayers(Lnet/minecraft/network/IPacket;)V"))
-    private void arclight$sendToOwner(PlayerList playerList, IPacket<?> packetIn) {
-        for (ServerPlayerEntity entity : filterPlayer(playerList.getPlayers())) {
-            entity.connection.sendPacket(packetIn);
+    @Redirect(method = "*", require = 11, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;broadcastAll(Lnet/minecraft/network/protocol/Packet;)V"))
+    private void arclight$sendToOwner(PlayerList playerList, Packet<?> packetIn) {
+        for (ServerPlayer entity : filterPlayer(playerList.getPlayers())) {
+            entity.connection.send(packetIn);
         }
     }
 
-    private List<ServerPlayerEntity> filterPlayer(List<ServerPlayerEntity> list) {
+    private List<ServerPlayer> filterPlayer(List<ServerPlayer> list) {
         return list.stream()
             .filter(it -> ((ServerPlayerEntityBridge) it).bridge$getBukkitEntity().getScoreboard().getHandle() == (Object) this)
             .collect(Collectors.toList());

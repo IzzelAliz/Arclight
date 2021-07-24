@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mod.server.entity;
 
 import io.izzel.arclight.common.mod.util.ResourceLocationUtil;
-import net.minecraft.entity.item.minecart.AbstractMinecartEntity;
+import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftMinecart;
@@ -12,7 +12,7 @@ public class ArclightModMinecart extends CraftMinecart {
 
     private final EntityType entityType;
 
-    public ArclightModMinecart(CraftServer server, AbstractMinecartEntity entity) {
+    public ArclightModMinecart(CraftServer server, AbstractMinecart entity) {
         super(server, entity);
         this.entityType = EntityType.valueOf(ResourceLocationUtil.standardize(ForgeRegistries.ENTITIES.getKey(entity.getType())));
     }

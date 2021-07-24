@@ -1,13 +1,12 @@
 package io.izzel.arclight.common.bridge.util.text;
 
-import net.minecraft.util.text.ITextComponent;
-
 import java.util.Iterator;
 import java.util.stream.Stream;
+import net.minecraft.network.chat.Component;
 
 public interface ITextComponentBridge {
 
-    Stream<ITextComponent> bridge$stream();
+    Stream<Component> bridge$stream();
 
-    Iterator<ITextComponent> bridge$iterator();
+    Iterator<Component> bridge$iterator();
 }

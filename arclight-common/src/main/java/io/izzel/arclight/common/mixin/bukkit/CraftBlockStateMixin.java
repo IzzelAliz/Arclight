@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
-import net.minecraft.block.BlockState;
+import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.craftbukkit.v.block.CraftBlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

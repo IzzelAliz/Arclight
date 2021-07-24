@@ -1,10 +1,10 @@
 package io.izzel.arclight.common.mod.server.event;
 
 import io.izzel.arclight.common.bridge.world.chunk.ChunkBridge;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.IChunk;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraftforge.event.world.ChunkDataEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataContainer;
@@ -13,19 +13,19 @@ public class ChunkEventHandler {
 
     @SubscribeEvent
     public void onChunkLoad(ChunkDataEvent.Load event) {
-        if (event.getStatus() == ChunkStatus.Type.LEVELCHUNK) {
-            IChunk chunk = event.getChunk();
-            CompoundNBT nbt = event.getData();
-            INBT values = nbt.get("ChunkBukkitValues");
-            if (values instanceof CompoundNBT) {
-                ((ChunkBridge) chunk).bridge$getPersistentContainer().putAll((CompoundNBT) values);
+        if (event.getStatus() == ChunkStatus.ChunkType.LEVELCHUNK) {
+            ChunkAccess chunk = event.getChunk();
+            CompoundTag nbt = event.getData();
+            Tag values = nbt.get("ChunkBukkitValues");
+            if (values instanceof CompoundTag) {
+                ((ChunkBridge) chunk).bridge$getPersistentContainer().putAll((CompoundTag) values);
             }
         }
     }
 
     @SubscribeEvent
     public void onChunkSave(ChunkDataEvent.Save event) {
-        IChunk chunk = event.getChunk();
+        ChunkAccess chunk = event.getChunk();
         if (chunk instanceof ChunkBridge) {
             CraftPersistentDataContainer container = ((ChunkBridge) chunk).bridge$getPersistentContainer();
             if (!container.isEmpty()) {

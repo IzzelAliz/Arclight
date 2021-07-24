@@ -1,11 +1,11 @@
 package io.izzel.arclight.common.bridge.block;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
 
 public interface BlockBridge {
 
-    int bridge$getExpDrop(BlockState blockState, ServerWorld world, BlockPos blockPos, ItemStack itemStack);
+    int bridge$getExpDrop(BlockState blockState, ServerLevel world, BlockPos blockPos, ItemStack itemStack);
 }

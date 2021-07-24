@@ -5,17 +5,17 @@ import com.mojang.authlib.properties.Property;
 import com.mojang.util.UUIDTypeAdapter;
 import io.izzel.arclight.common.bridge.network.NetworkManagerBridge;
 import io.izzel.arclight.common.bridge.network.login.ServerLoginNetHandlerBridge;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.ProtocolType;
-import net.minecraft.network.handshake.ServerHandshakeNetHandler;
-import net.minecraft.network.handshake.client.CHandshakePacket;
-import net.minecraft.network.login.ServerLoginNetHandler;
-import net.minecraft.network.login.server.SDisconnectLoginPacket;
-import net.minecraft.network.status.ServerStatusNetHandler;
+import net.minecraft.SharedConstants;
+import net.minecraft.network.Connection;
+import net.minecraft.network.ConnectionProtocol;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.protocol.handshake.ClientIntentionPacket;
+import net.minecraft.network.protocol.login.ClientboundLoginDisconnectPacket;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.SharedConstants;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.server.network.ServerHandshakePacketListenerImpl;
+import net.minecraft.server.network.ServerLoginPacketListenerImpl;
+import net.minecraft.server.network.ServerStatusPacketListenerImpl;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.LogManager;
 import org.bukkit.Bukkit;
@@ -30,7 +30,7 @@ import java.net.InetSocketAddress;
 import java.text.MessageFormat;
 import java.util.HashMap;
 
-@Mixin(ServerHandshakeNetHandler.class)
+@Mixin(ServerHandshakePacketListenerImpl.class)
 public class ServerHandshakeNetHandlerMixin {
 
     private static final Gson gson = new Gson();
@@ -38,9 +38,9 @@ public class ServerHandshakeNetHandlerMixin {
     private static int throttleCounter = 0;
 
     // @formatter:off
-    @Shadow @Final private NetworkManager networkManager;
+    @Shadow @Final private Connection connection;
     @Shadow @Final private MinecraftServer server;
-    @Shadow @Final private static ITextComponent field_241169_a_;
+    @Shadow @Final private static Component IGNORE_STATUS_REASON;
     // @formatter:on
 
     /**
@@ -48,22 +48,22 @@ public class ServerHandshakeNetHandlerMixin {
      * @reason
      */
     @Overwrite
-    public void processHandshake(CHandshakePacket packetIn) {
-        if (!ServerLifecycleHooks.handleServerLogin(packetIn, this.networkManager)) return;
-        switch (packetIn.getRequestedState()) {
+    public void handleIntention(ClientIntentionPacket packetIn) {
+        if (!ServerLifecycleHooks.handleServerLogin(packetIn, this.connection)) return;
+        switch (packetIn.getIntention()) {
             case LOGIN: {
-                this.networkManager.setConnectionState(ProtocolType.LOGIN);
+                this.connection.setProtocol(ConnectionProtocol.LOGIN);
 
                 try {
                     long currentTime = System.currentTimeMillis();
                     long connectionThrottle = Bukkit.getServer().getConnectionThrottle();
-                    InetAddress address = ((InetSocketAddress) this.networkManager.getRemoteAddress()).getAddress();
+                    InetAddress address = ((InetSocketAddress) this.connection.getRemoteAddress()).getAddress();
                     synchronized (throttleTracker) {
                         if (throttleTracker.containsKey(address) && !"127.0.0.1".equals(address.getHostAddress()) && currentTime - throttleTracker.get(address) < connectionThrottle) {
                             throttleTracker.put(address, currentTime);
-                            TranslationTextComponent component = new TranslationTextComponent("Connection throttled! Please wait before reconnecting.");
-                            this.networkManager.sendPacket(new SDisconnectLoginPacket(component));
-                            this.networkManager.closeChannel(component);
+                            TranslatableComponent component = new TranslatableComponent("Connection throttled! Please wait before reconnecting.");
+                            this.connection.send(new ClientboundLoginDisconnectPacket(component));
+                            this.connection.disconnect(component);
                             return;
                         }
                         throttleTracker.put(address, currentTime);
@@ -78,53 +78,53 @@ public class ServerHandshakeNetHandlerMixin {
                 }
 
 
-                if (packetIn.getProtocolVersion() > SharedConstants.getVersion().getProtocolVersion()) {
-                    TranslationTextComponent component = new TranslationTextComponent(MessageFormat.format(SpigotConfig.outdatedServerMessage.replaceAll("'", "''"), SharedConstants.getVersion().getName()));
-                    this.networkManager.sendPacket(new SDisconnectLoginPacket(component));
-                    this.networkManager.closeChannel(component);
+                if (packetIn.getProtocolVersion() > SharedConstants.getCurrentVersion().getProtocolVersion()) {
+                    TranslatableComponent component = new TranslatableComponent(MessageFormat.format(SpigotConfig.outdatedServerMessage.replaceAll("'", "''"), SharedConstants.getCurrentVersion().getName()));
+                    this.connection.send(new ClientboundLoginDisconnectPacket(component));
+                    this.connection.disconnect(component);
                     break;
                 }
-                if (packetIn.getProtocolVersion() < SharedConstants.getVersion().getProtocolVersion()) {
-                    TranslationTextComponent component = new TranslationTextComponent(MessageFormat.format(SpigotConfig.outdatedClientMessage.replaceAll("'", "''"), SharedConstants.getVersion().getName()));
-                    this.networkManager.sendPacket(new SDisconnectLoginPacket(component));
-                    this.networkManager.closeChannel(component);
+                if (packetIn.getProtocolVersion() < SharedConstants.getCurrentVersion().getProtocolVersion()) {
+                    TranslatableComponent component = new TranslatableComponent(MessageFormat.format(SpigotConfig.outdatedClientMessage.replaceAll("'", "''"), SharedConstants.getCurrentVersion().getName()));
+                    this.connection.send(new ClientboundLoginDisconnectPacket(component));
+                    this.connection.disconnect(component);
                     break;
                 }
-                this.networkManager.setNetHandler(new ServerLoginNetHandler(this.server, this.networkManager));
+                this.connection.setListener(new ServerLoginPacketListenerImpl(this.server, this.connection));
 
 
                 if (SpigotConfig.bungee) {
-                    String[] split = packetIn.ip.split("\00");
+                    String[] split = packetIn.hostName.split("\00");
                     if (split.length == 3 || split.length == 4) {
-                        packetIn.ip = split[0];
-                        this.networkManager.socketAddress = new InetSocketAddress(split[1], ((InetSocketAddress) this.networkManager.getRemoteAddress()).getPort());
-                        ((NetworkManagerBridge) this.networkManager).bridge$setSpoofedUUID(UUIDTypeAdapter.fromString(split[2]));
+                        packetIn.hostName = split[0];
+                        this.connection.address = new InetSocketAddress(split[1], ((InetSocketAddress) this.connection.getRemoteAddress()).getPort());
+                        ((NetworkManagerBridge) this.connection).bridge$setSpoofedUUID(UUIDTypeAdapter.fromString(split[2]));
                     } else {
-                        TranslationTextComponent component = new TranslationTextComponent("If you wish to use IP forwarding, please enable it in your BungeeCord config as well!");
-                        this.networkManager.sendPacket(new SDisconnectLoginPacket(component));
-                        this.networkManager.closeChannel(component);
+                        TranslatableComponent component = new TranslatableComponent("If you wish to use IP forwarding, please enable it in your BungeeCord config as well!");
+                        this.connection.send(new ClientboundLoginDisconnectPacket(component));
+                        this.connection.disconnect(component);
                         return;
                     }
                     if (split.length == 4) {
-                        ((NetworkManagerBridge) this.networkManager).bridge$setSpoofedProfile(gson.fromJson(split[3], Property[].class));
+                        ((NetworkManagerBridge) this.connection).bridge$setSpoofedProfile(gson.fromJson(split[3], Property[].class));
                     }
                 }
-                ((ServerLoginNetHandlerBridge) this.networkManager.getNetHandler()).bridge$setHostname(packetIn.ip + ":" + packetIn.port);
+                ((ServerLoginNetHandlerBridge) this.connection.getPacketListener()).bridge$setHostname(packetIn.hostName + ":" + packetIn.port);
 
 
                 break;
             }
             case STATUS: {
-                if (this.server.func_230541_aj_()) {
-                    this.networkManager.setConnectionState(ProtocolType.STATUS);
-                    this.networkManager.setNetHandler(new ServerStatusNetHandler(this.server, this.networkManager));
+                if (this.server.repliesToStatus()) {
+                    this.connection.setProtocol(ConnectionProtocol.STATUS);
+                    this.connection.setListener(new ServerStatusPacketListenerImpl(this.server, this.connection));
                 } else {
-                    this.networkManager.closeChannel(field_241169_a_);
+                    this.connection.disconnect(IGNORE_STATUS_REASON);
                 }
                 break;
             }
             default: {
-                throw new UnsupportedOperationException("Invalid intention " + packetIn.getRequestedState());
+                throw new UnsupportedOperationException("Invalid intention " + packetIn.getIntention());
             }
         }
     }

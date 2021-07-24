@@ -1,12 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.gen;
 
 import io.izzel.arclight.common.bridge.world.WorldBridge;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.SectionPos;
-import net.minecraft.world.gen.WorldGenRegion;
-import net.minecraft.world.gen.feature.structure.Structure;
-import net.minecraft.world.gen.feature.structure.StructureStart;
-import net.minecraft.world.server.ServerWorld;
 import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Final;
@@ -15,17 +9,23 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.stream.Stream;
+import net.minecraft.core.SectionPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.WorldGenRegion;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.levelgen.feature.StructureFeature;
+import net.minecraft.world.level.levelgen.structure.StructureStart;
 
 @Mixin(WorldGenRegion.class)
 public abstract class WorldGenRegionMixin implements WorldBridge {
 
     // @formatter:off
-    @Shadow public abstract boolean addEntity(Entity entityIn);
-    @Shadow @Final private ServerWorld world;
+    @Shadow public abstract boolean addFreshEntity(Entity entityIn);
+    @Shadow @Final private ServerLevel level;
     // @formatter:on
 
     public boolean addEntity(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
-        return this.addEntity(entity);
+        return this.addFreshEntity(entity);
     }
 
     @Override
@@ -39,7 +39,7 @@ public abstract class WorldGenRegionMixin implements WorldBridge {
 
     @Override
     public CraftWorld bridge$getWorld() {
-        return ((WorldBridge) this.world).bridge$getWorld();
+        return ((WorldBridge) this.level).bridge$getWorld();
     }
 
     @Override
@@ -52,7 +52,7 @@ public abstract class WorldGenRegionMixin implements WorldBridge {
      * @reason MC-199487
      */
     @Overwrite
-    public Stream<? extends StructureStart<?>> func_241827_a(SectionPos p_241827_1_, Structure<?> p_241827_2_) {
-        return this.world.getStructureManager().getStructureManager((WorldGenRegion) (Object) this).func_235011_a_(p_241827_1_, p_241827_2_);
+    public Stream<? extends StructureStart<?>> startsForFeature(SectionPos p_241827_1_, StructureFeature<?> p_241827_2_) {
+        return this.level.structureFeatureManager().forWorldGenRegion((WorldGenRegion) (Object) this).startsForFeature(p_241827_1_, p_241827_2_);
     }
 }

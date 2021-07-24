@@ -1,9 +1,6 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.common.bridge.item.crafting.IRecipeBridge;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.IRecipeType;
-import net.minecraft.util.ResourceLocation;
 import org.bukkit.craftbukkit.v.inventory.RecipeIterator;
 import org.bukkit.inventory.Recipe;
 import org.spongepowered.asm.mixin.Final;
@@ -13,13 +10,15 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Iterator;
 import java.util.Map;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.RecipeType;
 
 @Mixin(value = RecipeIterator.class, remap = false)
 public class RecipeIteratorMixin {
 
     // @formatter:off
-    @Shadow private Iterator<IRecipe<?>> current;
-    @Shadow @Final private Iterator<Map.Entry<IRecipeType<?>, Map<ResourceLocation, IRecipe<?>>>> recipes;
+    @Shadow private Iterator<net.minecraft.world.item.crafting.Recipe<?>> current;
+    @Shadow @Final private Iterator<Map.Entry<RecipeType<?>, Map<ResourceLocation, net.minecraft.world.item.crafting.Recipe<?>>>> recipes;
     // @formatter:on
 
     /**

@@ -2,14 +2,14 @@ package io.izzel.arclight.common.mixin.core.network.status;
 
 import com.mojang.authlib.GameProfile;
 import io.izzel.arclight.common.mod.util.ArclightPingEvent;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.IPacket;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.ServerStatusResponse;
-import net.minecraft.network.status.ServerStatusNetHandler;
-import net.minecraft.network.status.server.SServerInfoPacket;
+import net.minecraft.SharedConstants;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.status.ClientboundStatusResponsePacket;
+import net.minecraft.network.protocol.status.ServerStatus;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.SharedConstants;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerStatusPacketListenerImpl;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.util.CraftChatMessage;
 import org.spigotmc.SpigotConfig;
@@ -23,13 +23,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@Mixin(ServerStatusNetHandler.class)
+@Mixin(ServerStatusPacketListenerImpl.class)
 public class ServerStatusNetHandlerMixin {
 
     @Shadow @Final private MinecraftServer server;
 
-    @Redirect(method = "processServerQuery", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkManager;sendPacket(Lnet/minecraft/network/IPacket;)V"))
-    private void arclight$handleServerPing(NetworkManager networkManager, IPacket<?> packetIn) {
+    @Redirect(method = "handleStatusRequest", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Connection;send(Lnet/minecraft/network/protocol/Packet;)V"))
+    private void arclight$handleServerPing(Connection networkManager, Packet<?> packetIn) {
         Object[] players = this.server.getPlayerList().players.toArray();
         ArclightPingEvent event = new ArclightPingEvent(networkManager, server);
         Bukkit.getPluginManager().callEvent(event);
@@ -38,22 +38,22 @@ public class ServerStatusNetHandlerMixin {
         for (int length = (array = players).length, i = 0; i < length; ++i) {
             Object player = array[i];
             if (player != null) {
-                profiles.add(((ServerPlayerEntity) player).getGameProfile());
+                profiles.add(((ServerPlayer) player).getGameProfile());
             }
         }
-        ServerStatusResponse.Players playerSample = new ServerStatusResponse.Players(event.getMaxPlayers(), profiles.size());
+        ServerStatus.Players playerSample = new ServerStatus.Players(event.getMaxPlayers(), profiles.size());
         if (!profiles.isEmpty()) {
             Collections.shuffle(profiles);
             profiles = profiles.subList(0, Math.min(profiles.size(), SpigotConfig.playerSample));
         }
-        playerSample.setPlayers(profiles.toArray(new GameProfile[0]));
-        ServerStatusResponse ping = new ServerStatusResponse();
+        playerSample.setSample(profiles.toArray(new GameProfile[0]));
+        ServerStatus ping = new ServerStatus();
         ping.setFavicon(event.icon.value);
-        ping.setServerDescription(CraftChatMessage.fromString(event.getMotd(), true)[0]);
+        ping.setDescription(CraftChatMessage.fromString(event.getMotd(), true)[0]);
         ping.setPlayers(playerSample);
-        int version = SharedConstants.getVersion().getProtocolVersion();
-        ping.setVersion(new ServerStatusResponse.Version(this.server.getServerModName() + " " + this.server.getMinecraftVersion(), version));
-        ping.setForgeData(this.server.getServerStatusResponse().getForgeData());
-        networkManager.sendPacket(new SServerInfoPacket(ping));
+        int version = SharedConstants.getCurrentVersion().getProtocolVersion();
+        ping.setVersion(new ServerStatus.Version(this.server.getServerModName() + " " + this.server.getServerVersion(), version));
+        ping.setForgeData(this.server.getStatus().getForgeData());
+        networkManager.send(new ClientboundStatusResponsePacket(ping));
     }
 }

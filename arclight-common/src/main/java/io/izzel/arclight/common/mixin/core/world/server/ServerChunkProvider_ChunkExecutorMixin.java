@@ -4,18 +4,18 @@ import io.izzel.arclight.common.bridge.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.world.server.ChunkManagerBridge;
 import io.izzel.arclight.common.bridge.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
-import net.minecraft.util.concurrent.ThreadTaskExecutor;
-import net.minecraft.world.server.ServerChunkProvider;
+import net.minecraft.server.level.ServerChunkCache;
+import net.minecraft.util.thread.BlockableEventLoop;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(targets = "net.minecraft.world.server.ServerChunkProvider$ChunkExecutor")
-public abstract class ServerChunkProvider_ChunkExecutorMixin extends ThreadTaskExecutor<Runnable> {
+@Mixin(targets = "net.minecraft.server.level.ServerChunkCache$MainThreadExecutor")
+public abstract class ServerChunkProvider_ChunkExecutorMixin extends BlockableEventLoop<Runnable> {
 
     // @formatter:off
-    @Shadow(aliases = {"this$0", "field_213181_a"}, remap = false) @Final private ServerChunkProvider outer;
+    @Shadow(aliases = {"this$0", "field_213181_a"}, remap = false) @Final private ServerChunkCache outer;
     // @formatter:on
 
     protected ServerChunkProvider_ChunkExecutorMixin(String nameIn) {
@@ -27,16 +27,16 @@ public abstract class ServerChunkProvider_ChunkExecutorMixin extends ThreadTaskE
      * @reason
      */
     @Overwrite
-    protected boolean driveOne() {
+    protected boolean pollTask() {
         try {
             if (((ServerChunkProviderBridge) outer).bridge$tickDistanceManager()) {
                 return true;
             } else {
-                ((ServerChunkProviderBridge) outer).bridge$getLightManager().func_215588_z_();
-                return super.driveOne();
+                ((ServerChunkProviderBridge) outer).bridge$getLightManager().tryScheduleUpdate();
+                return super.pollTask();
             }
         } finally {
-            ((ChunkManagerBridge) outer.chunkManager).bridge$getCallbackExecutor().run();
+            ((ChunkManagerBridge) outer.chunkMap).bridge$getCallbackExecutor().run();
             ((MinecraftServerBridge) ArclightServer.getMinecraftServer()).bridge$drainQueuedTasks();
         }
     }

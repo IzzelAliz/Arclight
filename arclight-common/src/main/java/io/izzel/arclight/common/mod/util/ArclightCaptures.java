@@ -1,14 +1,14 @@
 package io.izzel.arclight.common.mod.util;
 
 import io.izzel.arclight.common.mod.ArclightConstants;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.datafix.codec.DatapackCodec;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.level.DataPackConfig;
 import org.bukkit.TreeType;
 import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
@@ -97,13 +97,13 @@ public class ArclightCaptures {
         }
     }
 
-    private static Hand placeEventHand;
+    private static InteractionHand placeEventHand;
 
-    public static void capturePlaceEventHand(Hand hand) {
+    public static void capturePlaceEventHand(InteractionHand hand) {
         ArclightCaptures.placeEventHand = hand;
     }
 
-    public static Hand getPlaceEventHand(Hand hand) {
+    public static InteractionHand getPlaceEventHand(InteractionHand hand) {
         try {
             return placeEventHand == null ? hand : placeEventHand;
         } finally {
@@ -125,13 +125,13 @@ public class ArclightCaptures {
         }
     }
 
-    private static transient Container arclight$capturedContainer;
+    private static transient AbstractContainerMenu arclight$capturedContainer;
 
-    public static void captureWorkbenchContainer(Container container) {
+    public static void captureWorkbenchContainer(AbstractContainerMenu container) {
         arclight$capturedContainer = container;
     }
 
-    public static Container getWorkbenchContainer() {
+    public static AbstractContainerMenu getWorkbenchContainer() {
         try {
             return arclight$capturedContainer;
         } finally {
@@ -167,13 +167,13 @@ public class ArclightCaptures {
         }
     }
 
-    private static transient PlayerEntity containerOwner;
+    private static transient Player containerOwner;
 
-    public static void captureContainerOwner(PlayerEntity entity) {
+    public static void captureContainerOwner(Player entity) {
         containerOwner = entity;
     }
 
-    public static PlayerEntity getContainerOwner() {
+    public static Player getContainerOwner() {
         return containerOwner;
     }
 
@@ -216,13 +216,13 @@ public class ArclightCaptures {
         }
     }
 
-    private static transient DatapackCodec datapackCodec;
+    private static transient DataPackConfig datapackCodec;
 
-    public static void captureDatapackConfig(DatapackCodec codec) {
+    public static void captureDatapackConfig(DataPackConfig codec) {
         datapackCodec = codec;
     }
 
-    public static DatapackCodec getDatapackConfig() {
+    public static DataPackConfig getDatapackConfig() {
         try {
             return datapackCodec;
         } finally {
