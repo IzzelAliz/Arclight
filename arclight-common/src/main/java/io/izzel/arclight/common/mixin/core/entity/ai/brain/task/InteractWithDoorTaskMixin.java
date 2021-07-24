@@ -60,8 +60,7 @@ public abstract class InteractWithDoorTaskMixin {
         if (blockstate1.isIn(BlockTags.WOODEN_DOORS)) {
             DoorBlock doorblock1 = (DoorBlock) blockstate1.getBlock();
             if (!doorblock1.isOpen(blockstate1)) {
-                // todo check this blockpos1
-                EntityInteractEvent event = new org.bukkit.event.entity.EntityInteractEvent(((EntityBridge) entityIn).bridge$getBukkitEntity(), CraftBlock.at(entityIn.world, blockpos1));
+                EntityInteractEvent event = new org.bukkit.event.entity.EntityInteractEvent(((EntityBridge) entityIn).bridge$getBukkitEntity(), CraftBlock.at(entityIn.world, blockpos));
                 Bukkit.getPluginManager().callEvent(event);
                 if (event.isCancelled()) {
                     return;
