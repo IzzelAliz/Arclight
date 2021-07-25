@@ -11,7 +11,6 @@ import io.izzel.arclight.common.bridge.util.FoodStatsBridge;
 import io.izzel.arclight.common.bridge.world.TeleporterBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
-import io.izzel.arclight.common.mod.util.BlackholeNetHandler;
 import io.izzel.arclight.common.mod.util.ChestBlockDoubleInventoryHacks;
 import net.minecraft.block.NetherPortalBlock;
 import net.minecraft.block.PortalInfo;
@@ -80,7 +79,6 @@ import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.IWorldInfo;
 import net.minecraftforge.common.ForgeHooks;
-import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.ITeleporter;
 import net.minecraftforge.fml.hooks.BasicEventHooks;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
@@ -193,9 +191,6 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
         this.canPickUpLoot = true;
         this.maxHealthCache = this.getMaxHealth();
         this.arclight$initialized = true;
-        if ((Object) this instanceof FakePlayer) {
-            this.connection = new BlackholeNetHandler(this.getServer(), (ServerPlayerEntity) (Object) this);
-        }
     }
 
     @Override
