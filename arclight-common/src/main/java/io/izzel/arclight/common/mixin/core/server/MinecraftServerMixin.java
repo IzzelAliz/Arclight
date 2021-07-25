@@ -16,6 +16,7 @@ import joptsimple.OptionSet;
 import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
 import net.minecraft.SharedConstants;
+import net.minecraft.SystemReport;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -23,6 +24,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.protocol.status.ServerStatus;
+import net.minecraft.obfuscate.DontObfuscate;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerResources;
@@ -36,7 +38,6 @@ import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.server.players.GameProfileCache;
 import net.minecraft.util.Unit;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.util.profiling.SingleTickProfiler;
 import net.minecraft.util.thread.ReentrantBlockableEventLoop;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.DataPackConfig;
@@ -49,8 +50,8 @@ import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.level.storage.WorldData;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.world.StructureSpawnManager;
-import net.minecraftforge.fml.BrandingControl;
-import net.minecraftforge.fml.server.ServerLifecycleHooks;
+import net.minecraftforge.fmllegacy.BrandingControl;
+import net.minecraftforge.fmllegacy.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -97,31 +98,32 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Shadow protected abstract void updateStatusIcon(ServerStatus response);
     @Shadow private volatile boolean running;
     @Shadow private long lastOverloadWarning;
-    @Shadow @Final private static Logger LOGGER;
-    @Shadow private boolean delayProfilerStart;
-    @Shadow protected abstract void tickServer(BooleanSupplier hasTimeLeft);
+    @Shadow @Final static Logger LOGGER;
+    @Shadow public abstract void tickServer(BooleanSupplier hasTimeLeft);
     @Shadow protected abstract boolean haveTime();
     @Shadow private boolean mayHaveDelayedTasks;
     @Shadow private long delayedTasksMaxNextTickTime;
     @Shadow protected abstract void waitUntilNextTick();
     @Shadow private volatile boolean isReady;
     @Shadow protected abstract void onServerCrash(CrashReport report);
-    @Shadow public abstract CrashReport fillReport(CrashReport report);
     @Shadow public abstract File getServerDirectory();
     @Shadow private boolean stopped;
-    @Shadow protected abstract void stopServer();
-    @Shadow protected abstract void onServerExit();
+    @Shadow public abstract void stopServer();
+    @Shadow public abstract void onServerExit();
     @Shadow public abstract Commands getCommands();
-    @Shadow protected abstract void startProfilerTick(@org.jetbrains.annotations.Nullable SingleTickProfiler p_240773_1_);
     @Shadow private ProfilerFiller profiler;
-    @Shadow protected abstract void endProfilerTick(@org.jetbrains.annotations.Nullable SingleTickProfiler p_240795_1_);
     @Shadow protected abstract void updateMobSpawningFlags();
     @Shadow public abstract ServerLevel overworld();
     @Shadow @Final public Map<ResourceKey<Level>, ServerLevel> levels;
     @Shadow protected abstract void setupDebugLevel(WorldData p_240778_1_);
     @Shadow protected WorldData worldData;
-    @Shadow private static void setInitialSpawn(ServerLevel p_240786_0_, ServerLevelData p_240786_1_, boolean hasBonusChest, boolean p_240786_3_, boolean p_240786_4_) { }
     @Shadow(remap = false) @Deprecated public abstract void markWorldsDirty();
+    @Shadow private static void setInitialSpawn(ServerLevel p_177897_, ServerLevelData p_177898_, boolean p_177899_, boolean p_177900_) { }
+    @Shadow public abstract boolean isSpawningMonsters();
+    @Shadow public abstract boolean isSpawningAnimals();
+    @Shadow protected abstract void startMetricsRecordingTick();
+    @Shadow protected abstract void endMetricsRecordingTick();
+    @Shadow public abstract SystemReport fillSystemReport(SystemReport p_177936_);
     // @formatter:on
 
     public MinecraftServerMixin(String name) {
@@ -211,9 +213,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
                     currentTick = (int) (System.currentTimeMillis() / 50);
 
                     this.nextTickTime += 50L;
-                    SingleTickProfiler longtickdetector = SingleTickProfiler.createTickProfiler("Server");
-                    this.startProfilerTick(longtickdetector);
-                    this.profiler.startTick();
+                    this.startMetricsRecordingTick();
                     this.profiler.push("tick");
                     this.tickServer(this::haveTime);
                     this.profiler.popPush("nextTickWait");
@@ -221,8 +221,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
                     this.delayedTasksMaxNextTickTime = Math.max(Util.getMillis() + 50L, this.nextTickTime);
                     this.waitUntilNextTick();
                     this.profiler.pop();
-                    this.profiler.endTick();
-                    this.endProfilerTick(longtickdetector);
+                    this.endMetricsRecordingTick();
                     this.isReady = true;
                 }
                 ServerLifecycleHooks.handleServerStopping((MinecraftServer) (Object) this);
@@ -240,11 +239,12 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
 
             CrashReport crashreport;
             if (throwable1 instanceof ReportedException) {
-                crashreport = this.fillReport(((ReportedException) throwable1).getReport());
+                crashreport = ((ReportedException) throwable1).getReport();
             } else {
-                crashreport = this.fillReport(new CrashReport("Exception in server tick loop", throwable1));
+                crashreport = new CrashReport("Exception in server tick loop", throwable1);
             }
 
+            this.fillSystemReport(crashreport.getSystemReport());
             File file1 = new File(new File(this.getServerDirectory(), "crash-reports"), "crash-" + (new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date()) + "-server.txt");
             if (crashreport.saveToFile(file1)) {
                 LOGGER.error("This crash report has been saved to: {}", file1.getAbsolutePath());
@@ -362,7 +362,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
 
         for (ServerLevel serverWorld : this.levels.values()) {
             if (((WorldBridge) serverWorld).bridge$getWorld().getKeepSpawnInMemory()) {
-                ForcedChunksSavedData forcedchunkssavedata = serverWorld.getDataStorage().get(ForcedChunksSavedData::new, "chunks");
+                ForcedChunksSavedData forcedchunkssavedata = serverWorld.getDataStorage().get(ForcedChunksSavedData::load, "chunks");
                 if (forcedchunkssavedata != null) {
                     LongIterator longiterator = forcedchunkssavedata.getChunks().iterator();
 
@@ -396,7 +396,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         worldborder.applySettings(worldInfo.getWorldBorder());
         if (!worldInfo.isInitialized()) {
             try {
-                setInitialSpawn(serverWorld, worldInfo, generatorSettings.generateBonusChest(), flag, true);
+                setInitialSpawn(serverWorld, worldInfo, generatorSettings.generateBonusChest(), flag);
                 worldInfo.setInitialized(true);
                 if (flag) {
                     this.setupDebugLevel(this.worldData);
@@ -436,7 +436,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
 
         this.executeModerately();
 
-        ForcedChunksSavedData forcedchunkssavedata = serverWorld.getDataStorage().get(ForcedChunksSavedData::new, "chunks");
+        ForcedChunksSavedData forcedchunkssavedata = serverWorld.getDataStorage().get(ForcedChunksSavedData::load, "chunks");
         if (forcedchunkssavedata != null) {
             LongIterator longiterator = forcedchunkssavedata.getChunks().iterator();
 
@@ -450,7 +450,8 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         this.executeModerately();
         listener.stop();
         serverchunkprovider.getLightEngine().setTaskPerBatch(5);
-        this.updateMobSpawningFlags();
+        // this.updateMobSpawningFlags();
+        serverWorld.setSpawnSettings(this.isSpawningMonsters(), this.isSpawningAnimals());
         this.forceTicks = false;
     }
 
@@ -470,6 +471,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
      * @author IzzelAliz
      * @reason our branding, no one should fuck this up
      */
+    @DontObfuscate
     @Overwrite
     public String getServerModName() {
         return BrandingControl.getServerBranding() + " arclight";

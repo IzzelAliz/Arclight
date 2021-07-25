@@ -78,7 +78,7 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
 
     @Inject(method = "setCanPickUpLoot", at = @At("HEAD"))
     public void arclight$setPickupLoot(boolean canPickup, CallbackInfo ci) {
-        super.canPickUpLoot = canPickup;
+        super.bukkitPickUpLoot = canPickup;
     }
 
     /**
@@ -87,7 +87,7 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
      */
     @Overwrite
     public boolean canPickUpLoot() {
-        return super.canPickUpLoot;
+        return super.bukkitPickUpLoot;
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))

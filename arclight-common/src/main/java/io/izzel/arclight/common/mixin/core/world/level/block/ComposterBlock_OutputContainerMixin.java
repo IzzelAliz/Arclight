@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
-import io.izzel.arclight.common.mixin.core.inventory.InventoryMixin;
+import io.izzel.arclight.common.mixin.core.world.SimpleContainerMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LevelAccessor;
@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(targets = "net.minecraft.world.level.block.ComposterBlock$OutputContainer")
-public abstract class ComposterBlock_OutputContainerMixin extends InventoryMixin {
+public abstract class ComposterBlock_OutputContainerMixin extends SimpleContainerMixin {
 
     // @formatter:off
     @Shadow @Final private BlockState state;

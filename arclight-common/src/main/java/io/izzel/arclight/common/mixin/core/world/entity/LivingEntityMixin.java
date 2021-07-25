@@ -187,7 +187,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     public boolean forceDrops;
     public CraftAttributeMap craftAttributes;
     public boolean collides;
-    public boolean canPickUpLoot;
+    public boolean bukkitPickUpLoot;
     public Set<UUID> collidableExemptions = new HashSet<>();
 
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;setHealth(F)V"))
@@ -396,7 +396,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
 
     @Override
     public boolean bridge$canPickUpLoot() {
-        return canPickUpLoot;
+        return bukkitPickUpLoot;
     }
 
     @Override

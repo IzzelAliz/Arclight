@@ -124,6 +124,8 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
     @Shadow public abstract Either<net.minecraft.world.entity.player.Player.BedSleepingProblem, Unit> startSleepInBed(BlockPos at);
     @Shadow public int sleepCounter;
     @Shadow public abstract GameProfile getGameProfile();
+    @Shadow public abstract Inventory getInventory();
+    @Shadow public abstract Abilities getAbilities();
     // @formatter:on
 
     public boolean fauxSleeping;

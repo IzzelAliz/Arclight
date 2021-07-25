@@ -203,6 +203,8 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow protected abstract void unsetRemoved();
     @Shadow public abstract double getY(double p_20228_);
     @Shadow public abstract void gameEvent(GameEvent p_146853_, @org.jetbrains.annotations.Nullable Entity p_146854_);
+    @Shadow public abstract void setTicksFrozen(int p_146918_);
+    @Shadow public abstract void setSharedFlagOnFire(boolean p_146869_);
     // @formatter:on
 
     private static final int CURRENT_LEVEL = 2;
