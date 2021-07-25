@@ -718,7 +718,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
 
     @Inject(method = "processTryUseItemOnBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/management/PlayerInteractionManager;func_219441_a(Lnet/minecraft/entity/player/ServerPlayerEntity;Lnet/minecraft/world/World;Lnet/minecraft/item/ItemStack;Lnet/minecraft/util/Hand;Lnet/minecraft/util/math/BlockRayTraceResult;)Lnet/minecraft/util/ActionResultType;"))
     private void arclight$checkDistance(CPlayerTryUseItemOnBlockPacket packetIn, CallbackInfo ci) {
-        this.player.stopActiveHand();
+        this.player.resetActiveHand();
     }
 
     private int limitedPackets;
@@ -1594,7 +1594,10 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 switch (event.getResult()) {
                     case ALLOW: {
                         flag3 = true;
+                        break;
                     }
+                    case DEFAULT:
+                        break;
                     case DENY: {
                         if (packetplayinsetcreativeslot.getSlotId() >= 0) {
                             this.player.connection.sendPacket(new SSetSlotPacket(this.player.container.windowId, packetplayinsetcreativeslot.getSlotId(), this.player.container.getSlot(packetplayinsetcreativeslot.getSlotId()).getStack()));
