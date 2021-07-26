@@ -397,6 +397,7 @@
     "util.FoodStatsMixin",
     "util.IndirectEntityDamageSourceMixin",
     "util.IWorldPosCallableMixin",
+    "util.WeightedListMixin",
     "util.text.ColorMixin",
     "util.text.ITextComponentMixin",
     "util.text.StyleMixin",
