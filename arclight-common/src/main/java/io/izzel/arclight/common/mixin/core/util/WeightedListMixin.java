@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.util;
 
 import com.google.common.collect.Lists;
-import io.izzel.arclight.common.bridge.util.IWeightedList;
+import io.izzel.arclight.common.bridge.util.WeightedListBridge;
 import net.minecraft.util.WeightedList;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,10 +17,13 @@ import java.util.Random;
  *     @see WeightedList
  */
 @Mixin(WeightedList.class)
-public class WeightedListMixin<U> implements IWeightedList {
+public class WeightedListMixin<U> implements WeightedListBridge {
+
+    // @formatter:off
     @Shadow @Final protected List<WeightedList.Entry<U>> weightedEntries;
-    @Unique
-    private boolean isUnsafe;
+    // @formatter:on
+
+    @Unique private boolean isUnsafe;
 
     @Inject(method = "<init>()V", at = @At("TAIL"))
     public void arclight$constructor(CallbackInfo ci) {
@@ -34,29 +37,30 @@ public class WeightedListMixin<U> implements IWeightedList {
 
     public WeightedList<U> getWeightedList(List<WeightedList.Entry<U>> weightedEntries, boolean isUnsafe) {
         WeightedList<U> weightedList = new WeightedList<U>(weightedEntries);
-        ((IWeightedList) weightedList).setUnsafe(isUnsafe);
+        ((WeightedListBridge) weightedList).bridge$setUnsafe(isUnsafe);
         return weightedList;
     }
 
     /**
      * @author yuesha-yc
+     * @reason Re-write this method to work on a clone of entries for concurrency
      */
     @Overwrite()
     public WeightedList<U> randomizeWithWeight(Random rand) {
         List<WeightedList.Entry<U>> list = this.isUnsafe ? Lists.newArrayList(this.weightedEntries) : this.weightedEntries;
         list.forEach(entry -> entry.generateChance(rand.nextFloat()));
         list.sort(Comparator.comparingDouble(WeightedList.Entry::getChance));
-        IWeightedList weightedList = this;
+        WeightedListBridge weightedList = this;
         return this.isUnsafe ? getWeightedList(list, this.isUnsafe) : (WeightedList<U>) weightedList;
     }
 
     @Override
-    public void setUnsafe(boolean unsafe) {
+    public void bridge$setUnsafe(boolean unsafe) {
         isUnsafe = unsafe;
     }
 
     @Override
-    public boolean getIsUnsafe() {
+    public boolean bridge$getIsUnsafe() {
         return isUnsafe;
     }
 }
