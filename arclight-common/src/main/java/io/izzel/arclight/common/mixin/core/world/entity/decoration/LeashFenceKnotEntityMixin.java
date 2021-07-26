@@ -12,19 +12,11 @@ import net.minecraft.world.phys.AABB;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
 @Mixin(LeashFenceKnotEntity.class)
 public abstract class LeashFenceKnotEntityMixin extends HangingEntityMixin {
-
-    @Inject(method = "recalculateBoundingBox", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;updateChunkPos(Lnet/minecraft/world/entity/Entity;)V"))
-    private void arclight$checkIfValid(CallbackInfo ci) {
-        if (!valid) ci.cancel();
-    }
 
     /**
      * @author IzzelAliz

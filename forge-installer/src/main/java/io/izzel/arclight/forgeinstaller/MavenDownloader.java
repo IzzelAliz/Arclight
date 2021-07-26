@@ -54,8 +54,7 @@ public class MavenDownloader implements Supplier<Path> {
         joiner.add("");
         for (int i = 0; i < exceptions.size(); i++) {
             Exception exception = exceptions.get(i);
-            if (exception instanceof LocalizedException) {
-                LocalizedException local = (LocalizedException) exception;
+            if (exception instanceof LocalizedException local) {
                 String format = ArclightLocale.getInstance().format(local.node(), local.args());
                 joiner.add("(" + (i + 1) + ") " + format);
             } else {

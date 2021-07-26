@@ -24,8 +24,7 @@ public abstract class CommandBlockMixin {
     public void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, BlockPos fromPos, boolean isMoving) {
         if (!worldIn.isClientSide) {
             BlockEntity tileentity = worldIn.getBlockEntity(pos);
-            if (tileentity instanceof CommandBlockEntity) {
-                CommandBlockEntity commandblocktileentity = (CommandBlockEntity) tileentity;
+            if (tileentity instanceof CommandBlockEntity commandblocktileentity) {
                 boolean flag = worldIn.hasNeighborSignal(pos);
                 boolean flag1 = commandblocktileentity.isPowered();
 

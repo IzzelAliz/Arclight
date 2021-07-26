@@ -24,7 +24,7 @@ public class FollowOwnerGoalMixin {
 
     private transient boolean arclight$cancelled;
 
-    @Redirect(method = "maybeTeleportTo", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/TamableAnimal;setLocationAndAngles(DDDFF)V"))
+    @Redirect(method = "maybeTeleportTo", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/TamableAnimal;moveTo(DDDFF)V"))
     public void arclight$teleport(TamableAnimal tameableEntity, double x, double y, double z, float yaw, float pitch) {
         CraftEntity craftEntity = ((EntityBridge) this.tamable).bridge$getBukkitEntity();
         Location location = new Location(craftEntity.getWorld(), x, y, z, yaw, pitch);

@@ -39,7 +39,7 @@ public abstract class EntityTypeMixin<T extends Entity> implements EntityTypeBri
 
     @Inject(method = "spawn(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/network/chat/Component;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/MobSpawnType;ZZ)Lnet/minecraft/world/entity/Entity;",
         cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At("RETURN"),
-        slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;func_242417_l(Lnet/minecraft/world/entity/Entity;)V")))
+        slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V")))
     private void arclight$returnIfSuccess(ServerLevel worldIn, CompoundTag compound, Component customName, Player playerIn, BlockPos pos, MobSpawnType reason, boolean p_220342_7_, boolean p_220342_8_, CallbackInfoReturnable<T> cir, T t) {
         if (t != null) {
             cir.setReturnValue(t.isRemoved() ? null : t);

@@ -1,8 +1,8 @@
 package io.izzel.arclight.impl.mixin.optimization.general.activationrange;
 
 import io.izzel.arclight.impl.bridge.EntityBridge_ActivationRange;
-import net.minecraft.entity.Entity;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import org.spigotmc.ActivationRange;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -11,22 +11,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.BooleanSupplier;
 
-@Mixin(ServerWorld.class)
+@Mixin(ServerLevel.class)
 public class ServerWorldMixin_ActivationRange {
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", remap = false, target = "Lit/unimi/dsi/fastutil/ints/Int2ObjectMap;int2ObjectEntrySet()Lit/unimi/dsi/fastutil/objects/ObjectSet;"))
+    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/server/level/ServerLevel;entityTickList:Lnet/minecraft/world/level/entity/EntityTickList;"))
     private void activationRange$activateEntity(BooleanSupplier hasTimeLeft, CallbackInfo ci) {
-        ActivationRange.activateEntities((ServerWorld) (Object) this);
+        ActivationRange.activateEntities((ServerLevel) (Object) this);
     }
 
-    @Inject(method = "updateEntity", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;forceSetPosition(DDD)V"))
+    @Inject(method = "tickNonPassenger", cancellable = true, at = @At(value = "HEAD"))
     private void activationRange$inactiveTick(Entity entityIn, CallbackInfo ci) {
         if (!ActivationRange.checkIfActive(entityIn)) {
-            if (entityIn.addedToChunk) {
-                ++entityIn.ticksExisted;
-                if (entityIn.canUpdate()) {
-                    ((EntityBridge_ActivationRange) entityIn).bridge$inactiveTick();
-                }
+            ++entityIn.tickCount;
+            if (entityIn.canUpdate()) {
+                ((EntityBridge_ActivationRange) entityIn).bridge$inactiveTick();
             }
             ci.cancel();
         }

@@ -39,7 +39,7 @@ public abstract class VillagerMixin extends AbstractVillagerMixin {
         }
     }
 
-    @Inject(method = "thunderHit", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;func_242417_l(Lnet/minecraft/world/entity/Entity;)V"))
+    @Inject(method = "thunderHit", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V"))
     private void arclight$transformWitch(ServerLevel serverWorld, LightningBolt lightningBolt, CallbackInfo ci, Witch witchEntity) {
         if (CraftEventFactory.callEntityTransformEvent((net.minecraft.world.entity.npc.Villager) (Object) this, witchEntity, EntityTransformEvent.TransformReason.LIGHTNING).isCancelled()) {
             ci.cancel();
@@ -48,7 +48,7 @@ public abstract class VillagerMixin extends AbstractVillagerMixin {
         }
     }
 
-    @Inject(method = "trySpawnGolem", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;func_242417_l(Lnet/minecraft/world/entity/Entity;)V"))
+    @Inject(method = "trySpawnGolem", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V"))
     private void arclight$ironGolemReason(ServerLevel world, CallbackInfoReturnable<IronGolem> cir) {
         ((WorldBridge) world).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.VILLAGE_DEFENSE);
     }

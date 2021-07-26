@@ -7,6 +7,33 @@ import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.world.ExplosionBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.FallingBlockEntity;
+import net.minecraft.world.entity.item.PrimedTnt;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.ProtectionEnchantment;
+import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.ExplosionDamageCalculator;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BaseFireBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -29,32 +56,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Mth;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.item.FallingBlockEntity;
-import net.minecraft.world.entity.item.PrimedTnt;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.ProtectionEnchantment;
-import net.minecraft.world.level.Explosion;
-import net.minecraft.world.level.ExplosionDamageCalculator;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BaseFireBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.level.storage.loot.LootContext;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 
 @Mixin(Explosion.class)
 public abstract class ExplosionMixin implements ExplosionBridge {
@@ -77,9 +78,9 @@ public abstract class ExplosionMixin implements ExplosionBridge {
     @Shadow @Final private boolean fire;
     @Shadow @Final private Random random;
     @Shadow private static void addBlockDrops(ObjectArrayList<Pair<ItemStack, BlockPos>> dropPositionArray, ItemStack stack, BlockPos pos) { }
+    @Shadow @Final private ExplosionDamageCalculator damageCalculator;
     // @formatter:on
 
-    @Shadow @Final private ExplosionDamageCalculator damageCalculator;
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/Entity;DDDFZLnet/minecraft/world/level/Explosion$BlockInteraction;)V",
         at = @At("RETURN"))
@@ -96,6 +97,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
         if (this.radius < 0.1F) {
             return;
         }
+        this.level.gameEvent(this.source, GameEvent.EXPLODE, new BlockPos(this.x, this.y, this.z));
         Set<BlockPos> set = Sets.newHashSet();
         int i = 16;
 
@@ -119,6 +121,11 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                             BlockPos blockpos = new BlockPos(d4, d6, d8);
                             BlockState blockstate = this.level.getBlockState(blockpos);
                             FluidState fluidstate = this.level.getFluidState(blockpos);
+
+                            if (!this.level.isInWorldBounds(blockpos)) {
+                                break;
+                            }
+
                             Optional<Float> optional = this.damageCalculator.getBlockExplosionResistance((Explosion) (Object) this, this.level, blockpos, blockstate, fluidstate);
                             if (optional.isPresent()) {
                                 f -= (optional.get() + 0.3F) * 0.3F;
@@ -151,12 +158,12 @@ public abstract class ExplosionMixin implements ExplosionBridge {
 
         for (Entity entity : list) {
             if (!entity.ignoreExplosion()) {
-                double d12 = Mth.sqrt(entity.distanceToSqr(vec3d)) / f3;
+                double d12 = Math.sqrt(entity.distanceToSqr(vec3d)) / f3;
                 if (d12 <= 1.0D) {
                     double d5 = entity.getX() - this.x;
                     double d7 = entity.getEyeY() - this.y;
                     double d9 = entity.getZ() - this.z;
-                    double d13 = Mth.sqrt(d5 * d5 + d7 * d7 + d9 * d9);
+                    double d13 = Math.sqrt(d5 * d5 + d7 * d7 + d9 * d9);
                     if (d13 != 0.0D) {
                         d5 = d5 / d13;
                         d7 = d7 / d13;
@@ -178,9 +185,8 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                         }
 
                         entity.setDeltaMovement(entity.getDeltaMovement().add(d5 * d11, d7 * d11, d9 * d11));
-                        if (entity instanceof Player) {
-                            Player playerentity = (Player) entity;
-                            if (!playerentity.isSpectator() && (!playerentity.isCreative() || !playerentity.abilities.flying)) {
+                        if (entity instanceof Player playerentity) {
+                            if (!playerentity.isSpectator() && (!playerentity.isCreative() || !playerentity.getAbilities().flying)) {
                                 this.hitPlayers.put(playerentity, new Vec3(d5 * d10, d7 * d10, d9 * d10));
                             }
                         }
@@ -231,12 +237,12 @@ public abstract class ExplosionMixin implements ExplosionBridge {
             for (BlockPos blockpos : this.toBlow) {
                 BlockState blockstate = this.level.getBlockState(blockpos);
                 Block block = blockstate.getBlock();
-                if (!blockstate.isAir(this.level, blockpos)) {
+                if (!blockstate.isAir()) {
                     BlockPos blockpos1 = blockpos.immutable();
                     this.level.getProfiler().push("explosion_blocks");
                     if (blockstate.canDropFromExplosion(this.level, blockpos, (Explosion) (Object) this) && this.level instanceof ServerLevel) {
-                        BlockEntity tileentity = blockstate.hasTileEntity() ? this.level.getBlockEntity(blockpos) : null;
-                        LootContext.Builder lootcontext$builder = (new LootContext.Builder((ServerLevel)this.level)).withRandom(this.level.random).withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(blockpos)).withParameter(LootContextParams.TOOL, ItemStack.EMPTY).withOptionalParameter(LootContextParams.BLOCK_ENTITY, tileentity).withOptionalParameter(LootContextParams.THIS_ENTITY, this.source);
+                        BlockEntity tileentity = blockstate.hasBlockEntity() ? this.level.getBlockEntity(blockpos) : null;
+                        LootContext.Builder lootcontext$builder = (new LootContext.Builder((ServerLevel) this.level)).withRandom(this.level.random).withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(blockpos)).withParameter(LootContextParams.TOOL, ItemStack.EMPTY).withOptionalParameter(LootContextParams.BLOCK_ENTITY, tileentity).withOptionalParameter(LootContextParams.THIS_ENTITY, this.source);
                         if (this.blockInteraction == Explosion.BlockInteraction.DESTROY || yield < 1.0F) {
                             lootcontext$builder.withParameter(LootContextParams.EXPLOSION_RADIUS, 1.0F / yield);
                         }
@@ -247,6 +253,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                     }
 
                     blockstate.onBlockExploded(this.level, blockpos, (Explosion) (Object) this);
+                    block.wasExploded(this.level, blockpos, (Explosion) (Object) this);
                     this.level.getProfiler().pop();
                 }
             }

@@ -191,8 +191,7 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
             }
             for (MethodNode method : classNode.methods) {
                 for (AbstractInsnNode instruction : method.instructions) {
-                    if (instruction instanceof FieldInsnNode) {
-                        FieldInsnNode node = (FieldInsnNode) instruction;
+                    if (instruction instanceof FieldInsnNode node) {
                         node.name = map.getOrDefault(node.name, node.name);
                     }
                 }
@@ -241,8 +240,7 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
     private void remapCtor(ClassNode classNode, MethodNode methodNode) {
         boolean initialized = false;
         for (AbstractInsnNode node : methodNode.instructions) {
-            if (node instanceof MethodInsnNode) {
-                MethodInsnNode methodInsnNode = (MethodInsnNode) node;
+            if (node instanceof MethodInsnNode methodInsnNode) {
                 if (methodInsnNode.name.equals("arclight$constructor")) {
                     if (initialized) {
                         throw new ClassFormatError("Duplicate constructor call");

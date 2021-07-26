@@ -13,7 +13,3 @@ repositories {
 dependencies {
     implementation 'org.spongepowered:configurate-hocon:3.6.1'
 }
-
-jar {
-    from { configurations.implementation.collect { it.isDirectory() ? it : zipTree(it) } }
-}

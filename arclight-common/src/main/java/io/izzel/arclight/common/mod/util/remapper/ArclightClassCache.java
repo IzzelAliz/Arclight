@@ -23,7 +23,6 @@ import java.net.JarURLConnection;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -97,7 +96,7 @@ public abstract class ArclightClassCache implements AutoCloseable {
                 String store;
                 Path version = basePath.resolve(".version");
                 if (Files.exists(version)) {
-                    store = new String(Files.readAllBytes(version), StandardCharsets.UTF_8);
+                    store = Files.readString(version);
                 } else {
                     store = null;
                 }
@@ -117,7 +116,7 @@ public abstract class ArclightClassCache implements AutoCloseable {
                     Files.createDirectories(blob);
                 }
                 if (obsolete) {
-                    Files.write(version, current.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
+                    Files.writeString(version, current, StandardOpenOption.CREATE);
                     ArclightMod.LOGGER.info(MARKER, "Obsolete plugin class cache is cleared");
                 }
             } catch (IOException e) {

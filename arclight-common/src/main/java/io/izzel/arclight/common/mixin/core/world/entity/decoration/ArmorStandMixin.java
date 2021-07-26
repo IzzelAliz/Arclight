@@ -162,13 +162,14 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
     @Override
     public void setSlot(net.minecraft.world.entity.EquipmentSlot slotIn, ItemStack stack, boolean silent) {
         switch (slotIn.getType()) {
-            case HAND:
+            case HAND -> {
                 this.bridge$playEquipSound(stack, silent);
                 this.handItems.set(slotIn.getIndex(), stack);
-                break;
-            case ARMOR:
+            }
+            case ARMOR -> {
                 this.bridge$playEquipSound(stack, silent);
                 this.armorItems.set(slotIn.getIndex(), stack);
+            }
         }
 
     }

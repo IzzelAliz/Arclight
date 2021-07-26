@@ -1,13 +1,16 @@
 package io.izzel.arclight.common.bridge.tileentity;
 
-import java.util.List;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
+
+import java.util.List;
 
 public interface AbstractFurnaceTileEntityBridge {
 
-    List<Recipe<?>> bridge$dropExp(Level world, Vec3 pos, Player entity, ItemStack itemStack, int amount);
+    List<Recipe<?>> bridge$dropExp(ServerPlayer entity, ItemStack itemStack, int amount);
+
+    int bridge$getBurnDuration(ItemStack stack);
+
+    boolean bridge$isLit();
 }

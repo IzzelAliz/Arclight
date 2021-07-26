@@ -1,23 +1,23 @@
 package io.izzel.arclight.impl.mixin.optimization.general.activationrange.entity;
 
 import io.izzel.arclight.impl.mixin.optimization.general.activationrange.EntityMixin_ActivationRange;
-import net.minecraft.entity.projectile.AbstractArrowEntity;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(AbstractArrowEntity.class)
+@Mixin(AbstractArrow.class)
 public abstract class AbstractArrowEntityMixin_ActivationRange extends EntityMixin_ActivationRange {
 
     // @formatter:off
     @Shadow public boolean inGround;
-    @Shadow protected int timeInGround;
+    @Shadow protected int inGroundTime;
     // @formatter:on
 
     @Override
     public void inactiveTick() {
         super.inactiveTick();
         if (this.inGround) {
-            this.timeInGround++;
+            this.inGroundTime++;
         }
     }
 }

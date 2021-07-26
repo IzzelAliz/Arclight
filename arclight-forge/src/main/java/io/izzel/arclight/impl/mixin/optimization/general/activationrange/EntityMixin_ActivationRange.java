@@ -3,10 +3,10 @@ package io.izzel.arclight.impl.mixin.optimization.general.activationrange;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.impl.bridge.EntityBridge_ActivationRange;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import org.spigotmc.ActivationRange;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -18,11 +18,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class EntityMixin_ActivationRange implements EntityBridge_ActivationRange {
 
     // @formatter:off
-    @Shadow public abstract void recalculateSize();
-    @Shadow public int ticksExisted;
-    @Shadow public abstract void remove();
-    @Shadow public World world;
-    @Shadow public abstract AxisAlignedBB getBoundingBox();
+    @Shadow public abstract void refreshDimensions();
+    @Shadow public int tickCount;
+    @Shadow public Level level;
+    @Shadow public abstract AABB getBoundingBox();
+    @Shadow public abstract void discard();
     // @formatter:on
 
     public ActivationRange.ActivationType activationType;
@@ -30,7 +30,7 @@ public abstract class EntityMixin_ActivationRange implements EntityBridge_Activa
     public long activatedTick = Integer.MIN_VALUE;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void arclight$init(EntityType<?> entityTypeIn, World worldIn, CallbackInfo ci) {
+    private void arclight$init(EntityType<?> entityTypeIn, Level worldIn, CallbackInfo ci) {
         activationType = ActivationRange.initializeEntityActivationType((Entity) (Object) this);
         if (worldIn != null) {
             this.defaultActivationState = ActivationRange.initializeEntityActivationState((Entity) (Object) this, ((WorldBridge) worldIn).bridge$spigotConfig());

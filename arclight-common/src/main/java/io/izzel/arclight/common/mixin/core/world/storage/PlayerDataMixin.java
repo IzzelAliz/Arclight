@@ -2,6 +2,11 @@ package io.izzel.arclight.common.mixin.core.world.storage;
 
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.world.storage.PlayerDataBridge;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.storage.PlayerDataStorage;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.spongepowered.asm.mixin.Final;
@@ -13,11 +18,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.File;
 import java.io.FileInputStream;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtIo;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.storage.PlayerDataStorage;
 
 @Mixin(PlayerDataStorage.class)
 public class PlayerDataMixin implements PlayerDataBridge {
@@ -32,7 +32,7 @@ public class PlayerDataMixin implements PlayerDataBridge {
         if (player instanceof ServerPlayer) {
             CraftPlayer craftPlayer = ((ServerPlayerEntityBridge) player).bridge$getBukkitEntity();
             // Only update first played if it is older than the one we have
-            long modified = new File(this.playerDir, player.getUUID().toString() + ".dat").lastModified();
+            long modified = new File(this.playerDir, player.getUUID() + ".dat").lastModified();
             if (modified < craftPlayer.getFirstPlayed()) {
                 craftPlayer.setFirstPlayed(modified);
             }

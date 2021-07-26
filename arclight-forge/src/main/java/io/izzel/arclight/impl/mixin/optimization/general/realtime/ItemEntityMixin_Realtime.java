@@ -1,7 +1,7 @@
 package io.izzel.arclight.impl.mixin.optimization.general.realtime;
 
 import io.izzel.arclight.common.mod.ArclightConstants;
-import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.world.entity.item.ItemEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,7 +16,7 @@ public class ItemEntityMixin_Realtime {
 
     private int lastTick = ArclightConstants.currentTick - 1;
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/entity/Entity;tick()V"))
+    @Inject(method = "tick", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/Entity;tick()V"))
     private void arclight$useWallTime(CallbackInfo ci) {
         int elapsedTicks = ArclightConstants.currentTick - this.lastTick - 1;
         if (elapsedTicks < 0) {

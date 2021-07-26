@@ -577,8 +577,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 if (entity1 instanceof net.minecraft.world.entity.player.Player) {
                     this.lastHurtByPlayerTime = 100;
                     this.lastHurtByPlayer = (net.minecraft.world.entity.player.Player) entity1;
-                } else if (entity1 instanceof TamableAnimal) {
-                    TamableAnimal wolfentity = (TamableAnimal) entity1;
+                } else if (entity1 instanceof TamableAnimal wolfentity) {
                     if (wolfentity.isTame()) {
                         this.lastHurtByPlayerTime = 100;
                         LivingEntity livingentity = wolfentity.getOwner();
@@ -910,8 +909,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 if (!itemstack1.isEmpty()) {
                     itemstack1.shrink(1);
                 }
-                if (itemstack != null && (Object) this instanceof ServerPlayer) {
-                    ServerPlayer serverplayerentity = (ServerPlayer) (Object) this;
+                if (itemstack != null && (Object) this instanceof ServerPlayer serverplayerentity) {
                     serverplayerentity.awardStat(Stats.ITEM_USED.get(Items.TOTEM_OF_UNDYING));
                     CriteriaTriggers.USED_TOTEM.trigger(serverplayerentity, itemstack);
                 }

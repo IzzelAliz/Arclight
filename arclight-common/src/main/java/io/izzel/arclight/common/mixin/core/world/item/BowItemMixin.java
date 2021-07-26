@@ -42,8 +42,7 @@ public abstract class BowItemMixin extends ProjectileWeaponItem {
      */
     @Overwrite
     public void releaseUsing(ItemStack stack, Level worldIn, LivingEntity entityLiving, int timeLeft) {
-        if (entityLiving instanceof Player) {
-            Player playerentity = (Player) entityLiving;
+        if (entityLiving instanceof Player playerentity) {
             boolean flag = playerentity.getAbilities().instabuild || EnchantmentHelper.getItemEnchantmentLevel(Enchantments.INFINITY_ARROWS, stack) > 0;
             ItemStack itemstack = playerentity.getProjectile(stack);
 

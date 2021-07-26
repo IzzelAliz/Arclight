@@ -557,7 +557,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             File file2;
             File file = this.server.getWorldPath(LevelResource.PLAYER_STATS_DIR).toFile();
             File file1 = new File(file, uuid + ".json");
-            if (!file1.exists() && (file2 = new File(file, String.valueOf(displayName) + ".json")).exists() && file2.isFile()) {
+            if (!file1.exists() && (file2 = new File(file, displayName + ".json")).exists() && file2.isFile()) {
                 file2.renameTo(file1);
             }
             serverstatisticmanager = new ServerStatsCounter(this.server, file1);

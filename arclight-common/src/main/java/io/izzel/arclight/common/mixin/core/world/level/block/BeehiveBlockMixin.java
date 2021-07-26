@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(BeehiveBlock.class)
 public class BeehiveBlockMixin {
 
-    @Redirect(method = "angerNearbyBees", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/Bee;setAttackTarget(Lnet/minecraft/world/entity/LivingEntity;)V"))
+    @Redirect(method = "angerNearbyBees", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/Bee;setTarget(Lnet/minecraft/world/entity/LivingEntity;)V"))
     private void arclight$targetReason(Bee beeEntity, LivingEntity livingEntity) {
         ((MobEntityBridge) beeEntity).bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.CLOSEST_PLAYER, true);
         beeEntity.setTarget(livingEntity);

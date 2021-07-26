@@ -50,7 +50,7 @@ dependencies {
     implementation "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
     implementation 'org.jetbrains:annotations:19.0.0'
 
-    implementation 'org.spongepowered:mixin:0.8.2'
+    implementation 'org.spongepowered:mixin:0.8.3'
     annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
 
     implementation 'com.github.ArclightTeam:mixin-tools:1.0.0'

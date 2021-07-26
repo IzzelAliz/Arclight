@@ -431,8 +431,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
     @Inject(method = "stopSleepInBed", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/player/Player;sleepCounter:I"))
     private void arclight$wakeup(boolean flag, boolean flag1, CallbackInfo ci) {
         BlockPos blockPos = this.getSleepingPos().orElse(null);
-        if (this.bridge$getBukkitEntity() instanceof Player) {
-            Player player = (Player) this.bridge$getBukkitEntity();
+        if (this.bridge$getBukkitEntity() instanceof Player player) {
             Block bed;
             if (blockPos != null) {
                 bed = CraftBlock.at(this.level, blockPos);

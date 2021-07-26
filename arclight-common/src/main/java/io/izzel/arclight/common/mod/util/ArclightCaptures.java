@@ -9,6 +9,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.DataPackConfig;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import org.bukkit.TreeType;
 import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
@@ -228,6 +229,21 @@ public class ArclightCaptures {
         } finally {
             datapackCodec = null;
         }
+    }
+
+    private static transient BlockEntity tickingBlockEntity;
+
+    public static void captureTickingBlockEntity(BlockEntity entity) {
+        tickingBlockEntity = entity;
+    }
+
+    public static void resetTickingBlockEntity() {
+        tickingBlockEntity = null;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends BlockEntity> T getTickingBlockEntity() {
+        return (T) tickingBlockEntity;
     }
 
     private static void recapture(String type) {

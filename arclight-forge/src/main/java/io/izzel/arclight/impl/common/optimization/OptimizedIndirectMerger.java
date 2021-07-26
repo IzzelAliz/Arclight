@@ -2,13 +2,13 @@ package io.izzel.arclight.impl.common.optimization;
 
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
-import net.minecraft.util.math.shapes.IDoubleListMerger;
+import net.minecraft.world.phys.shapes.IndexMerger;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * @author jellysquid3 (LGPLv3)
  */
-public class OptimizedIndirectMerger implements IDoubleListMerger {
+public class OptimizedIndirectMerger implements IndexMerger {
 
     private final double[] merged;
     private final int[] indicesFirst;
@@ -108,12 +108,12 @@ public class OptimizedIndirectMerger implements IDoubleListMerger {
     }
 
     @Override
-    public @NotNull DoubleList func_212435_a() {
+    public @NotNull DoubleList getList() {
         return this.pairs;
     }
 
     @Override
-    public boolean forMergedIndexes(@NotNull IConsumer consumer) {
+    public boolean forMergedIndexes(@NotNull IndexConsumer consumer) {
         int l = this.pairs.size() - 1;
 
         for (int i = 0; i < l; i++) {
@@ -123,5 +123,10 @@ public class OptimizedIndirectMerger implements IDoubleListMerger {
         }
 
         return true;
+    }
+
+    @Override
+    public int size() {
+        return this.pairs.size();
     }
 }

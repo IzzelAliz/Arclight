@@ -3,10 +3,10 @@ package io.izzel.arclight.impl.mixin.optimization.general.activationrange.entity
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.impl.mixin.optimization.general.activationrange.EntityMixin_ActivationRange;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.event.ForgeEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,15 +24,15 @@ public abstract class ItemEntityMixin_ActivationRange extends EntityMixin_Activa
     @Shadow public abstract ItemStack getItem();
     // @formatter:on
 
-    @Inject(method = "<init>(Lnet/minecraft/entity/EntityType;Lnet/minecraft/world/World;)V", at = @At("RETURN"))
-    private void activationRange$init(EntityType<? extends ItemEntity> entityType, World world, CallbackInfo ci) {
-        this.lifespan = ((WorldBridge) this.world).bridge$spigotConfig().itemDespawnRate;
+    @Inject(method = "<init>(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/level/Level;)V", at = @At("RETURN"))
+    private void activationRange$init(EntityType<? extends ItemEntity> entityType, Level world, CallbackInfo ci) {
+        this.lifespan = ((WorldBridge) this.level).bridge$spigotConfig().itemDespawnRate;
     }
 
-    @Inject(method = "<init>(Lnet/minecraft/world/World;DDDLnet/minecraft/item/ItemStack;)V", at = @At("RETURN"))
-    private void activationRange$init(World worldIn, double x, double y, double z, ItemStack stack, CallbackInfo ci) {
+    @Inject(method = "<init>(Lnet/minecraft/world/level/Level;DDDLnet/minecraft/world/item/ItemStack;)V", at = @At("RETURN"))
+    private void activationRange$init(Level worldIn, double x, double y, double z, ItemStack stack, CallbackInfo ci) {
         if (this.lifespan == 6000) {
-            this.lifespan = ((WorldBridge) this.world).bridge$spigotConfig().itemDespawnRate;
+            this.lifespan = ((WorldBridge) this.level).bridge$spigotConfig().itemDespawnRate;
         }
     }
 
@@ -46,9 +46,9 @@ public abstract class ItemEntityMixin_ActivationRange extends EntityMixin_Activa
         if (this.age != -32768) this.age += elapsedTicks;
         this.lastTick = ArclightConstants.currentTick;
 
-        if (!this.world.isRemote && this.age >= this.lifespan) {
+        if (!this.level.isClientSide && this.age >= this.lifespan) {
             int hook = ForgeEventFactory.onItemExpire((ItemEntity) (Object) this, this.getItem());
-            if (hook < 0) this.remove();
+            if (hook < 0) this.discard();
             else this.lifespan += hook;
         }
     }

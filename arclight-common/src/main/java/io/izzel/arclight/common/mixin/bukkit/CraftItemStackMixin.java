@@ -60,11 +60,10 @@ public abstract class CraftItemStackMixin implements CraftItemStackBridge {
         if (stack == (Object) this) {
             return true;
         }
-        if (!(stack instanceof CraftItemStack)) {
+        if (!(stack instanceof CraftItemStack that)) {
             return stack.getClass() == org.bukkit.inventory.ItemStack.class && stack.isSimilar((org.bukkit.inventory.ItemStack) (Object) this);
         }
 
-        CraftItemStack that = (CraftItemStack) stack;
         if (handle == ((CraftItemStackBridge) (Object) that).bridge$getHandle()) {
             return true;
         }

@@ -413,8 +413,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
 
     @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity$MovementEmission;emitsAnything()Z"))
     private void arclight$move$blockCollide(MoverType typeIn, Vec3 pos, CallbackInfo ci) {
-        if (horizontalCollision && this.bridge$getBukkitEntity() instanceof Vehicle) {
-            Vehicle vehicle = (Vehicle) this.bridge$getBukkitEntity();
+        if (horizontalCollision && this.bridge$getBukkitEntity() instanceof Vehicle vehicle) {
             org.bukkit.block.Block block = ((WorldBridge) this.level).bridge$getWorld().getBlockAt(Mth.floor(this.getX()), Mth.floor(this.getY()), Mth.floor(this.getZ()));
             Vec3 vec3d = this.collide(pos);
             if (pos.x > vec3d.x) {
@@ -506,8 +505,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Inject(method = "load", at = @At(value = "RETURN"))
     public void arclight$read$ReadBukkitValues(CompoundTag compound, CallbackInfo ci) {
         // CraftBukkit start
-        if ((Object) this instanceof LivingEntity) {
-            LivingEntity entity = (LivingEntity) (Object) this;
+        if ((Object) this instanceof LivingEntity entity) {
 
             this.tickCount = compound.getInt("Spigot.ticksLived");
 

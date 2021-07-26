@@ -126,8 +126,7 @@ public class ForgeInstaller {
                 future.join();
             } catch (CompletionException e) {
                 Throwable cause = e.getCause();
-                if (cause instanceof LocalizedException) {
-                    LocalizedException local = (LocalizedException) cause;
+                if (cause instanceof LocalizedException local) {
                     ArclightLocale.error(local.node(), local.args());
                 } else throw e;
             } catch (Exception e) {

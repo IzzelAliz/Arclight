@@ -1,16 +1,16 @@
 package io.izzel.arclight.common.mixin.core.world;
 
 import io.izzel.arclight.common.bridge.world.server.ServerWorldBridge;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.ServerLevelAccessor;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Iterator;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.ServerLevelAccessor;
 
 @Mixin(ServerLevelAccessor.class)
 public interface IServerWorldMixin extends LevelAccessor, ServerWorldBridge {
@@ -46,7 +46,7 @@ public interface IServerWorldMixin extends LevelAccessor, ServerWorldBridge {
             bridge$pushAddEntityReason(reason);
             this.addFreshEntity(next);
         }
-        return !entity.removed;
+        return !entity.isRemoved();
     }
 
     @Override

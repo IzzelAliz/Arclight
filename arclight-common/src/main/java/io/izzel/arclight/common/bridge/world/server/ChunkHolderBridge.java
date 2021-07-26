@@ -7,4 +7,6 @@ public interface ChunkHolderBridge {
     int bridge$getOldTicketLevel();
 
     LevelChunk bridge$getFullChunk();
+
+    LevelChunk bridge$getFullChunkUnchecked();
 }

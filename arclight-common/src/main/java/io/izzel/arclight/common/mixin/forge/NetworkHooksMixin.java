@@ -9,7 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraftforge.fml.network.NetworkHooks;
+import net.minecraftforge.fmllegacy.network.NetworkHooks;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -40,7 +40,7 @@ public class NetworkHooksMixin {
         }
     }
 
-    @Inject(method = "sendMCRegistryPackets", remap = false, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraftforge/fml/network/FMLMCRegisterPacketHandler;addChannels(Ljava/util/Set;Lnet/minecraft/network/NetworkManager;)V"))
+    @Inject(method = "sendMCRegistryPackets", remap = false, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraftforge/fmllegacy/network/FMLMCRegisterPacketHandler;addChannels(Ljava/util/Set;Lnet/minecraft/network/Connection;)V"))
     private static void arclight$withBukkitChannels(Connection manager, String direction, CallbackInfo ci, Set<ResourceLocation> resourceLocations) {
         Bukkit.getMessenger().getIncomingChannels().stream().map(ResourceLocation::new).forEach(resourceLocations::add);
     }

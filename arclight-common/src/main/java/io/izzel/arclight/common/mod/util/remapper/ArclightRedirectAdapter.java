@@ -162,8 +162,7 @@ public class ArclightRedirectAdapter implements PluginTransformer {
     private static void redirect(ClassNode classNode, ClassLoaderRemapper remapper) {
         for (MethodNode methodNode : classNode.methods) {
             for (AbstractInsnNode insnNode : methodNode.instructions) {
-                if (insnNode instanceof MethodInsnNode) {
-                    MethodInsnNode from = (MethodInsnNode) insnNode;
+                if (insnNode instanceof MethodInsnNode from) {
                     if (from.getOpcode() == Opcodes.INVOKESPECIAL
                         && Objects.equals(from.owner, classNode.superName)
                         && Objects.equals(from.name, methodNode.name)
@@ -176,8 +175,7 @@ public class ArclightRedirectAdapter implements PluginTransformer {
                     Object[] bsmArgs = invokeDynamic.bsmArgs;
                     for (int i = 0; i < bsmArgs.length; i++) {
                         Object bsmArg = bsmArgs[i];
-                        if (bsmArg instanceof Handle) {
-                            Handle handle = (Handle) bsmArg;
+                        if (bsmArg instanceof Handle handle) {
                             if (toOpcode(handle.getTag()) != -1) {
                                 bsmArgs[i] = processHandle(handle, remapper);
                             }
@@ -389,29 +387,21 @@ public class ArclightRedirectAdapter implements PluginTransformer {
     }
 
     private static int toOpcode(int handleType) {
-        switch (handleType) {
-            case Opcodes.H_INVOKEINTERFACE:
-                return Opcodes.INVOKEINTERFACE;
-            case Opcodes.H_INVOKEVIRTUAL:
-                return Opcodes.INVOKEVIRTUAL;
-            case Opcodes.H_INVOKESTATIC:
-                return Opcodes.INVOKESTATIC;
-            default:
-                return -1;
-        }
+        return switch (handleType) {
+            case Opcodes.H_INVOKEINTERFACE -> Opcodes.INVOKEINTERFACE;
+            case Opcodes.H_INVOKEVIRTUAL -> Opcodes.INVOKEVIRTUAL;
+            case Opcodes.H_INVOKESTATIC -> Opcodes.INVOKESTATIC;
+            default -> -1;
+        };
     }
 
     private static int toHandle(int opcode) {
-        switch (opcode) {
-            case Opcodes.INVOKEINTERFACE:
-                return Opcodes.H_INVOKEINTERFACE;
-            case Opcodes.INVOKESTATIC:
-                return Opcodes.H_INVOKESTATIC;
-            case Opcodes.INVOKEVIRTUAL:
-                return Opcodes.H_INVOKEVIRTUAL;
-            default:
-                return -1;
-        }
+        return switch (opcode) {
+            case Opcodes.INVOKEINTERFACE -> Opcodes.H_INVOKEINTERFACE;
+            case Opcodes.INVOKESTATIC -> Opcodes.H_INVOKESTATIC;
+            case Opcodes.INVOKEVIRTUAL -> Opcodes.H_INVOKEVIRTUAL;
+            default -> -1;
+        };
     }
 
     static AbstractInsnNode loadInt(int i) {

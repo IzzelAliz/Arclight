@@ -2,18 +2,18 @@ package io.izzel.arclight.impl.mixin.optimization.dfu;
 
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.DataFixerBuilder;
-import net.minecraft.util.SharedConstants;
-import net.minecraft.util.datafix.DataFixesManager;
+import net.minecraft.SharedConstants;
+import net.minecraft.util.datafix.DataFixers;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(DataFixesManager.class)
+@Mixin(DataFixers.class)
 public class DataFixesManagerMixin {
 
-    @Inject(method = "createFixer", cancellable = true, at = @At("HEAD"))
+    @Inject(method = "createFixerUpper", cancellable = true, at = @At("HEAD"))
     private static void arclight$disableDfu(CallbackInfoReturnable<DataFixer> cir) {
-        cir.setReturnValue(new DataFixerBuilder(SharedConstants.getVersion().getWorldVersion()).build(r -> {}));
+        cir.setReturnValue(new DataFixerBuilder(SharedConstants.getCurrentVersion().getWorldVersion()).build(r -> {}));
     }
 }

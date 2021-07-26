@@ -27,9 +27,4 @@ public interface ServerWorldBridge extends WorldBridge {
     boolean bridge$addAllEntitiesSafely(Entity entity, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason reason);
 
     LevelStorageSource.LevelStorageAccess bridge$getConvertable();
-
-    interface Hack {
-
-        BlockEntity getTileEntity(BlockPos blockPos);
-    }
 }

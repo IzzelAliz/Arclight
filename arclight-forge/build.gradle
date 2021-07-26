@@ -23,7 +23,7 @@ apply plugin: 'maven-publish'
 arclight {
     mcVersion = minecraftVersion
     forgeVersion = project.ext.forgeVersion
-    bukkitVersion = 'v1_16_R3'
+    bukkitVersion = 'v1_17_R1'
     wipeVersion = true
     reobfVersion = true
     accessTransformer = project(':arclight-common').file('bukkit.at')
@@ -86,6 +86,7 @@ def embedLibs = [/*'org.spongepowered:mixin:0.8.1',*/ 'org.ow2.asm:asm-util:9.0'
 dependencies {
     minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
     implementation group: 'org.jetbrains', name: 'annotations', version: '19.0.0'
+    implementation 'org.spongepowered:mixin:0.8.3'
     implementation(project(':arclight-common')) {
         exclude module: 'forge'
     }
@@ -102,7 +103,7 @@ dependencies {
     embed 'com.github.ArclightTeam:mixin-tools:1.0.0@jar'
     embed "io.izzel:tools:$toolsVersion"
     embed "io.izzel.arclight:arclight-api:$apiVersion"
-    annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
+    annotationProcessor 'org.spongepowered:mixin:0.8.3:processor'
     annotationProcessor 'com.github.ArclightTeam:mixin-tools:1.0.0'
 }
 

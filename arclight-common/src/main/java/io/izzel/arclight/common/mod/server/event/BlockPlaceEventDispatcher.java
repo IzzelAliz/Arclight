@@ -1,7 +1,9 @@
 package io.izzel.arclight.common.mod.server.event;
 
+import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.mod.util.ArclightBlockSnapshot;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraftforge.common.util.BlockSnapshot;
@@ -9,15 +11,12 @@ import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.block.BlockState;
-import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockMultiPlaceEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import io.izzel.arclight.common.mod.util.ArclightBlockSnapshot;
-import io.izzel.arclight.common.mod.util.ArclightCaptures;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,9 +26,8 @@ public class BlockPlaceEventDispatcher {
     @SubscribeEvent(receiveCanceled = true)
     public void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
         Entity entity = event.getEntity();
-        if (entity instanceof ServerPlayer) {
-            ServerPlayer playerEntity = (ServerPlayer) entity;
-            Player player = ((CraftServer) Bukkit.getServer()).getPlayer(playerEntity);
+        if (entity instanceof ServerPlayerEntityBridge playerEntity) {
+            Player player = playerEntity.bridge$getBukkitEntity();
             Direction direction = ArclightCaptures.getPlaceEventDirection();
             if (direction != null) {
                 InteractionHand hand = ArclightCaptures.getPlaceEventHand(InteractionHand.MAIN_HAND);
@@ -63,9 +61,8 @@ public class BlockPlaceEventDispatcher {
     @SubscribeEvent(receiveCanceled = true)
     public void onMultiPlace(BlockEvent.EntityMultiPlaceEvent event) {
         Entity entity = event.getEntity();
-        if (entity instanceof ServerPlayer) {
-            ServerPlayer playerEntity = (ServerPlayer) entity;
-            Player player = ((CraftServer) Bukkit.getServer()).getPlayer(playerEntity);
+        if (entity instanceof ServerPlayerEntityBridge playerEntity) {
+            Player player = playerEntity.bridge$getBukkitEntity();
             Direction direction = ArclightCaptures.getPlaceEventDirection();
             if (direction != null) {
                 InteractionHand hand = ArclightCaptures.getPlaceEventHand(InteractionHand.MAIN_HAND);

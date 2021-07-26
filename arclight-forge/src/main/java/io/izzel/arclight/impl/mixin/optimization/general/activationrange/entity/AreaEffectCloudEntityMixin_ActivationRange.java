@@ -1,11 +1,11 @@
 package io.izzel.arclight.impl.mixin.optimization.general.activationrange.entity;
 
 import io.izzel.arclight.impl.mixin.optimization.general.activationrange.EntityMixin_ActivationRange;
-import net.minecraft.entity.AreaEffectCloudEntity;
+import net.minecraft.world.entity.AreaEffectCloud;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(AreaEffectCloudEntity.class)
+@Mixin(AreaEffectCloud.class)
 public abstract class AreaEffectCloudEntityMixin_ActivationRange extends EntityMixin_ActivationRange {
 
     // @formatter:off
@@ -16,8 +16,8 @@ public abstract class AreaEffectCloudEntityMixin_ActivationRange extends EntityM
     @Override
     public void inactiveTick() {
         super.inactiveTick();
-        if (this.ticksExisted >= this.waitTime + this.duration) {
-            this.remove();
+        if (this.tickCount >= this.waitTime + this.duration) {
+            this.discard();
         }
     }
 }

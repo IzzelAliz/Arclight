@@ -62,8 +62,7 @@ public class ClassLoaderAdapter implements PluginTransformer {
         }
         for (MethodNode methodNode : node.methods) {
             for (AbstractInsnNode insnNode : methodNode.instructions) {
-                if (insnNode instanceof MethodInsnNode) {
-                    MethodInsnNode methodInsnNode = (MethodInsnNode) insnNode;
+                if (insnNode instanceof MethodInsnNode methodInsnNode) {
                     if (methodInsnNode.getOpcode() == Opcodes.INVOKESPECIAL && methodNode.name.equals("<init>") && methodInsnNode.name.equals("<init>") && methodInsnNode.owner.equals(node.superName)) {
                         methodInsnNode.owner = info.superName;
                     }
