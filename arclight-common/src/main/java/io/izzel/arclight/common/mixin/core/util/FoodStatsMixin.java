@@ -27,6 +27,7 @@ public abstract class FoodStatsMixin implements FoodStatsBridge {
     @Shadow public int foodLevel;
     @Shadow public abstract void addStats(int foodLevelIn, float foodSaturationModifier);
     @Shadow public float foodSaturationLevel;
+    @Shadow private int prevFoodLevel;
     // @formatter:on
 
     private PlayerEntity entityhuman;
@@ -42,6 +43,10 @@ public abstract class FoodStatsMixin implements FoodStatsBridge {
 
     @Redirect(method = "consume", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/FoodStats;addStats(IF)V"))
     public void arclight$foodLevelChange(FoodStats foodStats, int foodLevelIn, float foodSaturationModifier, Item maybeFood, ItemStack stack) {
+        if (entityhuman == null) {
+            foodStats.addStats(foodLevelIn, foodSaturationModifier);
+            return;
+        }
         Food food = maybeFood.getFood();
         int oldFoodLevel = this.foodLevel;
         FoodLevelChangeEvent event = CraftEventFactory.callFoodLevelChangeEvent(entityhuman, food.getHealing() + oldFoodLevel, stack);
@@ -53,10 +58,15 @@ public abstract class FoodStatsMixin implements FoodStatsBridge {
 
     @Inject(method = "tick", at = @At(value = "INVOKE_ASSIGN", remap = false, target = "Ljava/lang/Math;max(II)I"))
     public void arclight$foodLevelChange2(PlayerEntity player, CallbackInfo ci) {
-        FoodLevelChangeEvent event = CraftEventFactory.callFoodLevelChangeEvent(entityhuman, Math.max(this.foodLevel - 1, 0));
+        if (entityhuman == null) {
+            return;
+        }
+        FoodLevelChangeEvent event = CraftEventFactory.callFoodLevelChangeEvent(entityhuman, Math.max(this.prevFoodLevel - 1, 0));
 
         if (!event.isCancelled()) {
             this.foodLevel = event.getFoodLevel();
+        } else {
+            this.foodLevel = this.prevFoodLevel;
         }
 
         ((ServerPlayerEntity) entityhuman).connection.sendPacket(new SUpdateHealthPacket(((ServerPlayerEntityBridge) entityhuman).bridge$getBukkitEntity().getScaledHealth(), this.foodLevel, this.foodSaturationLevel));
@@ -64,6 +74,9 @@ public abstract class FoodStatsMixin implements FoodStatsBridge {
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;heal(F)V"))
     public void arclight$heal(PlayerEntity player, CallbackInfo ci) {
+        if (entityhuman == null) {
+            entityhuman = player;
+        }
         ((LivingEntityBridge) player).bridge$pushHealReason(EntityRegainHealthEvent.RegainReason.SATIATED);
     }
 
