@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mod.util;
 
-import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
@@ -8,13 +7,13 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-@MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class WrappedContents extends NonNullList<ItemStack> {
 
     private final Container inventory;
 
     public WrappedContents(Container inventory) {
+        super(null, null);
         this.inventory = inventory;
     }
 

@@ -1,9 +1,8 @@
 package io.izzel.arclight.common.mod.util;
 
 import com.mojang.serialization.Lifecycle;
-import io.izzel.arclight.common.bridge.world.storage.WorldInfoBridge;
 import io.izzel.arclight.common.bridge.world.storage.DerivedWorldInfoBridge;
-import net.minecraft.CrashReportCategory;
+import io.izzel.arclight.common.bridge.world.storage.WorldInfoBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.Difficulty;
@@ -16,6 +15,7 @@ import net.minecraft.world.level.storage.DerivedLevelData;
 import net.minecraft.world.level.storage.PrimaryLevelData;
 import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.level.timers.TimerQueue;
+
 import java.util.UUID;
 
 @SuppressWarnings("all")
@@ -231,11 +231,6 @@ public class DelegateWorldInfo extends PrimaryLevelData {
     @Override
     public void setWanderingTraderId(UUID id) {
         derivedWorldInfo.setWanderingTraderId(id);
-    }
-
-    @Override
-    public void fillCrashReportCategory(CrashReportCategory category) {
-        derivedWorldInfo.fillCrashReportCategory(category);
     }
 
     public static DelegateWorldInfo wrap(DerivedLevelData worldInfo) {

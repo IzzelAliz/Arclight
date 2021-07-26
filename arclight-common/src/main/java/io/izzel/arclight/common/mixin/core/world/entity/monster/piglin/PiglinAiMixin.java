@@ -20,6 +20,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Mixin(PiglinAi.class)
 public abstract class PiglinAiMixin {
@@ -92,7 +93,7 @@ public abstract class PiglinAiMixin {
         ItemStack stack = piglin.getItemInHand(InteractionHand.OFF_HAND);
         PiglinBarterEvent event = CraftEventFactory.callPiglinBarterEvent(piglin, getBarterResponseItems(piglin), stack);
         if (!event.isCancelled()) {
-            throwItems(piglin, event.getOutcome().stream().map(CraftItemStack::asNMSCopy).toList());
+            throwItems(piglin, event.getOutcome().stream().map(CraftItemStack::asNMSCopy).collect(Collectors.toList()));
         }
     }
 

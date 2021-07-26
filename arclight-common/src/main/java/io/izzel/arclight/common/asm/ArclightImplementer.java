@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.asm;
 
+import cpw.mods.modlauncher.api.NamedPath;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 import io.izzel.arclight.common.mod.util.log.ArclightI18nLogger;
 import org.apache.logging.log4j.Logger;
@@ -12,7 +13,6 @@ import org.objectweb.asm.tree.VarInsnNode;
 import org.spongepowered.asm.launch.MixinLaunchPlugin;
 
 import java.lang.reflect.Modifier;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -37,7 +37,7 @@ public class ArclightImplementer implements ILaunchPluginService {
     }
 
     @Override
-    public void initializeLaunch(ITransformerLoader transformerLoader, Path[] specialPaths) {
+    public void initializeLaunch(ITransformerLoader transformerLoader, NamedPath[] specialPaths) {
         this.transformerLoader = transformerLoader;
         this.implementers.put("inventory", new InventoryImplementer());
         this.implementers.put("switch", SwitchTableFixer.INSTANCE);

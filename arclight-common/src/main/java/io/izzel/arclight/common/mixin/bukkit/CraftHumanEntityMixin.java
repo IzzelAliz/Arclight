@@ -27,7 +27,7 @@ public abstract class CraftHumanEntityMixin extends CraftEntity {
     @Override
     public void setHandle(Entity entity) {
         super.setHandle(entity);
-        this.inventory = new CraftInventoryPlayer(((Player) entity).inventory);
+        this.inventory = new CraftInventoryPlayer(((Player) entity).getInventory());
         this.enderChest = new CraftInventory(((Player) entity).getEnderChestInventory());
     }
 }

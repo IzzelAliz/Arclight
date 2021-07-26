@@ -7,9 +7,8 @@ buildscript {
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: "${forge_gradle_version}"
-        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
-        // classpath "io.izzel.arclight:arclight-gradle-plugin:$agpVersion"
-        classpath files("G:\\workspace\\arclight-gradle-plugin\\build\\libs\\arclight-gradle-plugin-1.18.jar")
+        classpath 'org.spongepowered:mixingradle:0.7.1-SNAPSHOT'
+        classpath "io.izzel.arclight:arclight-gradle-plugin:$agpVersion"
     }
 }
 
@@ -140,6 +139,7 @@ jar {
     }
     from(project(':arclight-common').tasks.jar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) })
     from sourceSets.applaunch.output.classesDirs
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 remapSpigotJar {
@@ -157,7 +157,7 @@ compileJava {
 }
 
 compileApplaunchJava {
-    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_6
+    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_7
 }
 
 task srgJar(type: Jar) {

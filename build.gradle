@@ -3,7 +3,7 @@ allprojects {
     version '1.0.20'
 
     ext {
-        agpVersion = '1.17'
+        agpVersion = '1.18'
         minecraftVersion = '1.17.1'
         forgeVersion = '37.0.1'
         apiVersion = '1.0.+'

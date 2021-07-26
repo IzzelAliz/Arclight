@@ -12,7 +12,7 @@ import io.izzel.arclight.common.mod.server.entity.ArclightModProjectile;
 import io.izzel.arclight.common.mod.server.entity.ArclightModRaider;
 import io.izzel.arclight.common.mod.util.ResourceLocationUtil;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.AgableMob;
+import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.FlyingMob;
 import net.minecraft.world.entity.LivingEntity;
@@ -78,7 +78,7 @@ public abstract class CraftEntityMixin implements org.bukkit.entity.Entity {
     private static void arclight$modEntity(CraftServer server, Entity entity, CallbackInfoReturnable<CraftEntity> cir) {
         if (entity instanceof LivingEntity) {
             if (entity instanceof Mob) {
-                if (entity instanceof AgableMob) {
+                if (entity instanceof AgeableMob) {
                     if (entity instanceof AbstractHorse) {
                         if (entity instanceof AbstractChestedHorse) {
                             cir.setReturnValue(new ArclightModChestedHorse(server, (AbstractChestedHorse) entity));
@@ -91,7 +91,7 @@ public abstract class CraftEntityMixin implements org.bukkit.entity.Entity {
                         cir.setReturnValue(new CraftTameableAnimal(server, (TamableAnimal) entity));
                         return;
                     }
-                    cir.setReturnValue(new CraftAgeable(server, (AgableMob) entity));
+                    cir.setReturnValue(new CraftAgeable(server, (AgeableMob) entity));
                     return;
                 }
                 if (entity instanceof FlyingMob) {

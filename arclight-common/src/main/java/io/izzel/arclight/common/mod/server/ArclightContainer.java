@@ -182,7 +182,7 @@ public class ArclightContainer {
         @Override
         public void setItem(int index, @NotNull ItemStack stack) {
             if (index >= size) return;
-            container.setItem(index, stack);
+            container.getSlot(index).set(stack);
         }
 
         @Override

@@ -6,13 +6,15 @@ import net.minecraftforge.forgespi.locating.IModFile;
 
 import java.io.File;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.util.stream.Stream;
 
 public class ArclightLocator_Forge extends ArclightLocator {
 
     @Override
     protected IModFile loadJars() {
         try {
-            return ModFile.newFMLInstance(new File(ArclightLocator.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath(), this);
+            return ModFile.newFMLInstance(this, new File(ArclightLocator.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath());
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }

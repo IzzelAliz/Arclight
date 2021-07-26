@@ -29,7 +29,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.dimension.DimensionType;
-import net.minecraftforge.fml.CrashReportExtender;
+import net.minecraftforge.fml.CrashReportCallables;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistry;
 import net.minecraftforge.registries.IForgeRegistry;
@@ -81,7 +81,7 @@ public class BukkitRegistry {
     private static final BiMap<ResourceLocation, Statistic> STATS = HashBiMap.create(Unsafe.getStatic(CraftStatistic.class, "statistics"));
 
     public static void registerAll() {
-        CrashReportExtender.registerCrashCallable("Arclight", () -> new CraftCrashReport().call().toString());
+        CrashReportCallables.registerCrashCallable("Arclight", new CraftCrashReport());
         loadMaterials();
         loadPotions();
         loadEnchantments();
@@ -382,7 +382,7 @@ public class BukkitRegistry {
     private static Set<IForgeRegistry<?>> registries() {
         return ImmutableSet.of(ForgeRegistries.BLOCKS, ForgeRegistries.ITEMS,
             ForgeRegistries.POTION_TYPES, ForgeRegistries.POTIONS,
-            ForgeRegistries.ENTITIES, ForgeRegistries.TILE_ENTITIES,
+            ForgeRegistries.ENTITIES, ForgeRegistries.BLOCK_ENTITIES,
             ForgeRegistries.BIOMES);
     }
 

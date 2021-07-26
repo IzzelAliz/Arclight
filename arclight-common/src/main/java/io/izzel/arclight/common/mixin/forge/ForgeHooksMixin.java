@@ -1,18 +1,17 @@
 package io.izzel.arclight.common.mixin.forge;
 
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.context.UseOnContext;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.ForgeHooks;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import io.izzel.arclight.common.mod.util.ArclightCaptures;
 
 @Mixin(ForgeHooks.class)
 public class ForgeHooksMixin {
@@ -29,7 +28,7 @@ public class ForgeHooksMixin {
 
     @Inject(method = "canEntityDestroy", cancellable = true, remap = false, at = @At("HEAD"))
     private static void arclight$returnIfNotLoaded(Level world, BlockPos pos, LivingEntity entity, CallbackInfoReturnable<Boolean> cir) {
-        if (!world.getChunkSource().isEntityTickingChunk(new ChunkPos(pos.getX() >> 4, pos.getZ() >> 4))) {
+        if (!world.isLoaded(pos)) {
             cir.setReturnValue(false);
         }
     }

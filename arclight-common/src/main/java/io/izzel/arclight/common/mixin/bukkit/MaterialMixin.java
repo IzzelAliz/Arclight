@@ -7,6 +7,14 @@ import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.server.block.ArclightTileInventory;
 import io.izzel.arclight.i18n.LocalizedException;
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.FallingBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.BlockState;
@@ -46,14 +54,6 @@ import java.lang.reflect.Constructor;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.Container;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.FallingBlock;
-import net.minecraft.world.level.block.entity.BlockEntity;
 
 @Mixin(value = Material.class, remap = false)
 public abstract class MaterialMixin implements MaterialBridge {
@@ -328,7 +328,7 @@ public abstract class MaterialMixin implements MaterialBridge {
             arclight$spec.burnable = block != null && ((FireBlockBridge) Blocks.FIRE).bridge$canBurn(block);
         }
         if (arclight$spec.fuel == null) {
-            arclight$spec.fuel = item != null && new ItemStack(item).getBurnTime() > 0;
+            arclight$spec.fuel = item != null && new ItemStack(item).getBurnTime(null) > 0;
         }
         if (arclight$spec.occluding == null) {
             arclight$spec.occluding = arclight$spec.solid;

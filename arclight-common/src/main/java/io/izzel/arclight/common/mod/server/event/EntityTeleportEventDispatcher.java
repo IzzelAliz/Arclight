@@ -3,7 +3,6 @@ package io.izzel.arclight.common.mod.server.event;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.event.entity.living.EnderTeleportEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -15,7 +14,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 public class EntityTeleportEventDispatcher {
 
     @SubscribeEvent(receiveCanceled = true)
-    public void onTeleport(EnderTeleportEvent event) {
+    public void onTeleport(net.minecraftforge.event.entity.EntityTeleportEvent.EnderEntity event) {
         if (event.getEntity() instanceof ServerPlayer) {
             CraftPlayer player = ((ServerPlayerEntityBridge) event.getEntity()).bridge$getBukkitEntity();
             PlayerTeleportEvent bukkitEvent = new PlayerTeleportEvent(player, player.getLocation(), new Location(player.getWorld(), event.getTargetX(), event.getTargetY(), event.getTargetZ()), PlayerTeleportEvent.TeleportCause.ENDER_PEARL);

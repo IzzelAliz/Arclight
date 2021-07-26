@@ -7,9 +7,8 @@ buildscript {
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: "${forge_gradle_version}"
-        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
-        // classpath "io.izzel.arclight:arclight-gradle-plugin:$agpVersion"
-        classpath files("G:\\workspace\\arclight-gradle-plugin\\build\\libs\\arclight-gradle-plugin-1.18.jar")
+        classpath 'org.spongepowered:mixingradle:0.7.1-SNAPSHOT'
+        classpath "io.izzel.arclight:arclight-gradle-plugin:$agpVersion"
     }
 }
 
@@ -51,7 +50,7 @@ dependencies {
     implementation 'org.jetbrains:annotations:19.0.0'
 
     implementation 'org.spongepowered:mixin:0.8.3'
-    annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
+    annotationProcessor 'org.spongepowered:mixin:0.8.3:processor'
 
     implementation 'com.github.ArclightTeam:mixin-tools:1.0.0'
     annotationProcessor 'com.github.ArclightTeam:mixin-tools:1.0.0'
@@ -68,7 +67,7 @@ dependencies {
 }
 
 remapSpigotJar {
-    includes.add('net/minecraft/block/ChestBlock$DoubleInventory')
+    includes.add('net/minecraft/world/level/block/ChestBlock$DoubleInventory')
     includes.add('net/minecraft/tileentity/LecternTileEntity$LecternInventory')
 }
 
