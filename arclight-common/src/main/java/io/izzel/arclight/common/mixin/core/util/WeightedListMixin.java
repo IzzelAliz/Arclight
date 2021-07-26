@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.util;
 
 import com.google.common.collect.Lists;
-import com.teammoeg.frostedheart.util.IWeightedList;
+import io.izzel.arclight.common.bridge.util.IWeightedList;
 import net.minecraft.util.WeightedList;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
