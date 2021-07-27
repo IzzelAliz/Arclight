@@ -30,7 +30,7 @@ public abstract class EggItemMixin extends Item {
     private void arclight$muteSound(Level world, Player player, double x, double y, double z, SoundEvent soundIn, SoundSource category, float volume, float pitch) {
     }
 
-    @Eject(method = "onItemRightClick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
+    @Eject(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private boolean arclight$updateIfFail(Level world, Entity entityIn, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir, Level worldIn, Player playerIn, @NotNull InteractionHand handIn) {
         if (!worldIn.addFreshEntity(entityIn)) {
             if (playerIn instanceof ServerPlayerEntityBridge) {

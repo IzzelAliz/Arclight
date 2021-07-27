@@ -35,7 +35,7 @@ public abstract class TicketManagerMixin implements TicketManagerBridge {
     // @formatter:on
 
     @Inject(method = "removePlayer", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", remap = false, target = "Lit/unimi/dsi/fastutil/objects/ObjectSet;remove(Ljava/lang/Object;)Z"))
-    private void arclight$remove(SectionPos p_140829_, ServerPlayer p_140830_, CallbackInfo ci, ObjectSet<?> set) {
+    private void arclight$remove(SectionPos p_140829_, ServerPlayer p_140830_, CallbackInfo ci, long l, ObjectSet<?> set) {
         if (set == null) {
             ci.cancel();
         }

@@ -319,9 +319,9 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                 if (flag6) {
                     if (i > 0) {
                         if (entity instanceof LivingEntity) {
-                            ((LivingEntity) entity).knockback(i * 0.5f, Mth.sin(this.yRot * 0.017453292f), -Mth.cos(this.yRot * 0.017453292f));
+                            ((LivingEntity) entity).knockback(i * 0.5f, Mth.sin(this.getYRot() * 0.017453292f), -Mth.cos(this.getYRot() * 0.017453292f));
                         } else {
-                            entity.push(-Mth.sin(this.yRot * 0.017453292f) * i * 0.5f, 0.1, Mth.cos(this.yRot * 0.017453292f) * i * 0.5f);
+                            entity.push(-Mth.sin(this.getYRot() * 0.017453292f) * i * 0.5f, 0.1, Mth.cos(this.getYRot() * 0.017453292f) * i * 0.5f);
                         }
                         this.setDeltaMovement(this.getDeltaMovement().multiply(0.6, 1.0, 0.6));
                         this.setSprinting(false);
@@ -331,7 +331,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                         final List<LivingEntity> list = this.level.getEntitiesOfClass(LivingEntity.class, entity.getBoundingBox().inflate(1.0, 0.25, 1.0));
                         for (final LivingEntity entityliving : list) {
                             if (entityliving != (Object) this && entityliving != entity && !this.isAlliedTo(entityliving) && (!(entityliving instanceof ArmorStand) || !((ArmorStand) entityliving).isMarker()) && this.distanceToSqr(entityliving) < 9.0 && entityliving.hurt(((DamageSourceBridge) DamageSource.playerAttack((net.minecraft.world.entity.player.Player) (Object) this)).bridge$sweep(), f5)) {
-                                entityliving.knockback(0.4f, Mth.sin(this.yRot * 0.017453292f), -Mth.cos(this.yRot * 0.017453292f));
+                                entityliving.knockback(0.4f, Mth.sin(this.getYRot() * 0.017453292f), -Mth.cos(this.getYRot() * 0.017453292f));
                             }
                         }
                         this.level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, this.getSoundSource(), 1.0f, 1.0f);

@@ -3,6 +3,7 @@ package io.izzel.arclight.forgeinstaller;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.i18n.LocalizedException;
 
+import javax.net.ssl.SSLException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,12 +53,12 @@ public class FileDownloader implements Supplier<Path> {
             URL url = new URL(this.url);
             try (InputStream stream = redirect(url)) {
                 Files.copy(stream, path, StandardCopyOption.REPLACE_EXISTING);
-            } catch (SocketTimeoutException e) {
+            } catch (SocketTimeoutException | SSLException e) {
                 throw LocalizedException.checked("downloader.timeout", e, url);
             }
             if (Files.exists(path)) {
                 String hash = Util.hash(path);
-                if (hash.equals(this.hash)) return path;
+                if (hash.equalsIgnoreCase(this.hash)) return path;
                 else {
                     Files.delete(path);
                     throw LocalizedException.checked("downloader.hash-not-match", this.hash, hash, url);

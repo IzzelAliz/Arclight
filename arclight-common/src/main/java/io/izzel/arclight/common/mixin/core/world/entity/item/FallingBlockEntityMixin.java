@@ -27,12 +27,12 @@ public abstract class FallingBlockEntityMixin extends EntityMixin {
         }
     }
 
-    @Inject(method = "causeFallDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
+    @Inject(method = "causeFallDamage", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/List;forEach(Ljava/util/function/Consumer;)V"))
     private void arclight$damageSource(float distance, float damageMultiplier, DamageSource source, CallbackInfoReturnable<Boolean> cir) {
         CraftEventFactory.entityDamage = (FallingBlockEntity) (Object) this;
     }
 
-    @Inject(method = "causeFallDamage", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/Entity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
+    @Inject(method = "causeFallDamage", at = @At(value = "INVOKE", remap = false, shift = At.Shift.AFTER, target = "Ljava/util/List;forEach(Ljava/util/function/Consumer;)V"))
     private void arclight$damageSourceReset(float distance, float damageMultiplier, DamageSource source, CallbackInfoReturnable<Boolean> cir) {
         CraftEventFactory.entityDamage = null;
     }

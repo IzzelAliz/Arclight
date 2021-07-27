@@ -3,6 +3,7 @@
   "package": "io.izzel.arclight.impl.mixin.optimization.stream",
   "target": "@env(DEFAULT)",
   "refmap": "mixins.arclight.impl.forge.refmap.json",
+  "compatibilityLevel": "JAVA_11",
   "mixins": [
     "GoalSelectorMixin",
     "ITaskQueue_PriorityMixin"

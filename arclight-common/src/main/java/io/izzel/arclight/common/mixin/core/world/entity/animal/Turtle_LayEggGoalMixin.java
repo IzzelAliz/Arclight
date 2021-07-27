@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(targets = "net.minecraft.world.entity.animal.Turtle.TurtleLayEggGoal")
+@Mixin(targets = "net.minecraft.world.entity.animal.Turtle$TurtleLayEggGoal")
 public abstract class Turtle_LayEggGoalMixin extends MoveToBlockGoal {
 
     @Shadow @Final private Turtle turtle;

@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Random;
 
-@Mixin(targets = "net.minecraft.world.entity.monster.Silverfish.SilverfishWakeUpFriendsGoal")
+@Mixin(targets = "net.minecraft.world.entity.monster.Silverfish$SilverfishWakeUpFriendsGoal")
 public abstract class Silverfish_WakeUpFriendsGoalMixin extends Goal {
 
     @Shadow private int lookForFriends;

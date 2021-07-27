@@ -62,8 +62,10 @@ public abstract class ChunkHolderMixin implements ChunkHolderBridge {
 
     @Inject(method = "blockChanged", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "FIELD", ordinal = 0, target = "Lnet/minecraft/server/level/ChunkHolder;changedBlocksPerSection:[Lit/unimi/dsi/fastutil/shorts/ShortSet;"))
-    private void arclight$outOfBound(BlockPos pos, CallbackInfo ci, int i) {
-        if (i < 0 || i >= this.changedBlocksPerSection.length) return;
+    private void arclight$outOfBound(BlockPos pos, CallbackInfo ci, LevelChunk chunk, int i) {
+        if (i < 0 || i >= this.changedBlocksPerSection.length) {
+            ci.cancel();
+        }
     }
 
     @Inject(method = "updateFutures", at = @At(value = "JUMP", opcode = Opcodes.IFEQ, ordinal = 0),

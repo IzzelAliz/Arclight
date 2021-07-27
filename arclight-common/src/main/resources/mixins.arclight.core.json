@@ -14,6 +14,7 @@
     "conformVisibility": true
   },
   "mixinPriority": 500,
+  "compatibilityLevel": "JAVA_11",
   "mixins": [
     "advancements.AdvancementMixin",
     "commands.CommandNodeMixin",

@@ -16,8 +16,8 @@ public class ChestBlock2Mixin {
      * @author IzzelAliz
      * @reason
      */
-    @Overwrite
-    public Optional<MenuProvider> acceptDouble(final ChestBlockEntity p_225539_1_, final ChestBlockEntity p_225539_2_) {
+    @Overwrite(remap = false)
+    public Optional<MenuProvider> m_6959_(final ChestBlockEntity p_225539_1_, final ChestBlockEntity p_225539_2_) {
         final CompoundContainer iinventory = new CompoundContainer(p_225539_1_, p_225539_2_);
         return Optional.ofNullable(ChestBlockDoubleInventoryHacks.create(p_225539_1_, p_225539_2_, iinventory));
     }

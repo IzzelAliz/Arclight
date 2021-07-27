@@ -31,7 +31,7 @@ public abstract class LootTableMixin implements LootTableBridge {
     @Shadow protected abstract void shuffleAndSplitItems(List<ItemStack> stacks, int emptySlotsCount, Random rand);
     // @formatter:on
 
-    @Eject(method = "fillInventory", at = @At(value = "INVOKE", target = "Lnet/minecraft/loot/LootTable;generate(Lnet/minecraft/loot/LootContext;)Ljava/util/List;"))
+    @Eject(method = "fill", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/loot/LootTable;getRandomItems(Lnet/minecraft/world/level/storage/loot/LootContext;)Ljava/util/List;"))
     private List<ItemStack> arclight$nonPluginEvent(LootTable lootTable, LootContext context, CallbackInfo ci, Container inv) {
         List<ItemStack> list = lootTable.getRandomItems(context);
         if (!context.hasParam(LootContextParams.ORIGIN) && !context.hasParam(LootContextParams.THIS_ENTITY)) {

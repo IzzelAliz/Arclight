@@ -16,7 +16,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BucketPickup;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v.util.DummyGeneratorAccess;
@@ -39,11 +38,11 @@ public abstract class BucketItemMixin {
     // @formatter:on
 
     @Inject(method = "use", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/BucketPickup;pickupBlock(Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Lnet/minecraft/world/item/ItemStack;"))
-    private void arclight$bucketFill(Level worldIn, Player playerIn, InteractionHand handIn, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir, ItemStack stack, HitResult result) {
+    private void arclight$bucketFill(Level worldIn, Player playerIn, InteractionHand handIn, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir, ItemStack stack, BlockHitResult result) {
         BlockPos pos = ((BlockHitResult) result).getBlockPos();
         BlockState state = worldIn.getBlockState(pos);
         ItemStack dummyFluid = ((BucketPickup) state.getBlock()).pickupBlock(DummyGeneratorAccess.INSTANCE, pos, state);
-        PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent((ServerLevel) worldIn, playerIn, pos, pos, ((BlockHitResult) result).getDirection(), stack, dummyFluid.getItem());
+        PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent((ServerLevel) worldIn, playerIn, pos, pos, result.getDirection(), stack, dummyFluid.getItem());
         if (event.isCancelled()) {
             ((ServerPlayer) playerIn).connection.send(new ClientboundBlockUpdatePacket(worldIn, pos));
             ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().updateInventory();
@@ -54,10 +53,9 @@ public abstract class BucketItemMixin {
     }
 
     @Inject(method = "use", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/BucketItem;emptyContents(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/phys/BlockHitResult;)Z"))
-    private void arclight$capture(Level worldIn, Player playerIn, InteractionHand handIn, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir, ItemStack stack, HitResult result) {
-        BlockHitResult blockRayTraceResult = (BlockHitResult) result;
-        arclight$direction = blockRayTraceResult.getDirection();
-        arclight$click = blockRayTraceResult.getBlockPos();
+    private void arclight$capture(Level worldIn, Player playerIn, InteractionHand handIn, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir, ItemStack stack, BlockHitResult result) {
+        arclight$direction = result.getDirection();
+        arclight$click = result.getBlockPos();
         arclight$stack = stack;
     }
 

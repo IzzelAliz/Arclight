@@ -3,6 +3,7 @@
   "package": "io.izzel.arclight.impl.mixin.optimization.general",
   "target": "@env(DEFAULT)",
   "refmap": "mixins.arclight.impl.forge.refmap.json",
+  "compatibilityLevel": "JAVA_11",
   "mixins": [
     "ClassInheritanceMultiMapMixin",
     "EntityDataManagerMixin_Optimize",

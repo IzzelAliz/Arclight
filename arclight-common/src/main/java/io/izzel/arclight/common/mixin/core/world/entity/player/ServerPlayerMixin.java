@@ -488,7 +488,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             PortalInfo portalinfo = teleporter.getPortalInfo((ServerPlayer) (Object) this, server, this::findDimensionEntryPoint);
             ServerLevel[] exitWorld = new ServerLevel[]{server};
             if (portalinfo != null) {
-                Entity e = teleporter.placeEntity((ServerPlayer) (Object) this, serverworld, exitWorld[0], this.yRot, spawnPortal -> {//Forge: Start vanilla logic
+                Entity e = teleporter.placeEntity((ServerPlayer) (Object) this, serverworld, exitWorld[0], this.getYRot(), spawnPortal -> {//Forge: Start vanilla logic
                     serverworld.getProfiler().push("moving");
 
                     if (((PortalInfoBridge) portalinfo).bridge$getWorld() != null) {
@@ -568,7 +568,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Override
     protected CraftPortalEvent callPortalEvent(Entity entity, ServerLevel exitWorldServer, BlockPos exitPosition, PlayerTeleportEvent.TeleportCause cause, int searchRadius, int creationRadius) {
         Location enter = this.getBukkitEntity().getLocation();
-        Location exit = new Location(((WorldBridge) exitWorldServer).bridge$getWorld(), exitPosition.getX(), exitPosition.getY(), exitPosition.getZ(), this.yRot, this.xRot);
+        Location exit = new Location(((WorldBridge) exitWorldServer).bridge$getWorld(), exitPosition.getX(), exitPosition.getY(), exitPosition.getZ(), this.getYRot(), this.getXRot());
         PlayerPortalEvent event = new PlayerPortalEvent(this.getBukkitEntity(), enter, exit, cause, 128, true, creationRadius);
         Bukkit.getServer().getPluginManager().callEvent(event);
         if (event.isCancelled() || event.getTo() == null || event.getTo().getWorld() == null) {
@@ -602,7 +602,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             if (this.bedBlocked(blockposition, enumdirection)) {
                 return Either.left(Player.BedSleepingProblem.OBSTRUCTED);
             }
-            this.setRespawnPosition(this.level.dimension(), blockposition, this.yRot, false, true);
+            this.setRespawnPosition(this.level.dimension(), blockposition, this.getYRot(), false, true);
             if (this.level.isDay()) {
                 return Either.left(Player.BedSleepingProblem.NOT_POSSIBLE_NOW);
             }

@@ -18,7 +18,7 @@ import org.bukkit.event.entity.EntityBreedEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-@Mixin(targets = "net.minecraft.world.entity.animal.Fox.FoxBreedGoal")
+@Mixin(targets = "net.minecraft.world.entity.animal.Fox$FoxBreedGoal")
 public abstract class Fox_BreedGoalMixin extends BreedGoal {
 
     public Fox_BreedGoalMixin(Animal animal, double speedIn) {

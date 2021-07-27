@@ -10,7 +10,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.Ghast;
 import net.minecraft.world.level.Level;
 
-@Mixin(targets = "net.minecraft.world.entity.monster.Ghast.GhastShootFireballGoal")
+@Mixin(targets = "net.minecraft.world.entity.monster.Ghast$GhastShootFireballGoal")
 public abstract class Ghast_GhastShootFireballGoalMixin {
 
     @Shadow @Final private Ghast ghast;

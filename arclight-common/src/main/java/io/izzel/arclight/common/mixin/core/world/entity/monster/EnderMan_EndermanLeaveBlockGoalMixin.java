@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.Random;
 
-@Mixin(targets = "net.minecraft.world.entity.monster.EnderMan.EndermanLeaveBlockGoal")
+@Mixin(targets = "net.minecraft.world.entity.monster.EnderMan$EndermanLeaveBlockGoal")
 public class EnderMan_EndermanLeaveBlockGoalMixin {
 
     // @formatter:off

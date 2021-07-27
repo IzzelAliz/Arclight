@@ -100,10 +100,14 @@ import java.util.UUID;
 public abstract class EntityMixin implements InternalEntityBridge, EntityBridge, ICommandSourceBridge {
 
     // @formatter:off
-    @Shadow public float yRot;
+    @Shadow private float yRot;
     @Shadow public Level level;
     @Shadow protected int boardingCooldown;
-    @Shadow public float xRot;
+    @Shadow private float xRot;
+    @Shadow public abstract float getYRot();
+    @Shadow public abstract float getXRot();
+    @Shadow public abstract void setYRot(float p_146923_);
+    @Shadow public abstract void setXRot(float p_146927_);
     @Shadow public int remainingFireTicks;
     @Shadow public abstract Pose getPose();
     @Shadow public abstract String getScoreboardName();
@@ -244,7 +248,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     }
 
     public float getBukkitYaw() {
-        return yRot;
+        return getYRot();
     }
 
     @Override
@@ -468,11 +472,11 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
 
     @Inject(method = "saveWithoutId", at = @At(value = "INVOKE_ASSIGN", ordinal = 1, target = "Lnet/minecraft/nbt/CompoundTag;put(Ljava/lang/String;Lnet/minecraft/nbt/Tag;)Lnet/minecraft/nbt/Tag;"))
     public void arclight$writeWithoutTypeId$InfiniteValueCheck(CompoundTag compound, CallbackInfoReturnable<CompoundTag> cir) {
-        if (Float.isNaN(this.yRot)) {
+        if (Float.isNaN(this.getYRot())) {
             this.yRot = 0;
         }
 
-        if (Float.isNaN(this.xRot)) {
+        if (Float.isNaN(this.getXRot())) {
             this.xRot = 0;
         }
     }
@@ -823,7 +827,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             } else {
                 ServerLevel world = ((PortalInfoBridge) portalinfo).bridge$getWorld() == null ? server : ((PortalInfoBridge) portalinfo).bridge$getWorld();
                 this.unRide();
-                Entity transportedEntity = teleporter.placeEntity((Entity) (Object) this, (ServerLevel) this.level, server, this.yRot, spawnPortal -> { //Forge: Start vanilla logic
+                Entity transportedEntity = teleporter.placeEntity((Entity) (Object) this, (ServerLevel) this.level, server, this.getYRot(), spawnPortal -> { //Forge: Start vanilla logic
                     this.level.getProfiler().popPush("reloading");
                     Entity entity = this.getType().create(world);
                     if (entity != null) {
@@ -908,7 +912,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                     }
 
                     ArclightCaptures.captureCraftPortalEvent(event);
-                    return PortalShape.createPortalInfo(worldFinal, result, direction$axis, vector3d, this.getDimensions(this.getPose()), this.getDeltaMovement(), this.yRot, this.xRot);
+                    return PortalShape.createPortalInfo(worldFinal, result, direction$axis, vector3d, this.getDimensions(this.getPose()), this.getDeltaMovement(), this.getYRot(), this.getXRot());
                 }).orElse(null);
             }
         } else {
@@ -925,7 +929,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             }
             blockpos = new BlockPos(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
 
-            PortalInfo portalInfo = new PortalInfo(new Vec3((double) blockpos.getX() + 0.5D, blockpos.getY(), (double) blockpos.getZ() + 0.5D), this.getDeltaMovement(), this.yRot, this.xRot);
+            PortalInfo portalInfo = new PortalInfo(new Vec3((double) blockpos.getX() + 0.5D, blockpos.getY(), (double) blockpos.getZ() + 0.5D), this.getDeltaMovement(), this.getYRot(), this.getXRot());
             ((PortalInfoBridge) portalInfo).bridge$setWorld(((CraftWorld) event.getTo().getWorld()).getHandle());
             ((PortalInfoBridge) portalInfo).bridge$setPortalEventInfo(event);
             return portalInfo;

@@ -46,7 +46,7 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
 
     @Override
     public float getBukkitYaw() {
-        return this.yRot;
+        return this.getYRot();
     }
 
     @Inject(method = "hurt", cancellable = true, at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/decoration/ArmorStand;kill()V"))

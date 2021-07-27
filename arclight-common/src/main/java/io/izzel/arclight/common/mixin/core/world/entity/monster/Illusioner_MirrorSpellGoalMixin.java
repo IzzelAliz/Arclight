@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(targets = "net.minecraft.world.entity.monster.Illusioner.IllusionerMirrorSpellGoal")
+@Mixin(targets = "net.minecraft.world.entity.monster.Illusioner$IllusionerMirrorSpellGoal")
 public class Illusioner_MirrorSpellGoalMixin {
 
     @SuppressWarnings("target") @Shadow(aliases = {"this$0", "f_32955_"}, remap = false)

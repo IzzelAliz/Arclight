@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-@Mixin(targets = "net.minecraft.world.entity.monster.Silverfish.SilverfishMergeWithStoneGoal")
+@Mixin(targets = "net.minecraft.world.entity.monster.Silverfish$SilverfishMergeWithStoneGoal")
 public abstract class Silverfish_MergeWithStoneGoalMixin extends RandomStrollGoal {
 
     public Silverfish_MergeWithStoneGoalMixin(PathfinderMob creatureIn, double speedIn) {

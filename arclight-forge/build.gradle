@@ -7,9 +7,13 @@ buildscript {
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: "${forge_gradle_version}"
-        classpath 'org.spongepowered:mixingradle:0.7.1-SNAPSHOT'
+        classpath 'org.spongepowered:mixingradle:0.7.2-SNAPSHOT'
         classpath "io.izzel.arclight:arclight-gradle-plugin:$agpVersion"
     }
+}
+
+plugins {
+    id 'org.javamodularity.moduleplugin' version '1.8.7' apply false
 }
 
 apply plugin: 'net.minecraftforge.gradle'
@@ -18,6 +22,7 @@ apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'io.izzel.arclight'
 apply plugin: 'maven-publish'
+apply plugin: 'org.javamodularity.moduleplugin'
 
 arclight {
     mcVersion = minecraftVersion
@@ -31,8 +36,6 @@ arclight {
 
 archivesBaseName = archivesBaseName + '-' + minecraftVersion
 
-// sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '11'
-
 sourceSets {
     applaunch {
         java {
@@ -40,7 +43,16 @@ sourceSets {
             runtimeClasspath += main.output
         }
     }
+    module {
+        java {
+            compileClasspath += main.output
+            compileClasspath += main.compileClasspath
+            runtimeClasspath += main.output
+        }
+    }
 }
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 
 configurations {
     embed
@@ -64,11 +76,10 @@ repositories {
     maven { url = 'https://maven.izzel.io/releases' }
 }
 
-def embedLibs = [/*'org.spongepowered:mixin:0.8.1',*/ 'org.ow2.asm:asm-util:9.0',
-                 'org.ow2.asm:asm-analysis:9.0', 'org.yaml:snakeyaml:1.27',
+def embedLibs = ['org.spongepowered:mixin:0.8.3.2', 'org.yaml:snakeyaml:1.28',
                  'org.xerial:sqlite-jdbc:3.34.0', 'mysql:mysql-connector-java:5.1.49',
-                 'commons-lang:commons-lang:2.6', 'com.googlecode.json-simple:json-simple:1.1.1',
-                 'org.apache.logging.log4j:log4j-jul:2.11.2', 'net.md-5:SpecialSource:1.9.0',
+                 /*'commons-lang:commons-lang:2.6',*/ 'com.googlecode.json-simple:json-simple:1.1.1',
+                 'org.apache.logging.log4j:log4j-jul:2.11.2', 'net.md-5:SpecialSource:1.10.0',
                  'org.jline:jline-terminal-jansi:3.12.1', 'org.fusesource.jansi:jansi:1.18',
                  'org.jline:jline-terminal:3.12.1', 'org.jline:jline-reader:3.12.1',
                  'jline:jline:2.12.1', 'org.apache.maven:maven-resolver-provider:3.8.1',
@@ -80,12 +91,12 @@ def embedLibs = [/*'org.spongepowered:mixin:0.8.1',*/ 'org.ow2.asm:asm-util:9.0'
                  'org.apache.maven.resolver:maven-resolver-spi:1.6.2', 'org.apache.maven.resolver:maven-resolver-util:1.6.2',
                  'org.apache.maven.resolver:maven-resolver-impl:1.6.2', 'org.apache.httpcomponents:httpclient:4.5.12',
                  'org.apache.httpcomponents:httpcore:4.4.13', 'commons-codec:commons-codec:1.11',
-                 'org.slf4j:jcl-over-slf4j:1.7.30']
+                 'org.slf4j:jcl-over-slf4j:1.7.30', 'org.apache.logging.log4j:log4j-slf4j18-impl:2.14.1']
 
 dependencies {
     minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
     implementation group: 'org.jetbrains', name: 'annotations', version: '19.0.0'
-    implementation 'org.spongepowered:mixin:0.8.3'
+    // implementation 'org.spongepowered:mixin:0.8.3'
     implementation(project(':arclight-common')) {
         exclude module: 'forge'
     }
@@ -94,14 +105,12 @@ dependencies {
     for (def lib : embedLibs) {
         arclight lib
     }
-    embed('org.apache.logging.log4j:log4j-slf4j-impl:2.8.1') {
-        exclude module: 'log4j-api'
-    }
     embed 'net.md-5:bungeecord-chat:1.16-R0.4@jar'
     embed "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
-    embed 'com.github.ArclightTeam:mixin-tools:1.0.0@jar'
+    embed 'io.izzel.arclight:mixin-tools:1.0.1'
     embed "io.izzel:tools:$toolsVersion"
     embed "io.izzel.arclight:arclight-api:$apiVersion"
+    embed 'commons-lang:commons-lang:2.6@jar'
     annotationProcessor 'org.spongepowered:mixin:0.8.3:processor'
     annotationProcessor 'com.github.ArclightTeam:mixin-tools:1.0.0'
 }
@@ -128,18 +137,24 @@ jar {
     manifest.attributes 'Implementation-Version': "arclight-$minecraftVersion-${project.version}-${getGitHash()}"
     manifest.attributes 'Implementation-Vendor': 'Arclight Team'
     manifest.attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd HH:mm:ss")
-    manifest.attributes 'Add-Opens': 'java.base/sun.security.util java.base/java.util.jar'
-    manifest.attributes 'Add-Exports': 'java.base/sun.security.util'
+    manifest.attributes 'Automatic-Module-Name': 'arclight.boot'
     from(configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }) {
         exclude "META-INF/MANIFEST.MF"
         exclude "META-INF/*.SF"
         exclude "META-INF/*.DSA"
         exclude "META-INF/*.RSA"
         exclude "LICENSE.txt"
+        exclude "META-INF/services/**"
+        exclude "org/apache/commons/lang/enum/**"
     }
     from(project(':arclight-common').tasks.jar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) })
     from sourceSets.applaunch.output.classesDirs
+    from sourceSets.module.output.classesDirs
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.generateArclightMeta.doLast {
+    new File(project.buildDir, "arclight_cache/meta/META-INF/services").deleteDir()
 }
 
 remapSpigotJar {
@@ -152,6 +167,7 @@ mixin {
 }
 
 compileJava {
+    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_16
     options.compilerArgs << '-XDignore.symbol.file' << '-XDenableSunApiLintControl'
     options.encoding = 'UTF-8'
 }
@@ -160,19 +176,23 @@ compileApplaunchJava {
     sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_7
 }
 
+compileModuleJava {
+    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_16
+}
+
 task srgJar(type: Jar) {
     from(tasks.jar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) }) {
         include 'io/izzel/**'
         exclude 'io/izzel/arclight/common/mixin/**'
     }
-    classifier = 'srg'
+    archiveClassifier.set('srg')
 }
 
 task spigotJar(type: Jar) {
     with tasks.srgJar
     doLast {
         def task = tasks.create('renameSpigotJar', net.minecraftforge.gradle.userdev.tasks.RenameJarInPlace)
-        task.input = archivePath
+        task.input = archiveFile.get().asFile
         task.hasLog = false
         task.mappings = project(':arclight-common').file('build/arclight_cache/tmp_srg/bukkit_srg.srg')
         def args = task.args.toList()
@@ -180,7 +200,7 @@ task spigotJar(type: Jar) {
         task.setArgs(args)
         task.apply()
     }
-    classifier = 'spigot'
+    archiveClassifier.set('spigot')
 }
 
 task sourceJar(type: Jar) {

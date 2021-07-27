@@ -134,8 +134,8 @@ public abstract class AbstractMinecartMixin extends EntityMixin {
         double prevX = this.getX();
         double prevY = this.getY();
         double prevZ = this.getZ();
-        float prevYaw = this.yRot;
-        float prevPitch = this.xRot;
+        float prevYaw = this.getYRot();
+        float prevPitch = this.getXRot();
         if (this.getHurtTime() > 0) {
             this.setHurtTime(this.getHurtTime() - 1);
         }
@@ -150,15 +150,15 @@ public abstract class AbstractMinecartMixin extends EntityMixin {
                 double d0 = this.getX() + (this.lx - this.getX()) / this.lSteps;
                 double d2 = this.getY() + (this.ly - this.getY()) / this.lSteps;
                 double d3 = this.getZ() + (this.lz - this.getZ()) / this.lSteps;
-                double d4 = Mth.wrapDegrees(this.lyr - this.yRot);
-                this.yRot += (float) (d4 / this.lSteps);
-                this.xRot += (float) ((this.lxr - this.xRot) / this.lSteps);
+                double d4 = Mth.wrapDegrees(this.lyr - this.getYRot());
+                this.setYRot(this.getYRot() + (float) (d4 / this.lSteps));
+                this.setXRot(this.getXRot() + (float) ((this.lxr - this.getXRot()) / this.lSteps));
                 --this.lSteps;
                 this.setPos(d0, d2, d3);
-                this.setRot(this.yRot, this.xRot);
+                this.setRot(this.getYRot(), this.getXRot());
             } else {
                 this.setPos(this.getX(), this.getY(), this.getZ());
-                this.setRot(this.yRot, this.xRot);
+                this.setRot(this.getYRot(), this.getXRot());
             }
         } else {
             /*
@@ -186,24 +186,24 @@ public abstract class AbstractMinecartMixin extends EntityMixin {
                 this.comeOffTrack();
             }
             this.checkInsideBlocks();
-            this.xRot = 0.0f;
+            this.setXRot(0.f);
             double d5 = this.xo - this.getX();
             double d6 = this.zo - this.getZ();
             if (d5 * d5 + d6 * d6 > 0.001) {
-                this.yRot = (float) (Mth.atan2(d6, d5) * 180.0 / 3.141592653589793);
+                this.setYRot((float) (Mth.atan2(d6, d5) * 180.0 / 3.141592653589793));
                 if (this.flipped) {
-                    this.yRot += 180.0f;
+                    this.setYRot(this.getYRot() + 180.0f);
                 }
             }
-            double d7 = Mth.wrapDegrees(this.yRot - this.yRotO);
+            double d7 = Mth.wrapDegrees(this.getYRot() - this.yRotO);
             if (d7 < -170.0 || d7 >= 170.0) {
-                this.yRot += 180.0f;
+                this.setYRot(this.getYRot() + 180.0f);
                 this.flipped = !this.flipped;
             }
-            this.setRot(this.yRot, this.xRot);
+            this.setRot(this.getYRot(), this.getXRot());
             org.bukkit.World bworld = ((WorldBridge) this.level).bridge$getWorld();
             Location from = new Location(bworld, prevX, prevY, prevZ, prevYaw, prevPitch);
-            Location to = new Location(bworld, this.getX(), this.getY(), this.getZ(), this.yRot, this.xRot);
+            Location to = new Location(bworld, this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
             Vehicle vehicle = (Vehicle) this.getBukkitEntity();
             Bukkit.getPluginManager().callEvent(new VehicleUpdateEvent(vehicle));
             if (!from.equals(to)) {

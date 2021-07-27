@@ -7,7 +7,7 @@ buildscript {
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: "${forge_gradle_version}"
-        classpath 'org.spongepowered:mixingradle:0.7.1-SNAPSHOT'
+        classpath 'org.spongepowered:mixingradle:0.7.2-SNAPSHOT'
         classpath "io.izzel.arclight:arclight-gradle-plugin:$agpVersion"
     }
 }
@@ -28,7 +28,7 @@ arclight {
     // packageName = 'spigot'
 }
 
-// sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '11'
+java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 
 minecraft {
     mappings channel: 'official', version: minecraftVersion

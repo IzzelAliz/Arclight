@@ -83,7 +83,7 @@ public abstract class LavaFluidMixin {
         }
     }
 
-    @Eject(method = "flowInto", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/IWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+    @Eject(method = "spreadTo", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelAccessor;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     private boolean arclight$blockFromTo(LevelAccessor world, BlockPos pos, BlockState newState, int flags, CallbackInfo ci) {
         if (!CraftEventFactory.handleBlockFormEvent(((IWorldBridge) world).bridge$getMinecraftWorld(), pos, newState, flags)) {
             ci.cancel();

@@ -387,13 +387,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         }
     }
 
-    @Eject(method = "onLivingFall", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;attackEntityFrom(Lnet/minecraft/util/DamageSource;F)Z"))
-    private boolean arclight$fall(LivingEntity livingEntity, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        boolean ret = livingEntity.hurt(source, amount);
-        cir.setReturnValue(ret);
-        return ret;
-    }
-
     @Override
     public boolean bridge$canPickUpLoot() {
         return bukkitPickUpLoot;
@@ -622,7 +615,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                         d1 = (Math.random() - Math.random()) * 0.01D;
                     }
 
-                    this.hurtDir = (float) (Mth.atan2(d0, d1) * (double) (180F / (float) Math.PI) - (double) this.yRot);
+                    this.hurtDir = (float) (Mth.atan2(d0, d1) * (double) (180F / (float) Math.PI) - (double) this.getYRot());
                     this.knockback(0.4F, d1, d0);
                 } else {
                     this.hurtDir = (float) ((int) (Math.random() * 2.0D) * 180);
@@ -926,7 +919,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     }
 
     @Inject(method = "createWitherRose", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
-    private void arclight$witherRoseDrop(LivingEntity livingEntity, CallbackInfo ci, ItemEntity itemEntity) {
+    private void arclight$witherRoseDrop(LivingEntity livingEntity, CallbackInfo ci, boolean flag, ItemEntity itemEntity) {
         org.bukkit.event.entity.EntityDropItemEvent event = new org.bukkit.event.entity.EntityDropItemEvent(this.getBukkitEntity(), (org.bukkit.entity.Item) (((EntityBridge) itemEntity).bridge$getBukkitEntity()));
         CraftEventFactory.callEvent(event);
         if (event.isCancelled()) {

@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.ConduitBlockEntity;
@@ -12,17 +13,18 @@ import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.List;
 
 @Mixin(ConduitBlockEntity.class)
 public abstract class ConduitBlockEntityMixin extends BlockEntityMixin {
 
-    @Inject(method = "applyEffects", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;)Z"))
-    private static void arclight$addEntity(CallbackInfo ci, Player playerEntity) {
-        ((PlayerEntityBridge) playerEntity).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.CONDUIT);
+    @Redirect(method = "applyEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;)Z"))
+    private static boolean arclight$addEntity(Player player, MobEffectInstance eff) {
+        ((PlayerEntityBridge) player).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.CONDUIT);
+        return player.addEffect(eff);
     }
 
     @Inject(method = "updateDestroyTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z"))

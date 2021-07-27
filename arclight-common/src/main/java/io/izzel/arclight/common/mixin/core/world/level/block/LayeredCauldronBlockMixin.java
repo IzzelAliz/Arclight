@@ -40,12 +40,12 @@ public class LayeredCauldronBlockMixin {
     }
 
     @Redirect(method = "handlePrecipitation", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
-    private static boolean arclight$precipitation(Level level, BlockPos pos, BlockState state, BlockState old) {
+    private boolean arclight$precipitation(Level level, BlockPos pos, BlockState state, BlockState old) {
         return CauldronHooks.changeLevel(old, level, pos, state, null, CauldronLevelChangeEvent.ChangeReason.NATURAL_FILL);
     }
 
     @Eject(method = "receiveStalactiteDrip", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
-    private static boolean arclight$drip(Level level, BlockPos pos, BlockState state, BlockState old, CallbackInfo ci) {
+    private boolean arclight$drip(Level level, BlockPos pos, BlockState state, CallbackInfo ci, BlockState old) {
         if (CauldronHooks.changeLevel(old, level, pos, state, null, CauldronLevelChangeEvent.ChangeReason.NATURAL_FILL)) {
             return true;
         } else {

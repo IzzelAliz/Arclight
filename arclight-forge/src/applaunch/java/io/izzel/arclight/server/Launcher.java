@@ -2,8 +2,8 @@ package io.izzel.arclight.server;
 
 public class Launcher {
 
-    private static final int MIN_CLASS_VERSION = 52;
-    private static final int MIN_JAVA_VERSION = 8;
+    private static final int MIN_CLASS_VERSION = 60;
+    private static final int MIN_JAVA_VERSION = 16;
 
     public static void main(String[] args) throws Throwable {
         int javaVersion = (int) Float.parseFloat(System.getProperty("java.class.version"));

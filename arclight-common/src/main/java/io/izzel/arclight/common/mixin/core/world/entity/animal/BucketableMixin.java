@@ -29,7 +29,9 @@ public interface BucketableMixin {
      * @reason
      */
     @Overwrite
-    static <T extends LivingEntity & Bucketable> Optional<InteractionResult> bucketMobPickup(Player player, InteractionHand hand, T entity) {
+    static <T extends LivingEntity & Bucketable> Optional<InteractionResult> bucketMobPickup(Player player, InteractionHand hand, LivingEntity livingEntity) {
+        @SuppressWarnings("unchecked")
+        T entity = (T) livingEntity;
         ItemStack itemstack = player.getItemInHand(hand);
         if (itemstack.getItem() == Items.WATER_BUCKET && entity.isAlive()) {
             // entity.playSound(entity.getPickupSound(), 1.0F, 1.0F);

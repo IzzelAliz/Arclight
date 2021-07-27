@@ -10,7 +10,6 @@ import io.izzel.arclight.common.mod.util.log.ArclightLazyLogManager;
 import io.izzel.arclight.common.util.EnumTypeFactory;
 import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.arclight.i18n.ArclightLocale;
-import net.minecraftforge.server.ServerMain;
 
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -29,6 +28,7 @@ public abstract class ArclightMain {
     public void run(String[] args) throws Throwable {
         System.setProperty("java.util.logging.manager", ArclightLazyLogManager.class.getCanonicalName());
         System.setProperty("log4j.jul.LoggerAdapter", "io.izzel.arclight.common.mod.util.log.ArclightLoggerAdapter");
+        System.setProperty("log4j.configurationFile", "arclight-log4j2.xml");
         ArclightLocale.info("i18n.using-language", ArclightConfig.spec().getLocale().getCurrent(), ArclightConfig.spec().getLocale().getFallback());
         this.afterSetup();
         try {
@@ -45,9 +45,8 @@ public abstract class ArclightMain {
         }
         try {
             printLogo();
-            this.beforeStart();
             this.dirtyHacks();
-            ServerMain.main(args);
+            this.beforeStart();
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("Fail to launch Arclight.");

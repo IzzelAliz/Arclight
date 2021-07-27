@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
 import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
@@ -24,10 +25,10 @@ public class DyeItemMixin {
     @Shadow @Final private DyeColor dyeColor;
     // @formatter:on
 
-    @Eject(method = "itemInteractionForEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/SheepEntity;setFleeceColor(Lnet/minecraft/item/DyeColor;)V"))
+    @Eject(method = "interactLivingEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/Sheep;setColor(Lnet/minecraft/world/item/DyeColor;)V"))
     private void arclight$sheepDyeWool(net.minecraft.world.entity.animal.Sheep sheepEntity, DyeColor color, CallbackInfoReturnable<Boolean> cir, ItemStack stack, Player playerIn, LivingEntity target, InteractionHand hand) {
         byte bColor = (byte) this.dyeColor.getId();
-        SheepDyeWoolEvent event = new SheepDyeWoolEvent((Sheep) ((LivingEntityBridge) target).bridge$getBukkitEntity(), org.bukkit.DyeColor.getByWoolData(bColor));
+        SheepDyeWoolEvent event = new SheepDyeWoolEvent((Sheep) ((LivingEntityBridge) target).bridge$getBukkitEntity(), org.bukkit.DyeColor.getByWoolData(bColor), ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             cir.setReturnValue(false);

@@ -46,7 +46,7 @@ public abstract class ThrownEggMixin extends ThrowableProjectileMixin {
             }
             if (hatching) {
                 for (int i = 0; i < b0; ++i) {
-                    Entity entity = ((WorldBridge) this.level).bridge$getWorld().createEntity(new Location(((WorldBridge) this.level).bridge$getWorld(), this.getX(), this.getY(), this.getZ(), this.yRot, 0.0f), hatchingType.getEntityClass());
+                    Entity entity = ((WorldBridge) this.level).bridge$getWorld().createEntity(new Location(((WorldBridge) this.level).bridge$getWorld(), this.getX(), this.getY(), this.getZ(), this.getYRot(), 0.0f), hatchingType.getEntityClass());
                     if (((EntityBridge) entity).bridge$getBukkitEntity() instanceof Ageable) {
                         ((Ageable) ((EntityBridge) entity).bridge$getBukkitEntity()).setBaby();
                     }

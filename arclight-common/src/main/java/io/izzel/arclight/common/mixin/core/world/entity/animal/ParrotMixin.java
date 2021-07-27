@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.mixin.core.world.entity.animal.AnimalMixin;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.animal.Parrot;
@@ -21,7 +20,7 @@ public abstract class ParrotMixin extends AnimalMixin {
         bridge$pushEffectCause(EntityPotionEffectEvent.Cause.FOOD);
     }
 
-    @Redirect(method = "hurt", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraft/world/entity/animal/Parrot;setOrderedToSit(Z)V"))
+    @Redirect(method = "hurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/Parrot;setOrderedToSit(Z)V"))
     private void arclight$handledInSuper(Parrot parrotEntity, boolean p_233687_1_) {
     }
 

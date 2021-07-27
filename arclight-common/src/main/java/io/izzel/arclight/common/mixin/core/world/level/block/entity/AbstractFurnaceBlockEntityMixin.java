@@ -80,7 +80,8 @@ public abstract class AbstractFurnaceBlockEntityMixin extends LockableBlockEntit
     }
 
     @Inject(method = "serverTick", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "FIELD", ordinal = 0, target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;cookingProgress:I"))
-    private static void arclight$startSmelt(Level level, BlockPos pos, BlockState state, AbstractFurnaceBlockEntity furnace, CallbackInfo ci, Recipe<?> recipe) {
+    private static void arclight$startSmelt(Level level, BlockPos pos, BlockState state, AbstractFurnaceBlockEntity furnace, CallbackInfo ci,
+                                            boolean flag, boolean flag1, ItemStack stack, Recipe<?> recipe) {
         if (recipe != null && furnace.cookingProgress == 0) {
             CraftItemStack source = CraftItemStack.asCraftMirror(furnace.getItem(0));
             CookingRecipe<?> cookingRecipe = (CookingRecipe<?>) ((IRecipeBridge) recipe).bridge$toBukkitRecipe();

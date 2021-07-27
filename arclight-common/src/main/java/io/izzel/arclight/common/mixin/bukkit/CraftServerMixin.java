@@ -5,6 +5,7 @@ import com.mojang.brigadier.StringReader;
 import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
+import jline.console.ConsoleReader;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.dedicated.DedicatedPlayerList;
 import net.minecraft.server.dedicated.DedicatedServer;
@@ -36,6 +37,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -75,7 +77,20 @@ public abstract class CraftServerMixin implements CraftServerBridge {
         this.playerList = (DedicatedPlayerList) playerList;
     }
 
-    @Inject(method = "unloadWorld(Lorg/bukkit/World;Z)Z", require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;getChunkSource()Lnet/minecraft/server/level/ServerChunkCache;"))
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite(remap = false)
+    public ConsoleReader getReader() {
+        try {
+            return new ConsoleReader();
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    @Inject(method = "unloadWorld(Lorg/bukkit/World;Z)Z", remap = false, require = 1, at = @At(value = "INVOKE", ordinal = 1, target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))
     private void arclight$unloadForge(World world, boolean save, CallbackInfoReturnable<Boolean> cir) {
         MinecraftForge.EVENT_BUS.post(new WorldEvent.Unload(((CraftWorld) world).getHandle()));
         this.console.markWorldsDirty();

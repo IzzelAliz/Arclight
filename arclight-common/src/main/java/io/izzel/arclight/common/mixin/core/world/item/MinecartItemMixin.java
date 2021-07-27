@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(MinecartItem.class)
 public class MinecartItemMixin {
 
-    @Eject(method = "onItemUse", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
+    @Eject(method = "useOn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private boolean arclight$entityPlace(Level world, Entity entityIn, CallbackInfoReturnable<InteractionResult> cir, UseOnContext context) {
         if (CraftEventFactory.callEntityPlaceEvent(context, entityIn).isCancelled()) {
             cir.setReturnValue(InteractionResult.FAIL);

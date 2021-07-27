@@ -36,7 +36,7 @@ public abstract class ComposterBlockMixin {
     // @formatter:on
 
     @SuppressWarnings("UnresolvedMixinReference")
-    @Redirect(method = "getContainer", at = @At(value = "NEW", target = "()Lnet/minecraft/block/ComposterBlock$EmptyInventory;"))
+    @Redirect(method = "getContainer", at = @At(value = "NEW", target = "()Lnet/minecraft/world/level/block/ComposterBlock$EmptyContainer;"))
     public ComposterBlock.EmptyContainer arclight$newEmpty(BlockState blockState, LevelAccessor world, BlockPos blockPos) {
         ComposterBlock.EmptyContainer inventory = new ComposterBlock.EmptyContainer();
         ((IInventoryBridge) inventory).setOwner(new CraftBlockInventoryHolder(world, blockPos, inventory));

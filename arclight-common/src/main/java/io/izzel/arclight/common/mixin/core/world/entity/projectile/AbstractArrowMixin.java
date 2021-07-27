@@ -24,7 +24,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(net.minecraft.world.entity.projectile.AbstractArrow.class)
 public abstract class AbstractArrowMixin extends ProjectileMixin {
@@ -37,8 +36,8 @@ public abstract class AbstractArrowMixin extends ProjectileMixin {
     @Shadow protected abstract ItemStack getPickupItem();
     // @formatter:on
 
-    @Inject(method = "tick", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/entity/projectile/AbstractArrow;hasImpulse:Z"))
-    private void arclight$hitEvent(CallbackInfo ci, HitResult hitResult) {
+    @Redirect(method = "tick", at = @At(value = "INVOKE", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/entity/projectile/AbstractArrow;onHit(Lnet/minecraft/world/phys/HitResult;)V"))
+    private void arclight$hitEvent(net.minecraft.world.entity.projectile.AbstractArrow abstractArrow, HitResult hitResult) {
         this.preOnHit(hitResult);
     }
 

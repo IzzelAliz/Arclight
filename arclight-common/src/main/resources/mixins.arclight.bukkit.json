@@ -9,13 +9,13 @@
   "injectors": {
     "defaultRequire": 1
   },
+  "compatibilityLevel": "JAVA_11",
   "mixins": [
     "BukkitCommandWrapperMixin",
     "ColouredConsoleSenderMixin",
     "CraftAbstractVillagerMixin",
     "CraftBlockMixin",
     "CraftBlockStateMixin",
-    "CraftChunkMixin",
     "CraftConsoleCommandSenderMixin",
     "CraftEntityMixin",
     "CraftEventFactoryMixin",

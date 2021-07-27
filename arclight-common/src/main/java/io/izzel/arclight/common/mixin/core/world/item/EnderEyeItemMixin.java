@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(EnderEyeItem.class)
 public class EnderEyeItemMixin {
 
-    @Eject(method = "onItemRightClick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;addEntity(Lnet/minecraft/entity/Entity;)Z"))
+    @Eject(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private boolean arclight$returnIfFail(Level world, Entity entityIn, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir, Level worldIn, Player playerIn, InteractionHand handIn) {
         if (!world.addFreshEntity(entityIn)) {
             cir.setReturnValue(new InteractionResultHolder<>(InteractionResult.FAIL, playerIn.getItemInHand(handIn)));

@@ -8,6 +8,7 @@
   "injectors": {
     "defaultRequire": 1
   },
+  "compatibilityLevel": "JAVA_11",
   "mixins": [
     "FMLWorldPersistenceHookMixin",
     "ForgeEventFactoryMixin",

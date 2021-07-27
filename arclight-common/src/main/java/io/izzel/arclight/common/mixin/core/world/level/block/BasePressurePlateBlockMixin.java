@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BasePressurePlateBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -23,7 +24,7 @@ public abstract class BasePressurePlateBlockMixin {
     // @formatter:on
 
     @Redirect(method = "checkPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/BasePressurePlateBlock;getSignalStrength(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)I"))
-    public int arclight$blockRedstone(BasePressurePlateBlock abstractPressurePlateBlock, Level worldIn, BlockPos pos, Level world, BlockPos blockPos, BlockState state, int oldRedstoneStrength) {
+    private int arclight$blockRedstone(BasePressurePlateBlock abstractPressurePlateBlock, Level worldIn, BlockPos pos, Entity entity, Level world, BlockPos blockPos, BlockState state, int oldRedstoneStrength) {
         int newStrength = this.getSignalStrength(worldIn, pos);
         boolean flag = oldRedstoneStrength > 0;
         boolean flag1 = newStrength > 0;

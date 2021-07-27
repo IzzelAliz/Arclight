@@ -208,8 +208,8 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
 
         class Handler extends Thread {
 
-            Handler() {
-                super(SidedThreadGroups.SERVER, "User Authenticator #" + UNIQUE_THREAD_ID.incrementAndGet());
+            Handler(int i) {
+                super(SidedThreadGroups.SERVER, "User Authenticator #" + i);
             }
 
             public void run() {
@@ -249,12 +249,12 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
                 return server.getPreventProxyConnections() && socketaddress instanceof InetSocketAddress ? ((InetSocketAddress) socketaddress).getAddress() : null;
             }
         }
-        Thread thread = new Handler();
+        Thread thread = new Handler(UNIQUE_THREAD_ID.incrementAndGet());
         thread.setUncaughtExceptionHandler(new DefaultUncaughtExceptionHandler(LOGGER));
         thread.start();
     }
 
-    private void arclight$preLogin() throws Exception {
+    void arclight$preLogin() throws Exception {
         String playerName = gameProfile.getName();
         InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
         UUID uniqueId = gameProfile.getId();
