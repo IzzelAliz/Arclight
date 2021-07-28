@@ -9,7 +9,14 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fmllegacy.network.FMLNetworkConstants;
 import net.minecraftforge.server.permission.PermissionAPI;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.io.OutputStream;
+import java.io.PrintStream;
 
 @Mod("arclight")
 public class ArclightMod {
@@ -18,10 +25,34 @@ public class ArclightMod {
 
     public ArclightMod() {
         LOGGER.info("mod-load");
-        ArclightVersion.setVersion(ArclightVersion.v1_16_4);
+        ArclightVersion.setVersion(ArclightVersion.v1_17_R1);
+        System.setOut(new LoggingPrintStream("STDOUT", System.out, Level.INFO));
+        System.setErr(new LoggingPrintStream("STDERR", System.err, Level.ERROR));
         ArclightEventDispatcherRegistry.registerAllEventDispatchers();
         ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class,
             () -> new IExtensionPoint.DisplayTest(() -> FMLNetworkConstants.IGNORESERVERONLY, (a, b) -> true));
         PermissionAPI.setPermissionHandler(ArclightPermissionHandler.INSTANCE);
+    }
+
+    private static class LoggingPrintStream extends PrintStream {
+
+        private final Logger logger;
+        private final Level level;
+
+        public LoggingPrintStream(String name, @NotNull OutputStream out, Level level) {
+            super(out);
+            this.logger = LogManager.getLogger(name);
+            this.level = level;
+        }
+
+        @Override
+        public void println(@Nullable String x) {
+            logger.log(level, x);
+        }
+
+        @Override
+        public void println(@Nullable Object x) {
+            logger.log(level, String.valueOf(x));
+        }
     }
 }

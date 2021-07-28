@@ -60,13 +60,6 @@ public class ArclightLocator_Forge implements IModLocator {
 
     protected IModFile loadJar() {
         try {
-            var module = getClass().getModule();
-            for (var m : module.getLayer().modules()) {
-                module.addReads(m);
-            }
-            for (var layer : module.getLayer().parents()) {
-                layer.modules().forEach(module::addReads);
-            }
             var cl = forName("net.minecraftforge.fml.loading.moddiscovery.ModFile");
             var lookup = MethodHandles.lookup();
             var handle = lookup.findStatic(cl, "newFMLInstance", MethodType.methodType(cl, IModLocator.class, SecureJar.class));
@@ -87,10 +80,6 @@ public class ArclightLocator_Forge implements IModLocator {
 
     private JarMetadata excludePackages(SecureJar secureJar) {
         secureJar.getPackages().removeIf(it -> EXCLUDES.stream().anyMatch(it::startsWith));
-        return new SimpleJarMetadata("arclight", null, secureJar.getPackages(),
-            List.of(new SecureJar.Provider(
-                "cpw.mods.modlauncher.serviceapi.ILaunchPluginService",
-                List.of("io.izzel.arclight.common.asm.ArclightImplementer")
-            )));
+        return new SimpleJarMetadata("arclight", null, secureJar.getPackages(), List.of());
     }
 }

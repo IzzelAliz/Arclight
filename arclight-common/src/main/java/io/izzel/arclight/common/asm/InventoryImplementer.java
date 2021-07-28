@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class InventoryImplementer implements Implementer {
 
     private static final Marker MARKER = MarkerManager.getMarker("INVENTORY");
-    private static final String INV_TYPE = "net/minecraft/inventory/IInventory";
+    private static final String INV_TYPE = "net/minecraft/world/Container";
     private static final String BRIDGE_TYPE = "io/izzel/arclight/common/bridge/inventory/IInventoryBridge";
 
     private final Map<String, Integer> map = new ConcurrentHashMap<>();
@@ -114,7 +113,7 @@ public class InventoryImplementer implements Implementer {
         for (MethodNode method : node.methods) {
             String desc = method.name + method.desc;
             methods.add(desc);
-            if (desc.equals("func_70297_j_()I")) {
+            if (desc.equals("m_6893_()I")) {
                 stackLimitMethod = method;
             }
         }
@@ -176,7 +175,7 @@ public class InventoryImplementer implements Implementer {
                 stackLimitMethod.instructions.insert(list);
             } else {
                 MethodNode methodNode = stackLimitMethod == null
-                    ? new MethodNode(0, "func_70297_j_", "()I", null, null)
+                    ? new MethodNode(0, "m_6893_()I", "()I", null, null)
                     : stackLimitMethod;
                 methodNode.access = Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC;
                 int level = map.get(node.name);
@@ -222,22 +221,5 @@ public class InventoryImplementer implements Implementer {
             }
             return true;
         }
-    }
-
-    private List<FieldNode> findPossibleList(ClassNode node) {
-        LinkedList<FieldNode> list = new LinkedList<>();
-        for (FieldNode fieldNode : node.fields) {
-            boolean nonNullList = fieldNode.desc.equals("Lnet/minecraft/util/NonNullList;");
-            if (nonNullList || fieldNode.desc.equals("Ljava/util/List;")) {
-                if (fieldNode.signature != null && fieldNode.signature.contains("<Lnet/minecraft/item/ItemStack;>")) {
-                    if (nonNullList) {
-                        list.addFirst(fieldNode);
-                    } else {
-                        list.addLast(fieldNode);
-                    }
-                }
-            }
-        }
-        return list;
     }
 }

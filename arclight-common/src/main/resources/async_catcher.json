@@ -1,30 +1,28 @@
 {
-  "net/minecraft/world/server/ServerWorld": {
-    "func_72838_d(Lnet/minecraft/entity/Entity;)Z": "entity add",
-    "func_217465_m(Lnet/minecraft/entity/Entity;)V": "entity register",
-    "removeEntityComplete(Lnet/minecraft/entity/Entity;Z)V": "entity unregister"
+  "net/minecraft/server/level/ServerLevel": {
+    "m_8872_(Lnet/minecraft/world/entity/Entity;)Z": "entity add",
+    "m_142646_()Lnet/minecraft/world/level/entity/LevelEntityGetter;": "chunk entity get"
   },
-  "net/minecraft/world/server/ChunkManager$EntityTracker": {
-    "func_219399_a(Lnet/minecraft/entity/player/ServerPlayerEntity;)V": "player tracker clear",
-    "func_219400_b(Lnet/minecraft/entity/player/ServerPlayerEntity;)V": "player tracker update"
+  "net/minecraft/server/level/ServerLevel$EntityCallbacks": {
+    "m_141985_(Lnet/minecraft/world/entity/Entity;)V": "entity register",
+    "m_141981_(Lnet/minecraft/world/entity/Entity;)V": "entity unregister"
   },
-  "net/minecraft/block/Block": {
-    "func_220082_b(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Z)V": "block place",
-    "func_196243_a(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Z)V": "block remove"
+  "net/minecraft/server/level/ChunkMap$TrackedEntity": {
+    "m_140485_(Lnet/minecraft/server/level/ServerPlayer;)V": "player tracker clear",
+    "m_140497_(Lnet/minecraft/server/level/ServerPlayer;)V": "player tracker update"
   },
-  "net/minecraft/entity/LivingEntity": {
-    "func_195064_c(Lnet/minecraft/potion/EffectInstance;)Z": "effect add"
+  "net/minecraft/world/level/block/state/BlockBehaviour": {
+    "m_6807_(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Z)V": "block place",
+    "m_6810_(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Z)V": "block remove"
   },
-  "net/minecraft/world/server/ChunkManager": {
-    "func_219210_a(Lnet/minecraft/entity/Entity;)V": "entity track",
-    "func_219231_b(Lnet/minecraft/entity/Entity;)V": "entity untrack"
+  "net/minecraft/world/entity/LivingEntity": {
+    "m_147207_(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)Z": "effect add"
   },
-  "net/minecraft/world/chunk/Chunk": {
-    "func_177414_a(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/AxisAlignedBB;Ljava/util/List;Ljava/util/function/Predicate;)V": "chunk entity get",
-    "func_217313_a(Lnet/minecraft/entity/EntityType;Lnet/minecraft/util/math/AxisAlignedBB;Ljava/util/List;Ljava/util/function/Predicate;)V": "chunk entity get",
-    "func_177430_a(Ljava/lang/Class;Lnet/minecraft/util/math/AxisAlignedBB;Ljava/util/List;Ljava/util/function/Predicate;)V": "chunk entity get"
+  "net/minecraft/server/level/ChunkMap": {
+    "m_140199_(Lnet/minecraft/world/entity/Entity;)V": "entity track",
+    "m_140331_(Lnet/minecraft/world/entity/Entity;)V": "entity untrack"
   },
-  "net/minecraft/loot/LootTable": {
-    "func_216118_a(Lnet/minecraft/inventory/IInventory;Lnet/minecraft/loot/LootContext;)V": "loot generate"
+  "net/minecraft/world/level/storage/loot/LootTable": {
+    "m_79123_(Lnet/minecraft/world/Container;Lnet/minecraft/world/level/storage/loot/LootContext;)V": "loot generate"
   }
 }

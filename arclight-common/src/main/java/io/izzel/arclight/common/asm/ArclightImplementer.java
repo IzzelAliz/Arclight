@@ -2,6 +2,7 @@ package io.izzel.arclight.common.asm;
 
 import cpw.mods.modlauncher.api.NamedPath;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
+import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.common.mod.util.log.ArclightI18nLogger;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.Opcodes;
@@ -21,6 +22,12 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 public class ArclightImplementer implements ILaunchPluginService {
+
+    static {
+        try {
+            ArclightVersion.setVersion(ArclightVersion.v1_17_R1);
+        } catch (Throwable ignored) {}
+    }
 
     static final Logger LOGGER = ArclightI18nLogger.getLogger("Implementer");
 
