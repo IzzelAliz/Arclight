@@ -30,12 +30,12 @@ public class DerivedWorldInfoMixin implements DerivedWorldInfoBridge {
             if (ArclightConfig.spec().getCompat().isSymlinkWorld()) {
                 String worldName = this.wrapped.getLevelName() + "_";
                 String suffix;
-                if (typeKey == DimensionType.END_LOCATION) {
+                if (typeKey == DimensionType.NETHER_LOCATION) {
                     suffix = "nether";
-                } else if (typeKey == DimensionType.NETHER_LOCATION) {
+                } else if (typeKey == DimensionType.END_LOCATION) {
                     suffix = "the_end";
                 } else {
-                    suffix = (typeKey.location().getNamespace() + "/" + typeKey.location().getPath()).replace('/', '_');
+                    suffix = (typeKey.location().getNamespace() + "_" + typeKey.location().getPath()).replace('/', '_');
                 }
                 return worldName + suffix;
             } else {
