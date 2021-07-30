@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
-import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import net.minecraft.world.entity.projectile.ThrownEnderpearl;
 import net.minecraft.world.phys.HitResult;
 import org.bukkit.event.entity.CreatureSpawnEvent;

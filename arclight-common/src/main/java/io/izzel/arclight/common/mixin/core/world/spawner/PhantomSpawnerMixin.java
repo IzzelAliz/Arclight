@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.spawner;
 
-import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.levelgen.PhantomSpawner;
 import org.bukkit.event.entity.CreatureSpawnEvent;

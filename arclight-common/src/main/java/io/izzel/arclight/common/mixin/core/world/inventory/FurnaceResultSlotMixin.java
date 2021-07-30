@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.tileentity.AbstractFurnaceTileEntityBridge;
+import io.izzel.arclight.common.bridge.core.tileentity.AbstractFurnaceTileEntityBridge;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.FurnaceResultSlot;
 import net.minecraft.world.item.ItemStack;

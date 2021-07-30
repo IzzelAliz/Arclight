@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity.player;
 
-import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
-import io.izzel.arclight.common.bridge.entity.player.PlayerInventoryBridge;
-import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.PlayerInventoryBridge;
+import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;

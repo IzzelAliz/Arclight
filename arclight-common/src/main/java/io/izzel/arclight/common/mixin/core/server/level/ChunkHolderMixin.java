@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
 import com.mojang.datafixers.util.Either;
-import io.izzel.arclight.common.bridge.world.chunk.ChunkBridge;
-import io.izzel.arclight.common.bridge.world.server.ChunkHolderBridge;
-import io.izzel.arclight.common.bridge.world.server.ChunkMapBridge;
+import io.izzel.arclight.common.bridge.core.world.chunk.ChunkBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ChunkHolderBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ChunkMapBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import net.minecraft.core.BlockPos;

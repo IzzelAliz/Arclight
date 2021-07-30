@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.spawner;
 
-import io.izzel.arclight.common.bridge.entity.MobEntityBridge;
-import io.izzel.arclight.common.bridge.world.WorldBridge;
-import io.izzel.arclight.common.bridge.world.server.ServerWorldBridge;
+import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;

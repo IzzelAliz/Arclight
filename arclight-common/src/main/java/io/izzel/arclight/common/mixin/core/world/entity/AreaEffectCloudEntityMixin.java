@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
 import com.google.common.collect.Lists;
-import io.izzel.arclight.common.bridge.entity.AreaEffectCloudEntityBridge;
-import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.AreaEffectCloudEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;

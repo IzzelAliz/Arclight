@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
-import io.izzel.arclight.common.bridge.entity.AgeableEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.AgeableEntityBridge;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.AgeableMob;

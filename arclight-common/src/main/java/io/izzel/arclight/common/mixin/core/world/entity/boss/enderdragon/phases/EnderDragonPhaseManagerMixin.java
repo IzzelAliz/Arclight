@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.boss.enderdragon.phases;
 
-import io.izzel.arclight.common.bridge.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.enderdragon.phases.DragonPhaseInstance;
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;

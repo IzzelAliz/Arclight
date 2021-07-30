@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mod.server.event;
 
-import io.izzel.arclight.common.bridge.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;

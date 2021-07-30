@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.server.management;
 
-import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.server.management.PlayerInteractionManagerBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.management.PlayerInteractionManagerBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.advancements.CriteriaTriggers;

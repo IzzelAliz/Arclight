@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.network.protocol.game;
 
-import io.izzel.arclight.common.bridge.network.play.TimestampedPacket;
+import io.izzel.arclight.common.bridge.core.network.play.TimestampedPacket;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import org.spongepowered.asm.mixin.Mixin;

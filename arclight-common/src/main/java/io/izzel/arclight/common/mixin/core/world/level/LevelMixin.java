@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.level;
 
-import io.izzel.arclight.common.bridge.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.world.WorldBridge;
-import io.izzel.arclight.common.bridge.world.border.WorldBorderBridge;
-import io.izzel.arclight.common.bridge.world.server.ServerChunkProviderBridge;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.border.WorldBorderBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.server.world.WrappedWorlds;

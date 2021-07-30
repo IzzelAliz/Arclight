@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.bridge.inventory.container.ContainerBridge;
+import io.izzel.arclight.common.bridge.core.inventory.container.ContainerBridge;
 import org.bukkit.inventory.InventoryView;
 import org.spongepowered.asm.mixin.Mixin;
 

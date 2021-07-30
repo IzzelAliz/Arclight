@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
 import com.google.common.collect.Lists;
-import io.izzel.arclight.common.bridge.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.world.storage.MapDataBridge;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.world.storage.MapDataBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;

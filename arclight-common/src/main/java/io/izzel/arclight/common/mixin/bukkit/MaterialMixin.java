@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import com.google.common.collect.ImmutableMap;
-import io.izzel.arclight.common.bridge.block.FireBlockBridge;
+import io.izzel.arclight.common.bridge.core.block.FireBlockBridge;
 import io.izzel.arclight.common.bridge.bukkit.MaterialBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.server.block.ArclightTileInventory;

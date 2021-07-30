@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mod.server.event;
 
-import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.mod.util.ArclightBlockSnapshot;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.core.Direction;

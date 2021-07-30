@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.ai.behavior;
 
-import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.ai.behavior.VillagerMakeLove;

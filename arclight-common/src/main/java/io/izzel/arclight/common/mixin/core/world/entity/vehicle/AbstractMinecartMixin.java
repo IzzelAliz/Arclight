@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.vehicle;
 
-import io.izzel.arclight.common.bridge.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.EntityMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;

@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mod.server.event;
 
-import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import net.minecraftforge.event.entity.living.PotionEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;

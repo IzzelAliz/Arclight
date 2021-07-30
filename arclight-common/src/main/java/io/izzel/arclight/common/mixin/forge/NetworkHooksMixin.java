@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.forge;
 
-import io.izzel.arclight.common.bridge.inventory.container.ContainerBridge;
+import io.izzel.arclight.common.bridge.core.inventory.container.ContainerBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.network.Connection;
 import net.minecraft.network.FriendlyByteBuf;

@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
-import io.izzel.arclight.common.bridge.command.ICommandSourceBridge;
+import io.izzel.arclight.common.bridge.core.command.ICommandSourceBridge;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.world.level.block.entity.CommandBlockEntity;
 import org.bukkit.command.CommandSender;

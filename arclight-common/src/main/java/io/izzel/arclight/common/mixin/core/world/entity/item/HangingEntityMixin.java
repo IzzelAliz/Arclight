@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.item;
 
-import io.izzel.arclight.common.bridge.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.util.IndirectEntityDamageSourceBridge;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.util.IndirectEntityDamageSourceBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.EntityMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

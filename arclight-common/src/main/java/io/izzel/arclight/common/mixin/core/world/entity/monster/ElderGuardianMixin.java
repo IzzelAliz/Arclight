@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
-import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.PathfinderMobMixin;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;

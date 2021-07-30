@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.gen;
 
-import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Final;

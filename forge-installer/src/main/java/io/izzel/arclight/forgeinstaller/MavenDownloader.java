@@ -1,8 +1,5 @@
 package io.izzel.arclight.forgeinstaller;
 
-import io.izzel.arclight.i18n.ArclightLocale;
-import io.izzel.arclight.i18n.LocalizedException;
-
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -54,13 +51,8 @@ public class MavenDownloader implements Supplier<Path> {
         joiner.add("");
         for (int i = 0; i < exceptions.size(); i++) {
             Exception exception = exceptions.get(i);
-            if (exception instanceof LocalizedException local) {
-                String format = ArclightLocale.getInstance().format(local.node(), local.args());
-                joiner.add("(" + (i + 1) + ") " + format);
-            } else {
-                joiner.add("(" + (i + 1) + ") " + exception);
-            }
+            joiner.add("(" + (i + 1) + ") " + exception);
         }
-        throw LocalizedException.unchecked("downloader.maven-fail", coord, joiner.toString());
+        throw new RuntimeException("Failed %s %s".formatted(coord, joiner.toString()));
     }
 }

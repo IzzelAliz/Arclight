@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.npc;
 
-import io.izzel.arclight.common.bridge.item.MerchantOfferBridge;
+import io.izzel.arclight.common.bridge.core.item.MerchantOfferBridge;
 import net.minecraft.world.entity.npc.WanderingTrader;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;

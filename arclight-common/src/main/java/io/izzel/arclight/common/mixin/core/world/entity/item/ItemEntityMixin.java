@@ -1,10 +1,10 @@
 package io.izzel.arclight.common.mixin.core.world.entity.item;
 
-import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
-import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
-import io.izzel.arclight.common.bridge.entity.player.PlayerInventoryBridge;
-import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.network.datasync.EntityDataManagerBridge;
+import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.PlayerInventoryBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.network.datasync.EntityDataManagerBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.EntityMixin;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.stats.Stats;

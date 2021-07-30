@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.commands.arguments.selector;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import io.izzel.arclight.common.bridge.command.arguments.EntitySelectorParserBridge;
+import io.izzel.arclight.common.bridge.core.command.arguments.EntitySelectorParserBridge;
 import net.minecraft.commands.arguments.selector.EntitySelector;
 import net.minecraft.commands.arguments.selector.EntitySelectorParser;
 import org.spongepowered.asm.mixin.Mixin;

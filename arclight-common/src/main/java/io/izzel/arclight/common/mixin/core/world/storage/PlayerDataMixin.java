@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.storage;
 
-import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.world.storage.PlayerDataBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.storage.PlayerDataBridge;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.level.ServerPlayer;

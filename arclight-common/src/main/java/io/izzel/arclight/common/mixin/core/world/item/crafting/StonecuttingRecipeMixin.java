@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.item.crafting;
 
-import io.izzel.arclight.common.bridge.item.crafting.IRecipeBridge;
+import io.izzel.arclight.common.bridge.core.item.crafting.IRecipeBridge;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;

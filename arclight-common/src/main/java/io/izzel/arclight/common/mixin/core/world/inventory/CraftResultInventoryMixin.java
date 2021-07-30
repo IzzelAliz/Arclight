@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;

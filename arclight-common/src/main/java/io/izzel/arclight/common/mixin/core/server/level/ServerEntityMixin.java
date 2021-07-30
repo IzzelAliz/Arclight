@@ -2,8 +2,8 @@ package io.izzel.arclight.common.mixin.core.server.level;
 
 import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Pair;
-import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.world.TrackedEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.TrackedEntityBridge;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundAddMobPacket;
 import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket;

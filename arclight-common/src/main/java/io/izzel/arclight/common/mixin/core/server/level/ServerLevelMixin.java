@@ -1,16 +1,16 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
 import com.google.common.collect.Lists;
-import io.izzel.arclight.common.bridge.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.world.ExplosionBridge;
-import io.izzel.arclight.common.bridge.world.WorldBridge;
-import io.izzel.arclight.common.bridge.world.server.ServerChunkProviderBridge;
-import io.izzel.arclight.common.bridge.world.server.ServerWorldBridge;
-import io.izzel.arclight.common.bridge.world.storage.DerivedWorldInfoBridge;
-import io.izzel.arclight.common.bridge.world.storage.MapDataBridge;
-import io.izzel.arclight.common.bridge.world.storage.WorldInfoBridge;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.world.ExplosionBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
+import io.izzel.arclight.common.bridge.core.world.storage.DerivedWorldInfoBridge;
+import io.izzel.arclight.common.bridge.core.world.storage.MapDataBridge;
+import io.izzel.arclight.common.bridge.core.world.storage.WorldInfoBridge;
 import io.izzel.arclight.common.mixin.core.world.level.LevelMixin;
 import io.izzel.arclight.common.mod.server.world.WorldSymlink;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;

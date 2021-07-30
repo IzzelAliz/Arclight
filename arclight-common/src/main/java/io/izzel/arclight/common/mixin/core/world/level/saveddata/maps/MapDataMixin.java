@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.saveddata.maps;
 
-import io.izzel.arclight.common.bridge.world.storage.MapDataBridge;
+import io.izzel.arclight.common.bridge.core.world.storage.MapDataBridge;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;

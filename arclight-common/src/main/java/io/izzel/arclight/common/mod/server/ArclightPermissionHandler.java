@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mod.server;
 
 import com.mojang.authlib.GameProfile;
-import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import net.minecraftforge.server.permission.DefaultPermissionLevel;
 import net.minecraftforge.server.permission.IPermissionHandler;
 import net.minecraftforge.server.permission.context.IContext;

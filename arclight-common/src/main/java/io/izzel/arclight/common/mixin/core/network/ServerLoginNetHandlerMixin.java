@@ -2,10 +2,10 @@ package io.izzel.arclight.common.mixin.core.network;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import io.izzel.arclight.common.bridge.network.NetworkManagerBridge;
-import io.izzel.arclight.common.bridge.network.login.ServerLoginNetHandlerBridge;
-import io.izzel.arclight.common.bridge.server.MinecraftServerBridge;
-import io.izzel.arclight.common.bridge.server.management.PlayerListBridge;
+import io.izzel.arclight.common.bridge.core.network.NetworkManagerBridge;
+import io.izzel.arclight.common.bridge.core.network.login.ServerLoginNetHandlerBridge;
+import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
+import io.izzel.arclight.common.bridge.core.server.management.PlayerListBridge;
 import net.minecraft.DefaultUncaughtExceptionHandler;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;

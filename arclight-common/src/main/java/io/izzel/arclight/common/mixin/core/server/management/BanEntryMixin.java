@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server.management;
 
-import io.izzel.arclight.common.bridge.server.management.BanEntryBridge;
+import io.izzel.arclight.common.bridge.core.server.management.BanEntryBridge;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

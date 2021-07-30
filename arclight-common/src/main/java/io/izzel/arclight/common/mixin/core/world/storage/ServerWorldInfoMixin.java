@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.storage;
 
 import com.mojang.serialization.Lifecycle;
-import io.izzel.arclight.common.bridge.world.storage.WorldInfoBridge;
+import io.izzel.arclight.common.bridge.core.world.storage.WorldInfoBridge;
 import net.minecraft.network.protocol.game.ClientboundChangeDifficultyPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;

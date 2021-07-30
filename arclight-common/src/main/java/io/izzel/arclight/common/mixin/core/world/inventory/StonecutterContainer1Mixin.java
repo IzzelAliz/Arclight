@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.inventory.container.PosContainerBridge;
+import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.inventory.container.PosContainerBridge;
 import net.minecraft.world.inventory.StonecutterMenu;
 import org.bukkit.Location;
 import org.spongepowered.asm.mixin.Mixin;

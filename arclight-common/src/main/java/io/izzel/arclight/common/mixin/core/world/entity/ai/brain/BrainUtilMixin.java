@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.ai.brain;
 
-import io.izzel.arclight.common.bridge.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.behavior.BehaviorUtils;
 import net.minecraft.world.entity.item.ItemEntity;

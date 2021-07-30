@@ -1,5 +1,7 @@
 package io.izzel.arclight.server;
 
+import io.izzel.arclight.boot.Main_Forge;
+
 public class Launcher {
 
     private static final int MIN_CLASS_VERSION = 60;

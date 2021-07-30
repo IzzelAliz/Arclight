@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server;
 
-import io.izzel.arclight.common.bridge.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.server.PlayerAdvancements;
 import net.minecraft.server.level.ServerPlayer;
@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import io.izzel.arclight.common.bridge.advancement.AdvancementBridge;
+import io.izzel.arclight.common.bridge.core.advancement.AdvancementBridge;
 
 @Mixin(PlayerAdvancements.class)
 public class PlayerAdvancementsMixin {

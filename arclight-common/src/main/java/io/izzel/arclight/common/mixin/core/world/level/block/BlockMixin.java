@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
-import io.izzel.arclight.common.bridge.block.BlockBridge;
+import io.izzel.arclight.common.bridge.core.block.BlockBridge;
 import io.izzel.arclight.common.mixin.core.world.level.block.state.BlockBehaviourMixin;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.core.BlockPos;

@@ -1,7 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.bridge.entity.passive.TurtleEntityBridge;
-import io.izzel.arclight.common.mixin.core.world.entity.animal.AnimalMixin;
+import io.izzel.arclight.common.bridge.core.entity.passive.TurtleEntityBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.animal.Turtle;

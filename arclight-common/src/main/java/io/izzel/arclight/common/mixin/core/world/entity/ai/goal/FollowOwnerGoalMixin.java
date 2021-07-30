@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.ai.goal;
 
-import io.izzel.arclight.common.bridge.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ai.goal.FollowOwnerGoal;
 import org.bukkit.Bukkit;

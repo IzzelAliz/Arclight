@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
-import io.izzel.arclight.common.bridge.world.server.TicketManagerBridge;
+import io.izzel.arclight.common.bridge.core.world.server.TicketManagerBridge;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectSet;

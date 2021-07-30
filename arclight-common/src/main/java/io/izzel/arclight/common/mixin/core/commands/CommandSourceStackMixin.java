@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.commands;
 
 import com.mojang.brigadier.tree.CommandNode;
-import io.izzel.arclight.common.bridge.command.CommandSourceBridge;
-import io.izzel.arclight.common.bridge.command.ICommandSourceBridge;
+import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
+import io.izzel.arclight.common.bridge.core.command.ICommandSourceBridge;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerLevel;

@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
-import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
-import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;

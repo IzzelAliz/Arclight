@@ -1,14 +1,11 @@
 package io.izzel.arclight.forgeinstaller;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.izzel.arclight.api.Unsafe;
-import io.izzel.arclight.i18n.ArclightLocale;
-import io.izzel.arclight.i18n.LocalizedException;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,7 +56,7 @@ public class ForgeInstaller {
     };
     private static final String INSTALLER_URL = "https://arclight.mcxk.net/net/minecraftforge/forge/%s-%s/forge-%s-%s-installer.jar";
     private static final String SERVER_URL = "https://arclight.mcxk.net/net/minecraft/server/minecraft_server.%s.jar";
-    private static final Map<String, String> VERSION_HASH = ImmutableMap.of(
+    private static final Map<String, String> VERSION_HASH = Map.of(
         "1.17.1", "A16D67E5807F57FC4E550299CF20226194497DC2"
     );
 
@@ -69,13 +66,13 @@ public class ForgeInstaller {
         List<Supplier<Path>> suppliers = checkMavenNoSource(installInfo.libraries);
         Path path = Paths.get("libraries", "net", "minecraftforge", "forge", installInfo.installer.minecraft + "-" + installInfo.installer.forge, "win_args.txt");
         if (!suppliers.isEmpty() || !Files.exists(path)) {
-            ArclightLocale.info("downloader.info2");
+            System.out.println("Downloading missing libraries ...");
             ExecutorService pool = Executors.newFixedThreadPool(8);
             CompletableFuture<?>[] array = suppliers.stream().map(reportSupply(pool)).toArray(CompletableFuture[]::new);
             if (!Files.exists(path)) {
                 CompletableFuture<?>[] futures = installForge(installInfo, pool);
                 handleFutures(futures);
-                ArclightLocale.info("downloader.forge-install");
+                System.out.println("Forge installation is starting, please wait... ");
                 try {
                     ProcessBuilder builder = new ProcessBuilder();
                     File file = new File(System.getProperty("java.home"), "bin/java");
@@ -99,7 +96,7 @@ public class ForgeInstaller {
 
     private static Function<Supplier<Path>, CompletableFuture<Path>> reportSupply(ExecutorService service) {
         return it -> CompletableFuture.supplyAsync(it, service).thenApply(path -> {
-            ArclightLocale.info("downloader.complete", path);
+            System.out.println("Downloaded " + path);
             return path;
         });
     }
@@ -135,10 +132,7 @@ public class ForgeInstaller {
             try {
                 future.join();
             } catch (CompletionException e) {
-                Throwable cause = e.getCause();
-                if (cause instanceof LocalizedException local) {
-                    ArclightLocale.error(local.node(), local.args());
-                } else throw e;
+                System.err.println(e.getCause().toString());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -196,6 +190,7 @@ public class ForgeInstaller {
         List<String> userArgs = new ArrayList<>();
         List<String> opens = new ArrayList<>();
         List<String> exports = new ArrayList<>();
+        exports.add("cpw.mods.bootstraplauncher/cpw.mods.bootstraplauncher=ALL-UNNAMED");
         List<String> ignores = new ArrayList<>();
         List<String> merges = new ArrayList<>();
         var self = new File(ForgeInstaller.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getCanonicalPath();
@@ -210,12 +205,9 @@ public class ForgeInstaller {
                 } else if (arg.startsWith("-D")) {
                     var split = arg.substring(2).split("=", 2);
                     if (split[0].equals("legacyClassPath")) {
-                        for (String lib : split[1].split(File.pathSeparator)) {
-                            addToPath(Paths.get(lib), ignores.stream().anyMatch(lib::contains));
-                        }
                         split[1] =
                             Stream.concat(
-                                Stream.concat(Stream.of(split[1]), installInfo.libraries.keySet().stream()
+                                Stream.concat(Stream.of(self, split[1]), installInfo.libraries.keySet().stream()
                                     .map(it -> Paths.get("libraries", Util.mavenToPath(it)))
                                     .peek(it -> {
                                         var name = it.getFileName().toString();
@@ -224,7 +216,8 @@ public class ForgeInstaller {
                                         }
                                     })
                                     .map(Path::toString)),
-                                Stream.of(self)
+                                Stream.empty()
+                                //Stream.of(self)
                             ).collect(Collectors.joining(File.pathSeparator));
                     } else if (split[0].equals("ignoreList")) {
                         ignores.addAll(Arrays.asList(split[1].split(",")));
@@ -259,31 +252,35 @@ public class ForgeInstaller {
         for (String library : installInfo.libraries.keySet()) {
             addToPath(Paths.get("libraries", Util.mavenToPath(library)));
         }
-        addToPath(path);*/
+        addToPath(path);
         for (String library : installInfo.libraries.keySet()) {
             addToPath(Paths.get("libraries", Util.mavenToPath(library)), false);
-        }
+        }*/
         return Map.entry(Objects.requireNonNull(mainClass, "No main class found"), userArgs);
     }
 
-    private static void addToPath(Path path, boolean boot) throws Throwable {
-        ClassLoader loader = boot ? ClassLoader.getPlatformClassLoader() : ForgeInstaller.class.getClassLoader();
-        Field ucpField;
+    private static void addToPath(Path path) {
         try {
-            ucpField = loader.getClass().getDeclaredField("ucp");
-        } catch (NoSuchFieldException e) {
-            ucpField = loader.getClass().getSuperclass().getDeclaredField("ucp");
+            ClassLoader loader = ClassLoader.getPlatformClassLoader();
+            Field ucpField;
+            try {
+                ucpField = loader.getClass().getDeclaredField("ucp");
+            } catch (NoSuchFieldException e) {
+                ucpField = loader.getClass().getSuperclass().getDeclaredField("ucp");
+            }
+            long offset = Unsafe.objectFieldOffset(ucpField);
+            Object ucp = Unsafe.getObject(loader, offset);
+            if (ucp == null) {
+                var cl = Class.forName("jdk.internal.loader.URLClassPath");
+                var handle = Unsafe.lookup().findConstructor(cl, MethodType.methodType(void.class, URL[].class, AccessControlContext.class));
+                ucp = handle.invoke(new URL[]{}, (AccessControlContext) null);
+                Unsafe.putObjectVolatile(loader, offset, ucp);
+            }
+            Method method = ucp.getClass().getDeclaredMethod("addURL", URL.class);
+            Unsafe.lookup().unreflect(method).invoke(ucp, path.toUri().toURL());
+        } catch (Throwable t) {
+            t.printStackTrace();
         }
-        long offset = Unsafe.objectFieldOffset(ucpField);
-        Object ucp = Unsafe.getObject(loader, offset);
-        if (ucp == null) {
-            var cl = Class.forName("jdk.internal.loader.URLClassPath");
-            var handle = Unsafe.lookup().findConstructor(cl, MethodType.methodType(void.class, URL[].class, AccessControlContext.class));
-            ucp = handle.invoke(new URL[]{}, (AccessControlContext) null);
-            Unsafe.putObjectVolatile(loader, offset, ucp);
-        }
-        Method method = ucp.getClass().getDeclaredMethod("addURL", URL.class);
-        Unsafe.lookup().unreflect(method).invoke(ucp, path.toUri().toURL());
     }
 
     public static void addExports(List<String> exports) throws Throwable {
@@ -355,7 +352,7 @@ public class ForgeInstaller {
     private static void addModules(String modulePath) throws Throwable {
 
         // Find all extra modules
-        ModuleFinder finder = ModuleFinder.of(Arrays.stream(modulePath.split(File.pathSeparator)).map(Paths::get).toArray(Path[]::new));
+        ModuleFinder finder = ModuleFinder.of(Arrays.stream(modulePath.split(File.pathSeparator)).map(Paths::get).peek(ForgeInstaller::addToPath).toArray(Path[]::new));
         MethodHandle loadModuleMH = IMPL_LOOKUP.findVirtual(Class.forName("jdk.internal.loader.BuiltinClassLoader"), "loadModule", MethodType.methodType(void.class, ModuleReference.class));
 
         // Resolve modules to a new config

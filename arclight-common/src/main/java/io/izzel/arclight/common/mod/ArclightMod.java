@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mod;
 
-import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.common.mod.server.ArclightPermissionHandler;
 import io.izzel.arclight.common.mod.server.event.ArclightEventDispatcherRegistry;
 import io.izzel.arclight.common.mod.util.log.ArclightI18nLogger;
@@ -25,7 +24,6 @@ public class ArclightMod {
 
     public ArclightMod() {
         LOGGER.info("mod-load");
-        ArclightVersion.setVersion(ArclightVersion.v1_17_R1);
         System.setOut(new LoggingPrintStream("STDOUT", System.out, Level.INFO));
         System.setErr(new LoggingPrintStream("STDERR", System.err, Level.ERROR));
         ArclightEventDispatcherRegistry.registerAllEventDispatchers();

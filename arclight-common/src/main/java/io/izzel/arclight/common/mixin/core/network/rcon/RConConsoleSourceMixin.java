@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.network.rcon;
 
-import io.izzel.arclight.common.bridge.command.ICommandSourceBridge;
-import io.izzel.arclight.common.bridge.network.rcon.RConConsoleSourceBridge;
-import io.izzel.arclight.common.bridge.server.MinecraftServerBridge;
+import io.izzel.arclight.common.bridge.core.command.ICommandSourceBridge;
+import io.izzel.arclight.common.bridge.core.network.rcon.RConConsoleSourceBridge;
+import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.rcon.RconConsoleSource;

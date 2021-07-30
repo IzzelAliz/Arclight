@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mod.server;
 
 import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
-import io.izzel.arclight.common.bridge.server.MinecraftServerBridge;
+import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;

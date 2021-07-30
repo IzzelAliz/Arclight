@@ -1,0 +1,13 @@
+{
+  "minVersion": "0.8",
+  "package": "io.izzel.arclight.common.mixin.optimization.dfu",
+  "target": "@env(DEFAULT)",
+  "refmap": "mixins.arclight.refmap.json",
+  "compatibilityLevel": "JAVA_11",
+  "mixins": [
+    "CraftMagicNumbersMixin",
+    "DataFixerUpperMixin",
+    "DataFixesManagerMixin",
+    "MinecraftServerMixin"
+  ]
+}

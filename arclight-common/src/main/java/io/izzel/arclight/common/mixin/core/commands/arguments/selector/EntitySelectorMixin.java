@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.commands.arguments.selector;
 
-import io.izzel.arclight.common.bridge.command.CommandSourceBridge;
+import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.selector.EntitySelector;
 import org.spongepowered.asm.mixin.Mixin;

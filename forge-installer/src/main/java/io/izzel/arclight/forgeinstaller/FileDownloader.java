@@ -1,7 +1,6 @@
 package io.izzel.arclight.forgeinstaller;
 
 import io.izzel.arclight.api.Unsafe;
-import io.izzel.arclight.i18n.LocalizedException;
 
 import javax.net.ssl.SSLException;
 import java.io.File;
@@ -11,26 +10,19 @@ import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.rmi.RemoteException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.function.Supplier;
 
-public class FileDownloader implements Supplier<Path> {
-
-    private final String url;
-    private final String target;
-    private final String hash;
-
-    public FileDownloader(String url, String target, String hash) {
-        this.url = url;
-        this.target = target;
-        this.hash = hash;
-    }
+public record FileDownloader(String url, String target, String hash) implements Supplier<Path> {
 
     @Override
     public Path get() {
@@ -41,7 +33,7 @@ public class FileDownloader implements Supplier<Path> {
             }
             if (Files.exists(path)) {
                 if (Files.isDirectory(path)) {
-                    throw LocalizedException.checked("downloader.dir", target);
+                    throw new FileAlreadyExistsException(target);
                 } else {
                     if (Util.hash(path).equals(hash)) return path;
                     else Files.delete(path);
@@ -54,20 +46,20 @@ public class FileDownloader implements Supplier<Path> {
             try (InputStream stream = redirect(url)) {
                 Files.copy(stream, path, StandardCopyOption.REPLACE_EXISTING);
             } catch (SocketTimeoutException | SSLException e) {
-                throw LocalizedException.checked("downloader.timeout", e, url);
+                throw new RuntimeException("Timeout " + url);
             }
             if (Files.exists(path)) {
                 String hash = Util.hash(path);
                 if (hash.equalsIgnoreCase(this.hash)) return path;
                 else {
                     Files.delete(path);
-                    throw LocalizedException.checked("downloader.hash-not-match", this.hash, hash, url);
+                    throw new RuntimeException("Hash not match, expect %s found %s in %s".formatted(this.hash, hash, url));
                 }
             } else {
-                throw LocalizedException.checked("downloader.not-found", url);
+                throw new RuntimeException("Not found " + url);
             }
         } catch (AccessDeniedException e) {
-            throw LocalizedException.unchecked("downloader.access-denied", e.getFile(), e);
+            throw new RuntimeException("Access denied for file " + e.getFile(), e);
         } catch (Exception e) {
             Unsafe.throwException(e);
             return null;
@@ -83,7 +75,7 @@ public class FileDownloader implements Supplier<Path> {
             StringJoiner joiner = new StringJoiner("\n        ");
             joiner.add("");
             history.forEach(joiner::add);
-            throw LocalizedException.unchecked("downloader.redirect-error", joiner.toString());
+            throw new RuntimeException("Redirect error " + joiner);
         } else {
             history.add(url.toString());
         }
@@ -95,12 +87,12 @@ public class FileDownloader implements Supplier<Path> {
         if (responseCode == HttpURLConnection.HTTP_OK) {
             return connection.getInputStream();
         } else if (responseCode == HttpURLConnection.HTTP_MOVED_PERM || responseCode == HttpURLConnection.HTTP_MOVED_TEMP) {
-            String location = URLDecoder.decode(connection.getHeaderField("Location"), "UTF-8");
+            String location = URLDecoder.decode(connection.getHeaderField("Location"), StandardCharsets.UTF_8);
             return redirect(new URL(url, location));
         } else if (responseCode == HttpURLConnection.HTTP_NOT_FOUND || responseCode == HttpURLConnection.HTTP_FORBIDDEN) {
-            throw LocalizedException.unchecked("downloader.not-found", url);
+            throw new RuntimeException("Not found " + url);
         } else {
-            throw LocalizedException.unchecked("downloader.http-error", responseCode, url);
+            throw new RemoteException("Http " + responseCode + " " + url);
         }
     }
 }

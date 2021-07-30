@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;

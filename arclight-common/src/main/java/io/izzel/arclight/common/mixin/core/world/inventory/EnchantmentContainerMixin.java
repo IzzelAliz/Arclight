@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
-import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.inventory.container.PosContainerBridge;
-import io.izzel.arclight.common.bridge.util.IWorldPosCallableBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.inventory.container.PosContainerBridge;
+import io.izzel.arclight.common.bridge.core.util.IWorldPosCallableBridge;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;

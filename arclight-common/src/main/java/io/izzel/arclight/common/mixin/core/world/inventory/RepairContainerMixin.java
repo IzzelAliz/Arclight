@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
-import io.izzel.arclight.common.bridge.util.IWorldPosCallableBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.util.IWorldPosCallableBridge;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.AnvilMenu;

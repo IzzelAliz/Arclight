@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster.piglin;
 
-import io.izzel.arclight.common.bridge.entity.MobEntityBridge;
-import io.izzel.arclight.common.bridge.entity.monster.piglin.PiglinBridge;
+import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.monster.piglin.PiglinBridge;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
@@ -74,7 +74,7 @@ public abstract class PiglinAiMixin {
         }
     }
 
-    protected static boolean isLovedByPiglin(ItemStack itemstack, Piglin piglin) {
+    private static boolean isLovedByPiglin(ItemStack itemstack, Piglin piglin) {
         return isLovedItem(itemstack) || (((PiglinBridge) piglin).bridge$getInterestItems().contains(itemstack.getItem())
             || ((PiglinBridge) piglin).bridge$getAllowedBarterItems().contains(itemstack.getItem()));
     }

@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
 import com.google.common.base.Joiner;
-import io.izzel.arclight.common.bridge.command.CommandSourceBridge;
+import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;

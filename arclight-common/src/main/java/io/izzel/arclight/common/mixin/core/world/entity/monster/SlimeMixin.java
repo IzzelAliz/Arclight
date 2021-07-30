@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
-import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.MobMixin;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EntityType;

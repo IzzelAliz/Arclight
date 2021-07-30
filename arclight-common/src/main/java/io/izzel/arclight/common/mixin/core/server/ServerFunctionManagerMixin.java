@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.server;
 
 import com.mojang.brigadier.CommandDispatcher;
-import io.izzel.arclight.common.bridge.server.MinecraftServerBridge;
+import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerFunctionManager;

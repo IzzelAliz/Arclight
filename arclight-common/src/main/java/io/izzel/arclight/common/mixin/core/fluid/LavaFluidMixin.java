@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.fluid;
 
-import io.izzel.arclight.common.bridge.world.IWorldBridge;
+import io.izzel.arclight.common.bridge.core.world.IWorldBridge;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.GameRules;

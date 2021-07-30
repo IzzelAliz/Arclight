@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
-import io.izzel.arclight.common.bridge.entity.monster.CreeperEntityBridge;
-import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.entity.monster.CreeperEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.PathfinderMobMixin;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.server.level.ServerLevel;

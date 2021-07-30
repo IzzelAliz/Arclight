@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mod.server.event;
 
-import io.izzel.arclight.common.bridge.world.chunk.ChunkBridge;
+import io.izzel.arclight.common.bridge.core.world.chunk.ChunkBridge;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.chunk.ChunkAccess;

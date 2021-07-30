@@ -1,7 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.bridge.inventory.CraftingInventoryBridge;
-import io.izzel.arclight.common.mixin.core.world.entity.animal.AnimalMixin;
+import io.izzel.arclight.common.bridge.core.inventory.CraftingInventoryBridge;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.inventory.ResultContainer;
 import net.minecraft.world.item.DyeColor;

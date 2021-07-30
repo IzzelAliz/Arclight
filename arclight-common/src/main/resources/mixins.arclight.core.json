@@ -17,7 +17,6 @@
   "compatibilityLevel": "JAVA_11",
   "mixins": [
     "advancements.AdvancementMixin",
-    "commands.CommandNodeMixin",
     "commands.CommandsMixin",
     "commands.CommandSourceMixin",
     "commands.CommandSourceStackMixin",

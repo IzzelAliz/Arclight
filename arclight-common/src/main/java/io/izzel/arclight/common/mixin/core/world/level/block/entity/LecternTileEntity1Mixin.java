@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
-import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.tileentity.TileEntityBridge;
-import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.tileentity.TileEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;

@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
-import io.izzel.arclight.common.bridge.block.PortalInfoBridge;
-import io.izzel.arclight.common.bridge.block.PortalSizeBridge;
-import io.izzel.arclight.common.bridge.world.IWorldBridge;
-import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.block.PortalInfoBridge;
+import io.izzel.arclight.common.bridge.core.block.PortalSizeBridge;
+import io.izzel.arclight.common.bridge.core.world.IWorldBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.BlockUtil;
 import net.minecraft.core.BlockPos;

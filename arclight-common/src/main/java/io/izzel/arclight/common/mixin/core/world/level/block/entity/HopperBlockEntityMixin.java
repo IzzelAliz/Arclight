@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
-import io.izzel.arclight.common.bridge.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.tileentity.TileEntityBridge;
-import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.tileentity.TileEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.core.Direction;

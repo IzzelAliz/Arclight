@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import io.izzel.arclight.common.bridge.entity.projectile.DamagingProjectileEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.projectile.DamagingProjectileEntityBridge;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.Ghast;
 import net.minecraft.world.level.Level;

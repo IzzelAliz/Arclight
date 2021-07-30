@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
-import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.WitherSkull;
 import net.minecraft.world.level.Explosion;

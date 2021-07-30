@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal.horse;
 
-import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.animal.AnimalMixin;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.SimpleContainer;

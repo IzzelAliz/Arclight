@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.commands;
 
-import io.izzel.arclight.common.bridge.command.ICommandSourceBridge;
+import io.izzel.arclight.common.bridge.core.command.ICommandSourceBridge;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import org.bukkit.command.CommandSender;

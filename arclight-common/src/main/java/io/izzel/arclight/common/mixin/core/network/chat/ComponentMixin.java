@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.network.chat;
 
 import com.google.common.collect.Streams;
-import io.izzel.arclight.common.bridge.util.text.ITextComponentBridge;
+import io.izzel.arclight.common.bridge.core.util.text.ITextComponentBridge;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;

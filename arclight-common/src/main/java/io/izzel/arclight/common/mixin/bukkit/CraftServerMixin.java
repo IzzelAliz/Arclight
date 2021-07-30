@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.bukkit;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.StringReader;
 import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
-import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import jline.console.ConsoleReader;
 import net.minecraft.commands.CommandSourceStack;

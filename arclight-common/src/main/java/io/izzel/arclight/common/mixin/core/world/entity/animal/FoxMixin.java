@@ -1,7 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.bridge.entity.passive.FoxEntityBridge;
-import io.izzel.arclight.common.mixin.core.world.entity.animal.AnimalMixin;
+import io.izzel.arclight.common.bridge.core.entity.passive.FoxEntityBridge;
 import net.minecraft.world.entity.animal.Fox;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;

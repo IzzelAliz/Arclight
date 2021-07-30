@@ -23,9 +23,13 @@ arclight {
     forgeVersion = project.ext.forgeVersion
     bukkitVersion = 'v1_17_R1'
     wipeVersion = true
-    reobfVersion = false
+    reobfVersion = true
     accessTransformer = project.file('bukkit.at')
     // packageName = 'spigot'
+}
+
+configurations {
+    embed
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(16)
@@ -64,17 +68,37 @@ dependencies {
     implementation "io.izzel:tools:$toolsVersion"
     implementation "io.izzel.arclight:arclight-api:$apiVersion"
     implementation project(':i18n-config')
+    embed 'net.md-5:bungeecord-chat:1.16-R0.4@jar'
+    embed "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
+}
+
+jar {
+    manifest.attributes 'MixinConnector': 'io.izzel.arclight.common.mod.ArclightConnector'
+    manifest.attributes 'Implementation-Title': 'Arclight'
+    manifest.attributes 'Implementation-Version': "arclight-$minecraftVersion-${project.version}-$gitHash"
+    manifest.attributes 'Implementation-Vendor': 'Arclight Team'
+    manifest.attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd HH:mm:ss")
+    from(configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }) {
+        exclude "META-INF/MANIFEST.MF"
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+        exclude "LICENSE.txt"
+        exclude "META-INF/services/**"
+        exclude "org/apache/commons/lang/enum/**"
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+processResources {
+    filesMatching("**/mods.toml") {
+        expand 'version': "$minecraftVersion-${project.version}-$gitHash"
+    }
 }
 
 remapSpigotJar {
     includes.add('net/minecraft/world/level/block/ChestBlock$DoubleInventory')
     includes.add('net/minecraft/tileentity/LecternTileEntity$LecternInventory')
-}
-
-generateArclightMeta {
-    doFirst {
-        throw new StopExecutionException()
-    }
 }
 
 mixin {

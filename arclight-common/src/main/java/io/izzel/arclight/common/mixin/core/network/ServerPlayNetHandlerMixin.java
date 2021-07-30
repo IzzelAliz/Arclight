@@ -1,15 +1,15 @@
 package io.izzel.arclight.common.mixin.core.network;
 
 import com.google.common.base.Charsets;
-import io.izzel.arclight.common.bridge.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.inventory.container.ContainerBridge;
-import io.izzel.arclight.common.bridge.network.play.ServerPlayNetHandlerBridge;
-import io.izzel.arclight.common.bridge.network.play.TimestampedPacket;
-import io.izzel.arclight.common.bridge.server.MinecraftServerBridge;
-import io.izzel.arclight.common.bridge.server.management.PlayerInteractionManagerBridge;
-import io.izzel.arclight.common.bridge.server.management.PlayerListBridge;
-import io.izzel.arclight.common.bridge.tileentity.SignTileEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.inventory.container.ContainerBridge;
+import io.izzel.arclight.common.bridge.core.network.play.ServerPlayNetHandlerBridge;
+import io.izzel.arclight.common.bridge.core.network.play.TimestampedPacket;
+import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
+import io.izzel.arclight.common.bridge.core.server.management.PlayerInteractionManagerBridge;
+import io.izzel.arclight.common.bridge.core.server.management.PlayerListBridge;
+import io.izzel.arclight.common.bridge.core.tileentity.SignTileEntityBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.netty.util.concurrent.Future;

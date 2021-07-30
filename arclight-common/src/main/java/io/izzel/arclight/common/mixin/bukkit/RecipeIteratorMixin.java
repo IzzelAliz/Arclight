@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
-import io.izzel.arclight.common.bridge.item.crafting.IRecipeBridge;
+import io.izzel.arclight.common.bridge.core.item.crafting.IRecipeBridge;
 import org.bukkit.craftbukkit.v.inventory.RecipeIterator;
 import org.bukkit.inventory.Recipe;
 import org.spongepowered.asm.mixin.Final;

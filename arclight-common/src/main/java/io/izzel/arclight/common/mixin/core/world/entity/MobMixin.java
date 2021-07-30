@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
-import io.izzel.arclight.common.bridge.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
-import io.izzel.arclight.common.bridge.entity.MobEntityBridge;
-import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.nbt.CompoundTag;

@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.bridge.entity.MobEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import org.bukkit.event.entity.EntityTargetEvent;

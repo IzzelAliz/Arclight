@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.storage.loot;
 
-import io.izzel.arclight.common.bridge.world.storage.loot.LootTableBridge;
+import io.izzel.arclight.common.bridge.core.world.storage.loot.LootTableBridge;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;

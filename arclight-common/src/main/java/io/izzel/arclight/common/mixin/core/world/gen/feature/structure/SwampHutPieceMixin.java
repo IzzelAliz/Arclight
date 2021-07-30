@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.gen.feature.structure;
 
-import io.izzel.arclight.common.bridge.world.IWorldWriterBridge;
+import io.izzel.arclight.common.bridge.core.world.IWorldWriterBridge;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
-import io.izzel.arclight.common.bridge.entity.MobEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Bee;
 import net.minecraft.world.level.block.BeehiveBlock;

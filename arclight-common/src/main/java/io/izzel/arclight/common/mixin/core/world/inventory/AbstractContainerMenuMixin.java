@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.inventory.container.ContainerBridge;
-import io.izzel.arclight.common.bridge.inventory.container.SlotBridge;
+import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.inventory.container.ContainerBridge;
+import io.izzel.arclight.common.bridge.core.inventory.container.SlotBridge;
 import io.izzel.arclight.common.mod.server.ArclightContainer;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;

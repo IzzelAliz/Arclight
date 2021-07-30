@@ -1,7 +1,6 @@
 package io.izzel.arclight.common.mod.util.remapper.generated;
 
 import com.google.common.io.ByteStreams;
-import io.izzel.arclight.common.asm.SwitchTableFixer;
 import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
 import io.izzel.arclight.common.mod.util.remapper.ClassLoaderRemapper;
 import io.izzel.arclight.common.mod.util.remapper.RemappingClassLoader;
@@ -50,7 +49,7 @@ public class RemappingURLClassLoader extends URLClassLoader implements Remapping
                     byteSource = () -> {
                         try (InputStream is = connection.getInputStream()) {
                             byte[] classBytes = ByteStreams.toByteArray(is);
-                            classBytes = SwitchTableFixer.INSTANCE.processClass(classBytes);
+                            classBytes = ArclightRemapper.SWITCH_TABLE_FIXER.apply(classBytes);
                             return classBytes;
                         }
                     };

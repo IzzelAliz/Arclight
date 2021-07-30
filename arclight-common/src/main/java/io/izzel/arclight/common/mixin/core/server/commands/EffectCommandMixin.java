@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server.commands;
 
-import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.commands.EffectCommands;
 import net.minecraft.world.effect.MobEffect;

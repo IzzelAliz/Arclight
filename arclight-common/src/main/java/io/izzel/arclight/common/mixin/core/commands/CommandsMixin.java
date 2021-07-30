@@ -4,9 +4,9 @@ import com.google.common.collect.Maps;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
-import io.izzel.arclight.common.bridge.command.CommandNodeBridge;
-import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.server.MinecraftServerBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
+import io.izzel.arclight.common.mod.compat.CommandNodeHooks;
 import io.izzel.arclight.common.mod.util.BukkitDispatcher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -21,6 +21,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -69,9 +71,14 @@ public abstract class CommandsMixin {
         Bukkit.getPluginManager().callEvent(event);
         for (String s : set) {
             if (!event.getCommands().contains(s)) {
-                ((CommandNodeBridge) node).bridge$removeCommand(s);
+                CommandNodeHooks.removeCommand(node, s);
             }
         }
         player.connection.send(new ClientboundCommandsPacket(node));
+    }
+
+    @Redirect(method = "fillUsableCommands", at = @At(value = "INVOKE", remap = false, target = "Lcom/mojang/brigadier/tree/CommandNode;canUse(Ljava/lang/Object;)Z"))
+    private <S> boolean arclight$canUse(CommandNode<S> commandNode, S source) {
+        return CommandNodeHooks.canUse(commandNode, source);
     }
 }

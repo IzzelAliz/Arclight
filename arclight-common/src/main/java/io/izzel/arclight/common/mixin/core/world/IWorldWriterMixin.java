@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world;
 
-import io.izzel.arclight.common.bridge.world.IWorldWriterBridge;
+import io.izzel.arclight.common.bridge.core.world.IWorldWriterBridge;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.LevelWriter;
 import org.bukkit.event.entity.CreatureSpawnEvent;

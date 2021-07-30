@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.ai.village;
 
-import io.izzel.arclight.common.bridge.world.server.ServerWorldBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.village.VillageSiege;
 import org.bukkit.event.entity.CreatureSpawnEvent;

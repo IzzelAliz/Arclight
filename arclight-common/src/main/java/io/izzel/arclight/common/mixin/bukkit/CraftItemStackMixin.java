@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.common.bridge.bukkit.CraftItemStackBridge;
 import io.izzel.arclight.common.bridge.bukkit.ItemMetaBridge;
-import io.izzel.arclight.common.bridge.item.ItemStackBridge;
+import io.izzel.arclight.common.bridge.core.item.ItemStackBridge;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import org.bukkit.Material;

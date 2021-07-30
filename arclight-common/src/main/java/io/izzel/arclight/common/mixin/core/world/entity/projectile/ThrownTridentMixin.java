@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
-import io.izzel.arclight.common.bridge.entity.projectile.TridentEntityBridge;
-import io.izzel.arclight.common.bridge.world.server.ServerWorldBridge;
+import io.izzel.arclight.common.bridge.core.entity.projectile.TridentEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.projectile.ThrownTrident;

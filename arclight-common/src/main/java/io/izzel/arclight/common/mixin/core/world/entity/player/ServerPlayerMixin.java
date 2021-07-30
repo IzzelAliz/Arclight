@@ -1,15 +1,15 @@
 package io.izzel.arclight.common.mixin.core.world.entity.player;
 
 import com.mojang.datafixers.util.Either;
-import io.izzel.arclight.common.bridge.block.PortalInfoBridge;
-import io.izzel.arclight.common.bridge.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.entity.InternalEntityBridge;
-import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.inventory.container.ContainerBridge;
-import io.izzel.arclight.common.bridge.network.play.ServerPlayNetHandlerBridge;
-import io.izzel.arclight.common.bridge.util.FoodStatsBridge;
-import io.izzel.arclight.common.bridge.world.TeleporterBridge;
-import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.block.PortalInfoBridge;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.InternalEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.inventory.container.ContainerBridge;
+import io.izzel.arclight.common.bridge.core.network.play.ServerPlayNetHandlerBridge;
+import io.izzel.arclight.common.bridge.core.util.FoodStatsBridge;
+import io.izzel.arclight.common.bridge.core.world.TeleporterBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mod.server.block.ChestBlockDoubleInventoryHacks;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.BlockUtil;

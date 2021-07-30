@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
-import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;

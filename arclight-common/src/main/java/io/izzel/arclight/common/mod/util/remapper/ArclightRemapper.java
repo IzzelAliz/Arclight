@@ -19,11 +19,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
+@SuppressWarnings("unchecked")
 public class ArclightRemapper {
 
     public static final ArclightRemapper INSTANCE;
     public static final File DUMP;
+    public static final Function<byte[], byte[]> SWITCH_TABLE_FIXER;
 
     static {
         ArclightI18nLogger.getLogger("Arclight").info("loading-mapping");
@@ -42,6 +45,7 @@ public class ArclightRemapper {
             } else {
                 DUMP = null;
             }
+            SWITCH_TABLE_FIXER = (Function<byte[], byte[]>) Class.forName("io.izzel.arclight.boot.asm.SwitchTableFixer").getField("INSTANCE").get(null);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

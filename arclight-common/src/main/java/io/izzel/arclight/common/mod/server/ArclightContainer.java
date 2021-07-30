@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.mod.server;
 
 import io.izzel.arclight.api.Unsafe;
-import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
-import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.inventory.container.PosContainerBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.inventory.container.PosContainerBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.tools.product.Product;

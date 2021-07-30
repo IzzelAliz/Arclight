@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity.decoration;
 
 import com.google.common.collect.Lists;
-import io.izzel.arclight.common.bridge.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.LivingEntityMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;

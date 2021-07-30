@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
-import io.izzel.arclight.common.bridge.world.TrackedEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.TrackedEntityBridge;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ServerEntity;
 import net.minecraft.server.level.ServerPlayer;

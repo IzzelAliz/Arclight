@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.ai.goal;
 
-import io.izzel.arclight.common.bridge.entity.MobEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.target.TargetGoal;
 import org.bukkit.event.entity.EntityTargetEvent;

@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.inventory.container.PosContainerBridge;
+import io.izzel.arclight.common.bridge.core.inventory.container.PosContainerBridge;
 import io.izzel.arclight.common.mixin.core.world.SimpleContainerMixin;
 import net.minecraft.world.inventory.LoomMenu;
 import org.bukkit.Location;

@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
-import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.BlockSourceImpl;
 import net.minecraft.core.Direction;

@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.chunk.storage;
 
-import io.izzel.arclight.common.bridge.world.chunk.storage.RegionFileCacheBridge;
+import io.izzel.arclight.common.bridge.core.world.chunk.storage.RegionFileCacheBridge;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.storage.RegionFile;

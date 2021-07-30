@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server.commands;
 
-import io.izzel.arclight.common.bridge.world.server.ServerWorldBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;

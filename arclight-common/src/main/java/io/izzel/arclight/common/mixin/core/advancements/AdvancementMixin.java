@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.core.advancements;
 import net.minecraft.advancements.Advancement;
 import org.bukkit.craftbukkit.v.advancement.CraftAdvancement;
 import org.spongepowered.asm.mixin.Mixin;
-import io.izzel.arclight.common.bridge.advancement.AdvancementBridge;
+import io.izzel.arclight.common.bridge.core.advancement.AdvancementBridge;
 
 @Mixin(Advancement.class)
 public class AdvancementMixin implements AdvancementBridge {

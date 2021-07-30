@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.ai.attributes;
 
-import io.izzel.arclight.common.bridge.entity.ai.attributes.RangedAttributeBridge;
+import io.izzel.arclight.common.bridge.core.entity.ai.attributes.RangedAttributeBridge;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.RangedAttribute;
 import org.spongepowered.asm.mixin.Mixin;

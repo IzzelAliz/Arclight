@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.gen.feature.structure;
 
-import io.izzel.arclight.common.bridge.world.IWorldBridge;
+import io.izzel.arclight.common.bridge.core.world.IWorldBridge;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.StructureFeatureManager;

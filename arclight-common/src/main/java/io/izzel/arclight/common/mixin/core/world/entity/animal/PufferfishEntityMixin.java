@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
-import io.izzel.arclight.common.bridge.entity.MobEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Pufferfish;
 import net.minecraft.world.entity.player.Player;

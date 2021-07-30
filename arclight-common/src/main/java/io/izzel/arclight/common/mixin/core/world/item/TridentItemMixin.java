@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
-import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.entity.projectile.TridentEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.projectile.TridentEntityBridge;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;

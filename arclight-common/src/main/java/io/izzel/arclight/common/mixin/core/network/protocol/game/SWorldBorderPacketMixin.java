@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.network.protocol.game;
 
-import io.izzel.arclight.common.bridge.world.border.WorldBorderBridge;
+import io.izzel.arclight.common.bridge.core.world.border.WorldBorderBridge;
 import net.minecraft.network.protocol.game.ClientboundSetBorderCenterPacket;
 import net.minecraft.world.level.border.WorldBorder;
 import org.spongepowered.asm.mixin.Mixin;

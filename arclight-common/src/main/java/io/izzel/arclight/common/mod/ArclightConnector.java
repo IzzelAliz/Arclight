@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mod;
 
 import io.izzel.arclight.common.mod.util.log.ArclightI18nLogger;
+import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.arclight.mixin.injector.EjectorInfo;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixins;
@@ -19,5 +20,14 @@ public class ArclightConnector implements IMixinConnector {
         Mixins.addConfiguration("mixins.arclight.forge.json");
         Mixins.addConfiguration("mixins.arclight.api.json");
         LOGGER.info("mixin-load.core");
+        if (true) return;
+        Mixins.addConfiguration("mixins.arclight.impl.forge.optimization.json");
+        if (ArclightConfig.spec().getOptimization().isRemoveStream()) {
+            Mixins.addConfiguration("mixins.arclight.impl.forge.optimization.stream.json");
+        }
+        if (ArclightConfig.spec().getOptimization().isDisableDFU()) {
+            Mixins.addConfiguration("mixins.arclight.impl.forge.optimization.dfu.json");
+        }
+        LOGGER.info("mixin-load.optimization");
     }
 }

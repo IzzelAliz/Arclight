@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server;
 
-import io.izzel.arclight.common.bridge.server.CustomServerBossInfoBridge;
+import io.izzel.arclight.common.bridge.core.server.CustomServerBossInfoBridge;
 import net.minecraft.server.bossevents.CustomBossEvent;
 import org.bukkit.boss.KeyedBossBar;
 import org.bukkit.craftbukkit.v.boss.CraftKeyedBossbar;

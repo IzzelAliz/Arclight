@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.network.protocol;
 
-import io.izzel.arclight.common.bridge.network.play.ServerPlayNetHandlerBridge;
-import io.izzel.arclight.common.bridge.server.MinecraftServerBridge;
+import io.izzel.arclight.common.bridge.core.network.play.ServerPlayNetHandlerBridge;
+import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import net.minecraft.network.PacketListener;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketUtils;

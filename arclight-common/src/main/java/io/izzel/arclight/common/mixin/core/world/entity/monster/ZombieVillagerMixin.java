@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
-import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;

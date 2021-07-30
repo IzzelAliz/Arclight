@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.npc;
 
-import io.izzel.arclight.common.bridge.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.animal.IronGolem;
@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-import io.izzel.arclight.common.bridge.item.MerchantOfferBridge;
+import io.izzel.arclight.common.bridge.core.item.MerchantOfferBridge;
 
 @Mixin(net.minecraft.world.entity.npc.Villager.class)
 public abstract class VillagerMixin extends AbstractVillagerMixin {

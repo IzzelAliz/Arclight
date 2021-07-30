@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
-import io.izzel.arclight.common.bridge.server.MinecraftServerBridge;
-import io.izzel.arclight.common.bridge.world.server.ChunkMapBridge;
-import io.izzel.arclight.common.bridge.world.server.ServerChunkProviderBridge;
+import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ChunkMapBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.util.thread.BlockableEventLoop;

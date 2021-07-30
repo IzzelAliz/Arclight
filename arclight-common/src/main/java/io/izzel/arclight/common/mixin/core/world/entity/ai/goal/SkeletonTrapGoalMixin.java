@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.ai.goal;
 
-import io.izzel.arclight.common.bridge.world.WorldBridge;
-import io.izzel.arclight.common.bridge.world.server.ServerWorldBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LightningBolt;

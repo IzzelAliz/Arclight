@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal.horse;
 
-import io.izzel.arclight.common.bridge.entity.MobEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.ai.goal.TargetGoalMixin;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.spongepowered.asm.mixin.Mixin;

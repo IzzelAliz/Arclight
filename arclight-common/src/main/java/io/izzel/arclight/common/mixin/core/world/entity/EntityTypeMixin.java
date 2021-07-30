@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
-import io.izzel.arclight.common.bridge.entity.EntityTypeBridge;
-import io.izzel.arclight.common.bridge.world.IWorldWriterBridge;
+import io.izzel.arclight.common.bridge.core.entity.EntityTypeBridge;
+import io.izzel.arclight.common.bridge.core.world.IWorldWriterBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;

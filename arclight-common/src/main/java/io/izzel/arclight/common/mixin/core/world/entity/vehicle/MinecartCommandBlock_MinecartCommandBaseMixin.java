@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.vehicle;
 
-import io.izzel.arclight.common.bridge.command.ICommandSourceBridge;
-import io.izzel.arclight.common.bridge.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.command.ICommandSourceBridge;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.world.entity.vehicle.MinecartCommandBlock;
 import org.bukkit.command.CommandSender;

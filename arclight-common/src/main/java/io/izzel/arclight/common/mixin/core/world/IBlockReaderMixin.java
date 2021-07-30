@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world;
 
-import io.izzel.arclight.common.bridge.world.IBlockReaderBridge;
+import io.izzel.arclight.common.bridge.core.world.IBlockReaderBridge;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 

@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
-import io.izzel.arclight.common.bridge.item.MerchantOfferBridge;
+import io.izzel.arclight.common.bridge.core.item.MerchantOfferBridge;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.trading.MerchantOffer;
 import org.bukkit.craftbukkit.v.inventory.CraftMerchantRecipe;

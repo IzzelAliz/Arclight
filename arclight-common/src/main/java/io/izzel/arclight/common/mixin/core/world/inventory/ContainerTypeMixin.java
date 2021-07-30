@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.inventory.container.LecternContainerBridge;
+import io.izzel.arclight.common.bridge.core.inventory.container.LecternContainerBridge;
 import net.minecraft.core.Registry;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.LecternMenu;

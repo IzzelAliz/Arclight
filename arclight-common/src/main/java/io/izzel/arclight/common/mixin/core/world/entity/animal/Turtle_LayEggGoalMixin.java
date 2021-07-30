@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.bridge.entity.passive.TurtleEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.passive.TurtleEntityBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;

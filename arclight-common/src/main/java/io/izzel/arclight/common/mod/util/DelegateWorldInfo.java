@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mod.util;
 
 import com.mojang.serialization.Lifecycle;
-import io.izzel.arclight.common.bridge.world.storage.DerivedWorldInfoBridge;
-import io.izzel.arclight.common.bridge.world.storage.WorldInfoBridge;
+import io.izzel.arclight.common.bridge.core.world.storage.DerivedWorldInfoBridge;
+import io.izzel.arclight.common.bridge.core.world.storage.WorldInfoBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.Difficulty;

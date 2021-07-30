@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity.npc;
 
-import io.izzel.arclight.common.bridge.entity.merchant.IMerchantBridge;
-import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.item.MerchantOfferBridge;
+import io.izzel.arclight.common.bridge.core.entity.merchant.IMerchantBridge;
+import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.item.MerchantOfferBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.PathfinderMobMixin;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.EntityType;

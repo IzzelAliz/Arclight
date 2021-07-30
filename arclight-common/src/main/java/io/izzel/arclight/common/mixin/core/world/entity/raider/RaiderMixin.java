@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.raider;
 
-import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.PathfinderMobMixin;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
