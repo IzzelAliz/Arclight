@@ -5,9 +5,10 @@
   "refmap": "mixins.arclight.refmap.json",
   "compatibilityLevel": "JAVA_11",
   "mixins": [
-    "CraftMagicNumbersMixin",
-    "DataFixerUpperMixin",
-    "DataFixesManagerMixin",
-    "MinecraftServerMixin"
+    "BlockEntityTypeMixin_DFU",
+    "CraftMagicNumbersMixin_DFU",
+    "DataFixesManagerMixin_DFU",
+    "EntityType_BuilderMixin_DFU",
+    "MinecraftServerMixin_DFU"
   ]
 }

@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = CraftMagicNumbers.class, remap = false)
-public class CraftMagicNumbersMixin {
+public class CraftMagicNumbersMixin_DFU {
 
     @Inject(method = "checkSupported", at = @At("HEAD"))
     private void arclight$dfuDisabled(PluginDescriptionFile pdf, CallbackInfo ci) throws InvalidPluginException {

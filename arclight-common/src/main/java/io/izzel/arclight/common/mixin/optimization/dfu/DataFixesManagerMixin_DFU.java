@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(DataFixers.class)
-public class DataFixesManagerMixin {
+public class DataFixesManagerMixin_DFU {
 
     @Inject(method = "createFixerUpper", cancellable = true, at = @At("HEAD"))
     private static void arclight$disableDfu(CallbackInfoReturnable<DataFixer> cir) {

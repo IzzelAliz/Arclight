@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MinecraftServer.class)
-public abstract class MinecraftServerMixin {
+public abstract class MinecraftServerMixin_DFU {
 
     @Inject(method = "convertFromRegionFormatIfNeeded", cancellable = true, at = @At("HEAD"))
     private static void arclight$skipConvert(LevelStorageSource.LevelStorageAccess levelSave, CallbackInfo ci) {

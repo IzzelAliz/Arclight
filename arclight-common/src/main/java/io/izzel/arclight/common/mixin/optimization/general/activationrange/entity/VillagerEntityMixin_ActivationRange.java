@@ -15,10 +15,10 @@ public abstract class VillagerEntityMixin_ActivationRange extends EntityMixin_Ac
 
     @Override
     public void inactiveTick() {
-        super.inactiveTick();
         if (((WorldBridge) this.level).bridge$spigotConfig().tickInactiveVillagers
             && ((Villager) (Object) this).isEffectiveAi()) {
             this.customServerAiStep();
         }
+        super.inactiveTick();
     }
 }

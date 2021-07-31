@@ -20,7 +20,6 @@ public class ArclightConnector implements IMixinConnector {
         Mixins.addConfiguration("mixins.arclight.forge.json");
         Mixins.addConfiguration("mixins.arclight.api.json");
         LOGGER.info("mixin-load.core");
-        if (true) return;
         Mixins.addConfiguration("mixins.arclight.impl.forge.optimization.json");
         if (ArclightConfig.spec().getOptimization().isRemoveStream()) {
             Mixins.addConfiguration("mixins.arclight.impl.forge.optimization.stream.json");
