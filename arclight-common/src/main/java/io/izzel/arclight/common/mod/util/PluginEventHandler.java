@@ -124,7 +124,7 @@ public class PluginEventHandler extends ASMEventHandler {
         register(eventType, target, real, plugin, bus);
     }
 
-    private static void register(Class<?> eventType, Object target, Method method, Plugin plugin, EventBus bus) {
+    private static synchronized void register(Class<?> eventType, Object target, Method method, Plugin plugin, EventBus bus) {
         try {
             lastedPlugin = plugin;
             ASMEventHandler asm = new PluginEventHandler(plugin, target, method, IGenericEvent.class.isAssignableFrom(eventType));
