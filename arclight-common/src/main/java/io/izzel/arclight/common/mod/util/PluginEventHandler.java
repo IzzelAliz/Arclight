@@ -35,6 +35,9 @@ public class PluginEventHandler extends ASMEventHandler {
     private static final MethodHandle MH_ADD_LISTENERS;
     private static final MethodHandle MH_UNIQUE_NAME;
 
+    // 修复PluginEventHandler的plugin字段总是为null的问题
+    private static Plugin lastedPlugin;
+
     static {
         try {
             MH_GET_LISTENERS = Unsafe.lookup().findGetter(EventBus.class, "listeners", ConcurrentHashMap.class);
@@ -123,6 +126,7 @@ public class PluginEventHandler extends ASMEventHandler {
 
     private static void register(Class<?> eventType, Object target, Method method, Plugin plugin, EventBus bus) {
         try {
+            lastedPlugin = plugin;
             ASMEventHandler asm = new PluginEventHandler(plugin, target, method, IGenericEvent.class.isAssignableFrom(eventType));
             MH_ADD_LISTENERS.invokeExact(bus, target, eventType, (IEventListener) asm, asm.getPriority());
         } catch (Throwable e) {
@@ -185,7 +189,7 @@ public class PluginEventHandler extends ASMEventHandler {
         }
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
-        return Unsafe.defineClass(name, bytes, 0, bytes.length, plugin.getClass().getClassLoader(), plugin.getClass().getProtectionDomain());
+        return Unsafe.defineClass(name, bytes, 0, bytes.length, lastedPlugin.getClass().getClassLoader(), lastedPlugin.getClass().getProtectionDomain());
     }
 
     @Override
