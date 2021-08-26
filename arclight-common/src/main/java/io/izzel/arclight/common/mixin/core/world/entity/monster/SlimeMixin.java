@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.entity.monster;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.MobMixin;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import org.bukkit.Bukkit;
@@ -32,7 +33,7 @@ public abstract class SlimeMixin extends MobMixin {
      */
     @Overwrite(remap = false)
     @Override
-    public void remove(boolean keepData) {
+    public void remove(Entity.RemovalReason p_149847_) {
         int i = this.getSize();
         if (!this.level.isClientSide && i > 1 && this.isDeadOrDying()) {
             Component itextcomponent = this.getCustomName();
@@ -44,7 +45,7 @@ public abstract class SlimeMixin extends MobMixin {
             SlimeSplitEvent event = new SlimeSplitEvent((Slime) this.getBukkitEntity(), k);
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled() || event.getCount() <= 0) {
-                super.remove(keepData);
+                super.remove(p_149847_);
                 return;
             }
             k = event.getCount();
@@ -73,6 +74,6 @@ public abstract class SlimeMixin extends MobMixin {
                 this.level.addFreshEntity(living);
             }
         }
-        super.remove(keepData);
+        super.remove(p_149847_);
     }
 }

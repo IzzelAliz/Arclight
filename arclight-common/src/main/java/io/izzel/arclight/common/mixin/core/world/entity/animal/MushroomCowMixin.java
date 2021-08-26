@@ -1,12 +1,10 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
-import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.entity.animal.MushroomCow;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
@@ -23,17 +21,17 @@ import java.util.List;
 @Mixin(MushroomCow.class)
 public abstract class MushroomCowMixin extends AnimalMixin {
 
-    @Redirect(method = "onSheared", remap = false, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/MushroomCow;remove(Z)V"))
-    private void arclight$animalTransformPre(MushroomCow mushroomCow, boolean keepData) {
+    @Redirect(method = "shearInternal", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/MushroomCow;discard()V"))
+    private void arclight$animalTransformPre(MushroomCow mushroomCow) {
     }
 
-    @Inject(method = "onSheared", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
-    private void arclight$animalTransform(Player player, ItemStack item, Level world, BlockPos pos, int fortune, CallbackInfoReturnable<List<ItemStack>> cir, Cow cowEntity) {
+    @Inject(method = "shearInternal", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
+    private void arclight$animalTransform(SoundSource p_28924_, CallbackInfoReturnable<List<ItemStack>> cir, Cow cowEntity) {
         if (CraftEventFactory.callEntityTransformEvent((MushroomCow) (Object) this, cowEntity, EntityTransformEvent.TransformReason.SHEARED).isCancelled()) {
             cir.setReturnValue(Collections.emptyList());
         } else {
             ((WorldBridge) this.level).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.SHEARED);
-            this.remove(false);
+            this.discard();
         }
     }
 }

@@ -128,7 +128,6 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow @Nullable public abstract MinecraftServer getServer();
     @Shadow public abstract Vec3 getDeltaMovement();
     @Shadow public abstract EntityType<?> getType();
-    @Shadow(remap = false) public void remove(boolean keepData) { }
     @Shadow @Final protected Random random;
     @Shadow public abstract float getBbWidth();
     @Shadow public abstract float getBbHeight();
@@ -202,7 +201,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow public abstract void setInvisible(boolean invisible);
     @Shadow public ImmutableList<Entity> passengers;
     @Shadow public abstract boolean isRemoved();
-    @Shadow public abstract void remove(Entity.RemovalReason p_146834_);
+    @Shadow public void remove(Entity.RemovalReason p_146834_) {}
     @Shadow public abstract void discard();
     @Shadow protected abstract void unsetRemoved();
     @Shadow public abstract double getY(double p_20228_);

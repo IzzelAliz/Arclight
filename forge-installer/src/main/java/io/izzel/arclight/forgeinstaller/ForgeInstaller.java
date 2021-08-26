@@ -76,7 +76,7 @@ public class ForgeInstaller {
                 try {
                     ProcessBuilder builder = new ProcessBuilder();
                     File file = new File(System.getProperty("java.home"), "bin/java");
-                    builder.command(file.getCanonicalPath(), "-Djava.net.useSystemProxies=true", "-jar", String.format("forge-%s-%s-installer.jar", installInfo.installer.minecraft, installInfo.installer.forge), "--installServer", ".");
+                    builder.command(file.getCanonicalPath(), "-Djava.net.useSystemProxies=true", "-jar", String.format("forge-%s-%s-installer.jar", installInfo.installer.minecraft, installInfo.installer.forge), "--installServer", ".", "--debug");
                     builder.inheritIO();
                     Process process = builder.start();
                     process.waitFor();

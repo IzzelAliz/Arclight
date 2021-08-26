@@ -110,6 +110,7 @@ jar {
 }
 
 task generateInstallerInfo {
+    inputs.property('forgeVersion', forgeVersion)
     def installer = file("${project.buildDir}/arclight_installer/META-INF/installer.json")
     outputs.file(installer)
     doLast {

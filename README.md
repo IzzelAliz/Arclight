@@ -6,7 +6,7 @@ A Bukkit server implementation utilizing Mixin.
 
 | Minecraft | Forge | Status | Build |
 | :----: | :----: | :---: | :---: |
-| 1.17.x | 37.0.1 | ACTIVE | [![1.17 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-17?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-17) |
+| 1.17.x | 37.0.44 | ACTIVE | [![1.17 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-17?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-17) |
 | 1.16.x | 36.2.0 | ACTIVE | [![1.16 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-16?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-16) |
 | 1.15.x | 31.2.48 | [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/1.15/1.0.19) | [![1.15 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-15?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-15) |
 | 1.14.x | 28.2.0 | [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/1.0.6) | [![1.14 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight) |
@@ -32,7 +32,7 @@ Please read this [wiki section](https://github.com/IzzelAliz/Arclight/wiki/Contr
 
 ## License
 
-This project in licensed under [GPL v3](LICENSE).
+This project is licensed under [GPL v3](LICENSE).
 
 ## Sponsor
 

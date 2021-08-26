@@ -49,6 +49,7 @@ import net.minecraft.stats.ServerStatsCounter;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
@@ -252,7 +253,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
     public ServerPlayer moveToWorld(ServerPlayer playerIn, ServerLevel worldIn, boolean flag, Location location, boolean avoidSuffocation) {
         playerIn.stopRiding();
         this.removePlayer(playerIn);
-        playerIn.getLevel().removePlayer(playerIn, true);
+        playerIn.getLevel().removePlayerImmediately(playerIn, Entity.RemovalReason.DISCARDED);
         playerIn.revive();
         BlockPos pos = playerIn.getRespawnPosition();
         float f = playerIn.getRespawnAngle();
@@ -375,7 +376,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         arclight$suffo = null;
         playerIn.stopRiding();
         this.removePlayer(playerIn);
-        playerIn.getLevel().removePlayer(playerIn, true); // Forge: keep data until copyFrom called
+        playerIn.getLevel().removePlayerImmediately(playerIn, Entity.RemovalReason.DISCARDED);
         BlockPos pos = playerIn.getRespawnPosition();
         float f = playerIn.getRespawnAngle();
         boolean flag2 = playerIn.isRespawnForced();
@@ -449,7 +450,6 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         if (!conqueredEnd) {  // keep inventory here since inventory dropped at ServerPlayerEntity#onDeath
             serverplayerentity.getInventory().replaceWith(playerIn.getInventory());
         }
-        playerIn.remove(false); // Forge: clone event had a chance to see old data, now discard it
         serverplayerentity.setId(playerIn.getId());
         serverplayerentity.setMainArm(playerIn.getMainArm());
 

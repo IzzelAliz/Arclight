@@ -1194,6 +1194,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                         // CraftBukkit end
 
                         InteractionResult enuminteractionresult = interaction.run(player, entity, hand);
+                        if (ForgeHooks.onInteractEntityAt(player, entity, entity.position(), hand) != null) return;
 
                         // CraftBukkit start
                         if (!itemInHand.isEmpty() && itemInHand.getCount() <= -1) {

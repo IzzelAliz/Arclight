@@ -48,7 +48,6 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.PlayerEnderChestContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -296,9 +295,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                 final double d0 = this.walkDist - this.walkDistO;
                 if (flag && !flag3 && !flag2 && this.onGround && d0 < this.getSpeed()) {
                     final ItemStack itemstack = this.getItemInHand(InteractionHand.MAIN_HAND);
-                    if (itemstack.getItem() instanceof SwordItem) {
-                        flag4 = true;
-                    }
+                    flag4 = itemstack.canPerformAction(net.minecraftforge.common.ToolActions.SWORD_SWEEP);
                 }
                 float f4 = 0.0f;
                 boolean flag5 = false;
@@ -328,7 +325,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                     }
                     if (flag4) {
                         final float f5 = 1.0f + EnchantmentHelper.getSweepingDamageRatio((net.minecraft.world.entity.player.Player) (Object) this) * f;
-                        final List<LivingEntity> list = this.level.getEntitiesOfClass(LivingEntity.class, entity.getBoundingBox().inflate(1.0, 0.25, 1.0));
+                        final List<LivingEntity> list = this.level.getEntitiesOfClass(LivingEntity.class, this.getItemInHand(InteractionHand.MAIN_HAND).getSweepHitBox((net.minecraft.world.entity.player.Player) (Object) this, entity));
                         for (final LivingEntity entityliving : list) {
                             if (entityliving != (Object) this && entityliving != entity && !this.isAlliedTo(entityliving) && (!(entityliving instanceof ArmorStand) || !((ArmorStand) entityliving).isMarker()) && this.distanceToSqr(entityliving) < 9.0 && entityliving.hurt(((DamageSourceBridge) DamageSource.playerAttack((net.minecraft.world.entity.player.Player) (Object) this)).bridge$sweep(), f5)) {
                                 entityliving.knockback(0.4f, Mth.sin(this.getYRot() * 0.017453292f), -Mth.cos(this.getYRot() * 0.017453292f));

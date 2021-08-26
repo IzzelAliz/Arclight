@@ -22,6 +22,7 @@ public class Main_Forge {
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("Fail to launch Arclight.");
+            System.exit(-1);
         }
     }
 }

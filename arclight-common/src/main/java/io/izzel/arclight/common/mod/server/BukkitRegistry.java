@@ -273,12 +273,12 @@ public class BukkitRegistry {
 
     private static void loadPotions() {
         int origin = PotionEffectType.values().length;
-        int size = ForgeRegistries.POTIONS.getEntries().size();
-        int maxId = ForgeRegistries.POTIONS.getValues().stream().mapToInt(MobEffect::getId).max().orElse(0);
+        int size = ForgeRegistries.MOB_EFFECTS.getEntries().size();
+        int maxId = ForgeRegistries.MOB_EFFECTS.getValues().stream().mapToInt(MobEffect::getId).max().orElse(0);
         PotionEffectType[] types = new PotionEffectType[maxId + 1];
         putStatic(PotionEffectType.class, "byId", types);
         putBool(PotionEffectType.class, "acceptingNew", true);
-        for (MobEffect eff : ForgeRegistries.POTIONS) {
+        for (MobEffect eff : ForgeRegistries.MOB_EFFECTS) {
             try {
                 String name = ResourceLocationUtil.standardize(eff.getRegistryName());
                 ArclightPotionEffect effect = new ArclightPotionEffect(eff, name);
@@ -381,7 +381,7 @@ public class BukkitRegistry {
 
     private static Set<IForgeRegistry<?>> registries() {
         return ImmutableSet.of(ForgeRegistries.BLOCKS, ForgeRegistries.ITEMS,
-            ForgeRegistries.POTION_TYPES, ForgeRegistries.POTIONS,
+            ForgeRegistries.MOB_EFFECTS, ForgeRegistries.POTIONS,
             ForgeRegistries.ENTITIES, ForgeRegistries.BLOCK_ENTITIES,
             ForgeRegistries.BIOMES);
     }
