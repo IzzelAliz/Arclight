@@ -67,6 +67,7 @@ public abstract class SlimeMixin extends MobMixin {
                 slimes.add(slimeentity);
             }
             if (CraftEventFactory.callEntityTransformEvent((net.minecraft.world.entity.monster.Slime) (Object) this, slimes, EntityTransformEvent.TransformReason.SPLIT).isCancelled()) {
+                super.remove(p_149847_);
                 return;
             }
             for (LivingEntity living : slimes) {

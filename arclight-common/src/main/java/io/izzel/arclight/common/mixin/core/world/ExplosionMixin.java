@@ -295,20 +295,20 @@ public abstract class ExplosionMixin implements ExplosionBridge {
 
         boolean cancelled;
         List<org.bukkit.block.Block> bukkitBlocks;
-        float yield;
+        float bukkitYield;
 
         if (exploder != null) {
             EntityExplodeEvent event = new EntityExplodeEvent(exploder, location, blockList, this.blockInteraction == Explosion.BlockInteraction.DESTROY ? 1.0F / this.radius : 1.0F);
             Bukkit.getPluginManager().callEvent(event);
             cancelled = event.isCancelled();
             bukkitBlocks = event.blockList();
-            yield = event.getYield();
+            bukkitYield = event.getYield();
         } else {
             BlockExplodeEvent event = new BlockExplodeEvent(location.getBlock(), blockList, this.blockInteraction == Explosion.BlockInteraction.DESTROY ? 1.0F / this.radius : 1.0F);
             Bukkit.getPluginManager().callEvent(event);
             cancelled = event.isCancelled();
             bukkitBlocks = event.blockList();
-            yield = event.getYield();
+            bukkitYield = event.getYield();
         }
 
         this.toBlow.clear();
@@ -317,6 +317,6 @@ public abstract class ExplosionMixin implements ExplosionBridge {
             BlockPos blockPos = new BlockPos(block.getX(), block.getY(), block.getZ());
             this.toBlow.add(blockPos);
         }
-        return cancelled ? Float.NaN : yield;
+        return cancelled ? Float.NaN : bukkitYield;
     }
 }

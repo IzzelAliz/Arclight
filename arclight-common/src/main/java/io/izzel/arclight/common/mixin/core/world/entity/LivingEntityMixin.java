@@ -180,6 +180,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public abstract boolean canAttack(LivingEntity p_21171_);
     @Shadow public abstract boolean hasLineOfSight(Entity p_147185_);
     @Shadow protected abstract void hurtHelmet(DamageSource p_147213_, float p_147214_);
+    @Shadow public abstract void stopUsingItem();
     // @formatter:on
 
     public int expToDrop;

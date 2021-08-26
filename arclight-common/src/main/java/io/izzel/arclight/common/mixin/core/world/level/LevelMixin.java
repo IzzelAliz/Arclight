@@ -3,7 +3,9 @@ package io.izzel.arclight.common.mixin.core.world.level;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.border.WorldBorderBridge;
+import io.izzel.arclight.common.bridge.core.world.level.levelgen.ChunkGeneratorBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.server.world.WrappedWorlds;
@@ -18,6 +20,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelWriter;
+import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -35,7 +38,9 @@ import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v.generator.CraftWorldInfo;
 import org.bukkit.craftbukkit.v.generator.CustomChunkGenerator;
+import org.bukkit.craftbukkit.v.generator.CustomWorldChunkManager;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -85,6 +90,7 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
     public boolean populating;
     public org.bukkit.generator.ChunkGenerator generator;
     protected org.bukkit.World.Environment environment;
+    protected org.bukkit.generator.BiomeProvider biomeProvider;
     public org.spigotmc.SpigotWorldConfig spigotConfig;
     @SuppressWarnings("unused") // Access transformed to public by ArclightMixinPlugin
     private static BlockPos lastPhysicsProblem; // Spigot
@@ -94,10 +100,11 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
         throw new RuntimeException();
     }
 
-    public void arclight$constructor(WritableLevelData worldInfo, ResourceKey<Level> dimension, final DimensionType dimensionType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed, org.bukkit.generator.ChunkGenerator gen, org.bukkit.World.Environment env) {
+    public void arclight$constructor(WritableLevelData worldInfo, ResourceKey<Level> dimension, final DimensionType dimensionType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider, org.bukkit.World.Environment env) {
         arclight$constructor(worldInfo, dimension, dimensionType, profiler, isRemote, isDebug, seed);
         this.generator = gen;
         this.environment = env;
+        this.biomeProvider = biomeProvider;
         bridge$getWorld();
     }
 
@@ -219,7 +226,7 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
 
     @Inject(method = "postGameEventInRadius", cancellable = true, at = @At("HEAD"))
     private void arclight$gameEventEvent(Entity entity, GameEvent gameEvent, BlockPos pos, int i, CallbackInfo ci) {
-        GenericGameEvent event = new GenericGameEvent(org.bukkit.GameEvent.getByKey(CraftNamespacedKey.fromMinecraft(Registry.GAME_EVENT.getKey(gameEvent))), new Location(this.getWorld(), pos.getX(),pos.getY(), pos.getZ()), (entity == null) ? null : ((EntityBridge) entity).bridge$getBukkitEntity(), i);
+        GenericGameEvent event = new GenericGameEvent(org.bukkit.GameEvent.getByKey(CraftNamespacedKey.fromMinecraft(Registry.GAME_EVENT.getKey(gameEvent))), new Location(this.getWorld(), pos.getX(), pos.getY(), pos.getZ()), (entity == null) ? null : ((EntityBridge) entity).bridge$getBukkitEntity(), i);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             ci.cancel();
@@ -240,17 +247,27 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
                     throw new RuntimeException(e);
                 }
             }
-            if (generator == null) {
-                generator = getCraftServer().getGenerator(((ServerLevelData) this.getLevelData()).getLevelName());
-                if (generator != null && (Object) this instanceof ServerLevel serverWorld) {
-                    CustomChunkGenerator gen = new CustomChunkGenerator(serverWorld, serverWorld.getChunkSource().getGenerator(), generator);
-                    ((ServerChunkProviderBridge) serverWorld.getChunkSource()).bridge$setChunkGenerator(gen);
-                }
-            }
             if (environment == null) {
                 environment = ArclightServer.getEnvironment(this.typeKey);
             }
-            this.world = new CraftWorld((ServerLevel) (Object) this, generator, environment);
+            if (generator == null) {
+                generator = getCraftServer().getGenerator(((ServerLevelData) this.getLevelData()).getLevelName());
+                if (generator != null && (Object) this instanceof ServerLevel serverWorld) {
+                    org.bukkit.generator.WorldInfo worldInfo = new CraftWorldInfo((ServerLevelData) getLevelData(),
+                        ((ServerWorldBridge) this).bridge$getConvertable(), environment, this.dimensionType);
+                    if (biomeProvider == null && generator != null) {
+                        biomeProvider = generator.getDefaultBiomeProvider(worldInfo);
+                    }
+                    var generator = serverWorld.getChunkSource().getGenerator();
+                    if (biomeProvider != null) {
+                        BiomeSource biomeSource = new CustomWorldChunkManager(worldInfo, biomeProvider, serverWorld.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY));
+                        ((ChunkGeneratorBridge) generator).bridge$setBiomeSource(biomeSource);
+                    }
+                    CustomChunkGenerator gen = new CustomChunkGenerator(serverWorld, generator, this.generator);
+                    ((ServerChunkProviderBridge) serverWorld.getChunkSource()).bridge$setChunkGenerator(gen);
+                }
+            }
+            this.world = new CraftWorld((ServerLevel) (Object) this, generator, biomeProvider, environment);
             getCraftServer().addWorld(this.world);
         }
         return this.world;

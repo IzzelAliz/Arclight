@@ -4,15 +4,18 @@ buildscript {
         maven { url = 'https://repo.spongepowered.org/maven' }
         mavenCentral()
         maven { url = 'https://maven.izzel.io/releases' }
+        maven { url = 'https://maven.parchmentmc.org' }
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: "${forge_gradle_version}"
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: "${forge_gradle_version}", changing: true
+        classpath 'org.parchmentmc:librarian:1.+'
         classpath 'org.spongepowered:mixingradle:0.7.2-SNAPSHOT'
         classpath "io.izzel.arclight:arclight-gradle-plugin:$agpVersion"
     }
 }
 
 apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'org.parchmentmc.librarian.forgegradle'
 apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'java'
 apply plugin: 'idea'
@@ -35,7 +38,7 @@ configurations {
 java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 
 minecraft {
-    mappings channel: 'official', version: minecraftVersion
+    mappings channel: 'parchment', version: "2021.08.22-$minecraftVersion"
     accessTransformer = project.file('src/main/resources/META-INF/accesstransformer.cfg')
 }
 

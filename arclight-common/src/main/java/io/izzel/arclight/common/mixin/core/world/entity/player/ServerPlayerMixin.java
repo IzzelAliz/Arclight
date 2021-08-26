@@ -335,6 +335,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
                 loot.add(craftItemStack);
             }
         }
+        this.keepLevel = keepInventory;
         if (!keepInventory) {
             this.getInventory().replaceWith(copyInv);
         }
@@ -672,6 +673,10 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         return this.containerCounter;
     }
 
+    @Redirect(method = "openMenu", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;closeContainer()V"))
+    private void arclight$skipSwitch(ServerPlayer serverPlayer) {
+    }
+
     @Inject(method = "openMenu", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/world/MenuProvider;createMenu(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/entity/player/Player;)Lnet/minecraft/world/inventory/AbstractContainerMenu;"))
     private void arclight$invOpen(MenuProvider itileinventory, CallbackInfoReturnable<OptionalInt> cir, AbstractContainerMenu container) {
         if (container != null) {
@@ -905,13 +910,13 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
     public void reset() {
         float exp = 0.0f;
-        boolean keepInventory = this.level.getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY);
-        if (this.keepLevel || keepInventory) {
+        if (this.keepLevel) {
             exp = this.experienceProgress;
             this.newTotalExp = this.totalExperience;
             this.newLevel = this.experienceLevel;
         }
         this.setHealth(this.getMaxHealth());
+        this.stopUsingItem();
         this.remainingFireTicks = 0;
         this.fallDistance = 0.0f;
         this.foodData = new FoodData();
@@ -928,7 +933,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         this.lastHurtByMob = null;
         this.combatTracker = new CombatTracker((ServerPlayer) (Object) this);
         this.lastSentExp = -1;
-        if (this.keepLevel || keepInventory) {
+        if (this.keepLevel) {
             this.experienceProgress = exp;
         } else {
             this.giveExperiencePoints(this.newExp);

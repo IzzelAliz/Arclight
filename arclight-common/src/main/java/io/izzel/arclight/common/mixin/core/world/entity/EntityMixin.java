@@ -212,6 +212,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
 
     private static final int CURRENT_LEVEL = 2;
     public boolean persist = true;
+    public boolean generation;
     public boolean valid;
     public org.bukkit.projectiles.ProjectileSource projectileSource; // For projectiles only
     public boolean forceExplosionKnockback; // SPIGOT-949
@@ -714,7 +715,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Inject(method = "setSwimming", cancellable = true, at = @At(value = "HEAD"))
     public void arclight$setSwimming$EntityToggleSwimEvent(boolean flag, CallbackInfo ci) {
         // CraftBukkit start
-        if (this.isSwimming() != flag && (Object) this instanceof LivingEntity) {
+        if (this.isValid() && this.isSwimming() != flag && (Object) this instanceof LivingEntity) {
             if (CraftEventFactory.callToggleSwimEvent((LivingEntity) (Object) this, flag).isCancelled()) {
                 ci.cancel();
             }

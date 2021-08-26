@@ -425,6 +425,8 @@
     "world.level.chunk.LevelChunkMixin",
     "world.level.chunk.storage.ChunkLoaderMixin",
     "world.level.chunk.storage.RegionFileCacheMixin",
+    "world.level.levelgen.ChunkGeneratorMixin",
+    "world.level.levelgen.NoiseBasedChunkGeneratorMixin",
     "world.level.portal.PortalForcerMixin",
     "world.level.saveddata.maps.MapData_MapInfoMixin",
     "world.level.saveddata.maps.MapDataMixin",
