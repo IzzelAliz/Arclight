@@ -578,15 +578,15 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         }
     }
 
-    @Inject(method = "startRiding(Lnet/minecraft/world/entity/Entity;Z)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;addPassenger(Lnet/minecraft/world/entity/Entity;)V"))
-    public void arclight$startRide(Entity entityIn, boolean force, CallbackInfoReturnable<Boolean> cir) {
-        if (!((EntityBridge) this.vehicle).bridge$addPassenger((Entity) (Object) this)) {
+    @Redirect(method = "startRiding(Lnet/minecraft/world/entity/Entity;Z)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;addPassenger(Lnet/minecraft/world/entity/Entity;)V"))
+    private void arclight$startRiding(Entity entity, Entity pPassenger) {
+        if (!((EntityBridge) entity).bridge$addPassenger(pPassenger)) {
             this.vehicle = null;
         }
     }
 
     @Redirect(method = "removeVehicle", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;removePassenger(Lnet/minecraft/world/entity/Entity;)V"))
-    public void arclight$stopRiding$CraftBukkitPatch(Entity entity, Entity passenger) {
+    private void arclight$stopRiding(Entity entity, Entity passenger) {
         if (!((EntityBridge) entity).bridge$removePassenger(passenger)) {
             this.vehicle = entity;
         }
