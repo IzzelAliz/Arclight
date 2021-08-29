@@ -1,8 +1,10 @@
 package io.izzel.arclight.common.mod.server;
 
+import io.izzel.arclight.api.Arclight;
 import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.common.mod.server.api.DefaultArclightServer;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.dedicated.DedicatedServer;
@@ -26,6 +28,7 @@ public class ArclightServer {
     @SuppressWarnings("ConstantConditions")
     public static CraftServer createOrLoad(DedicatedServer console, PlayerList playerList) {
         if (server == null) {
+            Arclight.setServer(new DefaultArclightServer());
             try {
                 server = new CraftServer(console, playerList);
                 ((MinecraftServerBridge) console).bridge$setServer(server);
