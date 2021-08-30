@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mod.util.remapper;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import cpw.mods.modlauncher.api.LamdbaExceptionUtils;
+import io.izzel.arclight.api.PluginPatcher;
 import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.tools.product.Product;
@@ -69,6 +70,20 @@ public abstract class ArclightClassCache implements AutoCloseable {
         private final Path basePath = Paths.get(".arclight/class_cache");
         private ScheduledExecutorService executor;
 
+        private static String currentVersionInfo() {
+            var builder = new StringBuilder();
+            var arclight = ModList.get().getModContainerById("arclight")
+                .orElseThrow(IllegalStateException::new).getModInfo().getVersion().toString();
+            builder.append(arclight);
+            for (PluginPatcher patcher : ArclightRemapper.INSTANCE.getPatchers()) {
+                builder.append('\0')
+                    .append(patcher.getClass().getName())
+                    .append('\0')
+                    .append(patcher.version());
+            }
+            return builder.toString();
+        }
+
         public Impl() {
             if (!enabled) return;
             executor = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -91,8 +106,7 @@ public abstract class ArclightClassCache implements AutoCloseable {
                 if (!Files.isDirectory(basePath)) {
                     Files.createDirectories(basePath);
                 }
-                String current = ModList.get().getModContainerById("arclight")
-                    .orElseThrow(IllegalStateException::new).getModInfo().getVersion().toString();
+                String current = currentVersionInfo();
                 String store;
                 Path version = basePath.resolve(".version");
                 if (Files.exists(version)) {
