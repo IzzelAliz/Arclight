@@ -26,7 +26,6 @@ public class ArclightConnector implements IMixinConnector {
         Mixins.addConfiguration("mixins.arclight.core.json");
         Mixins.addConfiguration("mixins.arclight.bukkit.json");
         Mixins.addConfiguration("mixins.arclight.forge.json");
-        Mixins.addConfiguration("mixins.arclight.api.json");
         LOGGER.info("mixin-load.core");
     }
 }

@@ -88,7 +88,7 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        new Thread(() -> System.exit(0), "Exit Thread").start();
+        // new Thread(() -> System.exit(0), "Exit Thread").start();
     }
 
     /**
