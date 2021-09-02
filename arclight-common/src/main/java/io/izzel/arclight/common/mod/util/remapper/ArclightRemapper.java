@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mod.util.remapper;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import io.izzel.arclight.api.PluginPatcher;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.util.log.ArclightI18nLogger;
 import io.izzel.arclight.common.mod.util.remapper.patcher.ArclightPluginPatcher;
@@ -53,6 +54,7 @@ public class ArclightRemapper {
     private final List<PluginTransformer> transformerList = new ArrayList<>();
     private final JarRemapper toBukkitRemapper;
     private final JarRemapper toNmsRemapper;
+    private final List<PluginPatcher> patchers;
 
     public ArclightRemapper() throws Exception {
         this.toNmsMapping = new JarMapping();
@@ -78,7 +80,7 @@ public class ArclightRemapper {
         this.transformerList.add(ArclightInterfaceInvokerGen.INSTANCE);
         this.transformerList.add(ArclightRedirectAdapter.INSTANCE);
         this.transformerList.add(ClassLoaderAdapter.INSTANCE);
-        ArclightPluginPatcher.load(this.transformerList);
+        this.patchers = ArclightPluginPatcher.load(this.transformerList);
         toBukkitMapping.setFallbackInheritanceProvider(GlobalClassRepo.inheritanceProvider());
         this.toBukkitRemapper = new LenientJarRemapper(toBukkitMapping);
         this.toNmsRemapper = new LenientJarRemapper(toNmsMapping);
@@ -99,6 +101,10 @@ public class ArclightRemapper {
 
     public List<PluginTransformer> getTransformerList() {
         return transformerList;
+    }
+
+    public List<PluginPatcher> getPatchers() {
+        return patchers;
     }
 
     private static long pkgOffset, clOffset, mdOffset, fdOffset, mapOffset;

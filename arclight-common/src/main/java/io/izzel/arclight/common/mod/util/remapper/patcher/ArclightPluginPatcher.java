@@ -14,6 +14,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -35,7 +36,7 @@ public class ArclightPluginPatcher implements PluginTransformer {
         }
     }
 
-    public static void load(List<PluginTransformer> transformerList) {
+    public static List<PluginPatcher> load(List<PluginTransformer> transformerList) {
         File pluginFolder = new File("plugins");
         if (pluginFolder.exists()) {
             ArclightMod.LOGGER.info("patcher.loading");
@@ -51,9 +52,11 @@ public class ArclightPluginPatcher implements PluginTransformer {
                     list.sort(Comparator.comparing(PluginPatcher::priority));
                     ArclightMod.LOGGER.info("patcher.loaded", list.size());
                     transformerList.add(new ArclightPluginPatcher(list));
+                    return list;
                 }
             }
         }
+        return Collections.emptyList();
     }
 
     private static Optional<PluginPatcher> loadFromJar(File file) {
