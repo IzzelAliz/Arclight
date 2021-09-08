@@ -17,6 +17,7 @@ allprojects {
         forgeVersion = '37.0.44'
         apiVersion = '1.1.+'
         toolsVersion = '1.3.+'
+        mixinVersion = '0.8.4'
         gitHash = getGitHash()
     }
 

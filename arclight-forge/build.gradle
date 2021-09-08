@@ -40,7 +40,7 @@ repositories {
     maven { url = 'https://maven.izzel.io/releases' }
 }
 
-def embedLibs = ['org.spongepowered:mixin:0.8.3.2', 'org.yaml:snakeyaml:1.28',
+def embedLibs = ["org.spongepowered:mixin:$mixinVersion", 'org.yaml:snakeyaml:1.28',
                  'org.xerial:sqlite-jdbc:3.34.0', 'mysql:mysql-connector-java:5.1.49',
                  /*'commons-lang:commons-lang:2.6',*/ 'com.googlecode.json-simple:json-simple:1.1.1',
                  'org.apache.logging.log4j:log4j-jul:2.11.2', 'net.md-5:SpecialSource:1.10.0',
