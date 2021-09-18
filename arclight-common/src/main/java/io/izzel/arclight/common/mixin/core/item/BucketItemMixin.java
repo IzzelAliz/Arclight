@@ -44,13 +44,15 @@ public abstract class BucketItemMixin {
         BlockPos pos = ((BlockRayTraceResult) result).getPos();
         BlockState state = worldIn.getBlockState(pos);
         Fluid dummyFluid = ((IBucketPickupHandler) state.getBlock()).pickupFluid(DummyGeneratorAccess.INSTANCE, pos, state);
-        PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent((ServerWorld) worldIn, playerIn, pos, pos, ((BlockRayTraceResult) result).getFace(), stack, dummyFluid.getFilledBucket());
-        if (event.isCancelled()) {
-            ((ServerPlayerEntity) playerIn).connection.sendPacket(new SChangeBlockPacket(worldIn, pos));
-            ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().updateInventory();
-            cir.setReturnValue(new ActionResult<>(ActionResultType.FAIL, stack));
-        } else {
-            arclight$captureItem = event.getItemStack();
+        if (worldIn instanceof ServerWorld) {
+            PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent((ServerWorld) worldIn, playerIn, pos, pos, ((BlockRayTraceResult) result).getFace(), stack, dummyFluid.getFilledBucket());
+            if (event.isCancelled()) {
+                ((ServerPlayerEntity) playerIn).connection.sendPacket(new SChangeBlockPacket(worldIn, pos));
+                ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().updateInventory();
+                cir.setReturnValue(new ActionResult<>(ActionResultType.FAIL, stack));
+            } else {
+                arclight$captureItem = event.getItemStack();
+            }
         }
     }
 
