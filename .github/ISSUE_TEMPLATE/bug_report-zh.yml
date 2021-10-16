@@ -1,0 +1,117 @@
+name: 🐞 错误报告表格
+description: 通过填写表格来报告错误
+title: "[错误报告]："
+labels: ["triage"]
+
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        在进行错误报告之前，请确保没有类似的已存报告。
+        <br>内容要求语句通顺，描述清晰。
+        <br>务必注意！请完整填写以下内容，如果缺少或不够详细可能会让该报告处理优先级降低甚至不处理！
+        <br>最后，感谢您耐心地向我们报告错误。        
+  - type: input
+    id: version
+    attributes:
+      label: Arclight 版本
+      description: 在 Arclight 启动时会打印版本，示例 arclight-1.15.2-1.0.3-SNAPSHOT-9455d03
+    validations:
+      required: true
+
+  - type: input
+    id: confirm
+    attributes:
+      label: 你确认您在跑最新版吗？
+      description: >-
+        最新的构建版本可以在 https://github.com/IzzelAliz/Arclight/actions 下载
+        <br>你所汇报的问题很可能已经修复
+        <br>如果你确实用不了最新版，请简述为什么
+      placeholder: "示例：是|否，理由"
+    validations:
+      required: true
+      
+  - type: checkboxes
+    id: check
+    attributes:
+      label: 请确认您已完成以下几件事
+      description: 市面上大多数整合包，特别是较老版本（1.12.2）的整合包，其自带的插件都无法在高版本环境下运行
+      options:
+        - label: 我确认已为所有 Mod 安装依赖
+          required: true
+        - label: I have installed proper version of plugins.
+          required: true
+    
+  - type: input
+    id: environment
+    attributes:
+      label: Java 版本 | 操作系统
+      description: 在命令行中键入 `java -version` 后可以获取版本
+      placeholder: "示例：Java-Openjdk_11(Hotspot) | Windows Server 2019"
+    validations:
+      required: true
+
+  - type: textarea
+    id: related
+    attributes:
+      label: 相关 Mod/插件 的名称及版本
+      description: 输入 `/plugins` 和 `/forge mods` 命令可获取相关信息
+      value: >-
+        Mods:     
+        Plugins:
+    validations:
+      required: true
+      
+  - type: textarea
+    id: description
+    attributes:
+      label: 错误描述
+      description: >-
+        请尽可能详细。对于描述，请假设开发者不知道 Mod 是干什么的。
+        <br>如果可以的话，在安装尽可能少的 mod 的情况下复现它。
+        <br>越清楚的描述会让该报告处理优先级提高
+      placeholder: "描述这个为什么是一个错误，是哪一方面的，以及其他可能需要的信息"
+    validations:
+      required: true
+  
+  - type: textarea
+    id: step
+    attributes:
+      label: 复现步骤
+      value: >-
+        1. 安装 xxx
+        2. 进入服务器后 xxxx
+        3. ....
+     
+  - type: dropdown
+    attributes:
+      label: 能否在 Forge 复现
+      options:
+        - "是"
+        - "否"
+    validations:
+      required: true
+      
+  - type: dropdown
+    attributes:
+      label: 能否在 Spigot 复现
+      options:
+        - "是"
+        - "否"
+    validations:
+      required: true
+      
+  - type: textarea
+    id: logs
+    attributes:
+      label: 报错信息
+      description: >-
+        日志位于服务器文件夹的 /logs 目录下，名称为 latest.log
+        <br>服务器关闭后，将该文件中内容全部复制，上传至 https://paste.ubuntu.com/ 网站，提交后将链接附在下方即可
+        <br>如果上面的网站打不开，可以在下方指定位置复制日志内容
+      value: >-
+        日志链接：
+        如果没有就用日志替换下边的 [日志] 文本
+        <details><pre>
+        [日志]
+        </pre></details>  
