@@ -260,7 +260,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
 
     private transient CreatureSpawnEvent.SpawnReason arclight$reason;
 
-    @Inject(method = "addEntity", cancellable = true, at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/eventbus/api/IEventBus;post(Lnet/minecraftforge/eventbus/api/Event;)Z"))
+    @Inject(method = "addEntity", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/entity/PersistentEntitySectionManager;addNewEntity(Lnet/minecraft/world/level/entity/EntityAccess;)Z"))
     private void arclight$addEntityEvent(Entity entityIn, CallbackInfoReturnable<Boolean> cir) {
         CreatureSpawnEvent.SpawnReason reason = arclight$reason == null ? CreatureSpawnEvent.SpawnReason.DEFAULT : arclight$reason;
         arclight$reason = null;

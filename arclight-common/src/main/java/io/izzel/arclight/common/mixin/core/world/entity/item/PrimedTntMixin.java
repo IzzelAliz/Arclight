@@ -31,13 +31,13 @@ public abstract class PrimedTntMixin extends EntityMixin {
 
     @Inject(method = "<init>(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/level/Level;)V", at = @At("RETURN"))
     private void arclight$init(EntityType<? extends PrimedTnt> type, Level worldIn, CallbackInfo ci) {
-        yield = 4;
+        this.yield = 4;
         isIncendiary = false;
     }
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/Level;DDDLnet/minecraft/world/entity/LivingEntity;)V", at = @At("RETURN"))
     private void arclight$init(Level worldIn, double x, double y, double z, LivingEntity igniter, CallbackInfo ci) {
-        yield = 4;
+        this.yield = 4;
         isIncendiary = false;
     }
 

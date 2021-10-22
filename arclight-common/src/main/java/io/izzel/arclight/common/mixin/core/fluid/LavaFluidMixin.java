@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.fluid;
 import io.izzel.arclight.common.bridge.core.world.IWorldBridge;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -26,7 +27,7 @@ public abstract class LavaFluidMixin {
 
     // @formatter:off
     @Shadow protected abstract boolean hasFlammableNeighbours(LevelReader worldIn, BlockPos pos);
-    @Shadow protected abstract boolean isFlammable(LevelReader worldIn, BlockPos pos);
+    @Shadow protected abstract boolean isFlammable(LevelReader level, BlockPos pos, Direction face);
     // @formatter:on
 
     /**
@@ -68,7 +69,7 @@ public abstract class LavaFluidMixin {
                         return;
                     }
 
-                    if (world.isEmptyBlock(blockpos1.above()) && this.isFlammable(world, blockpos1)) {
+                    if (world.isEmptyBlock(blockpos1.above()) && this.isFlammable(world, blockpos1, Direction.UP)) {
                         BlockPos up = blockpos1.above();
                         if (world.getBlockState(up).getBlock() != Blocks.FIRE) {
                             if (CraftEventFactory.callBlockIgniteEvent(world, up, pos).isCancelled()) {

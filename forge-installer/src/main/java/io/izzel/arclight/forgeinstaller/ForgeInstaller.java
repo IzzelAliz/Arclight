@@ -85,7 +85,7 @@ public class ForgeInstaller {
                         new URL[]{new File(String.format("forge-%s-%s-installer.jar", installInfo.installer.minecraft, installInfo.installer.forge)).toURI().toURL()},
                         ForgeInstaller.class.getClassLoader().getParent());
                     Method method = loader.loadClass("net.minecraftforge.installer.SimpleInstaller").getMethod("main", String[].class);
-                    method.invoke(null, (Object) new String[]{"--installServer", "."});
+                    method.invoke(null, (Object) new String[]{"--installServer", ".", "--debug"});
                 }
             }
             handleFutures(array);

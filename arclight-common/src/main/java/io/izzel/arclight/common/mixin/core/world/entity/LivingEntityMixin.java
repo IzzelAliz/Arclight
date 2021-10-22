@@ -347,7 +347,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 return false;
             }
 
-            MinecraftForge.EVENT_BUS.post(new PotionEvent.PotionAddedEvent((LivingEntity) (Object) this, effectinstance, effectInstanceIn));
+            MinecraftForge.EVENT_BUS.post(new PotionEvent.PotionAddedEvent((LivingEntity) (Object) this, effectinstance, effectInstanceIn, entity));
             if (effectinstance == null) {
                 this.activeEffects.put(effectInstanceIn.getEffect(), effectInstanceIn);
                 this.onEffectAdded(effectInstanceIn, entity);
