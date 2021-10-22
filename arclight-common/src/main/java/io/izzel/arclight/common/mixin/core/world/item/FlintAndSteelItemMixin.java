@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
+import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -18,6 +19,7 @@ public class FlintAndSteelItemMixin {
 
     @Inject(method = "useOn", cancellable = true, at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/level/Level;playSound(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/core/BlockPos;Lnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V"))
     public void arclight$blockIgnite(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
+        if (!DistValidate.isValid(context)) return;
         Player playerentity = context.getPlayer();
         Level world = context.getLevel();
         BlockPos blockpos = context.getClickedPos();

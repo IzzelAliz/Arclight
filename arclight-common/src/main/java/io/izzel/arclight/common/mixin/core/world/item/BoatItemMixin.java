@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
+import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -66,10 +67,12 @@ public class BoatItemMixin extends Item {
             }
 
             if (result.getType() == HitResult.Type.BLOCK) {
-                PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(playerIn, Action.RIGHT_CLICK_BLOCK, result.getBlockPos(), result.getDirection(), itemstack, handIn);
+                if (DistValidate.isValid(worldIn)) {
+                    PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(playerIn, Action.RIGHT_CLICK_BLOCK, result.getBlockPos(), result.getDirection(), itemstack, handIn);
 
-                if (event.isCancelled()) {
-                    return new InteractionResultHolder<>(InteractionResult.PASS, itemstack);
+                    if (event.isCancelled()) {
+                        return new InteractionResultHolder<>(InteractionResult.PASS, itemstack);
+                    }
                 }
 
                 Boat boatentity = new Boat(worldIn, result.getLocation().x, result.getLocation().y, result.getLocation().z);
@@ -79,7 +82,7 @@ public class BoatItemMixin extends Item {
                     return new InteractionResultHolder<>(InteractionResult.FAIL, itemstack);
                 } else {
                     if (!worldIn.isClientSide) {
-                        if (CraftEventFactory.callEntityPlaceEvent(worldIn, result.getBlockPos(), result.getDirection(), playerIn, boatentity).isCancelled()) {
+                        if (DistValidate.isValid(worldIn) && CraftEventFactory.callEntityPlaceEvent(worldIn, result.getBlockPos(), result.getDirection(), playerIn, boatentity).isCancelled()) {
                             return new InteractionResultHolder<>(InteractionResult.FAIL, itemstack);
                         }
                         if (!worldIn.addFreshEntity(boatentity)) {
