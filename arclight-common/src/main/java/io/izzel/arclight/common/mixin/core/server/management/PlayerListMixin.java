@@ -297,6 +297,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                     location = new Location(((WorldBridge) spawnWorld).bridge$getWorld(), vec3d.x, vec3d.y, vec3d.z);
                 } else if (pos != null) {
                     playerIn.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.NO_RESPAWN_BLOCK_AVAILABLE, 0.0f));
+                    playerIn.setRespawnPosition(Level.OVERWORLD, null, 0f, false, false); // CraftBukkit - SPIGOT-5988: Clear respawn location when obstructed
                 }
             }
             if (location == null) {
@@ -413,6 +414,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                     location = new Location(((WorldBridge) spawnWorld).bridge$getWorld(), vec3d.x, vec3d.y, vec3d.z);
                 } else if (pos != null) {
                     playerIn.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.NO_RESPAWN_BLOCK_AVAILABLE, 0.0f));
+                    playerIn.setRespawnPosition(Level.OVERWORLD, null, 0f, false, false);
                 }
             }
             if (location == null) {

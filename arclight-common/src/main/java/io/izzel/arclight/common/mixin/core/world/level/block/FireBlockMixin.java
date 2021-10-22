@@ -15,6 +15,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.block.CraftBlockState;
+import org.bukkit.craftbukkit.v.block.CraftBlockStates;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockFadeEvent;
@@ -71,7 +72,7 @@ public abstract class FireBlockMixin implements FireBlockBridge {
         if (!(worldIn instanceof Level)) {
             return Blocks.AIR.defaultBlockState();
         }
-        CraftBlockState blockState = CraftBlockState.getBlockState(worldIn, currentPos);
+        CraftBlockState blockState = CraftBlockStates.getBlockState(worldIn, currentPos);
         blockState.setData(Blocks.AIR.defaultBlockState());
         BlockFadeEvent event = new BlockFadeEvent(blockState.getBlock(), blockState);
         Bukkit.getPluginManager().callEvent(event);

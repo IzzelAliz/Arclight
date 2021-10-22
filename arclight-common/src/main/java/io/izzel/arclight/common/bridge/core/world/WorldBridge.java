@@ -39,5 +39,7 @@ public interface WorldBridge extends IWorldWriterBridge, IWorldBridge {
 
     long bridge$ticksPerWaterAmbientSpawns();
 
+    long bridge$ticksPerWaterUndergroundSpawns();
+
     ResourceKey<DimensionType> bridge$getTypeKey();
 }

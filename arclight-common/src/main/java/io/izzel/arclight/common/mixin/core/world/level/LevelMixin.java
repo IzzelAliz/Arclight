@@ -86,6 +86,7 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
     public long ticksPerMonsterSpawns;
     public long ticksPerWaterSpawns;
     public long ticksPerWaterAmbientSpawns;
+    public long ticksPerWaterUndergroundCreatureSpawns;
     public long ticksPerAmbientSpawns;
     public boolean populating;
     public org.bukkit.generator.ChunkGenerator generator;
@@ -116,6 +117,7 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
         this.ticksPerMonsterSpawns = this.getCraftServer().getTicksPerMonsterSpawns();
         this.ticksPerWaterSpawns = this.getCraftServer().getTicksPerWaterSpawns();
         this.ticksPerWaterAmbientSpawns = this.getCraftServer().getTicksPerWaterAmbientSpawns();
+        this.ticksPerWaterUndergroundCreatureSpawns = this.getCraftServer().getTicksPerWaterUndergroundCreatureSpawns();
         this.ticksPerAmbientSpawns = this.getCraftServer().getTicksPerAmbientSpawns();
         this.typeKey = this.getCraftServer().getHandle().getServer().registryAccess().registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY)
             .getResourceKey(dimensionType)
@@ -150,6 +152,11 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
     @Override
     public long bridge$ticksPerWaterAmbientSpawns() {
         return ticksPerWaterAmbientSpawns;
+    }
+
+    @Override
+    public long bridge$ticksPerWaterUndergroundSpawns() {
+        return ticksPerWaterUndergroundCreatureSpawns;
     }
 
     public ResourceKey<DimensionType> getTypeKey() {

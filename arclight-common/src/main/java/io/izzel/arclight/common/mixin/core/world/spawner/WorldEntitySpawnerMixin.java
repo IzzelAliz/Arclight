@@ -58,6 +58,7 @@ public abstract class WorldEntitySpawnerMixin {
         boolean spawnWaterThisTick = ((WorldBridge) world).bridge$ticksPerWaterSpawns() != 0L && worldInfo.getGameTime() % ((WorldBridge) world).bridge$ticksPerWaterSpawns() == 0L;
         boolean spawnAmbientThisTick = ((WorldBridge) world).bridge$ticksPerAmbientSpawns() != 0L && worldInfo.getGameTime() % ((WorldBridge) world).bridge$ticksPerAmbientSpawns() == 0L;
         boolean spawnWaterAmbientThisTick = ((WorldBridge) world).bridge$ticksPerWaterAmbientSpawns() != 0L && worldInfo.getGameTime() % ((WorldBridge) world).bridge$ticksPerWaterAmbientSpawns() == 0L;
+        boolean spawnWaterUndergroundThisTick = ((WorldBridge) world).bridge$ticksPerWaterUndergroundSpawns() != 0L && worldInfo.getGameTime() % ((WorldBridge) world).bridge$ticksPerWaterUndergroundSpawns() == 0L;
         for (MobCategory classification : classifications) {
             boolean spawnThisTick = true;
             int limit = classification.getMaxInstancesPerChunk();
@@ -69,6 +70,10 @@ public abstract class WorldEntitySpawnerMixin {
                 case CREATURE -> {
                     spawnThisTick = spawnAnimalThisTick;
                     limit = ((WorldBridge) world).bridge$getWorld().getAnimalSpawnLimit();
+                }
+                case UNDERGROUND_WATER_CREATURE -> {
+                    spawnThisTick = spawnWaterUndergroundThisTick;
+                    limit = ((WorldBridge) world).bridge$getWorld().getWaterUndergroundCreatureSpawnLimit();
                 }
                 case WATER_CREATURE -> {
                     spawnThisTick = spawnWaterThisTick;

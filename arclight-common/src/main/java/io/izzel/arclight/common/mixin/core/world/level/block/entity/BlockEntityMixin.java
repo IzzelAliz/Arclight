@@ -1,7 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
 import io.izzel.arclight.common.bridge.core.tileentity.TileEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
@@ -57,10 +56,6 @@ public abstract class BlockEntityMixin implements TileEntityBridge {
     public InventoryHolder getOwner() {
         if (this.level == null) return null;
         org.bukkit.block.Block block = CraftBlock.at(this.level, this.worldPosition);
-        if (block == null) {
-            org.bukkit.Bukkit.getLogger().log(java.util.logging.Level.WARNING, "No block for owner at %s %d %d %d", new Object[]{((WorldBridge) level).bridge$getWorld(), worldPosition.getX(), worldPosition.getY(), worldPosition.getZ()});
-            return null;
-        }
         org.bukkit.block.BlockState state = block.getState();
         if (state instanceof InventoryHolder) return (InventoryHolder) state;
         return null;

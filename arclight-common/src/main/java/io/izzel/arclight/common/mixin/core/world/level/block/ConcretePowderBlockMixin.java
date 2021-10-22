@@ -9,6 +9,7 @@ import net.minecraft.world.level.block.ConcretePowderBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlockState;
+import org.bukkit.craftbukkit.v.block.CraftBlockStates;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.block.BlockFormEvent;
 import org.spongepowered.asm.mixin.Final;
@@ -34,7 +35,7 @@ public abstract class ConcretePowderBlockMixin extends FallingBlockMixin {
     public BlockState arclight$blockForm(@Coerce ConcretePowderBlockMixin block, BlockPlaceContext context) {
         Level world = context.getLevel();
         BlockPos blockPos = context.getClickedPos();
-        CraftBlockState blockState = CraftBlockState.getBlockState(world, blockPos);
+        CraftBlockState blockState = CraftBlockStates.getBlockState(world, blockPos);
         blockState.setData(this.concrete);
         BlockFormEvent event = new BlockFormEvent(blockState.getBlock(), blockState);
         Bukkit.getPluginManager().callEvent(event);
@@ -49,7 +50,7 @@ public abstract class ConcretePowderBlockMixin extends FallingBlockMixin {
         if (!(worldIn instanceof Level)) {
             return this.concrete;
         }
-        CraftBlockState blockState = CraftBlockState.getBlockState(worldIn, currentPos);
+        CraftBlockState blockState = CraftBlockStates.getBlockState(worldIn, currentPos);
         blockState.setData(this.concrete);
         BlockFormEvent event = new BlockFormEvent(blockState.getBlock(), blockState);
         Bukkit.getPluginManager().callEvent(event);

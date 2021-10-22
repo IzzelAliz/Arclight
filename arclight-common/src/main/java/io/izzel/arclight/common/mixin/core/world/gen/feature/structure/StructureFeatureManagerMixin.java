@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(StructureFeatureManager.class)
-public class StructureManagerMixin {
+public class StructureFeatureManagerMixin {
 
     @Shadow @Final private LevelAccessor level;
 

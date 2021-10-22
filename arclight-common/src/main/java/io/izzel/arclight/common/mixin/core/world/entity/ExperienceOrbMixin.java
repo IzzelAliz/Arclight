@@ -88,6 +88,7 @@ public abstract class ExperienceOrbMixin extends EntityMixin {
 
             itemstack.setDamageValue(itemstack.getDamageValue() - j);
             int k = i - this.durabilityToXp(j);
+            this.value = k;
 
             return k > 0 ? this.repairPlayerItems(player, k) : 0;
         } else {

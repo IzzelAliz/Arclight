@@ -1,26 +1,23 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import com.google.common.collect.ImmutableMap;
-import io.izzel.arclight.common.bridge.core.block.FireBlockBridge;
 import io.izzel.arclight.common.bridge.bukkit.MaterialBridge;
+import io.izzel.arclight.common.bridge.core.block.FireBlockBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
-import io.izzel.arclight.common.mod.server.block.ArclightTileInventory;
 import io.izzel.arclight.i18n.LocalizedException;
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FallingBlock;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.block.CraftBlockEntityState;
 import org.bukkit.craftbukkit.v.block.CraftBlockState;
+import org.bukkit.craftbukkit.v.block.CraftBlockStates;
 import org.bukkit.craftbukkit.v.inventory.CraftMetaArmorStand;
 import org.bukkit.craftbukkit.v.inventory.CraftMetaBanner;
 import org.bukkit.craftbukkit.v.inventory.CraftMetaBlockState;
@@ -357,7 +354,6 @@ public abstract class MaterialMixin implements MaterialBridge {
         this.setupBlockStateFunc();
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     private void setupBlockStateFunc() {
         if (arclight$spec.blockStateClass != null && !arclight$spec.blockStateClass.equalsIgnoreCase("auto")) {
             try {
@@ -390,13 +386,7 @@ public abstract class MaterialMixin implements MaterialBridge {
             }
         }
         if (this.arclight$stateFunc == null) {
-            this.arclight$stateFunc = b -> {
-                BlockEntity tileEntity = b.getCraftWorld().getHandle().getBlockEntity(b.getPosition());
-                if (tileEntity instanceof Container) {
-                    return new ArclightTileInventory(b, tileEntity.getClass());
-                }
-                return tileEntity == null ? new CraftBlockState(b) : new CraftBlockEntityState<>(b, tileEntity.getClass());
-            };
+            this.arclight$stateFunc = CraftBlockStates::getBlockState;
         }
     }
 

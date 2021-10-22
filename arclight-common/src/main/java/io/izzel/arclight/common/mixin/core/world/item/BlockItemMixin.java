@@ -15,7 +15,7 @@ import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.block.CraftBlockState;
+import org.bukkit.craftbukkit.v.block.CraftBlockStates;
 import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.entity.Player;
@@ -42,7 +42,7 @@ public abstract class BlockItemMixin {
         at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/item/BlockItem;getPlacementState(Lnet/minecraft/world/item/context/BlockPlaceContext;)Lnet/minecraft/world/level/block/state/BlockState;"))
     private void arclight$prePlaceLilypad(BlockPlaceContext context, CallbackInfoReturnable<InteractionResult> cir, BlockPlaceContext context1) {
         if ((Object) this instanceof WaterLilyBlockItem) {
-            this.arclight$state = CraftBlockState.getBlockState(context1.getLevel(), context1.getClickedPos());
+            this.arclight$state = CraftBlockStates.getBlockState(context1.getLevel(), context1.getClickedPos());
         }
     }
 

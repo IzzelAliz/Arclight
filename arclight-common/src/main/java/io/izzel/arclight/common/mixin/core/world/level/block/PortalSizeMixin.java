@@ -23,6 +23,7 @@ import org.bukkit.World;
 import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.block.CraftBlockState;
+import org.bukkit.craftbukkit.v.block.CraftBlockStates;
 import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.spongepowered.asm.mixin.Final;
@@ -67,7 +68,7 @@ public abstract class PortalSizeMixin implements PortalSizeBridge {
         World world = ((WorldBridge) ((IWorldBridge) this.level).bridge$getMinecraftWorld()).bridge$getWorld();
         net.minecraft.world.level.block.state.BlockState blockState = Blocks.NETHER_PORTAL.defaultBlockState().setValue(NetherPortalBlock.AXIS, this.axis);
         BlockPos.betweenClosed(this.bottomLeft, this.bottomLeft.relative(Direction.UP, this.height - 1).relative(this.rightDir, this.width - 1)).forEach(pos -> {
-            CraftBlockState state = CraftBlockState.getBlockState(((IWorldBridge) this.level).bridge$getMinecraftWorld(), pos, 18);
+            CraftBlockState state = CraftBlockStates.getBlockState(((IWorldBridge) this.level).bridge$getMinecraftWorld(), pos, 18);
             state.setData(blockState);
             this.blocks.add(state);
         });

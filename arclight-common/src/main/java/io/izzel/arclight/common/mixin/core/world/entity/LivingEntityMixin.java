@@ -46,6 +46,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.MinecraftForge;
@@ -910,7 +911,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
 
                 this.setHealth(1.0F);
                 this.removeAllEffects(EntityPotionEffectEvent.Cause.TOTEM);
-                this.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 900, 1), EntityPotionEffectEvent.Cause.TOTEM);bridge$pushEffectCause(EntityPotionEffectEvent.Cause.TOTEM);
+                this.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 900, 1), EntityPotionEffectEvent.Cause.TOTEM);
+                bridge$pushEffectCause(EntityPotionEffectEvent.Cause.TOTEM);
                 this.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 100, 1), EntityPotionEffectEvent.Cause.TOTEM);
                 this.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 800, 1), EntityPotionEffectEvent.Cause.TOTEM);
                 this.level.broadcastEntityEvent((Entity) (Object) this, (byte) 35);
@@ -926,6 +928,11 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         if (event.isCancelled()) {
             ci.cancel();
         }
+    }
+
+    @Redirect(method = "createWitherRose", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
+    private boolean arclight$fireWitherRoseForm(Level instance, BlockPos pPos, BlockState pNewState, int pFlags) {
+        return CraftEventFactory.handleBlockFormEvent(instance, pPos, pNewState, 3, (Entity) (Object) this);
     }
 
     @Redirect(method = "getDamageAfterArmorAbsorb", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurtArmor(Lnet/minecraft/world/damagesource/DamageSource;F)V"))

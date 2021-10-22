@@ -594,7 +594,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
     private Either<Player.BedSleepingProblem, Unit> getBedResult(BlockPos blockposition, Direction enumdirection) {
         if (!this.isSleeping() && this.isAlive()) {
-            if (!this.level.dimensionType().natural()) {
+            if (!this.level.dimensionType().natural() || !this.level.dimensionType().bedWorks()) {
                 return Either.left(Player.BedSleepingProblem.NOT_POSSIBLE_HERE);
             }
             if (!this.bedInRange(blockposition, enumdirection)) {

@@ -214,6 +214,7 @@ public abstract class RepairContainerMixin extends ItemCombinerMixin {
 
             // this.outputSlot.setInventorySlotContents(0, itemstack1);
             CraftEventFactory.callPrepareAnvilEvent(getBukkitView(), itemstack1);
+            this.sendAllDataToRemote();
             this.broadcastChanges();
         }
     }

@@ -8,6 +8,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.block.CraftBlockState;
+import org.bukkit.craftbukkit.v.block.CraftBlockStates;
 import org.bukkit.event.block.CauldronLevelChangeEvent;
 
 public class CauldronHooks {
@@ -40,7 +41,7 @@ public class CauldronHooks {
     }
 
     public static boolean changeLevel(BlockState old, Level world, BlockPos pos, BlockState state, Entity entity, CauldronLevelChangeEvent.ChangeReason reason) {
-        CraftBlockState newState = CraftBlockState.getBlockState(world, pos);
+        CraftBlockState newState = CraftBlockStates.getBlockState(world, pos);
         newState.setData(state);
         CauldronLevelChangeEvent event = new CauldronLevelChangeEvent(
             CraftBlock.at(world, pos),
