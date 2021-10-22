@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mod.server.event;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
@@ -20,7 +21,7 @@ public class BlockBreakEventDispatcher {
 
     @SubscribeEvent(receiveCanceled = true)
     public void onBreakBlock(BlockEvent.BreakEvent event) {
-        if (!event.getWorld().isClientSide()) {
+        if (DistValidate.isValid(event.getWorld())) {
             CraftBlock craftBlock = CraftBlock.at(event.getWorld(), event.getPos());
             BlockBreakEvent breakEvent = new BlockBreakEvent(craftBlock, ((ServerPlayerEntityBridge) event.getPlayer()).bridge$getBukkitEntity());
             ArclightCaptures.captureBlockBreakPlayer(breakEvent);
@@ -34,6 +35,7 @@ public class BlockBreakEventDispatcher {
 
     @SubscribeEvent
     public void onFarmlandBreak(BlockEvent.FarmlandTrampleEvent event) {
+        if (!DistValidate.isValid(event.getWorld())) return;
         Entity entity = event.getEntity();
         Cancellable cancellable;
         if (entity instanceof Player) {

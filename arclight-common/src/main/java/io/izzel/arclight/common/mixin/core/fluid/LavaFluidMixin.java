@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.fluid;
 
 import io.izzel.arclight.common.bridge.core.world.IWorldBridge;
+import io.izzel.arclight.common.mod.util.DistValidate;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.GameRules;
@@ -50,7 +51,7 @@ public abstract class LavaFluidMixin {
                     if (blockstate.isAir()) {
                         if (this.hasFlammableNeighbours(world, blockpos)) {
                             if (world.getBlockState(blockpos).getBlock() != Blocks.FIRE) {
-                                if (CraftEventFactory.callBlockIgniteEvent(world, blockpos, pos).isCancelled()) {
+                                if (DistValidate.isValid(world) && CraftEventFactory.callBlockIgniteEvent(world, blockpos, pos).isCancelled()) {
                                     continue;
                                 }
                             }
@@ -71,7 +72,7 @@ public abstract class LavaFluidMixin {
                     if (world.isEmptyBlock(blockpos1.above()) && this.isFlammable(world, blockpos1)) {
                         BlockPos up = blockpos1.above();
                         if (world.getBlockState(up).getBlock() != Blocks.FIRE) {
-                            if (CraftEventFactory.callBlockIgniteEvent(world, up, pos).isCancelled()) {
+                            if (DistValidate.isValid(world) && CraftEventFactory.callBlockIgniteEvent(world, up, pos).isCancelled()) {
                                 continue;
                             }
                         }
@@ -85,6 +86,7 @@ public abstract class LavaFluidMixin {
 
     @Eject(method = "spreadTo", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelAccessor;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     private boolean arclight$blockFromTo(LevelAccessor world, BlockPos pos, BlockState newState, int flags, CallbackInfo ci) {
+        if (!DistValidate.isValid(world)) return world.setBlock(pos, newState, flags);
         if (!CraftEventFactory.handleBlockFormEvent(((IWorldBridge) world).bridge$getMinecraftWorld(), pos, newState, flags)) {
             ci.cancel();
             return false;

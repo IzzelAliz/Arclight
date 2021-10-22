@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.level.block;
 import io.izzel.arclight.common.bridge.core.block.BlockBridge;
 import io.izzel.arclight.common.mixin.core.world.level.block.state.BlockBehaviourMixin;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -78,7 +79,8 @@ public abstract class BlockMixin extends BlockBehaviourMixin implements BlockBri
         List<ItemEntity> blockDrops = ArclightCaptures.getBlockDrops();
         org.bukkit.block.BlockState state = ArclightCaptures.getBlockBreakPlayerState();
         BlockBreakEvent breakEvent = ArclightCaptures.resetBlockBreakPlayer();
-        if (player instanceof ServerPlayer && blockDrops != null && (breakEvent == null || breakEvent.isDropItems())) {
+        if (player instanceof ServerPlayer && blockDrops != null && (breakEvent == null || breakEvent.isDropItems())
+            && DistValidate.isValid(worldIn)) {
             CraftBlock craftBlock = CraftBlock.at(((CraftWorld) state.getWorld()).getHandle(), pos);
             CraftEventFactory.handleBlockDropItemEvent(craftBlock, state, ((ServerPlayer) player), blockDrops);
         }

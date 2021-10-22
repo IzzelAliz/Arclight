@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -52,7 +53,7 @@ public abstract class BlockItemMixin {
         org.bukkit.block.BlockState state = arclight$state;
         arclight$state = null;
         BlockPos pos = context1.getClickedPos();
-        if (state != null) {
+        if (state != null && DistValidate.isValid(context)) {
             org.bukkit.event.block.BlockPlaceEvent placeEvent = CraftEventFactory.callBlockPlaceEvent((ServerLevel) context1.getLevel(), context1.getPlayer(), context1.getHand(), state, pos.getX(), pos.getY(), pos.getZ());
             if (placeEvent != null && (placeEvent.isCancelled() || !placeEvent.canBuild())) {
                 state.update(true, false);
@@ -90,7 +91,7 @@ public abstract class BlockItemMixin {
 
         Player player = (context.getPlayer() instanceof ServerPlayerEntityBridge) ? ((ServerPlayerEntityBridge) context.getPlayer()).bridge$getBukkitEntity() : null;
         BlockCanBuildEvent event = new BlockCanBuildEvent(CraftBlock.at(context.getLevel(), context.getClickedPos()), player, CraftBlockData.fromData(state), original);
-        Bukkit.getPluginManager().callEvent(event);
+        if (DistValidate.isValid(context)) Bukkit.getPluginManager().callEvent(event);
         return event.isBuildable();
     }
 }

@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
+import io.izzel.arclight.common.mod.util.DistValidate;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -16,7 +17,7 @@ public class MinecartItemMixin {
 
     @Eject(method = "useOn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private boolean arclight$entityPlace(Level world, Entity entityIn, CallbackInfoReturnable<InteractionResult> cir, UseOnContext context) {
-        if (CraftEventFactory.callEntityPlaceEvent(context, entityIn).isCancelled()) {
+        if (DistValidate.isValid(world) && CraftEventFactory.callEntityPlaceEvent(context, entityIn).isCancelled()) {
             cir.setReturnValue(InteractionResult.FAIL);
             return false;
         } else if (!world.addFreshEntity(entityIn)) {

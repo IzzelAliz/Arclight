@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -44,7 +45,7 @@ public class ChorusFruitItemMixin extends Item {
                 double d4 = Mth.clamp(entityLiving.getY() + (double) (entityLiving.getRandom().nextInt(16) - 8), 0.0D, worldIn.getHeight() - 1);
                 double d5 = entityLiving.getZ() + (entityLiving.getRandom().nextDouble() - 0.5D) * 16.0D;
 
-                if (entityLiving instanceof ServerPlayer) {
+                if (entityLiving instanceof ServerPlayer && DistValidate.isValid(worldIn)) {
                     Player player = ((ServerPlayerEntityBridge) entityLiving).bridge$getBukkitEntity();
                     PlayerTeleportEvent event = new PlayerTeleportEvent(player, player.getLocation(), new Location(player.getWorld(), d3, d4, d5), PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT);
                     Bukkit.getPluginManager().callEvent(event);

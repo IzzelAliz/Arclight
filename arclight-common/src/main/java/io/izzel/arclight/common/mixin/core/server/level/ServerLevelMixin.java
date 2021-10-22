@@ -15,6 +15,7 @@ import io.izzel.arclight.common.mixin.core.world.level.LevelMixin;
 import io.izzel.arclight.common.mod.server.world.WorldSymlink;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.DelegateWorldInfo;
+import io.izzel.arclight.common.mod.util.DistValidate;
 import io.izzel.arclight.i18n.ArclightConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
@@ -34,6 +35,7 @@ import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.ExplosionDamageCalculator;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -113,7 +115,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         this.generator = gen;
         this.environment = env;
         this.biomeProvider = biomeProvider;
-        if (gen != null) {
+        if (gen != null && this.chunkSource != null) {
             CustomChunkGenerator generator = new CustomChunkGenerator((ServerLevel) (Object) this, this.chunkSource.getGenerator(), gen);
             ((ServerChunkProviderBridge) this.chunkSource).bridge$setChunkGenerator(generator);
         }
@@ -122,21 +124,25 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
 
     @Inject(method = "<init>(Lnet/minecraft/server/MinecraftServer;Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/world/level/storage/ServerLevelData;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/dimension/DimensionType;Lnet/minecraft/server/level/progress/ChunkProgressListener;Lnet/minecraft/world/level/chunk/ChunkGenerator;ZJLjava/util/List;Z)V", at = @At("RETURN"))
     private void arclight$init(MinecraftServer minecraftServer, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, ServerLevelData worldInfo, ResourceKey<net.minecraft.world.level.Level> dimension, DimensionType dimensionType, ChunkProgressListener statusListener, ChunkGenerator chunkGenerator, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking, CallbackInfo ci) {
-        this.pvpMode = minecraftServer.isPvpAllowed();
+        this.pvpMode = minecraftServer != null && minecraftServer.isPvpAllowed();
         this.convertable = levelSave;
-        this.uuid = WorldUUID.getUUID(levelSave.getDimensionPath(this.dimension()));
+        this.uuid = levelSave != null ? WorldUUID.getUUID(levelSave.getDimensionPath(this.dimension())) : UUID.randomUUID();
         if (worldInfo instanceof PrimaryLevelData) {
             this.$$worldDataServer = (PrimaryLevelData) worldInfo;
         } else if (worldInfo instanceof DerivedLevelData) {
             // damn spigot again
             this.$$worldDataServer = DelegateWorldInfo.wrap(((DerivedLevelData) worldInfo));
             ((DerivedWorldInfoBridge) worldInfo).bridge$setDimType(this.getTypeKey());
-            if (ArclightConfig.spec().getCompat().isSymlinkWorld()) {
+            if (levelSave != null && ArclightConfig.spec().getCompat().isSymlinkWorld()) {
                 WorldSymlink.create((DerivedLevelData) worldInfo, levelSave.getDimensionPath(this.dimension()));
             }
         }
-        ((ServerChunkProviderBridge) this.chunkSource).bridge$setViewDistance(spigotConfig.viewDistance);
-        ((WorldInfoBridge) this.$$worldDataServer).bridge$setWorld((ServerLevel) (Object) this);
+        if (this.chunkSource != null) {
+            ((ServerChunkProviderBridge) this.chunkSource).bridge$setViewDistance(spigotConfig.viewDistance);
+        }
+        if (this.$$worldDataServer != null) {
+            ((WorldInfoBridge) this.$$worldDataServer).bridge$setWorld((ServerLevel) (Object) this);
+        }
     }
 
     public LevelChunk getChunkIfLoaded(int x, int z) {
@@ -190,9 +196,11 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
             cause = arclight$cause;
             arclight$cause = null;
         }
-        LightningStrikeEvent lightning = CraftEventFactory.callLightningStrikeEvent((LightningStrike) ((EntityBridge) entity).bridge$getBukkitEntity(), cause);
-        if (lightning.isCancelled()) {
-            return false;
+        if (DistValidate.isValid((LevelAccessor) this)) {
+            LightningStrikeEvent lightning = CraftEventFactory.callLightningStrikeEvent((LightningStrike) ((EntityBridge) entity).bridge$getBukkitEntity(), cause);
+            if (lightning.isCancelled()) {
+                return false;
+            }
         }
         return this.addFreshEntity(entity);
     }
@@ -204,7 +212,9 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
 
     @Inject(method = "save", at = @At(value = "JUMP", ordinal = 0, opcode = Opcodes.IFNULL))
     private void arclight$worldSaveEvent(ProgressListener progress, boolean flush, boolean skipSave, CallbackInfo ci) {
-        Bukkit.getPluginManager().callEvent(new WorldSaveEvent(bridge$getWorld()));
+        if (DistValidate.isValid((LevelAccessor) this)) {
+            Bukkit.getPluginManager().callEvent(new WorldSaveEvent(bridge$getWorld()));
+        }
     }
 
     @Inject(method = "save", at = @At("RETURN"))
@@ -264,7 +274,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     private void arclight$addEntityEvent(Entity entityIn, CallbackInfoReturnable<Boolean> cir) {
         CreatureSpawnEvent.SpawnReason reason = arclight$reason == null ? CreatureSpawnEvent.SpawnReason.DEFAULT : arclight$reason;
         arclight$reason = null;
-        if (!CraftEventFactory.doEntityAddEventCalling((ServerLevel) (Object) this, entityIn, reason)) {
+        if (DistValidate.isValid((LevelAccessor) this) && !CraftEventFactory.doEntityAddEventCalling((ServerLevel) (Object) this, entityIn, reason)) {
             cir.setReturnValue(false);
         }
     }
@@ -406,6 +416,11 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         BlockPos.betweenClosed(i - 2, j, k - 2, i + 2, j, k + 2).forEach((pos) -> {
             blockList.setBlock(pos, Blocks.OBSIDIAN.defaultBlockState(), 3);
         });
+        if (!DistValidate.isValid(world)) {
+            blockList.updateList();
+            ArclightCaptures.getEndPortalEntity();
+            return;
+        }
         CraftWorld bworld = ((WorldBridge) world).bridge$getWorld();
         boolean spawnPortal = ArclightCaptures.getEndPortalSpawn();
         Entity entity = ArclightCaptures.getEndPortalEntity();
