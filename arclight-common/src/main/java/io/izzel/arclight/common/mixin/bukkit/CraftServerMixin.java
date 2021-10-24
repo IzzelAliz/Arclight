@@ -37,7 +37,6 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -83,11 +82,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
      */
     @Overwrite(remap = false)
     public ConsoleReader getReader() {
-        try {
-            return new ConsoleReader();
-        } catch (IOException e) {
-            return null;
-        }
+        return null;
     }
 
     @Inject(method = "unloadWorld(Lorg/bukkit/World;Z)Z", remap = false, require = 1, at = @At(value = "INVOKE", ordinal = 1, target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))

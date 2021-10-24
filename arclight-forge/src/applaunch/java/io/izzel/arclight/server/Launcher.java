@@ -1,6 +1,6 @@
 package io.izzel.arclight.server;
 
-import io.izzel.arclight.boot.Main_Forge;
+import io.izzel.arclight.boot.application.Main_Forge;
 
 public class Launcher {
 

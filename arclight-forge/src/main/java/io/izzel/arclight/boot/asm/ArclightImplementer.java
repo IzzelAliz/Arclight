@@ -29,6 +29,15 @@ public class ArclightImplementer implements ILaunchPluginService {
     private final Map<String, Implementer> implementers = new HashMap<>();
     private volatile Consumer<String[]> auditAcceptor;
     private ITransformerLoader transformerLoader;
+    private final boolean logger;
+
+    public ArclightImplementer() {
+        this(false);
+    }
+
+    public ArclightImplementer(boolean logger) {
+        this.logger = logger;
+    }
 
     @Override
     public String name() {
@@ -42,6 +51,9 @@ public class ArclightImplementer implements ILaunchPluginService {
         this.implementers.put("switch", SwitchTableFixer.INSTANCE);
         this.implementers.put("async", AsyncCatcher.INSTANCE);
         this.implementers.put("entitytype", EntityTypePatcher.INSTANCE);
+        if (this.logger) {
+            this.implementers.put("logger", new LoggerTransformer());
+        }
     }
 
     @Override

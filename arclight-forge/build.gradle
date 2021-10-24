@@ -25,7 +25,8 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 configurations {
     installer
     embed
-    implementation.extendsFrom(embed)
+    gson
+    implementation.extendsFrom(embed, gson)
 }
 
 repositories {
@@ -40,12 +41,12 @@ repositories {
     maven { url = 'https://maven.izzel.io/releases' }
 }
 
-def embedLibs = ["org.spongepowered:mixin:$mixinVersion", 'org.yaml:snakeyaml:1.28',
+def embedLibs = [/*"org.spongepowered:mixin:$mixinVersion", */ 'org.yaml:snakeyaml:1.28',
                  'org.xerial:sqlite-jdbc:3.34.0', 'mysql:mysql-connector-java:5.1.49',
                  /*'commons-lang:commons-lang:2.6',*/ 'com.googlecode.json-simple:json-simple:1.1.1',
-                 'org.apache.logging.log4j:log4j-jul:2.11.2', 'net.md-5:SpecialSource:1.10.0',
+                 'org.apache.logging.log4j:log4j-jul:2.14.1', 'net.md-5:SpecialSource:1.10.0',
                  'org.jline:jline-terminal-jansi:3.12.1', 'org.fusesource.jansi:jansi:1.18',
-                 'org.jline:jline-terminal:3.12.1', 'org.jline:jline-reader:3.12.1',
+                 /*'org.jline:jline-terminal:3.12.1', 'org.jline:jline-reader:3.12.1',*/
                  'jline:jline:2.12.1', 'org.apache.maven:maven-resolver-provider:3.8.1',
                  'org.apache.maven.resolver:maven-resolver-connector-basic:1.6.2', 'org.apache.maven.resolver:maven-resolver-transport-http:1.6.2',
                  'org.apache.maven:maven-model:3.8.1', 'org.codehaus.plexus:plexus-utils:3.2.1',
@@ -54,8 +55,8 @@ def embedLibs = ["org.spongepowered:mixin:$mixinVersion", 'org.yaml:snakeyaml:1.
                  'org.apache.maven:maven-repository-metadata:3.8.1', 'org.apache.maven.resolver:maven-resolver-api:1.6.2',
                  'org.apache.maven.resolver:maven-resolver-spi:1.6.2', 'org.apache.maven.resolver:maven-resolver-util:1.6.2',
                  'org.apache.maven.resolver:maven-resolver-impl:1.6.2', 'org.apache.httpcomponents:httpclient:4.5.12',
-                 'org.apache.httpcomponents:httpcore:4.4.13', 'commons-codec:commons-codec:1.11',
-                 'org.slf4j:jcl-over-slf4j:1.7.30', 'org.apache.logging.log4j:log4j-slf4j18-impl:2.14.1',
+                 'org.apache.httpcomponents:httpcore:4.4.13',/* 'commons-codec:commons-codec:1.11',*/
+                 'org.slf4j:jcl-over-slf4j:1.7.30', /*'org.apache.logging.log4j:log4j-slf4j18-impl:2.14.1',*/
                  'org.spongepowered:configurate-hocon:3.6.1', 'org.spongepowered:configurate-core:3.6.1',
                  'com.typesafe:config:1.3.1']
 
@@ -66,11 +67,11 @@ dependencies {
     implementation 'cpw.mods:modlauncher:9.0.7'
     implementation 'cpw.mods:securejarhandler:0.9.45'
     implementation 'net.minecraftforge:forgespi:4.0.9'
-    implementation 'com.google.code.gson:gson:2.8.0'
+    gson 'com.google.code.gson:gson:2.8.8'
     implementation 'org.apache.logging.log4j:log4j-api:2.14.1'
     implementation 'org.jetbrains:annotations:19.0.0'
     implementation 'org.spongepowered:mixin:0.8.3'
-    implementation 'org.apache.logging.log4j:log4j-jul:2.11.2'
+    implementation 'org.apache.logging.log4j:log4j-jul:2.14.1'
     for (def lib : embedLibs) {
         installer lib
     }
@@ -81,7 +82,9 @@ dependencies {
     embed(project(':i18n-config')) {
         transitive = false
     }
-    embed(project(':forge-installer'))
+    embed(project(':forge-installer')) {
+        transitive = false
+    }
 }
 
 jar {
@@ -103,6 +106,10 @@ jar {
     into('/') {
         it.from(project(':arclight-common').tasks.jar.outputs.files.collect())
         it.rename { name -> 'common.jar' }
+    }
+    into('/') {
+        it.from(configurations.gson.collect())
+        it.rename { name -> 'gson.jar' }
     }
     from sourceSets.applaunch.output.classesDirs
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE

@@ -43,6 +43,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -60,7 +61,22 @@ public class ForgeInstaller {
         "1.17.1", "A16D67E5807F57FC4E550299CF20226194497DC2"
     );
 
-    public static Map.Entry<String, List<String>> install() throws Throwable {
+    public static List<Path> modInstall(Consumer<String> logger) throws Throwable {
+        InputStream stream = ForgeInstaller.class.getModule().getResourceAsStream("/META-INF/installer.json");
+        InstallInfo installInfo = new Gson().fromJson(new InputStreamReader(stream), InstallInfo.class);
+        List<Supplier<Path>> suppliers = checkMavenNoSource(installInfo.libraries);
+        if (!suppliers.isEmpty()) {
+            logger.accept("Downloading missing libraries ...");
+            ExecutorService pool = Executors.newFixedThreadPool(8);
+            CompletableFuture<?>[] array = suppliers.stream().map(reportSupply(pool, logger)).toArray(CompletableFuture[]::new);
+            handleFutures(logger, array);
+            pool.shutdownNow();
+        }
+        return installInfo.libraries.keySet().stream().map(it -> Paths.get("libraries").resolve(Util.mavenToPath(it))).collect(Collectors.toList());
+    }
+
+    @SuppressWarnings("unused")
+    public static Map.Entry<String, List<String>> applicationInstall() throws Throwable {
         InputStream stream = ForgeInstaller.class.getResourceAsStream("/META-INF/installer.json");
         InstallInfo installInfo = new Gson().fromJson(new InputStreamReader(stream), InstallInfo.class);
         List<Supplier<Path>> suppliers = checkMavenNoSource(installInfo.libraries);
@@ -68,10 +84,10 @@ public class ForgeInstaller {
         if (!suppliers.isEmpty() || !Files.exists(path)) {
             System.out.println("Downloading missing libraries ...");
             ExecutorService pool = Executors.newFixedThreadPool(8);
-            CompletableFuture<?>[] array = suppliers.stream().map(reportSupply(pool)).toArray(CompletableFuture[]::new);
+            CompletableFuture<?>[] array = suppliers.stream().map(reportSupply(pool, System.out::println)).toArray(CompletableFuture[]::new);
             if (!Files.exists(path)) {
-                CompletableFuture<?>[] futures = installForge(installInfo, pool);
-                handleFutures(futures);
+                CompletableFuture<?>[] futures = installForge(installInfo, pool, System.out::println);
+                handleFutures(System.out::println, futures);
                 System.out.println("Forge installation is starting, please wait... ");
                 try {
                     ProcessBuilder builder = new ProcessBuilder();
@@ -88,24 +104,24 @@ public class ForgeInstaller {
                     method.invoke(null, (Object) new String[]{"--installServer", ".", "--debug"});
                 }
             }
-            handleFutures(array);
+            handleFutures(System.out::println, array);
             pool.shutdownNow();
         }
         return classpath(path, installInfo);
     }
 
-    private static Function<Supplier<Path>, CompletableFuture<Path>> reportSupply(ExecutorService service) {
+    private static Function<Supplier<Path>, CompletableFuture<Path>> reportSupply(ExecutorService service, Consumer<String> logger) {
         return it -> CompletableFuture.supplyAsync(it, service).thenApply(path -> {
-            System.out.println("Downloaded " + path);
+            logger.accept("Downloaded " + path);
             return path;
         });
     }
 
-    private static CompletableFuture<?>[] installForge(InstallInfo info, ExecutorService pool) throws Exception {
+    private static CompletableFuture<?>[] installForge(InstallInfo info, ExecutorService pool, Consumer<String> logger) throws Exception {
         String format = String.format(INSTALLER_URL, info.installer.minecraft, info.installer.forge, info.installer.minecraft, info.installer.forge);
         String dist = String.format("forge-%s-%s-installer.jar", info.installer.minecraft, info.installer.forge);
         FileDownloader fd = new FileDownloader(format, dist, info.installer.hash);
-        CompletableFuture<?> installerFuture = reportSupply(pool).apply(fd).thenAccept(path -> {
+        CompletableFuture<?> installerFuture = reportSupply(pool, logger).apply(fd).thenAccept(path -> {
             try {
                 FileSystem system = FileSystems.newFileSystem(path, (ClassLoader) null);
                 Map<String, Map.Entry<String, String>> map = new HashMap<>();
@@ -114,25 +130,25 @@ public class ForgeInstaller {
                 Path version = system.getPath("version.json");
                 map.putAll(profileLibraries(version));
                 List<Supplier<Path>> suppliers = checkMaven(map);
-                CompletableFuture<?>[] array = suppliers.stream().map(reportSupply(pool)).toArray(CompletableFuture[]::new);
-                handleFutures(array);
+                CompletableFuture<?>[] array = suppliers.stream().map(reportSupply(pool, logger)).toArray(CompletableFuture[]::new);
+                handleFutures(logger, array);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         });
-        CompletableFuture<?> serverFuture = reportSupply(pool).apply(
+        CompletableFuture<?> serverFuture = reportSupply(pool, logger).apply(
             new FileDownloader(String.format(SERVER_URL, info.installer.minecraft),
                 String.format("libraries/net/minecraft/server/%1$s/minecraft_server.%1$s.jar", info.installer.minecraft), VERSION_HASH.get(info.installer.minecraft))
         );
         return new CompletableFuture<?>[]{installerFuture, serverFuture};
     }
 
-    private static void handleFutures(CompletableFuture<?>... futures) {
+    private static void handleFutures(Consumer<String> logger, CompletableFuture<?>... futures) {
         for (CompletableFuture<?> future : futures) {
             try {
                 future.join();
             } catch (CompletionException e) {
-                System.err.println(e.getCause().toString());
+                logger.accept(e.getCause().toString());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -259,7 +275,7 @@ public class ForgeInstaller {
         return Map.entry(Objects.requireNonNull(mainClass, "No main class found"), userArgs);
     }
 
-    private static void addToPath(Path path) {
+    public static void addToPath(Path path) {
         try {
             ClassLoader loader = ClassLoader.getPlatformClassLoader();
             Field ucpField;

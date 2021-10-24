@@ -17,8 +17,12 @@ A Bukkit server implementation utilizing Mixin.
 
 ## Installing
 
-1. Download the jar from [release page](https://github.com/IzzelAliz/Arclight/releases) or build server. (see the table above)
-2. Launch with command `java -jar arclight-forge-<mc>-<version>.jar nogui`. The `nogui` argument will disable the server control panel.
+* Download the jar from [release page](https://github.com/IzzelAliz/Arclight/releases) or build server. (see the table
+  above)
+* There are 2 ways to start Arclight:
+    * (**Recommended**) Launch with command `java -jar arclight-forge-<mc>-<version>.jar nogui`. The `nogui` argument will disable the
+      server control panel.
+    * Drop the downloaded jar into `mods` folder and start a forge server.
 
 ## Support
 
@@ -38,9 +42,8 @@ This project is licensed under [GPL v3](LICENSE).
 
 [![](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com)
 
-YourKit supports open source projects with innovative and intelligent tools 
-for monitoring and profiling Java and .NET applications.
-YourKit is the creator of <a href="https://www.yourkit.com/java/profiler/">YourKit Java Profiler</a>,
+YourKit supports open source projects with innovative and intelligent tools for monitoring and profiling Java and .NET
+applications. YourKit is the creator of <a href="https://www.yourkit.com/java/profiler/">YourKit Java Profiler</a>,
 <a href="https://www.yourkit.com/.net/profiler/">YourKit .NET Profiler</a>,
 and <a href="https://www.yourkit.com/youmonitor/">YourKit YouMonitor</a>.
 
