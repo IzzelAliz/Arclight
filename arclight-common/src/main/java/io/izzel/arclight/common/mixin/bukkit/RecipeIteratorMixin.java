@@ -46,7 +46,13 @@ public class RecipeIteratorMixin {
     public Recipe next() {
         if (current == null || !current.hasNext()) {
             current = recipes.next().getValue().values().iterator();
+            return next();
         }
-        return ((IRecipeBridge) current.next()).bridge$toBukkitRecipe();
+        IRecipe<?> recipe = current.next();
+        try {
+            return ((IRecipeBridge) recipe).bridge$toBukkitRecipe();
+        } catch (Throwable e) {
+            throw new RuntimeException("Error converting recipe " + recipe.getId(), e);
+        }
     }
 }
