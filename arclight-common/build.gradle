@@ -93,6 +93,27 @@ jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
+task srgJar(type: Jar) {
+    from(tasks.jar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) }) {
+        include 'io/izzel/**'
+        exclude 'io/izzel/arclight/common/mixin/**'
+    }
+    archiveClassifier.set('srg')
+}
+
+task spigotJar(type: Jar) {
+    with tasks.srgJar
+    doLast {
+        def task = tasks.create('renameSpigotJar', net.minecraftforge.gradle.userdev.tasks.RenameJarInPlace)
+        task.input.set(archiveFile.get().asFile)
+        task.hasLog = false
+        task.mappings.set(project.file('build/arclight_cache/tmp_srg/bukkit_srg.srg'))
+        task.args.add('--reverse')
+        task.apply()
+    }
+    archiveClassifier.set('spigot')
+}
+
 afterEvaluate {
     tasks.reobfJar.configure {
         it.extraMappings.from(project.files('extra_mapping.tsrg'))
