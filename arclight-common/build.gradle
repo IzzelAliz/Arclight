@@ -93,6 +93,12 @@ jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
+afterEvaluate {
+    tasks.reobfJar.configure {
+        it.extraMappings.from(project.files('extra_mapping.tsrg'))
+    }
+}
+
 processResources {
     filesMatching("**/mods.toml") {
         expand 'version': "$minecraftVersion-${project.version}-$gitHash"
@@ -101,7 +107,6 @@ processResources {
 
 remapSpigotJar {
     includes.add('net/minecraft/world/level/block/ChestBlock$DoubleInventory')
-    includes.add('net/minecraft/tileentity/LecternTileEntity$LecternInventory')
 }
 
 mixin {
@@ -111,7 +116,4 @@ mixin {
 compileJava {
     options.compilerArgs << '-XDignore.symbol.file' << '-XDenableSunApiLintControl'
     options.encoding = 'UTF-8'
-    options.compilerArgs += [
-            "-AreobfTsrgFiles=${project.file('extra_mapping.tsrg').canonicalPath}"
-    ]
 }

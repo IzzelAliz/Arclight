@@ -325,7 +325,7 @@
     "world.level.block.CarvedPumpkinBlockMixin",
     "world.level.block.CauldronBlockMixin",
     "world.level.block.CaveVinesMixin",
-    "world.level.block.ChestBlock2Mixin",
+    "world.level.block.ChestBlock2_1Mixin",
     "world.level.block.ChestBlockMixin",
     "world.level.block.ChorusFlowerBlockMixin",
     "world.level.block.CocoaBlockMixin",

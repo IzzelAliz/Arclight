@@ -90,4 +90,8 @@ public abstract class LecternTileEntity1Mixin implements IInventoryBridge, Conta
     @Override
     public void setCurrentRecipe(Recipe<?> recipe) {
     }
+
+    public LecternBlockEntity getLectern() {
+        return outerThis;
+    }
 }

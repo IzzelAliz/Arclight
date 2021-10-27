@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(targets = "net.minecraft.world.level.block.ComposterBlock$OutputContainer")
+@Mixin(ComposterBlock.OutputContainer.class)
 public abstract class ComposterBlock_OutputContainerMixin extends SimpleContainerMixin {
 
     // @formatter:off
