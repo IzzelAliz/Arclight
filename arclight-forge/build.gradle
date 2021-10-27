@@ -69,6 +69,7 @@ dependencies {
     implementation 'net.minecraftforge:forgespi:4.0.9'
     gson 'com.google.code.gson:gson:2.8.8'
     implementation 'org.apache.logging.log4j:log4j-api:2.14.1'
+    implementation 'org.apache.logging.log4j:log4j-core:2.14.1'
     implementation 'org.jetbrains:annotations:19.0.0'
     implementation 'org.spongepowered:mixin:0.8.3'
     implementation 'org.apache.logging.log4j:log4j-jul:2.14.1'

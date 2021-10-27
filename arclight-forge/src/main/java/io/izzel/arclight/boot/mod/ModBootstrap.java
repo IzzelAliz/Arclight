@@ -26,9 +26,9 @@ import java.util.Set;
 
 public class ModBootstrap extends AbstractBootstrap {
 
-    public static record ModBoot(Configuration configuration, Thread thread, ClassLoader parent) {}
+    public static record ModBoot(Configuration configuration, ClassLoader parent) {}
 
-    private static volatile ModBoot modBoot;
+    private static ModBoot modBoot;
 
     static void run() {
         var plugin = Launcher.INSTANCE.environment().findLaunchPlugin("arclight_implementer");
@@ -46,12 +46,12 @@ public class ModBootstrap extends AbstractBootstrap {
     }
 
     @SuppressWarnings("unchecked")
-    static void postRun() {
+    public static void postRun() {
         if (modBoot == null) return;
         try {
             var conf = modBoot.configuration();
             var parent = modBoot.parent();
-            var classLoader = (ModuleClassLoader) modBoot.thread().getContextClassLoader();
+            var classLoader = (ModuleClassLoader) Thread.currentThread().getContextClassLoader();
             var parentField = ModuleClassLoader.class.getDeclaredField("parentLoaders");
             var parentLoaders = (Map<String, ClassLoader>) Unsafe.getObject(classLoader, Unsafe.objectFieldOffset(parentField));
             for (var mod : conf.modules()) {
@@ -116,7 +116,7 @@ public class ModBootstrap extends AbstractBootstrap {
         var confOffset = Unsafe.objectFieldOffset(configurationField);
         var oldConf = (Configuration) Unsafe.getObject(classLoader, confOffset);
         var conf = oldConf.resolveAndBind(JarModuleFinder.of(secureJar), ModuleFinder.of(), List.of(secureJar.name()));
-        modBoot = new ModBoot(conf, Thread.currentThread(), classLoader);
+        modBoot = new ModBoot(conf, classLoader);
         Unsafe.putObjectVolatile(classLoader, confOffset, conf);
         var pkgField = ModuleClassLoader.class.getDeclaredField("packageLookup");
         var packageLookup = (Map<String, ResolvedModule>) Unsafe.getObject(classLoader, Unsafe.objectFieldOffset(pkgField));

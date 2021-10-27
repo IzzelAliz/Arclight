@@ -3,6 +3,7 @@ package io.izzel.arclight.boot.asm;
 import cpw.mods.modlauncher.api.NamedPath;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 import io.izzel.arclight.boot.log.ArclightI18nLogger;
+import io.izzel.arclight.boot.mod.ModBootstrap;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -46,6 +47,8 @@ public class ArclightImplementer implements ILaunchPluginService {
 
     @Override
     public void initializeLaunch(ITransformerLoader transformerLoader, NamedPath[] specialPaths) {
+        // runs after TX CL built
+        ModBootstrap.postRun();
         this.transformerLoader = transformerLoader;
         this.implementers.put("inventory", new InventoryImplementer());
         this.implementers.put("switch", SwitchTableFixer.INSTANCE);
