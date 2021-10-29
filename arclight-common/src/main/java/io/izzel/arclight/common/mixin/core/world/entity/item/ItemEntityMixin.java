@@ -5,6 +5,7 @@ import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.PlayerInventoryBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.network.datasync.EntityDataManagerBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.EntityMixin;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.stats.Stats;
@@ -12,6 +13,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.fmllegacy.hooks.BasicEventHooks;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -131,5 +133,11 @@ public abstract class ItemEntityMixin extends EntityMixin {
         if (!stack.isEmpty()) {
             itemEntity.setItem(stack);
         }
+    }
+
+    @Redirect(method = "mergeWithNeighbours", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;inflate(DDD)Lnet/minecraft/world/phys/AABB;"))
+    private AABB arclight$mergeRadius(AABB instance, double pX, double pY, double pZ) {
+        double radius = ((WorldBridge) level).bridge$spigotConfig().itemMerge;
+        return instance.inflate(radius);
     }
 }
