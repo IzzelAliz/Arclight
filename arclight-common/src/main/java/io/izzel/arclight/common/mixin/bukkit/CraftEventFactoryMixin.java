@@ -16,6 +16,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.block.CraftBlockState;
+import org.bukkit.craftbukkit.v.block.CraftBlockStates;
 import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
@@ -95,7 +96,7 @@ public class CraftEventFactoryMixin {
             return true;
         }
 
-        CraftBlockState state = CraftBlockState.getBlockState(world, target, flag);
+        CraftBlockState state = CraftBlockStates.getBlockState(world, target, flag);
         state.setData(block);
 
         BlockSpreadEvent event = new BlockSpreadEvent(state.getBlock(), CraftBlock.at(world, source), state);
@@ -143,7 +144,7 @@ public class CraftEventFactoryMixin {
             world.setBlock(pos, block, flag);
             return true;
         }
-        CraftBlockState blockState = CraftBlockState.getBlockState(world, pos, flag);
+        CraftBlockState blockState = CraftBlockStates.getBlockState(world, pos, flag);
         blockState.setData(block);
 
         BlockFormEvent event = (entity == null) ? new BlockFormEvent(blockState.getBlock(), blockState) : new EntityBlockFormEvent(((EntityBridge) entity).bridge$getBukkitEntity(), blockState.getBlock(), blockState);
@@ -164,9 +165,9 @@ public class CraftEventFactoryMixin {
     public static BlockFadeEvent callBlockFadeEvent(LevelAccessor world, BlockPos pos, net.minecraft.world.level.block.state.BlockState newBlock) {
         // Suppress during worldgen
         if (!(world instanceof Level) || !DistValidate.isValid(world)) {
-            return new BlockFadeEvent(CraftBlock.at(world, pos), new CraftBlockState(CraftMagicNumbers.getMaterial(newBlock.getBlock())));
+            return new BlockFadeEvent(CraftBlock.at(world, pos), CraftBlockStates.getBlockState(CraftMagicNumbers.getMaterial(newBlock.getBlock()), null));
         }
-        CraftBlockState state = CraftBlockState.getBlockState(world, pos);
+        CraftBlockState state = CraftBlockStates.getBlockState(world, pos);
         state.setData(newBlock);
 
         BlockFadeEvent event = new BlockFadeEvent(state.getBlock(), state);
