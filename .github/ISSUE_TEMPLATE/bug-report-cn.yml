@@ -42,9 +42,7 @@ body:
     attributes:
       label: Java 版本 | 操作系统
       description: 在命令行中键入 `java -version` 后可以获取版本
-      placeholder: |
-        Java: openjdk version "16.0.1" 2021-04-20
-        系统: CentOS 7.3 x64
+      placeholder: 'Java: openjdk version "16.0.1" 2021-04-20, 系统: CentOS 7.3 x64'
     validations:
       required: true
 
@@ -73,10 +71,12 @@ body:
     id: step
     attributes:
       label: 复现步骤
-      placeholder: >-
+      placeholder: |
         1. 安装 xxx
-        <br>2. 进入服务器后 xxxx
-        <br>3. ....
+
+        2. 进入服务器后 xxxx
+
+        3. ....
 
   - type: textarea
     id: logs

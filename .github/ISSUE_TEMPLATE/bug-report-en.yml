@@ -41,8 +41,7 @@ body:
       label: OS & Java versions
       description: Type `java -version` in console
       placeholder: |
-        OS: CentOS 7.3 x64
-        <br>Java: openjdk version "16.0.1" 2021-04-20
+        OS: CentOS 7.3 x64, Java: openjdk version "16.0.1" 2021-04-20
     validations:
       required: true
 
@@ -74,10 +73,12 @@ body:
     id: step
     attributes:
       label: Step to reproduce
-      placeholder: >-
+      placeholder: |
         1. Install something...
-        <br>2. Join the game...
-        <br>3. ....
+
+        2. Join the game...
+
+        3. ....
 
   - type: textarea
     id: logs
@@ -85,8 +86,8 @@ body:
       label: Logs
       description: >-
         Logs can be found in /logs/latest.log
-        After server is stopped, upload it to https://paste.ubuntu.com/
-        **DO NOT PASTE LOG CONTENT!**
+        <br>After server is stopped, upload it to https://paste.ubuntu.com/
+        <br>**DO NOT PASTE LOG CONTENT!**
       placeholder: 'External link or drag log file here to upload'
 
   - type: input
