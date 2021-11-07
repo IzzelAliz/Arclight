@@ -1,62 +1,60 @@
-name: 🐞 Bug Report Form
-description: Fill a Form for bug reporting
-title: "[Bug Report]: "
-labels: ["Triage"]
+name: 🐞 Bug Report
+description: English template for reporting a bug
+labels: [ "Triage" ]
 
 body:
   - type: markdown
     attributes:
-      value: >-
-        Before reporting an error, please ensure that there is no similar existing one report that
-        <br>Please fill in the following content completely.
-        <br>At Last, Thank you for your reporting.
+      value: |
+        Read the [FAQ](https://github.com/IzzelAliz/Arclight/wiki/FAQ) first!
+
+        Report with [latest development version](https://ci.appveyor.com/project/IzzelAliz/arclight-17/build/artifacts), your issue is likely to be fixed.
+
+        Make sure you have searched issues and no similar is present.
+
+  - type: checkboxes
+    id: preliminary
+    attributes:
+      label: I have confirmed that ...
+      options:
+        - label: Arclight is up to date
+        - label: all dependencies are installed
+          required: true
+        - label: all plugins and mods are up to date
+          required: true
+        - label: unable to reproduce in Spigot
+          required: true
+        - label: unable to reproduce in Forge
+          required: true
+
   - type: input
     id: version
     attributes:
-      label: Arclight Version
-      description: Versions are printed when Arclight is starting, for example arclight-1.15.2-1.0.3-SNAPSHOT-9455d03
-    validations:
-      required: true
-
-  - type: input
-    id: confirm
-    attributes:
-      label: Are you running the latest development version?
-      description: >-
-        Latest development build can be found at https://github.com/IzzelAliz/Arclight/actions
-        <br>The issue you are reporting may be fixed
-        <br>If you are not running latest dev version, explain why
-      placeholder: "Example: Yes|No, Reason Here"
+      label: Arclight version
+      description: Versions are printed on startup. i.e. arclight-1.15.2-1.0.3-SNAPSHOT-9455d03
     validations:
       required: true
 
   - type: input
     id: environment
     attributes:
-      label: Java Version | Operating System
-      description: Type `java -version` in your console
-      placeholder: "Example：Java-Openjdk_11(Hotspot) | Windows Server 2019"
+      label: OS & Java versions
+      description: Type `java -version` in console
+      placeholder: |
+        OS: CentOS 7.3 x64
+        <br>Java: openjdk version "16.0.1" 2021-04-20
     validations:
       required: true
 
   - type: textarea
     id: related
     attributes:
-      label: The Name and Version of Related Mod/Plugins 
-      description: Run `/plugins` and `/forge mods` in your server to get it.
-      value: >-
-        Mods:     
-        Plugins:
+      label: Plugins and Mods
+      description: Run `/plugins` and `/forge mods` in console.
+      placeholder: 'Mods & plugins list here'
+      render: 'raw'
     validations:
       required: true
-
-  - type: input
-    id: package
-    attributes:
-      label: Server pack link(Optional)
-      description: If you have too much mods/plugins included and you are not able to minimize the reproducible list, you can upload your server pack to GoogleDrive/Mega maybe.
-    validations:
-      required: false
 
   - type: textarea
     id: description
@@ -68,8 +66,7 @@ body:
         be as detailed as possible and include a step by step reproduction. 
         <br>It is recommended you try to reproduce the issue you are having yourself with as few mods as possible. 
         <br>The clearer the description, the higher the report processing priority
-
-      placeholder: "What Happens"
+      placeholder: "Detailed information about what should(not) happen"
     validations:
       required: true
 
@@ -77,28 +74,10 @@ body:
     id: step
     attributes:
       label: Step to reproduce
-      value: >-
-        1. Install something
-        2. ...
-        3. ....
-     
-  - type: dropdown
-    attributes:
-      label: Reproducible in Forge
-      options:
-        - "Yes"
-        - "No"
-    validations:
-      required: true
-
-  - type: dropdown
-    attributes:
-      label: Reproducible in Spigot
-      options:
-        - "Yes"
-        - "No"
-    validations:
-      required: true
+      placeholder: >-
+        1. Install something...
+        <br>2. Join the game...
+        <br>3. ....
 
   - type: textarea
     id: logs
@@ -106,12 +85,12 @@ body:
       label: Logs
       description: >-
         Logs can be found in /logs/latest.log
-        After server is stopped, paste it to https://paste.ubuntu.com/
-        
-        If you have trouble using a pastebin, paste these codes to {ERROR LOG] and fill it
-      value: >-
-        Logs link:
-        If you can not use any Paste Service, replace [Logs] with your paste.
-        <details><pre>
-        [Logs]
-        </pre></details>
+        After server is stopped, upload it to https://paste.ubuntu.com/
+        **DO NOT PASTE LOG CONTENT!**
+      placeholder: 'External link or drag log file here to upload'
+
+  - type: input
+    id: pack
+    attributes:
+      label: Server pack link (Optional)
+      description: If you have too much mods/plugins included and you are not able to minimize the reproducible list, you can upload your server pack to GoogleDrive/Mega.
