@@ -5,10 +5,13 @@ import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
+import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
+import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
@@ -19,9 +22,9 @@ import org.bukkit.event.inventory.BrewingStandFuelEvent;
 import org.bukkit.inventory.BrewerInventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
@@ -52,17 +55,53 @@ public abstract class BrewingStandBlockEntityMixin extends LockableBlockEntityMi
         }
     }
 
-    @Inject(method = "doBrew", cancellable = true, at = @At("HEAD"))
-    private static void arclight$brewPotion(Level level, BlockPos pos, NonNullList<ItemStack> p_155293_, CallbackInfo ci) {
+    /**
+     * @author Izzel_Aliz
+     * @reason
+     */
+    @Overwrite
+    private static void doBrew(Level level, BlockPos pos, NonNullList<ItemStack> stacks) {
+        if (ForgeEventFactory.onPotionAttemptBrew(stacks)) return;
+        ItemStack ing = stacks.get(3);
+
+        List<org.bukkit.inventory.ItemStack> brewResults = new ArrayList<>(3);
+        for (int i = 0; i < 3; ++i) {
+            var input = stacks.get(i);
+            var output = BrewingRecipeRegistry.getOutput(input, ing);
+            brewResults.add(i, CraftItemStack.asCraftMirror(output.isEmpty() ? input : output));
+        }
         BrewingStandBlockEntity entity = ArclightCaptures.getTickingBlockEntity();
         InventoryHolder owner = entity == null ? null : ((TileEntityBridge) entity).bridge$getOwner();
         if (owner != null) {
-            BrewEvent event = new BrewEvent(CraftBlock.at(level, pos), (BrewerInventory) owner.getInventory(), entity.fuel);
+            BrewEvent event = new BrewEvent(CraftBlock.at(level, pos), (BrewerInventory) owner.getInventory(), brewResults, entity.fuel);
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
-                ci.cancel();
+                return;
+            } else {
+                for (int i = 0; i < 3; ++i) {
+                    if (i < brewResults.size()) {
+                        stacks.set(i, CraftItemStack.asNMSCopy(brewResults.get(i)));
+                    } else {
+                        stacks.set(i, ItemStack.EMPTY);
+                    }
+                }
             }
         }
+
+        // BrewingRecipeRegistry.brewPotions(stacks, ing, SLOTS_FOR_SIDES);
+        ForgeEventFactory.onPotionBrewed(stacks);
+        if (ing.hasContainerItem()) {
+            ItemStack containerItem = ing.getContainerItem();
+            ing.shrink(1);
+            if (ing.isEmpty()) {
+                ing = containerItem;
+            } else {
+                Containers.dropItemStack(level, (double) pos.getX(), (double) pos.getY(), (double) pos.getZ(), containerItem);
+            }
+        } else ing.shrink(1);
+
+        stacks.set(3, ing);
+        level.levelEvent(1035, pos, 0);
     }
 
     @Override

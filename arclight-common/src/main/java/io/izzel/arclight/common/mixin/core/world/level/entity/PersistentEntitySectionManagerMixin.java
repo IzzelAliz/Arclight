@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.entity;
 
-import com.google.common.collect.ImmutableList;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.storage.EntityStorage;
@@ -34,6 +34,7 @@ public abstract class PersistentEntitySectionManagerMixin<T extends EntityAccess
     @Shadow public abstract void close() throws IOException;
     @Shadow @Final private EntityPersistentStorage<T> permanentStorage;
     @Shadow @Final EntitySectionStorage<T> sectionStorage;
+    @Shadow @Final private Long2ObjectMap<PersistentEntitySectionManager.ChunkLoadStatus> chunkLoadStatuses;
     // @formatter:on
 
     public void close(boolean save) throws IOException {
@@ -47,6 +48,10 @@ public abstract class PersistentEntitySectionManagerMixin<T extends EntityAccess
     public List<Entity> getEntities(ChunkPos chunkCoordIntPair) {
         return sectionStorage.getExistingSectionsInChunk(chunkCoordIntPair.toLong())
             .flatMap(EntitySection::getEntities).map(o -> (Entity) o).collect(Collectors.toList());
+    }
+
+    public boolean isPending(long cord) {
+        return this.chunkLoadStatuses.get(cord) == PersistentEntitySectionManager.ChunkLoadStatus.PENDING;
     }
 
     @Unique private boolean arclight$fireEvent = false;
