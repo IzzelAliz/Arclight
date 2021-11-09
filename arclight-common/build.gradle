@@ -44,6 +44,12 @@ repositories {
     maven { url = 'https://maven.izzel.io/releases' }
 }
 
+configurations.all {
+    resolutionStrategy {
+        force 'org.spongepowered:mixin:0.8.2'
+    }
+}
+
 dependencies {
     minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
     implementation "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
