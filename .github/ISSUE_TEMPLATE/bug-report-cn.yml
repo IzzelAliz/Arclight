@@ -5,6 +5,7 @@ labels: [ "Triage" ]
 body:
   - type: markdown
     attributes:
+      label: 报告须知
       value: >-
         报告前先阅读[常见问题](https://github.com/IzzelAliz/Arclight/wiki/FAQ)！
         <br>请使用最新的构建版本报告，你发现的问题很可能已经修复。
