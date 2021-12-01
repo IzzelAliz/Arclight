@@ -13,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Mixin(LootTableManager.class)
@@ -24,10 +25,10 @@ public class LootTableManagerMixin {
 
     public Map<LootTable, ResourceLocation> lootTableToKey = ImmutableMap.of();
 
-    @Inject(method = "apply", at = @At("RETURN"))
+    @Inject(method = "apply(Ljava/util/Map;Lnet/minecraft/resources/IResourceManager;Lnet/minecraft/profiler/IProfiler;)V", at = @At("RETURN"))
     private void arclight$buildRev(Map<ResourceLocation, JsonObject> objectIn, IResourceManager resourceManagerIn, IProfiler profilerIn, CallbackInfo ci) {
-        ImmutableMap.Builder<LootTable, ResourceLocation> lootTableToKeyBuilder = ImmutableMap.builder();
+        Map<LootTable, ResourceLocation> lootTableToKeyBuilder = new HashMap<>();
         this.registeredLootTables.forEach((lootTable, key) -> lootTableToKeyBuilder.put(key, lootTable));
-        this.lootTableToKey = lootTableToKeyBuilder.build();
+        this.lootTableToKey = ImmutableMap.copyOf(lootTableToKeyBuilder);
     }
 }
