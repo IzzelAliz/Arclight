@@ -103,6 +103,7 @@ public class ForgeInstaller {
                     Method method = loader.loadClass("net.minecraftforge.installer.SimpleInstaller").getMethod("main", String[].class);
                     method.invoke(null, (Object) new String[]{"--installServer", ".", "--debug"});
                 }
+                System.exit(0);
             }
             handleFutures(System.out::println, array);
             pool.shutdownNow();
