@@ -33,6 +33,62 @@ public class ArclightReflectionHandler extends ClassLoader {
 
     public static ClassLoaderRemapper remapper;
 
+    public static Method[] redirectGetDeclaredMethods(Class<?> cl) {
+        try {
+            return cl.getDeclaredMethods();
+        } catch (TypeNotPresentException e) {
+            if (e.getCause() instanceof ClassNotFoundException) {
+                remapper.tryDefineClass(e.getCause().getMessage().replace('.', '/'));
+                return redirectGetDeclaredMethods(cl);
+            } else throw e;
+        } catch (NoClassDefFoundError error) {
+            remapper.tryDefineClass(error.getMessage());
+            return redirectGetDeclaredMethods(cl);
+        }
+    }
+
+    public static Method[] redirectGetMethods(Class<?> cl) {
+        try {
+            return cl.getMethods();
+        } catch (TypeNotPresentException e) {
+            if (e.getCause() instanceof ClassNotFoundException) {
+                remapper.tryDefineClass(e.getCause().getMessage().replace('.', '/'));
+                return redirectGetMethods(cl);
+            } else throw e;
+        } catch (NoClassDefFoundError error) {
+            remapper.tryDefineClass(error.getMessage());
+            return redirectGetMethods(cl);
+        }
+    }
+
+    public static Field[] redirectGetDeclaredFields(Class<?> cl) {
+        try {
+            return cl.getDeclaredFields();
+        } catch (TypeNotPresentException e) {
+            if (e.getCause() instanceof ClassNotFoundException) {
+                remapper.tryDefineClass(e.getCause().getMessage().replace('.', '/'));
+                return redirectGetDeclaredFields(cl);
+            } else throw e;
+        } catch (NoClassDefFoundError error) {
+            remapper.tryDefineClass(error.getMessage());
+            return redirectGetDeclaredFields(cl);
+        }
+    }
+
+    public static Field[] redirectGetFields(Class<?> cl) {
+        try {
+            return cl.getFields();
+        } catch (TypeNotPresentException e) {
+            if (e.getCause() instanceof ClassNotFoundException) {
+                remapper.tryDefineClass(e.getCause().getMessage().replace('.', '/'));
+                return redirectGetFields(cl);
+            } else throw e;
+        } catch (NoClassDefFoundError error) {
+            remapper.tryDefineClass(error.getMessage());
+            return redirectGetFields(cl);
+        }
+    }
+
     // srg -> bukkit
     public static String redirectFieldGetName(Field field) {
         return remapper.tryMapFieldToBukkit(field.getDeclaringClass(), field.getName(), field);
