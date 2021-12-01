@@ -318,14 +318,18 @@ public class ArclightReflectionHandler extends ClassLoader {
             className = name;
         }
         className = remapper.mapType(className);
-        if (className.startsWith("java/")) return null;
-        else if (cl != null) return "/" + className + ".class";
+        if (className.startsWith("java/") || className.startsWith("jdk/") || className.startsWith("javax/")) {
+            return null;
+        } else if (cl != null) return "/" + className + ".class";
         else return className + ".class";
     }
 
     public static URL redirectClassGetResource(Class<?> cl, String name) throws MalformedURLException {
         String mappedResource = findMappedResource(cl, name);
         if (mappedResource == null) {
+            if (name.startsWith("/java/") || name.startsWith("/jdk/") || name.startsWith("/javax/")) {
+                return ClassLoader.getPlatformClassLoader().getResource(name);
+            }
             return cl.getResource(name);
         } else {
             URL resource = cl.getResource(mappedResource);
@@ -336,6 +340,9 @@ public class ArclightReflectionHandler extends ClassLoader {
     public static InputStream redirectClassGetResourceAsStream(Class<?> cl, String name) throws IOException {
         String mappedResource = findMappedResource(cl, name);
         if (mappedResource == null) {
+            if (name.startsWith("/java/") || name.startsWith("/jdk/") || name.startsWith("/javax/")) {
+                return ClassLoader.getPlatformClassLoader().getResourceAsStream(name);
+            }
             return cl.getResourceAsStream(name);
         } else {
             URL resource = cl.getResource(mappedResource);
@@ -347,6 +354,9 @@ public class ArclightReflectionHandler extends ClassLoader {
     public static URL redirectClassLoaderGetResource(ClassLoader loader, String name) throws MalformedURLException {
         String mappedResource = findMappedResource(null, name);
         if (mappedResource == null) {
+            if (name.startsWith("java/") || name.startsWith("jdk/") || name.startsWith("javax/")) {
+                return ClassLoader.getPlatformClassLoader().getResource(name);
+            }
             return loader.getResource(name);
         } else {
             URL resource = loader.getResource(mappedResource);
@@ -357,6 +367,9 @@ public class ArclightReflectionHandler extends ClassLoader {
     public static Enumeration<URL> redirectClassLoaderGetResources(ClassLoader loader, String name) throws IOException {
         String mappedResource = findMappedResource(null, name);
         if (mappedResource == null) {
+            if (name.startsWith("java/") || name.startsWith("jdk/") || name.startsWith("javax/")) {
+                return ClassLoader.getPlatformClassLoader().getResources(name);
+            }
             return loader.getResources(name);
         } else {
             Enumeration<URL> resources = loader.getResources(mappedResource);
