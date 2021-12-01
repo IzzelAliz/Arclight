@@ -178,7 +178,7 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
         method.getGenericParameterTypes();
     }
 
-    private void tryDefineClass(String internalName) {
+    public void tryDefineClass(String internalName) {
         if (!internalName.startsWith(PREFIX)) {
             throw new NoClassDefFoundError(internalName);
         }

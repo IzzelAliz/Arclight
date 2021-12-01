@@ -67,6 +67,10 @@ public class ArclightRedirectAdapter implements PluginTransformer {
         modify(Class.class, "getDeclaredField", "classGetDeclaredField", String.class);
         modify(Class.class, "getMethod", "classGetMethod", String.class, Class[].class);
         modify(Class.class, "getDeclaredMethod", "classGetDeclaredMethod", String.class, Class[].class);
+        redirect(Class.class, "getDeclaredMethods", "getDeclaredMethods");
+        redirect(Class.class, "getMethods", "getMethods");
+        redirect(Class.class, "getDeclaredFields", "getDeclaredFields");
+        redirect(Class.class, "getFields", "getFields");
         modify(MethodType.class, "fromMethodDescriptorString", "fromDescStr", String.class, ClassLoader.class);
         modify(MethodHandles.Lookup.class, "findStatic", "lookupFindStatic", Class.class, String.class, MethodType.class);
         modify(MethodHandles.Lookup.class, "findVirtual", "lookupFindVirtual", Class.class, String.class, MethodType.class);
