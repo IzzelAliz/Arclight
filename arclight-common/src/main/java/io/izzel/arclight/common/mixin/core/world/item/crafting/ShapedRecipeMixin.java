@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.item.crafting;
 
 import io.izzel.arclight.common.bridge.core.item.crafting.IRecipeBridge;
+import io.izzel.arclight.common.mod.util.ArclightSpecialRecipe;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -27,6 +28,9 @@ public abstract class ShapedRecipeMixin implements IRecipeBridge {
 
     @Override
     public Recipe bridge$toBukkitRecipe() {
+        if (this.getWidth() < 0 || this.getWidth() > 3 || this.getHeight() < 0 || this.getHeight() > 3) {
+            return new ArclightSpecialRecipe((net.minecraft.world.item.crafting.Recipe<?>) this);
+        }
         CraftItemStack result = CraftItemStack.asCraftMirror(this.result);
         CraftShapedRecipe recipe = new CraftShapedRecipe(result, (ShapedRecipe) (Object) this);
         recipe.setGroup(this.group);
