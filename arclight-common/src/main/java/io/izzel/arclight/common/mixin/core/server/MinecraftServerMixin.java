@@ -325,7 +325,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
 
     @Inject(method = "createLevels", at = @At(value = "NEW", ordinal = 0, target = "net/minecraft/server/level/ServerLevel"))
     private void arclight$registerEnv(ChunkProgressListener p_240787_1_, CallbackInfo ci) {
-        BukkitRegistry.registerEnvironments();
+        BukkitRegistry.registerEnvironments(this.worldData.worldGenSettings().dimensions());
     }
 
     @Redirect(method = "createLevels", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))

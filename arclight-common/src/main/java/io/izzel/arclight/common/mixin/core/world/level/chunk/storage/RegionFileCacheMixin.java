@@ -14,8 +14,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @Mixin(RegionFileStorage.class)
 public abstract class RegionFileCacheMixin implements RegionFileCacheBridge {
@@ -33,8 +34,8 @@ public abstract class RegionFileCacheMixin implements RegionFileCacheBridge {
 
     @Inject(method = "getRegionFile", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "NEW", target = "net/minecraft/world/level/chunk/storage/RegionFile"))
-    private void arclight$retIfSearch(ChunkPos pos, CallbackInfoReturnable<RegionFile> cir, long l, RegionFile rf, File file) {
-        if (arclight$existOnly && !file.exists()) cir.setReturnValue(null);
+    private void arclight$retIfSearch(ChunkPos pos, CallbackInfoReturnable<RegionFile> cir, long l, RegionFile rf, Path path) {
+        if (arclight$existOnly && !Files.exists(path)) cir.setReturnValue(null);
     }
 
     @Inject(method = "read", at = @At("HEAD"))

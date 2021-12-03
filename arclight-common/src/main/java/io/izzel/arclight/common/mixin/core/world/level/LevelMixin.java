@@ -110,7 +110,6 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/storage/WritableLevelData;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/dimension/DimensionType;Ljava/util/function/Supplier;ZZJ)V", at = @At("RETURN"))
     private void arclight$init(WritableLevelData info, ResourceKey<Level> dimension, DimensionType dimType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed, CallbackInfo ci) {
-        this.spigotConfig = new SpigotWorldConfig(((ServerLevelData) info).getLevelName());
         ((WorldBorderBridge) this.worldBorder).bridge$setWorld((Level) (Object) this);
         this.ticksPerAnimalSpawns = this.getCraftServer().getTicksPerAnimalSpawns();
         this.ticksPerMonsterSpawns = this.getCraftServer().getTicksPerMonsterSpawns();

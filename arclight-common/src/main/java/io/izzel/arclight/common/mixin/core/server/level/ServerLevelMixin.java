@@ -18,6 +18,7 @@ import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.DelegateWorldInfo;
 import io.izzel.arclight.i18n.ArclightConfig;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket;
@@ -65,6 +66,7 @@ import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.event.world.TimeSkipEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.objectweb.asm.Opcodes;
+import org.spigotmc.SpigotWorldConfig;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -105,10 +107,11 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     private int tickPosition;
     public LevelStorageSource.LevelStorageAccess convertable;
     public UUID uuid;
+    public ResourceKey<LevelStem> typeKey;
 
     @Override
     public ResourceKey<LevelStem> getTypeKey() {
-        return ((LevelStorageSourceBridge.LevelStorageAccessBridge) this.convertable).bridge$getTypeKey();
+        return this.typeKey;
     }
 
     public void arclight$constructor(MinecraftServer server, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, ServerLevelData serverWorldInfo, ResourceKey<net.minecraft.world.level.Level> dimension, DimensionType dimensionType, ChunkProgressListener statusListener, ChunkGenerator chunkGenerator, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking) {
@@ -131,7 +134,18 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     private void arclight$init(MinecraftServer minecraftServer, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, ServerLevelData worldInfo, ResourceKey<net.minecraft.world.level.Level> dimension, DimensionType dimensionType, ChunkProgressListener statusListener, ChunkGenerator chunkGenerator, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking, CallbackInfo ci) {
         this.pvpMode = minecraftServer.isPvpAllowed();
         this.convertable = levelSave;
-        this.uuid = WorldUUID.getUUID(levelSave.getDimensionPath(this.dimension()).toFile());
+        var typeKey = ((LevelStorageSourceBridge.LevelStorageAccessBridge) levelSave).bridge$getTypeKey();
+        if (typeKey != null) {
+            this.typeKey = typeKey;
+        } else {
+            var dimensions = shadow$getServer().getWorldData().worldGenSettings().dimensions();
+            var levelStem = dimensions.get(dimension.location());
+            if (levelStem != null) {
+                this.typeKey = ResourceKey.create(Registry.LEVEL_STEM_REGISTRY, dimension.location());
+            } else {
+                throw new IllegalStateException("No level stem for dimension " + dimension.location());
+            }
+        }
         if (worldInfo instanceof PrimaryLevelData) {
             this.$$worldDataServer = (PrimaryLevelData) worldInfo;
         } else if (worldInfo instanceof DerivedLevelData) {
@@ -142,6 +156,8 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
                 WorldSymlink.create((DerivedLevelData) worldInfo, levelSave.getDimensionPath(this.dimension()).toFile());
             }
         }
+        this.spigotConfig = new SpigotWorldConfig(worldInfo.getLevelName());
+        this.uuid = WorldUUID.getUUID(levelSave.getDimensionPath(this.dimension()).toFile());
         ((ServerChunkProviderBridge) this.chunkSource).bridge$setViewDistance(spigotConfig.viewDistance);
         ((WorldInfoBridge) this.$$worldDataServer).bridge$setWorld((ServerLevel) (Object) this);
     }

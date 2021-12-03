@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.io.File;
 import java.nio.file.Path;
 
 @Mixin(LevelStorageSource.LevelStorageAccess.class)
@@ -42,13 +41,13 @@ public class LevelStorageSource_LevelStorageAccessMixin implements LevelStorageS
     }
 
     @Inject(method = "getDimensionPath", cancellable = true, at = @At("HEAD"))
-    private void arclight$useActualType(ResourceKey<Level> dimensionKey, CallbackInfoReturnable<File> cir) {
+    private void arclight$useActualType(ResourceKey<Level> dimensionKey, CallbackInfoReturnable<Path> cir) {
         if (dimensionType == LevelStem.OVERWORLD) {
-            cir.setReturnValue(this.levelPath.toFile());
+            cir.setReturnValue(this.levelPath);
         } else if (dimensionType == LevelStem.NETHER) {
-            cir.setReturnValue(new File(this.levelPath.toFile(), "DIM-1"));
+            cir.setReturnValue(this.levelPath.resolve("DIM-1"));
         } else if (dimensionType == LevelStem.END) {
-            cir.setReturnValue(new File(this.levelPath.toFile(), "DIM1"));
+            cir.setReturnValue(this.levelPath.resolve("DIM1"));
         }
     }
 }
