@@ -66,7 +66,8 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.block.NetherPortalBlock;
-import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.border.WorldBorder;
+import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.portal.PortalInfo;
 import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.phys.AABB;
@@ -77,8 +78,8 @@ import net.minecraft.world.scores.Team;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.util.ITeleporter;
-import net.minecraftforge.fmllegacy.hooks.BasicEventHooks;
-import net.minecraftforge.fmllegacy.server.ServerLifecycleHooks;
+import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -215,7 +216,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
                 int i2 = (k1 + j1 * l1) % i1;
                 int j2 = i2 % (i * 2 + 1);
                 int k2 = i2 / (i * 2 + 1);
-                BlockPos blockposition1 = PlayerRespawnLogic.getOverworldRespawnPos(worldserver, blockposition.getX() + j2 - i, blockposition.getZ() + k2 - i, false);
+                BlockPos blockposition1 = PlayerRespawnLogic.getOverworldRespawnPos(worldserver, blockposition.getX() + j2 - i, blockposition.getZ() + k2 - i);
                 if (blockposition1 == null) continue;
                 return blockposition1;
             }
@@ -430,7 +431,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Overwrite
     protected PortalInfo findDimensionEntryPoint(ServerLevel p_241829_1_) {
         PortalInfo portalinfo = super.findDimensionEntryPoint(p_241829_1_);
-        if (portalinfo != null && ((WorldBridge) this.level).bridge$getTypeKey() == DimensionType.OVERWORLD_LOCATION && ((WorldBridge) p_241829_1_).bridge$getTypeKey() == DimensionType.END_LOCATION) {
+        if (portalinfo != null && ((WorldBridge) this.level).bridge$getTypeKey() == LevelStem.OVERWORLD && ((WorldBridge) p_241829_1_).bridge$getTypeKey() == LevelStem.END) {
             Vec3 vector3d = portalinfo.pos.add(0.0D, -1.0D, 0.0D);
             PortalInfo newInfo = new PortalInfo(vector3d, Vec3.ZERO, 90.0F, 0.0F);
             ((PortalInfoBridge) newInfo).bridge$setWorld(p_241829_1_);
@@ -466,8 +467,8 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
         // this.invulnerableDimensionChange = true;
         ServerLevel serverworld = this.getLevel();
-        ResourceKey<DimensionType> registrykey = ((WorldBridge) serverworld).bridge$getTypeKey();
-        if (registrykey == DimensionType.END_LOCATION && ((WorldBridge) server).bridge$getTypeKey() == DimensionType.OVERWORLD_LOCATION && teleporter.isVanilla()) { //Forge: Fix non-vanilla teleporters triggering end credits
+        ResourceKey<LevelStem> registrykey = ((WorldBridge) serverworld).bridge$getTypeKey();
+        if (registrykey == LevelStem.END && ((WorldBridge) server).bridge$getTypeKey() == LevelStem.OVERWORLD && teleporter.isVanilla()) { //Forge: Fix non-vanilla teleporters triggering end credits
             this.isChangingDimension = true;
             this.unRide();
             this.getLevel().removePlayer((ServerPlayer) (Object) this, true); //Forge: The player entity is cloned so keep the data until after cloning calls copyFrom
@@ -496,9 +497,9 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
                         exitWorld[0] = ((PortalInfoBridge) portalinfo).bridge$getWorld();
                     }
                     if (exitWorld[0] != null) {
-                        if (registrykey == DimensionType.OVERWORLD_LOCATION && ((WorldBridge) exitWorld[0]).bridge$getTypeKey() == DimensionType.NETHER_LOCATION) {
+                        if (registrykey ==LevelStem.OVERWORLD&& ((WorldBridge) exitWorld[0]).bridge$getTypeKey() == LevelStem.NETHER) {
                             this.enteredNetherPosition = this.position();
-                        } else if (spawnPortal && ((WorldBridge) exitWorld[0]).bridge$getTypeKey() == DimensionType.END_LOCATION
+                        } else if (spawnPortal && ((WorldBridge) exitWorld[0]).bridge$getTypeKey() == LevelStem.END
                             && (((PortalInfoBridge) portalinfo).bridge$getPortalEventInfo() == null || ((PortalInfoBridge) portalinfo).bridge$getPortalEventInfo().getCanCreatePortal())) {
                             this.createEndPlatform(exitWorld[0], new BlockPos(portalinfo.pos));
                         }
@@ -557,7 +558,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
                 this.lastSentExp = -1;
                 this.lastSentHealth = -1.0F;
                 this.lastSentFood = -1;
-                BasicEventHooks.firePlayerChangedDimensionEvent((ServerPlayer) (Object) this, serverworld.dimension(), exitWorld[0].dimension());
+                ForgeEventFactory.firePlayerChangedDimensionEvent((ServerPlayer) (Object) this, serverworld.dimension(), exitWorld[0].dimension());
                 PlayerChangedWorldEvent changeEvent = new PlayerChangedWorldEvent(this.getBukkitEntity(), ((WorldBridge) serverworld).bridge$getWorld());
                 Bukkit.getPluginManager().callEvent(changeEvent);
             }
@@ -579,8 +580,8 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     }
 
     @Override
-    protected Optional<BlockUtil.FoundRectangle> findOrCreatePortal(ServerLevel worldserver, BlockPos blockposition, boolean flag, int searchRadius, boolean canCreatePortal, int createRadius) {
-        Optional<BlockUtil.FoundRectangle> optional = super.findOrCreatePortal(worldserver, blockposition, flag, searchRadius, canCreatePortal, createRadius);
+    protected Optional<BlockUtil.FoundRectangle> getExitPortal(ServerLevel worldserver, BlockPos blockposition, boolean flag, WorldBorder worldborder, int searchRadius, boolean canCreatePortal, int createRadius) {
+        Optional<BlockUtil.FoundRectangle> optional = super.getExitPortal(worldserver, blockposition, flag, worldborder, searchRadius, canCreatePortal, createRadius);
         if (optional.isPresent() || !canCreatePortal) {
             return optional;
         }
@@ -758,16 +759,16 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
     @Inject(method = "updateOptions", at = @At("HEAD"))
     private void arclight$settingChange(ServerboundClientInformationPacket packetIn, CallbackInfo ci) {
-        if (this.getMainArm() != packetIn.getMainHand()) {
+        if (this.getMainArm() != packetIn.mainHand()) {
             PlayerChangedMainHandEvent event = new PlayerChangedMainHandEvent(this.getBukkitEntity(), (this.getMainArm() == HumanoidArm.LEFT) ? MainHand.LEFT : MainHand.RIGHT);
             Bukkit.getPluginManager().callEvent(event);
         }
-        if (!this.language.equals(packetIn.getLanguage())) {
-            PlayerLocaleChangeEvent event2 = new PlayerLocaleChangeEvent(this.getBukkitEntity(), packetIn.getLanguage());
+        if (!this.language.equals(packetIn.language())) {
+            PlayerLocaleChangeEvent event2 = new PlayerLocaleChangeEvent(this.getBukkitEntity(), packetIn.language());
             Bukkit.getPluginManager().callEvent(event2);
         }
-        this.locale = packetIn.getLanguage();
-        this.clientViewDistance = packetIn.viewDistance;
+        this.locale = packetIn.language();
+        this.clientViewDistance = packetIn.viewDistance();
     }
 
     @Inject(method = "setCamera", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;teleportTo(DDD)V"))
@@ -800,7 +801,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         ci.cancel();
     }
 
-    public void a(ServerLevel worldserver, double d0, double d1, double d2, float f, float f1, PlayerTeleportEvent.TeleportCause cause) {
+    public void teleportTo(ServerLevel worldserver, double d0, double d1, double d2, float f, float f1, PlayerTeleportEvent.TeleportCause cause) {
         bridge$pushChangeDimensionCause(cause);
         teleportTo(worldserver, d0, d1, d2, f, f1);
     }

@@ -20,10 +20,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 @Mixin(MapItemSavedData.HoldingPlayer.class)
-public abstract class MapData_MapInfoMixin {
+public abstract class MapItemSavedData_HoldingPlayerMixin {
 
     // @formatter:off
-    @SuppressWarnings("target") @Shadow(aliases = {"this$0", "field_176107_c"}, remap = false) private MapItemSavedData outerThis;
+    @SuppressWarnings("target") @Shadow(aliases = {"this$0", "f_77961_"}, remap = false) private MapItemSavedData outerThis;
     @Shadow private boolean dirtyData;
     @Shadow private int minDirtyX;
     @Shadow private int minDirtyY;

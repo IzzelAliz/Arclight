@@ -3,7 +3,7 @@ package io.izzel.arclight.common.bridge.core.world;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.dimension.LevelStem;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.generator.ChunkGenerator;
@@ -41,5 +41,5 @@ public interface WorldBridge extends IWorldWriterBridge, IWorldBridge {
 
     long bridge$ticksPerWaterUndergroundSpawns();
 
-    ResourceKey<DimensionType> bridge$getTypeKey();
+    ResourceKey<LevelStem> bridge$getTypeKey();
 }

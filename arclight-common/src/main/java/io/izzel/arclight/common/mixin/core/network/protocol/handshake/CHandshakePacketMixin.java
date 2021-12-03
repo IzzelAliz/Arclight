@@ -4,8 +4,8 @@ import com.google.gson.Gson;
 import com.mojang.authlib.properties.Property;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.handshake.ClientIntentionPacket;
-import net.minecraftforge.fmllegacy.network.FMLNetworkConstants;
-import net.minecraftforge.fmllegacy.network.NetworkHooks;
+import net.minecraftforge.network.NetworkConstants;
+import net.minecraftforge.network.NetworkHooks;
 import org.spigotmc.SpigotConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,10 +24,10 @@ public class CHandshakePacketMixin {
         return packetBuffer.readUtf(Short.MAX_VALUE);
     }
 
-    @Redirect(method = "<init>(Lnet/minecraft/network/FriendlyByteBuf;)V", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/fmllegacy/network/NetworkHooks;getFMLVersion(Ljava/lang/String;)Ljava/lang/String;"))
+    @Redirect(method = "<init>(Lnet/minecraft/network/FriendlyByteBuf;)V", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/network/NetworkHooks;getFMLVersion(Ljava/lang/String;)Ljava/lang/String;"))
     private String arclight$readFromProfile(String ip) {
         String fmlVersion = NetworkHooks.getFMLVersion(ip);
-        if (SpigotConfig.bungee && !Objects.equals(fmlVersion, FMLNetworkConstants.NETVERSION)) {
+        if (SpigotConfig.bungee && !Objects.equals(fmlVersion, NetworkConstants.NETVERSION)) {
             String[] split = ip.split("\0");
             if (split.length == 4) {
                 Property[] properties = GSON.fromJson(split[3], Property[].class);

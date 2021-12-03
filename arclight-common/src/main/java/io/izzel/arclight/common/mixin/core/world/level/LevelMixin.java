@@ -6,7 +6,6 @@ import io.izzel.arclight.common.bridge.core.world.border.WorldBorderBridge;
 import io.izzel.arclight.common.bridge.core.world.level.levelgen.ChunkGeneratorBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
-import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.server.world.WrappedWorlds;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
@@ -27,6 +26,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.level.storage.ServerLevelData;
@@ -78,7 +78,6 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
     @Accessor("thread") public abstract Thread arclight$getMainThread();
     // @formatter:on
 
-    private ResourceKey<DimensionType> typeKey;
     protected CraftWorld world;
     public boolean pvpMode;
     public boolean keepSpawnInMemory = true;
@@ -119,14 +118,6 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
         this.ticksPerWaterAmbientSpawns = this.getCraftServer().getTicksPerWaterAmbientSpawns();
         this.ticksPerWaterUndergroundCreatureSpawns = this.getCraftServer().getTicksPerWaterUndergroundCreatureSpawns();
         this.ticksPerAmbientSpawns = this.getCraftServer().getTicksPerAmbientSpawns();
-        this.typeKey = this.getCraftServer().getHandle().getServer().registryAccess().registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY)
-            .getResourceKey(dimensionType)
-            .orElseGet(() -> {
-                Registry<DimensionType> registry = this.getCraftServer().getHandle().getServer().registryAccess().registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY);
-                ResourceKey<DimensionType> typeRegistryKey = ResourceKey.create(registry.key(), dimension.location());
-                ArclightMod.LOGGER.warn("Assign {} to unknown dimension type {} as {}", typeRegistryKey, dimType);
-                return typeRegistryKey;
-            });
     }
 
     @Override
@@ -159,12 +150,10 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
         return ticksPerWaterUndergroundCreatureSpawns;
     }
 
-    public ResourceKey<DimensionType> getTypeKey() {
-        return this.typeKey;
-    }
+    public abstract ResourceKey<LevelStem> getTypeKey();
 
     @Override
-    public ResourceKey<DimensionType> bridge$getTypeKey() {
+    public ResourceKey<LevelStem> bridge$getTypeKey() {
         return getTypeKey();
     }
 
@@ -255,7 +244,7 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
                 }
             }
             if (environment == null) {
-                environment = ArclightServer.getEnvironment(this.typeKey);
+                environment = ArclightServer.getEnvironment(this.getTypeKey());
             }
             if (generator == null) {
                 generator = getCraftServer().getGenerator(((ServerLevelData) this.getLevelData()).getLevelName());
@@ -280,13 +269,13 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
         return this.world;
     }
 
-    public BlockEntity getTileEntity(BlockPos pos, boolean validate) {
+    public BlockEntity getBlockEntity(BlockPos pos, boolean validate) {
         return getBlockEntity(pos);
     }
 
     @Override
     public BlockEntity bridge$getTileEntity(BlockPos pos, boolean validate) {
-        return getTileEntity(pos, validate);
+        return getBlockEntity(pos, validate);
     }
 
     @Override

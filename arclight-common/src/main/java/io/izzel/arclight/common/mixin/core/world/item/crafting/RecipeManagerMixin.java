@@ -39,6 +39,7 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
     @Shadow private boolean hasErrors;
     @Shadow @Final private static Logger LOGGER;
     @Shadow public static Recipe<?> fromJson(ResourceLocation recipeId, JsonObject json) { return null; }
+    @Shadow private Map<ResourceLocation, Recipe<?>> byName;
     // @formatter:on
 
     /**
@@ -55,6 +56,7 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
             map.put(type, new Object2ObjectLinkedOpenHashMap<>());
         }
 
+        ImmutableMap.Builder<ResourceLocation, Recipe<?>> builder = ImmutableMap.builder();
         for (Map.Entry<ResourceLocation, JsonElement> entry : objectIn.entrySet()) {
             ResourceLocation resourcelocation = entry.getKey();
             if (resourcelocation.getPath().startsWith("_"))
@@ -72,12 +74,14 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
                 }
                 map.computeIfAbsent(irecipe.getType(), (recipeType) -> new Object2ObjectLinkedOpenHashMap<>())
                     .putAndMoveToFirst(resourcelocation, irecipe);
+                builder.put(resourcelocation, irecipe);
             } catch (IllegalArgumentException | JsonParseException jsonparseexception) {
                 LOGGER.error("Parsing error loading recipe {}", resourcelocation, jsonparseexception);
             }
         }
 
         this.recipes = (Map) map;
+        this.byName = Maps.newHashMap(builder.build());
         LOGGER.info("Loaded {} recipes", map.size());
     }
 
@@ -98,6 +102,9 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
         if (this.recipes instanceof ImmutableMap) {
             this.recipes = new HashMap<>(recipes);
         }
+        if (this.byName instanceof ImmutableMap) {
+            this.byName = new HashMap<>(byName);
+        }
         Map<ResourceLocation, Recipe<?>> original = this.recipes.get(recipe.getType());
         Object2ObjectLinkedOpenHashMap<ResourceLocation, Recipe<?>> map;
         if (!(original instanceof Object2ObjectLinkedOpenHashMap)) {
@@ -109,10 +116,11 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
             map = ((Object2ObjectLinkedOpenHashMap<ResourceLocation, Recipe<?>>) original);
         }
 
-        if (map.containsKey(recipe.getId())) {
+        if (this.byName.containsKey(recipe.getId()) || map.containsKey(recipe.getId())) {
             throw new IllegalStateException("Duplicate recipe ignored with ID " + recipe.getId());
         } else {
             map.putAndMoveToFirst(recipe.getId(), recipe);
+            this.byName.put(recipe.getId(), recipe);
         }
     }
 
@@ -126,6 +134,7 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
         for (RecipeType<?> type : Registry.RECIPE_TYPE) {
             this.recipes.put(type, new Object2ObjectLinkedOpenHashMap<>());
         }
+        this.byName = new HashMap<>();
     }
 
     @Override

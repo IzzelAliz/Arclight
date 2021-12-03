@@ -39,7 +39,7 @@ public abstract class CommandBlockMixin {
                 if (!flag1 && !commandblocktileentity.isAutomatic() && commandblocktileentity.getMode() != CommandBlockEntity.Mode.SEQUENCE) {
                     if (flag) {
                         commandblocktileentity.markConditionMet();
-                        worldIn.getBlockTicks().scheduleTick(pos, (CommandBlock) (Object) this, 1);
+                        worldIn.scheduleTick(pos, (CommandBlock) (Object) this, 1);
                     }
 
                 }

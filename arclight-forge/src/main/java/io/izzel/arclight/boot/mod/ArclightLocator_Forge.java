@@ -3,8 +3,10 @@ package io.izzel.arclight.boot.mod;
 import cpw.mods.jarhandling.JarMetadata;
 import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.jarhandling.impl.SimpleJarMetadata;
+import net.minecraftforge.forgespi.language.IModFileInfo;
 import net.minecraftforge.forgespi.locating.IModFile;
 import net.minecraftforge.forgespi.locating.IModLocator;
+import net.minecraftforge.forgespi.locating.ModFileFactory;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -63,10 +65,19 @@ public class ArclightLocator_Forge implements IModLocator {
         try {
             var cl = forName("net.minecraftforge.fml.loading.moddiscovery.ModFile");
             var lookup = MethodHandles.lookup();
-            var handle = lookup.findStatic(cl, "newFMLInstance", MethodType.methodType(cl, IModLocator.class, SecureJar.class));
+            var handle = lookup.findConstructor(cl, MethodType.methodType(void.class, SecureJar.class, IModLocator.class, ModFileFactory.ModFileInfoParser.class));
             var version = System.getProperty("arclight.version");
             var path = Paths.get(".arclight", "mod_file", version + ".jar");
-            return (IModFile) handle.invoke(this, SecureJar.from(it -> excludePackages(it, version), path));
+            var parserCl = forName("net.minecraftforge.fml.loading.moddiscovery.ModFileParser");
+            var modsToml = lookup.findStatic(parserCl, "modsTomlParser", MethodType.methodType(IModFileInfo.class, IModFile.class));
+            ModFileFactory.ModFileInfoParser parser = modFile -> {
+                try {
+                    return (IModFileInfo) modsToml.invoke(modFile);
+                } catch (Throwable e) {
+                    throw new RuntimeException(e);
+                }
+            };
+            return (IModFile) handle.invoke(SecureJar.from(it -> excludePackages(it, version), path), this, parser);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }

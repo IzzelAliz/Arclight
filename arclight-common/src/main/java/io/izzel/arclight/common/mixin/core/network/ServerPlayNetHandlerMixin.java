@@ -198,7 +198,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     private boolean justTeleported;
     private boolean hasMoved;
 
-    public CraftPlayer getPlayer() {
+    public CraftPlayer getCraftPlayer() {
         return (this.player == null) ? null : ((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity();
     }
 
@@ -234,7 +234,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             return;
         }
         String leaveMessage = ChatFormatting.YELLOW + this.player.getScoreboardName() + " left the game.";
-        PlayerKickEvent event = new PlayerKickEvent(getPlayer(), s, leaveMessage);
+        PlayerKickEvent event = new PlayerKickEvent(getCraftPlayer(), s, leaveMessage);
         if (this.cserver.getServer().isRunning()) {
             this.cserver.getPluginManager().callEvent(event);
         }
@@ -324,7 +324,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                     flag2 = true;
                     LOGGER.warn("{} (vehicle of {}) moved wrongly! {}", entity.getName().getString(), this.player.getName().getString(), Math.sqrt(d11));
                 }
-                Location curPos = this.getPlayer().getLocation();
+                Location curPos = this.getCraftPlayer().getLocation();
                 entity.absMoveTo(d4, d5, d6, f, f2);
                 this.player.absMoveTo(d4, d5, d6, this.player.getYRot(), this.player.getXRot());
                 boolean flag3 = worldserver.noCollision(entity, entity.getBoundingBox().deflate(0.0625));
@@ -334,7 +334,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                     this.connection.send(new ClientboundMoveVehiclePacket(entity));
                     return;
                 }
-                Player player = this.getPlayer();
+                Player player = this.getCraftPlayer();
                 if (!hasMoved) {
                     lastPosX = curPos.getX();
                     lastPosY = curPos.getY();
@@ -370,7 +370,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                             ((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity().teleport(event.getTo(), PlayerTeleportEvent.TeleportCause.PLUGIN);
                             return;
                         }
-                        if (!from.equals(this.getPlayer().getLocation()) && this.justTeleported) {
+                        if (!from.equals(this.getCraftPlayer().getLocation()) && this.justTeleported) {
                             this.justTeleported = false;
                             return;
                         }
@@ -407,7 +407,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         CraftEventFactory.callTradeSelectEvent(this.player, i, (MerchantMenu) container);
     }
 
-    @Inject(method = "handleEditBook", cancellable = true, at = @At("HEAD"))
+    @Inject(method = "handleEditBook", at = @At("HEAD"))
     private void arclight$editBookSpam(ServerboundEditBookPacket packetIn, CallbackInfo ci) {
         if (this.lastBookTick == 0) {
             this.lastBookTick = ArclightConstants.currentTick - 20;
@@ -589,7 +589,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                                 this.teleport(d3, d4, d5, f, f1);
                             } else {
                                 this.player.absMoveTo(prevX, prevY, prevZ, prevYaw, prevPitch);
-                                CraftPlayer player = this.getPlayer();
+                                CraftPlayer player = this.getCraftPlayer();
                                 Location from = new Location(player.getWorld(), this.lastPosX, this.lastPosY, this.lastPosZ, this.lastYaw, this.lastPitch);
                                 Location to = player.getLocation().clone();
                                 if (packetplayinflying.hasPos) {
@@ -618,10 +618,10 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                                             return;
                                         }
                                         if (!oldTo.equals(event.getTo()) && !event.isCancelled()) {
-                                            getPlayer().teleport(event.getTo(), PlayerTeleportEvent.TeleportCause.PLUGIN);
+                                            getCraftPlayer().teleport(event.getTo(), PlayerTeleportEvent.TeleportCause.PLUGIN);
                                             return;
                                         }
-                                        if (!from.equals(this.getPlayer().getLocation()) && this.justTeleported) {
+                                        if (!from.equals(this.getCraftPlayer().getLocation()) && this.justTeleported) {
                                             this.justTeleported = false;
                                             return;
                                         }
@@ -670,7 +670,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                     ItemStack itemstack = this.player.getItemInHand(InteractionHand.OFF_HAND);
                     CraftItemStack mainHand = CraftItemStack.asCraftMirror(itemstack);
                     CraftItemStack offHand = CraftItemStack.asCraftMirror(this.player.getItemInHand(InteractionHand.MAIN_HAND));
-                    PlayerSwapHandItemsEvent swapItemsEvent = new PlayerSwapHandItemsEvent(this.getPlayer(), mainHand.clone(), offHand.clone());
+                    PlayerSwapHandItemsEvent swapItemsEvent = new PlayerSwapHandItemsEvent(this.getCraftPlayer(), mainHand.clone(), offHand.clone());
                     this.cserver.getPluginManager().callEvent(swapItemsEvent);
                     if (swapItemsEvent.isCancelled()) {
                         return;
@@ -823,7 +823,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
 
     @Inject(method = "handleResourcePackResponse", at = @At("RETURN"))
     private void arclight$handleResourcePackStatus(ServerboundResourcePackPacket packetIn, CallbackInfo ci) {
-        this.cserver.getPluginManager().callEvent(new PlayerResourcePackStatusEvent(this.getPlayer(), PlayerResourcePackStatusEvent.Status.values()[packetIn.action.ordinal()]));
+        this.cserver.getPluginManager().callEvent(new PlayerResourcePackStatusEvent(this.getCraftPlayer(), PlayerResourcePackStatusEvent.Status.values()[packetIn.action.ordinal()]));
     }
 
     @Inject(method = "onDisconnect", cancellable = true, at = @At("HEAD"))
@@ -855,7 +855,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             return;
         }
         if (packetIn instanceof ClientboundSetDefaultSpawnPositionPacket packet6) {
-            ((ServerPlayerEntityBridge) this.player).bridge$setCompassTarget(new Location(this.getPlayer().getWorld(), packet6.pos.getX(), packet6.pos.getY(), packet6.pos.getZ()));
+            ((ServerPlayerEntityBridge) this.player).bridge$setCompassTarget(new Location(this.getCraftPlayer().getWorld(), packet6.pos.getX(), packet6.pos.getY(), packet6.pos.getZ()));
         }
     }
 
@@ -870,7 +870,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             return;
         }
         if (packet.getSlot() >= 0 && packet.getSlot() < net.minecraft.world.entity.player.Inventory.getSelectionSize()) {
-            PlayerItemHeldEvent event = new PlayerItemHeldEvent(this.getPlayer(), this.player.getInventory().selected, packet.getSlot());
+            PlayerItemHeldEvent event = new PlayerItemHeldEvent(this.getCraftPlayer(), this.player.getInventory().selected, packet.getSlot());
             this.cserver.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
                 this.send(new ClientboundSetCarriedItemPacket(this.player.getInventory().selected));
@@ -926,9 +926,9 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 }
             } else if (s.isEmpty()) {
                 LOGGER.warn(this.player.getScoreboardName() + " tried to send an empty message");
-            } else if (this.getPlayer().isConversing()) {
+            } else if (this.getCraftPlayer().isConversing()) {
                 String conversationInput = s;
-                ((MinecraftServerBridge) this.server).bridge$queuedProcess(() -> this.getPlayer().acceptConversationInput(conversationInput));
+                ((MinecraftServerBridge) this.server).bridge$queuedProcess(() -> this.getCraftPlayer().acceptConversationInput(conversationInput));
             } else if (this.player.getChatVisibility() == ChatVisiblity.SYSTEM) {
                 this.send(new ClientboundChatPacket((new TranslatableComponent("chat.cannotSend")).withStyle(ChatFormatting.RED), ChatType.SYSTEM, Util.NIL_UUID));
             } else {
@@ -979,7 +979,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         if (!async && s.startsWith("/")) {
             this.handleCommand(s);
         } else if (this.player.getChatVisibility() != ChatVisiblity.SYSTEM) {
-            Player thisPlayer = this.getPlayer();
+            Player thisPlayer = this.getCraftPlayer();
             AsyncPlayerChatEvent event = new AsyncPlayerChatEvent(async, thisPlayer, s, new LazyPlayerSet(this.server));
             this.cserver.getPluginManager().callEvent(event);
             if (PlayerChatEvent.getHandlerList().getRegisteredListeners().length != 0) {
@@ -1068,7 +1068,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         if (SpigotConfig.logCommands) {
             LOGGER.info(this.player.getScoreboardName() + " issued server command: " + s);
         }
-        CraftPlayer player = this.getPlayer();
+        CraftPlayer player = this.getCraftPlayer();
         PlayerCommandPreprocessEvent event = new PlayerCommandPreprocessEvent(player, s, new LazyPlayerSet(this.server));
         this.cserver.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
@@ -1111,7 +1111,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         if (result == null || result.getType() != HitResult.Type.BLOCK) {
             CraftEventFactory.callPlayerInteractEvent(this.player, Action.LEFT_CLICK_AIR, this.player.getInventory().getSelected(), InteractionHand.MAIN_HAND);
         }
-        PlayerAnimationEvent event = new PlayerAnimationEvent(this.getPlayer());
+        PlayerAnimationEvent event = new PlayerAnimationEvent(this.getCraftPlayer());
         this.cserver.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             return;
@@ -1126,13 +1126,13 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             return;
         }
         if (packetIn.getAction() == ServerboundPlayerCommandPacket.Action.PRESS_SHIFT_KEY || packetIn.getAction() == ServerboundPlayerCommandPacket.Action.RELEASE_SHIFT_KEY) {
-            PlayerToggleSneakEvent event = new PlayerToggleSneakEvent(this.getPlayer(), packetIn.getAction() == ServerboundPlayerCommandPacket.Action.PRESS_SHIFT_KEY);
+            PlayerToggleSneakEvent event = new PlayerToggleSneakEvent(this.getCraftPlayer(), packetIn.getAction() == ServerboundPlayerCommandPacket.Action.PRESS_SHIFT_KEY);
             this.cserver.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
                 ci.cancel();
             }
         } else if (packetIn.getAction() == ServerboundPlayerCommandPacket.Action.START_SPRINTING || packetIn.getAction() == ServerboundPlayerCommandPacket.Action.STOP_SPRINTING) {
-            PlayerToggleSprintEvent e2 = new PlayerToggleSprintEvent(this.getPlayer(), packetIn.getAction() == ServerboundPlayerCommandPacket.Action.START_SPRINTING);
+            PlayerToggleSprintEvent e2 = new PlayerToggleSprintEvent(this.getCraftPlayer(), packetIn.getAction() == ServerboundPlayerCommandPacket.Action.START_SPRINTING);
             this.cserver.getPluginManager().callEvent(e2);
             if (e2.isCancelled()) {
                 ci.cancel();
@@ -1159,6 +1159,9 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         this.player.resetLastActionTime();
         this.player.setShiftKeyDown(packetIn.isUsingSecondaryAction());
         if (entity != null) {
+            if (!world.getWorldBorder().isWithinBounds(entity.blockPosition())) {
+                return;
+            }
             double d0 = 36.0D;
             if (this.player.distanceToSqr(entity) < 36.0D) {
                 class Handler implements ServerboundInteractPacket.Handler {
@@ -1214,14 +1217,14 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                     @Override
                     public void onInteraction(InteractionHand hand) {
                         this.performInteraction(hand, net.minecraft.world.entity.player.Player::interactOn,
-                            new PlayerInteractEntityEvent(getPlayer(), ((EntityBridge) entity).bridge$getBukkitEntity(),
+                            new PlayerInteractEntityEvent(getCraftPlayer(), ((EntityBridge) entity).bridge$getBukkitEntity(),
                                 (hand == InteractionHand.OFF_HAND) ? EquipmentSlot.OFF_HAND : EquipmentSlot.HAND));
                     }
 
                     @Override
                     public void onInteraction(InteractionHand hand, Vec3 vec) {
                         this.performInteraction(hand, (player, e, h) -> e.interactAt(player, vec, h),
-                            new PlayerInteractAtEntityEvent(getPlayer(), ((EntityBridge) entity).bridge$getBukkitEntity(),
+                            new PlayerInteractAtEntityEvent(getCraftPlayer(), ((EntityBridge) entity).bridge$getBukkitEntity(),
                                 new org.bukkit.util.Vector(vec.x, vec.y, vec.z), (hand == InteractionHand.OFF_HAND) ? EquipmentSlot.OFF_HAND : EquipmentSlot.HAND));
                     }
 
@@ -1648,10 +1651,10 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
 
     private Component[] arclight$lines;
 
-    @Inject(method = "updateSignText", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/SignBlockEntity;isEditable()Z"))
+    @Inject(method = "updateSignText", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/SignBlockEntity;isEditable()Z"))
     public void arclight$onSignChangePre(ServerboundSignUpdatePacket p_244542_1_, List<String> p_244542_2_, CallbackInfo ci) {
         String[] lines = p_244542_2_.toArray(new String[0]);
-        Player player = getPlayer();
+        Player player = getCraftPlayer();
         CraftBlock block = CraftBlock.at(this.player.level, p_244542_1_.getPos());
         String[] bukkitLines = new String[lines.length];
         for (int i = 0; i < lines.length; i++) {
@@ -1696,7 +1699,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     public void handlePlayerAbilities(ServerboundPlayerAbilitiesPacket packet) {
         PacketUtils.ensureRunningOnSameThread(packet, (ServerGamePacketListenerImpl) (Object) this, this.player.getLevel());
         if (this.player.getAbilities().mayfly && this.player.getAbilities().flying != packet.isFlying()) {
-            PlayerToggleFlightEvent event = new PlayerToggleFlightEvent(getPlayer(), packet.isFlying());
+            PlayerToggleFlightEvent event = new PlayerToggleFlightEvent(getCraftPlayer(), packet.isFlying());
             this.cserver.getPluginManager().callEvent(event);
             if (!event.isCancelled()) {
                 this.player.getAbilities().flying = packet.isFlying();
@@ -1709,14 +1712,14 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     private static final ResourceLocation CUSTOM_REGISTER = new ResourceLocation("register");
     private static final ResourceLocation CUSTOM_UNREGISTER = new ResourceLocation("unregister");
 
-    @Inject(method = "handleCustomPayload", cancellable = true, at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/fmllegacy/network/NetworkHooks;onCustomPayload(Lnet/minecraftforge/fmllegacy/network/ICustomPacket;Lnet/minecraft/network/Connection;)Z"))
+    @Inject(method = "handleCustomPayload", cancellable = true, at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/network/NetworkHooks;onCustomPayload(Lnet/minecraftforge/network/ICustomPacket;Lnet/minecraft/network/Connection;)Z"))
     private void arclight$customPayload(ServerboundCustomPayloadPacket packet, CallbackInfo ci) {
         if (packet.identifier.equals(CUSTOM_REGISTER)) {
             try {
                 String channels = packet.data.toString(Charsets.UTF_8);
                 for (String channel : channels.split("\0")) {
                     if (!StringUtil.isNullOrEmpty(channel)) {
-                        this.getPlayer().addChannel(channel);
+                        this.getCraftPlayer().addChannel(channel);
                     }
                 }
             } catch (Exception ex) {
@@ -1729,7 +1732,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 final String channels = packet.data.toString(Charsets.UTF_8);
                 for (String channel : channels.split("\0")) {
                     if (!StringUtil.isNullOrEmpty(channel)) {
-                        this.getPlayer().removeChannel(channel);
+                        this.getCraftPlayer().removeChannel(channel);
                     }
                 }
             } catch (Exception ex) {
@@ -1769,9 +1772,9 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     public void teleport(double x, double y, double z, float yaw, float pitch, Set<ClientboundPlayerPositionPacket.RelativeArgument> relativeSet) {
         PlayerTeleportEvent.TeleportCause cause = arclight$cause == null ? PlayerTeleportEvent.TeleportCause.UNKNOWN : arclight$cause;
         arclight$cause = null;
-        Player player = this.getPlayer();
+        Player player = this.getCraftPlayer();
         Location from = player.getLocation();
-        Location to = new Location(this.getPlayer().getWorld(), x, y, z, yaw, pitch);
+        Location to = new Location(this.getCraftPlayer().getWorld(), x, y, z, yaw, pitch);
         if (!from.equals(to)) {
             PlayerTeleportEvent event = new PlayerTeleportEvent(player, from.clone(), to.clone(), cause);
             this.cserver.getPluginManager().callEvent(event);
@@ -1795,11 +1798,11 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         this.internalTeleport(x, y, z, yaw, pitch, relativeSet, false);
     }
 
-    public void a(double d0, double d1, double d2, float f, float f1, PlayerTeleportEvent.TeleportCause cause) {
-        this.a(d0, d1, d2, f, f1, Collections.emptySet(), cause);
+    public void teleport(double d0, double d1, double d2, float f, float f1, PlayerTeleportEvent.TeleportCause cause) {
+        this.teleport(d0, d1, d2, f, f1, Collections.emptySet(), cause);
     }
 
-    public void a(double d0, double d1, double d2, float f, float f1, Set<ClientboundPlayerPositionPacket.RelativeArgument> set, PlayerTeleportEvent.TeleportCause cause) {
+    public void teleport(double d0, double d1, double d2, float f, float f1, Set<ClientboundPlayerPositionPacket.RelativeArgument> set, PlayerTeleportEvent.TeleportCause cause) {
         bridge$pushTeleportCause(cause);
         this.teleport(d0, d1, d2, f, f1, set);
     }

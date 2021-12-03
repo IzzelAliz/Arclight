@@ -38,6 +38,7 @@ import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.server.players.GameProfileCache;
 import net.minecraft.util.Unit;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.util.profiling.jfr.JvmProfiler;
 import net.minecraft.util.thread.ReentrantBlockableEventLoop;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.DataPackConfig;
@@ -50,8 +51,8 @@ import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.level.storage.WorldData;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.world.StructureSpawnManager;
-import net.minecraftforge.fmllegacy.BrandingControl;
-import net.minecraftforge.fmllegacy.server.ServerLifecycleHooks;
+import net.minecraftforge.internal.BrandingControl;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -124,6 +125,8 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Shadow protected abstract void startMetricsRecordingTick();
     @Shadow protected abstract void endMetricsRecordingTick();
     @Shadow public abstract SystemReport fillSystemReport(SystemReport p_177936_);
+    @Shadow private float averageTickTime;
+    @Shadow @Final @Nullable private GameProfileCache profileCache;
     // @formatter:on
 
     public MinecraftServerMixin(String name) {
@@ -223,6 +226,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
                     this.profiler.pop();
                     this.endMetricsRecordingTick();
                     this.isReady = true;
+                    JvmProfiler.INSTANCE.onServerTick(this.averageTickTime);
                 }
                 ServerLifecycleHooks.handleServerStopping((MinecraftServer) (Object) this);
                 ServerLifecycleHooks.expectServerStopped(); // has to come before finalTick to avoid race conditions
@@ -261,6 +265,9 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
             } catch (Throwable throwable) {
                 LOGGER.error("Exception stopping the server", throwable);
             } finally {
+                if (this.profileCache != null) {
+                    this.profileCache.clearExecutor();
+                }
                 WatchdogThread.doStop();
                 ServerLifecycleHooks.handleServerStopped((MinecraftServer) (Object) this);
                 this.onServerExit();
@@ -415,7 +422,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     }
 
     // bukkit methods
-    public void loadSpawn(ChunkProgressListener listener, ServerLevel serverWorld) {
+    public void prepareLevels(ChunkProgressListener listener, ServerLevel serverWorld) {
         this.markWorldsDirty();
         MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.WorldEvent.Load(serverWorld));
         if (!((WorldBridge) serverWorld).bridge$getWorld().getKeepSpawnInMemory()) {

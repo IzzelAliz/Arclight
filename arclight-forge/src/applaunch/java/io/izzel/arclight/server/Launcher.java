@@ -4,8 +4,8 @@ import io.izzel.arclight.boot.application.Main_Forge;
 
 public class Launcher {
 
-    private static final int MIN_CLASS_VERSION = 60;
-    private static final int MIN_JAVA_VERSION = 16;
+    private static final int MIN_CLASS_VERSION = 61;
+    private static final int MIN_JAVA_VERSION = 17;
 
     public static void main(String[] args) throws Throwable {
         int javaVersion = (int) Float.parseFloat(System.getProperty("java.class.version"));

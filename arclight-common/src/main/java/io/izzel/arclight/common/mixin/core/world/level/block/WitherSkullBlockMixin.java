@@ -5,10 +5,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.WitherSkullBlock;
 import net.minecraft.world.level.block.entity.SkullBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.util.Constants;
 import org.bukkit.craftbukkit.v.util.BlockStateListPopulator;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -41,7 +41,7 @@ public class WitherSkullBlockMixin {
         if (arclight$success) {
             if (arclight$populator != null) {
                 for (BlockPos pos : arclight$populator.getBlocks()) {
-                    worldIn.levelEvent(Constants.WorldEvents.BREAK_BLOCK_EFFECTS, pos, Block.getId(worldIn.getBlockState(pos)));
+                    worldIn.levelEvent(LevelEvent.PARTICLES_DESTROY_BLOCK, pos, Block.getId(worldIn.getBlockState(pos)));
                 }
                 arclight$populator.updateList();
             }

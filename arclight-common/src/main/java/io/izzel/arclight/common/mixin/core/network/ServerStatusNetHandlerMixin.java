@@ -36,17 +36,23 @@ public class ServerStatusNetHandlerMixin {
         List<GameProfile> profiles = new ArrayList<>(players.length);
         Object[] array;
         for (int length = (array = players).length, i = 0; i < length; ++i) {
-            Object player = array[i];
+            ServerPlayer player = (ServerPlayer) array[i];
             if (player != null) {
-                profiles.add(((ServerPlayer) player).getGameProfile());
+                if (player.allowsListing()) {
+                    profiles.add(player.getGameProfile());
+                } else {
+                    profiles.add(MinecraftServer.ANONYMOUS_PLAYER_PROFILE);
+                }
             }
         }
         ServerStatus.Players playerSample = new ServerStatus.Players(event.getMaxPlayers(), profiles.size());
-        if (!profiles.isEmpty()) {
-            Collections.shuffle(profiles);
-            profiles = profiles.subList(0, Math.min(profiles.size(), SpigotConfig.playerSample));
+        if (!this.server.hidesOnlinePlayers()) {
+            if (!profiles.isEmpty()) {
+                Collections.shuffle(profiles);
+                profiles = profiles.subList(0, Math.min(profiles.size(), SpigotConfig.playerSample));
+            }
+            playerSample.setSample(profiles.toArray(new GameProfile[0]));
         }
-        playerSample.setSample(profiles.toArray(new GameProfile[0]));
         ServerStatus ping = new ServerStatus();
         ping.setFavicon(event.icon.value);
         ping.setDescription(CraftChatMessage.fromString(event.getMotd(), true)[0]);

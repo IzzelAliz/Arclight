@@ -27,7 +27,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -125,8 +124,8 @@ public abstract class BeehiveBlockEntityMixin extends BlockEntityMixin {
         }
     }
 
-    @Inject(method = "save", at = @At("RETURN"))
-    private void arclight$writeMax(CompoundTag compound, CallbackInfoReturnable<CompoundTag> cir) {
+    @Inject(method = "saveAdditional", at = @At("RETURN"))
+    private void arclight$writeMax(CompoundTag compound, CallbackInfo ci) {
         compound.putInt("Bukkit.MaxEntities", this.maxBees);
     }
 }

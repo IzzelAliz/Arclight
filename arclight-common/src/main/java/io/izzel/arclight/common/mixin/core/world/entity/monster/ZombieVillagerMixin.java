@@ -32,7 +32,7 @@ public abstract class ZombieVillagerMixin extends ZombieMixin {
 
     @Eject(method = "finishConversion", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/ZombieVillager;convertTo(Lnet/minecraft/world/entity/EntityType;Z)Lnet/minecraft/world/entity/Mob;"))
     private <T extends Mob> T arclight$cure(net.minecraft.world.entity.monster.ZombieVillager zombieVillagerEntity, EntityType<T> entityType, boolean flag, CallbackInfo ci) {
-        T t = this.a(entityType, flag, EntityTransformEvent.TransformReason.CURED, CreatureSpawnEvent.SpawnReason.CURED);
+        T t = this.convertTo(entityType, flag, EntityTransformEvent.TransformReason.CURED, CreatureSpawnEvent.SpawnReason.CURED);
         if (t == null) {
             ((ZombieVillager) this.bridge$getBukkitEntity()).setConversionTime(-1);
             ci.cancel();

@@ -24,7 +24,7 @@ apply plugin: 'io.izzel.arclight'
 arclight {
     mcVersion = minecraftVersion
     forgeVersion = project.ext.forgeVersion
-    bukkitVersion = 'v1_17_R1'
+    bukkitVersion = 'v1_18_R1'
     wipeVersion = true
     reobfVersion = true
     accessTransformer = project.file('bukkit.at')
@@ -35,10 +35,11 @@ configurations {
     embed
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(16)
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 minecraft {
-    mappings channel: 'parchment', version: "2021.08.22-$minecraftVersion"
+    //mappings channel: 'parchment', version: "2021.08.22-$minecraftVersion"
+    mappings channel: 'official', version: '1.18'
     accessTransformer = project.file('src/main/resources/META-INF/accesstransformer.cfg')
 }
 
@@ -54,7 +55,7 @@ repositories {
 dependencies {
     minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
     implementation "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
-    implementation 'org.jetbrains:annotations:19.0.0'
+    implementation 'org.jetbrains:annotations:22.0.0'
 
     implementation "org.spongepowered:mixin:$mixinVersion"
     annotationProcessor 'org.spongepowered:mixin:0.8.3:processor'

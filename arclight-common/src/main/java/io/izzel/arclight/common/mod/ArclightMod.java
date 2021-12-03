@@ -6,7 +6,7 @@ import io.izzel.arclight.common.mod.util.log.ArclightI18nLogger;
 import net.minecraftforge.fml.IExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fmllegacy.network.FMLNetworkConstants;
+import net.minecraftforge.network.NetworkConstants;
 import net.minecraftforge.server.permission.PermissionAPI;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -28,7 +28,7 @@ public class ArclightMod {
         System.setErr(new LoggingPrintStream("STDERR", System.err, Level.ERROR));
         ArclightEventDispatcherRegistry.registerAllEventDispatchers();
         ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class,
-            () -> new IExtensionPoint.DisplayTest(() -> FMLNetworkConstants.IGNORESERVERONLY, (a, b) -> true));
+            () -> new IExtensionPoint.DisplayTest(() -> NetworkConstants.IGNORESERVERONLY, (a, b) -> true));
         PermissionAPI.setPermissionHandler(ArclightPermissionHandler.INSTANCE);
     }
 

@@ -7,10 +7,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraft.world.level.dimension.DimensionType;
-import org.spongepowered.asm.mixin.Final;
+import net.minecraft.world.level.dimension.LevelStem;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
@@ -27,15 +25,14 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
     // @formatter:off
     @Shadow @Nullable protected abstract ChunkHolder getUpdatingChunkIfPresent(long chunkPosIn);
     @Shadow protected abstract Iterable<ChunkHolder> getChunks();
-    @Shadow abstract boolean noPlayersCloseForSpawning(ChunkPos chunkPosIn);
     @Shadow protected abstract void tick();
-    @Shadow @Final @Mutable public ChunkGenerator generator;
+    @Shadow @Mutable public ChunkGenerator generator;
     @Invoker("tick") public abstract void bridge$tick(BooleanSupplier hasMoreTime);
     @Invoker("setViewDistance") public abstract void bridge$setViewDistance(int i);
     // @formatter:on
 
     @Redirect(method = "readChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;dimension()Lnet/minecraft/resources/ResourceKey;"))
-    private ResourceKey<DimensionType> arclight$useTypeKey(ServerLevel serverWorld) {
+    private ResourceKey<LevelStem> arclight$useTypeKey(ServerLevel serverWorld) {
         return ((WorldBridge) serverWorld).bridge$getTypeKey();
     }
 
@@ -54,11 +51,6 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
     @Override
     public Iterable<ChunkHolder> bridge$getLoadedChunksIterable() {
         return this.getChunks();
-    }
-
-    @Override
-    public boolean bridge$isOutsideSpawningRadius(ChunkPos chunkPosIn) {
-        return this.noPlayersCloseForSpawning(chunkPosIn);
     }
 
     @Override

@@ -9,6 +9,7 @@ import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
 import io.izzel.arclight.common.bridge.core.world.storage.DerivedWorldInfoBridge;
+import io.izzel.arclight.common.bridge.core.world.storage.LevelStorageSourceBridge;
 import io.izzel.arclight.common.bridge.core.world.storage.MapDataBridge;
 import io.izzel.arclight.common.bridge.core.world.storage.WorldInfoBridge;
 import io.izzel.arclight.common.mixin.core.world.level.LevelMixin;
@@ -41,6 +42,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.entity.PersistentEntitySectionManager;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.level.storage.DerivedLevelData;
@@ -104,6 +106,11 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     public LevelStorageSource.LevelStorageAccess convertable;
     public UUID uuid;
 
+    @Override
+    public ResourceKey<LevelStem> getTypeKey() {
+        return ((LevelStorageSourceBridge.LevelStorageAccessBridge) this.convertable).bridge$getTypeKey();
+    }
+
     public void arclight$constructor(MinecraftServer server, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, ServerLevelData serverWorldInfo, ResourceKey<net.minecraft.world.level.Level> dimension, DimensionType dimensionType, ChunkProgressListener statusListener, ChunkGenerator chunkGenerator, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking) {
         throw new RuntimeException();
     }
@@ -124,7 +131,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     private void arclight$init(MinecraftServer minecraftServer, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, ServerLevelData worldInfo, ResourceKey<net.minecraft.world.level.Level> dimension, DimensionType dimensionType, ChunkProgressListener statusListener, ChunkGenerator chunkGenerator, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking, CallbackInfo ci) {
         this.pvpMode = minecraftServer.isPvpAllowed();
         this.convertable = levelSave;
-        this.uuid = WorldUUID.getUUID(levelSave.getDimensionPath(this.dimension()));
+        this.uuid = WorldUUID.getUUID(levelSave.getDimensionPath(this.dimension()).toFile());
         if (worldInfo instanceof PrimaryLevelData) {
             this.$$worldDataServer = (PrimaryLevelData) worldInfo;
         } else if (worldInfo instanceof DerivedLevelData) {
@@ -132,7 +139,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
             this.$$worldDataServer = DelegateWorldInfo.wrap(((DerivedLevelData) worldInfo));
             ((DerivedWorldInfoBridge) worldInfo).bridge$setDimType(this.getTypeKey());
             if (ArclightConfig.spec().getCompat().isSymlinkWorld()) {
-                WorldSymlink.create((DerivedLevelData) worldInfo, levelSave.getDimensionPath(this.dimension()));
+                WorldSymlink.create((DerivedLevelData) worldInfo, levelSave.getDimensionPath(this.dimension()).toFile());
             }
         }
         ((ServerChunkProviderBridge) this.chunkSource).bridge$setViewDistance(spigotConfig.viewDistance);
@@ -284,31 +291,31 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         return this.arclight$reason;
     }
 
-    public boolean addEntity(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
+    public boolean addFreshEntity(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
         bridge$pushAddEntityReason(reason);
         return addFreshEntity(entity);
     }
 
     @Override
     public boolean bridge$addEntity(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
-        return addEntity(entity, reason);
+        return addFreshEntity(entity, reason);
     }
 
-    public boolean addEntitySerialized(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
+    public boolean addWithUUID(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
         bridge$pushAddEntityReason(reason);
         return addWithUUID(entity);
     }
 
-    public void addEntityTeleport(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
-        addEntity(entity, reason);
+    public void addDuringTeleport(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
+        addFreshEntity(entity, reason);
     }
 
     @Override
     public boolean bridge$addEntitySerialized(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
-        return addEntitySerialized(entity, reason);
+        return addWithUUID(entity, reason);
     }
 
-    public boolean addAllEntitiesSafely(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
+    public boolean tryAddFreshEntityWithPassengers(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
         if (entity.getSelfAndPassengers().map(Entity::getUUID).anyMatch(this.entityManager::isLoaded)) {
             return false;
         }
@@ -317,7 +324,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
 
     @Override
     public boolean bridge$addAllEntitiesSafely(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
-        return addAllEntitiesSafely(entity, reason);
+        return tryAddFreshEntityWithPassengers(entity, reason);
     }
 
     @Inject(method = "explode", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER,
@@ -359,7 +366,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     }
 
     @Override
-    public BlockEntity getTileEntity(BlockPos pos, boolean validate) {
+    public BlockEntity getBlockEntity(BlockPos pos, boolean validate) {
         return this.getBlockEntity(pos);
     }
 

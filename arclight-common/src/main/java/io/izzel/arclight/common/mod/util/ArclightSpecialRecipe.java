@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mod.util;
 
 import io.izzel.arclight.common.bridge.core.item.crafting.RecipeManagerBridge;
 import net.minecraft.world.item.crafting.Recipe;
-import net.minecraftforge.fmllegacy.server.ServerLifecycleHooks;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import org.bukkit.NamespacedKey;
 import org.bukkit.craftbukkit.v.inventory.CraftComplexRecipe;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;

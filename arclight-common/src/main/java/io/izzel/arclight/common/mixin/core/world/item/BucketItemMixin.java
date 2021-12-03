@@ -74,7 +74,7 @@ public abstract class BucketItemMixin {
         return arclight$captureItem == null ? itemStack : CraftItemStack.asNMSCopy(arclight$captureItem);
     }
 
-    public boolean a(Player entity, Level world, BlockPos pos, @Nullable BlockHitResult result, Direction direction, BlockPos clicked, ItemStack itemstack) {
+    public boolean emptyContents(Player entity, Level world, BlockPos pos, @Nullable BlockHitResult result, Direction direction, BlockPos clicked, ItemStack itemstack) {
         arclight$direction = direction;
         arclight$click = clicked;
         arclight$stack = itemstack;

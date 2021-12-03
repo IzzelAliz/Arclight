@@ -9,7 +9,7 @@ public class ArclightBlockSnapshot extends CraftBlock {
     private final BlockState blockState;
 
     public ArclightBlockSnapshot(BlockSnapshot blockSnapshot, boolean current) {
-        super(blockSnapshot.getWorld(), blockSnapshot.getPos());
+        super(blockSnapshot.getLevel(), blockSnapshot.getPos());
         this.blockState = current ? blockSnapshot.getCurrentBlock() : blockSnapshot.getReplacedBlock();
     }
 

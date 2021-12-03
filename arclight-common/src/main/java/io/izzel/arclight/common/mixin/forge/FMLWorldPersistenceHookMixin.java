@@ -6,9 +6,8 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.WorldData;
+import net.minecraftforge.common.util.MavenVersionStringHelper;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fmllegacy.FMLWorldPersistenceHook;
-import net.minecraftforge.fmllegacy.MavenVersionStringHelper;
 import net.minecraftforge.registries.ForgeRegistry;
 import net.minecraftforge.registries.GameData;
 import net.minecraftforge.registries.RegistryManager;
@@ -25,7 +24,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-@Mixin(value = FMLWorldPersistenceHook.class, remap = false)
+@Mixin(targets = "net.minecraftforge.common.ForgeMod$FMLWorldPersistenceHook", remap = false)
 public class FMLWorldPersistenceHookMixin {
 
     @Shadow @Final private static Logger LOGGER;

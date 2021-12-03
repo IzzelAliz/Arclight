@@ -39,16 +39,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(PortalShape.class)
-public abstract class PortalSizeMixin implements PortalSizeBridge {
+public abstract class PortalShapeMixin implements PortalSizeBridge {
 
     // @formatter:off
     @Shadow @Final private LevelAccessor level;
-    @Shadow public abstract void createPortalBlocks();
+    @Shadow public abstract void shadow$createPortalBlocks();
     @Shadow @Final private Direction.Axis axis;
     @Shadow @Nullable private BlockPos bottomLeft;
     @Shadow private int height;
     @Shadow @Final private Direction rightDir;
-    @Shadow private int width;
+    @Shadow @Final private int width;
     @Shadow public static PortalInfo createPortalInfo(ServerLevel world, BlockUtil.FoundRectangle result, Direction.Axis axis, Vec3 offsetVector, EntityDimensions size, Vec3 motion, float rotationYaw, float rotationPitch) { return null; }
     // @formatter:on
 
@@ -82,14 +82,14 @@ public abstract class PortalSizeMixin implements PortalSizeBridge {
 
     private transient boolean arclight$ret;
 
-    public boolean createPortal() {
-        this.createPortalBlocks();
+    public boolean createPortalBlocks() {
+        this.shadow$createPortalBlocks();
         return arclight$ret;
     }
 
     @Override
     public boolean bridge$createPortal() {
-        return createPortal();
+        return createPortalBlocks();
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -101,7 +101,7 @@ public abstract class PortalSizeMixin implements PortalSizeBridge {
         return portalInfo;
     }
 
-    private static PortalInfo a(ServerLevel world, BlockUtil.FoundRectangle result, Direction.Axis axis, Vec3 offsetVector, EntityDimensions size, Vec3 motion, float rotationYaw, float rotationPitch, CraftPortalEvent event) {
+    private static PortalInfo createPortalInfo(ServerLevel world, BlockUtil.FoundRectangle result, Direction.Axis axis, Vec3 offsetVector, EntityDimensions size, Vec3 motion, float rotationYaw, float rotationPitch, CraftPortalEvent event) {
         ArclightCaptures.captureCraftPortalEvent(event);
         return createPortalInfo(world, result, axis, offsetVector, size, motion, rotationYaw, rotationPitch);
     }

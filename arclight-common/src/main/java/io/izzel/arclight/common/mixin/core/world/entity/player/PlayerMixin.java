@@ -415,14 +415,14 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
 
     protected transient boolean arclight$forceSleep;
 
-    public Either<net.minecraft.world.entity.player.Player.BedSleepingProblem, Unit> sleep(BlockPos at, boolean force) {
+    public Either<net.minecraft.world.entity.player.Player.BedSleepingProblem, Unit> startSleepInBed(BlockPos at, boolean force) {
         this.arclight$forceSleep = force;
         return this.startSleepInBed(at);
     }
 
     @Override
     public Either<net.minecraft.world.entity.player.Player.BedSleepingProblem, Unit> bridge$trySleep(BlockPos at, boolean force) {
-        return sleep(at, force);
+        return startSleepInBed(at, force);
     }
 
     @Inject(method = "stopSleepInBed", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/player/Player;sleepCounter:I"))
@@ -544,7 +544,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
     }
 
     @Override
-    public void setSlot(EquipmentSlot slotIn, ItemStack stack, boolean silent) {
+    public void setItemSlot(EquipmentSlot slotIn, ItemStack stack, boolean silent) {
         if (slotIn == EquipmentSlot.MAINHAND) {
             this.bridge$playEquipSound(stack, silent);
             this.inventory.items.set(this.inventory.selected, stack);

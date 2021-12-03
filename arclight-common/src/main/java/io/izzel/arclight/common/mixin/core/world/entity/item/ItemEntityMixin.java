@@ -14,7 +14,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.fmllegacy.hooks.BasicEventHooks;
+import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.entity.Item;
@@ -82,7 +82,7 @@ public abstract class ItemEntityMixin extends EntityMixin {
             if (this.pickupDelay <= 0 && (hook == 1 || canHold > 0)) {
 
                 copy.setCount(canHold);
-                BasicEventHooks.firePlayerItemPickupEvent(entity, (ItemEntity) (Object) this, copy);
+                ForgeEventFactory.firePlayerItemPickupEvent(entity, (ItemEntity) (Object) this, copy);
 
                 itemstack.setCount(canHold);
                 final PlayerPickupItemEvent playerEvent = new PlayerPickupItemEvent(((ServerPlayerEntityBridge) entity).bridge$getBukkitEntity(), (Item) this.getBukkitEntity(), remaining);

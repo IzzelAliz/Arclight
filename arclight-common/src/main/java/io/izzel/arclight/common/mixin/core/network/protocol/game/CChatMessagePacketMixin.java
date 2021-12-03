@@ -22,7 +22,7 @@ public class CChatMessagePacketMixin {
         new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Async Chat Thread - #%d").build()
     );
 
-    @Inject(method = "handle", cancellable = true, at = @At("HEAD"))
+    @Inject(method = "handle(Lnet/minecraft/network/protocol/game/ServerGamePacketListener;)V", cancellable = true, at = @At("HEAD"))
     private void arclight$asyncChat(ServerGamePacketListener handler, CallbackInfo ci) {
         if (!this.message.startsWith("/")) {
             executors.submit(() -> handler.handleChat((ServerboundChatPacket) (Object) this));

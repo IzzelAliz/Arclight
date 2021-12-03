@@ -23,7 +23,7 @@ public abstract class ChestBlockMixin {
     // @formatter:on
 
     @Nullable
-    public MenuProvider getInventory(BlockState state, Level level, BlockPos pos, boolean ignoreObstructions) {
+    public MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos, boolean ignoreObstructions) {
         return this.combine(state, level, pos, ignoreObstructions).apply(MENU_PROVIDER_COMBINER).orElse(null);
     }
 }

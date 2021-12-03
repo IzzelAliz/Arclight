@@ -19,8 +19,6 @@ import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.AreaEffectCloudApplyEvent;
 import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Implements;
-import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -30,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 
 @Mixin(AreaEffectCloud.class)
-@Implements(@Interface(iface = AreaEffectCloudEntityBridge.Hack.class, prefix = "hack$"))
 public abstract class AreaEffectCloudEntityMixin extends EntityMixin implements AreaEffectCloudEntityBridge {
 
     // @formatter:off
@@ -210,11 +207,11 @@ public abstract class AreaEffectCloudEntityMixin extends EntityMixin implements 
         }
     }
 
-    public String hack$getType() {
+    public String getPotionType() {
         return Registry.POTION.getKey(this.potion).toString();
     }
 
-    public void hack$setType(final String string) {
+    public void setPotionType(final String string) {
         this.setPotion(Registry.POTION.get(new ResourceLocation(string)));
     }
 

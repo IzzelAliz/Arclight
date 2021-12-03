@@ -18,7 +18,6 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.storage.LevelData;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
@@ -28,7 +27,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.util.function.Consumer;
 
 @Mixin(ServerChunkCache.class)
 public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge {
@@ -41,12 +39,6 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
     @Shadow @Final private DistanceManager distanceManager;
     @Shadow protected abstract void clearCache();
     @Shadow @Nullable protected abstract ChunkHolder getVisibleChunkIfPresent(long chunkPosIn);
-    @Shadow  abstract boolean runDistanceManagerUpdates();
-    @Shadow protected abstract boolean chunkAbsent(@Nullable ChunkHolder chunkHolderIn, int p_217224_2_);
-    @Shadow public boolean spawnEnemies;
-    @Shadow public boolean spawnFriendlies;
-    @Shadow protected abstract void getFullChunk(long p_241098_1_, Consumer<LevelChunk> p_241098_3_);
-    @Shadow @Final @Mutable public ChunkGenerator generator;
     @Invoker("runDistanceManagerUpdates") public abstract boolean bridge$tickDistanceManager();
     @Accessor("lightEngine") public abstract ThreadedLevelLightEngine bridge$getLightManager();
     // @formatter:on
@@ -71,7 +63,6 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
 
     @Override
     public void bridge$setChunkGenerator(ChunkGenerator chunkGenerator) {
-        this.generator = chunkGenerator;
         ((ChunkMapBridge) this.chunkMap).bridge$setChunkGenerator(chunkGenerator);
     }
 

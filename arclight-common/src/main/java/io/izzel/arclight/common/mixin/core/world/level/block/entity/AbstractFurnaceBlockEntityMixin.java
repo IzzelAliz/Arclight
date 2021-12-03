@@ -141,7 +141,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends LockableBlockEntit
     private static ItemStack arclight$item;
     private static int arclight$captureAmount;
 
-    public List<Recipe<?>> a(ServerLevel world, Vec3 vec, BlockPos pos, Player entity, ItemStack itemStack, int amount) {
+    public List<Recipe<?>> getRecipesToAwardAndPopExperience(ServerLevel world, Vec3 vec, BlockPos pos, Player entity, ItemStack itemStack, int amount) {
         try {
             arclight$item = itemStack;
             arclight$captureAmount = amount;
@@ -161,7 +161,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends LockableBlockEntit
 
     @Override
     public List<Recipe<?>> bridge$dropExp(ServerPlayer entity, ItemStack itemStack, int amount) {
-        return a(entity.getLevel(), entity.position(), this.worldPosition, entity, itemStack, amount);
+        return getRecipesToAwardAndPopExperience(entity.getLevel(), entity.position(), this.worldPosition, entity, itemStack, amount);
     }
 
     @Redirect(method = "createExperience", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;award(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/phys/Vec3;I)V"))

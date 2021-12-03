@@ -9,6 +9,6 @@
     "CraftMagicNumbersMixin_DFU",
     "DataFixesManagerMixin_DFU",
     "EntityType_BuilderMixin_DFU",
-    "MinecraftServerMixin_DFU"
+    "MainMixin_DFU"
   ]
 }

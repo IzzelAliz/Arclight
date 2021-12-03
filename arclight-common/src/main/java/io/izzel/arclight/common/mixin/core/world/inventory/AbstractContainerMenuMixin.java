@@ -312,8 +312,8 @@ public abstract class AbstractContainerMenuMixin implements ContainerBridge {
                         if (itemstack4.getCount() > l1) {
                             slot2.set(itemstack4.split(l1));
                         } else {
-                            slot2.set(itemstack4);
                             inventory.setItem(dragType, ItemStack.EMPTY);
+                            slot2.set(itemstack4);
                         }
                     }
                 } else if (slot2.mayPickup(player) && slot2.mayPlace(itemstack4)) {
@@ -325,8 +325,8 @@ public abstract class AbstractContainerMenuMixin implements ContainerBridge {
                             player.drop(itemstack7, true);
                         }
                     } else {
-                        slot2.set(itemstack4);
                         inventory.setItem(dragType, itemstack7);
+                        slot2.set(itemstack4);
                         slot2.onTake(player, itemstack7);
                     }
                 }

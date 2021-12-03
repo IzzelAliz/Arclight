@@ -39,7 +39,7 @@ public interface IServerWorldMixin extends LevelAccessor, ServerWorldBridge {
         }
     }
 
-    default boolean addAllEntities(Entity entity, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason reason) {
+    default boolean addFreshEntityWithPassengers(Entity entity, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason reason) {
         Iterator<Entity> iterator = entity.getSelfAndPassengers().iterator();
         while (iterator.hasNext()) {
             Entity next = iterator.next();
@@ -51,6 +51,6 @@ public interface IServerWorldMixin extends LevelAccessor, ServerWorldBridge {
 
     @Override
     default boolean bridge$addAllEntities(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
-        return this.addAllEntities(entity, reason);
+        return this.addFreshEntityWithPassengers(entity, reason);
     }
 }

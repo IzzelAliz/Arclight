@@ -142,7 +142,7 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
         arclight$targetSuccess = true;
     }
 
-    public boolean setGoalTarget(LivingEntity livingEntity, EntityTargetEvent.TargetReason reason, boolean fireEvent) {
+    public boolean setTarget(LivingEntity livingEntity, EntityTargetEvent.TargetReason reason, boolean fireEvent) {
         bridge$pushGoalTargetReason(reason, fireEvent);
         setTarget(livingEntity);
         return arclight$targetSuccess;
@@ -155,7 +155,7 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
 
     @Override
     public boolean bridge$setGoalTarget(LivingEntity livingEntity, EntityTargetEvent.TargetReason reason, boolean fireEvent) {
-        return setGoalTarget(livingEntity, reason, fireEvent);
+        return setTarget(livingEntity, reason, fireEvent);
     }
 
     @Override
@@ -306,7 +306,7 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
         this.arclight$transform = null;
     }
 
-    public <T extends Mob> T a(EntityType<T> entityType, boolean flag, EntityTransformEvent.TransformReason transformReason, CreatureSpawnEvent.SpawnReason spawnReason) {
+    public <T extends Mob> T convertTo(EntityType<T> entityType, boolean flag, EntityTransformEvent.TransformReason transformReason, CreatureSpawnEvent.SpawnReason spawnReason) {
         ((WorldBridge) this.level).bridge$pushAddEntityReason(spawnReason);
         bridge$pushTransformReason(transformReason);
         return this.convertTo(entityType, flag);

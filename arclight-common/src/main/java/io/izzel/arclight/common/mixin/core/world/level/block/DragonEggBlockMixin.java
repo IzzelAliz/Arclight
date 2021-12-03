@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.DragonEggBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.border.WorldBorder;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.event.block.BlockFromToEvent;
@@ -21,7 +22,7 @@ public class DragonEggBlockMixin {
     @Inject(method = "teleport", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/Level;isClientSide:Z"))
     public void arclight$blockFromTo(BlockState blockState, Level world, BlockPos blockPos, CallbackInfo ci,
-                                     int i, BlockPos pos) {
+                                     WorldBorder wb, int i, BlockPos pos) {
         org.bukkit.block.Block from = CraftBlock.at(world, blockPos);
         org.bukkit.block.Block to = CraftBlock.at(world, pos);
         BlockFromToEvent event = new BlockFromToEvent(from, to);
@@ -35,7 +36,7 @@ public class DragonEggBlockMixin {
 
     private transient BlockPos arclight$toBlock;
 
-    @ModifyVariable(method = "teleport", index = 5, name = "blockpos", at = @At(value = "JUMP", opcode = Opcodes.IFEQ, ordinal = 1))
+    @ModifyVariable(method = "teleport", index = 6, name = "blockpos", at = @At(value = "JUMP", opcode = Opcodes.IFEQ, ordinal = 1))
     public BlockPos arclight$setPos(BlockPos pos) {
         return arclight$toBlock;
     }

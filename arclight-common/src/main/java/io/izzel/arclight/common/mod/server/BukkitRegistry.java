@@ -28,7 +28,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraftforge.fml.CrashReportCallables;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistry;
@@ -70,11 +70,11 @@ public class BukkitRegistry {
     private static final Map<Material, Block> MATERIAL_BLOCK = Unsafe.getStatic(CraftMagicNumbers.class, "MATERIAL_BLOCK");
     private static final Map<String, EntityType> ENTITY_NAME_MAP = Unsafe.getStatic(EntityType.class, "NAME_MAP");
     private static final Map<Integer, World.Environment> ENVIRONMENT_MAP = Unsafe.getStatic(World.Environment.class, "lookup");
-    static final BiMap<ResourceKey<DimensionType>, World.Environment> DIM_MAP =
-        HashBiMap.create(ImmutableMap.<ResourceKey<DimensionType>, World.Environment>builder()
-            .put(DimensionType.OVERWORLD_LOCATION, World.Environment.NORMAL)
-            .put(DimensionType.NETHER_LOCATION, World.Environment.NETHER)
-            .put(DimensionType.END_LOCATION, World.Environment.THE_END)
+    static final BiMap<ResourceKey<LevelStem>, World.Environment> DIM_MAP =
+        HashBiMap.create(ImmutableMap.<ResourceKey<LevelStem>, World.Environment>builder()
+            .put(LevelStem.OVERWORLD, World.Environment.NORMAL)
+            .put(LevelStem.NETHER, World.Environment.NETHER)
+            .put(LevelStem.END, World.Environment.THE_END)
             .build());
     private static final Map<String, Art> ART_BY_NAME = Unsafe.getStatic(Art.class, "BY_NAME");
     private static final Map<Integer, Art> ART_BY_ID = Unsafe.getStatic(Art.class, "BY_ID");
@@ -209,9 +209,9 @@ public class BukkitRegistry {
     public static void registerEnvironments() {
         int i = World.Environment.values().length;
         List<World.Environment> newTypes = new ArrayList<>();
-        Registry<DimensionType> registry = ArclightServer.getMinecraftServer().registryAccess().registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY);
-        for (Map.Entry<ResourceKey<DimensionType>, DimensionType> entry : registry.entrySet()) {
-            ResourceKey<DimensionType> key = entry.getKey();
+        Registry<LevelStem> registry = ArclightServer.getMinecraftServer().registryAccess().registryOrThrow(Registry.LEVEL_STEM_REGISTRY);
+        for (Map.Entry<ResourceKey<LevelStem>, LevelStem> entry : registry.entrySet()) {
+            ResourceKey<LevelStem> key = entry.getKey();
             World.Environment environment = DIM_MAP.get(key);
             if (environment == null) {
                 String name = ResourceLocationUtil.standardize(key.location());

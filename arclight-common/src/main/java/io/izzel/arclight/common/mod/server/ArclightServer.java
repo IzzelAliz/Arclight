@@ -9,8 +9,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.players.PlayerList;
-import net.minecraft.world.level.dimension.DimensionType;
-import net.minecraftforge.fmllegacy.server.ServerLifecycleHooks;
+import net.minecraft.world.level.dimension.LevelStem;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.command.ColouredConsoleSender;
@@ -78,11 +78,7 @@ public class ArclightServer {
         return mainThreadExecutor;
     }
 
-    public static World.Environment getEnvironment(ResourceKey<DimensionType> key) {
-        return BukkitRegistry.DIM_MAP.get(key);
-    }
-
-    public static ResourceKey<DimensionType> getDimensionType(World.Environment environment) {
-        return BukkitRegistry.DIM_MAP.inverse().get(environment);
+    public static World.Environment getEnvironment(ResourceKey<LevelStem> key) {
+        return BukkitRegistry.DIM_MAP.getOrDefault(key, World.Environment.CUSTOM);
     }
 }

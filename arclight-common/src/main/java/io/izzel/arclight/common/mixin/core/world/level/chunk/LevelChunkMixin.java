@@ -1,29 +1,27 @@
 package io.izzel.arclight.common.mixin.core.world.level.chunk;
 
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.chunk.ChunkAccessBridge;
 import io.izzel.arclight.common.bridge.core.world.chunk.ChunkBridge;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.TickList;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.chunk.UpgradeData;
+import net.minecraft.world.level.levelgen.blending.BlendingData;
 import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.ticks.LevelChunkTicks;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftChunk;
 import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataContainer;
-import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataTypeRegistry;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -31,18 +29,13 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
-import java.util.Map;
-import java.util.function.Consumer;
 
 @Mixin(LevelChunk.class)
-public abstract class LevelChunkMixin implements ChunkBridge {
+public abstract class LevelChunkMixin extends ChunkAccessMixin implements ChunkBridge {
 
     // @formatter:off
     @Shadow @Nullable public abstract BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving);
     @Shadow @Final public Level level;
-    @Shadow @Final private ChunkPos chunkPos;
-    @Shadow private volatile boolean unsaved;
-    @Shadow @Final private Map<BlockPos, CompoundTag> pendingBlockEntities;
     // @formatter:on
 
     public org.bukkit.Chunk bukkitChunk;
@@ -51,18 +44,16 @@ public abstract class LevelChunkMixin implements ChunkBridge {
     private transient boolean arclight$doPlace;
     public ServerLevel $$level;
 
-    private static final CraftPersistentDataTypeRegistry DATA_TYPE_REGISTRY = new CraftPersistentDataTypeRegistry();
-    public final CraftPersistentDataContainer persistentDataContainer = new CraftPersistentDataContainer(DATA_TYPE_REGISTRY);
-
-    @Inject(method = "<init>(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/ChunkBiomeContainer;Lnet/minecraft/world/level/chunk/UpgradeData;Lnet/minecraft/world/level/TickList;Lnet/minecraft/world/level/TickList;J[Lnet/minecraft/world/level/chunk/LevelChunkSection;Ljava/util/function/Consumer;)V", at = @At("RETURN"))
-    private void arclight$init(Level worldIn, ChunkPos chunkPosIn, ChunkBiomeContainer biomeContainerIn, UpgradeData upgradeDataIn, TickList<Block> tickBlocksIn, TickList<Fluid> tickFluidsIn, long inhabitedTimeIn, LevelChunkSection[] sectionsIn, Consumer<LevelChunk> postLoadConsumerIn, CallbackInfo ci) {
+    @Inject(method = "<init>(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/UpgradeData;Lnet/minecraft/world/ticks/LevelChunkTicks;Lnet/minecraft/world/ticks/LevelChunkTicks;J[Lnet/minecraft/world/level/chunk/LevelChunkSection;Lnet/minecraft/world/level/chunk/LevelChunk$PostLoadProcessor;Lnet/minecraft/world/level/levelgen/blending/BlendingData;)V", at = @At("RETURN"))
+    private void arclight$init(Level worldIn, ChunkPos p_196855_, UpgradeData p_196856_, LevelChunkTicks<Block> p_196857_, LevelChunkTicks<Fluid> p_196858_, long p_196859_, @Nullable LevelChunkSection[] p_196860_, @Nullable LevelChunk.PostLoadProcessor p_196861_, @Nullable BlendingData p_196862_, CallbackInfo ci) {
         this.$$level = ((ServerLevel) worldIn);
-        bridge$setBukkitChunk(new CraftChunk((LevelChunk) (Object) this));
+        this.bukkitChunk = new CraftChunk((LevelChunk) (Object) this);
     }
 
-    @Inject(method = "<init>(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ProtoChunk;Ljava/util/function/Consumer;)V", at = @At("RETURN"))
-    private void arclight$init(ServerLevel p_156365_, ProtoChunk p_156366_, Consumer<LevelChunk> p_156367_, CallbackInfo ci) {
+    @Inject(method = "<init>(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ProtoChunk;Lnet/minecraft/world/level/chunk/LevelChunk$PostLoadProcessor;)V", at = @At("RETURN"))
+    private void arclight$init(ServerLevel p_196850_, ProtoChunk protoChunk, @Nullable LevelChunk.PostLoadProcessor p_196852_, CallbackInfo ci) {
         this.needsDecoration = true;
+        this.persistentDataContainer = (CraftPersistentDataContainer) ((ChunkAccessBridge) protoChunk).bridge$getPersistentDataContainer();
     }
 
     @Inject(method = "removeBlockEntity", at = @At(value = "INVOKE_ASSIGN", remap = false, target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))
@@ -91,18 +82,18 @@ public abstract class LevelChunkMixin implements ChunkBridge {
         this.bukkitChunk = chunk;
     }
 
-    public BlockState setType(BlockPos pos, BlockState state, boolean isMoving, boolean doPlace) {
-        return this.bridge$setType(pos, state, isMoving, doPlace);
-    }
-
-    @Override
-    public BlockState bridge$setType(BlockPos pos, BlockState state, boolean isMoving, boolean doPlace) {
+    public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving, boolean doPlace) {
         this.arclight$doPlace = doPlace;
         try {
             return this.setBlockState(pos, state, isMoving);
         } finally {
             this.arclight$doPlace = true;
         }
+    }
+
+    @Override
+    public BlockState bridge$setType(BlockPos pos, BlockState state, boolean isMoving, boolean doPlace) {
+        return this.setBlockState(pos, state, isMoving, doPlace);
     }
 
     @Override
@@ -177,12 +168,8 @@ public abstract class LevelChunkMixin implements ChunkBridge {
         return world.isClientSide && this.arclight$doPlace;
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
+    @Override
     public boolean isUnsaved() {
-        return !this.mustNotSave && this.unsaved;
+        return super.isUnsaved() && !this.mustNotSave;
     }
 }

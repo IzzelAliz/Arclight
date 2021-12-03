@@ -6,8 +6,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CarvedPumpkinBlock;
+import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.util.Constants;
 import org.bukkit.craftbukkit.v.util.BlockStateListPopulator;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -40,7 +40,7 @@ public class CarvedPumpkinBlockMixin {
         if (arclight$success) {
             if (arclight$populator != null) {
                 for (BlockPos pos : arclight$populator.getBlocks()) {
-                    world.levelEvent(Constants.WorldEvents.BREAK_BLOCK_EFFECTS, pos, Block.getId(world.getBlockState(pos)));
+                    world.levelEvent(LevelEvent.PARTICLES_DESTROY_BLOCK, pos, Block.getId(world.getBlockState(pos)));
                 }
                 arclight$populator.updateList();
             }

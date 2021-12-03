@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Random;
 
 @Mixin(FireBlock.class)
-public abstract class FireBlockMixin implements FireBlockBridge {
+public abstract class FireBlockMixin extends BaseFireBlockMixin implements FireBlockBridge {
 
     // @formatter:off
     @Shadow protected abstract BlockState getStateForPlacement(BlockGetter blockReader, BlockPos pos);

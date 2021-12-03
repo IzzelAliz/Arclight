@@ -58,7 +58,7 @@ public class ForgeInstaller {
     private static final String INSTALLER_URL = "https://arclight.mcxk.net/net/minecraftforge/forge/%s-%s/forge-%s-%s-installer.jar";
     private static final String SERVER_URL = "https://arclight.mcxk.net/net/minecraft/server/minecraft_server.%s.jar";
     private static final Map<String, String> VERSION_HASH = Map.of(
-        "1.17.1", "A16D67E5807F57FC4E550299CF20226194497DC2"
+        "1.18", "3cf24a8694aca6267883b17d934efacc5e44440d"
     );
 
     public static List<Path> modInstall(Consumer<String> logger) throws Throwable {
@@ -276,6 +276,7 @@ public class ForgeInstaller {
         return Map.entry(Objects.requireNonNull(mainClass, "No main class found"), userArgs);
     }
 
+    @SuppressWarnings("removal")
     public static void addToPath(Path path) {
         try {
             ClassLoader loader = ClassLoader.getPlatformClassLoader();

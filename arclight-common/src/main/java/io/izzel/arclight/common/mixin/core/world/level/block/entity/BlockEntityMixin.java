@@ -46,10 +46,10 @@ public abstract class BlockEntityMixin implements TileEntityBridge {
         }
     }
 
-    @Inject(method = "saveMetadata", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundTag;putString(Ljava/lang/String;Ljava/lang/String;)V"))
-    public void arclight$savePersistent(CompoundTag compound, CallbackInfoReturnable<CompoundTag> cir) {
+    @Inject(method = "saveWithoutMetadata", at = @At("RETURN"))
+    private void arclight$savePersistent(CallbackInfoReturnable<CompoundTag> cir) {
         if (this.persistentDataContainer != null && !this.persistentDataContainer.isEmpty()) {
-            compound.put("PublicBukkitValues", this.persistentDataContainer.toTagCompound());
+            cir.getReturnValue().put("PublicBukkitValues", this.persistentDataContainer.toTagCompound());
         }
     }
 

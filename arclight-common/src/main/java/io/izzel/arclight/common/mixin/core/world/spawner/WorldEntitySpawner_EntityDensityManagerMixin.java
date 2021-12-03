@@ -6,6 +6,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.LocalMobCapCalculator;
 import net.minecraft.world.level.NaturalSpawner;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import org.spongepowered.asm.mixin.Final;
@@ -20,6 +22,7 @@ public abstract class WorldEntitySpawner_EntityDensityManagerMixin implements Wo
     @Shadow @Final private int spawnableChunkCount;
     @Shadow @Final private Object2IntOpenHashMap<MobCategory> mobCategoryCounts;
     @Shadow protected abstract boolean canSpawn(EntityType<?> p_234989_1_, BlockPos p_234989_2_, ChunkAccess p_234989_3_);
+    @Shadow @Final private LocalMobCapCalculator localMobCapCalculator;
     // @formatter:on
 
     @Override
@@ -33,8 +36,8 @@ public abstract class WorldEntitySpawner_EntityDensityManagerMixin implements Wo
     }
 
     @Override
-    public boolean bridge$canSpawn(MobCategory classification, int limit) {
+    public boolean bridge$canSpawn(MobCategory classification, ChunkPos pos, int limit) {
         int i = limit * this.spawnableChunkCount / 289;
-        return this.mobCategoryCounts.getInt(classification) < i;
+        return this.mobCategoryCounts.getInt(classification) >= i ? false : this.localMobCapCalculator.canSpawn(classification, pos);
     }
 }

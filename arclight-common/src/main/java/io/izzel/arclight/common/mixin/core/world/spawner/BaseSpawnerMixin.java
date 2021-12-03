@@ -7,7 +7,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.random.WeightedRandomList;
+import net.minecraft.util.random.SimpleWeightedRandomList;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -15,6 +16,7 @@ import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.level.BaseSpawner;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.SpawnData;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.event.ForgeEventFactory;
@@ -30,23 +32,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Optional;
 
 @Mixin(BaseSpawner.class)
-public abstract class AbstractSpawnerMixin {
+public abstract class BaseSpawnerMixin {
 
     // @formatter:off
-    @Shadow public WeightedRandomList<SpawnData> spawnPotentials;
+    @Shadow public SimpleWeightedRandomList<SpawnData> spawnPotentials;
     @Shadow public int spawnDelay;
     @Shadow public int spawnCount;
     @Shadow public SpawnData nextSpawnData;
     @Shadow public int spawnRange;
     @Shadow public int maxNearbyEntities;
-    @Shadow private static WeightedRandomList<SpawnData> EMPTY_POTENTIALS;
     @Shadow protected abstract boolean isNearPlayer(Level p_151344_, BlockPos p_151345_);
     @Shadow protected abstract void delay(Level p_151351_, BlockPos p_151352_);
     // @formatter:on
 
     @Inject(method = "setEntityId", at = @At("RETURN"))
     public void arclight$clearMobs(EntityType<?> type, CallbackInfo ci) {
-        this.spawnPotentials = EMPTY_POTENTIALS;
+        this.spawnPotentials = SimpleWeightedRandomList.empty();
     }
 
     /**
@@ -66,7 +67,7 @@ public abstract class AbstractSpawnerMixin {
                 boolean flag = false;
 
                 for (int i = 0; i < this.spawnCount; ++i) {
-                    CompoundTag compoundtag = this.nextSpawnData.getTag();
+                    CompoundTag compoundtag = this.nextSpawnData.getEntityToSpawn();
                     Optional<EntityType<?>> optional = EntityType.by(compoundtag);
                     if (optional.isEmpty()) {
                         this.delay(level, pos);
@@ -78,7 +79,21 @@ public abstract class AbstractSpawnerMixin {
                     double d0 = j >= 1 ? listtag.getDouble(0) : (double) pos.getX() + (level.random.nextDouble() - level.random.nextDouble()) * (double) this.spawnRange + 0.5D;
                     double d1 = j >= 2 ? listtag.getDouble(1) : (double) (pos.getY() + level.random.nextInt(3) - 1);
                     double d2 = j >= 3 ? listtag.getDouble(2) : (double) pos.getZ() + (level.random.nextDouble() - level.random.nextDouble()) * (double) this.spawnRange + 0.5D;
-                    if (level.noCollision(optional.get().getAABB(d0, d1, d2)) && SpawnPlacements.checkSpawnRules(optional.get(), level, MobSpawnType.SPAWNER, new BlockPos(d0, d1, d2), level.getRandom())) {
+                    if (level.noCollision(optional.get().getAABB(d0, d1, d2))) {
+                        BlockPos blockpos = new BlockPos(d0, d1, d2);
+                        if (this.nextSpawnData.getCustomSpawnRules().isPresent()) {
+                            if (!optional.get().getCategory().isFriendly() && level.getDifficulty() == Difficulty.PEACEFUL) {
+                                continue;
+                            }
+
+                            SpawnData.CustomSpawnRules spawndata$customspawnrules = this.nextSpawnData.getCustomSpawnRules().get();
+                            if (!spawndata$customspawnrules.blockLightLimit().isValueInRange(level.getBrightness(LightLayer.BLOCK, blockpos)) || !spawndata$customspawnrules.skyLightLimit().isValueInRange(level.getBrightness(LightLayer.SKY, blockpos))) {
+                                continue;
+                            }
+                        } else if (!SpawnPlacements.checkSpawnRules(optional.get(), level, MobSpawnType.SPAWNER, blockpos, level.getRandom())) {
+                            continue;
+                        }
+
                         Entity entity = EntityType.loadEntityRecursive(compoundtag, level, (p_151310_) -> {
                             p_151310_.moveTo(d0, d1, d2, p_151310_.getYRot(), p_151310_.getXRot());
                             return p_151310_;
@@ -96,11 +111,11 @@ public abstract class AbstractSpawnerMixin {
 
                         entity.moveTo(entity.getX(), entity.getY(), entity.getZ(), level.random.nextFloat() * 360.0F, 0.0F);
                         if (entity instanceof Mob mob) {
-                            if (!ForgeEventFactory.canEntitySpawnSpawner(mob, level, (float) entity.getX(), (float) entity.getY(), (float) entity.getZ(), (BaseSpawner) (Object) this)) {
+                            if (this.nextSpawnData.getCustomSpawnRules().isEmpty() && !ForgeEventFactory.canEntitySpawnSpawner(mob, level, (float) entity.getX(), (float) entity.getY(), (float) entity.getZ(), (BaseSpawner) (Object) this)) {
                                 continue;
                             }
 
-                            if (this.nextSpawnData.getTag().size() == 1 && this.nextSpawnData.getTag().contains("id", 8)) {
+                            if (this.nextSpawnData.getEntityToSpawn().size() == 1 && this.nextSpawnData.getEntityToSpawn().contains("id", 8)) {
                                 if (!ForgeEventFactory.doSpecialSpawn(mob, level, (float) entity.getX(), (float) entity.getY(), (float) entity.getZ(), (BaseSpawner) (Object) this, MobSpawnType.SPAWNER))
                                     ((Mob) entity).finalizeSpawn(level, level.getCurrentDifficultyAt(entity.blockPosition()), MobSpawnType.SPAWNER, null, null);
                             }

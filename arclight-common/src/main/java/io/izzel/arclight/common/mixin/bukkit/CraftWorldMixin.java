@@ -23,6 +23,6 @@ public abstract class CraftWorldMixin {
      */
     @Overwrite
     public File getWorldFolder() {
-        return ((ServerWorldBridge) this.world).bridge$getConvertable().getDimensionPath(this.world.dimension());
+        return ((ServerWorldBridge) this.world).bridge$getConvertable().getDimensionPath(this.world.dimension()).toFile();
     }
 }

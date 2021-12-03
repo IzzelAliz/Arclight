@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.storage;
 import io.izzel.arclight.common.bridge.core.world.storage.DerivedWorldInfoBridge;
 import io.izzel.arclight.i18n.ArclightConfig;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.storage.DerivedLevelData;
 import net.minecraft.world.level.storage.ServerLevelData;
 import org.spongepowered.asm.mixin.Final;
@@ -16,7 +16,7 @@ public class DerivedWorldInfoMixin implements DerivedWorldInfoBridge {
 
     @Shadow @Final private ServerLevelData wrapped;
 
-    private ResourceKey<DimensionType> typeKey;
+    private ResourceKey<LevelStem> typeKey;
 
     /**
      * @author IzzelAliz
@@ -24,15 +24,15 @@ public class DerivedWorldInfoMixin implements DerivedWorldInfoBridge {
      */
     @Overwrite
     public String getLevelName() {
-        if (typeKey == null || typeKey == DimensionType.OVERWORLD_LOCATION) {
+        if (typeKey == null || typeKey == LevelStem.OVERWORLD) {
             return this.wrapped.getLevelName();
         } else {
             if (ArclightConfig.spec().getCompat().isSymlinkWorld()) {
                 String worldName = this.wrapped.getLevelName() + "_";
                 String suffix;
-                if (typeKey == DimensionType.NETHER_LOCATION) {
+                if (typeKey == LevelStem.NETHER) {
                     suffix = "nether";
-                } else if (typeKey == DimensionType.END_LOCATION) {
+                } else if (typeKey == LevelStem.END) {
                     suffix = "the_end";
                 } else {
                     suffix = (typeKey.location().getNamespace() + "_" + typeKey.location().getPath()).replace('/', '_');
@@ -41,9 +41,9 @@ public class DerivedWorldInfoMixin implements DerivedWorldInfoBridge {
             } else {
                 String worldName = this.wrapped.getLevelName() + "/";
                 String suffix;
-                if (typeKey == DimensionType.END_LOCATION) {
+                if (typeKey == LevelStem.END) {
                     suffix = "DIM1";
-                } else if (typeKey == DimensionType.NETHER_LOCATION) {
+                } else if (typeKey == LevelStem.NETHER) {
                     suffix = "DIM-1";
                 } else {
                     suffix = typeKey.location().getNamespace() + "/" + typeKey.location().getPath();
@@ -59,7 +59,7 @@ public class DerivedWorldInfoMixin implements DerivedWorldInfoBridge {
     }
 
     @Override
-    public void bridge$setDimType(ResourceKey<DimensionType> typeKey) {
+    public void bridge$setDimType(ResourceKey<LevelStem> typeKey) {
         this.typeKey = typeKey;
     }
 }

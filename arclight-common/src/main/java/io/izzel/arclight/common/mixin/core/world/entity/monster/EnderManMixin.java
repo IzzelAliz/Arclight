@@ -44,8 +44,8 @@ public abstract class EnderManMixin extends PathfinderMobMixin implements Enderm
     }
 
     @Override
-    public boolean setGoalTarget(LivingEntity livingEntity, EntityTargetEvent.TargetReason reason, boolean fireEvent) {
-        if (!super.setGoalTarget(livingEntity, reason, fireEvent)) {
+    public boolean setTarget(LivingEntity livingEntity, EntityTargetEvent.TargetReason reason, boolean fireEvent) {
+        if (!super.setTarget(livingEntity, reason, fireEvent)) {
             return false;
         }
         bridge$updateTarget(getTarget());

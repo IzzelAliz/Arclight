@@ -42,6 +42,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.portal.PortalInfo;
@@ -189,7 +190,6 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow(remap = false) public abstract void revive();
     @Shadow public abstract boolean isPushable();
     @Shadow protected abstract void removeAfterChangingDimensions();
-    @Shadow protected abstract Optional<BlockUtil.FoundRectangle> getExitPortal(ServerLevel p_241830_1_, BlockPos p_241830_2_, boolean p_241830_3_);
     @Shadow protected BlockPos portalEntrancePos;
     @Shadow protected abstract Vec3 getRelativePortalPosition(Direction.Axis axis, BlockUtil.FoundRectangle result);
     @Shadow public abstract EntityDimensions getDimensions(Pose poseIn);
@@ -387,7 +387,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         }
     }
 
-    public void setOnFire(int seconds, boolean callEvent) {
+    public void setSecondsOnFire(int seconds, boolean callEvent) {
         if (callEvent) {
             EntityCombustEvent event = new EntityCombustEvent(this.getBukkitEntity(), seconds);
             Bukkit.getPluginManager().callEvent(event);
@@ -401,7 +401,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
 
     @Override
     public void bridge$setOnFire(int tick, boolean callEvent) {
-        setOnFire(tick, callEvent);
+        setSecondsOnFire(tick, callEvent);
     }
 
     @ModifyArg(method = "move", index = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;stepOn(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/entity/Entity;)V"))
@@ -835,7 +835,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                         entity.moveTo(portalinfo.pos.x, portalinfo.pos.y, portalinfo.pos.z, portalinfo.yRot, entity.getXRot());
                         entity.setDeltaMovement(portalinfo.speed);
                         world.addDuringTeleport(entity);
-                        if (((WorldBridge) world).bridge$getTypeKey() == DimensionType.END_LOCATION) {
+                        if (((WorldBridge) world).bridge$getTypeKey() == LevelStem.END) {
                             ArclightCaptures.captureEndPortalEntity((Entity) (Object) this, spawnPortal);
                             ServerLevel.makeObsidianPlatform(world);
                         }
@@ -874,20 +874,16 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         if (world == null) {
             return null;
         }
-        boolean flag = ((WorldBridge) this.level).bridge$getTypeKey() == DimensionType.END_LOCATION && ((WorldBridge) world).bridge$getTypeKey() == DimensionType.OVERWORLD_LOCATION;
-        boolean flag1 = ((WorldBridge) world).bridge$getTypeKey() == DimensionType.END_LOCATION;
+        boolean flag = ((WorldBridge) this.level).bridge$getTypeKey() == LevelStem.END && ((WorldBridge) world).bridge$getTypeKey() == LevelStem.OVERWORLD;
+        boolean flag1 = ((WorldBridge) world).bridge$getTypeKey() == LevelStem.END;
         if (!flag && !flag1) {
-            boolean flag2 = ((WorldBridge) world).bridge$getTypeKey() == DimensionType.NETHER_LOCATION;
+            boolean flag2 = ((WorldBridge) world).bridge$getTypeKey() == LevelStem.NETHER;
             if (this.level.dimension() != Level.NETHER && !flag2) {
                 return null;
             } else {
                 WorldBorder worldborder = world.getWorldBorder();
-                double d0 = Math.max(-2.9999872E7D, worldborder.getMinX() + 16.0D);
-                double d1 = Math.max(-2.9999872E7D, worldborder.getMinZ() + 16.0D);
-                double d2 = Math.min(2.9999872E7D, worldborder.getMaxX() - 16.0D);
-                double d3 = Math.min(2.9999872E7D, worldborder.getMaxZ() - 16.0D);
-                double d4 = DimensionType.getTeleportationScale(this.level.dimensionType(), world.dimensionType());
-                BlockPos blockpos1 = new BlockPos(Mth.clamp(this.getX() * d4, d0, d2), this.getY(), Mth.clamp(this.getZ() * d4, d1, d3));
+                double d0 = DimensionType.getTeleportationScale(this.level.dimensionType(), world.dimensionType());
+                BlockPos blockpos1 = worldborder.clampToBounds(this.getX() * d0, this.getY(), this.getZ() * d0);
 
                 CraftPortalEvent event = this.callPortalEvent((Entity) (Object) this, world, blockpos1, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL, flag2 ? 16 : 128, 16);
                 if (event == null) {
@@ -896,7 +892,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                 ServerLevel worldFinal = world = ((CraftWorld) event.getTo().getWorld()).getHandle();
                 blockpos1 = new BlockPos(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
 
-                return this.findOrCreatePortal(world, blockpos1, flag2, event.getSearchRadius(), event.getCanCreatePortal(), event.getCreationRadius()).map((result) -> {
+                return this.getExitPortal(world, blockpos1, flag2, worldborder, event.getSearchRadius(), event.getCanCreatePortal(), event.getCreationRadius()).map((result) -> {
                     BlockState blockstate = this.level.getBlockState(this.portalEntrancePos);
                     Direction.Axis direction$axis;
                     Vec3 vector3d;
@@ -948,11 +944,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         return new CraftPortalEvent(event);
     }
 
-    protected Optional<BlockUtil.FoundRectangle> a(ServerLevel serverWorld, BlockPos pos, boolean flag, int searchRadius, boolean canCreatePortal, int createRadius) {
-        return findOrCreatePortal(serverWorld, pos, flag, searchRadius, canCreatePortal, createRadius);
-    }
-
-    protected Optional<BlockUtil.FoundRectangle> findOrCreatePortal(ServerLevel serverWorld, BlockPos pos, boolean flag, int searchRadius, boolean canCreatePortal, int createRadius) {
-        return ((TeleporterBridge) serverWorld.getPortalForcer()).bridge$findPortal(pos, searchRadius);
+    protected Optional<BlockUtil.FoundRectangle> getExitPortal(ServerLevel serverWorld, BlockPos pos, boolean flag, WorldBorder worldborder, int searchRadius, boolean canCreatePortal, int createRadius) {
+        return ((TeleporterBridge) serverWorld.getPortalForcer()).bridge$findPortal(pos, worldborder, searchRadius);
     }
 }

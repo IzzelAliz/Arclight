@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.level.chunk.storage;
 
 import io.izzel.arclight.common.bridge.core.world.chunk.storage.RegionFileCacheBridge;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.StreamTagVisitor;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.storage.RegionFile;
 import net.minecraft.world.level.chunk.storage.RegionFileStorage;
@@ -51,6 +52,18 @@ public abstract class RegionFileCacheMixin implements RegionFileCacheBridge {
     @Inject(method = "write", at = @At("HEAD"))
     private void arclight$write(ChunkPos pos, CompoundTag compound, CallbackInfo ci) {
         this.arclight$existOnly = false;
+    }
+
+    @Inject(method = "scanChunk", at = @At("HEAD"))
+    private void arclight$scan(CallbackInfo ci) {
+        this.arclight$existOnly = true;
+    }
+
+    @Inject(method = "scanChunk", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/storage/RegionFile;getChunkDataInputStream(Lnet/minecraft/world/level/ChunkPos;)Ljava/io/DataInputStream;"))
+    private void arclight$retIfNotFound(ChunkPos p_196957_, StreamTagVisitor p_196958_, CallbackInfo ci, RegionFile rf) {
+        if (rf == null) {
+            ci.cancel();
+        }
     }
 
     public boolean chunkExists(ChunkPos pos) throws IOException {

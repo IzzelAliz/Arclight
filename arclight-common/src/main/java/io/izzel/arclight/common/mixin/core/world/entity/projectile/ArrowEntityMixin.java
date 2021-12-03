@@ -13,8 +13,6 @@ import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.alchemy.Potions;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Implements;
-import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,7 +22,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Set;
 
 @Mixin(Arrow.class)
-@Implements(@Interface(iface = ArrowEntityBridge.Hack.class, prefix = "hack$"))
 public abstract class ArrowEntityMixin extends AbstractArrowMixin implements ArrowEntityBridge {
 
     // @formatter:off
@@ -47,11 +44,11 @@ public abstract class ArrowEntityMixin extends AbstractArrowMixin implements Arr
         refreshEffects();
     }
 
-    public String hack$getType() {
+    public String getPotionType() {
         return Registry.POTION.getKey(this.potion).toString();
     }
 
-    public void hack$setType(final String string) {
+    public void setPotionType(final String string) {
         this.potion = Registry.POTION.get(new ResourceLocation(string));
         this.getEntityData().set(ID_EFFECT_COLOR, PotionUtils.getColor(PotionUtils.getAllEffects(this.potion, this.effects)));
     }

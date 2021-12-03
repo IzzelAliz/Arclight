@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.Iterator;
 
 @Mixin(DistanceManager.class)
-public abstract class TicketManagerMixin implements TicketManagerBridge {
+public abstract class DistanceManagerMixin implements TicketManagerBridge {
 
     // @formatter:off
     @Shadow private long ticketTickCounter;

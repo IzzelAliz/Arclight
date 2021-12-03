@@ -1081,16 +1081,16 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         return CraftEventFactory.callArrowBodyCountChangeEvent((LivingEntity) (Object) this, this.getArrowCount(), newCount, reset).isCancelled();
     }
 
-    public void setSlot(EquipmentSlot slotIn, ItemStack stack, boolean silent) {
+    public void setItemSlot(EquipmentSlot slotIn, ItemStack stack, boolean silent) {
         this.setItemSlot(slotIn, stack);
     }
 
     @Override
     public void bridge$setSlot(EquipmentSlot slotIn, ItemStack stack, boolean silent) {
-        this.setSlot(slotIn, stack, silent);
+        this.setItemSlot(slotIn, stack, silent);
     }
 
-    protected void playEquipSound(ItemStack stack, boolean silent) {
+    protected void equipEventAndSound(ItemStack stack, boolean silent) {
         if (!silent) {
             this.equipEventAndSound(stack);
         }
@@ -1098,6 +1098,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
 
     @Override
     public void bridge$playEquipSound(ItemStack stack, boolean silent) {
-        this.playEquipSound(stack, silent);
+        this.equipEventAndSound(stack, silent);
     }
 }

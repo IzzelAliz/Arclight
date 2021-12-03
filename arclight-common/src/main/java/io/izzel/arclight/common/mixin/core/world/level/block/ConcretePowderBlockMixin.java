@@ -16,7 +16,6 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(ConcretePowderBlock.class)
@@ -32,7 +31,7 @@ public abstract class ConcretePowderBlockMixin extends FallingBlockMixin {
     }
 
     @Redirect(method = "getStateForPlacement", at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/block/ConcretePowderBlock;concrete:Lnet/minecraft/world/level/block/state/BlockState;"))
-    public BlockState arclight$blockForm(@Coerce ConcretePowderBlockMixin block, BlockPlaceContext context) {
+    public BlockState arclight$blockForm(ConcretePowderBlock instance, BlockPlaceContext context) {
         Level world = context.getLevel();
         BlockPos blockPos = context.getClickedPos();
         CraftBlockState blockState = CraftBlockStates.getBlockState(world, blockPos);
@@ -46,7 +45,7 @@ public abstract class ConcretePowderBlockMixin extends FallingBlockMixin {
     }
 
     @Redirect(method = "updateShape", at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/block/ConcretePowderBlock;concrete:Lnet/minecraft/world/level/block/state/BlockState;"))
-    public BlockState arclight$blockForm(@Coerce ConcretePowderBlockMixin block, BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor worldIn, BlockPos currentPos, BlockPos facingPos) {
+    public BlockState arclight$blockForm(ConcretePowderBlock instance, BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor worldIn, BlockPos currentPos, BlockPos facingPos) {
         if (!(worldIn instanceof Level)) {
             return this.concrete;
         }

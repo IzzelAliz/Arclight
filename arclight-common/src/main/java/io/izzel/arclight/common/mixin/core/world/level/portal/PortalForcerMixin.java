@@ -9,6 +9,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.portal.PortalForcer;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftWorld;
@@ -34,7 +35,7 @@ public abstract class PortalForcerMixin implements TeleporterBridge {
     // @formatter:off
     @Shadow public abstract Optional<BlockUtil.FoundRectangle> createPortal(BlockPos pos, Direction.Axis axis);
     @Shadow @Final protected ServerLevel level;
-    @Shadow public abstract Optional<BlockUtil.FoundRectangle> findPortalAround(BlockPos pos, boolean isNether);
+    @Shadow public abstract Optional<BlockUtil.FoundRectangle> findPortalAround(BlockPos p_192986_, boolean p_192987_, WorldBorder p_192988_);
     // @formatter:on
 
     @ModifyVariable(method = "findPortalAround", index = 4, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ai/village/poi/PoiManager;ensureLoadedAndValid(Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/core/BlockPos;I)V"))
@@ -44,18 +45,18 @@ public abstract class PortalForcerMixin implements TeleporterBridge {
 
     private transient int arclight$searchRadius = -1;
 
-    public Optional<BlockUtil.FoundRectangle> findPortal(BlockPos pos, int searchRadius) {
+    public Optional<BlockUtil.FoundRectangle> findPortalAround(BlockPos pos, WorldBorder worldBorder, int searchRadius) {
         this.arclight$searchRadius = searchRadius;
         try {
-            return this.findPortalAround(pos, false);
+            return this.findPortalAround(pos, false, worldBorder);
         } finally {
             this.arclight$searchRadius = -1;
         }
     }
 
     @Override
-    public Optional<BlockUtil.FoundRectangle> bridge$findPortal(BlockPos pos, int searchRadius) {
-        return findPortal(pos, searchRadius);
+    public Optional<BlockUtil.FoundRectangle> bridge$findPortal(BlockPos pos, WorldBorder worldborder, int searchRadius) {
+        return findPortalAround(pos, worldborder, searchRadius);
     }
 
     @ModifyArg(method = "createPortal", index = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/core/BlockPos;spiralAround(Lnet/minecraft/core/BlockPos;ILnet/minecraft/core/Direction;Lnet/minecraft/core/Direction;)Ljava/lang/Iterable;"))

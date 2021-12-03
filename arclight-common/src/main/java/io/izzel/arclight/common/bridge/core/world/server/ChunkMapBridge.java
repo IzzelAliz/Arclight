@@ -13,8 +13,6 @@ public interface ChunkMapBridge {
 
     Iterable<ChunkHolder> bridge$getLoadedChunksIterable();
 
-    boolean bridge$isOutsideSpawningRadius(ChunkPos chunkPosIn);
-
     void bridge$tickEntityTracker();
 
     ArclightCallbackExecutor bridge$getCallbackExecutor();

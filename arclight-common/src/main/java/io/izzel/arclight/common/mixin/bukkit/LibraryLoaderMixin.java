@@ -12,7 +12,7 @@ import java.net.URLClassLoader;
 public class LibraryLoaderMixin {
 
     @Redirect(method = "createLoader", at = @At(value = "NEW", target = "java/net/URLClassLoader"))
-    private URLClassLoader arclight$useRemapped(URL[] urls) {
-        return new RemappingURLClassLoader(urls);
+    private URLClassLoader arclight$useRemapped(URL[] urls, ClassLoader loader) {
+        return new RemappingURLClassLoader(urls, loader);
     }
 }

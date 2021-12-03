@@ -46,7 +46,7 @@ public abstract class EntityTypeMixin<T extends Entity> implements EntityTypeBri
         }
     }
 
-    public T spawnCreature(ServerLevel worldIn, @Nullable CompoundTag compound, @Nullable Component customName, @Nullable Player playerIn, BlockPos pos, MobSpawnType reason, boolean p_220342_7_, boolean p_220342_8_, CreatureSpawnEvent.SpawnReason spawnReason) {
+    public T spawn(ServerLevel worldIn, @Nullable CompoundTag compound, @Nullable Component customName, @Nullable Player playerIn, BlockPos pos, MobSpawnType reason, boolean p_220342_7_, boolean p_220342_8_, CreatureSpawnEvent.SpawnReason spawnReason) {
         T t = this.create(worldIn, compound, customName, playerIn, pos, reason, p_220342_7_, p_220342_8_);
         if (t != null) {
             if (t instanceof net.minecraft.world.entity.Mob && net.minecraftforge.event.ForgeEventFactory.doSpecialSpawn((net.minecraft.world.entity.Mob) t, worldIn, pos.getX(), pos.getY(), pos.getZ(), null, reason))
@@ -60,6 +60,6 @@ public abstract class EntityTypeMixin<T extends Entity> implements EntityTypeBri
 
     @Override
     public T bridge$spawnCreature(ServerLevel worldIn, @Nullable CompoundTag compound, @Nullable Component customName, @Nullable Player playerIn, BlockPos pos, MobSpawnType reason, boolean flag, boolean flag1, CreatureSpawnEvent.SpawnReason spawnReason) {
-        return spawnCreature(worldIn, compound, customName, playerIn, pos, reason, flag, flag1, spawnReason);
+        return spawn(worldIn, compound, customName, playerIn, pos, reason, flag, flag1, spawnReason);
     }
 }

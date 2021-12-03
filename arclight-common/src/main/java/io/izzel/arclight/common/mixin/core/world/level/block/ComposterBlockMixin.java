@@ -35,7 +35,7 @@ public abstract class ComposterBlockMixin {
     @Shadow public static BlockState extractProduce(BlockState state, Level world, BlockPos pos) { return null; }
     // @formatter:on
 
-    @SuppressWarnings("UnresolvedMixinReference")
+    @SuppressWarnings({"InvalidMemberReference", "UnresolvedMixinReference", "MixinAnnotationTarget", "InvalidInjectorMethodSignature"})
     @Redirect(method = "getContainer", at = @At(value = "NEW", target = "()Lnet/minecraft/world/level/block/ComposterBlock$EmptyContainer;"))
     public ComposterBlock.EmptyContainer arclight$newEmpty(BlockState blockState, LevelAccessor world, BlockPos blockPos) {
         ComposterBlock.EmptyContainer inventory = new ComposterBlock.EmptyContainer();
@@ -52,13 +52,13 @@ public abstract class ComposterBlockMixin {
         int i = state.getValue(LEVEL);
         if (i < 7 && COMPOSTABLES.containsKey(stack.getItem())) {
             double rand = world.random.nextDouble();
-            BlockState state1 = attemptCompost(state, DummyGeneratorAccess.INSTANCE, pos, stack, rand);
+            BlockState state1 = addItem(state, DummyGeneratorAccess.INSTANCE, pos, stack, rand);
 
             if (state == state1 || CraftEventFactory.callEntityChangeBlockEvent(ArclightCaptures.getEntityChangeBlock(), pos, state1).isCancelled()) {
                 return state;
             }
 
-            state1 = attemptCompost(state, world, pos, stack, rand);
+            state1 = addItem(state, world, pos, stack, rand);
             stack.shrink(1);
             return state1;
         } else {
@@ -77,16 +77,12 @@ public abstract class ComposterBlockMixin {
         }
     }
 
-    private static BlockState d(BlockState state, Level world, BlockPos pos, Entity entity) {
+    private static BlockState extractProduce(BlockState state, Level world, BlockPos pos, Entity entity) {
         ArclightCaptures.captureEntityChangeBlock(entity);
         return extractProduce(state, world, pos);
     }
 
-    private static BlockState b(BlockState state, LevelAccessor world, BlockPos pos, ItemStack stack, double rand) {
-        return attemptCompost(state, world, pos, stack, rand);
-    }
-
-    private static BlockState attemptCompost(BlockState state, LevelAccessor world, BlockPos pos, ItemStack stack, double rand) {
+    private static BlockState addItem(BlockState state, LevelAccessor world, BlockPos pos, ItemStack stack, double rand) {
         int i = state.getValue(LEVEL);
         float f = COMPOSTABLES.getFloat(stack.getItem());
         if ((i != 0 || !(f > 0.0F)) && !(rand < (double) f)) {
@@ -96,7 +92,7 @@ public abstract class ComposterBlockMixin {
             BlockState blockstate = state.setValue(LEVEL, j);
             world.setBlock(pos, blockstate, 3);
             if (j == 7) {
-                world.getBlockTicks().scheduleTick(pos, state.getBlock(), 20);
+                world.scheduleTick(pos, state.getBlock(), 20);
             }
             return blockstate;
         }

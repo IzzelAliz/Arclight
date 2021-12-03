@@ -86,7 +86,7 @@ public abstract class TripWireBlockMixin extends BlockMixin {
         }
 
         if (flag1) {
-            worldIn.getBlockTicks().scheduleTick(new BlockPos(pos), (Block) (Object) this, 10);
+            worldIn.scheduleTick(new BlockPos(pos), (Block) (Object) this, 10);
         }
 
     }
