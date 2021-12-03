@@ -5,6 +5,7 @@ import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @ConfigSerializable
 public class CompatSpec {
@@ -18,6 +19,9 @@ public class CompatSpec {
     // todo Enable this by default in 1.17
     @Setting("symlink-world")
     private boolean symlinkWorld;
+
+    @Setting("extra-logic-worlds")
+    private Set<String> extraLogicWorlds;
 
     public Map<String, MaterialPropertySpec> getMaterials() {
         return materials;
@@ -37,5 +41,9 @@ public class CompatSpec {
 
     public boolean isSymlinkWorld() {
         return symlinkWorld;
+    }
+
+    public Set<String> getExtraLogicWorlds() {
+        return extraLogicWorlds;
     }
 }

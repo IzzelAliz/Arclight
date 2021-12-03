@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.item;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
+import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionResult;
@@ -30,6 +31,7 @@ public class HangingEntityItemMixin {
     @Inject(method = "useOn", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/HangingEntity;playPlacementSound()V"))
     public void arclight$hangingPlace(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir, BlockPos blockPos, Direction direction, BlockPos blockPos1, net.minecraft.world.entity.player.Player playerEntity, ItemStack itemStack, Level world, HangingEntity hangingEntity) {
+        if (!DistValidate.isValid(context)) return;
         Player who = (context.getPlayer() == null) ? null : (Player) ((PlayerEntityBridge) context.getPlayer()).bridge$getBukkitEntity();
         Block blockClicked = CraftBlock.at(world, blockPos);
         BlockFace blockFace = CraftBlock.notchToBlockFace(direction);

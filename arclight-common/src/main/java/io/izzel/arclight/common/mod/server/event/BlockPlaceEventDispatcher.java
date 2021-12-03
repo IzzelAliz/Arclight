@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mod.server.event;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.mod.util.ArclightBlockSnapshot;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
@@ -29,7 +30,7 @@ public class BlockPlaceEventDispatcher {
         if (entity instanceof ServerPlayerEntityBridge playerEntity) {
             Player player = playerEntity.bridge$getBukkitEntity();
             Direction direction = ArclightCaptures.getPlaceEventDirection();
-            if (direction != null) {
+            if (direction != null && DistValidate.isValid(event.getWorld())) {
                 InteractionHand hand = ArclightCaptures.getPlaceEventHand(InteractionHand.MAIN_HAND);
                 CraftBlock placedBlock = ArclightBlockSnapshot.fromBlockSnapshot(event.getBlockSnapshot(), true);
                 CraftBlock againstBlock = CraftBlock.at(event.getWorld(), event.getPos().relative(direction.getOpposite()));
@@ -64,7 +65,7 @@ public class BlockPlaceEventDispatcher {
         if (entity instanceof ServerPlayerEntityBridge playerEntity) {
             Player player = playerEntity.bridge$getBukkitEntity();
             Direction direction = ArclightCaptures.getPlaceEventDirection();
-            if (direction != null) {
+            if (direction != null && DistValidate.isValid(event.getWorld())) {
                 InteractionHand hand = ArclightCaptures.getPlaceEventHand(InteractionHand.MAIN_HAND);
                 List<BlockState> placedBlocks = new ArrayList<>(event.getReplacedBlockSnapshots().size());
                 for (BlockSnapshot snapshot : event.getReplacedBlockSnapshots()) {

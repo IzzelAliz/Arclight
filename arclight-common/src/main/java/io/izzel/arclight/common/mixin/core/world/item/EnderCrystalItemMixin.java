@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
+import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.item.EndCrystalItem;
@@ -24,7 +25,7 @@ public class EnderCrystalItemMixin {
 
     @Inject(method = "useOn", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     public void arclight$entityPlace(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
-        if (CraftEventFactory.callEntityPlaceEvent(context, arclight$enderCrystalEntity).isCancelled()) {
+        if (DistValidate.isValid(context) && CraftEventFactory.callEntityPlaceEvent(context, arclight$enderCrystalEntity).isCancelled()) {
             cir.setReturnValue(InteractionResult.FAIL);
         }
         arclight$enderCrystalEntity = null;

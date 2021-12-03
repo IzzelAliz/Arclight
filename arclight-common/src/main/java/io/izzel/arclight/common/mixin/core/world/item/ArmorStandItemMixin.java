@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
+import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.item.ArmorStandItem;
@@ -24,7 +25,7 @@ public class ArmorStandItemMixin {
 
     @Inject(method = "useOn", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V"))
     public void arclight$entityPlace(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
-        if (CraftEventFactory.callEntityPlaceEvent(context, arclight$entity).isCancelled()) {
+        if (DistValidate.isValid(context) && CraftEventFactory.callEntityPlaceEvent(context, arclight$entity).isCancelled()) {
             cir.setReturnValue(InteractionResult.FAIL);
         }
         arclight$entity = null;

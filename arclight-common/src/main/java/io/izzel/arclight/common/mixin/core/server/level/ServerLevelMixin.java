@@ -16,6 +16,7 @@ import io.izzel.arclight.common.mixin.core.world.level.LevelMixin;
 import io.izzel.arclight.common.mod.server.world.WorldSymlink;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.DelegateWorldInfo;
+import io.izzel.arclight.common.mod.util.DistValidate;
 import io.izzel.arclight.i18n.ArclightConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
@@ -36,6 +37,7 @@ import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.ExplosionDamageCalculator;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -213,9 +215,11 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
             cause = arclight$cause;
             arclight$cause = null;
         }
-        LightningStrikeEvent lightning = CraftEventFactory.callLightningStrikeEvent((LightningStrike) ((EntityBridge) entity).bridge$getBukkitEntity(), cause);
-        if (lightning.isCancelled()) {
-            return false;
+        if (DistValidate.isValid((LevelAccessor) this)) {
+            LightningStrikeEvent lightning = CraftEventFactory.callLightningStrikeEvent((LightningStrike) ((EntityBridge) entity).bridge$getBukkitEntity(), cause);
+            if (lightning.isCancelled()) {
+                return false;
+            }
         }
         return this.addFreshEntity(entity);
     }
@@ -227,7 +231,9 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
 
     @Inject(method = "save", at = @At(value = "JUMP", ordinal = 0, opcode = Opcodes.IFNULL))
     private void arclight$worldSaveEvent(ProgressListener progress, boolean flush, boolean skipSave, CallbackInfo ci) {
-        Bukkit.getPluginManager().callEvent(new WorldSaveEvent(bridge$getWorld()));
+        if (DistValidate.isValid((LevelAccessor) this)) {
+            Bukkit.getPluginManager().callEvent(new WorldSaveEvent(bridge$getWorld()));
+        }
     }
 
     @Inject(method = "save", at = @At("RETURN"))
@@ -287,7 +293,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     private void arclight$addEntityEvent(Entity entityIn, CallbackInfoReturnable<Boolean> cir) {
         CreatureSpawnEvent.SpawnReason reason = arclight$reason == null ? CreatureSpawnEvent.SpawnReason.DEFAULT : arclight$reason;
         arclight$reason = null;
-        if (!CraftEventFactory.doEntityAddEventCalling((ServerLevel) (Object) this, entityIn, reason)) {
+        if (DistValidate.isValid((LevelAccessor) this) && !CraftEventFactory.doEntityAddEventCalling((ServerLevel) (Object) this, entityIn, reason)) {
             cir.setReturnValue(false);
         }
     }
@@ -429,6 +435,11 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         BlockPos.betweenClosed(i - 2, j, k - 2, i + 2, j, k + 2).forEach((pos) -> {
             blockList.setBlock(pos, Blocks.OBSIDIAN.defaultBlockState(), 3);
         });
+        if (!DistValidate.isValid(world)) {
+            blockList.updateList();
+            ArclightCaptures.getEndPortalEntity();
+            return;
+        }
         CraftWorld bworld = ((WorldBridge) world).bridge$getWorld();
         boolean spawnPortal = ArclightCaptures.getEndPortalSpawn();
         Entity entity = ArclightCaptures.getEndPortalEntity();

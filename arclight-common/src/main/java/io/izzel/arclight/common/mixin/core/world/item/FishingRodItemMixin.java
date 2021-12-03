@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.item;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
@@ -51,12 +52,14 @@ public class FishingRodItemMixin extends Item {
                 int j = EnchantmentHelper.getFishingLuckBonus(itemstack);
 
                 FishingHook hook = new FishingHook(playerIn, worldIn, j, k);
-                PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity(), null, (FishHook) ((EntityBridge) hook).bridge$getBukkitEntity(), PlayerFishEvent.State.FISHING);
-                Bukkit.getPluginManager().callEvent(playerFishEvent);
+                if (DistValidate.isValid(worldIn)) {
+                    PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity(), null, (FishHook) ((EntityBridge) hook).bridge$getBukkitEntity(), PlayerFishEvent.State.FISHING);
+                    Bukkit.getPluginManager().callEvent(playerFishEvent);
 
-                if (playerFishEvent.isCancelled()) {
-                    playerIn.fishing = null;
-                    return new InteractionResultHolder<>(InteractionResult.PASS, itemstack);
+                    if (playerFishEvent.isCancelled()) {
+                        playerIn.fishing = null;
+                        return new InteractionResultHolder<>(InteractionResult.PASS, itemstack);
+                    }
                 }
                 worldIn.playSound(null, playerIn.getX(), playerIn.getY(), playerIn.getZ(), SoundEvents.FISHING_BOBBER_THROW, SoundSource.NEUTRAL, 0.5F, 0.4F / (worldIn.getRandom().nextFloat() * 0.4F + 0.8F));
                 worldIn.addFreshEntity(new FishingHook(playerIn, worldIn, j, k));

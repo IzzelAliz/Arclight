@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.item;
 
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.projectile.TridentEntityBridge;
+import io.izzel.arclight.common.mod.util.DistValidate;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -47,6 +48,7 @@ public class TridentItemMixin {
 
     @Inject(method = "releaseUsing", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/entity/player/Player;getYRot()F"))
     public void arclight$riptide(ItemStack stack, Level worldIn, LivingEntity entityLiving, int timeLeft, CallbackInfo ci) {
+        if (!DistValidate.isValid(worldIn)) return;
         PlayerRiptideEvent event = new PlayerRiptideEvent(((ServerPlayerEntityBridge) entityLiving).bridge$getBukkitEntity(), CraftItemStack.asCraftMirror(stack));
         Bukkit.getPluginManager().callEvent(event);
     }
