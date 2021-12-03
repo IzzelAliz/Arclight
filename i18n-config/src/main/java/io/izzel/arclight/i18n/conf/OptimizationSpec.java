@@ -12,11 +12,18 @@ public class OptimizationSpec {
     @Setting("disable-data-fixer")
     private boolean disableDFU;
 
+    @Setting("goal-selector-update-interval")
+    private int goalSelectorInterval;
+
     public boolean isCachePluginClass() {
         return cachePluginClass;
     }
 
     public boolean isDisableDFU() {
         return disableDFU;
+    }
+
+    public int getGoalSelectorInterval() {
+        return goalSelectorInterval;
     }
 }

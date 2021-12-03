@@ -7,6 +7,7 @@
   "mixins": [
     "ClassInheritanceMultiMapMixin",
     "EntityDataManagerMixin_Optimize",
+    "MobMixin_Optimization",
     "VoxelShapesMixin",
     "activationrange.ActivationRangeMixin",
     "activationrange.EntityMixin_ActivationRange",
