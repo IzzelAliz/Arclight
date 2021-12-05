@@ -1,26 +1,15 @@
 package io.izzel.arclight.common.mod.server;
 
-import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.inventory.container.PosContainerBridge;
-import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
-import io.izzel.tools.product.Product;
-import io.izzel.tools.product.Product2;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
-import net.minecraftforge.items.SlotItemHandler;
-import net.minecraftforge.items.wrapper.CombinedInvWrapper;
-import net.minecraftforge.items.wrapper.InvWrapper;
-import net.minecraftforge.items.wrapper.RangedWrapper;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v.inventory.CraftInventory;
@@ -31,127 +20,34 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.InventoryView;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
 
 public class ArclightContainer {
 
-    private static final long HANDLERS_OFFSET;
-    private static final long COMPOSE_OFFSET;
-
-    static {
-        try {
-            Unsafe.ensureClassInitialized(CombinedInvWrapper.class);
-            Field itemHandler = CombinedInvWrapper.class.getDeclaredField("itemHandler");
-            HANDLERS_OFFSET = Unsafe.objectFieldOffset(itemHandler);
-            Unsafe.ensureClassInitialized(RangedWrapper.class);
-            Field compose = RangedWrapper.class.getDeclaredField("compose");
-            COMPOSE_OFFSET = Unsafe.objectFieldOffset(compose);
-        } catch (NoSuchFieldException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static IInventory getActualInventoryForSlot(Slot slot) {
-        if (slot instanceof SlotItemHandler) {
-            return getInventoryFromWrapper(((SlotItemHandler) slot).getItemHandler());
-        } else {
-            return slot.inventory;
-        }
-    }
-
-    private static IInventory getInventoryFromWrapper(IItemHandler handler) {
-        if (handler instanceof CombinedInvWrapper) {
-            IItemHandlerModifiable[] handlers = ((IItemHandlerModifiable[]) Unsafe.getObject(handler, HANDLERS_OFFSET));
-            IInventory last = null;
-            for (IItemHandlerModifiable modifiable : handlers) {
-                IInventory inventory = getInventoryFromWrapper(modifiable);
-                if (inventory instanceof PlayerInventory) {
-                    return inventory;
-                } else {
-                    last = inventory;
-                }
-            }
-            return last;
-        } else if (handler instanceof InvWrapper) {
-            return ((InvWrapper) handler).getInv();
-        } else if (handler instanceof RangedWrapper) {
-            return getInventoryFromWrapper(((IItemHandler) Unsafe.getObject(handler, COMPOSE_OFFSET)));
-        } else {
-            return null;
-        }
-    }
-
+    /*
+     * Treat all modded containers not having a "bottom" inventory.
+     */
     public static InventoryView createInvView(Container container) {
-        Product2<PlayerEntity, Integer> containerInfo = getContainerInfo(container);
-        Inventory viewing = new CraftInventory(new ContainerInvWrapper(container, containerInfo._2, containerInfo._1));
-        return new CraftInventoryView(((PlayerEntityBridge) containerInfo._1).bridge$getBukkitEntity(), viewing, container);
-    }
-
-    public static void updateView(Container container, InventoryView inventoryView) {
-        Inventory topInventory = inventoryView.getTopInventory();
-        if (topInventory instanceof CraftInventory) {
-            IInventory inventory = ((CraftInventory) topInventory).getInventory();
-            if (inventory instanceof ContainerInvWrapper) {
-                Product2<PlayerEntity, Integer> containerInfo = getContainerInfo(container);
-                ((ContainerInvWrapper) inventory).setOwner(((PlayerEntityBridge) containerInfo._1).bridge$getBukkitEntity());
-                ((ContainerInvWrapper) inventory).setSize(containerInfo._2);
-            }
-        }
-    }
-
-    // todo check this
-    private static Product2<PlayerEntity, Integer> getContainerInfo(Container container) {
-        PlayerEntity candidate = ArclightCaptures.getContainerOwner();
-        int bottomBegin = -1, bottomEnd = -1;
-        for (ListIterator<Slot> iterator = container.inventorySlots.listIterator(); iterator.hasNext(); ) {
-            Slot slot = iterator.next();
-            IInventory inventory = getActualInventoryForSlot(slot);
-            if (inventory instanceof PlayerInventory) {
-                if (candidate != null && ((PlayerInventory) inventory).player != candidate) {
-                    ArclightMod.LOGGER.warn("Multiple player found in {}/{}, previous {}, new {}", container, container.getClass(), candidate, ((PlayerInventory) inventory).player);
-                }
-                candidate = ((PlayerInventory) inventory).player;
-                if (bottomBegin == -1 || bottomBegin < bottomEnd) {
-                    bottomBegin = iterator.previousIndex();
-                }
-            } else {
-                if (bottomEnd < bottomBegin) {
-                    bottomEnd = iterator.previousIndex();
-                }
-            }
-        }
-        if (candidate == null) {
-            throw new RuntimeException("candidate cannot be null, " + container + "/" + container.getClass());
-        }
-        if (bottomBegin < bottomEnd || bottomBegin == -1) {
-            bottomBegin = container.inventorySlots.size();
-        }
-        return Product.of(candidate, bottomBegin);
+        PlayerEntity containerOwner = ArclightCaptures.getContainerOwner();
+        Inventory viewing = new CraftInventory(new ContainerInvWrapper(container, containerOwner));
+        return new CraftInventoryView(((PlayerEntityBridge) containerOwner).bridge$getBukkitEntity(), viewing, container);
     }
 
     private static class ContainerInvWrapper implements IInventory, IInventoryBridge {
 
         private final Container container;
-        private int size;
         private InventoryHolder owner;
         private final List<HumanEntity> viewers = new ArrayList<>();
 
-        public ContainerInvWrapper(Container container, int size, PlayerEntity owner) {
+        public ContainerInvWrapper(Container container, PlayerEntity owner) {
             this.container = container;
-            this.size = size;
             this.owner = ((PlayerEntityBridge) owner).bridge$getBukkitEntity();
-        }
-
-        public void setSize(int size) {
-            this.size = size;
         }
 
         @Override
         public int getSizeInventory() {
-            return size;
+            return container.inventorySlots.size();
         }
 
         @Override
@@ -164,31 +60,31 @@ public class ArclightContainer {
 
         @Override
         public @NotNull ItemStack getStackInSlot(int index) {
-            if (index >= size) return ItemStack.EMPTY;
+            if (index >= getSizeInventory()) return ItemStack.EMPTY;
             return container.getSlot(index).getStack();
         }
 
         @Override
         public @NotNull ItemStack decrStackSize(int index, int count) {
-            if (index >= size) return ItemStack.EMPTY;
+            if (index >= getSizeInventory()) return ItemStack.EMPTY;
             return container.getSlot(index).decrStackSize(count);
         }
 
         @Override
         public @NotNull ItemStack removeStackFromSlot(int index) {
-            if (index >= size) return ItemStack.EMPTY;
+            if (index >= getSizeInventory()) return ItemStack.EMPTY;
             return container.getSlot(index).decrStackSize(Integer.MAX_VALUE);
         }
 
         @Override
         public void setInventorySlotContents(int index, @NotNull ItemStack stack) {
-            if (index >= size) return;
+            if (index >= getSizeInventory()) return;
             container.putStackInSlot(index, stack);
         }
 
         @Override
         public int getInventoryStackLimit() {
-            if (size <= 0) return 0;
+            if (getSizeInventory() <= 0) return 0;
             return container.getSlot(0).getSlotStackLimit();
         }
 
@@ -211,7 +107,7 @@ public class ArclightContainer {
         @Override
         public List<ItemStack> getContents() {
             container.detectAndSendChanges();
-            return container.inventoryItemStacks.subList(0, size);
+            return container.inventoryItemStacks;
         }
 
         @Override
