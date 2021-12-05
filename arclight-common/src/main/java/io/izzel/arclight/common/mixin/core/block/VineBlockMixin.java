@@ -101,7 +101,7 @@ public abstract class VineBlockMixin extends BlockMixin {
                     BlockPos blockpos1 = pos.down();
                     BlockState blockstate = worldIn.getBlockState(blockpos1);
                     boolean isAir = blockstate.isAir(worldIn, blockpos1);
-                    if (isAir || blockstate.isIn((Block) (Object) this)) {
+                    if (isAir || blockstate.matchesBlock((Block) (Object) this)) {
                         BlockState blockstate1 = isAir ? this.getDefaultState() : blockstate;
                         BlockState blockstate2 = this.func_196544_a(state, blockstate1, random);
                         if (blockstate1 != blockstate2 && this.isFacingCardinal(blockstate2)) {

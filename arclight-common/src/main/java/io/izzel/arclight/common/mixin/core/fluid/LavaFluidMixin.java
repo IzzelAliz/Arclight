@@ -6,6 +6,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.LavaFluid;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.IWorld;
@@ -26,7 +27,7 @@ public abstract class LavaFluidMixin {
 
     // @formatter:off
     @Shadow protected abstract boolean isSurroundingBlockFlammable(IWorldReader worldIn, BlockPos pos);
-    @Shadow protected abstract boolean getCanBlockBurn(IWorldReader worldIn, BlockPos pos);
+    @Shadow protected abstract boolean isFlammable(IWorldReader world, BlockPos pos, Direction face);
     // @formatter:on
 
     /**
@@ -68,7 +69,7 @@ public abstract class LavaFluidMixin {
                         return;
                     }
 
-                    if (world.isAirBlock(blockpos1.up()) && this.getCanBlockBurn(world, blockpos1)) {
+                    if (world.isAirBlock(blockpos1.up()) && this.isFlammable(world, blockpos1, Direction.UP)) {
                         BlockPos up = blockpos1.up();
                         if (world.getBlockState(up).getBlock() != Blocks.FIRE) {
                             if (CraftEventFactory.callBlockIgniteEvent(world, up, pos).isCancelled()) {

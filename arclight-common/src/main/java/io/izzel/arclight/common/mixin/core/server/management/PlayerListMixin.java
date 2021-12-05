@@ -226,7 +226,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             ProfileBanEntry gameprofilebanentry = this.bannedPlayers.getEntry(gameProfile);
             TranslationTextComponent chatmessage = new TranslationTextComponent("multiplayer.disconnect.banned.reason", gameprofilebanentry.getBanReason());
             if (gameprofilebanentry.getBanEndDate() != null) {
-                chatmessage.append(new TranslationTextComponent("multiplayer.disconnect.banned.expiration", DATE_FORMAT.format(gameprofilebanentry.getBanEndDate())));
+                chatmessage.appendSibling(new TranslationTextComponent("multiplayer.disconnect.banned.expiration", DATE_FORMAT.format(gameprofilebanentry.getBanEndDate())));
             }
             event.disallow(PlayerLoginEvent.Result.KICK_BANNED, CraftChatMessage.fromComponent(chatmessage));
         } else if (!this.canJoin(gameProfile)) {
@@ -235,7 +235,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             IPBanEntry ipbanentry = this.bannedIPs.getBanEntry(socketAddress);
             TranslationTextComponent chatmessage = new TranslationTextComponent("multiplayer.disconnect.banned_ip.reason", ipbanentry.getBanReason());
             if (ipbanentry.getBanEndDate() != null) {
-                chatmessage.append(new TranslationTextComponent("multiplayer.disconnect.banned_ip.expiration", DATE_FORMAT.format(ipbanentry.getBanEndDate())));
+                chatmessage.appendSibling(new TranslationTextComponent("multiplayer.disconnect.banned_ip.expiration", DATE_FORMAT.format(ipbanentry.getBanEndDate())));
             }
             event.disallow(PlayerLoginEvent.Result.KICK_BANNED, CraftChatMessage.fromComponent(chatmessage));
         } else if (this.players.size() >= this.maxPlayers && !this.bypassesPlayerLimit(gameProfile)) {
@@ -283,7 +283,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                 }
                 if (optional.isPresent()) {
                     BlockState iblockdata = spawnWorld.getBlockState(pos);
-                    boolean flag4 = iblockdata.isIn(Blocks.RESPAWN_ANCHOR);
+                    boolean flag4 = iblockdata.matchesBlock(Blocks.RESPAWN_ANCHOR);
                     Vector3d vec3d = optional.get();
                     float f2;
                     if (!iblockdata.isIn(BlockTags.BEDS) && !flag4) {
@@ -399,7 +399,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                 }
                 if (optional.isPresent()) {
                     BlockState iblockdata = spawnWorld.getBlockState(pos);
-                    boolean flag4 = iblockdata.isIn(Blocks.RESPAWN_ANCHOR);
+                    boolean flag4 = iblockdata.matchesBlock(Blocks.RESPAWN_ANCHOR);
                     Vector3d vec3d = optional.get();
                     float f2;
                     if (!iblockdata.isIn(BlockTags.BEDS) && !flag4) {
