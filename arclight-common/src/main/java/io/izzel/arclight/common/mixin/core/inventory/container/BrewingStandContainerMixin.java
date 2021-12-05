@@ -1,12 +1,14 @@
 package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import io.izzel.arclight.common.bridge.entity.player.PlayerEntityBridge;
+import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.BrewingStandContainer;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.util.IIntArray;
+import org.bukkit.block.BrewingStand;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryBrewer;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
 import org.spongepowered.asm.mixin.Final;
@@ -39,6 +41,9 @@ public abstract class BrewingStandContainerMixin extends ContainerMixin {
 
     @Override
     public CraftInventoryView getBukkitView() {
+        if (!(((IInventoryBridge) this.tileBrewingStand).getOwner() instanceof BrewingStand)) {
+            return (CraftInventoryView) super.getBukkitView();
+        }
         if (bukkitEntity != null) {
             return bukkitEntity;
         }

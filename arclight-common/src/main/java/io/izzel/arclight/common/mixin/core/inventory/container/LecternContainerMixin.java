@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.inventory.container;
 
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.inventory.container.LecternContainerBridge;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -9,6 +10,7 @@ import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.LecternContainer;
 import net.minecraft.util.IIntArray;
 import org.bukkit.Bukkit;
+import org.bukkit.block.Lectern;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryLectern;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
 import org.bukkit.event.player.PlayerTakeLecternBookEvent;
@@ -63,6 +65,9 @@ public abstract class LecternContainerMixin extends ContainerMixin implements Le
 
     @Override
     public CraftInventoryView getBukkitView() {
+        if (!(((IInventoryBridge) this.lecternInventory).getOwner() instanceof Lectern)) {
+            return (CraftInventoryView) super.getBukkitView();
+        }
         if (bukkitEntity != null) {
             return bukkitEntity;
         }
