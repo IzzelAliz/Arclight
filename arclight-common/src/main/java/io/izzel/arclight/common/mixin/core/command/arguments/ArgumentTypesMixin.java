@@ -46,6 +46,8 @@ public abstract class ArgumentTypesMixin {
         INTERNAL_TYPES.add(new ResourceLocation("forge", "modid"));
     }
 
+    private static boolean arclight$reentrant = false;
+
     /**
      * @author IzzelAliz
      * @reason
@@ -57,7 +59,12 @@ public abstract class ArgumentTypesMixin {
             LOGGER.error("Could not serialize {} ({}) - will not be sent to client!", type, type.getClass());
             buffer.writeResourceLocation(new ResourceLocation(""));
         } else {
-            boolean wrap = SpigotConfig.bungee && !INTERNAL_TYPES.contains(entry.id);
+            boolean wrap;
+            if (!arclight$reentrant && SpigotConfig.bungee && !INTERNAL_TYPES.contains(entry.id)) {
+                arclight$reentrant = wrap = true;
+            } else {
+                wrap = false;
+            }
             if (wrap) {
                 buffer.writeString("arclight:wrapped");
             }
@@ -67,6 +74,7 @@ public abstract class ArgumentTypesMixin {
             if (wrap) {
                 buffer.writeVarInt(buf.writerIndex());
                 buffer.writeBytes(buf);
+                arclight$reentrant = false;
             }
         }
     }
