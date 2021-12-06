@@ -566,7 +566,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                             }
 
                             this.player.move(MoverType.PLAYER, new Vec3(d7, d8, d9));
-                            this.player.setOnGround(packetplayinflying.isOnGround()); // CraftBukkit - SPIGOT-5810, SPIGOT-5835: reset by this.player.move
+                            this.player.onGround = packetplayinflying.isOnGround();
                             double d12 = d8;
 
                             d7 = d0 - this.player.getX();
@@ -634,9 +634,9 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                                 // CraftBukkit end
                                 this.player.getLevel().getChunkSource().move(this.player);
                                 this.player.doCheckFallDamage(this.player.getY() - d6, packetplayinflying.isOnGround());
-                                // this.player.setOnGround(packetplayinflying.b()); // CraftBukkit - moved up
+                                this.player.setOnGround(packetplayinflying.isOnGround());
                                 if (flag) {
-                                    this.player.fallDistance = 0.0F;
+                                    this.player.resetFallDistance();
                                 }
 
                                 this.player.checkMovementStatistics(this.player.getX() - d3, this.player.getY() - d4, this.player.getZ() - d5);

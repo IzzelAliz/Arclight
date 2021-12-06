@@ -20,8 +20,8 @@ import net.minecraft.world.level.chunk.FeatureAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.levelgen.blending.BlendingData;
-import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataContainer;
 import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataTypeRegistry;
+import org.bukkit.craftbukkit.v.persistence.DirtyCraftPersistentDataContainer;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,6 +29,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Map;
 
@@ -47,13 +48,24 @@ public abstract class ChunkAccessMixin implements BlockGetter, BiomeManager.Nois
 
 
     private static final CraftPersistentDataTypeRegistry DATA_TYPE_REGISTRY = new CraftPersistentDataTypeRegistry();
-    public CraftPersistentDataContainer persistentDataContainer = new CraftPersistentDataContainer(DATA_TYPE_REGISTRY);
+    public DirtyCraftPersistentDataContainer persistentDataContainer = new DirtyCraftPersistentDataContainer(DATA_TYPE_REGISTRY);
     public Registry<Biome> biomeRegistry;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(ChunkPos p_187621_, UpgradeData p_187622_, LevelHeightAccessor p_187623_, Registry<Biome> registry, long p_187625_, LevelChunkSection[] p_187626_, BlendingData p_187627_, CallbackInfo ci) {
         this.biomeRegistry = registry;
-        this.persistentDataContainer.setCallback(() -> this.setUnsaved(true));
+    }
+
+    @Inject(method = "setUnsaved", at = @At("HEAD"))
+    private void arclight$dirty(boolean flag, CallbackInfo ci) {
+        if (!flag) {
+            this.persistentDataContainer.dirty(false);
+        }
+    }
+
+    @Inject(method = "isUnsaved", cancellable = true, at = @At("RETURN"))
+    private void arclight$isDirty(CallbackInfoReturnable<Boolean> cir) {
+        cir.setReturnValue(cir.getReturnValueZ() || this.persistentDataContainer.dirty());
     }
 
     @Override

@@ -22,9 +22,12 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.protocol.status.ServerStatus;
 import net.minecraft.obfuscate.DontObfuscate;
+import net.minecraft.resources.RegistryReadOps;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerResources;
@@ -134,6 +137,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     }
 
     public DataPackConfig datapackconfiguration;
+    public RegistryReadOps<Tag> registryreadops;
     private boolean forceTicks;
     public CraftServer server;
     public OptionSet options;
@@ -172,6 +176,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
             e.printStackTrace();
         }
         this.datapackconfiguration = ArclightCaptures.getDatapackConfig();
+        this.registryreadops = RegistryReadOps.createAndLoad(NbtOps.INSTANCE, dataRegistries.getResourceManager(), dynamicRegistries);
         this.vanillaCommandDispatcher = dataRegistries.getCommands();
     }
 

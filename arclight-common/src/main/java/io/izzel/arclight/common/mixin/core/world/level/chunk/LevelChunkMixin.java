@@ -19,6 +19,7 @@ import net.minecraft.world.ticks.LevelChunkTicks;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftChunk;
 import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataContainer;
+import org.bukkit.craftbukkit.v.persistence.DirtyCraftPersistentDataContainer;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -53,7 +54,7 @@ public abstract class LevelChunkMixin extends ChunkAccessMixin implements ChunkB
     @Inject(method = "<init>(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ProtoChunk;Lnet/minecraft/world/level/chunk/LevelChunk$PostLoadProcessor;)V", at = @At("RETURN"))
     private void arclight$init(ServerLevel p_196850_, ProtoChunk protoChunk, @Nullable LevelChunk.PostLoadProcessor p_196852_, CallbackInfo ci) {
         this.needsDecoration = true;
-        this.persistentDataContainer = (CraftPersistentDataContainer) ((ChunkAccessBridge) protoChunk).bridge$getPersistentDataContainer();
+        this.persistentDataContainer = (DirtyCraftPersistentDataContainer) ((ChunkAccessBridge) protoChunk).bridge$getPersistentDataContainer();
     }
 
     @Inject(method = "removeBlockEntity", at = @At(value = "INVOKE_ASSIGN", remap = false, target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))

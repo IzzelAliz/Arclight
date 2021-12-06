@@ -162,6 +162,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Shadow public abstract void setLevel(ServerLevel p_143426_);
     @Shadow(remap = false) private boolean hasTabListName;
     @Shadow(remap = false) private Component tabListDisplayName;
+    @Shadow public abstract void resetFallDistance();
     // @formatter:on
 
     public String displayName;
@@ -919,7 +920,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         this.setHealth(this.getMaxHealth());
         this.stopUsingItem();
         this.remainingFireTicks = 0;
-        this.fallDistance = 0.0f;
+        this.resetFallDistance();
         this.foodData = new FoodData();
         ((FoodStatsBridge) this.foodData).bridge$setEntityHuman((ServerPlayer) (Object) this);
         this.experienceLevel = this.newLevel;

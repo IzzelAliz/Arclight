@@ -24,6 +24,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.tags.Tag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -37,6 +39,7 @@ import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -45,6 +48,8 @@ import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.portal.PortalInfo;
 import net.minecraft.world.level.portal.PortalShape;
 import net.minecraft.world.phys.AABB;
@@ -57,6 +62,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
+import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -217,6 +223,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     public org.bukkit.projectiles.ProjectileSource projectileSource; // For projectiles only
     public boolean forceExplosionKnockback; // SPIGOT-949
     public boolean persistentInvisibility = false;
+    public BlockPos lastLavaContact;
 
     private CraftEntity bukkitEntity;
 
@@ -370,11 +377,29 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         if ((Object) this instanceof ServerPlayer) this.handleNetherPortal();// CraftBukkit - // Moved up to postTick
     }
 
+    @Redirect(method = "updateFluidHeightAndDoFluidPushing", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FluidState;getFlow(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/Vec3;"))
+    private Vec3 arclight$setLava(FluidState instance, BlockGetter level, BlockPos pos, Tag<Fluid> tag) {
+        if (tag == FluidTags.LAVA) {
+            lastLavaContact = pos.immutable();
+        }
+        return instance.getFlow(level, pos);
+    }
+
+    @Redirect(method = "baseTick", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/entity/Entity;isInLava()Z"))
+    private boolean arclight$resetLava(Entity instance) {
+        var ret = instance.isInLava();
+        if (!ret) {
+            this.lastLavaContact = null;
+        }
+        return ret;
+    }
+
     @Redirect(method = "lavaHurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;setSecondsOnFire(I)V"))
     public void arclight$setOnFireFromLava$bukkitEvent(Entity entity, int seconds) {
+        var damager = (lastLavaContact == null) ? null : CraftBlock.at(level, lastLavaContact);
+        CraftEventFactory.blockDamage = damager;
         if ((Object) this instanceof LivingEntity && remainingFireTicks <= 0) {
-            org.bukkit.block.Block damager = null; // ((WorldServer) this.l).getWorld().getBlockAt(i, j, k);
-            org.bukkit.entity.Entity damagee = this.getBukkitEntity();
+            var damagee = this.getBukkitEntity();
             EntityCombustEvent combustEvent = new EntityCombustByBlockEvent(damager, damagee, 15);
             Bukkit.getPluginManager().callEvent(combustEvent);
 
@@ -385,6 +410,11 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             // This will be called every single tick the entity is in lava, so don't throw an event
             this.setSecondsOnFire(15);
         }
+    }
+
+    @Inject(method = "lavaHurt", at = @At("RETURN"))
+    private void arclight$resetBlockDamage(CallbackInfo ci) {
+        CraftEventFactory.blockDamage = null;
     }
 
     public void setSecondsOnFire(int seconds, boolean callEvent) {
