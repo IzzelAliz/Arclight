@@ -80,7 +80,8 @@ public class ForgeInstaller {
         InputStream stream = ForgeInstaller.class.getResourceAsStream("/META-INF/installer.json");
         InstallInfo installInfo = new Gson().fromJson(new InputStreamReader(stream), InstallInfo.class);
         List<Supplier<Path>> suppliers = checkMavenNoSource(installInfo.libraries);
-        Path path = Paths.get("libraries", "net", "minecraftforge", "forge", installInfo.installer.minecraft + "-" + installInfo.installer.forge, "win_args.txt");
+        var sysType = File.pathSeparatorChar == ';' ? "win" : "unix";
+        Path path = Paths.get("libraries", "net", "minecraftforge", "forge", installInfo.installer.minecraft + "-" + installInfo.installer.forge, sysType + "_args.txt");
         if (!suppliers.isEmpty() || !Files.exists(path)) {
             System.out.println("Downloading missing libraries ...");
             ExecutorService pool = Executors.newFixedThreadPool(8);
