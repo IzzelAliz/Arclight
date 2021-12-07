@@ -55,7 +55,7 @@ public class ForgeInstaller {
     private static final String[] MAVEN_REPO = {
         "https://arclight.mcxk.net/"
     };
-    private static final String INSTALLER_URL = "https://maven.minecraftforge.net/net/minecraftforge/forge/1.18-38.0.15/forge-1.18-38.0.15-installer.jar";
+    private static final String INSTALLER_URL = "https://maven.minecraftforge.net/net/minecraftforge/forge/%s-%s/forge-%s-%s-installer.jar";
     private static final String SERVER_URL = "https://arclight.mcxk.net/net/minecraft/server/minecraft_server.%s.jar";
     private static final Map<String, String> VERSION_HASH = Map.of(
         "1.18", "3cf24a8694aca6267883b17d934efacc5e44440d"
