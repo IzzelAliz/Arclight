@@ -10,6 +10,8 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InsnNode;
 
 import java.util.ServiceLoader;
 import java.util.function.Consumer;
@@ -25,6 +27,7 @@ public class ApplicationBootstrap extends AbstractBootstrap implements Consumer<
         System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
         System.setProperty("log4j.jul.LoggerAdapter", "io.izzel.arclight.boot.log.ArclightLoggerAdapter");
         System.setProperty("log4j.configurationFile", "arclight-log4j2.xml");
+        this.hackLog4j();
         ArclightLocale.info("i18n.using-language", ArclightConfig.spec().getLocale().getCurrent(), ArclightConfig.spec().getLocale().getFallback());
         try {
             int javaVersion = (int) Float.parseFloat(System.getProperty("java.class.version"));
@@ -48,6 +51,29 @@ public class ApplicationBootstrap extends AbstractBootstrap implements Consumer<
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("Fail to launch Arclight.");
+        }
+    }
+
+    private void hackLog4j() {
+        try (var in = getClass().getClassLoader().getResourceAsStream("org/apache/logging/log4j/core/lookup/JndiLookup.class")) {
+            var cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+            var cr = new ClassReader(in);
+            var node = new ClassNode();
+            cr.accept(node, 0);
+            for (var method : node.methods) {
+                if (method.name.equals("lookup")) {
+                    method.instructions.clear();
+                    method.instructions.add(new InsnNode(Opcodes.ACONST_NULL));
+                    method.instructions.add(new InsnNode(Opcodes.ARETURN));
+                    method.tryCatchBlocks.clear();
+                    method.localVariables.clear();
+                }
+            }
+            node.accept(cw);
+            var bytes = cw.toByteArray();
+            Unsafe.defineClass(cr.getClassName(), bytes, 0, bytes.length, getClass().getClassLoader(), getClass().getProtectionDomain());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
