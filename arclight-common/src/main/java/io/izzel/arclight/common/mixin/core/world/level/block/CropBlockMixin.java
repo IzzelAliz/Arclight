@@ -40,7 +40,7 @@ public class CropBlockMixin {
         return CraftEventFactory.handleBlockGrowEvent(world, pos, newState, flags);
     }
 
-    @Inject(method = "getGrowthSpeed", at = @At("RETURN"))
+    @Inject(method = "getGrowthSpeed", cancellable = true, at = @At("RETURN"))
     private static void arclight$spigotModifier(Block block, BlockGetter blockGetter, BlockPos pos, CallbackInfoReturnable<Float> cir) {
         if (blockGetter instanceof WorldBridge bridge) {
             int modifier;
