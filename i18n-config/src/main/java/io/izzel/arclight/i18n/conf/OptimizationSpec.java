@@ -15,6 +15,9 @@ public class OptimizationSpec {
     @Setting("goal-selector-update-interval")
     private int goalSelectorInterval;
 
+    @Setting("entity-move")
+    private MoveInterpolationSpec moveInterpolation;
+
     public boolean isCachePluginClass() {
         return cachePluginClass;
     }
@@ -25,5 +28,9 @@ public class OptimizationSpec {
 
     public int getGoalSelectorInterval() {
         return goalSelectorInterval;
+    }
+
+    public MoveInterpolationSpec getMoveInterpolation() {
+        return moveInterpolation;
     }
 }

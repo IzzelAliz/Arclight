@@ -23,6 +23,9 @@ public class ArclightConnector implements IMixinConnector {
         if (ArclightConfig.spec().getOptimization().isDisableDFU()) {
             Mixins.addConfiguration("mixins.arclight.impl.forge.optimization.dfu.json");
         }
+        if (ArclightConfig.spec().getOptimization().getMoveInterpolation().isInterpolation()) {
+            Mixins.addConfiguration("mixins.arclight.impl.forge.optimization.moveinterp.json");
+        }
         LOGGER.info("mixin-load.optimization");
     }
 }

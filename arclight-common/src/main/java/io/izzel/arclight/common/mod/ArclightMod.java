@@ -3,6 +3,12 @@ package io.izzel.arclight.common.mod;
 import io.izzel.arclight.common.mod.server.ArclightPermissionHandler;
 import io.izzel.arclight.common.mod.server.event.ArclightEventDispatcherRegistry;
 import io.izzel.arclight.common.mod.util.log.ArclightI18nLogger;
+import io.izzel.arclight.common.mod.util.optimization.moveinterp.MoveInterpolatorService;
+import io.izzel.arclight.i18n.ArclightConfig;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.server.ServerStartedEvent;
+import net.minecraftforge.event.server.ServerStoppedEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.IExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -30,6 +36,20 @@ public class ArclightMod {
         ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class,
             () -> new IExtensionPoint.DisplayTest(() -> NetworkConstants.IGNORESERVERONLY, (a, b) -> true));
         PermissionAPI.setPermissionHandler(ArclightPermissionHandler.INSTANCE);
+        MinecraftForge.EVENT_BUS.register(this);
+    }
+
+    @SubscribeEvent
+    public void onServerStarted(ServerStartedEvent event) {
+        if (ArclightConfig.spec().getOptimization().getMoveInterpolation().isInterpolation()) {
+            MoveInterpolatorService.getInstance().start();
+        }
+    }
+
+    @SubscribeEvent
+    public void onServerStopped(ServerStoppedEvent event) {
+        var service = MoveInterpolatorService.getInstance();
+        service.stop();
     }
 
     private static class LoggingPrintStream extends PrintStream {
