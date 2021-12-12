@@ -58,7 +58,7 @@ public class ForgeInstaller {
     private static final String INSTALLER_URL = "https://arclight.mcxk.net/net/minecraftforge/forge/%s-%s/forge-%s-%s-installer.jar";
     private static final String SERVER_URL = "https://arclight.mcxk.net/net/minecraft/server/minecraft_server.%s.jar";
     private static final Map<String, String> VERSION_HASH = Map.of(
-        "1.18", "3cf24a8694aca6267883b17d934efacc5e44440d"
+        "1.18.1", "125e5adf40c659fd3bce3e66e67a16bb49ecc1b9"
     );
 
     public static List<Path> modInstall(Consumer<String> logger) throws Throwable {

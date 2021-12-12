@@ -13,8 +13,8 @@ allprojects {
 
     ext {
         agpVersion = '1.22'
-        minecraftVersion = '1.18'
-        forgeVersion = '38.0.12'
+        minecraftVersion = '1.18.1'
+        forgeVersion = '39.0.0'
         apiVersion = '1.2.2'
         toolsVersion = '1.3.+'
         mixinVersion = '0.8.5'
