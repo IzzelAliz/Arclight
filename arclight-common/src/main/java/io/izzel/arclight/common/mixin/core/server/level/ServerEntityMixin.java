@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Pair;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.ServerEntityBridge;
+import io.izzel.arclight.common.mod.ArclightConstants;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundAddMobPacket;
 import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket;
@@ -42,6 +43,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -81,10 +83,14 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
     // @formatter:on
 
     private Set<ServerPlayerConnection> trackedPlayers;
+    @Unique private int lastTick;
+    @Unique private int lastUpdate, lastPosUpdate, lastMapUpdate;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(ServerLevel serverWorld, Entity entity, int updateFrequency, boolean sendVelocityUpdates, Consumer<Packet<?>> packetConsumer, CallbackInfo ci) {
         trackedPlayers = new HashSet<>();
+        lastTick = ArclightConstants.currentTick - 1;
+        lastUpdate = lastPosUpdate = lastMapUpdate = -1;
     }
 
     public void arclight$constructor(ServerLevel serverWorld, Entity entity, int updateFrequency, boolean sendVelocityUpdates, Consumer<Packet<?>> packetConsumer) {
@@ -112,9 +118,14 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
             this.lastPassengers = list;
             this.broadcastAndSend(new ClientboundSetPassengersPacket(this.entity));
         }
+        int elapsedTicks = ArclightConstants.currentTick - this.lastTick;
+        if (elapsedTicks < 0) {
+            elapsedTicks = 0;
+        }
+        this.lastTick = ArclightConstants.currentTick;
         if (this.entity instanceof ItemFrame itemFrame) {
             ItemStack itemstack = itemFrame.getItem();
-            if (this.tickCount % 10 == 0 && itemstack.getItem() instanceof MapItem) {
+            if (this.tickCount / 10 != this.lastMapUpdate && itemstack.getItem() instanceof MapItem) {
                 MapItemSavedData mapdata = MapItem.getSavedData(itemstack, this.level);
                 if (mapdata != null) {
                     for (ServerPlayerConnection connection : this.trackedPlayers) {
@@ -129,7 +140,7 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
             }
             this.sendDirtyEntityData();
         }
-        if (this.tickCount % this.updateInterval == 0 || this.entity.hasImpulse || this.entity.getEntityData().isDirty()) {
+        if (this.tickCount / this.updateInterval != this.lastUpdate || this.entity.hasImpulse || this.entity.getEntityData().isDirty()) {
             if (this.entity.isPassenger()) {
                 int i1 = Mth.floor(this.entity.getYRot() * 256.0F / 360.0F);
                 int l1 = Mth.floor(this.entity.getXRot() * 256.0F / 360.0F);
@@ -143,13 +154,13 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
                 this.sendDirtyEntityData();
                 this.wasRiding = true;
             } else {
-                ++this.teleportDelay;
+                this.teleportDelay += elapsedTicks;
                 int l = Mth.floor(this.entity.getYRot() * 256.0F / 360.0F);
                 int k1 = Mth.floor(this.entity.getXRot() * 256.0F / 360.0F);
                 Vec3 vector3d = this.entity.position().subtract(ClientboundMoveEntityPacket.packetToEntity(this.xp, this.yp, this.zp));
                 boolean flag3 = vector3d.lengthSqr() >= (double) 7.6293945E-6F;
                 Packet<?> ipacket1 = null;
-                boolean flag4 = flag3 || this.tickCount % 60 == 0;
+                boolean flag4 = flag3 || this.tickCount / 60 != this.lastPosUpdate;
                 boolean flag = Math.abs(l - this.yRotp) >= 1 || Math.abs(k1 - this.xRotp) >= 1;
                 if (flag4) {
                     this.updateSentPos();
@@ -200,7 +211,10 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
             }
             this.entity.hasImpulse = false;
         }
-        ++this.tickCount;
+        this.lastUpdate = this.tickCount / this.updateInterval;
+        this.lastPosUpdate = this.tickCount / 60;
+        this.lastMapUpdate = this.tickCount / 10;
+        this.tickCount += elapsedTicks;
         if (this.entity.hurtMarked) {
             boolean cancelled = false;
             if (this.entity instanceof ServerPlayer) {
