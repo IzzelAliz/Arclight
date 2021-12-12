@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.core.server.level;
 import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Pair;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.TrackedEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.ServerEntityBridge;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundAddMobPacket;
 import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket;
@@ -20,6 +20,7 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerEntity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerPlayerConnection;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
@@ -54,7 +55,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 @Mixin(ServerEntity.class)
-public abstract class ServerEntityMixin implements TrackedEntityBridge {
+public abstract class ServerEntityMixin implements ServerEntityBridge {
 
     // @formatter:off
     @Shadow @Final private Entity entity;
@@ -79,7 +80,7 @@ public abstract class ServerEntityMixin implements TrackedEntityBridge {
     @Shadow protected abstract void broadcastAndSend(Packet<?> packet);
     // @formatter:on
 
-    private Set<ServerPlayer> trackedPlayers;
+    private Set<ServerPlayerConnection> trackedPlayers;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(ServerLevel serverWorld, Entity entity, int updateFrequency, boolean sendVelocityUpdates, Consumer<Packet<?>> packetConsumer, CallbackInfo ci) {
@@ -90,13 +91,13 @@ public abstract class ServerEntityMixin implements TrackedEntityBridge {
         throw new NullPointerException();
     }
 
-    public void arclight$constructor(ServerLevel serverWorld, Entity entity, int updateFrequency, boolean sendVelocityUpdates, Consumer<Packet<?>> packetConsumer, Set<ServerPlayer> set) {
+    public void arclight$constructor(ServerLevel serverWorld, Entity entity, int updateFrequency, boolean sendVelocityUpdates, Consumer<Packet<?>> packetConsumer, Set<ServerPlayerConnection> set) {
         arclight$constructor(serverWorld, entity, updateFrequency, sendVelocityUpdates, packetConsumer);
         this.trackedPlayers = set;
     }
 
     @Override
-    public void bridge$setTrackedPlayers(Set<ServerPlayer> trackedPlayers) {
+    public void bridge$setTrackedPlayers(Set<ServerPlayerConnection> trackedPlayers) {
         this.trackedPlayers = trackedPlayers;
     }
 
@@ -116,7 +117,8 @@ public abstract class ServerEntityMixin implements TrackedEntityBridge {
             if (this.tickCount % 10 == 0 && itemstack.getItem() instanceof MapItem) {
                 MapItemSavedData mapdata = MapItem.getSavedData(itemstack, this.level);
                 if (mapdata != null) {
-                    for (ServerPlayer serverplayerentity : this.trackedPlayers) {
+                    for (ServerPlayerConnection connection : this.trackedPlayers) {
+                        var serverplayerentity = connection.getPlayer();
                         mapdata.tickCarriedBy(serverplayerentity, itemstack);
                         Packet<?> ipacket = ((MapItem) itemstack.getItem()).getUpdatePacket(itemstack, this.level, serverplayerentity);
                         if (ipacket != null) {
