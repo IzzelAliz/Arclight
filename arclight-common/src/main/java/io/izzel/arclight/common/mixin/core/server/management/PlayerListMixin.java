@@ -293,7 +293,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                         f2 = (float) MathHelper.wrapDegrees(MathHelper.atan2(vec3d2.z, vec3d2.x) * 57.2957763671875 - 90.0);
                     }
                     // playerIn.setLocationAndAngles(vec3d.x, vec3d.y, vec3d.z, f2, 0.0f);
-                    playerIn.func_242111_a(spawnWorld.getDimensionKey(), pos, f, flag2, false);
+                    playerIn.func_242111_a(spawnWorld.getDimensionKey(), pos, f2, flag2, false);
                     flag3 = (!flag && flag4);
                     isBedSpawn = true;
                     location = new Location(((WorldBridge) spawnWorld).bridge$getWorld(), vec3d.x, vec3d.y, vec3d.z);
@@ -409,7 +409,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                         f2 = (float) MathHelper.wrapDegrees(MathHelper.atan2(vec3d2.z, vec3d2.x) * 57.2957763671875 - 90.0);
                     }
                     // playerIn.setLocationAndAngles(vec3d.x, vec3d.y, vec3d.z, f2, 0.0f);
-                    playerIn.func_242111_a(spawnWorld.getDimensionKey(), pos, f, flag2, false);
+                    playerIn.func_242111_a(spawnWorld.getDimensionKey(), pos, f2, flag2, false);
                     flag3 = (!flag2 && flag4);
                     isBedSpawn = true;
                     location = new Location(((WorldBridge) spawnWorld).bridge$getWorld(), vec3d.x, vec3d.y, vec3d.z);
@@ -455,6 +455,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
 
         serverplayerentity.connection = playerIn.connection;
         serverplayerentity.copyFrom(playerIn, conqueredEnd);
+        serverplayerentity.func_242111_a(playerIn.func_241141_L_(), playerIn.func_241140_K_(), playerIn.func_242109_L(), playerIn.func_241142_M_(), false);
         if (!conqueredEnd) {  // keep inventory here since inventory dropped at ServerPlayerEntity#onDeath
             serverplayerentity.inventory.copyInventory(playerIn.inventory);
         }
