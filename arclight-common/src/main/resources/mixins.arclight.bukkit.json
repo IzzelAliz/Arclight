@@ -29,6 +29,7 @@
     "CraftMetaItemMixin",
     "CraftPlayerMixin",
     "CraftRegionAccessorMixin",
+    "CraftSchedulerMixin",
     "CraftServerMixin",
     "CraftVillagerMixin",
     "CraftWorldMixin",
