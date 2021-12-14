@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.server.dedicated;
 
 import io.izzel.arclight.common.mixin.core.server.MinecraftServerMixin;
+import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.server.BukkitRegistry;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
@@ -25,6 +26,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Mixin(DedicatedServer.class)
 public abstract class DedicatedServerMixin extends MinecraftServerMixin {
@@ -88,7 +91,28 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        // new Thread(() -> System.exit(0), "Exit Thread").start();
+        Thread exitThread = new Thread(this::arclight$exit, "Exit Thread");
+        exitThread.setDaemon(true);
+        exitThread.start();
+    }
+
+    private void arclight$exit() {
+        try {
+            Thread.sleep(5000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        List<String> threads = new ArrayList<>();
+        for (Thread thread : Thread.getAllStackTraces().keySet()) {
+            if (!thread.isDaemon() && !thread.getName().equals("DestroyJavaVM")) {
+                threads.add(thread.getName());
+            }
+        }
+        if (!threads.isEmpty()) {
+            ArclightMod.LOGGER.debug("Threads {} not shutting down", String.join(", ", threads));
+            ArclightMod.LOGGER.warn("{} threads not shutting down correctly, force exiting", threads.size());
+        }
+        System.exit(0);
     }
 
     /**

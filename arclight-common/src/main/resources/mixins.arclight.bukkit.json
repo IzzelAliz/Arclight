@@ -28,6 +28,7 @@
     "CraftMagicNumbersMixin",
     "CraftMetaItemMixin",
     "CraftPlayerMixin",
+    "CraftSchedulerMixin",
     "CraftServerMixin",
     "CraftVillagerMixin",
     "CraftWorldMixin",
