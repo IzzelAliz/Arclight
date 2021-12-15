@@ -9,7 +9,6 @@ import io.izzel.arclight.common.bridge.core.network.play.TimestampedPacket;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.core.server.management.PlayerInteractionManagerBridge;
 import io.izzel.arclight.common.bridge.core.server.management.PlayerListBridge;
-import io.izzel.arclight.common.bridge.core.tileentity.SignTileEntityBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.netty.util.concurrent.Future;
@@ -64,6 +63,7 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -75,7 +75,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.block.CraftSign;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -129,7 +128,6 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -1642,47 +1640,58 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         }
     }
 
-    @Inject(method = "updateSignText", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;resetLastActionTime()V"))
-    private void arclight$noSignEdit(ServerboundSignUpdatePacket p_244542_1_, List<String> p_244542_2_, CallbackInfo ci) {
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    private void updateSignText(ServerboundSignUpdatePacket packet, List<TextFilter.FilteredText> list) {
         if (((ServerPlayerEntityBridge) player).bridge$isMovementBlocked()) {
-            ci.cancel();
+            return;
         }
-    }
-
-    private Component[] arclight$lines;
-
-    @Inject(method = "updateSignText", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/SignBlockEntity;isEditable()Z"))
-    public void arclight$onSignChangePre(ServerboundSignUpdatePacket p_244542_1_, List<String> p_244542_2_, CallbackInfo ci) {
-        String[] lines = p_244542_2_.toArray(new String[0]);
-        Player player = getCraftPlayer();
-        CraftBlock block = CraftBlock.at(this.player.level, p_244542_1_.getPos());
-        String[] bukkitLines = new String[lines.length];
-        for (int i = 0; i < lines.length; i++) {
-            bukkitLines[i] = ChatFormatting.stripFormatting(
-                new TextComponent(
-                    Objects.requireNonNull(
-                        ChatFormatting.stripFormatting(lines[i])
-                    )
-                ).getString()
-            );
-        }
-        SignChangeEvent event = new SignChangeEvent(block, player, bukkitLines);
-        Bukkit.getPluginManager().callEvent(event);
-        if (!event.isCancelled()) {
-            for (int i = 0; i < lines.length; i++) {
-                arclight$lines = CraftSign.sanitizeLines(event.getLines());
+        this.player.resetLastActionTime();
+        ServerLevel serverlevel = this.player.getLevel();
+        BlockPos blockpos = packet.getPos();
+        if (serverlevel.hasChunkAt(blockpos)) {
+            BlockState blockstate = serverlevel.getBlockState(blockpos);
+            BlockEntity blockentity = serverlevel.getBlockEntity(blockpos);
+            if (!(blockentity instanceof SignBlockEntity signblockentity)) {
+                return;
             }
-        }
-    }
 
-    @Redirect(method = "updateSignText", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/SignBlockEntity;setMessage(ILnet/minecraft/network/chat/Component;)V"))
-    public void arclight$onSignChangePost(SignBlockEntity signTileEntity, int line, Component signText) {
-        if (arclight$lines != null) {
-            signTileEntity.setMessage(line, arclight$lines[line]);
-            if (line == arclight$lines.length - 1) {
-                arclight$lines = null;
-                ((SignTileEntityBridge) signTileEntity).bridge$setEditable(false);
+            if (!signblockentity.isEditable() || !this.player.getUUID().equals(signblockentity.getPlayerWhoMayEdit())) {
+                LOGGER.warn("Player {} just tried to change non-editable sign", this.player.getName().getString());
+                this.send(blockentity.getUpdatePacket());
+                return;
             }
+
+            Player player = ((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity();
+            int x = packet.getPos().getX();
+            int y = packet.getPos().getY();
+            int z = packet.getPos().getZ();
+            String[] lines = new String[4];
+
+            for (int i = 0; i < list.size(); ++i) {
+                TextFilter.FilteredText text = list.get(i);
+
+                if (this.player.isTextFilteringEnabled()) {
+                    lines[i] = ChatFormatting.stripFormatting(new TextComponent(ChatFormatting.stripFormatting(text.getFiltered())).getString());
+                } else {
+                    lines[i] = ChatFormatting.stripFormatting(new TextComponent(ChatFormatting.stripFormatting(text.getRaw())).getString());
+                }
+            }
+            SignChangeEvent event = new SignChangeEvent(player.getWorld().getBlockAt(x, y, z), player, lines);
+            Bukkit.getPluginManager().callEvent(event);
+            if (!event.isCancelled()) {
+                Component[] components = CraftSign.sanitizeLines(event.getLines());
+                for (int i = 0; i < components.length; i++) {
+                    signblockentity.setMessage(i, components[i]);
+                }
+                signblockentity.isEditable = false;
+            }
+
+            signblockentity.setChanged();
+            serverlevel.sendBlockUpdated(blockpos, blockstate, blockstate, 3);
         }
     }
 
