@@ -88,6 +88,9 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
      */
     @Overwrite
     public void handleBlockBreakAction(BlockPos blockPos, ServerboundPlayerActionPacket.Action action, Direction direction, int i) {
+        if (!this.level.hasChunkAt(blockPos)) {
+            return;
+        }
         double d0 = this.player.getX() - (blockPos.getX() + 0.5);
         double d2 = this.player.getY() - (blockPos.getY() + 0.5) + 1.5;
         double d3 = this.player.getZ() - (blockPos.getZ() + 0.5);
