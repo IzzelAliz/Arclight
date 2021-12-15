@@ -35,7 +35,7 @@ public class ArclightServer {
                 ((MinecraftServerBridge) console).bridge$setConsole(ColouredConsoleSender.getInstance());
                 ArclightPermissionHandler.INSTANCE.initialize();
             } catch (Throwable t) {
-                t.printStackTrace();
+                throw new RuntimeException("Error initializing Arclight", t);
             }
             try {
                 ArclightMod.LOGGER.info("registry.begin");
@@ -44,6 +44,7 @@ public class ArclightServer {
                 org.spigotmc.SpigotConfig.registerCommands();
             } catch (Throwable t) {
                 ArclightMod.LOGGER.error("registry.error", t);
+                throw t;
             }
         } else {
             ((CraftServerBridge) (Object) server).bridge$setPlayerList(playerList);
