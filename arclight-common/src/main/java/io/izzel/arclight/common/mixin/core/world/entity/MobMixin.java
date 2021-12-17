@@ -338,8 +338,12 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
         return this.persistenceRequired;
     }
 
+    public void setPersistenceRequired(boolean value) {
+        this.persistenceRequired = value;
+    }
+
     @Override
     public void bridge$setPersistenceRequired(boolean value) {
-        this.persistenceRequired = value;
+        this.setPersistenceRequired(value);
     }
 }
