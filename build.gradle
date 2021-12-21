@@ -15,7 +15,7 @@ allprojects {
         agpVersion = '1.22'
         minecraftVersion = '1.18.1'
         forgeVersion = '39.0.0'
-        apiVersion = '1.2.2'
+        apiVersion = '1.2.4'
         toolsVersion = '1.3.+'
         mixinVersion = '0.8.5'
         gitHash = getGitHash()
