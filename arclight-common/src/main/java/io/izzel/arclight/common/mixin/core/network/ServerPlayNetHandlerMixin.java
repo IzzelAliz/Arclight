@@ -44,9 +44,10 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MoverType;
-import net.minecraft.world.entity.animal.AbstractFish;
+import net.minecraft.world.entity.animal.Bucketable;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.entity.projectile.AbstractArrow;
@@ -1174,8 +1175,8 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                         cserver.getPluginManager().callEvent(event);
 
                         // Fish bucket - SPIGOT-4048
-                        if ((entity instanceof AbstractFish && origItem != null && origItem.asItem() == Items.WATER_BUCKET) && (event.isCancelled() || player.getInventory().getSelected() == null || player.getInventory().getSelected().getItem() != origItem)) {
-                            send(new ClientboundAddMobPacket((AbstractFish) entity));
+                        if ((entity instanceof Bucketable && entity instanceof LivingEntity && origItem != null && origItem.asItem() == Items.WATER_BUCKET) && (event.isCancelled() || player.getInventory().getSelected() == null || player.getInventory().getSelected().getItem() != origItem)) {
+                            send(new ClientboundAddMobPacket((LivingEntity) entity));
                             player.containerMenu.sendAllDataToRemote();
                         }
 

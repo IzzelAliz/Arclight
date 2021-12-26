@@ -429,6 +429,7 @@
     "world.level.chunk.storage.ChunkSerializerMixin",
     "world.level.chunk.storage.RegionFileCacheMixin",
     "world.level.entity.PersistentEntitySectionManagerMixin",
+    "world.level.gameevent.vibrations.VibrationListenerMixin",
     "world.level.levelgen.ChunkGeneratorMixin",
     "world.level.portal.PortalForcerMixin",
     "world.level.saveddata.maps.MapDataMixin",

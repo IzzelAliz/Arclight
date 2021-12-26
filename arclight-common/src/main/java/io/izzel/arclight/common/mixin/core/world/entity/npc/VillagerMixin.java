@@ -30,12 +30,21 @@ public abstract class VillagerMixin extends AbstractVillagerMixin {
         bridge$pushEffectCause(EntityPotionEffectEvent.Cause.VILLAGER_TRADE);
     }
 
-    @Redirect(method = "updateSpecialPrices", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/item/trading/MerchantOffer;addToSpecialPriceDiff(I)V"))
-    private void arclight$replenish(MerchantOffer merchantOffer, int add) {
-        VillagerReplenishTradeEvent event = new VillagerReplenishTradeEvent((Villager) this.getBukkitEntity(), ((MerchantOfferBridge) merchantOffer).bridge$asBukkit(), add);
+    @Redirect(method = "restock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/trading/MerchantOffer;resetUses()V"))
+    private void arclight$restock(MerchantOffer instance) {
+        VillagerReplenishTradeEvent event = new VillagerReplenishTradeEvent((Villager) this.getBukkitEntity(), ((MerchantOfferBridge) instance).bridge$asBukkit());
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
-            merchantOffer.addToSpecialPriceDiff(event.getBonus());
+            instance.resetUses();
+        }
+    }
+
+    @Redirect(method = "updateSpecialPrices", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/item/trading/MerchantOffer;addToSpecialPriceDiff(I)V"))
+    private void arclight$replenish(MerchantOffer merchantOffer, int add) {
+        VillagerReplenishTradeEvent event = new VillagerReplenishTradeEvent((Villager) this.getBukkitEntity(), ((MerchantOfferBridge) merchantOffer).bridge$asBukkit());
+        Bukkit.getPluginManager().callEvent(event);
+        if (!event.isCancelled()) {
+            merchantOffer.resetUses();
         }
     }
 

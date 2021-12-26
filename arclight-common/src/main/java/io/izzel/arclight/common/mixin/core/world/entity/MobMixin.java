@@ -278,6 +278,16 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
         this.forceDrops = true;
     }
 
+    @Inject(method = "restoreLeashFromSave", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/Mob;spawnAtLocation(Lnet/minecraft/world/level/ItemLike;)Lnet/minecraft/world/entity/item/ItemEntity;"))
+    private void arclight$leashRestorePost(CallbackInfo ci) {
+        this.forceDrops = false;
+    }
+
+    @Inject(method = "restoreLeashFromSave", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;spawnAtLocation(Lnet/minecraft/world/level/ItemLike;)Lnet/minecraft/world/entity/item/ItemEntity;"))
+    private void arclight$leashRestorePre(CallbackInfo ci) {
+        this.forceDrops = true;
+    }
+
     @Inject(method = "startRiding", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;dropLeash(ZZ)V"))
     private void arclight$unleashRide(Entity entityIn, boolean force, CallbackInfoReturnable<Boolean> cir) {
         Bukkit.getPluginManager().callEvent(new EntityUnleashEvent(this.getBukkitEntity(), EntityUnleashEvent.UnleashReason.UNKNOWN));
