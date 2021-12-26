@@ -82,11 +82,12 @@ public class ForgeInstaller {
         List<Supplier<Path>> suppliers = checkMavenNoSource(installInfo.libraries);
         var sysType = File.pathSeparatorChar == ';' ? "win" : "unix";
         Path path = Paths.get("libraries", "net", "minecraftforge", "forge", installInfo.installer.minecraft + "-" + installInfo.installer.forge, sysType + "_args.txt");
-        if (!suppliers.isEmpty() || !Files.exists(path)) {
+        var installForge = !Files.exists(path) || forgeClasspathMissing(path);
+        if (!suppliers.isEmpty() || installForge) {
             System.out.println("Downloading missing libraries ...");
             ExecutorService pool = Executors.newFixedThreadPool(8);
             CompletableFuture<?>[] array = suppliers.stream().map(reportSupply(pool, System.out::println)).toArray(CompletableFuture[]::new);
-            if (!Files.exists(path)) {
+            if (installForge) {
                 CompletableFuture<?>[] futures = installForge(installInfo, pool, System.out::println);
                 handleFutures(System.out::println, futures);
                 System.out.println("Forge installation is starting, please wait... ");
@@ -151,8 +152,10 @@ public class ForgeInstaller {
                 future.join();
             } catch (CompletionException e) {
                 logger.accept(e.getCause().toString());
+                Unsafe.throwException(e.getCause());
             } catch (Exception e) {
                 e.printStackTrace();
+                Unsafe.throwException(e);
             }
         }
     }
@@ -200,6 +203,23 @@ public class ForgeInstaller {
             }
         }
         return incomplete;
+    }
+
+    private static boolean forgeClasspathMissing(Path path) throws Exception {
+        for (String arg : Files.lines(path).collect(Collectors.toList())) {
+            if (arg.startsWith("-p ")) {
+                var modules = arg.substring(2).trim();
+                if (!Arrays.stream(modules.split(File.pathSeparator)).map(Paths::get).allMatch(Files::exists)) {
+                    return true;
+                }
+            } else if (arg.startsWith("-DlegacyClassPath")) {
+                var classpath = arg.substring("-DlegacyClassPath=".length()).trim();
+                if (!Arrays.stream(classpath.split(File.pathSeparator)).map(Paths::get).allMatch(Files::exists)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static Map.Entry<String, List<String>> classpath(Path path, InstallInfo installInfo) throws Throwable {
@@ -340,6 +360,7 @@ public class ForgeInstaller {
             this.packages = packages;
             this.target = target;
         }
+
     }
 
     private static void addExtra(List<String> extras, MethodHandle implAddExtraMH, MethodHandle implAddExtraToAllUnnamedMH) {

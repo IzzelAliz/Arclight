@@ -35,24 +35,27 @@ public record FileDownloader(String url, String target, String hash) implements 
                 if (Files.isDirectory(path)) {
                     throw new FileAlreadyExistsException(target);
                 } else {
-                    if (Util.hash(path).equals(hash)) return path;
+                    if (Util.hash(path).equalsIgnoreCase(hash)) return path;
                     else Files.delete(path);
                 }
             }
             if (!Files.exists(path) && path.getParent() != null) {
                 Files.createDirectories(path.getParent());
             }
+            var tmp = new File(target + ".tmp").toPath();
             URL url = new URL(this.url);
             try (InputStream stream = redirect(url)) {
-                Files.copy(stream, path, StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(stream, tmp, StandardCopyOption.REPLACE_EXISTING);
             } catch (SocketTimeoutException | SSLException e) {
                 throw new RuntimeException("Timeout " + url);
             }
-            if (Files.exists(path)) {
-                String hash = Util.hash(path);
-                if (hash.equalsIgnoreCase(this.hash)) return path;
-                else {
-                    Files.delete(path);
+            if (Files.exists(tmp)) {
+                String hash = Util.hash(tmp);
+                if (hash.equalsIgnoreCase(this.hash)) {
+                    Files.move(tmp, path, StandardCopyOption.REPLACE_EXISTING);
+                    return path;
+                } else {
+                    Files.delete(tmp);
                     throw new RuntimeException("Hash not match, expect %s found %s in %s".formatted(this.hash, hash, url));
                 }
             } else {
