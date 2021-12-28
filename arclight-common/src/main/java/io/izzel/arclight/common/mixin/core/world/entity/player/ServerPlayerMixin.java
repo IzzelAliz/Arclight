@@ -186,6 +186,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     public String locale = "en_us";
     private boolean arclight$initialized = false;
 
+    
     @Inject(method = "<init>", at = @At("RETURN"))
     public void arclight$init(CallbackInfo ci) {
         this.displayName = this.getGameProfile() != null ? getScoreboardName() : "~FakePlayer~";
