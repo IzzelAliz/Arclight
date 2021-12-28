@@ -145,8 +145,6 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Shadow private float lastSentHealth;
     @Shadow private int lastSentFood;
     @Shadow public int containerCounter;
-    @Shadow public int currentWindowId;
-    @Shadow public abstract void getNextWindowId();
     @Shadow(remap = false) private String language;
     @Shadow public abstract void teleportTo(ServerLevel newWorld, double x, double y, double z, float yaw, float pitch);
     @Shadow public abstract void giveExperiencePoints(int p_195068_1_);
@@ -165,6 +163,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Shadow(remap = false) private boolean hasTabListName;
     @Shadow(remap = false) private Component tabListDisplayName;
     @Shadow public abstract void resetFallDistance();
+    @Shadow public abstract void shadow$nextContainerCounter();
     // @formatter:on
 
     public String displayName;
@@ -186,7 +185,6 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     public String locale = "en_us";
     private boolean arclight$initialized = false;
 
-    
     @Inject(method = "<init>", at = @At("RETURN"))
     public void arclight$init(CallbackInfo ci) {
         this.displayName = this.getGameProfile() != null ? getScoreboardName() : "~FakePlayer~";
@@ -674,8 +672,8 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     }
 
     public int nextContainerCounter() {
-        this.getNextWindowId();
-        return this.currentWindowId;
+        this.shadow$nextContainerCounter();
+        return this.containerCounter();
     }
 
     @Redirect(method = "openMenu", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;closeContainer()V"))
