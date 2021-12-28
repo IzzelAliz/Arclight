@@ -141,7 +141,7 @@ public class ForgeInstaller {
         });
         CompletableFuture<?> serverFuture = reportSupply(pool, logger).apply(
             new FileDownloader(String.format(SERVER_URL, info.installer.minecraft),
-                String.format("libraries/net/minecraft/server/%1$s/minecraft_server.%1$s.jar", info.installer.minecraft), VERSION_HASH.get(info.installer.minecraft))
+                String.format("libraries/net/minecraft/server/%1$s/server-%1$s.jar", info.installer.minecraft), VERSION_HASH.get(info.installer.minecraft))
         );
         return new CompletableFuture<?>[]{installerFuture, serverFuture};
     }
