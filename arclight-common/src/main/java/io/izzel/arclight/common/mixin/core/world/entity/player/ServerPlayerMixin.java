@@ -163,6 +163,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Shadow(remap = false) private boolean hasTabListName;
     @Shadow(remap = false) private Component tabListDisplayName;
     @Shadow public abstract void resetFallDistance();
+    @Shadow public abstract void shadow$nextContainerCounter();
     // @formatter:on
 
     public String displayName;
@@ -671,7 +672,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     }
 
     public int nextContainerCounter() {
-        this.nextContainerCounter();
+        this.shadow$nextContainerCounter();
         return this.containerCounter;
     }
 
