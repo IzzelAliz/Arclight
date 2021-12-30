@@ -28,6 +28,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.AccessControlContext;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -105,10 +106,12 @@ public class ForgeInstaller {
                     Method method = loader.loadClass("net.minecraftforge.installer.SimpleInstaller").getMethod("main", String[].class);
                     method.invoke(null, (Object) new String[]{"--installServer", ".", "--debug"});
                 }
-                System.exit(0);
             }
             handleFutures(System.out::println, array);
             pool.shutdownNow();
+            if (installForge) {
+                System.exit(0);
+            }
         }
         return classpath(path, installInfo);
     }
@@ -141,7 +144,7 @@ public class ForgeInstaller {
         });
         CompletableFuture<?> serverFuture = reportSupply(pool, logger).apply(
             new FileDownloader(String.format(SERVER_URL, info.installer.minecraft),
-                String.format("libraries/net/minecraft/server/%1$s/minecraft_server.%1$s.jar", info.installer.minecraft), VERSION_HASH.get(info.installer.minecraft))
+                String.format("libraries/net/minecraft/server/%1$s/server-%1$s.jar", info.installer.minecraft), VERSION_HASH.get(info.installer.minecraft))
         );
         return new CompletableFuture<?>[]{installerFuture, serverFuture};
     }
@@ -231,7 +234,23 @@ public class ForgeInstaller {
         exports.add("cpw.mods.bootstraplauncher/cpw.mods.bootstraplauncher=ALL-UNNAMED");
         List<String> ignores = new ArrayList<>();
         List<String> merges = new ArrayList<>();
-        var self = new File(ForgeInstaller.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getCanonicalPath();
+        var self = new File(ForgeInstaller.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath();
+        // todo ugly McModLauncher/securejarhandler#19
+        if (self.getParent() != null && self.getParent().getParent() != null && self.getParent().getParent().getFileName() == null) {
+            var folder = self.resolveSibling(".arclight");
+            var relocation = folder.resolve("tmp.jar");
+            if (!Files.exists(folder)) {
+                Files.createDirectories(folder);
+            }
+            try {
+                if (!Files.isSymbolicLink(relocation)) {
+                    Files.createSymbolicLink(relocation, self);
+                }
+            } catch (Exception e) {
+                Files.copy(self, relocation, StandardCopyOption.REPLACE_EXISTING);
+            }
+            self = relocation;
+        }
         for (String arg : Files.lines(path).collect(Collectors.toList())) {
             if (jvmArgs && arg.startsWith("-")) {
                 if (arg.startsWith("-p ")) {
@@ -245,7 +264,7 @@ public class ForgeInstaller {
                     if (split[0].equals("legacyClassPath")) {
                         split[1] =
                             Stream.concat(
-                                Stream.concat(Stream.of(self, split[1]), installInfo.libraries.keySet().stream()
+                                Stream.concat(Stream.of(self.toString(), split[1]), installInfo.libraries.keySet().stream()
                                     .map(it -> Paths.get("libraries", Util.mavenToPath(it)))
                                     .peek(it -> {
                                         var name = it.getFileName().toString();

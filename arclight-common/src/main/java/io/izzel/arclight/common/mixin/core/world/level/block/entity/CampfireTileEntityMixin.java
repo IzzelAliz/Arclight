@@ -31,6 +31,7 @@ public abstract class CampfireTileEntityMixin extends BlockEntityMixin {
             ItemStack itemstack = entity.getItems().get(i);
             if (!itemstack.isEmpty()) {
                 flag = true;
+                entity.cookingProgress[i]++;
                 if (entity.cookingProgress[i] >= entity.cookingTime[i]) {
                     Container container = new SimpleContainer(itemstack);
                     ItemStack itemstack1 = level.getRecipeManager().getRecipeFor(RecipeType.CAMPFIRE_COOKING, container, level).map((p_155305_) -> {

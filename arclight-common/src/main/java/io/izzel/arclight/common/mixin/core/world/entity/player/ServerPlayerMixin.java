@@ -673,7 +673,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
     public int nextContainerCounter() {
         this.shadow$nextContainerCounter();
-        return this.containerCounter();
+        return this.containerCounter;
     }
 
     @Redirect(method = "openMenu", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;closeContainer()V"))
