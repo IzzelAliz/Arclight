@@ -3,7 +3,6 @@ package io.izzel.arclight.common.mixin.core.world.level.levelgen;
 import io.izzel.arclight.common.bridge.core.world.IWorldBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.level.levelgen.ChunkGeneratorBridge;
-import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.BiomeSource;
@@ -17,8 +16,9 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
-
-import java.util.Random;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ChunkGenerator.class)
 public abstract class ChunkGeneratorMixin implements ChunkGeneratorBridge {
@@ -29,10 +29,20 @@ public abstract class ChunkGeneratorMixin implements ChunkGeneratorBridge {
     @Shadow @Final @Mutable protected BiomeSource runtimeBiomeSource;
     // @formatter:on
 
-    public void addDecorations(WorldGenLevel region, ChunkAccess chunk, StructureFeatureManager structureManager, boolean vanilla) {
+    @Inject(method = "applyBiomeDecoration", at = @At("RETURN"))
+    private void arclight$addBukkitDecoration(WorldGenLevel level, ChunkAccess chunkAccess, StructureFeatureManager manager, CallbackInfo ci) {
+        this.addDecorations(level, chunkAccess, manager);
+    }
+
+    public void applyBiomeDecoration(WorldGenLevel level, ChunkAccess chunkAccess, StructureFeatureManager structureFeatureManager, boolean vanilla) {
         if (vanilla) {
-            this.applyBiomeDecoration(region, chunk, structureManager);
+            this.applyBiomeDecoration(level, chunkAccess, structureFeatureManager);
+        } else {
+            this.addDecorations(level, chunkAccess, structureFeatureManager);
         }
+    }
+
+    private void addDecorations(WorldGenLevel region, ChunkAccess chunk, StructureFeatureManager structureManager) {
         org.bukkit.World world = ((WorldBridge) ((IWorldBridge) region).bridge$getMinecraftWorld()).bridge$getWorld();
         // only call when a populator is present (prevents unnecessary entity conversion)
         if (!world.getPopulators().isEmpty()) {
@@ -47,24 +57,6 @@ public abstract class ChunkGeneratorMixin implements ChunkGeneratorBridge {
             limitedRegion.saveEntities();
             limitedRegion.breakLink();
         }
-    }
-
-    public void buildBedrock(ChunkAccess chunkAccess, Random random) {
-        throw new UnsupportedOperationException("Methode not overridden");
-    }
-
-    public WorldgenRandom buildSurface(WorldGenRegion region, ChunkAccess chunkAccess) {
-        throw new UnsupportedOperationException("Methode not overridden");
-    }
-
-    @Override
-    public void bridge$buildBedrock(ChunkAccess chunkAccess, Random random) {
-        buildBedrock(chunkAccess, random);
-    }
-
-    @Override
-    public WorldgenRandom bridge$buildSurface(WorldGenRegion region, ChunkAccess chunkAccess) {
-        return buildSurface(region, chunkAccess);
     }
 
     @Override
