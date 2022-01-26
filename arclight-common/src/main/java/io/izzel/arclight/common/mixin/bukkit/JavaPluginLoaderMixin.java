@@ -212,8 +212,6 @@ public abstract class JavaPluginLoaderMixin implements JavaPluginLoaderBridge {
             invokeCode = Opcodes.INVOKESTATIC;
         } else if (method.getDeclaringClass().isInterface()) {
             invokeCode = Opcodes.INVOKEINTERFACE;
-        } else if (Modifier.isPrivate(method.getModifiers())) {
-            invokeCode = Opcodes.INVOKESPECIAL;
         } else {
             invokeCode = Opcodes.INVOKEVIRTUAL;
         }
