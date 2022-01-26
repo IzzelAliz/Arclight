@@ -214,6 +214,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow public abstract void gameEvent(GameEvent p_146853_, @org.jetbrains.annotations.Nullable Entity p_146854_);
     @Shadow public abstract void setTicksFrozen(int p_146918_);
     @Shadow public abstract void setSharedFlagOnFire(boolean p_146869_);
+    @Shadow public abstract int getMaxAirSupply();
     // @formatter:on
 
     private static final int CURRENT_LEVEL = 2;
@@ -224,6 +225,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     public boolean forceExplosionKnockback; // SPIGOT-949
     public boolean persistentInvisibility = false;
     public BlockPos lastLavaContact;
+    public int maxAirTicks = getDefaultMaxAirSupply();
 
     private CraftEntity bukkitEntity;
 
@@ -270,6 +272,15 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Override
     public boolean bridge$isChunkLoaded() {
         return isChunkLoaded();
+    }
+
+    public int getDefaultMaxAirSupply() {
+        return Entity.TOTAL_AIR_SUPPLY;
+    }
+
+    @Inject(method = "getMaxAirSupply", cancellable = true, at = @At("RETURN"))
+    private void arclight$useBukkitMaxAir(CallbackInfoReturnable<Integer> cir) {
+        cir.setReturnValue(this.maxAirTicks);
     }
 
     @Inject(method = "setPose", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/network/syncher/SynchedEntityData;set(Lnet/minecraft/network/syncher/EntityDataAccessor;Ljava/lang/Object;)V"))
@@ -523,6 +534,9 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         if (this.persistentInvisibility) {
             compound.putBoolean("Bukkit.invisible", this.persistentInvisibility);
         }
+        if (maxAirTicks != getDefaultMaxAirSupply()) {
+            compound.putInt("Bukkit.MaxAirSupply", getMaxAirSupply());
+        }
     }
 
     @Inject(method = "saveWithoutId", at = @At(value = "RETURN"))
@@ -577,6 +591,9 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             boolean bukkitInvisible = compound.getBoolean("Bukkit.invisible");
             this.setInvisible(bukkitInvisible);
             this.persistentInvisibility = bukkitInvisible;
+        }
+        if (compound.contains("Bukkit.MaxAirSupply")) {
+            maxAirTicks = compound.getInt("Bukkit.MaxAirSupply");
         }
         // CraftBukkit end
     }
@@ -920,7 +937,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                     return null;
                 }
                 ServerLevel worldFinal = world = ((CraftWorld) event.getTo().getWorld()).getHandle();
-                blockpos1 = new BlockPos(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
+                blockpos1 = worldFinal.getWorldBorder().clampToBounds(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
 
                 return this.getExitPortal(world, blockpos1, flag2, worldborder, event.getSearchRadius(), event.getCanCreatePortal(), event.getCreationRadius()).map((result) -> {
                     BlockState blockstate = this.level.getBlockState(this.portalEntrancePos);

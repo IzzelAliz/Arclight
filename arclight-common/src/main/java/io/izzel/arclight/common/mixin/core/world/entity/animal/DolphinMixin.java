@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import io.izzel.arclight.common.mixin.core.world.entity.PathfinderMobMixin;
 import net.minecraft.world.entity.animal.Dolphin;
 import net.minecraft.world.entity.item.ItemEntity;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Dolphin.class)
 public abstract class DolphinMixin extends PathfinderMobMixin {
@@ -17,5 +18,15 @@ public abstract class DolphinMixin extends PathfinderMobMixin {
         if (CraftEventFactory.callEntityPickupItemEvent((Dolphin) (Object) this, itemEntity, 0, false).isCancelled()) {
             ci.cancel();
         }
+    }
+
+    @Inject(method = "getMaxAirSupply", cancellable = true, at = @At("RETURN"))
+    private void arclight$useBukkitMaxAir(CallbackInfoReturnable<Integer> cir) {
+        cir.setReturnValue(this.maxAirTicks);
+    }
+
+    @Override
+    public int getDefaultMaxAirSupply() {
+        return Dolphin.TOTAL_AIR_SUPPLY;
     }
 }

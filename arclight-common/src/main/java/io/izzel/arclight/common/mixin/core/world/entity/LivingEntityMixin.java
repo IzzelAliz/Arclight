@@ -185,7 +185,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     // @formatter:on
 
     public int expToDrop;
-    public int maxAirTicks;
     public boolean forceDrops;
     public CraftAttributeMap craftAttributes;
     public boolean collides;
@@ -199,7 +198,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(EntityType<? extends LivingEntity> type, Level worldIn, CallbackInfo ci) {
-        this.maxAirTicks = 300;
         this.collides = true;
         this.craftAttributes = new CraftAttributeMap(this.attributes);
         this.entityData.set(DATA_HEALTH_ID, (float) this.getAttributeValue(Attributes.MAX_HEALTH));
