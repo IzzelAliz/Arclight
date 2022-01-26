@@ -22,6 +22,9 @@ public class CompatSpec {
     @Setting("extra-logic-worlds")
     private List<String> extraLogicWorlds;
 
+    @Setting("forward-permission")
+    private boolean forwardPermission;
+
     public Map<String, MaterialPropertySpec> getMaterials() {
         return materials;
     }
@@ -44,5 +47,9 @@ public class CompatSpec {
 
     public List<String> getExtraLogicWorlds() {
         return extraLogicWorlds;
+    }
+
+    public boolean isForwardPermission() {
+        return forwardPermission;
     }
 }

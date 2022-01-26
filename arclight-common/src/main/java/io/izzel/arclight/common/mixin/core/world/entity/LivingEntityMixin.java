@@ -679,7 +679,20 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             float hardHatModifier = hardHat.apply((double) f).floatValue();
             f += hardHatModifier;
 
-            Function<Double, Double> blocking = f13 -> -((this.isDamageSourceBlocked(damagesource)) ? f13 : 0.0);
+            Function<Double, Double> blocking;
+            var shieldTakesDamage = false;
+            if (this.isDamageSourceBlocked(damagesource)) {
+                var shieldEvent = ForgeHooks.onShieldBlock((LivingEntity) (Object) this, damagesource, f);
+                if (!shieldEvent.isCanceled()) {
+                    var blocked = shieldEvent.getBlockedDamage();
+                    shieldTakesDamage = shieldEvent.shieldTakesDamage();
+                    blocking = f13 -> -(double) blocked;
+                } else {
+                    blocking = f13 -> 0d;
+                }
+            } else {
+                blocking = f13 -> 0d;
+            }
             float blockingModifier = blocking.apply((double) f).floatValue();
             f += blockingModifier;
 
@@ -743,7 +756,9 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             // Apply blocking code // PAIL: steal from above
             if (event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) < 0) {
                 this.level.broadcastEntityEvent((Entity) (Object) this, (byte) 29); // SPIGOT-4635 - shield damage sound
-                this.hurtCurrentlyUsedShield((float) -event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING));
+                if (shieldTakesDamage) {
+                    this.hurtCurrentlyUsedShield((float) -event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING));
+                }
                 Entity entity = damagesource.getDirectEntity();
 
                 if (entity instanceof LivingEntity) {

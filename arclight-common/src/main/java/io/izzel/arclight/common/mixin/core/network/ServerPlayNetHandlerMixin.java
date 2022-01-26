@@ -1587,14 +1587,10 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             ItemStack itemstack = packetplayinsetcreativeslot.getItem();
             final CompoundTag nbttagcompound = itemstack.getTagElement("BlockEntityTag");
             if (!itemstack.isEmpty() && nbttagcompound != null && nbttagcompound.contains("x") && nbttagcompound.contains("y") && nbttagcompound.contains("z")) {
-                final BlockPos blockposition = new BlockPos(nbttagcompound.getInt("x"), nbttagcompound.getInt("y"), nbttagcompound.getInt("z"));
-                final BlockEntity tileentity = this.player.level.getBlockEntity(blockposition);
-                if (tileentity != null) {
-                    final CompoundTag nbttagcompound2 = tileentity.save(new CompoundTag());
-                    nbttagcompound2.remove("x");
-                    nbttagcompound2.remove("y");
-                    nbttagcompound2.remove("z");
-                    itemstack.addTagElement("BlockEntityTag", nbttagcompound2);
+                BlockPos blockpos = BlockEntity.getPosFromTag(nbttagcompound);
+                BlockEntity blockentity = this.player.level.getBlockEntity(blockpos);
+                if (blockentity != null) {
+                    blockentity.saveToItem(itemstack);
                 }
             }
             final boolean flag2 = packetplayinsetcreativeslot.getSlotNum() >= 1 && packetplayinsetcreativeslot.getSlotNum() <= 45;

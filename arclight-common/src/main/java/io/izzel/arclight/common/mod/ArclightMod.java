@@ -1,13 +1,11 @@
 package io.izzel.arclight.common.mod;
 
-import io.izzel.arclight.common.mod.server.ArclightPermissionHandler;
 import io.izzel.arclight.common.mod.server.event.ArclightEventDispatcherRegistry;
 import io.izzel.arclight.common.mod.util.log.ArclightI18nLogger;
 import net.minecraftforge.fml.IExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.NetworkConstants;
-import net.minecraftforge.server.permission.PermissionAPI;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,7 +27,6 @@ public class ArclightMod {
         ArclightEventDispatcherRegistry.registerAllEventDispatchers();
         ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class,
             () -> new IExtensionPoint.DisplayTest(() -> NetworkConstants.IGNORESERVERONLY, (a, b) -> true));
-        PermissionAPI.setPermissionHandler(ArclightPermissionHandler.INSTANCE);
     }
 
     private static class LoggingPrintStream extends PrintStream {
