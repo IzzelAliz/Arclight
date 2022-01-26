@@ -19,6 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.nbt.CompoundTag;
@@ -29,36 +30,27 @@ import net.minecraft.nbt.Tag;
 public class CraftMetaItemMixin implements ItemMetaBridge {
 
     // @formatter:off
-    @Shadow(remap = false) @Final private Map<String, Tag> unhandledTags;
+    @Shadow @Final Map<String, Tag> unhandledTags;
+    @Shadow @Final private static Set<String> HANDLED_TAGS;
     // @formatter:on
 
-    private static final Set<String> EXTEND_TAGS = ImmutableSet.of(
-        "map_is_scaling",
-        "map",
-        "CustomPotionEffects",
-        "Potion",
-        "CustomPotionColor",
-        "SkullOwner",
-        "SkullProfile",
-        "EntityTag",
-        "BlockEntityTag",
-        "title",
-        "author",
-        "pages",
-        "resolved",
-        "generation",
-        "Fireworks",
-        "StoredEnchantments",
-        "Explosion",
-        "Recipes",
-        "BucketVariantTag",
-        "Charged",
-        "ChargedProjectiles",
-        "Effects",
-        "LodestoneDimension",
-        "LodestonePos",
-        "LodestoneTracked"
-    );
+    private static final Set<String> EXTEND_TAGS;
+
+    static {
+        EXTEND_TAGS = new HashSet<>(HANDLED_TAGS);
+        EXTEND_TAGS.removeAll(Set.of(
+            "display",
+            "CustomModelData",
+            "BlockStateTag",
+            "RepairCost",
+            "Enchantments",
+            "HideFlags",
+            "Unbreakable",
+            "Damage",
+            "PublicBukkitValues",
+            "AttributeModifiers"
+        ));
+    }
 
     @ModifyVariable(method = "<init>(Lnet/minecraft/nbt/CompoundTag;)V", at = @At(value = "INVOKE", target = "Lorg/bukkit/UnsafeValues;getDataVersion()I"))
     private CompoundTag arclight$provideTag(CompoundTag tag) {
