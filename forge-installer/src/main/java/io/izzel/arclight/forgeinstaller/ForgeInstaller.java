@@ -264,7 +264,7 @@ public class ForgeInstaller {
                     if (split[0].equals("legacyClassPath")) {
                         split[1] =
                             Stream.concat(
-                                Stream.concat(Stream.of(self.toString(), split[1]), installInfo.libraries.keySet().stream()
+                                Stream.concat(Stream.concat(Stream.of(self.toString()), Arrays.stream(split[1].split(File.pathSeparator))), installInfo.libraries.keySet().stream()
                                     .map(it -> Paths.get("libraries", Util.mavenToPath(it)))
                                     .peek(it -> {
                                         var name = it.getFileName().toString();
@@ -275,7 +275,16 @@ public class ForgeInstaller {
                                     .map(Path::toString)),
                                 Stream.empty()
                                 //Stream.of(self)
-                            ).collect(Collectors.joining(File.pathSeparator));
+                            ).sorted((a, b) -> {
+                                // damn stupid jpms
+                                if (a.contains("maven-repository-metadata")) {
+                                    return -1;
+                                } else if (b.contains("maven-repository-metadata")) {
+                                    return 1;
+                                } else {
+                                    return 0;
+                                }
+                            }).collect(Collectors.joining(File.pathSeparator));
                     } else if (split[0].equals("ignoreList")) {
                         ignores.addAll(Arrays.asList(split[1].split(",")));
                     }
