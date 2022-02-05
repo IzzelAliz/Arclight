@@ -158,7 +158,7 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
                 }
                 return;
             }
-            BlockDamageEvent blockEvent = CraftEventFactory.callBlockDamageEvent(this.player, blockPos.getX(), blockPos.getY(), blockPos.getZ(), this.player.getInventory().getSelected(), f >= 1.0f);
+            BlockDamageEvent blockEvent = CraftEventFactory.callBlockDamageEvent(this.player, blockPos, this.player.getInventory().getSelected(), f >= 1.0f);
             if (blockEvent.isCancelled()) {
                 this.player.connection.send(new ClientboundBlockUpdatePacket(this.level, blockPos));
                 return;
@@ -177,6 +177,7 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
                 int j = (int) (f * 10.0f);
                 this.level.destroyBlockProgress(this.player.getId(), blockPos, j);
                 this.player.connection.send(new ClientboundBlockBreakAckPacket(blockPos, this.level.getBlockState(blockPos), action, true, "actual start of destroying"));
+                CraftEventFactory.callBlockDamageAbortEvent(this.player, blockPos, this.player.getInventory().getSelected());
                 this.lastSentState = j;
             }
         } else if (action == ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK) {

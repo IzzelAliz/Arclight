@@ -16,8 +16,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.item.FallingBlockEntity;
-import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.ProtectionEnchantment;
@@ -34,6 +32,7 @@ import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.entity.PartEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -172,10 +171,31 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                         double d10 = (1.0D - d12) * d14;
 
                         CraftEventFactory.entityDamage = this.source;
-                        ((EntityBridge) entity).bridge$setForceExplosionKnockback(false);
-                        boolean wasDamaged = entity.hurt(this.getDamageSource(), (float) ((int) ((d10 * d10 + d10) / 2.0D * 7.0D * (double) f3 + 1.0D)));
+                        ((EntityBridge) entity).bridge$setLastDamageCancelled(false);
+
+                        // Special case ender dragon only give knockback if no damage is cancelled
+                        // Thinks to note:
+                        // - Setting a velocity to a ComplexEntityPart is ignored (and therefore not needed)
+                        // - Damaging ComplexEntityPart while forward the damage to EntityEnderDragon
+                        // - Damaging EntityEnderDragon does nothing
+                        // - EntityEnderDragon hitbock always covers the other parts and is therefore always present
+                        if (entity instanceof PartEntity<?>) {
+                            continue;
+                        }
+
+                        var parts = entity.getParts();
+                        if (parts != null) {
+                            for (var part : parts) {
+                                if (list.contains(part)) {
+                                    part.hurt(this.getDamageSource(), (float) ((int) ((d10 * d10 + d10) / 2.0D * 7.0D * (double) f3 + 1.0D)));
+                                }
+                            }
+                        } else {
+                            entity.hurt(this.getDamageSource(), (float) ((int) ((d10 * d10 + d10) / 2.0D * 7.0D * (double) f3 + 1.0D)));
+                        }
+
                         CraftEventFactory.entityDamage = null;
-                        if (!wasDamaged && !(entity instanceof PrimedTnt || entity instanceof FallingBlockEntity) && !((EntityBridge) entity).bridge$isForceExplosionKnockback()) {
+                        if (((EntityBridge) entity).bridge$isLastDamageCancelled()) {
                             continue;
                         }
 

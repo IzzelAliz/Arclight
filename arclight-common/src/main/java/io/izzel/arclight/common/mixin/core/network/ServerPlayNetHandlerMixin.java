@@ -401,9 +401,13 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         }
     }
 
-    @Inject(method = "handleSelectTrade", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/MerchantMenu;setSelectionHint(I)V"))
+    @Inject(method = "handleSelectTrade", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/MerchantMenu;setSelectionHint(I)V"))
     private void arclight$tradeSelect(ServerboundSelectTradePacket packetIn, CallbackInfo ci, int i, AbstractContainerMenu container) {
-        CraftEventFactory.callTradeSelectEvent(this.player, i, (MerchantMenu) container);
+        var event = CraftEventFactory.callTradeSelectEvent(this.player, i, (MerchantMenu) container);
+        if (event.isCancelled()) {
+            ((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity().updateInventory();
+            ci.cancel();
+        }
     }
 
     @Inject(method = "handleEditBook", at = @At("HEAD"))

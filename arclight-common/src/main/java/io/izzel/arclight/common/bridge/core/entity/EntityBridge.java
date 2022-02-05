@@ -1,13 +1,13 @@
 package io.izzel.arclight.common.bridge.core.entity;
 
 import io.izzel.arclight.common.bridge.core.command.ICommandSourceBridge;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.List;
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.Entity;
 
 public interface EntityBridge extends ICommandSourceBridge {
 
@@ -35,9 +35,9 @@ public interface EntityBridge extends ICommandSourceBridge {
 
     boolean bridge$isChunkLoaded();
 
-    boolean bridge$isForceExplosionKnockback();
+    boolean bridge$isLastDamageCancelled();
 
-    void bridge$setForceExplosionKnockback(boolean forceExplosionKnockback);
+    void bridge$setLastDamageCancelled(boolean cancelled);
 
     void bridge$postTick();
 

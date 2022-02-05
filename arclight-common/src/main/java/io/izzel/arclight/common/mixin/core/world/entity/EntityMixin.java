@@ -222,7 +222,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     public boolean generation;
     public boolean valid;
     public org.bukkit.projectiles.ProjectileSource projectileSource; // For projectiles only
-    public boolean forceExplosionKnockback; // SPIGOT-949
+    public boolean lastDamageCancelled; // SPIGOT-949
     public boolean persistentInvisibility = false;
     public BlockPos lastLavaContact;
     public int maxAirTicks = getDefaultMaxAirSupply();
@@ -362,13 +362,13 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     }
 
     @Override
-    public boolean bridge$isForceExplosionKnockback() {
-        return forceExplosionKnockback;
+    public boolean bridge$isLastDamageCancelled() {
+        return lastDamageCancelled;
     }
 
     @Override
-    public void bridge$setForceExplosionKnockback(boolean forceExplosionKnockback) {
-        this.forceExplosionKnockback = forceExplosionKnockback;
+    public void bridge$setLastDamageCancelled(boolean cancelled) {
+        this.lastDamageCancelled = cancelled;
     }
 
     public void postTick() {

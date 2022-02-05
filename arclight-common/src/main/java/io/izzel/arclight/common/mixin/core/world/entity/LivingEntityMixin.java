@@ -534,7 +534,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             boolean flag1 = true;
             if ((float) this.invulnerableTime > 10.0F) {
                 if (amount <= this.lastHurt) {
-                    this.forceExplosionKnockback = true;
                     return false;
                 }
 

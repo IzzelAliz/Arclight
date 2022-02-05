@@ -189,7 +189,6 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
         if (this.isInvulnerableTo(source)) {
             return false;
         } else if (this.abilities.invulnerable && !source.isBypassInvul()) {
-            this.forceExplosionKnockback = true;
             return false;
         } else {
             this.noActionTime = 0;
