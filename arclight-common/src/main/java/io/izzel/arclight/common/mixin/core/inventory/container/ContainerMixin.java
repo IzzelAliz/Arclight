@@ -84,7 +84,7 @@ public abstract class ContainerMixin implements ContainerBridge {
 
     private ITextComponent title;
 
-    public final ITextComponent getTitle() {
+    public ITextComponent getTitle() {
         if (this.title == null) {
             if (this.containerType != null && this.containerType.getRegistryName() != null) {
                 return new StringTextComponent(this.containerType.getRegistryName().toString());
@@ -95,7 +95,7 @@ public abstract class ContainerMixin implements ContainerBridge {
         return this.title;
     }
 
-    public final void setTitle(ITextComponent title) {
+    public void setTitle(ITextComponent title) {
         if (this.title == null) {
             if (title == null) {
                 this.title = getTitle();
