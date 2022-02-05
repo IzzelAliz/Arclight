@@ -36,6 +36,14 @@ public class RemappingURLClassLoader extends URLClassLoader implements Remapping
         super(urls, RemappingClassLoader.asTransforming(parent), factory);
     }
 
+    public RemappingURLClassLoader(String name, URL[] urls, ClassLoader parent) {
+        super(urls, RemappingClassLoader.asTransforming(parent));
+    }
+
+    public RemappingURLClassLoader(String name, URL[] urls, ClassLoader parent, URLStreamHandlerFactory factory) {
+        super(urls, RemappingClassLoader.asTransforming(parent), factory);
+    }
+
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
         Class<?> result = null;
