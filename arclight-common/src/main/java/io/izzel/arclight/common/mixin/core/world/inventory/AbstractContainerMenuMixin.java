@@ -71,22 +71,12 @@ public abstract class AbstractContainerMenuMixin implements ContainerBridge {
 
     public boolean checkReachable = true;
     private InventoryView bukkitView;
-    private long bukkitViewHash = 0;
 
     public InventoryView getBukkitView() {
-        if (bukkitView != null && bukkitViewHash != bukkitViewHash()) {
-            ArclightContainer.updateView((AbstractContainerMenu) (Object) this, bukkitView);
-            bukkitViewHash = bukkitViewHash();
-        }
         if (bukkitView == null) {
             bukkitView = ArclightContainer.createInvView((AbstractContainerMenu) (Object) this);
-            bukkitViewHash = bukkitViewHash();
         }
         return bukkitView;
-    }
-
-    private long bukkitViewHash() {
-        return (((long) this.slots.size()) << 32) | System.identityHashCode(this.slots);
     }
 
     public void transferTo(AbstractContainerMenu other, CraftHumanEntity player) {
@@ -100,7 +90,7 @@ public abstract class AbstractContainerMenuMixin implements ContainerBridge {
 
     private Component title;
 
-    public final Component getTitle() {
+    public Component getTitle() {
         if (this.title == null) {
             if (this.menuType != null && this.menuType.getRegistryName() != null) {
                 return new TextComponent(this.menuType.getRegistryName().toString());
@@ -111,7 +101,7 @@ public abstract class AbstractContainerMenuMixin implements ContainerBridge {
         return this.title;
     }
 
-    public final void setTitle(Component title) {
+    public void setTitle(Component title) {
         if (this.title == null) {
             if (title == null) {
                 this.title = getTitle();
