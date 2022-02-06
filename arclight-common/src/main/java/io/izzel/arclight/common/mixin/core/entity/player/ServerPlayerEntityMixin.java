@@ -710,7 +710,9 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
     @Inject(method = "closeContainer", at = @At("HEAD"))
     private void arclight$invClose(CallbackInfo ci) {
         if (this.openContainer != this.container) {
+            ArclightCaptures.captureContainerOwner((ServerPlayerEntity) (Object) this);
             CraftEventFactory.handleInventoryCloseEvent((ServerPlayerEntity) (Object) this);
+            ArclightCaptures.resetContainerOwner();
         }
     }
 
