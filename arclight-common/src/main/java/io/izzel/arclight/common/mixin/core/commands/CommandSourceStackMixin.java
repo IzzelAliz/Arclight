@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.commands;
 import com.mojang.brigadier.tree.CommandNode;
 import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
 import io.izzel.arclight.common.bridge.core.command.ICommandSourceBridge;
+import io.izzel.arclight.common.mod.compat.CommandNodeHooks;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerLevel;
@@ -28,8 +29,10 @@ public abstract class CommandSourceStackMixin implements CommandSourceBridge {
 
     public CommandNode currentCommand;
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     @Inject(method = "hasPermission", cancellable = true, at = @At("HEAD"))
     public void arclight$checkPermission(int level, CallbackInfoReturnable<Boolean> cir) {
+        CommandNode currentCommand = bridge$getCurrentCommand();
         if (currentCommand != null) {
             cir.setReturnValue(hasPermission(level, VanillaCommandWrapper.getPermission(currentCommand)));
         }
@@ -47,7 +50,11 @@ public abstract class CommandSourceStackMixin implements CommandSourceBridge {
 
     @Override
     public CommandNode<?> bridge$getCurrentCommand() {
-        return currentCommand;
+        if (currentCommand == null) {
+            return CommandNodeHooks.getCurrent();
+        } else {
+            return currentCommand;
+        }
     }
 
     @Override

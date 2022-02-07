@@ -8,13 +8,16 @@ import java.util.Map;
 
 public class CommandNodeHooks {
 
-    private static final long CHILDREN, LITERALS, ARGUMENTS;
+    private static final long CHILDREN, LITERALS, ARGUMENTS, CURRENT;
+    private static final Object CURRENT_BASE;
 
     static {
         try {
             CHILDREN = Unsafe.objectFieldOffset(CommandNode.class.getDeclaredField("children"));
             LITERALS = Unsafe.objectFieldOffset(CommandNode.class.getDeclaredField("literals"));
             ARGUMENTS = Unsafe.objectFieldOffset(CommandNode.class.getDeclaredField("arguments"));
+            CURRENT_BASE = Unsafe.staticFieldBase(CommandNode.class.getDeclaredField("CURRENT_COMMAND"));
+            CURRENT = Unsafe.staticFieldOffset(CommandNode.class.getDeclaredField("CURRENT_COMMAND"));
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
@@ -25,6 +28,10 @@ public class CommandNodeHooks {
         ((Map<String, ?>) Unsafe.getObject(node, CHILDREN)).remove(command);
         ((Map<String, ?>) Unsafe.getObject(node, LITERALS)).remove(command);
         ((Map<String, ?>) Unsafe.getObject(node, ARGUMENTS)).remove(command);
+    }
+
+    public static CommandNode<?> getCurrent() {
+        return (CommandNode<?>) Unsafe.getObjectVolatile(CURRENT_BASE, CURRENT);
     }
 
     public static <S> boolean canUse(CommandNode<S> node, S source) {
