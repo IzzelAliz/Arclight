@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import com.google.common.io.ByteStreams;
+import cpw.mods.modlauncher.EnumerationHelper;
 import io.izzel.arclight.common.asm.SwitchTableFixer;
 import io.izzel.arclight.common.bridge.bukkit.JavaPluginLoaderBridge;
 import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
@@ -21,7 +22,9 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.security.CodeSource;
+import java.util.Enumeration;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.jar.Manifest;
 
@@ -48,6 +51,40 @@ public class PluginClassLoaderMixin extends URLClassLoader implements RemappingC
 
     public PluginClassLoaderMixin(URL[] urls) {
         super(urls);
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    @Override
+    public URL getResource(String name) {
+        Objects.requireNonNull(name);
+        URL url = findResource(name);
+        if (url == null) {
+            if (getParent() != null) {
+                url = getParent().getResource(name);
+            }
+        }
+        return url;
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    @Override
+    public Enumeration<URL> getResources(String name) throws IOException {
+        Objects.requireNonNull(name);
+        @SuppressWarnings("unchecked")
+        Enumeration<URL>[] tmp = (Enumeration<URL>[]) new Enumeration<?>[2];
+        if (getParent()!= null) {
+            tmp[1] = getParent().getResources(name);
+        }
+        tmp[0] = findResources(name);
+        return EnumerationHelper.merge(tmp[0], tmp[1]);
     }
 
     /**
