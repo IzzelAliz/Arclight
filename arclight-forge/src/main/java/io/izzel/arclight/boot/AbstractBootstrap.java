@@ -68,17 +68,18 @@ public class AbstractBootstrap {
                 removeCommand.name = "removeCommand";
                 removeCommand.desc = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(String.class));
                 removeCommand.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                removeCommand.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
                 removeCommand.instructions.add(new FieldInsnNode(Opcodes.GETFIELD, "com/mojang/brigadier/tree/CommandNode", "children", Type.getDescriptor(Map.class)));
+                removeCommand.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
                 removeCommand.instructions.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, Type.getInternalName(Map.class), "remove", "(Ljava/lang/Object;)Ljava/lang/Object;", true));
                 removeCommand.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                removeCommand.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
                 removeCommand.instructions.add(new FieldInsnNode(Opcodes.GETFIELD, "com/mojang/brigadier/tree/CommandNode", "literals", Type.getDescriptor(Map.class)));
+                removeCommand.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
                 removeCommand.instructions.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, Type.getInternalName(Map.class), "remove", "(Ljava/lang/Object;)Ljava/lang/Object;", true));
                 removeCommand.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                removeCommand.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
                 removeCommand.instructions.add(new FieldInsnNode(Opcodes.GETFIELD, "com/mojang/brigadier/tree/CommandNode", "arguments", Type.getDescriptor(Map.class)));
+                removeCommand.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
                 removeCommand.instructions.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, Type.getInternalName(Map.class), "remove", "(Ljava/lang/Object;)Ljava/lang/Object;", true));
+                removeCommand.instructions.add(new InsnNode(Opcodes.RETURN));
                 node.methods.add(removeCommand);
             }
             var cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
