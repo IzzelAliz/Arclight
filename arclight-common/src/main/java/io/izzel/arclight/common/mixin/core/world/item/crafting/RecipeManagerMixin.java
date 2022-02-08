@@ -129,6 +129,13 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
         addRecipe(recipe);
     }
 
+    public boolean removeRecipe(ResourceLocation mcKey) {
+        for (var recipes : recipes.values()) {
+            recipes.remove(mcKey);
+        }
+        return byName.remove(mcKey) != null;
+    }
+
     public void clearRecipes() {
         this.recipes = new HashMap<>();
         for (RecipeType<?> type : Registry.RECIPE_TYPE) {
