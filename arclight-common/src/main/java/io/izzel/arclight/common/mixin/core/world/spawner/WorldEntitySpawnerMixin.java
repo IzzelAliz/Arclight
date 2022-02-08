@@ -14,6 +14,8 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.storage.LevelData;
+import org.bukkit.craftbukkit.v.util.CraftSpawnCategory;
+import org.bukkit.entity.SpawnCategory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -53,40 +55,13 @@ public abstract class WorldEntitySpawnerMixin {
         world.getProfiler().push("spawner");
         MobCategory[] classifications = SPAWNING_CATEGORIES;
         LevelData worldInfo = world.getLevelData();
-        boolean spawnAnimalThisTick = ((WorldBridge) world).bridge$ticksPerAnimalSpawns() != 0L && worldInfo.getGameTime() % ((WorldBridge) world).bridge$ticksPerAnimalSpawns() == 0L;
-        boolean spawnMonsterThisTick = ((WorldBridge) world).bridge$ticksPerMonsterSpawns() != 0L && worldInfo.getGameTime() % ((WorldBridge) world).bridge$ticksPerMonsterSpawns() == 0L;
-        boolean spawnWaterThisTick = ((WorldBridge) world).bridge$ticksPerWaterSpawns() != 0L && worldInfo.getGameTime() % ((WorldBridge) world).bridge$ticksPerWaterSpawns() == 0L;
-        boolean spawnAmbientThisTick = ((WorldBridge) world).bridge$ticksPerAmbientSpawns() != 0L && worldInfo.getGameTime() % ((WorldBridge) world).bridge$ticksPerAmbientSpawns() == 0L;
-        boolean spawnWaterAmbientThisTick = ((WorldBridge) world).bridge$ticksPerWaterAmbientSpawns() != 0L && worldInfo.getGameTime() % ((WorldBridge) world).bridge$ticksPerWaterAmbientSpawns() == 0L;
-        boolean spawnWaterUndergroundThisTick = ((WorldBridge) world).bridge$ticksPerWaterUndergroundSpawns() != 0L && worldInfo.getGameTime() % ((WorldBridge) world).bridge$ticksPerWaterUndergroundSpawns() == 0L;
         for (MobCategory classification : classifications) {
             boolean spawnThisTick = true;
             int limit = classification.getMaxInstancesPerChunk();
-            switch (classification) {
-                case MONSTER -> {
-                    spawnThisTick = spawnMonsterThisTick;
-                    limit = ((WorldBridge) world).bridge$getWorld().getMonsterSpawnLimit();
-                }
-                case CREATURE -> {
-                    spawnThisTick = spawnAnimalThisTick;
-                    limit = ((WorldBridge) world).bridge$getWorld().getAnimalSpawnLimit();
-                }
-                case UNDERGROUND_WATER_CREATURE -> {
-                    spawnThisTick = spawnWaterUndergroundThisTick;
-                    limit = ((WorldBridge) world).bridge$getWorld().getWaterUndergroundCreatureSpawnLimit();
-                }
-                case WATER_CREATURE -> {
-                    spawnThisTick = spawnWaterThisTick;
-                    limit = ((WorldBridge) world).bridge$getWorld().getWaterAnimalSpawnLimit();
-                }
-                case AMBIENT -> {
-                    spawnThisTick = spawnAmbientThisTick;
-                    limit = ((WorldBridge) world).bridge$getWorld().getAmbientSpawnLimit();
-                }
-                case WATER_AMBIENT -> {
-                    spawnThisTick = spawnWaterAmbientThisTick;
-                    limit = ((WorldBridge) world).bridge$getWorld().getWaterAmbientSpawnLimit();
-                }
+            SpawnCategory spawnCategory = CraftSpawnCategory.toBukkit(classification);
+            if (CraftSpawnCategory.isValidForLimits(spawnCategory)) {
+                spawnThisTick = ((WorldBridge) world).bridge$ticksPerSpawnCategory().getLong(spawnCategory) != 0 && worldInfo.getGameTime() % ((WorldBridge) world).bridge$ticksPerSpawnCategory().getLong(spawnCategory) == 0;
+                limit = ((WorldBridge) world).bridge$getWorld().getSpawnLimit(spawnCategory);
             }
             if (spawnThisTick) {
                 if (limit != 0) {

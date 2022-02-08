@@ -1,11 +1,13 @@
 package io.izzel.arclight.common.bridge.core.world;
 
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.dimension.LevelStem;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
+import org.bukkit.entity.SpawnCategory;
 import org.bukkit.generator.ChunkGenerator;
 import org.spigotmc.SpigotWorldConfig;
 
@@ -29,17 +31,7 @@ public interface WorldBridge extends IWorldWriterBridge, IWorldBridge {
 
     SpigotWorldConfig bridge$spigotConfig();
 
-    long bridge$ticksPerAnimalSpawns();
-
-    long bridge$ticksPerMonsterSpawns();
-
-    long bridge$ticksPerWaterSpawns();
-
-    long bridge$ticksPerAmbientSpawns();
-
-    long bridge$ticksPerWaterAmbientSpawns();
-
-    long bridge$ticksPerWaterUndergroundSpawns();
+    Object2LongOpenHashMap<SpawnCategory> bridge$ticksPerSpawnCategory();
 
     ResourceKey<LevelStem> bridge$getTypeKey();
 }

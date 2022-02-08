@@ -9,6 +9,7 @@ import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.server.world.WrappedWorlds;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
@@ -42,6 +43,8 @@ import org.bukkit.craftbukkit.v.generator.CraftWorldInfo;
 import org.bukkit.craftbukkit.v.generator.CustomChunkGenerator;
 import org.bukkit.craftbukkit.v.generator.CustomWorldChunkManager;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
+import org.bukkit.craftbukkit.v.util.CraftSpawnCategory;
+import org.bukkit.entity.SpawnCategory;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.world.GenericGameEvent;
@@ -81,12 +84,7 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
     protected CraftWorld world;
     public boolean pvpMode;
     public boolean keepSpawnInMemory = true;
-    public long ticksPerAnimalSpawns;
-    public long ticksPerMonsterSpawns;
-    public long ticksPerWaterSpawns;
-    public long ticksPerWaterAmbientSpawns;
-    public long ticksPerWaterUndergroundCreatureSpawns;
-    public long ticksPerAmbientSpawns;
+    public final Object2LongOpenHashMap<SpawnCategory> ticksPerSpawnCategory = new Object2LongOpenHashMap<>();
     public boolean populating;
     public org.bukkit.generator.ChunkGenerator generator;
     protected org.bukkit.World.Environment environment;
@@ -111,42 +109,16 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
     @Inject(method = "<init>(Lnet/minecraft/world/level/storage/WritableLevelData;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/dimension/DimensionType;Ljava/util/function/Supplier;ZZJ)V", at = @At("RETURN"))
     private void arclight$init(WritableLevelData info, ResourceKey<Level> dimension, DimensionType dimType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed, CallbackInfo ci) {
         ((WorldBorderBridge) this.worldBorder).bridge$setWorld((Level) (Object) this);
-        this.ticksPerAnimalSpawns = this.getCraftServer().getTicksPerAnimalSpawns();
-        this.ticksPerMonsterSpawns = this.getCraftServer().getTicksPerMonsterSpawns();
-        this.ticksPerWaterSpawns = this.getCraftServer().getTicksPerWaterSpawns();
-        this.ticksPerWaterAmbientSpawns = this.getCraftServer().getTicksPerWaterAmbientSpawns();
-        this.ticksPerWaterUndergroundCreatureSpawns = this.getCraftServer().getTicksPerWaterUndergroundCreatureSpawns();
-        this.ticksPerAmbientSpawns = this.getCraftServer().getTicksPerAmbientSpawns();
+        for (SpawnCategory spawnCategory : SpawnCategory.values()) {
+            if (CraftSpawnCategory.isValidForLimits(spawnCategory)) {
+                this.ticksPerSpawnCategory.put(spawnCategory, this.getCraftServer().getTicksPerSpawns(spawnCategory));
+            }
+        }
     }
 
     @Override
-    public long bridge$ticksPerAnimalSpawns() {
-        return ticksPerAnimalSpawns;
-    }
-
-    @Override
-    public long bridge$ticksPerMonsterSpawns() {
-        return ticksPerMonsterSpawns;
-    }
-
-    @Override
-    public long bridge$ticksPerWaterSpawns() {
-        return ticksPerWaterSpawns;
-    }
-
-    @Override
-    public long bridge$ticksPerAmbientSpawns() {
-        return ticksPerAmbientSpawns;
-    }
-
-    @Override
-    public long bridge$ticksPerWaterAmbientSpawns() {
-        return ticksPerWaterAmbientSpawns;
-    }
-
-    @Override
-    public long bridge$ticksPerWaterUndergroundSpawns() {
-        return ticksPerWaterUndergroundCreatureSpawns;
+    public Object2LongOpenHashMap<SpawnCategory> bridge$ticksPerSpawnCategory() {
+        return this.ticksPerSpawnCategory;
     }
 
     public abstract ResourceKey<LevelStem> getTypeKey();

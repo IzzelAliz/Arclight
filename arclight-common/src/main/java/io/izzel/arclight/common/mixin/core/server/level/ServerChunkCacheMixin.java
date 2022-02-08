@@ -16,6 +16,7 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.storage.LevelData;
+import org.bukkit.entity.SpawnCategory;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -95,7 +96,7 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
     @Redirect(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/LevelData;getGameTime()J"))
     private long arclight$ticksPer(LevelData worldInfo) {
         long gameTime = worldInfo.getGameTime();
-        long ticksPer = ((WorldBridge) this.level).bridge$ticksPerAnimalSpawns();
+        long ticksPer = ((WorldBridge) this.level).bridge$ticksPerSpawnCategory().getLong(SpawnCategory.ANIMAL);
         return (ticksPer != 0L && gameTime % ticksPer == 0) ? 0 : 1;
     }
 
