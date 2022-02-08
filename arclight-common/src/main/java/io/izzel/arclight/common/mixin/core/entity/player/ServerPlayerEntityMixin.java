@@ -430,12 +430,13 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
      */
     @Nullable
     @Overwrite
-    protected PortalInfo func_241829_a(ServerWorld p_241829_1_) {
-        PortalInfo portalinfo = super.func_241829_a(p_241829_1_);
-        if (portalinfo != null && ((WorldBridge) this.world).bridge$getTypeKey() == DimensionType.OVERWORLD && ((WorldBridge) p_241829_1_).bridge$getTypeKey() == DimensionType.THE_END) {
+    protected PortalInfo func_241829_a(ServerWorld world) {
+        PortalInfo portalinfo = super.func_241829_a(world);
+        world = portalinfo == null || ((PortalInfoBridge) portalinfo).bridge$getWorld() == null ? world : ((PortalInfoBridge) portalinfo).bridge$getWorld();
+        if (portalinfo != null && ((WorldBridge) this.world).bridge$getTypeKey() == DimensionType.OVERWORLD && ((WorldBridge) world).bridge$getTypeKey() == DimensionType.THE_END) {
             Vector3d vector3d = portalinfo.pos.add(0.0D, -1.0D, 0.0D);
             PortalInfo newInfo = new PortalInfo(vector3d, Vector3d.ZERO, 90.0F, 0.0F);
-            ((PortalInfoBridge) newInfo).bridge$setWorld(p_241829_1_);
+            ((PortalInfoBridge) newInfo).bridge$setWorld(world);
             ((PortalInfoBridge) newInfo).bridge$setPortalEventInfo(((PortalInfoBridge) portalinfo).bridge$getPortalEventInfo());
             return newInfo;
         } else {
@@ -481,22 +482,21 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntityMixin implemen
 
             return (ServerPlayerEntity) (Object) this;
         } else {
-            IWorldInfo iworldinfo = server.getWorldInfo();
-            this.connection.sendPacket(new SRespawnPacket(server.getDimensionType(), server.getDimensionKey(), BiomeManager.getHashedSeed(server.getSeed()), this.interactionManager.getGameType(), this.interactionManager.func_241815_c_(), server.isDebug(), server.isFlatWorld(), true));
-            this.connection.sendPacket(new SServerDifficultyPacket(iworldinfo.getDifficulty(), iworldinfo.isDifficultyLocked()));
-            PlayerList playerlist = this.server.getPlayerList();
-            playerlist.updatePermissionLevel((ServerPlayerEntity) (Object) this);
-            serverworld.removeEntity((ServerPlayerEntity) (Object) this, true); //Forge: the player entity is moved to the new world, NOT cloned. So keep the data alive with no matching invalidate call.
-            this.revive();
             PortalInfo portalinfo = teleporter.getPortalInfo((ServerPlayerEntity) (Object) this, server, this::func_241829_a);
-            ServerWorld[] exitWorld = new ServerWorld[]{server};
             if (portalinfo != null) {
+                if (((PortalInfoBridge) portalinfo).bridge$getWorld() != null) {
+                    server = ((PortalInfoBridge) portalinfo).bridge$getWorld();
+                }
+                ServerWorld[] exitWorld = new ServerWorld[]{server};
+                IWorldInfo iworldinfo = server.getWorldInfo();
+                this.connection.sendPacket(new SRespawnPacket(server.getDimensionType(), server.getDimensionKey(), BiomeManager.getHashedSeed(server.getSeed()), this.interactionManager.getGameType(), this.interactionManager.func_241815_c_(), server.isDebug(), server.isFlatWorld(), true));
+                this.connection.sendPacket(new SServerDifficultyPacket(iworldinfo.getDifficulty(), iworldinfo.isDifficultyLocked()));
+                PlayerList playerlist = this.server.getPlayerList();
+                playerlist.updatePermissionLevel((ServerPlayerEntity) (Object) this);
+                serverworld.removeEntity((ServerPlayerEntity) (Object) this, true); //Forge: the player entity is moved to the new world, NOT cloned. So keep the data alive with no matching invalidate call.
+                this.revive();
                 Entity e = teleporter.placeEntity((ServerPlayerEntity) (Object) this, serverworld, exitWorld[0], this.rotationYaw, spawnPortal -> {//Forge: Start vanilla logic
                     serverworld.getProfiler().startSection("moving");
-
-                    if (((PortalInfoBridge) portalinfo).bridge$getWorld() != null) {
-                        exitWorld[0] = ((PortalInfoBridge) portalinfo).bridge$getWorld();
-                    }
                     if (exitWorld[0] != null) {
                         if (registrykey == DimensionType.OVERWORLD && ((WorldBridge) exitWorld[0]).bridge$getTypeKey() == DimensionType.THE_NETHER) {
                             this.enteredNetherPosition = this.getPositionVec();
