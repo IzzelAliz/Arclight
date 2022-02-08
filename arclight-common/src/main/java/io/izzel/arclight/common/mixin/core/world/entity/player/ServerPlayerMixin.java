@@ -431,12 +431,13 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
      */
     @Nullable
     @Overwrite
-    protected PortalInfo findDimensionEntryPoint(ServerLevel p_241829_1_) {
-        PortalInfo portalinfo = super.findDimensionEntryPoint(p_241829_1_);
-        if (portalinfo != null && ((WorldBridge) this.level).bridge$getTypeKey() == LevelStem.OVERWORLD && ((WorldBridge) p_241829_1_).bridge$getTypeKey() == LevelStem.END) {
+    protected PortalInfo findDimensionEntryPoint(ServerLevel level) {
+        PortalInfo portalinfo = super.findDimensionEntryPoint(level);
+        level = portalinfo == null || ((PortalInfoBridge) portalinfo).bridge$getWorld() == null ? level : ((PortalInfoBridge) portalinfo).bridge$getWorld();
+        if (portalinfo != null && ((WorldBridge) this.level).bridge$getTypeKey() == LevelStem.OVERWORLD && ((WorldBridge) level).bridge$getTypeKey() == LevelStem.END) {
             Vec3 vector3d = portalinfo.pos.add(0.0D, -1.0D, 0.0D);
             PortalInfo newInfo = new PortalInfo(vector3d, Vec3.ZERO, 90.0F, 0.0F);
-            ((PortalInfoBridge) newInfo).bridge$setWorld(p_241829_1_);
+            ((PortalInfoBridge) newInfo).bridge$setWorld(level);
             ((PortalInfoBridge) newInfo).bridge$setPortalEventInfo(((PortalInfoBridge) portalinfo).bridge$getPortalEventInfo());
             return newInfo;
         } else {
@@ -482,24 +483,23 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
             return (ServerPlayer) (Object) this;
         } else {
-            LevelData iworldinfo = server.getLevelData();
-            this.connection.send(new ClientboundRespawnPacket(server.dimensionType(), server.dimension(), BiomeManager.obfuscateSeed(server.getSeed()), this.gameMode.getGameModeForPlayer(), this.gameMode.getPreviousGameModeForPlayer(), server.isDebug(), server.isFlat(), true));
-            this.connection.send(new ClientboundChangeDifficultyPacket(iworldinfo.getDifficulty(), iworldinfo.isDifficultyLocked()));
-            PlayerList playerlist = this.server.getPlayerList();
-            playerlist.sendPlayerPermissionLevel((ServerPlayer) (Object) this);
-            serverworld.removeEntity((ServerPlayer) (Object) this, true); //Forge: the player entity is moved to the new world, NOT cloned. So keep the data alive with no matching invalidate call.
-            this.revive();
             PortalInfo portalinfo = teleporter.getPortalInfo((ServerPlayer) (Object) this, server, this::findDimensionEntryPoint);
-            ServerLevel[] exitWorld = new ServerLevel[]{server};
             if (portalinfo != null) {
+                if (((PortalInfoBridge) portalinfo).bridge$getWorld() != null) {
+                    server = ((PortalInfoBridge) portalinfo).bridge$getWorld();
+                }
+                ServerLevel[] exitWorld = new ServerLevel[]{server};
+                LevelData iworldinfo = server.getLevelData();
+                this.connection.send(new ClientboundRespawnPacket(server.dimensionType(), server.dimension(), BiomeManager.obfuscateSeed(server.getSeed()), this.gameMode.getGameModeForPlayer(), this.gameMode.getPreviousGameModeForPlayer(), server.isDebug(), server.isFlat(), true));
+                this.connection.send(new ClientboundChangeDifficultyPacket(iworldinfo.getDifficulty(), iworldinfo.isDifficultyLocked()));
+                PlayerList playerlist = this.server.getPlayerList();
+                playerlist.sendPlayerPermissionLevel((ServerPlayer) (Object) this);
+                serverworld.removeEntity((ServerPlayer) (Object) this, true); //Forge: the player entity is moved to the new world, NOT cloned. So keep the data alive with no matching invalidate call.
+                this.revive();
                 Entity e = teleporter.placeEntity((ServerPlayer) (Object) this, serverworld, exitWorld[0], this.getYRot(), spawnPortal -> {//Forge: Start vanilla logic
                     serverworld.getProfiler().push("moving");
-
-                    if (((PortalInfoBridge) portalinfo).bridge$getWorld() != null) {
-                        exitWorld[0] = ((PortalInfoBridge) portalinfo).bridge$getWorld();
-                    }
                     if (exitWorld[0] != null) {
-                        if (registrykey ==LevelStem.OVERWORLD&& ((WorldBridge) exitWorld[0]).bridge$getTypeKey() == LevelStem.NETHER) {
+                        if (registrykey == LevelStem.OVERWORLD && ((WorldBridge) exitWorld[0]).bridge$getTypeKey() == LevelStem.NETHER) {
                             this.enteredNetherPosition = this.position();
                         } else if (spawnPortal && ((WorldBridge) exitWorld[0]).bridge$getTypeKey() == LevelStem.END
                             && (((PortalInfoBridge) portalinfo).bridge$getPortalEventInfo() == null || ((PortalInfoBridge) portalinfo).bridge$getPortalEventInfo().getCanCreatePortal())) {
