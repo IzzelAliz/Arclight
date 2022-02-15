@@ -46,7 +46,7 @@ public abstract class ExperienceOrbMixin extends EntityMixin {
         arclight$lastPlayer = null;
     }
 
-    @Redirect(method = "tick", at = @At(value = "FIELD", ordinal = 6, target = "Lnet/minecraft/world/entity/ExperienceOrb;followingPlayer:Lnet/minecraft/world/entity/player/Player;"))
+    @Redirect(method = "tick", at = @At(value = "FIELD", ordinal = 4, target = "Lnet/minecraft/world/entity/ExperienceOrb;followingPlayer:Lnet/minecraft/world/entity/player/Player;"))
     private Player arclight$targetPlayer(ExperienceOrb entity) {
         if (this.followingPlayer != arclight$lastPlayer) {
             EntityTargetLivingEntityEvent event = CraftEventFactory.callEntityTargetLivingEvent((ExperienceOrb) (Object) this, this.followingPlayer, (this.followingPlayer != null) ? EntityTargetEvent.TargetReason.CLOSEST_PLAYER : EntityTargetEvent.TargetReason.FORGOT_TARGET);
