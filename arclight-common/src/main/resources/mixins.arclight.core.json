@@ -19,6 +19,7 @@
     "advancements.AdvancementMixin",
     "commands.CommandsMixin",
     "commands.CommandSourceMixin",
+    "commands.CommandSource1Mixin",
     "commands.CommandSourceStackMixin",
     "commands.arguments.EntityArgumentMixin",
     "commands.arguments.blocks.BlockStateParserMixin",
