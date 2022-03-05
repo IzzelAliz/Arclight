@@ -294,7 +294,7 @@ public abstract class MaterialMixin implements MaterialBridge {
                 }
             } catch (Exception e) {
                 ArclightMod.LOGGER.warn("Bad material data class {} for {}", arclight$spec.materialDataClass, this);
-                ArclightMod.LOGGER.warn("Exception: ", e);
+                ArclightMod.LOGGER.warn(e);
             }
         }
         if (arclight$spec.maxStack == null) {
