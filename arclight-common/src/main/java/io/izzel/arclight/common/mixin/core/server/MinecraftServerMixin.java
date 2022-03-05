@@ -3,6 +3,8 @@ package io.izzel.arclight.common.mixin.core.server;
 import com.mojang.authlib.GameProfileRepository;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.datafixers.DataFixer;
+import com.mojang.serialization.DynamicOps;
+
 import io.izzel.arclight.common.bridge.core.command.ICommandSourceBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
@@ -27,11 +29,11 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.protocol.status.ServerStatus;
 import net.minecraft.obfuscate.DontObfuscate;
-import net.minecraft.resources.RegistryReadOps;
+import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.ServerResources;
 import net.minecraft.server.TickTask;
+import net.minecraft.server.WorldStem;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.TicketType;
@@ -53,10 +55,8 @@ import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.level.storage.WorldData;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.world.StructureSpawnManager;
 import net.minecraftforge.internal.BrandingControl;
 import net.minecraftforge.server.ServerLifecycleHooks;
-import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -67,6 +67,7 @@ import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.plugin.PluginLoadOrder;
+import org.slf4j.Logger;
 import org.spigotmc.WatchdogThread;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -137,7 +138,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     }
 
     public DataPackConfig datapackconfiguration;
-    public RegistryReadOps<Tag> registryreadops;
+    public DynamicOps<Tag> registryreadops;
     private boolean forceTicks;
     public CraftServer server;
     public OptionSet options;
@@ -167,7 +168,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    public void arclight$loadOptions(Thread serverThread, RegistryAccess.RegistryHolder dynamicRegistries, LevelStorageSource.LevelStorageAccess anvilConverterForAnvilFile, WorldData serverConfig, PackRepository dataPacks, Proxy serverProxy, DataFixer dataFixer, ServerResources dataRegistries, MinecraftSessionService sessionService, GameProfileRepository profileRepo, GameProfileCache profileCache, ChunkProgressListenerFactory chunkStatusListenerFactory, CallbackInfo ci) {
+    public void arclight$loadOptions(Thread p_206546_, LevelStorageSource.LevelStorageAccess p_206547_, PackRepository p_206548_, WorldStem p_206549_, Proxy p_206550_, DataFixer p_206551_, @Nullable MinecraftSessionService p_206552_, @Nullable GameProfileRepository p_206553_, @Nullable GameProfileCache p_206554_, ChunkProgressListenerFactory p_206555_, CallbackInfo ci) {
         String[] arguments = ManagementFactory.getRuntimeMXBean().getInputArguments().toArray(new String[0]);
         OptionParser parser = new BukkitOptionParser();
         try {
@@ -176,8 +177,8 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
             e.printStackTrace();
         }
         this.datapackconfiguration = ArclightCaptures.getDatapackConfig();
-        this.registryreadops = RegistryReadOps.createAndLoad(NbtOps.INSTANCE, dataRegistries.getResourceManager(), dynamicRegistries);
-        this.vanillaCommandDispatcher = dataRegistries.getCommands();
+        this.registryreadops = RegistryOps.createAndLoad(NbtOps.INSTANCE, RegistryAccess.builtinCopy(), p_206549_.resourceManager());
+        this.vanillaCommandDispatcher = p_206549_.dataPackResources().getCommands();
     }
 
     /**
@@ -295,7 +296,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         }
     }
 
-    @Inject(method = "stopServer", at = @At(value = "INVOKE", remap = false, ordinal = 0, shift = At.Shift.AFTER, target = "Lorg/apache/logging/log4j/Logger;info(Ljava/lang/String;)V"))
+    @Inject(method = "stopServer", at = @At(value = "INVOKE", remap = false, ordinal = 0, shift = At.Shift.AFTER, target = "Lorg/slf4j/Logger;info(Ljava/lang/String;)V"))
     public void arclight$unloadPlugins(CallbackInfo ci) {
         if (this.server != null) {
             this.server.disablePlugins();
@@ -355,7 +356,6 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
      */
     @Overwrite
     public void prepareLevels(ChunkProgressListener listener) {
-        StructureSpawnManager.gatherEntitySpawns();
         ServerLevel serverworld = this.overworld();
         this.forceTicks = true;
         LOGGER.info("Preparing start region for dimension {}", serverworld.dimension().location());

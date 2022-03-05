@@ -19,6 +19,7 @@ import io.izzel.arclight.common.mod.util.DelegateWorldInfo;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import io.izzel.arclight.i18n.ArclightConfig;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.network.protocol.Packet;
@@ -116,11 +117,11 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         return this.typeKey;
     }
 
-    public void arclight$constructor(MinecraftServer server, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, ServerLevelData serverWorldInfo, ResourceKey<net.minecraft.world.level.Level> dimension, DimensionType dimensionType, ChunkProgressListener statusListener, ChunkGenerator chunkGenerator, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking) {
+    public void arclight$constructor(MinecraftServer server, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, ServerLevelData serverWorldInfo, ResourceKey<net.minecraft.world.level.Level> dimension, Holder<DimensionType> dimensionType, ChunkProgressListener statusListener, ChunkGenerator chunkGenerator, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking) {
         throw new RuntimeException();
     }
 
-    public void arclight$constructor(MinecraftServer server, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, ServerLevelData serverWorldInfo, ResourceKey<net.minecraft.world.level.Level> dimension, DimensionType dimensionType, ChunkProgressListener statusListener, ChunkGenerator chunkGenerator, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking, org.bukkit.World.Environment env, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider) {
+    public void arclight$constructor(MinecraftServer server, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, ServerLevelData serverWorldInfo, ResourceKey<net.minecraft.world.level.Level> dimension, Holder<DimensionType> dimensionType, ChunkProgressListener statusListener, ChunkGenerator chunkGenerator, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking, org.bukkit.World.Environment env, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider) {
         arclight$constructor(server, backgroundExecutor, levelSave, serverWorldInfo, dimension, dimensionType, statusListener, chunkGenerator, isDebug, seed, specialSpawners, shouldBeTicking);
         this.generator = gen;
         this.environment = env;
@@ -132,8 +133,8 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         bridge$getWorld();
     }
 
-    @Inject(method = "<init>(Lnet/minecraft/server/MinecraftServer;Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/world/level/storage/ServerLevelData;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/dimension/DimensionType;Lnet/minecraft/server/level/progress/ChunkProgressListener;Lnet/minecraft/world/level/chunk/ChunkGenerator;ZJLjava/util/List;Z)V", at = @At("RETURN"))
-    private void arclight$init(MinecraftServer minecraftServer, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, ServerLevelData worldInfo, ResourceKey<net.minecraft.world.level.Level> dimension, DimensionType dimensionType, ChunkProgressListener statusListener, ChunkGenerator chunkGenerator, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking, CallbackInfo ci) {
+    @Inject(method = "<init>(Lnet/minecraft/server/MinecraftServer;Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/world/level/storage/ServerLevelData;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/core/Holder;Lnet/minecraft/server/level/progress/ChunkProgressListener;Lnet/minecraft/world/level/chunk/ChunkGenerator;ZJLjava/util/List;Z)V", at = @At("RETURN"))
+    private void arclight$init(MinecraftServer minecraftServer, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, ServerLevelData worldInfo, ResourceKey<net.minecraft.world.level.Level> dimension, Holder<DimensionType> dimensionType, ChunkProgressListener statusListener, ChunkGenerator chunkGenerator, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking, CallbackInfo ci) {
         this.pvpMode = minecraftServer.isPvpAllowed();
         this.convertable = levelSave;
         var typeKey = ((LevelStorageSourceBridge.LevelStorageAccessBridge) levelSave).bridge$getTypeKey();

@@ -8,7 +8,7 @@ import net.minecraft.network.protocol.PacketUtils;
 import net.minecraft.server.RunningOnDifferentThreadException;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.util.thread.BlockableEventLoop;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.spongepowered.asm.mixin.Final;

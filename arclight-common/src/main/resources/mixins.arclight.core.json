@@ -47,7 +47,7 @@
     "network.rcon.RConConsoleSourceMixin",
     "server.BootstrapMixin",
     "server.CustomServerBossInfoMixin",
-    "server.MainMixin",
+    "server.WorldStemMixin",
     "server.MinecraftServerMixin",
     "server.PlayerAdvancementsMixin",
     "server.ServerFunctionManagerMixin",

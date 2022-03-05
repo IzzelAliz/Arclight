@@ -20,7 +20,7 @@ import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.crafting.CraftingHelper;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -91,8 +91,8 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
      */
     @Overwrite
     public <C extends Container, T extends Recipe<C>> Optional<T> getRecipeFor(RecipeType<T> recipeTypeIn, C inventoryIn, Level worldIn) {
-        Optional<T> optional = this.byType(recipeTypeIn).values().stream().flatMap((recipe) -> {
-            return Util.toStream(recipeTypeIn.tryMatch(recipe, worldIn, inventoryIn));
+        Optional<T> optional = this.byType(recipeTypeIn).values().stream().flatMap((p_44064_) -> {
+            return recipeTypeIn.tryMatch(p_44064_, worldIn, inventoryIn).stream();
         }).findFirst();
         ((IInventoryBridge) inventoryIn).setCurrentRecipe(optional.orElse(null));
         return optional;

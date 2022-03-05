@@ -71,7 +71,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.ForgeHooks;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
