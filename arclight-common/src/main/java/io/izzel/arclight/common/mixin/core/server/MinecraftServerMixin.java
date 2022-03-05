@@ -23,7 +23,6 @@ import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.TextComponent;
@@ -177,7 +176,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
             e.printStackTrace();
         }
         this.datapackconfiguration = ArclightCaptures.getDatapackConfig();
-        this.registryreadops = RegistryOps.createAndLoad(NbtOps.INSTANCE, RegistryAccess.builtinCopy(), p_206549_.resourceManager());
+        this.registryreadops = RegistryOps.create(NbtOps.INSTANCE, p_206549_.registryAccess());
         this.vanillaCommandDispatcher = p_206549_.dataPackResources().getCommands();
     }
 
