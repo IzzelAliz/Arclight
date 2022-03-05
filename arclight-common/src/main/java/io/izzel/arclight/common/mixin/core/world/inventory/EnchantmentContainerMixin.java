@@ -24,6 +24,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.EnchantmentTableBlock;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.Bukkit;
@@ -56,7 +57,6 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
     // @formatter:off
     @Shadow @Final private Container enchantSlots;
     @Shadow @Final private ContainerLevelAccess access;
-    @Shadow(remap = false) protected abstract float getPower(Level world, BlockPos pos);
     @Shadow @Final private Random random;
     @Shadow @Final private DataSlot enchantmentSeed;
     @Shadow @Final public int[] costs;
@@ -90,21 +90,11 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
                 this.access.execute((p_217002_2_, p_217002_3_) -> {
                     float power = 0;
 
-                    for (int k = -1; k <= 1; ++k) {
-                        for (int l = -1; l <= 1; ++l) {
-                            if ((k != 0 || l != 0) && p_217002_2_.isEmptyBlock(p_217002_3_.offset(l, 0, k)) && p_217002_2_.isEmptyBlock(p_217002_3_.offset(l, 1, k))) {
-                                power += getPower(p_217002_2_, p_217002_3_.offset(l * 2, 0, k * 2));
-                                power += getPower(p_217002_2_, p_217002_3_.offset(l * 2, 1, k * 2));
-
-                                if (l != 0 && k != 0) {
-                                    power += getPower(p_217002_2_, p_217002_3_.offset(l * 2, 0, k));
-                                    power += getPower(p_217002_2_, p_217002_3_.offset(l * 2, 1, k));
-                                    power += getPower(p_217002_2_, p_217002_3_.offset(l, 0, k * 2));
-                                    power += getPower(p_217002_2_, p_217002_3_.offset(l, 1, k * 2));
-                                }
-                            }
+                    for(BlockPos blockpos : EnchantmentTableBlock.BOOKSHELF_OFFSETS) {
+                        if (EnchantmentTableBlock.isValidBookShelf(p_217002_2_, p_217002_3_, blockpos)) {
+                           power += p_217002_2_.getBlockState(p_217002_3_.offset(blockpos)).getEnchantPowerBonus(p_217002_2_, p_217002_3_.offset(blockpos));
                         }
-                    }
+                     }
 
                     this.random.setSeed(this.enchantmentSeed.get());
 

@@ -11,6 +11,7 @@ import io.izzel.arclight.common.mod.server.world.WrappedWorlds;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -94,11 +95,11 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
     private static BlockPos lastPhysicsProblem; // Spigot
     public boolean preventPoiUpdated = false;
 
-    public void arclight$constructor(WritableLevelData worldInfo, ResourceKey<Level> dimension, final DimensionType dimensionType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed) {
+    public void arclight$constructor(WritableLevelData worldInfo, ResourceKey<Level> dimension, final Holder<DimensionType> dimensionType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed) {
         throw new RuntimeException();
     }
 
-    public void arclight$constructor(WritableLevelData worldInfo, ResourceKey<Level> dimension, final DimensionType dimensionType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider, org.bukkit.World.Environment env) {
+    public void arclight$constructor(WritableLevelData worldInfo, ResourceKey<Level> dimension, final Holder<DimensionType> dimensionType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider, org.bukkit.World.Environment env) {
         arclight$constructor(worldInfo, dimension, dimensionType, profiler, isRemote, isDebug, seed);
         this.generator = gen;
         this.environment = env;
@@ -106,8 +107,8 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
         bridge$getWorld();
     }
 
-    @Inject(method = "<init>(Lnet/minecraft/world/level/storage/WritableLevelData;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/dimension/DimensionType;Ljava/util/function/Supplier;ZZJ)V", at = @At("RETURN"))
-    private void arclight$init(WritableLevelData info, ResourceKey<Level> dimension, DimensionType dimType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed, CallbackInfo ci) {
+    @Inject(method = "<init>(Lnet/minecraft/world/level/storage/WritableLevelData;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/core/Holder;Ljava/util/function/Supplier;ZZJ)V", at = @At("RETURN"))
+    private void arclight$init(WritableLevelData info, ResourceKey<Level> dimension, Holder<DimensionType> dimType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed, CallbackInfo ci) {
         ((WorldBorderBridge) this.worldBorder).bridge$setWorld((Level) (Object) this);
         for (SpawnCategory spawnCategory : SpawnCategory.values()) {
             if (CraftSpawnCategory.isValidForLimits(spawnCategory)) {

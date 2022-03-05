@@ -134,7 +134,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void arclight$loadServer(MinecraftServer minecraftServer, RegistryAccess.RegistryHolder p_i231425_2_, PlayerDataStorage p_i231425_3_, int p_i231425_4_, CallbackInfo ci) {
+    private void arclight$loadServer(MinecraftServer minecraftServer, RegistryAccess.Frozen p_i231425_2_, PlayerDataStorage p_i231425_3_, int p_i231425_4_, CallbackInfo ci) {
         cserver = ArclightServer.createOrLoad((DedicatedServer) minecraftServer, (PlayerList) (Object) this);
     }
 
@@ -324,7 +324,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             playerIn.setPos(playerIn.getX(), playerIn.getY() + 1.0, playerIn.getZ());
         }
         LevelData worlddata = serverWorld.getLevelData();
-        playerIn.connection.send(new ClientboundRespawnPacket(serverWorld.dimensionType(), serverWorld.dimension(), BiomeManager.obfuscateSeed(serverWorld.getSeed()), playerIn.gameMode.getGameModeForPlayer(), playerIn.gameMode.getPreviousGameModeForPlayer(), serverWorld.isDebug(), serverWorld.isFlat(), flag));
+        playerIn.connection.send(new ClientboundRespawnPacket(serverWorld.dimensionTypeRegistration(), serverWorld.dimension(), BiomeManager.obfuscateSeed(serverWorld.getSeed()), playerIn.gameMode.getGameModeForPlayer(), playerIn.gameMode.getPreviousGameModeForPlayer(), serverWorld.isDebug(), serverWorld.isFlat(), flag));
         playerIn.connection.send(new ClientboundSetChunkCacheRadiusPacket(((WorldBridge) serverWorld).bridge$spigotConfig().viewDistance));
         playerIn.connection.send(new ClientboundSetSimulationDistancePacket(((WorldBridge) serverWorld).bridge$spigotConfig().simulationDistance));
         playerIn.setLevel(serverWorld);
@@ -469,7 +469,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         }
 
         LevelData iworldinfo = serverplayerentity.level.getLevelData();
-        serverplayerentity.connection.send(new ClientboundRespawnPacket(serverplayerentity.level.dimensionType(), serverplayerentity.level.dimension(), BiomeManager.obfuscateSeed(serverplayerentity.getLevel().getSeed()), serverplayerentity.gameMode.getGameModeForPlayer(), serverplayerentity.gameMode.getPreviousGameModeForPlayer(), serverplayerentity.getLevel().isDebug(), serverplayerentity.getLevel().isFlat(), conqueredEnd));
+        serverplayerentity.connection.send(new ClientboundRespawnPacket(serverplayerentity.level.dimensionTypeRegistration(), serverplayerentity.level.dimension(), BiomeManager.obfuscateSeed(serverplayerentity.getLevel().getSeed()), serverplayerentity.gameMode.getGameModeForPlayer(), serverplayerentity.gameMode.getPreviousGameModeForPlayer(), serverplayerentity.getLevel().isDebug(), serverplayerentity.getLevel().isFlat(), conqueredEnd));
         serverplayerentity.connection.send(new ClientboundSetChunkCacheRadiusPacket(((WorldBridge) serverWorld).bridge$spigotConfig().viewDistance));
         serverplayerentity.connection.send(new ClientboundSetSimulationDistancePacket(((WorldBridge) serverWorld).bridge$spigotConfig().simulationDistance));
         serverplayerentity.setLevel(serverWorld);

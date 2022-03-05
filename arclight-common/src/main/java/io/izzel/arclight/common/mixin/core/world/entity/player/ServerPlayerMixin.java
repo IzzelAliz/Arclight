@@ -80,7 +80,7 @@ import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.util.ITeleporter;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.server.ServerLifecycleHooks;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.WeatherType;
@@ -490,7 +490,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
                 }
                 ServerLevel[] exitWorld = new ServerLevel[]{server};
                 LevelData iworldinfo = server.getLevelData();
-                this.connection.send(new ClientboundRespawnPacket(server.dimensionType(), server.dimension(), BiomeManager.obfuscateSeed(server.getSeed()), this.gameMode.getGameModeForPlayer(), this.gameMode.getPreviousGameModeForPlayer(), server.isDebug(), server.isFlat(), true));
+                this.connection.send(new ClientboundRespawnPacket(server.dimensionTypeRegistration(), server.dimension(), BiomeManager.obfuscateSeed(server.getSeed()), this.gameMode.getGameModeForPlayer(), this.gameMode.getPreviousGameModeForPlayer(), server.isDebug(), server.isFlat(), true));
                 this.connection.send(new ClientboundChangeDifficultyPacket(iworldinfo.getDifficulty(), iworldinfo.isDifficultyLocked()));
                 PlayerList playerlist = this.server.getPlayerList();
                 playerlist.sendPlayerPermissionLevel((ServerPlayer) (Object) this);
@@ -524,7 +524,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
                     if (newWorld != exitWorld[0]) {
                         exitWorld[0] = newWorld;
                         LevelData newWorldInfo = exitWorld[0].getLevelData();
-                        this.connection.send(new ClientboundRespawnPacket(exitWorld[0].dimensionType(), exitWorld[0].dimension(), BiomeManager.obfuscateSeed(exitWorld[0].getSeed()), this.gameMode.getGameModeForPlayer(), this.gameMode.getPreviousGameModeForPlayer(), exitWorld[0].isDebug(), exitWorld[0].isFlat(), true));
+                        this.connection.send(new ClientboundRespawnPacket(exitWorld[0].dimensionTypeRegistration(), exitWorld[0].dimension(), BiomeManager.obfuscateSeed(exitWorld[0].getSeed()), this.gameMode.getGameModeForPlayer(), this.gameMode.getPreviousGameModeForPlayer(), exitWorld[0].isDebug(), exitWorld[0].isFlat(), true));
                         this.connection.send(new ClientboundChangeDifficultyPacket(newWorldInfo.getDifficulty(), newWorldInfo.isDifficultyLocked()));
                     }
 

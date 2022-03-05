@@ -71,9 +71,8 @@ public abstract class EnderDragonMixin extends MobMixin {
                 for (int i3 = k; i3 <= j2; ++i3) {
                     final BlockPos blockposition = new BlockPos(k2, l2, i3);
                     final BlockState iblockdata = this.level.getBlockState(blockposition);
-                    final net.minecraft.world.level.block.Block block = iblockdata.getBlock();
                     if (!iblockdata.isAir() && iblockdata.getMaterial() != Material.FIRE) {
-                        if (net.minecraftforge.common.ForgeHooks.canEntityDestroy(this.level, blockposition, (EnderDragon) (Object) this) && !BlockTags.DRAGON_IMMUNE.contains(block)) {
+                        if (net.minecraftforge.common.ForgeHooks.canEntityDestroy(this.level, blockposition, (EnderDragon) (Object) this) && !iblockdata.is(BlockTags.DRAGON_IMMUNE)) {
                             flag2 = true;
                             destroyedBlocks.add(CraftBlock.at(this.level, blockposition));
                         } else {

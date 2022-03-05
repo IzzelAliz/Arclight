@@ -1,6 +1,6 @@
 allprojects {
     group 'io.izzel.arclight'
-    version '1.0.1'
+    version '1.0.2-SNAPSHOT'
 
     def getGitHash = { ->
         def stdout = new ByteArrayOutputStream()
@@ -13,9 +13,9 @@ allprojects {
 
     ext {
         agpVersion = '1.22'
-        minecraftVersion = '1.18.1'
-        forgeVersion = '39.1.2'
-        apiVersion = '1.2.5'
+        minecraftVersion = '1.18.2'
+        forgeVersion = '40.0.12'
+        apiVersion = '1.2.6'
         toolsVersion = '1.3.+'
         mixinVersion = '0.8.5'
         gitHash = getGitHash()

@@ -27,6 +27,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.Tag;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -391,7 +392,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     }
 
     @Redirect(method = "updateFluidHeightAndDoFluidPushing", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FluidState;getFlow(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/Vec3;"))
-    private Vec3 arclight$setLava(FluidState instance, BlockGetter level, BlockPos pos, Tag<Fluid> tag) {
+    private Vec3 arclight$setLava(FluidState instance, BlockGetter level, BlockPos pos, TagKey<Fluid> tag) {
         if (tag == FluidTags.LAVA) {
             lastLavaContact = pos.immutable();
         }

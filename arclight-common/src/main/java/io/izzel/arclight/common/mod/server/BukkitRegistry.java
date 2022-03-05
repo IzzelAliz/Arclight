@@ -16,7 +16,6 @@ import io.izzel.arclight.common.mod.util.types.ArclightPotionEffect;
 import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.arclight.i18n.conf.EntityPropertySpec;
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
-import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -207,10 +206,10 @@ public class BukkitRegistry {
         ArclightMod.LOGGER.info("registry.villager-profession", newTypes.size());
     }
 
-    public static void registerEnvironments(MappedRegistry<LevelStem> dimensions) {
+    public static void registerEnvironments(Registry<LevelStem> registry) {
         int i = World.Environment.values().length;
         List<World.Environment> newTypes = new ArrayList<>();
-        for (Map.Entry<ResourceKey<LevelStem>, LevelStem> entry : dimensions.entrySet()) {
+        for (Map.Entry<ResourceKey<LevelStem>, LevelStem> entry : registry.entrySet()) {
             ResourceKey<LevelStem> key = entry.getKey();
             World.Environment environment = DIM_MAP.get(key);
             if (environment == null) {

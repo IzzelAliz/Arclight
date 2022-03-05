@@ -29,7 +29,7 @@ public class FrostWalkerEnchantmentMixin {
             BlockPos.MutableBlockPos blockpos$mutable = new BlockPos.MutableBlockPos();
 
             for (BlockPos blockpos : BlockPos.betweenClosed(pos.offset((double) (-f), -1.0D, (double) (-f)), pos.offset((double) f, -1.0D, (double) f))) {
-                if (blockpos.closerThan(living.position(), (double) f)) {
+                if (blockpos.closerToCenterThan(living.position(), (double) f)) {
                     blockpos$mutable.set(blockpos.getX(), blockpos.getY() + 1, blockpos.getZ());
                     BlockState blockstate1 = worldIn.getBlockState(blockpos$mutable);
                     if (blockstate1.isAir()) {

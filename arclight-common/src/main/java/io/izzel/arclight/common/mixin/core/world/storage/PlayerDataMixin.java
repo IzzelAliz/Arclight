@@ -7,7 +7,7 @@ import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.storage.PlayerDataStorage;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

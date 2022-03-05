@@ -127,7 +127,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public int hurtTime;
     @Shadow public float hurtDir;
     @Shadow public abstract void setLastHurtByMob(@Nullable LivingEntity livingBase);
-    @Shadow protected abstract void markHurt();
     @Shadow @Nullable protected abstract SoundEvent getDeathSound();
     @Shadow protected abstract float getSoundVolume();
     @Shadow public abstract float getVoicePitch();
