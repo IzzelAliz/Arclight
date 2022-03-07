@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server;
 
+import com.google.common.collect.ImmutableList;
 import com.mojang.authlib.GameProfileRepository;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.datafixers.DataFixer;
@@ -30,6 +31,7 @@ import net.minecraft.obfuscate.DontObfuscate;
 import net.minecraft.resources.RegistryReadOps;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.ServerFunctionManager;
 import net.minecraft.server.ServerResources;
 import net.minecraft.server.TickTask;
 import net.minecraft.server.level.ServerChunkCache;
@@ -37,8 +39,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.server.level.progress.ChunkProgressListenerFactory;
+import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.server.players.GameProfileCache;
+import net.minecraft.server.players.PlayerList;
 import net.minecraft.util.Unit;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.util.profiling.jfr.JvmProfiler;
@@ -49,6 +53,7 @@ import net.minecraft.world.level.ForcedChunksSavedData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.levelgen.WorldGenSettings;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.level.storage.WorldData;
@@ -86,8 +91,12 @@ import java.lang.management.ManagementFactory;
 import java.net.Proxy;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.BooleanSupplier;
 
 @Mixin(MinecraftServer.class)
@@ -130,6 +139,16 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Shadow public abstract SystemReport fillSystemReport(SystemReport p_177936_);
     @Shadow private float averageTickTime;
     @Shadow @Final @Nullable private GameProfileCache profileCache;
+    @Shadow @Final private PackRepository packRepository;
+    @Shadow @Final public RegistryAccess.RegistryHolder registryHolder;
+    @Shadow public abstract boolean isDedicatedServer();
+    @Shadow public abstract int getFunctionCompilationLevel();
+    @Shadow @Final public Executor executor;
+    @Shadow public ServerResources resources;
+    @Shadow private static DataPackConfig getSelectedPacks(PackRepository p_129818_) { return null; }
+    @Shadow public abstract PlayerList getPlayerList();
+    @Shadow @Final private ServerFunctionManager functionManager;
+    @Shadow @Final private StructureManager structureManager;
     // @formatter:on
 
     public MinecraftServerMixin(String name) {
@@ -477,6 +496,36 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Inject(method = "saveAllChunks", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;overworld()Lnet/minecraft/server/level/ServerLevel;"))
     private void arclight$skipSave(boolean suppressLog, boolean flush, boolean forced, CallbackInfoReturnable<Boolean> cir, boolean flag) {
         cir.setReturnValue(flag);
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    public CompletableFuture<Void> reloadResources(Collection<String> p_129862_) {
+        CompletableFuture<Void> completablefuture = CompletableFuture.supplyAsync(() -> {
+            return p_129862_.stream().map(this.packRepository::getPack).filter(Objects::nonNull).map(Pack::open).collect(ImmutableList.toImmutableList());
+        }, this).thenCompose((p_199990_) -> {
+            return ServerResources.loadResources(p_199990_, this.registryHolder, this.isDedicatedServer() ? Commands.CommandSelection.DEDICATED : Commands.CommandSelection.INTEGRATED, this.getFunctionCompilationLevel(), this.executor, this);
+        }).thenAcceptAsync((p_199996_) -> {
+            this.resources.close();
+            this.resources = p_199996_;
+            this.server.syncCommands();
+            this.packRepository.setSelected(p_129862_);
+            this.worldData.setDataPackConfig(getSelectedPacks(this.packRepository));
+            p_199996_.updateGlobals();
+            this.getPlayerList().saveAll();
+            this.getPlayerList().reloadResources();
+            this.functionManager.replaceLibrary(this.resources.getFunctionLibrary());
+            this.structureManager.onResourceManagerReload(this.resources.getResourceManager());
+            this.getPlayerList().getPlayers().forEach(this.getPlayerList()::sendPlayerPermissionLevel); //Forge: Fix newly added/modified commands not being sent to the client when commands reload.
+        }, this);
+        if (this.isSameThread()) {
+            this.managedBlock(completablefuture::isDone);
+        }
+
+        return completablefuture;
     }
 
     /**
