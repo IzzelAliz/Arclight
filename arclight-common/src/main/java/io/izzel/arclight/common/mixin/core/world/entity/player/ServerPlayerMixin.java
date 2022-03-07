@@ -474,7 +474,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         if (registrykey == LevelStem.END && ((WorldBridge) server).bridge$getTypeKey() == LevelStem.OVERWORLD && teleporter.isVanilla()) { //Forge: Fix non-vanilla teleporters triggering end credits
             this.isChangingDimension = true;
             this.unRide();
-            this.getLevel().removePlayer((ServerPlayer) (Object) this, true); //Forge: The player entity is cloned so keep the data until after cloning calls copyFrom
+            this.getLevel().removePlayerImmediately((ServerPlayer) (Object) this, Entity.RemovalReason.CHANGED_DIMENSION);
             if (!this.wonGame) {
                 this.wonGame = true;
                 this.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.WIN_GAME, this.seenCredits ? 0.0F : 1.0F));
@@ -494,7 +494,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
                 this.connection.send(new ClientboundChangeDifficultyPacket(iworldinfo.getDifficulty(), iworldinfo.isDifficultyLocked()));
                 PlayerList playerlist = this.server.getPlayerList();
                 playerlist.sendPlayerPermissionLevel((ServerPlayer) (Object) this);
-                serverworld.removeEntity((ServerPlayer) (Object) this, true); //Forge: the player entity is moved to the new world, NOT cloned. So keep the data alive with no matching invalidate call.
+                this.getLevel().removePlayerImmediately((ServerPlayer) (Object) this, Entity.RemovalReason.CHANGED_DIMENSION);
                 this.revive();
                 Entity e = teleporter.placeEntity((ServerPlayer) (Object) this, serverworld, exitWorld[0], this.getYRot(), spawnPortal -> {//Forge: Start vanilla logic
                     serverworld.getProfiler().push("moving");

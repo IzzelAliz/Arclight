@@ -9,6 +9,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.monster.Shulker;
 import net.minecraft.world.phys.AABB;
+import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -45,6 +46,11 @@ public abstract class ShulkerMixin extends PathfinderMobMixin {
                 BlockPos blockpos1 = blockpos.offset(Mth.randomBetweenInclusive(this.random, -8, 8), Mth.randomBetweenInclusive(this.random, -8, 8), Mth.randomBetweenInclusive(this.random, -8, 8));
                 if (blockpos1.getY() > this.level.getMinBuildHeight() && this.level.isEmptyBlock(blockpos1) && this.level.getWorldBorder().isWithinBounds(blockpos1) && this.level.noCollision((Shulker) (Object) this, (new AABB(blockpos1)).deflate(1.0E-6D))) {
                     Direction direction = this.findAttachableSurface(blockpos1);
+                    if (direction != null) {
+                        var event = ForgeEventFactory.onEnderTeleport((Shulker) (Object) this, blockpos1.getX(), blockpos1.getY(), blockpos1.getZ());
+                        if (event.isCanceled()) direction = null;
+                        blockpos1 = new BlockPos(event.getTargetX(), event.getTargetY(), event.getTargetZ());
+                    }
                     if (direction != null) {
                         EntityTeleportEvent teleport = new EntityTeleportEvent(this.getBukkitEntity(), this.getBukkitEntity().getLocation(), new Location(((WorldBridge) this.level).bridge$getWorld(), blockpos1.getX(), blockpos1.getY(), blockpos1.getZ()));
                         Bukkit.getPluginManager().callEvent(teleport);

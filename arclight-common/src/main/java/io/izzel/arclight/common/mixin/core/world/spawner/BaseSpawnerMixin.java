@@ -111,8 +111,12 @@ public abstract class BaseSpawnerMixin {
 
                         entity.moveTo(entity.getX(), entity.getY(), entity.getZ(), level.random.nextFloat() * 360.0F, 0.0F);
                         if (entity instanceof Mob mob) {
-                            if (this.nextSpawnData.getCustomSpawnRules().isEmpty() && !ForgeEventFactory.canEntitySpawnSpawner(mob, level, (float) entity.getX(), (float) entity.getY(), (float) entity.getZ(), (BaseSpawner) (Object) this)) {
-                                continue;
+                            var res = ForgeEventFactory.canEntitySpawn(mob, level, (float) entity.getX(), (float) entity.getY(), (float) entity.getZ(), (BaseSpawner) (Object) this, MobSpawnType.SPAWNER);
+                            if (res == net.minecraftforge.eventbus.api.Event.Result.DENY) continue;
+                            if (res == net.minecraftforge.eventbus.api.Event.Result.DEFAULT) {
+                                if (this.nextSpawnData.getCustomSpawnRules().isEmpty() && !ForgeEventFactory.canEntitySpawnSpawner(mob, level, (float) entity.getX(), (float) entity.getY(), (float) entity.getZ(), (BaseSpawner) (Object) this)) {
+                                    continue;
+                                }
                             }
 
                             if (this.nextSpawnData.getEntityToSpawn().size() == 1 && this.nextSpawnData.getEntityToSpawn().contains("id", 8)) {

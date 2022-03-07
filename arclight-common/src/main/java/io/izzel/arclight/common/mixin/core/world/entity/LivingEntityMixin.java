@@ -233,7 +233,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     protected void dropExperience() {
         // if (!this.world.isRemote && (this.isPlayer() || this.recentlyHit > 0 && this.canDropLoot() && this.world.getGameRules().getBoolean(GameRules.DO_MOB_LOOT))) {
         if (true) {
-            ExperienceOrb.award((ServerLevel) this.level, this.position(), this.expToDrop);
+            int reward = ForgeEventFactory.getExperienceDrop((LivingEntity)(Object) this, this.lastHurtByPlayer, this.expToDrop);
+            ExperienceOrb.award((ServerLevel) this.level, this.position(), reward);
             bridge$setExpToDrop(0);
         }
     }
