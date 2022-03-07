@@ -17,14 +17,21 @@ import net.minecraftforge.event.world.WorldEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.command.CraftBlockCommandSender;
 import org.bukkit.craftbukkit.v.command.CraftCommandMap;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.craftbukkit.v.help.SimpleHelpMap;
+import org.bukkit.craftbukkit.v.scheduler.CraftScheduler;
+import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginLoadOrder;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.SimplePluginManager;
+import org.bukkit.scheduler.BukkitWorker;
+import org.spigotmc.SpigotConfig;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -37,8 +44,12 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Mixin(CraftServer.class)
@@ -54,6 +65,20 @@ public abstract class CraftServerMixin implements CraftServerBridge {
     @Shadow(remap = false) @Final @Mutable private String serverName;
     @Shadow(remap = false) @Final @Mutable protected DedicatedPlayerList playerList;
     @Shadow(remap = false) @Final private Map<String, World> worlds;
+    @Shadow public int reloadCount;
+    @Shadow private YamlConfiguration configuration;
+    @Shadow protected abstract File getConfigFile();
+    @Shadow private YamlConfiguration commandsConfiguration;
+    @Shadow protected abstract File getCommandsConfigFile();
+    @Shadow@Final private Logger logger;
+    @Shadow public abstract void reloadData();
+    @Shadow private boolean overrideAllCommandBlockCommands;
+    @Shadow public boolean ignoreVanillaPermissions;
+    @Shadow public abstract CraftScheduler getScheduler();
+    @Shadow public abstract Logger getLogger();
+    @Shadow public abstract void loadPlugins();
+    @Shadow public abstract void enablePlugins(PluginLoadOrder type);
+    @Shadow public abstract PluginManager getPluginManager();
     @Accessor(value = "logger", remap = false) @Mutable public abstract void setLogger(Logger logger);
     // @formatter:on
 
@@ -133,5 +158,54 @@ public abstract class CraftServerMixin implements CraftServerBridge {
             return;
         }
         this.worlds.remove(((WorldBridge) world).bridge$getWorld().getName().toLowerCase(Locale.ROOT));
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite(remap = false)
+    public void reload() {
+        ++this.reloadCount;
+        this.configuration = YamlConfiguration.loadConfiguration(this.getConfigFile());
+        this.commandsConfiguration = YamlConfiguration.loadConfiguration(this.getCommandsConfigFile());
+
+        try {
+            this.playerList.getIpBans().load();
+        } catch (IOException var12) {
+            this.logger.log(Level.WARNING, "Failed to load banned-ips.json, " + var12.getMessage());
+        }
+
+        try {
+            this.playerList.getBans().load();
+        } catch (IOException var11) {
+            this.logger.log(Level.WARNING, "Failed to load banned-players.json, " + var11.getMessage());
+        }
+
+        this.pluginManager.clearPlugins();
+        this.commandMap.clearCommands();
+        this.reloadData();
+        SpigotConfig.registerCommands();
+        this.overrideAllCommandBlockCommands = this.commandsConfiguration.getStringList("command-block-overrides").contains("*");
+        this.ignoreVanillaPermissions = this.commandsConfiguration.getBoolean("ignore-vanilla-permissions");
+
+        for (int pollCount = 0; pollCount < 50 && this.getScheduler().getActiveWorkers().size() > 0; ++pollCount) {
+            try {
+                Thread.sleep(50L);
+            } catch (InterruptedException var10) {
+            }
+        }
+
+        List<BukkitWorker> overdueWorkers = this.getScheduler().getActiveWorkers();
+
+        for (BukkitWorker worker : overdueWorkers) {
+            Plugin plugin = worker.getOwner();
+            this.getLogger().log(Level.SEVERE, String.format("Nag author(s): '%s' of '%s' about the following: %s", plugin.getDescription().getAuthors(), plugin.getDescription().getFullName(), "This plugin is not properly shutting down its async tasks when it is being reloaded.  This may cause conflicts with the newly loaded version of the plugin"));
+        }
+
+        this.loadPlugins();
+        this.enablePlugins(PluginLoadOrder.STARTUP);
+        this.enablePlugins(PluginLoadOrder.POSTWORLD);
+        this.getPluginManager().callEvent(new ServerLoadEvent(ServerLoadEvent.LoadType.RELOAD));
     }
 }
