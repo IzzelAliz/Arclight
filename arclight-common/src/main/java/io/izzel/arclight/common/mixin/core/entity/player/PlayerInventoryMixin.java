@@ -37,7 +37,7 @@ public abstract class PlayerInventoryMixin implements IInventory, IInventoryBrid
     @Shadow public abstract void setItemStack(ItemStack itemStackIn);
     // @formatter:on
 
-    private List<HumanEntity> transactions = new ArrayList<>();
+    private List<HumanEntity> transaction = new ArrayList<>();
     private int maxStack = MAX_STACK;
 
     @Inject(method = "getItemStack", at = @At("HEAD"))
@@ -87,17 +87,17 @@ public abstract class PlayerInventoryMixin implements IInventory, IInventoryBrid
 
     @Override
     public void onOpen(CraftHumanEntity who) {
-        transactions.add(who);
+        transaction.add(who);
     }
 
     @Override
     public void onClose(CraftHumanEntity who) {
-        transactions.remove(who);
+        transaction.remove(who);
     }
 
     @Override
     public List<HumanEntity> getViewers() {
-        return transactions;
+        return transaction;
     }
 
     @Override
