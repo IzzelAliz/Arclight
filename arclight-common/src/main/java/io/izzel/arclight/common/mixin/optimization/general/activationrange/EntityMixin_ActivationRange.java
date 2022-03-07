@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.optimization.general.activationrange;
 
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
-import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.bridge.optimization.EntityBridge_ActivationRange;
+import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -34,7 +34,12 @@ public abstract class EntityMixin_ActivationRange implements EntityBridge_Activa
     private void arclight$init(EntityType<?> entityTypeIn, Level worldIn, CallbackInfo ci) {
         activationType = ActivationRange.initializeEntityActivationType((Entity) (Object) this);
         if (DistValidate.isValid(worldIn)) {
-            this.defaultActivationState = ActivationRange.initializeEntityActivationState((Entity) (Object) this, ((WorldBridge) worldIn).bridge$spigotConfig());
+            var config = ((WorldBridge) worldIn).bridge$spigotConfig();
+            if (config != null) {
+                this.defaultActivationState = ActivationRange.initializeEntityActivationState((Entity) (Object) this, config);
+            } else {
+                this.defaultActivationState = false;
+            }
         } else {
             this.defaultActivationState = false;
         }
