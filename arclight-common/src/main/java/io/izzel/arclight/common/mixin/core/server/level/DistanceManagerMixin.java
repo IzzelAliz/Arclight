@@ -9,6 +9,7 @@ import net.minecraft.server.level.DistanceManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.Ticket;
 import net.minecraft.server.level.TicketType;
+import net.minecraft.server.level.TickingTracker;
 import net.minecraft.util.SortedArraySet;
 import net.minecraft.world.level.ChunkPos;
 import org.spongepowered.asm.mixin.Final;
@@ -31,7 +32,8 @@ public abstract class DistanceManagerMixin implements TicketManagerBridge {
     @Shadow protected abstract SortedArraySet<Ticket<?>> getTickets(long p_229848_1_);
     @Shadow private static int getTicketLevelAt(SortedArraySet<Ticket<?>> p_229844_0_) { return 0; }
     @Shadow @Final public Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> tickets;
-    @Invoker("purgeStaleTickets") public abstract void bridge$tick();
+    @Shadow abstract TickingTracker tickingTracker();
+    @Shadow@Final private Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> forcedTickets;@Invoker("purgeStaleTickets") public abstract void bridge$tick();
     // @formatter:on
 
     @Inject(method = "removePlayer", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", remap = false, target = "Lit/unimi/dsi/fastutil/objects/ObjectSet;remove(Ljava/lang/Object;)Z"))
@@ -39,6 +41,20 @@ public abstract class DistanceManagerMixin implements TicketManagerBridge {
         if (set == null) {
             ci.cancel();
         }
+    }
+
+    public <T> boolean addRegionTicketAtDistance(TicketType<T> type, ChunkPos pos, int level, T value) {
+        var ticket = new Ticket<>(type, 33 - level, value);
+        var ret = this.addTicket(pos.toLong(), ticket);
+        this.tickingTracker().addTicket(pos.toLong(), ticket);
+        return ret;
+    }
+
+    public <T> boolean removeRegionTicketAtDistance(TicketType<T> type, ChunkPos pos, int level, T value) {
+        var ticket = new Ticket<>(type, 33 - level, value);
+        var ret = this.removeTicket(pos.toLong(), ticket);
+        this.tickingTracker().removeTicket(pos.toLong(), ticket);
+        return ret;
     }
 
     public <T> boolean addTicketAtLevel(TicketType<T> type, ChunkPos pos, int level, T value) {
@@ -71,6 +87,12 @@ public abstract class DistanceManagerMixin implements TicketManagerBridge {
             this.tickets.remove(chunkPosIn);
         }
         this.ticketTracker.update(chunkPosIn, getTicketLevelAt(ticketSet), false);
+        if (ticketIn.isForceTicks()) {
+            SortedArraySet<Ticket<?>> tickets = this.forcedTickets.get(chunkPosIn);
+            if (tickets != null) {
+                tickets.remove(ticketIn);
+            }
+        }
         return removed;
     }
 
@@ -86,6 +108,10 @@ public abstract class DistanceManagerMixin implements TicketManagerBridge {
         ticket.setCreatedTick(this.ticketTickCounter);
         if (ticketIn.getTicketLevel() < level) {
             this.ticketTracker.update(chunkPosIn, ticketIn.getTicketLevel(), true);
+        }
+        if (ticketIn.isForceTicks()) {
+            SortedArraySet<Ticket<?>> tickets = this.forcedTickets.computeIfAbsent(chunkPosIn, e -> SortedArraySet.create(4));
+            tickets.addOrGet(ticketIn);
         }
         return ticketIn == ticket;
     }

@@ -219,4 +219,8 @@ public abstract class AbstractFurnaceBlockEntityMixin extends LockableBlockEntit
     public boolean bridge$isLit() {
         return this.isLit();
     }
+
+    public Object2IntOpenHashMap<ResourceLocation> getRecipesUsed() {
+        return this.recipesUsed;
+    }
 }

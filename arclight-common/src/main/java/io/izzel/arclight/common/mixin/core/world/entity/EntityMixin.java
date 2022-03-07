@@ -9,6 +9,7 @@ import io.izzel.arclight.common.bridge.core.entity.InternalEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.network.datasync.EntityDataManagerBridge;
 import io.izzel.arclight.common.bridge.core.world.TeleporterBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
@@ -215,6 +216,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow public abstract void setTicksFrozen(int p_146918_);
     @Shadow public abstract void setSharedFlagOnFire(boolean p_146869_);
     @Shadow public abstract int getMaxAirSupply();
+    @Shadow public abstract int getAirSupply();
     // @formatter:on
 
     private static final int CURRENT_LEVEL = 2;
@@ -778,10 +780,12 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         if (this.valid) {
             event.getEntity().getServer().getPluginManager().callEvent(event);
         }
-        if (!event.isCancelled()) {
-            this.entityData.set(DATA_AIR_SUPPLY_ID, event.getAmount());
+        if (event.isCancelled() && this.getAirSupply() != -1) {
+            ci.cancel();
+            ((EntityDataManagerBridge) this.getEntityData()).bridge$markDirty(DATA_AIR_SUPPLY_ID);
+            return;
         }
-        ci.cancel();
+        this.entityData.set(DATA_AIR_SUPPLY_ID, event.getAmount());
         // CraftBukkit end
     }
 

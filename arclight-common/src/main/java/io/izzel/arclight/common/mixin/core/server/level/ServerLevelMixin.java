@@ -13,6 +13,7 @@ import io.izzel.arclight.common.bridge.core.world.storage.LevelStorageSourceBrid
 import io.izzel.arclight.common.bridge.core.world.storage.MapDataBridge;
 import io.izzel.arclight.common.bridge.core.world.storage.WorldInfoBridge;
 import io.izzel.arclight.common.mixin.core.world.level.LevelMixin;
+import io.izzel.arclight.common.mod.server.world.LevelPersistentData;
 import io.izzel.arclight.common.mod.server.world.WorldSymlink;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.DelegateWorldInfo;
@@ -49,6 +50,7 @@ import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.entity.PersistentEntitySectionManager;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.level.storage.DerivedLevelData;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.PrimaryLevelData;
 import net.minecraft.world.level.storage.ServerLevelData;
@@ -102,6 +104,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     @Shadow @Final public static BlockPos END_SPAWN_POINT;
     @Shadow @Final public ServerLevelData serverLevelData;
     @Shadow @Final private PersistentEntitySectionManager<Entity> entityManager;
+    @Shadow public abstract DimensionDataStorage getDataStorage();
     // @formatter:on
 
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
@@ -162,6 +165,14 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         this.uuid = WorldUUID.getUUID(levelSave.getDimensionPath(this.dimension()).toFile());
         ((ServerChunkProviderBridge) this.chunkSource).bridge$setViewDistance(spigotConfig.viewDistance);
         ((WorldInfoBridge) this.$$worldDataServer).bridge$setWorld((ServerLevel) (Object) this);
+        var data = this.getDataStorage().computeIfAbsent(LevelPersistentData::new, () -> new LevelPersistentData(null), "bukkit_pdc");
+        this.bridge$getWorld().readBukkitValues(data.getTag());
+    }
+
+    @Inject(method = "saveLevelData", at = @At("RETURN"))
+    private void arclight$savePdc(CallbackInfo ci) {
+        var data = this.getDataStorage().computeIfAbsent(LevelPersistentData::new, () -> new LevelPersistentData(null), "bukkit_pdc");
+        data.save(this.world);
     }
 
     public LevelChunk getChunkIfLoaded(int x, int z) {
