@@ -32,7 +32,7 @@ public abstract class InventoryMixin implements Container, IInventoryBridge, Pla
     @Shadow protected abstract boolean hasRemainingSpaceForItem(ItemStack stack1, ItemStack stack2);
     // @formatter:on
 
-    private List<HumanEntity> transactions = new ArrayList<>();
+    private List<HumanEntity> transaction = new ArrayList<>();
     private int maxStack = MAX_STACK;
 
     public int canHold(ItemStack stack) {
@@ -75,17 +75,17 @@ public abstract class InventoryMixin implements Container, IInventoryBridge, Pla
 
     @Override
     public void onOpen(CraftHumanEntity who) {
-        transactions.add(who);
+        transaction.add(who);
     }
 
     @Override
     public void onClose(CraftHumanEntity who) {
-        transactions.remove(who);
+        transaction.remove(who);
     }
 
     @Override
     public List<HumanEntity> getViewers() {
-        return transactions;
+        return transaction;
     }
 
     @Override
