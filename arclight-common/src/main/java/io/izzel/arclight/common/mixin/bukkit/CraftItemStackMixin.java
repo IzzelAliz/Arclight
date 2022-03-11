@@ -6,6 +6,7 @@ import io.izzel.arclight.common.bridge.core.item.ItemStackBridge;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import org.bukkit.Material;
+import org.bukkit.craftbukkit.v.inventory.CraftItemFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v.legacy.CraftLegacy;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -26,7 +27,17 @@ public abstract class CraftItemStackMixin implements CraftItemStackBridge {
     @Shadow public abstract Material getType();
     @Shadow public abstract short getDurability();
     @Shadow public abstract boolean hasItemMeta();
+    @Shadow static Material getType(ItemStack item) { throw new RuntimeException(); }
     // @formatter:on
+
+    @Inject(method = "getItemMeta(Lnet/minecraft/world/item/ItemStack;)Lorg/bukkit/inventory/meta/ItemMeta;", cancellable = true, at = @At(value = "INVOKE", target = "Lorg/bukkit/Material;ordinal()I"))
+    private static void arclight$noTag(ItemStack item, CallbackInfoReturnable<ItemMeta> cir) {
+        if (item.getTag() == null) {
+            var meta = CraftItemFactory.instance().getItemMeta(getType(item));
+            ((ItemMetaBridge) meta).bridge$setForgeCaps(((ItemStackBridge) (Object) item).bridge$getForgeCaps());
+            cir.setReturnValue(meta);
+        }
+    }
 
     @Inject(method = "getItemMeta(Lnet/minecraft/world/item/ItemStack;)Lorg/bukkit/inventory/meta/ItemMeta;", at = @At("RETURN"))
     private static void arclight$offerCaps(ItemStack item, CallbackInfoReturnable<ItemMeta> cir) {
@@ -39,12 +50,11 @@ public abstract class CraftItemStackMixin implements CraftItemStackBridge {
         ((ItemMetaBridge) meta).bridge$setForgeCaps(((ItemStackBridge) (Object) item).bridge$getForgeCaps());
     }
 
-    // check when update
-    @Inject(method = "setItemMeta(Lnet/minecraft/world/item/ItemStack;Lorg/bukkit/inventory/meta/ItemMeta;)Z", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/item/ItemStack;m_41720_()Lnet/minecraft/world/item/Item;"))
+    @Inject(method = "setItemMeta(Lnet/minecraft/world/item/ItemStack;Lorg/bukkit/inventory/meta/ItemMeta;)Z", at = @At(value = "INVOKE", ordinal = 1, remap = true, target = "Lnet/minecraft/world/item/ItemStack;getItem()Lnet/minecraft/world/item/Item;"))
     private static void arclight$setCaps(ItemStack item, ItemMeta itemMeta, CallbackInfoReturnable<Boolean> cir) {
         CompoundTag forgeCaps = ((ItemMetaBridge) itemMeta).bridge$getForgeCaps();
         if (forgeCaps != null) {
-            ((ItemStackBridge)(Object) item).bridge$setForgeCaps(forgeCaps.copy());
+            ((ItemStackBridge) (Object) item).bridge$setForgeCaps(forgeCaps.copy());
         }
     }
 

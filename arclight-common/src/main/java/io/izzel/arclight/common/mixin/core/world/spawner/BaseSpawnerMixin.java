@@ -16,6 +16,7 @@ import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.level.BaseSpawner;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.SpawnData;
 import net.minecraft.world.phys.AABB;
@@ -114,13 +115,13 @@ public abstract class BaseSpawnerMixin {
                             var res = ForgeEventFactory.canEntitySpawn(mob, level, (float) entity.getX(), (float) entity.getY(), (float) entity.getZ(), (BaseSpawner) (Object) this, MobSpawnType.SPAWNER);
                             if (res == net.minecraftforge.eventbus.api.Event.Result.DENY) continue;
                             if (res == net.minecraftforge.eventbus.api.Event.Result.DEFAULT) {
-                                if (this.nextSpawnData.getCustomSpawnRules().isEmpty() && !ForgeEventFactory.canEntitySpawnSpawner(mob, level, (float) entity.getX(), (float) entity.getY(), (float) entity.getZ(), (BaseSpawner) (Object) this)) {
+                                if (this.nextSpawnData.getCustomSpawnRules().isEmpty() && !mob.checkSpawnRules(level, MobSpawnType.SPAWNER) || !mob.checkSpawnObstruction(level)) {
                                     continue;
                                 }
                             }
 
                             if (this.nextSpawnData.getEntityToSpawn().size() == 1 && this.nextSpawnData.getEntityToSpawn().contains("id", 8)) {
-                                if (!ForgeEventFactory.doSpecialSpawn(mob, level, (float) entity.getX(), (float) entity.getY(), (float) entity.getZ(), (BaseSpawner) (Object) this, MobSpawnType.SPAWNER))
+                                if (!ForgeEventFactory.doSpecialSpawn(mob, (LevelAccessor) level, (float) entity.getX(), (float) entity.getY(), (float) entity.getZ(), (BaseSpawner) (Object) this, MobSpawnType.SPAWNER))
                                     ((Mob) entity).finalizeSpawn(level, level.getCurrentDifficultyAt(entity.blockPosition()), MobSpawnType.SPAWNER, null, null);
                             }
                             if (((WorldBridge) mob.level).bridge$spigotConfig().nerfSpawnerMobs) {
