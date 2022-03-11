@@ -37,7 +37,7 @@ public abstract class PlayerInventoryMixin implements IInventory, IInventoryBrid
     @Shadow public abstract void setItemStack(ItemStack itemStackIn);
     // @formatter:on
 
-    private List<HumanEntity> transaction = new ArrayList<>();
+    public List<HumanEntity> transaction = new ArrayList<>();
     private int maxStack = MAX_STACK;
 
     @Inject(method = "getItemStack", at = @At("HEAD"))
