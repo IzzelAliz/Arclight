@@ -69,11 +69,7 @@ public class ArclightCaptures {
     private static String quitMessage;
 
     public static void captureQuitMessage(String quitMessage) {
-        if (ArclightCaptures.quitMessage == null) {
-            ArclightCaptures.quitMessage = quitMessage;
-        } else {
-            recapture("quit message");
-        }
+        ArclightCaptures.quitMessage = quitMessage;
     }
 
     public static String getQuitMessage() {

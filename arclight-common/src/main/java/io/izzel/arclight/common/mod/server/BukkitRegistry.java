@@ -24,6 +24,7 @@ import net.minecraft.stats.Stats;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.decoration.Motive;
 import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -41,21 +42,25 @@ import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.craftbukkit.v.CraftCrashReport;
 import org.bukkit.craftbukkit.v.CraftStatistic;
+import org.bukkit.craftbukkit.v.inventory.CraftCreativeCategory;
 import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Villager;
+import org.bukkit.inventory.CreativeCategory;
 import org.bukkit.potion.PotionEffectType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @SuppressWarnings({"ConstantConditions", "deprecation"})
 public class BukkitRegistry {
@@ -90,6 +95,31 @@ public class BukkitRegistry {
         loadBiomes();
         loadArts();
         loadStats();
+        loadCreativeTab();
+    }
+
+    private static void loadCreativeTab() {
+        var id = new AtomicInteger(CreativeCategory.values().length);
+        var newTypes = new ArrayList<CreativeCategory>();
+        var tabs = CreativeModeTab.TABS;
+        var map = new HashMap<CreativeModeTab, CreativeCategory>(Unsafe.getStatic(CraftCreativeCategory.class, "NMS_TO_BUKKIT"));
+        for (var tab : tabs) {
+            map.computeIfAbsent(tab, k -> {
+                var name = "MOD_" + k.getId();
+                var newTab = EnumHelper.makeEnum(CreativeCategory.class, name, id.getAndIncrement(), List.of(), List.of());
+                newTypes.add(newTab);
+                ArclightMod.LOGGER.debug("Registered {} as creative tab {}", k, newTab);
+                return newTab;
+            });
+        }
+        EnumHelper.addEnums(CreativeCategory.class, newTypes);
+        try {
+            var field = CraftCreativeCategory.class.getDeclaredField("NMS_TO_BUKKIT");
+            field.setAccessible(true);
+            field.set(null, map);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void loadStats() {

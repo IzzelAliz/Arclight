@@ -241,6 +241,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             return;
         }
         s = event.getReason();
+        ArclightCaptures.captureQuitMessage(s);
         Component textComponent = CraftChatMessage.fromString(s, true)[0];
         this.connection.send(new ClientboundDisconnectPacket(textComponent), future -> this.connection.disconnect(textComponent));
         this.onDisconnect(textComponent);
