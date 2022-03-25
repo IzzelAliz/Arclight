@@ -32,7 +32,7 @@ public abstract class InventoryMixin implements Container, IInventoryBridge, Pla
     @Shadow protected abstract boolean hasRemainingSpaceForItem(ItemStack stack1, ItemStack stack2);
     // @formatter:on
 
-    private List<HumanEntity> transaction = new ArrayList<>();
+    public List<HumanEntity> transaction = new ArrayList<>();
     private int maxStack = MAX_STACK;
 
     public int canHold(ItemStack stack) {

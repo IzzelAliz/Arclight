@@ -21,6 +21,7 @@
     "CraftEventFactoryMixin",
     "CraftHumanEntityMixin",
     "CraftInventoryMixin",
+    "CraftInventoryViewMixin",
     "CraftItemFactoryMixin",
     "CraftItemStackMixin",
     "CraftLegacyLegacyMixin",
