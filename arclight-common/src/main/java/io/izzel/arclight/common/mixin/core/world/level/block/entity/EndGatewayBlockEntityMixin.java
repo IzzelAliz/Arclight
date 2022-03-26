@@ -4,6 +4,7 @@ import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBrid
 import io.izzel.arclight.common.bridge.core.network.play.ServerPlayNetHandlerBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
@@ -28,10 +29,11 @@ public abstract class EndGatewayBlockEntityMixin extends BlockEntityMixin {
     // @formatter:on
 
     @Inject(method = "teleportEntity", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;setPortalCooldown()V"))
-    private static void arclight$portal(Level level, BlockPos pos, BlockState state, Entity entityIn, TheEndGatewayBlockEntity entity, CallbackInfo ci) {
+    private static void arclight$portal(Level level, BlockPos pos, BlockState state, Entity entityIn, TheEndGatewayBlockEntity entity, CallbackInfo ci,
+                                        ServerLevel serverLevel, BlockPos dest) {
         if (entityIn instanceof ServerPlayer) {
             CraftPlayer player = ((ServerPlayerEntityBridge) entityIn).bridge$getBukkitEntity();
-            Location location = new Location(((WorldBridge) level).bridge$getWorld(), pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
+            Location location = new Location(((WorldBridge) level).bridge$getWorld(), dest.getX() + 0.5D, dest.getY() + 0.5D, dest.getZ() + 0.5D);
             location.setPitch(player.getLocation().getPitch());
             location.setYaw(player.getLocation().getYaw());
 
