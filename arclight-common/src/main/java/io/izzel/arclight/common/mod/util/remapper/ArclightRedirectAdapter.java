@@ -96,6 +96,7 @@ public class ArclightRedirectAdapter implements PluginTransformer {
         modify(classOf("jdk.internal.misc.Unsafe"), "defineClass", "unsafeDefineClass", String.class, byte[].class, int.class, int.class, ClassLoader.class, ProtectionDomain.class);
         modify(classOf("jdk.internal.misc.Unsafe"), "defineClass0", "unsafeDefineClass", String.class, byte[].class, int.class, int.class, ClassLoader.class, ProtectionDomain.class);
         modify(MethodHandles.Lookup.class, "defineClass", "lookupDefineClass", byte[].class);
+        redirect(java.lang.reflect.Type.class, "getTypeName", "typeGetName");
     }
 
     public static Object[] runHandle(ClassLoaderRemapper remapper, Method method, Object src, Object[] param) {
