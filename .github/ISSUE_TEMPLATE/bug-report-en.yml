@@ -18,7 +18,6 @@ body:
       label: I have confirmed that ...
       options:
         - label: Arclight is up to date
-          required: true
         - label: I have read and determined that there is no solution to this problem in the FAQ
           required: true
         - label: all dependencies are installed
