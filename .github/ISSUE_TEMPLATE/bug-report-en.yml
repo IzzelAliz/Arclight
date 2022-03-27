@@ -8,7 +8,7 @@ body:
       value: |
         Read the [FAQ](https://github.com/IzzelAliz/Arclight/wiki/FAQ) first!
 
-        Report with [latest development version](https://ci.appveyor.com/project/IzzelAliz/arclight-17/build/artifacts), your issue is likely to be fixed.
+        Report with [latest development version](https://ci.appveyor.com/project/IzzelAliz/arclight-18/build/artifacts), your issue is likely to be fixed.
 
         Make sure you have searched issues and no similar is present.
 
@@ -18,6 +18,9 @@ body:
       label: I have confirmed that ...
       options:
         - label: Arclight is up to date
+          required: true
+        - label: I have read and determined that there is no solution to this problem in the FAQ
+          required: true
         - label: all dependencies are installed
           required: true
         - label: all plugins and mods are up to date
@@ -49,7 +52,10 @@ body:
     id: related
     attributes:
       label: Plugins and Mods
-      description: Run `/plugins` and `/forge mods` in console.
+      description: >-
+        Run `/plugins` and `/forge mods` in console.
+        <br>If you want your problem solved quickly, eliminate irrelevant Mods and Plugins
+        <br>Fill in only Mods and Plugins related to the problem
       placeholder: 'Mods & plugins list here'
       render: 'raw'
     validations:
@@ -87,6 +93,7 @@ body:
       description: >-
         Logs can be found in /logs/latest.log
         <br>After server is stopped, upload it to https://paste.ubuntu.com/
+        <br>Please note that if using other online clipboards, make sure the links are available
         <br>**DO NOT PASTE LOG CONTENT!**
       placeholder: 'External link or drag log file here to upload'
 
