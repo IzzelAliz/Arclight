@@ -19,8 +19,6 @@ body:
       description: 市面上大多数整合包，特别是较老版本（1.12.2）的整合包，其自带的插件都无法在高版本环境下运行
       options:
         - label: 正在使用最新的 Arclight
-        - label: 我已经阅读以及确定在FAQ中没有这个问题的解决方法
-          required: true
         - label: 已为所有插件及模组安装依赖
           required: true
         - label: 已为所有插件及模组更新至最新版
@@ -91,7 +89,8 @@ body:
       label: 报错信息
       description: >-
         日志能在 /logs/latest.log 中找到
-        <br>服务器关闭后，将该文件中内容全部复制，上传至 https://paste.ubuntu.com/ 网站，提交后将链接附在下方即可
+        <br>服务器关闭后，将日志文件拖拽至输入框上传
+        <br>或上传至 https://paste.ubuntu.com/ 网站，提交后将链接附在下方即可
         <br>如果选择使用其他在线剪贴板，请确保链接可用
         <br>**请勿直接复制粘贴日志文本**
       placeholder: 日志链接，或将日志文件拖到此处上传
