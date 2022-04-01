@@ -34,6 +34,7 @@
     "CraftRegionAccessorMixin",
     "CraftSchedulerMixin",
     "CraftServerMixin",
+    "CraftSpawnCategoryMixin",
     "CraftVillagerMixin",
     "CraftWorldMixin",
     "EntityTypeMixin",

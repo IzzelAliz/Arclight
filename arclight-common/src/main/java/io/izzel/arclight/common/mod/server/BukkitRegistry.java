@@ -23,6 +23,7 @@ import net.minecraft.stats.StatType;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.decoration.Motive;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.item.CreativeModeTab;
@@ -48,9 +49,11 @@ import org.bukkit.craftbukkit.v.inventory.CraftCreativeCategory;
 import org.bukkit.craftbukkit.v.potion.CraftPotionUtil;
 import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
+import org.bukkit.craftbukkit.v.util.CraftSpawnCategory;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.SpawnCategory;
 import org.bukkit.entity.Villager;
 import org.bukkit.inventory.CreativeCategory;
 import org.bukkit.potion.PotionEffectType;
@@ -100,6 +103,23 @@ public class BukkitRegistry {
         loadArts();
         loadStats();
         loadCreativeTab();
+        loadSpawnCategory();
+    }
+
+    private static void loadSpawnCategory() {
+        var id = SpawnCategory.values().length;
+        var newTypes = new ArrayList<SpawnCategory>();
+        for (var category : MobCategory.values()) {
+            try {
+                CraftSpawnCategory.toBukkit(category);
+            } catch (Exception e) {
+                var name = category.name();
+                var spawnCategory = EnumHelper.makeEnum(SpawnCategory.class, name, id++, List.of(), List.of());
+                newTypes.add(spawnCategory);
+                ArclightMod.LOGGER.debug("Registered {} as spawn category {}", name, spawnCategory);
+            }
+        }
+        EnumHelper.addEnums(SpawnCategory.class, newTypes);
     }
 
     private static void loadCreativeTab() {
