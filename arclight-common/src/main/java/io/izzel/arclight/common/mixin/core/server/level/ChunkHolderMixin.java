@@ -37,14 +37,14 @@ public abstract class ChunkHolderMixin implements ChunkHolderBridge {
     @Override @Accessor("oldTicketLevel") public abstract int bridge$getOldTicketLevel();
     // @formatter:on
 
-    public LevelChunk getFullChunk() {
+    public LevelChunk getFullChunkNow() {
         if (!ChunkHolder.getFullChunkStatus(this.oldTicketLevel).isOrAfter(ChunkHolder.FullChunkStatus.BORDER)) {
             return null; // note: using oldTicketLevel for isLoaded checks
         }
-        return this.getFullChunkUnchecked();
+        return this.getFullChunkNowUnchecked();
     }
 
-    public LevelChunk getFullChunkUnchecked() {
+    public LevelChunk getFullChunkNowUnchecked() {
         CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> statusFuture = this.getFutureIfPresentUnchecked(ChunkStatus.FULL);
         Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure> either = statusFuture.getNow(null);
         return (either == null) ? null : (LevelChunk) either.left().orElse(null);
@@ -52,12 +52,12 @@ public abstract class ChunkHolderMixin implements ChunkHolderBridge {
 
     @Override
     public LevelChunk bridge$getFullChunk() {
-        return this.getFullChunk();
+        return this.getFullChunkNow();
     }
 
     @Override
     public LevelChunk bridge$getFullChunkUnchecked() {
-        return this.getFullChunkUnchecked();
+        return this.getFullChunkNowUnchecked();
     }
 
     @Inject(method = "blockChanged", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
