@@ -8,7 +8,6 @@ import com.google.gson.JsonParseException;
 import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.item.crafting.RecipeManagerBridge;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
-import net.minecraft.Util;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -20,6 +19,7 @@ import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.crafting.CraftingHelper;
+import net.minecraftforge.common.crafting.conditions.ICondition;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,8 +38,9 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
     @Shadow protected abstract <C extends Container, T extends Recipe<C>> Map<ResourceLocation, Recipe<C>> byType(RecipeType<T> recipeTypeIn);
     @Shadow private boolean hasErrors;
     @Shadow @Final private static Logger LOGGER;
-    @Shadow public static Recipe<?> fromJson(ResourceLocation recipeId, JsonObject json) { return null; }
+    @Shadow(remap = false) public static Recipe<?> fromJson(ResourceLocation recipeId, JsonObject json, ICondition.IContext context) { return null; }
     @Shadow private Map<ResourceLocation, Recipe<?>> byName;
+    @Shadow(remap = false) @Final private ICondition.IContext context;
     // @formatter:on
 
     /**
@@ -63,11 +64,11 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
                 continue; //Forge: filter anything beginning with "_" as it's used for metadata.
 
             try {
-                if (entry.getValue().isJsonObject() && !CraftingHelper.processConditions(entry.getValue().getAsJsonObject(), "conditions")) {
+                if (entry.getValue().isJsonObject() && !CraftingHelper.processConditions(entry.getValue().getAsJsonObject(), "conditions", this.context)) {
                     LOGGER.info("Skipping loading recipe {} as it's conditions were not met", resourcelocation);
                     continue;
                 }
-                Recipe<?> irecipe = fromJson(resourcelocation, GsonHelper.convertToJsonObject(entry.getValue(), "top element"));
+                Recipe<?> irecipe = fromJson(resourcelocation, GsonHelper.convertToJsonObject(entry.getValue(), "top element"), this.context);
                 if (irecipe == null) {
                     LOGGER.info("Skipping loading recipe {} as it's serializer returned null", resourcelocation);
                     continue;
