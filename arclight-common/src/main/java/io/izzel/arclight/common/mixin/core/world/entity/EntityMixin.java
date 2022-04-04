@@ -26,7 +26,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.tags.Tag;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
@@ -878,13 +877,13 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                 return null;
             } else {
                 ServerLevel world = ((PortalInfoBridge) portalinfo).bridge$getWorld() == null ? server : ((PortalInfoBridge) portalinfo).bridge$getWorld();
-                if (world == server) {
+                if (world == this.level) {
                     this.moveTo(portalinfo.pos.x, portalinfo.pos.y, portalinfo.pos.z, portalinfo.yRot, this.getXRot());
                     this.setDeltaMovement(portalinfo.speed);
                     return (Entity) (Object) this;
                 }
                 this.unRide();
-                Entity transportedEntity = teleporter.placeEntity((Entity) (Object) this, (ServerLevel) this.level, server, this.getYRot(), spawnPortal -> { //Forge: Start vanilla logic
+                Entity transportedEntity = teleporter.placeEntity((Entity) (Object) this, (ServerLevel) this.level, world, this.getYRot(), spawnPortal -> { //Forge: Start vanilla logic
                     this.level.getProfiler().popPush("reloading");
                     Entity entity = this.getType().create(world);
                     if (entity != null) {
