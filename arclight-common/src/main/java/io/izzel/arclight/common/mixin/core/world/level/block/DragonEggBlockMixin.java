@@ -36,7 +36,7 @@ public class DragonEggBlockMixin {
 
     private transient BlockPos arclight$toBlock;
 
-    @ModifyVariable(method = "teleport", index = 6, name = "blockpos", at = @At(value = "JUMP", opcode = Opcodes.IFEQ, ordinal = 1))
+    @ModifyVariable(method = "teleport", index = 6, name = "blockpos", at = @At(value = "JUMP", opcode = Opcodes.IFEQ, ordinal = 2))
     public BlockPos arclight$setPos(BlockPos pos) {
         return arclight$toBlock;
     }
