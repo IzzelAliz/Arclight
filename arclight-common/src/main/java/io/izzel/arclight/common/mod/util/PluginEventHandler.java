@@ -185,7 +185,7 @@ public class PluginEventHandler extends ASMEventHandler {
         }
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
-        return Unsafe.defineClass(name, bytes, 0, bytes.length, plugin.getClass().getClassLoader(), plugin.getClass().getProtectionDomain());
+        return Unsafe.defineClass(name, bytes, 0, bytes.length, callback.getDeclaringClass().getClassLoader(), callback.getDeclaringClass().getProtectionDomain());
     }
 
     @Override
