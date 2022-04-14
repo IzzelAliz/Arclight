@@ -50,7 +50,7 @@ public class ServerLevel_EntityCallbacksMixin {
 
     @Inject(method = "onTrackingEnd(Lnet/minecraft/world/entity/Entity;)V", at = @At("RETURN"))
     private void arclight$invalid(Entity entity, CallbackInfo ci) {
-        ((EntityBridge) entity).bridge$setValid(true);
+        ((EntityBridge) entity).bridge$setValid(false);
         if (!(entity instanceof ServerPlayer)) {
             for (var player : outerThis.players()) {
                 ((ServerPlayerEntityBridge) player).bridge$getBukkitEntity().onEntityRemove(entity);
