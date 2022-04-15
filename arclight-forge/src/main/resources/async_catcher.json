@@ -24,5 +24,8 @@
   },
   "net/minecraft/world/level/storage/loot/LootTable": {
     "m_79123_(Lnet/minecraft/world/Container;Lnet/minecraft/world/level/storage/loot/LootContext;)V": "loot generate"
+  },
+  "net/minecraftforge/network/NetworkHooks": {
+    "openGui(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/MenuProvider;Ljava/util/function/Consumer;)V": "open gui"
   }
 }
