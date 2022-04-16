@@ -442,7 +442,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         int k = blockpos.getZ();
         BlockStateListPopulator blockList = new BlockStateListPopulator(world);
         BlockPos.betweenClosed(i - 2, j + 1, k - 2, i + 2, j + 3, k + 2).forEach((pos) -> {
-            blockList.setBlock(pos, Blocks.OBSIDIAN.defaultBlockState(), 3);
+            blockList.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
         });
         BlockPos.betweenClosed(i - 2, j, k - 2, i + 2, j, k + 2).forEach((pos) -> {
             blockList.setBlock(pos, Blocks.OBSIDIAN.defaultBlockState(), 3);
