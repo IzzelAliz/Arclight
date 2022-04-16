@@ -33,7 +33,7 @@ public abstract class InventoryMixin implements Container, IInventoryBridge, Pla
     // @formatter:on
 
     public List<HumanEntity> transaction = new ArrayList<>();
-    private int maxStack = MAX_STACK;
+    private int maxStack = -1;
 
     public int canHold(ItemStack stack) {
         int remains = stack.getCount();
@@ -98,8 +98,10 @@ public abstract class InventoryMixin implements Container, IInventoryBridge, Pla
 
     @Override
     public int getMaxStackSize() {
-        if (maxStack == 0) maxStack = MAX_STACK;
-        return maxStack;
+        if (maxStack != -1) {
+            return maxStack;
+        }
+        return Container.super.getMaxStackSize();
     }
 
     @Override
