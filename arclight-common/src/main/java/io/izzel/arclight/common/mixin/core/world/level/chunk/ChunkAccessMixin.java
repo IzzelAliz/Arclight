@@ -6,6 +6,7 @@ import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.QuartPos;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
@@ -73,7 +74,7 @@ public abstract class ChunkAccessMixin implements BlockGetter, BiomeManager.Nois
         return this.persistentDataContainer;
     }
 
-    public void setBiome(int i, int j, int k, Biome biome) {
+    public void setBiome(int i, int j, int k, Holder<Biome> biome) {
         try {
             int l = QuartPos.fromBlock(this.getMinBuildHeight());
             int i1 = l + QuartPos.fromBlock(this.getHeight()) - 1;

@@ -6,6 +6,7 @@ import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBrid
 import io.izzel.arclight.common.bridge.core.util.FoodStatsBridge;
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 import net.minecraft.world.food.FoodProperties;
@@ -21,6 +22,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import javax.annotation.Nullable;
 
 @Mixin(FoodData.class)
 public abstract class FoodDataMixin implements FoodStatsBridge {
@@ -46,19 +49,22 @@ public abstract class FoodDataMixin implements FoodStatsBridge {
         this.entityhuman = playerEntity;
     }
 
-    @Redirect(method = "eat(Lnet/minecraft/world/item/Item;Lnet/minecraft/world/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/food/FoodData;eat(IF)V"))
-    public void arclight$foodLevelChange(FoodData foodStats, int foodLevelIn, float foodSaturationModifier, Item maybeFood, ItemStack stack) {
-        if (entityhuman == null) {
+    @Redirect(method = "eat(Lnet/minecraft/world/item/Item;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;)V", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraft/world/food/FoodData;eat(IF)V"))
+    public void arclight$foodLevelChange(FoodData foodStats, int foodLevelIn, float foodSaturationModifier, Item maybeFood, ItemStack stack, @Nullable LivingEntity entity) {
+        var player = this.entityhuman != null ? this.entityhuman : (entity instanceof Player p ? p : null);
+        if (player == null) {
             foodStats.eat(foodLevelIn, foodSaturationModifier);
             return;
+        } else if (this.entityhuman == null) {
+            this.entityhuman = player;
         }
-        FoodProperties food = maybeFood.getFoodProperties();
+        FoodProperties food = maybeFood.getFoodProperties(stack, entity);
         int oldFoodLevel = this.foodLevel;
-        FoodLevelChangeEvent event = CraftEventFactory.callFoodLevelChangeEvent(entityhuman, food.getNutrition() + oldFoodLevel, stack);
+        FoodLevelChangeEvent event = CraftEventFactory.callFoodLevelChangeEvent(player, food.getNutrition() + oldFoodLevel, stack);
         if (!event.isCancelled()) {
             this.eat(event.getFoodLevel() - oldFoodLevel, food.getSaturationModifier());
         }
-        ((ServerPlayerEntityBridge) entityhuman).bridge$getBukkitEntity().sendHealthUpdate();
+        ((ServerPlayerEntityBridge) player).bridge$getBukkitEntity().sendHealthUpdate();
     }
 
     @Inject(method = "tick", at = @At(value = "INVOKE_ASSIGN", remap = false, target = "Ljava/lang/Math;max(II)I"))
