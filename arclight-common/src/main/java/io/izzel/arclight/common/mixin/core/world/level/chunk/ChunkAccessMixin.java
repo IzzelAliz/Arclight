@@ -6,6 +6,7 @@ import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.QuartPos;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
@@ -71,6 +72,10 @@ public abstract class ChunkAccessMixin implements BlockGetter, BiomeManager.Nois
     @Override
     public PersistentDataContainer bridge$getPersistentDataContainer() {
         return this.persistentDataContainer;
+    }
+
+    public void setBiome(int i, int j, int k, Holder<Biome> biome) {
+        setBiome(i, j, k, biome.value());
     }
 
     public void setBiome(int i, int j, int k, Biome biome) {
