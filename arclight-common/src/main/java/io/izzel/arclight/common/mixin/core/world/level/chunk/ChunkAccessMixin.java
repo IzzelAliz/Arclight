@@ -75,10 +75,6 @@ public abstract class ChunkAccessMixin implements BlockGetter, BiomeManager.Nois
     }
 
     public void setBiome(int i, int j, int k, Holder<Biome> biome) {
-        setBiome(i, j, k, biome.value());
-    }
-
-    public void setBiome(int i, int j, int k, Biome biome) {
         try {
             int l = QuartPos.fromBlock(this.getMinBuildHeight());
             int i1 = l + QuartPos.fromBlock(this.getHeight()) - 1;
