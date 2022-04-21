@@ -16,11 +16,11 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(LevelChunkSection.class)
 public class LevelChunkSectionMixin implements LevelChunkSectionBridge {
-    
+    final Registry<Biome> registry = ((CraftServer)(Bukkit.getServer())).getServer().registryAccess().registryOrThrow(Registry.BIOME_REGISTRY);
+
     @Shadow @Final private PalettedContainer<Holder<Biome>> biomes;
 
     public void setBiome(int i, int j, int k, net.minecraft.world.level.biome.Biome biome) {
-        Registry<Biome> registry = ((CraftServer)(Bukkit.getServer())).getServer().registryAccess().registryOrThrow(Registry.BIOME_REGISTRY);
         this.biomes.set(i, j, k, CraftBlock.biomeToBiomeBase(registry, org.bukkit.block.Biome.valueOf(ResourceLocationUtil.standardize(biome.getRegistryName()))));
     }
 
