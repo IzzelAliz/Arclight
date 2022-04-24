@@ -95,7 +95,6 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(EntityType<? extends MobEntity> type, World worldIn, CallbackInfo ci) {
-        this.persistenceRequired = !this.canDespawn(0.0);
         this.aware = true;
     }
 

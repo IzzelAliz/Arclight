@@ -22,6 +22,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.effect.LightningBoltEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.IInventory;
@@ -167,6 +168,13 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
     @Override
     public SaveFormat.LevelSave bridge$getConvertable() {
         return this.convertable;
+    }
+
+    @Inject(method = "onEntityAdded", at = @At("HEAD"))
+    private void aright$setPersistence(Entity entityIn, CallbackInfo ci) {
+        if(entityIn instanceof MobEntity){
+            ((MobEntity) entityIn).persistenceRequired = !((MobEntity) entityIn).canDespawn(0.0);
+        }
     }
 
     @Inject(method = "onEntityAdded", at = @At("RETURN"))
