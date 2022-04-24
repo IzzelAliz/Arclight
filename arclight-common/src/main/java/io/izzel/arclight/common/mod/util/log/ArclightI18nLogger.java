@@ -22,7 +22,6 @@ public class ArclightI18nLogger extends ExtendedLoggerWrapper {
 
     @Override
     protected void logMessage(String fqcn, Level level, Marker marker, CharSequence message, Throwable t) {
-        this.info("", "");
         super.logMessage(fqcn, level, marker, ArclightLocale.getInstance().get(message.toString()), t);
     }
 
