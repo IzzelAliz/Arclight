@@ -466,7 +466,7 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         int k = blockpos.getZ();
         BlockStateListPopulator blockList = new BlockStateListPopulator(world);
         BlockPos.getAllInBoxMutable(i - 2, j + 1, k - 2, i + 2, j + 3, k + 2).forEach((pos) -> {
-            blockList.setBlockState(pos, Blocks.OBSIDIAN.getDefaultState(), 3);
+            blockList.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
         });
         BlockPos.getAllInBoxMutable(i - 2, j, k - 2, i + 2, j, k + 2).forEach((pos) -> {
             blockList.setBlockState(pos, Blocks.OBSIDIAN.getDefaultState(), 3);

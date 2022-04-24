@@ -66,48 +66,50 @@ public abstract class ItemEntityMixin extends EntityMixin {
     public void onCollideWithPlayer(final PlayerEntity entity) {
         if (!this.world.isRemote) {
             if (this.pickupDelay > 0) return;
-            final ItemStack itemstack = this.getItem();
-            final net.minecraft.item.Item item = itemstack.getItem();
-            final int i = itemstack.getCount();
+            ItemStack itemstack = this.getItem();
+            int i = itemstack.getCount();
 
             int hook = net.minecraftforge.event.ForgeEventFactory.onItemPickup((ItemEntity) (Object) this, entity);
             if (hook < 0) return;
-            ItemStack copy = itemstack.copy();
 
             final int canHold = ((PlayerInventoryBridge) entity.inventory).bridge$canHold(itemstack);
-            final int remaining = i - canHold;
-            if (this.pickupDelay <= 0 && (hook == 1 || canHold > 0)) {
-
-                copy.setCount(canHold);
-                net.minecraftforge.fml.hooks.BasicEventHooks.firePlayerItemPickupEvent(entity, (ItemEntity) (Object) this, copy);
-
+            final int remaining = itemstack.getCount() - canHold;
+            if (this.pickupDelay <= 0 && canHold > 0) {
                 itemstack.setCount(canHold);
                 final PlayerPickupItemEvent playerEvent = new PlayerPickupItemEvent(((ServerPlayerEntityBridge) entity).bridge$getBukkitEntity(), (Item) this.getBukkitEntity(), remaining);
                 playerEvent.setCancelled(!((PlayerEntityBridge) entity).bridge$canPickUpLoot());
                 Bukkit.getPluginManager().callEvent(playerEvent);
                 if (playerEvent.isCancelled()) {
-                    itemstack.setCount(i);
+                    itemstack.setCount(canHold + remaining);
                     return;
                 }
                 final EntityPickupItemEvent entityEvent = new EntityPickupItemEvent(((LivingEntityBridge) entity).bridge$getBukkitEntity(), (Item) this.getBukkitEntity(), remaining);
                 entityEvent.setCancelled(!((PlayerEntityBridge) entity).bridge$canPickUpLoot());
                 Bukkit.getPluginManager().callEvent(entityEvent);
                 if (entityEvent.isCancelled()) {
-                    itemstack.setCount(i);
+                    itemstack.setCount(canHold + remaining);
                     return;
                 }
-                itemstack.setCount(canHold + remaining);
+                ItemStack current = this.getItem();
+                if (!itemstack.equals(current)) {
+                    itemstack = current;
+                } else {
+                    itemstack.setCount(canHold + remaining);
+                }
                 this.pickupDelay = 0;
-            } else if (this.pickupDelay == 0) {
+            } else if (this.pickupDelay == 0 && hook != 1) {
                 this.pickupDelay = -1;
             }
-            if (this.pickupDelay == 0 && (this.owner == null /*|| 6000 - this.age <= 200*/ || this.owner.equals(entity.getUniqueID())) && entity.inventory.addItemStackToInventory(itemstack)) {
+            ItemStack copy = itemstack.copy();
+            if (this.pickupDelay == 0 && (this.owner == null /*|| 6000 - this.age <= 200*/ || this.owner.equals(entity.getUniqueID())) && (hook == 1 || entity.inventory.addItemStackToInventory(itemstack))) {
+                copy.setCount(copy.getCount() - itemstack.getCount());
+                net.minecraftforge.fml.hooks.BasicEventHooks.firePlayerItemPickupEvent(entity, (ItemEntity) (Object) this, copy);
                 entity.onItemPickup((ItemEntity) (Object) this, i);
                 if (itemstack.isEmpty()) {
                     this.remove();
                     itemstack.setCount(i);
                 }
-                entity.addStat(Stats.ITEM_PICKED_UP.get(item), i);
+                entity.addStat(Stats.ITEM_PICKED_UP.get(itemstack.getItem()), i);
             }
         }
     }

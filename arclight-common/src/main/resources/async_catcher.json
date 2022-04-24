@@ -26,5 +26,8 @@
   },
   "net/minecraft/loot/LootTable": {
     "func_216118_a(Lnet/minecraft/inventory/IInventory;Lnet/minecraft/loot/LootContext;)V": "loot generate"
+  },
+  "net/minecraftforge/fml/network/NetworkHooks": {
+    "openGui(Lnet/minecraft/entity/player/ServerPlayerEntity;Lnet/minecraft/inventory/container/INamedContainerProvider;Ljava/util/function/Consumer;)V": "open gui"
   }
 }

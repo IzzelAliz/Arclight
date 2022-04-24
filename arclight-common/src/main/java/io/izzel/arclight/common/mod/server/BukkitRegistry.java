@@ -23,6 +23,9 @@ import net.minecraft.entity.merchant.villager.VillagerProfession;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.potion.Effect;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.Potions;
 import net.minecraft.stats.StatType;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.RegistryKey;
@@ -41,6 +44,7 @@ import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.craftbukkit.v.CraftCrashReport;
 import org.bukkit.craftbukkit.v.CraftStatistic;
+import org.bukkit.craftbukkit.v.potion.CraftPotionUtil;
 import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -48,6 +52,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Villager;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -290,6 +295,23 @@ public class BukkitRegistry {
         }
         PotionEffectType.stopAcceptingRegistrations();
         ArclightMod.LOGGER.info("registry.potion", size - origin);
+        int typeId = PotionType.values().length;
+        List<PotionType> newTypes = new ArrayList<>();
+        BiMap<PotionType, String> map = HashBiMap.create(Unsafe.getStatic(CraftPotionUtil.class, "regular"));
+        putStatic(CraftPotionUtil.class, "regular", map);
+        for (Potion potion : ForgeRegistries.POTION_TYPES) {
+            if (CraftPotionUtil.toBukkit(potion.getRegistryName().toString()).getType() == PotionType.UNCRAFTABLE && potion != Potions.EMPTY) {
+                String name = ResourceLocationUtil.standardize(potion.getRegistryName());
+                EffectInstance effectInstance = potion.getEffects().isEmpty() ? null : potion.getEffects().get(0);
+                PotionType potionType = EnumHelper.makeEnum(PotionType.class, name, typeId++,
+                    Arrays.asList(PotionEffectType.class, boolean.class, boolean.class),
+                    Arrays.asList(effectInstance == null ? null : PotionEffectType.getById(Effect.getId(effectInstance.getPotion())), false, false));
+                newTypes.add(potionType);
+                map.put(potionType, potion.getRegistryName().toString());
+                ArclightMod.LOGGER.debug("Registered {} as potion type {}", potion.getRegistryName(), potionType);
+            }
+        }
+        EnumHelper.addEnums(PotionType.class, newTypes);
     }
 
     private static void loadMaterials() {

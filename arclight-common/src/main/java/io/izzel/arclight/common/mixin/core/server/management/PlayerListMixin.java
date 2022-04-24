@@ -452,6 +452,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         if ((Object) playerIn instanceof MobEntity) {
             ((MobEntity) (Object) playerIn).clearLeashed(true, false);
         }
+        playerIn.connection.player = serverplayerentity;
 
         serverplayerentity.connection = playerIn.connection;
         serverplayerentity.copyFrom(playerIn, conqueredEnd);

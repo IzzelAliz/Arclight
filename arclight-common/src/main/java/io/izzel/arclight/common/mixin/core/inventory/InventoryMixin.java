@@ -24,10 +24,8 @@ public abstract class InventoryMixin implements IInventory, IInventoryBridge {
     @Shadow @Final public NonNullList<ItemStack> inventoryContents;
     // @formatter:on
 
-    private static final int MAX_STACK = 64;
-
     public List<HumanEntity> transaction = new ArrayList<>();
-    private int maxStack = MAX_STACK;
+    private int maxStack = -1;
     protected InventoryHolder bukkitOwner;
 
     public void arclight$constructor(int numSlots) {
@@ -71,8 +69,10 @@ public abstract class InventoryMixin implements IInventory, IInventoryBridge {
 
     @Override
     public int getInventoryStackLimit() {
-        if (maxStack == 0) maxStack = MAX_STACK;
-        return maxStack;
+        if (maxStack != -1) {
+            return maxStack;
+        }
+        return IInventory.super.getInventoryStackLimit();
     }
 
     @Override

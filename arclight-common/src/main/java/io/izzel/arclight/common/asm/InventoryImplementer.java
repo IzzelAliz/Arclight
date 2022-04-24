@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -123,9 +122,9 @@ public class InventoryImplementer implements Implementer {
             node.interfaces.add(BRIDGE_TYPE);
             return false;
         } else {
-            ArclightImplementer.LOGGER.debug(MARKER, "Implementing inventory for class {}", node.name);
+            ArclightImplementer.LOGGER.debug(MARKER, "Implementing inventory for class {} in {}", node.name, map.get(node.name));
             FieldNode transaction = new FieldNode(Opcodes.ACC_PRIVATE, "$transaction", Type.getType(List.class).getDescriptor(), null, null);
-            FieldNode maxStack = new FieldNode(Opcodes.ACC_PRIVATE, "$maxStack", "I", null, null);
+            FieldNode maxStack = new FieldNode(Opcodes.ACC_PRIVATE, "$maxStack", Type.getType(Integer.class).getDescriptor(), null, null);
             node.fields.add(transaction);
             node.fields.add(maxStack);
             node.interfaces.add(BRIDGE_TYPE);
@@ -166,12 +165,12 @@ public class InventoryImplementer implements Implementer {
             LabelNode labelNode = new LabelNode();
             list.add(new VarInsnNode(Opcodes.ALOAD, 0));
             list.add(new FieldInsnNode(Opcodes.GETFIELD, node.name, maxStack.name, maxStack.desc));
-            list.add(new InsnNode(Opcodes.ICONST_M1));
-            list.add(new JumpInsnNode(Opcodes.IF_ICMPEQ, labelNode));
-            list.add(new VarInsnNode(Opcodes.ALOAD, 0));
-            list.add(new FieldInsnNode(Opcodes.GETFIELD, node.name, maxStack.name, maxStack.desc));
+            list.add(new InsnNode(Opcodes.DUP));
+            list.add(new JumpInsnNode(Opcodes.IFNULL, labelNode));
+            list.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, Type.getInternalName(Integer.class), "intValue", "()I", false));
             list.add(new InsnNode(Opcodes.IRETURN));
             list.add(labelNode);
+            list.add(new InsnNode(Opcodes.POP));
             if (stackLimitMethod != null && !Modifier.isAbstract(stackLimitMethod.access)) {
                 stackLimitMethod.instructions.insert(list);
             } else {
@@ -195,6 +194,7 @@ public class InventoryImplementer implements Implementer {
                 InsnList insnList = new InsnList();
                 insnList.add(new VarInsnNode(Opcodes.ALOAD, 0));
                 insnList.add(new VarInsnNode(Opcodes.ILOAD, 1));
+                insnList.add(new MethodInsnNode(Opcodes.INVOKESTATIC, Type.getInternalName(Integer.class), "valueOf", Type.getMethodDescriptor(Type.getType(Integer.class), Type.INT_TYPE)));
                 insnList.add(new FieldInsnNode(Opcodes.PUTFIELD, node.name, maxStack.name, maxStack.desc));
                 insnList.add(new InsnNode(Opcodes.RETURN));
                 methodNode.instructions = insnList;
@@ -213,31 +213,11 @@ public class InventoryImplementer implements Implementer {
                         insnList.add(new InsnNode(Opcodes.DUP));
                         insnList.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, Type.getInternalName(ArrayList.class), "<init>", "()V", false));
                         insnList.add(new FieldInsnNode(Opcodes.PUTFIELD, node.name, transaction.name, transaction.desc));
-                        insnList.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                        insnList.add(new InsnNode(Opcodes.ICONST_M1));
-                        insnList.add(new FieldInsnNode(Opcodes.PUTFIELD, node.name, maxStack.name, maxStack.desc));
                         methodNode.instructions.insert(initNode, insnList);
                     }
                 }
             }
             return true;
         }
-    }
-
-    private List<FieldNode> findPossibleList(ClassNode node) {
-        LinkedList<FieldNode> list = new LinkedList<>();
-        for (FieldNode fieldNode : node.fields) {
-            boolean nonNullList = fieldNode.desc.equals("Lnet/minecraft/util/NonNullList;");
-            if (nonNullList || fieldNode.desc.equals("Ljava/util/List;")) {
-                if (fieldNode.signature != null && fieldNode.signature.contains("<Lnet/minecraft/item/ItemStack;>")) {
-                    if (nonNullList) {
-                        list.addFirst(fieldNode);
-                    } else {
-                        list.addLast(fieldNode);
-                    }
-                }
-            }
-        }
-        return list;
     }
 }
