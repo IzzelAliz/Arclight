@@ -95,7 +95,6 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(EntityType<? extends MobEntity> type, World worldIn, CallbackInfo ci) {
-        this.persistenceRequired = !this.canDespawn(0.0);
         this.aware = true;
     }
 
@@ -190,7 +189,11 @@ public abstract class MobEntityMixin extends LivingEntityMixin implements MobEnt
 
     @Redirect(method = "readAdditional", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/nbt/CompoundNBT;getBoolean(Ljava/lang/String;)Z"))
     public boolean arclight$setIfTrue(CompoundNBT nbt, String key) {
-        return nbt.getBoolean(key) || this.persistenceRequired;
+        if (nbt.contains("PersistenceRequired")) {
+            return nbt.getBoolean(key);
+        } else {
+            return !this.canDespawn(0.0);
+        }
     }
 
     @Inject(method = "updateEntityActionState", cancellable = true, at = @At("HEAD"))
