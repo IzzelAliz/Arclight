@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.item;
 
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.EntityMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.damagesource.DamageSource;
@@ -8,6 +9,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,7 +21,10 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 @Mixin(FallingBlockEntity.class)
 public abstract class FallingBlockEntityMixin extends EntityMixin {
 
+    // @formatter:off
     @Shadow private BlockState blockState;
+    @Shadow public static FallingBlockEntity fall(Level p_201972_, BlockPos p_201973_, BlockState p_201974_) { return null; }
+    // @formatter:on
 
     @Inject(method = "tick", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     private void arclight$entityChangeBlock(CallbackInfo ci, Block block, BlockPos pos) {
@@ -43,5 +48,10 @@ public abstract class FallingBlockEntityMixin extends EntityMixin {
         if (CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state.getFluidState().createLegacyBlock()).isCancelled()) {
             cir.setReturnValue(entity);
         }
+    }
+
+    private static FallingBlockEntity fall(Level level, BlockPos pos, BlockState state, CreatureSpawnEvent.SpawnReason spawnReason) {
+        ((WorldBridge) level).bridge$pushAddEntityReason(spawnReason);
+        return fall(level, pos, state);
     }
 }

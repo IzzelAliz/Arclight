@@ -89,6 +89,20 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
                         new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "reload", "(Lnet/minecraft/server/MinecraftServer;)V", null, null)
                     )
                 ))
+            .put("net.minecraft.world.entity.monster.Zombie",
+                Map.entry(
+                    List.of(),
+                    List.of(
+                        new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "zombifyVillager", "(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/npc/Villager;Lnet/minecraft/core/BlockPos;ZLorg/bukkit/event/entity/CreatureSpawnEvent$SpawnReason;)Lnet/minecraft/world/entity/monster/ZombieVillager;", null, null)
+                    )
+                ))
+            .put("net.minecraft.world.entity.item.FallingBlockEntity",
+                Map.entry(
+                    List.of(),
+                    List.of(
+                        new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "fall", "(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lorg/bukkit/event/entity/CreatureSpawnEvent$SpawnReason;)Lnet/minecraft/world/entity/item/FallingBlockEntity;", null, null)
+                    )
+                ))
             .build();
 
     // damn spigot

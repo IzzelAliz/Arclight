@@ -49,8 +49,9 @@ public abstract class FoodDataMixin implements FoodStatsBridge {
         this.entityhuman = playerEntity;
     }
 
-    @Redirect(method = "eat(Lnet/minecraft/world/item/Item;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;)V", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraft/world/food/FoodData;eat(IF)V"))
-    public void arclight$foodLevelChange(FoodData foodStats, int foodLevelIn, float foodSaturationModifier, Item maybeFood, ItemStack stack, @Nullable LivingEntity entity) {
+    @Redirect(method = "eat(Lnet/minecraft/world/item/Item;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;)V", remap = false,
+        at = @At(value = "INVOKE", remap = true, target = "Lnet/minecraft/world/food/FoodData;eat(IF)V"))
+    private void arclight$foodLevelChange(FoodData foodStats, int foodLevelIn, float foodSaturationModifier, Item maybeFood, ItemStack stack, @Nullable LivingEntity entity) {
         var player = this.entityhuman != null ? this.entityhuman : (entity instanceof Player p ? p : null);
         if (player == null) {
             foodStats.eat(foodLevelIn, foodSaturationModifier);

@@ -21,7 +21,8 @@ public class SWorldBorderPacketMixin {
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/border/WorldBorder;)V", at = @At("RETURN"))
     private void arclight$nether(WorldBorder border, CallbackInfo ci) {
-        this.newCenterX = border.getCenterX() * (((WorldBorderBridge) border).bridge$getWorld().dimensionType().coordinateScale());
-        this.newCenterZ = border.getCenterZ() * (((WorldBorderBridge) border).bridge$getWorld().dimensionType().coordinateScale());
+        var level = ((WorldBorderBridge) border).bridge$getWorld();
+        this.newCenterX = border.getCenterX() * (level != null ? level.dimensionType().coordinateScale() : 1.0);
+        this.newCenterZ = border.getCenterZ() * (level != null ? level.dimensionType().coordinateScale() : 1.0);
     }
 }
