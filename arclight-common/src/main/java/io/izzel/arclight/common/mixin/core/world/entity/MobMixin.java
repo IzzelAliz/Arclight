@@ -21,7 +21,6 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.ForgeHooks;
-import org.apache.logging.log4j.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -92,7 +91,6 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(EntityType<? extends Mob> type, net.minecraft.world.level.Level worldIn, CallbackInfo ci) {
-        this.persistenceRequired = !this.removeWhenFarAway(0.0);
         this.aware = true;
     }
 
@@ -187,7 +185,11 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
 
     @Redirect(method = "readAdditionalSaveData", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/nbt/CompoundTag;getBoolean(Ljava/lang/String;)Z"))
     public boolean arclight$setIfTrue(CompoundTag nbt, String key) {
-        return nbt.getBoolean(key) || this.persistenceRequired;
+        if (nbt.contains("PersistenceRequired")) {
+            return nbt.getBoolean(key);
+        } else {
+            return !this.removeWhenFarAway(0.0);
+        }
     }
 
     @Inject(method = "serverAiStep", cancellable = true, at = @At("HEAD"))
