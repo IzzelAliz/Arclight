@@ -34,6 +34,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -245,7 +246,7 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
 
     @Redirect(method = "checkDespawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;removeWhenFarAway(D)Z"))
     public boolean arclight$checkDespawn(Mob mobEntity, double distanceToClosestPlayer) {
-        return true;
+        return this.overridePersistenceRequired || mobEntity.removeWhenFarAway(distanceToClosestPlayer);
     }
 
     @Inject(method = "interact", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;dropLeash(ZZ)V"))
@@ -350,8 +351,11 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
         return this.persistenceRequired;
     }
 
+    @Unique private boolean overridePersistenceRequired;
+
     public void setPersistenceRequired(boolean value) {
         this.persistenceRequired = value;
+        this.overridePersistenceRequired = true;
     }
 
     @Override
