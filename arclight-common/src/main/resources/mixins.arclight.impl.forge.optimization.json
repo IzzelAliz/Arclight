@@ -6,6 +6,7 @@
   "compatibilityLevel": "JAVA_11",
   "mixins": [
     "ClassInheritanceMultiMapMixin",
+    "ConnectionMixin_Optimize",
     "EntityDataManagerMixin_Optimize",
     "GoalMixin",
     "MobMixin_Optimization",
