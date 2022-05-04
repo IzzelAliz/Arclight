@@ -7,7 +7,6 @@ import io.izzel.arclight.common.bridge.core.command.ICommandSourceBridge;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.InternalEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.network.datasync.EntityDataManagerBridge;
 import io.izzel.arclight.common.bridge.core.world.TeleporterBridge;
@@ -36,7 +35,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.Pose;
-import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -554,20 +552,6 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
 
     @Inject(method = "load", at = @At(value = "RETURN"))
     public void arclight$read$ReadBukkitValues(CompoundTag compound, CallbackInfo ci) {
-        // CraftBukkit start
-        if ((Object) this instanceof LivingEntity entity) {
-
-            this.tickCount = compound.getInt("Spigot.ticksLived");
-
-            // Reset the persistence for tamed animals
-            if (entity instanceof TamableAnimal && !isLevelAtLeast(compound, 2) && !compound.getBoolean("PersistenceRequired")) {
-                Mob entityInsentient = (Mob) entity;
-                ((MobEntityBridge) entityInsentient).bridge$setPersistenceRequired(!entityInsentient.removeWhenFarAway(0));
-            }
-        }
-        this.persist = !compound.contains("Bukkit.persist") || compound.getBoolean("Bukkit.persist");
-        // CraftBukkit end
-
         // CraftBukkit start - Reset world
         if ((Object) this instanceof ServerPlayer) {
             Server server = Bukkit.getServer();

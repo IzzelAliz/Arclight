@@ -123,7 +123,6 @@
     "world.entity.ai.goal.TemptGoalMixin",
     "world.entity.ai.village.VillageSiegeMixin",
     "world.entity.ambient.BatMixin",
-    "world.entity.animal.AbstractFishMixin",
     "world.entity.animal.AnimalMixin",
     "world.entity.animal.Bee_GrowCropGoalMixin",
     "world.entity.animal.Bee_HurtByOtherGoalMixin",

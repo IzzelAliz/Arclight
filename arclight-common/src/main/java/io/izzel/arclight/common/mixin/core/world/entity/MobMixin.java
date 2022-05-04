@@ -34,7 +34,6 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -184,15 +183,6 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
         if (canPickup) mobEntity.setCanPickUpLoot(true);
     }
 
-    @Redirect(method = "readAdditionalSaveData", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/nbt/CompoundTag;getBoolean(Ljava/lang/String;)Z"))
-    public boolean arclight$setIfTrue(CompoundTag nbt, String key) {
-        if (nbt.contains("PersistenceRequired")) {
-            return nbt.getBoolean(key);
-        } else {
-            return !this.removeWhenFarAway(0.0);
-        }
-    }
-
     @Inject(method = "serverAiStep", cancellable = true, at = @At("HEAD"))
     private void arclight$unaware(CallbackInfo ci) {
         if (!this.aware) {
@@ -242,11 +232,6 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
         } else {
             return false;
         }
-    }
-
-    @Redirect(method = "checkDespawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;removeWhenFarAway(D)Z"))
-    public boolean arclight$checkDespawn(Mob mobEntity, double distanceToClosestPlayer) {
-        return this.overridePersistenceRequired || mobEntity.removeWhenFarAway(distanceToClosestPlayer);
     }
 
     @Inject(method = "interact", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;dropLeash(ZZ)V"))
@@ -351,11 +336,8 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
         return this.persistenceRequired;
     }
 
-    @Unique private boolean overridePersistenceRequired;
-
     public void setPersistenceRequired(boolean value) {
         this.persistenceRequired = value;
-        this.overridePersistenceRequired = true;
     }
 
     @Override

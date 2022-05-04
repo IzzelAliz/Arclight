@@ -12,7 +12,6 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.ExperienceOrb;
-import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -96,9 +95,6 @@ public abstract class AnimalMixin extends AgeableMobMixin implements AnimalEntit
             return;
         }
         if (child != null) {
-            if (child instanceof TamableAnimal && ((TamableAnimal) child).isTame()) {
-                child.persistenceRequired = true;
-            }
             ServerPlayer serverplayerentity = this.getLoveCause();
             if (serverplayerentity == null && animalEntity.getLoveCause() != null) {
                 serverplayerentity = animalEntity.getLoveCause();

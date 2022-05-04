@@ -37,16 +37,6 @@ public abstract class WorldEntitySpawnerMixin {
     @Shadow public static void spawnCategoryForChunk(MobCategory p_234967_0_, ServerLevel p_234967_1_, LevelChunk p_234967_2_, NaturalSpawner.SpawnPredicate p_234967_3_, NaturalSpawner.AfterSpawnCallback p_234967_4_) { }
     // @formatter:on
 
-    @Redirect(method = "createState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;requiresCustomPersistence()Z"))
-    private static boolean arclight$specialDespawn(Mob mobEntity) {
-        return false;
-    }
-
-    @Redirect(method = "createState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;isPersistenceRequired()Z"))
-    private static boolean arclight$specialDespawn2(Mob mobEntity) {
-        return mobEntity.removeWhenFarAway(0) && mobEntity.isPersistenceRequired();
-    }
-
     /**
      * @author IzzelAliz
      * @reason
