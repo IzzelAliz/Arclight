@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Pufferfish.class)
-public abstract class PufferfishEntityMixin extends AbstractFishMixin {
+public abstract class PufferfishEntityMixin {
 
     @Inject(method = "touch", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)Z"))
     private void arclight$attack(Mob mobEntity, CallbackInfo ci) {
