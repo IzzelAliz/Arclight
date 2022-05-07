@@ -7,7 +7,6 @@ import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.entity.AgeableEntity;
 import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -96,9 +95,6 @@ public abstract class AnimalEntityMixin extends AgeableEntityMixin implements An
             return;
         }
         if (child != null) {
-            if (child instanceof TameableEntity && ((TameableEntity) child).isTamed()) {
-                child.persistenceRequired = true;
-            }
             ServerPlayerEntity serverplayerentity = this.getLoveCause();
             if (serverplayerentity == null && animalEntity.getLoveCause() != null) {
                 serverplayerentity = animalEntity.getLoveCause();

@@ -10,17 +10,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ChickenEntity.class)
 public abstract class ChickenEntityMixin extends AnimalEntityMixin {
 
-    // @formatter:off
-    @Shadow public abstract boolean isChickenJockey();
-    // @formatter:on
-
-    @Inject(method = "livingTick", at = @At("HEAD"))
-    private void arclight$persist(CallbackInfo ci) {
-        if (this.isChickenJockey()) {
-            this.persistenceRequired = !this.canDespawn(0.0);
-        }
-    }
-
     @Inject(method = "livingTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/ChickenEntity;entityDropItem(Lnet/minecraft/util/IItemProvider;)Lnet/minecraft/entity/item/ItemEntity;"))
     private void arclight$forceDropOn(CallbackInfo ci) {
         this.forceDrops = true;

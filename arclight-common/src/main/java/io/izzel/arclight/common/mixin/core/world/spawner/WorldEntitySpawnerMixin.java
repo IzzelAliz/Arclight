@@ -4,7 +4,6 @@ import io.izzel.arclight.common.bridge.world.IWorldWriterBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import io.izzel.arclight.common.bridge.world.spawner.WorldEntitySpawnerBridge;
 import net.minecraft.entity.EntityClassification;
-import net.minecraft.entity.MobEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IServerWorld;
 import net.minecraft.world.biome.Biome;
@@ -20,7 +19,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Random;
@@ -32,16 +30,6 @@ public abstract class WorldEntitySpawnerMixin {
     @Shadow @Final private static EntityClassification[] field_234961_c_;
     @Shadow public static void func_234967_a_(EntityClassification p_234967_0_, ServerWorld p_234967_1_, Chunk p_234967_2_, WorldEntitySpawner.IDensityCheck p_234967_3_, WorldEntitySpawner.IOnSpawnDensityAdder p_234967_4_) { }
     // @formatter:on
-
-    @Redirect(method = "func_234964_a_", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/MobEntity;preventDespawn()Z"))
-    private static boolean arclight$specialDespawn(MobEntity mobEntity) {
-        return false;
-    }
-
-    @Redirect(method = "func_234964_a_", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/MobEntity;isNoDespawnRequired()Z"))
-    private static boolean arclight$specialDespawn2(MobEntity mobEntity) {
-        return mobEntity.canDespawn(0) && mobEntity.isNoDespawnRequired();
-    }
 
     /**
      * @author IzzelAliz

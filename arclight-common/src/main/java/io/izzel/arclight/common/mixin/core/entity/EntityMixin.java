@@ -5,7 +5,6 @@ import io.izzel.arclight.common.bridge.command.ICommandSourceBridge;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.entity.InternalEntityBridge;
 import io.izzel.arclight.common.bridge.entity.LivingEntityBridge;
-import io.izzel.arclight.common.bridge.entity.MobEntityBridge;
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.world.TeleporterBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
@@ -22,7 +21,6 @@ import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.Pose;
 import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -521,13 +519,8 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             LivingEntity entity = (LivingEntity) (Object) this;
 
             this.ticksExisted = compound.getInt("Spigot.ticksLived");
-
-            // Reset the persistence for tamed animals
-            if (entity instanceof TameableEntity && !isLevelAtLeast(compound, 2) && !compound.getBoolean("PersistenceRequired")) {
-                MobEntity entityInsentient = (MobEntity) entity;
-                ((MobEntityBridge) entityInsentient).bridge$setPersistenceRequired(!entityInsentient.canDespawn(0));
-            }
         }
+        this.persist = !compound.contains("Bukkit.persist") || compound.getBoolean("Bukkit.persist");
         // CraftBukkit end
 
         // CraftBukkit start - Reset world
