@@ -552,6 +552,13 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
 
     @Inject(method = "load", at = @At(value = "RETURN"))
     public void arclight$read$ReadBukkitValues(CompoundTag compound, CallbackInfo ci) {
+        // CraftBukkit start
+        if ((Object) this instanceof LivingEntity entity) {
+            this.tickCount = compound.getInt("Spigot.ticksLived");
+        }
+        this.persist = !compound.contains("Bukkit.persist") || compound.getBoolean("Bukkit.persist");
+        // CraftBukkit end
+
         // CraftBukkit start - Reset world
         if ((Object) this instanceof ServerPlayer) {
             Server server = Bukkit.getServer();
