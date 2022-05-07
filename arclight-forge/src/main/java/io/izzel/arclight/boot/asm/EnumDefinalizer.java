@@ -19,7 +19,8 @@ public class EnumDefinalizer implements Implementer {
         "org/bukkit/Art",
         "org/bukkit/Statistic",
         "org/bukkit/inventory/CreativeCategory",
-        "org/bukkit/entity/SpawnCategory"
+        "org/bukkit/entity/SpawnCategory",
+        "org/bukkit/entity/EnderDragon$Phase"
     );
 
     @Override

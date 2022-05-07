@@ -24,6 +24,7 @@ import net.minecraft.stats.Stats;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
 import net.minecraft.world.entity.decoration.Motive;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.item.CreativeModeTab;
@@ -51,6 +52,7 @@ import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.craftbukkit.v.util.CraftSpawnCategory;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.SpawnCategory;
@@ -104,6 +106,19 @@ public class BukkitRegistry {
         loadStats();
         loadCreativeTab();
         loadSpawnCategory();
+        loadEndDragonPhase();
+    }
+
+    private static void loadEndDragonPhase() {
+        var max = EnderDragonPhase.getCount();
+        var newTypes = new ArrayList<EnderDragon.Phase>();
+        for (var id = EnderDragon.Phase.values().length; id < max; id++) {
+            var name = "MOD_PHASE_" + id;
+            var newPhase = EnumHelper.makeEnum(EnderDragon.Phase.class, name, id, List.of(), List.of());
+            newTypes.add(newPhase);
+            ArclightMod.LOGGER.debug("Registered {} as ender dragon phase {}", name, newPhase);
+        }
+        EnumHelper.addEnums(EnderDragon.Phase.class, newTypes);
     }
 
     private static void loadSpawnCategory() {
