@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.optimization.general;
+package io.izzel.arclight.common.mixin.optimization.general.network;
 
 import io.netty.util.concurrent.AbstractEventExecutor;
 import net.minecraft.network.Connection;

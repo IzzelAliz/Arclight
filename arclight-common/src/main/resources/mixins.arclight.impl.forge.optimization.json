@@ -6,7 +6,6 @@
   "compatibilityLevel": "JAVA_11",
   "mixins": [
     "ClassInheritanceMultiMapMixin",
-    "ConnectionMixin_Optimize",
     "EntityDataManagerMixin_Optimize",
     "EntityMixin_Optimize",
     "GoalMixin",
@@ -23,6 +22,11 @@
     "activationrange.entity.ItemEntityMixin_ActivationRange",
     "activationrange.entity.LivingEntityMixin_ActivationRange",
     "activationrange.entity.VillagerEntityMixin_ActivationRange",
+    "network.ChunkMapMixin_Optimize",
+    "network.ChunkMapMixin_Optimize$TrackedEntityMixin",
+    "network.ConnectionMixin_Optimize",
+    "network.ServerGamePacketListenerImplMixin_Optimize",
+    "network.ServerPlayerMixin_Optimize",
     "realtime.ItemEntityMixin_Realtime",
     "realtime.PlayerInteractionManagerMixin_Realtime",
     "trackingrange.ChunkManagerMixin_TrackingRange"

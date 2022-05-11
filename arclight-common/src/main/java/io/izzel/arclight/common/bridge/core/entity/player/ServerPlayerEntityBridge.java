@@ -37,4 +37,8 @@ public interface ServerPlayerEntityBridge extends PlayerEntityBridge {
     Entity bridge$changeDimension(ServerLevel world, PlayerTeleportEvent.TeleportCause cause);
 
     boolean bridge$initialized();
+
+    boolean bridge$isTrackerDirty();
+
+    void bridge$setTrackerDirty(boolean flag);
 }
