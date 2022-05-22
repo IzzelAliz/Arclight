@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
@@ -397,6 +398,33 @@ public class ArclightReflectionHandler extends ClassLoader {
         return lookup.findStaticSetter(cl, field, type);
     }
 
+    // bukkit -> srg
+    public static Class<?> redirectLookupFindClass(MethodHandles.Lookup lookup, String name) throws ClassNotFoundException {
+        return redirectClassForName(name, false, lookup.lookupClass().getClassLoader());
+    }
+
+    // bukkit -> srg
+    public static Object[] handleLookupFindVarHandle(MethodHandles.Lookup lookup, Class<?> cl, String name, Class<?> type) {
+        return handleLookupFindGetter(lookup, cl, name, type);
+    }
+
+    // bukkit -> srg
+    public static VarHandle redirectLookupFindVarHandle(MethodHandles.Lookup lookup, Class<?> cl, String name, Class<?> type) throws NoSuchFieldException, IllegalAccessException {
+        String field = remapper.tryMapFieldToSrg(cl, name);
+        return lookup.findVarHandle(cl, field, type);
+    }
+
+    // bukkit -> srg
+    public static Object[] handleLookupFindStaticVarHandle(MethodHandles.Lookup lookup, Class<?> cl, String name, Class<?> type) {
+        return handleLookupFindGetter(lookup, cl, name, type);
+    }
+
+    // bukkit -> srg
+    public static VarHandle redirectLookupFindStaticVarHandle(MethodHandles.Lookup lookup, Class<?> cl, String name, Class<?> type) throws NoSuchFieldException, IllegalAccessException {
+        String field = remapper.tryMapFieldToSrg(cl, name);
+        return lookup.findStaticVarHandle(cl, field, type);
+    }
+
     public static Object[] handleClassLoaderLoadClass(ClassLoader loader, String binaryName) {
         return new Object[]{loader, remapper.mapType(binaryName.replace('.', '/')).replace('/', '.')};
     }
@@ -593,6 +621,25 @@ public class ArclightReflectionHandler extends ClassLoader {
         byte[] transform = transformOrAdd(lookup.lookupClass().getClassLoader(), bytes);
         MethodHandle mh = Unsafe.lookup().findVirtual(MethodHandles.Lookup.class, "defineClass", MethodType.methodType(Class.class, byte[].class));
         return (Class<?>) mh.invokeExact(lookup, transform);
+    }
+
+    public static Object[] handleLookupDefineHiddenClass(MethodHandles.Lookup lookup, byte[] bytes, boolean initialize, MethodHandles.Lookup.ClassOption[] options) {
+        return new Object[]{lookup, transformOrAdd(lookup.lookupClass().getClassLoader(), bytes), initialize, options};
+    }
+
+    public static MethodHandles.Lookup redirectLookupDefineHiddenClass(MethodHandles.Lookup lookup, byte[] bytes, boolean initialize, MethodHandles.Lookup.ClassOption[] options) throws IllegalAccessException {
+        byte[] transform = transformOrAdd(lookup.lookupClass().getClassLoader(), bytes);
+        return lookup.defineHiddenClass(transform, initialize, options);
+    }
+
+    public static Object[] handleLookupDefineHiddenClassWithClassData(MethodHandles.Lookup lookup, byte[] bytes, Object classData, boolean initialize, MethodHandles.Lookup.ClassOption[] options) {
+        byte[] transform = transformOrAdd(lookup.lookupClass().getClassLoader(), bytes);
+        return new Object[]{lookup, transform, classData, initialize, options};
+    }
+
+    public static MethodHandles.Lookup redirectLookupDefineHiddenClassWithClassData(MethodHandles.Lookup lookup, byte[] bytes, Object classData, boolean initialize, MethodHandles.Lookup.ClassOption[] options) throws IllegalAccessException {
+        byte[] transform = transformOrAdd(lookup.lookupClass().getClassLoader(), bytes);
+        return lookup.defineHiddenClassWithClassData(transform, classData, initialize, options);
     }
 
     public static byte[] transformOrAdd(ClassLoader loader, byte[] bytes) {

@@ -79,6 +79,9 @@ public class ArclightRedirectAdapter implements PluginTransformer {
         modify(MethodHandles.Lookup.class, "findSetter", "lookupFindSetter", Class.class, String.class, Class.class);
         modify(MethodHandles.Lookup.class, "findStaticGetter", "lookupFindStaticGetter", Class.class, String.class, Class.class);
         modify(MethodHandles.Lookup.class, "findStaticSetter", "lookupFindStaticSetter", Class.class, String.class, Class.class);
+        redirect(MethodHandles.Lookup.class, "findClass", "lookupFindClass", String.class);
+        modify(MethodHandles.Lookup.class, "findVarHandle", "lookupFindVarHandle", Class.class, String.class, Class.class);
+        modify(MethodHandles.Lookup.class, "findStaticVarHandle", "lookupFindStaticVarHandle", Class.class, String.class, Class.class);
         modify(ClassLoader.class, "loadClass", "classLoaderLoadClass", String.class);
         redirect(Class.class, "getResource", "classGetResource", String.class);
         redirect(Class.class, "getResourceAsStream", "classGetResourceAsStream", String.class);
@@ -96,6 +99,8 @@ public class ArclightRedirectAdapter implements PluginTransformer {
         modify(classOf("jdk.internal.misc.Unsafe"), "defineClass", "unsafeDefineClass", String.class, byte[].class, int.class, int.class, ClassLoader.class, ProtectionDomain.class);
         modify(classOf("jdk.internal.misc.Unsafe"), "defineClass0", "unsafeDefineClass", String.class, byte[].class, int.class, int.class, ClassLoader.class, ProtectionDomain.class);
         modify(MethodHandles.Lookup.class, "defineClass", "lookupDefineClass", byte[].class);
+        modify(MethodHandles.Lookup.class, "defineHiddenClass", "lookupDefineHiddenClass", byte[].class, boolean.class, MethodHandles.Lookup.ClassOption[].class);
+        modify(MethodHandles.Lookup.class, "defineHiddenClassWithClassData", "lookupDefineHiddenClassWithClassData", byte[].class, Object.class, boolean.class, MethodHandles.Lookup.ClassOption[].class);
         redirect(java.lang.reflect.Type.class, "getTypeName", "typeGetName");
     }
 
