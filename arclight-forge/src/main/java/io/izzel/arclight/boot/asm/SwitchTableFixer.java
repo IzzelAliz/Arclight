@@ -1,6 +1,5 @@
 package io.izzel.arclight.boot.asm;
 
-import com.google.common.collect.ImmutableSet;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
@@ -27,13 +26,7 @@ public class SwitchTableFixer implements Implementer, Function<byte[], byte[]> {
 
     public static final SwitchTableFixer INSTANCE = new SwitchTableFixer();
     private static final Marker MARKER = MarkerManager.getMarker("SWITCH_TABLE");
-    private static final Set<String> ENUMS = ImmutableSet.<String>builder()
-        .add("org/bukkit/Material")
-        .add("org/bukkit/entity/EntityType")
-        .add("org/bukkit/World$Environment")
-        .add("org/bukkit/entity/Villager$Profession")
-        .add("org/bukkit/block/Biome")
-        .build();
+    private static final Set<String> ENUMS = EnumDefinalizer.ENUM;
 
     @Override
     public byte[] apply(byte[] bytes) {

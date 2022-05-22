@@ -10,7 +10,7 @@ import java.util.Set;
 
 public class EnumDefinalizer implements Implementer {
 
-    private static final Set<String> ENUM = Set.of(
+    static final Set<String> ENUM = Set.of(
         "org/bukkit/Material",
         "org/bukkit/potion/PotionType",
         "org/bukkit/entity/EntityType",

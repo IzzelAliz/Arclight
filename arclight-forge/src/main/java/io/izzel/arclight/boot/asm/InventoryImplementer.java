@@ -57,13 +57,16 @@ public class InventoryImplementer implements Implementer {
             if (t instanceof LocalizedException) {
                 ArclightImplementer.LOGGER.error(MARKER, ((LocalizedException) t).node(), ((LocalizedException) t).args());
             } else {
-                ArclightImplementer.LOGGER.error(t);
+                ArclightImplementer.LOGGER.error(MARKER, "Error processing class", t);
             }
             return false;
         }
     }
 
     private boolean isInventoryClass(ClassNode node, ILaunchPluginService.ITransformerLoader transformerLoader) throws Throwable {
+        if (node == null) { // maybe runtime defined class
+            return false;
+        }
         Integer ret = map.get(node.name);
         if (ret != null) return ret > 1;
         Integer i = map.get(node.superName);
@@ -89,21 +92,19 @@ public class InventoryImplementer implements Implementer {
 
     private ClassNode findClass(String typeName, ILaunchPluginService.ITransformerLoader transformerLoader) throws Exception {
         try {
+            byte[] array;
             InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(typeName + ".class");
-            if (stream == null) throw LocalizedException.checked("implementer.not-found", typeName);
-            byte[] array = ByteStreams.toByteArray(stream);
+            if (stream != null) {
+                array = ByteStreams.toByteArray(stream);
+            } else {
+                array = transformerLoader.buildTransformedClassNodeFor(Type.getObjectType(typeName).getClassName());
+            }
             ClassNode node = new ClassNode();
             new ClassReader(array).accept(node, ClassReader.SKIP_CODE);
             return node;
-        } catch (Throwable e) {
-            try {
-                byte[] bytes = transformerLoader.buildTransformedClassNodeFor(Type.getObjectType(typeName).getClassName());
-                ClassNode node = new ClassNode();
-                new ClassReader(bytes).accept(node, ClassReader.SKIP_CODE);
-                return node;
-            } catch (Throwable t) {
-                throw LocalizedException.checked("implementer.not-found", typeName);
-            }
+        } catch (ClassNotFoundException e) {
+            ArclightImplementer.LOGGER.debug("implementer.not-found", typeName);
+            return null;
         }
     }
 
