@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.optimization.general.activationrange.enti
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mixin.optimization.general.activationrange.EntityMixin_ActivationRange;
 import io.izzel.arclight.common.mod.ArclightConstants;
+import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
@@ -26,12 +27,14 @@ public abstract class ItemEntityMixin_ActivationRange extends EntityMixin_Activa
 
     @Inject(method = "<init>(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/level/Level;)V", at = @At("RETURN"))
     private void activationRange$init(EntityType<? extends ItemEntity> entityType, Level world, CallbackInfo ci) {
-        this.lifespan = ((WorldBridge) this.level).bridge$spigotConfig().itemDespawnRate;
+        if (DistValidate.isValid(this.level)) {
+            this.lifespan = ((WorldBridge) this.level).bridge$spigotConfig().itemDespawnRate;
+        }
     }
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/Level;DDDLnet/minecraft/world/item/ItemStack;)V", at = @At("RETURN"))
     private void activationRange$init(Level worldIn, double x, double y, double z, ItemStack stack, CallbackInfo ci) {
-        if (this.lifespan == 6000) {
+        if (DistValidate.isValid(this.level) && this.lifespan == 6000) {
             this.lifespan = ((WorldBridge) this.level).bridge$spigotConfig().itemDespawnRate;
         }
     }
