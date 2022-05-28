@@ -350,6 +350,11 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
 
     @Override
     public byte[] remapClassFile(byte[] in, ClassRepo repo) {
+        return remapClassFile(in, repo, false);
+    }
+
+    public byte[] remapClassFile(byte[] in, ClassRepo repo, boolean runtime) {
+        if (runtime) GlobalClassRepo.runtimeRepo().put(in);
         return remapClassFile(new ClassReader(in), repo);
     }
 

@@ -538,7 +538,7 @@ public class ArclightReflectionHandler extends ClassLoader {
             }
         }
         if (rcl != null) {
-            return rcl.getRemapper().remapClassFile(bytes, GlobalClassRepo.INSTANCE);
+            return rcl.getRemapper().remapClassFile(bytes, GlobalClassRepo.INSTANCE, true);
         } else {
             ArclightRedirectAdapter.scanMethod(bytes);
             return bytes;
