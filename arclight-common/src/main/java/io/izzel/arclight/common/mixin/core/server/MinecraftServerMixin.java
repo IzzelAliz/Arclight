@@ -412,6 +412,7 @@ public abstract class MinecraftServerMixin extends RecursiveEventLoop<TickDelaye
             }
             worldInfo.setInitialized(true);
         }
+        Bukkit.getPluginManager().callEvent(new WorldInitEvent(((WorldBridge) serverWorld).bridge$getWorld()));
     }
 
     // bukkit methods
