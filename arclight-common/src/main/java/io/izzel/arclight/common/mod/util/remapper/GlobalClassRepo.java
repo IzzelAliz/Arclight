@@ -24,8 +24,10 @@ public class GlobalClassRepo implements ClassRepo, PluginPatcher.ClassRepo {
     private final LoadingCache<String, ClassNode> cache = CacheBuilder.newBuilder().maximumSize(256)
         .expireAfterAccess(1, TimeUnit.MINUTES).build(CacheLoader.from(this::findParallel));
     private final Set<ClassRepo> repos = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final RuntimeRepo runtimeRepo = new RuntimeRepo();
 
     private GlobalClassRepo() {
+        repos.add(this.runtimeRepo);
     }
 
     @Override
@@ -82,5 +84,9 @@ public class GlobalClassRepo implements ClassRepo, PluginPatcher.ClassRepo {
 
     public static PluginInheritanceProvider remappingProvider() {
         return REMAPPING;
+    }
+
+    public static RuntimeRepo runtimeRepo() {
+        return INSTANCE.runtimeRepo;
     }
 }
