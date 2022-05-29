@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.network.play.server;
 
+import io.izzel.arclight.common.mod.ArclightMixinPlugin;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
 import net.minecraft.network.PacketBuffer;
@@ -22,7 +23,7 @@ public class SChatPacketMixin {
     @Shadow private UUID sender;
     // @formatter:on
 
-    public BaseComponent[] components;
+    @ArclightMixinPlugin.SortField(after = "field_148919_a" /* chatComponent */) public BaseComponent[] components;
 
     /**
      * @author IzzelAliz

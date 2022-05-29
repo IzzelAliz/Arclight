@@ -5,7 +5,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -16,14 +18,28 @@ import org.objectweb.asm.tree.VarInsnNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 
 public class ArclightMixinPlugin implements IMixinConfigPlugin {
+
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.CLASS)
+    public @interface SortField {
+
+        String after();
+    }
+
+    private static final String SORT_FIELD_TYPE = Type.getDescriptor(SortField.class);
 
     private final Map<String, Map.Entry<List<FieldNode>, List<MethodNode>>> accessTransformer =
         ImmutableMap.<String, Map.Entry<List<FieldNode>, List<MethodNode>>>builder()
@@ -136,6 +152,10 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
         .add("net.minecraft.world.storage.SaveFormat$LevelSave")
         .build();
 
+    private final Set<String> sortFields = ImmutableSet.<String>builder()
+        .add("net.minecraft.network.play.server.SChatPacket")
+        .build();
+
     @Override
     public void onLoad(String mixinPackage) {
 
@@ -181,6 +201,35 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
         }
         modifyConstructor(targetClassName, targetClass);
         renameFields(targetClassName, targetClass);
+        sortFields(targetClassName, targetClass);
+    }
+
+    private void sortFields(String targetClassName, ClassNode classNode) {
+        if (sortFields.contains(targetClassName)) {
+            TreeMap<Integer, FieldNode> insertions = new TreeMap<>();
+            for (ListIterator<FieldNode> iterator = classNode.fields.listIterator(); iterator.hasNext(); ) {
+                FieldNode node = iterator.next();
+                if (node.invisibleAnnotations == null) continue;
+                for (AnnotationNode annotation : node.invisibleAnnotations) {
+                    if (SORT_FIELD_TYPE.equals(annotation.desc)) {
+                        String name = annotation.values.get(1).toString();
+                        int index = 0;
+                        for (FieldNode field : classNode.fields) {
+                            if (field.name.equals(name)) break;
+                            else index++;
+                        }
+                        if (index >= classNode.fields.size())
+                            throw new IllegalArgumentException(String.format("SortField cannot find %s in %s", name, targetClassName));
+                        insertions.put(index + 1, node);
+                        iterator.remove();
+                    }
+                }
+            }
+            for (Map.Entry<Integer, FieldNode> entry : insertions.descendingMap().entrySet()) {
+                classNode.fields.add(entry.getKey(), entry.getValue());
+                entry.getValue().invisibleAnnotations.removeIf(it -> SORT_FIELD_TYPE.equals(it.desc));
+            }
+        }
     }
 
     private void renameFields(String targetClassName, ClassNode classNode) {
