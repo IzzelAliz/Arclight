@@ -23,8 +23,8 @@ import java.util.jar.Manifest;
 
 public abstract class ArclightMain {
 
-    private static final int MIN_DEPRECATED_VERSION = 60;
-    private static final int MIN_DEPRECATED_JAVA_VERSION = 16;
+    private static final int MIN_DEPRECATED_VERSION = 61;
+    private static final int MIN_DEPRECATED_JAVA_VERSION = 17;
 
     public void run(String[] args) throws Throwable {
         System.setProperty("java.util.logging.manager", ArclightLazyLogManager.class.getCanonicalName());
