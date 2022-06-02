@@ -948,6 +948,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             this.giveExperiencePoints(this.newExp);
         }
         this.keepLevel = false;
+        this.setDeltaMovement(0, 0, 0);
     }
 
     @Override

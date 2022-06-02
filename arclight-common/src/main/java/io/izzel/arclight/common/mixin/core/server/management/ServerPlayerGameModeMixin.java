@@ -20,8 +20,10 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.DoubleHighBlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CakeBlock;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
@@ -95,16 +97,20 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
         double d2 = this.player.getY() - (blockPos.getY() + 0.5) + 1.5;
         double d3 = this.player.getZ() - (blockPos.getZ() + 0.5);
         double d4 = d0 * d0 + d2 * d2 + d3 * d3;
-        double dist = player.getAttribute(net.minecraftforge.common.ForgeMod.REACH_DISTANCE.get()).getValue() + 1;
-        dist *= dist;
         net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock forgeEvent = net.minecraftforge.common.ForgeHooks.onLeftClickBlock(player, blockPos, direction);
         if (forgeEvent.isCanceled() || (!this.isCreative() && forgeEvent.getUseItem() == net.minecraftforge.eventbus.api.Event.Result.DENY)) { // Restore block and te data
             player.connection.send(new ClientboundBlockBreakAckPacket(blockPos, level.getBlockState(blockPos), action, false, "mod canceled"));
             level.sendBlockUpdated(blockPos, level.getBlockState(blockPos), level.getBlockState(blockPos), 3);
             return;
         }
-        if (d4 > dist) {
-            this.player.connection.send(new ClientboundBlockBreakAckPacket(blockPos, this.level.getBlockState(blockPos), action, false, "too far"));
+        if (!this.player.canInteractWith(blockPos, 1)) {
+            BlockState state;
+            if (this.player.level.getServer() != null && this.player.chunkPosition().getChessboardDistance(new ChunkPos(blockPos)) < this.player.level.getServer().getPlayerList().getViewDistance()) {
+                state = this.level.getBlockState(blockPos);
+            } else {
+                state = Blocks.AIR.defaultBlockState();
+            }
+            this.player.connection.send(new ClientboundBlockBreakAckPacket(blockPos, state, action, false, "too far"));
         } else if (blockPos.getY() >= i) {
             this.player.connection.send(new ClientboundBlockBreakAckPacket(blockPos, this.level.getBlockState(blockPos), action, false, "too high"));
         } else if (action == ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK) {

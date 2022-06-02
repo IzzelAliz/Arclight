@@ -54,6 +54,7 @@ import net.minecraft.world.level.portal.PortalShape;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Team;
+import net.minecraftforge.common.ForgeHooks;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -857,6 +858,8 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Overwrite(remap = false)
     @Nullable
     public Entity changeDimension(ServerLevel server, net.minecraftforge.common.util.ITeleporter teleporter) {
+        if (!ForgeHooks.onTravelToDimension((Entity) (Object) this, server.dimension()))
+            return null;
         if (this.level instanceof ServerLevel && !this.isRemoved()) {
             this.level.getProfiler().push("changeDimension");
             if (server == null) {
