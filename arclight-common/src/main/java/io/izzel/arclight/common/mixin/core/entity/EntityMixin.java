@@ -594,6 +594,11 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         }
     }
 
+    @Inject(method = "getPassengers", cancellable = true, at = @At(value = "HEAD"))
+    public void arclight$getPassengers(CallbackInfoReturnable<List<Entity>> cir) {
+        cir.setReturnValue(this.bridge$getPassengers());
+    }
+
     @Override
     public List<Entity> bridge$getPassengers() {
         return passengers;
