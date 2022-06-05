@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.mixin.optimization.general;
 
 import com.google.common.collect.ImmutableList;
-import jdk.internal.org.objectweb.asm.Opcodes;
 import net.minecraft.entity.Entity;
 import net.minecraft.world.TrackedEntity;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
