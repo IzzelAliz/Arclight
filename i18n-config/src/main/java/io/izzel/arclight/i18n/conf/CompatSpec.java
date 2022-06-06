@@ -5,6 +5,7 @@ import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @ConfigSerializable
@@ -23,7 +24,7 @@ public class CompatSpec {
     private List<String> extraLogicWorlds;
 
     @Setting("forward-permission")
-    private boolean forwardPermission;
+    private String forwardPermission;
 
     public Map<String, MaterialPropertySpec> getMaterials() {
         return materials;
@@ -50,6 +51,10 @@ public class CompatSpec {
     }
 
     public boolean isForwardPermission() {
-        return forwardPermission;
+        return Objects.equals(forwardPermission, "true");
+    }
+
+    public boolean isForwardPermissionReverse() {
+        return Objects.equals(forwardPermission, "reverse");
     }
 }
