@@ -1,6 +1,7 @@
-package io.izzel.arclight.common.mixin.optimization.general;
+package io.izzel.arclight.impl.mixin.optimization.stream;
 
 import com.google.common.collect.ImmutableList;
+import io.izzel.arclight.common.bridge.world.TrackedEntityBridge;
 import net.minecraft.entity.Entity;
 import net.minecraft.world.TrackedEntity;
 import org.objectweb.asm.Opcodes;
@@ -26,6 +27,6 @@ public class MixinTrackedEntity_Optimize {
             )
     )
     public void arclight$getPassengers$local(TrackedEntity instance, List<Entity> value) {
-        ((TrackedEntityAccessor) instance).setPassengers(ImmutableList.copyOf(value));
+        ((TrackedEntityBridge) instance).bridge$setPassengers(ImmutableList.copyOf(value));
     }
 }

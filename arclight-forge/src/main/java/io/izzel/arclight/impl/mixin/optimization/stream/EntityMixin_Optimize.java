@@ -1,7 +1,8 @@
-package io.izzel.arclight.common.mixin.optimization.general;
+package io.izzel.arclight.impl.mixin.optimization.stream;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import org.spongepowered.asm.mixin.Final;
@@ -83,7 +84,7 @@ public abstract class EntityMixin_Optimize {
 
         for (Entity entity : this.passengers) {
             set.add(entity);
-            ((EntityAccessor) entity).callGetRecursivePassengers(false, set);
+            ((EntityBridge) entity).bridge$getRecursivePassengers(false, set);
         }
 
         return set;
@@ -104,7 +105,7 @@ public abstract class EntityMixin_Optimize {
                 passengers.add(entity);
             }
 
-            ((EntityAccessor) entity).callGetRecursivePassengers(playersOnly, passengers);
+            ((EntityBridge) entity).bridge$getRecursivePassengers(playersOnly, passengers);
         }
     }
 

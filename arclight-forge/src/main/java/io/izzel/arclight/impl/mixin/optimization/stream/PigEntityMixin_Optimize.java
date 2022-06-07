@@ -1,17 +1,20 @@
-package io.izzel.arclight.common.mixin.optimization.general;
+package io.izzel.arclight.impl.mixin.optimization.stream;
 
+import com.google.common.collect.ImmutableList;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.entity.passive.horse.AbstractHorseEntity;
+import net.minecraft.entity.passive.PigEntity;
 import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(AbstractHorseEntity.class)
-public abstract class AbstractHorseEntityMixin_Optimize extends AnimalEntity {
+@Mixin(PigEntity.class)
+public abstract class PigEntityMixin_Optimize extends AnimalEntity {
 
-    protected AbstractHorseEntityMixin_Optimize(EntityType<? extends AnimalEntity> type, World worldIn) {
+    protected PigEntityMixin_Optimize(EntityType<? extends AnimalEntity> type, World worldIn) {
         super(type, worldIn);
     }
 

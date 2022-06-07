@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.optimization.general;
+package io.izzel.arclight.impl.mixin.optimization.stream;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.BoatEntity;
