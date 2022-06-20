@@ -1,7 +1,8 @@
 {
   "net/minecraft/server/level/ServerLevel": {
     "m_8872_(Lnet/minecraft/world/entity/Entity;)Z": "entity add",
-    "m_142646_()Lnet/minecraft/world/level/entity/LevelEntityGetter;": "chunk entity get"
+    "m_142646_()Lnet/minecraft/world/level/entity/LevelEntityGetter;": "chunk entity get",
+    "m_142346_(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/level/gameevent/GameEvent;Lnet/minecraft/core/BlockPos;)V": "game event trigger"
   },
   "net/minecraft/server/level/ServerLevel$EntityCallbacks": {
     "m_141985_(Lnet/minecraft/world/entity/Entity;)V": "entity register",
