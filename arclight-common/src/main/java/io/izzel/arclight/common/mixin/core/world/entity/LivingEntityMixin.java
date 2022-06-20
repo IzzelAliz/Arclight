@@ -951,7 +951,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     public void arclight$muteDamageArmor(LivingEntity entity, DamageSource damageSource, float damage) {
     }
 
-    @Redirect(method = "getDamageAfterMagicAbsorb", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hasEffect(Lnet/minecraft/world/effect/MobEffect;)Z"))
+    @Redirect(method = "getDamageAfterMagicAbsorb", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hasEffect(Lnet/minecraft/world/effect/MobEffect;)Z"))
     public boolean arclight$mutePotion(LivingEntity livingEntity, MobEffect potionIn) {
         return false;
     }
