@@ -79,6 +79,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -439,8 +440,8 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
         }
     }
 
-    @Redirect(method = "jumpFromGround", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;causeFoodExhaustion(F)V"))
-    private void arclight$exhaustInfo(net.minecraft.world.entity.player.Player player, float f) {
+    @ModifyArg(method = "jumpFromGround", index = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;causeFoodExhaustion(F)V"))
+    private float arclight$exhaustInfo(float f) {
         SpigotWorldConfig config = ((WorldBridge) level).bridge$spigotConfig();
         if (config != null) {
             if (this.isSprinting()) {
@@ -451,7 +452,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                 bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.JUMP);
             }
         }
-        this.causeFoodExhaustion(f);
+        return f;
     }
 
     @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;setSharedFlag(IZ)V"))
