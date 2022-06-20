@@ -1,7 +1,6 @@
 package io.izzel.arclight.impl.mixin.optimization.general.chunkticking;
 
 import io.izzel.arclight.common.bridge.world.server.ChunkManagerBridge;
-import jdk.internal.org.objectweb.asm.Opcodes;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerChunkProvider;
 import org.spongepowered.asm.mixin.Final;
@@ -26,17 +25,17 @@ public class ServerChunkProviderMixin_Optimize {
 
     @Redirect(method = "Lnet/minecraft/world/server/ServerChunkProvider;tickChunks()V",
     at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Lists;newArrayList(Ljava/lang/Iterable;)Ljava/util/ArrayList;"))
-    public ArrayList<?> handle(Iterable<?> elements) {
+    public ArrayList<?> arclight$removeNewList(Iterable<?> elements) {
         return EMPTY;
     }
 
     @Redirect(method = "Lnet/minecraft/world/server/ServerChunkProvider;tickChunks()V",
             at = @At(value = "INVOKE", target = "Ljava/util/Collections;shuffle(Ljava/util/List;)V"))
-    public void handle(List<?> objects) {}
+    public void arclight$removeShuffle(List<?> objects) {}
 
     @Redirect(method = "Lnet/minecraft/world/server/ServerChunkProvider;tickChunks()V",
     at = @At(value = "INVOKE", target = "Ljava/util/List;forEach(Ljava/util/function/Consumer;)V"))
-    public void forEach(List instance, Consumer consumer) {
+    public void arclight$redirectChunkForEach(List instance, Consumer consumer) {
         ((ChunkManagerBridge) this.chunkManager).bridge$getLoadedChunksIterable().forEach(consumer);
     }
 }
