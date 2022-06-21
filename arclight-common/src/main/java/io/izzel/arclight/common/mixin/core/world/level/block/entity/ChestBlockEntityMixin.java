@@ -60,6 +60,6 @@ public abstract class ChestBlockEntityMixin extends LockableBlockEntityMixin {
 
     @Override
     public boolean onlyOpCanSetNbt() {
-        return true;
+        return this.getType().getRegistryName().getNamespace().equals("minecraft");
     }
 }

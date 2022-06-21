@@ -7,6 +7,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.SolidBucketItem;
 import net.minecraft.world.item.WaterLilyBlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Block;
@@ -42,7 +43,7 @@ public abstract class BlockItemMixin {
     @Inject(method = "place", locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/item/BlockItem;getPlacementState(Lnet/minecraft/world/item/context/BlockPlaceContext;)Lnet/minecraft/world/level/block/state/BlockState;"))
     private void arclight$prePlaceLilypad(BlockPlaceContext context, CallbackInfoReturnable<InteractionResult> cir, BlockPlaceContext context1) {
-        if ((Object) this instanceof WaterLilyBlockItem) {
+        if ((Object) this instanceof WaterLilyBlockItem || (Object) this instanceof SolidBucketItem) {
             this.arclight$state = CraftBlockStates.getBlockState(context1.getLevel(), context1.getClickedPos());
         }
     }
@@ -57,6 +58,9 @@ public abstract class BlockItemMixin {
             org.bukkit.event.block.BlockPlaceEvent placeEvent = CraftEventFactory.callBlockPlaceEvent((ServerLevel) context1.getLevel(), context1.getPlayer(), context1.getHand(), state, pos.getX(), pos.getY(), pos.getZ());
             if (placeEvent != null && (placeEvent.isCancelled() || !placeEvent.canBuild())) {
                 state.update(true, false);
+                if ((Object) this instanceof SolidBucketItem) {
+                    ((ServerPlayerEntityBridge) context1.getPlayer()).bridge$getBukkitEntity().updateInventory();
+                }
                 cir.setReturnValue(InteractionResult.FAIL);
             }
         }

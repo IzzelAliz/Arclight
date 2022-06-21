@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataContainer;
@@ -34,6 +35,7 @@ public abstract class BlockEntityMixin implements TileEntityBridge {
     @Shadow public BlockPos getBlockPos() { return null; }
     @Shadow public abstract boolean onlyOpCanSetNbt();
     @Shadow protected static void setChanged(Level p_155233_, BlockPos p_155234_, BlockState p_155235_) { }
+    @Shadow public abstract BlockEntityType<?> getType();
     // @formatter:on
 
     @Inject(method = "load", at = @At("RETURN"))

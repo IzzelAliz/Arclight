@@ -54,6 +54,7 @@ import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -1591,7 +1592,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         if (this.player.gameMode.isCreative()) {
             final boolean flag = packetplayinsetcreativeslot.getSlotNum() < 0;
             ItemStack itemstack = packetplayinsetcreativeslot.getItem();
-            final CompoundTag nbttagcompound = itemstack.getTagElement("BlockEntityTag");
+            final CompoundTag nbttagcompound = BlockItem.getBlockEntityData(itemstack);
             if (!itemstack.isEmpty() && nbttagcompound != null && nbttagcompound.contains("x") && nbttagcompound.contains("y") && nbttagcompound.contains("z")) {
                 BlockPos blockpos = BlockEntity.getPosFromTag(nbttagcompound);
                 BlockEntity blockentity = this.player.level.getBlockEntity(blockpos);
