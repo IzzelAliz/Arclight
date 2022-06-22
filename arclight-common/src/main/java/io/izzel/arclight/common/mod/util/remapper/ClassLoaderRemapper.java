@@ -200,7 +200,7 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
     private String mapField(Field field) {
         String owner = Type.getInternalName(field.getDeclaringClass());
         String srgName = field.getName();
-        String desc = Type.getInternalName(field.getType());
+        String desc = Type.getDescriptor(field.getType());
         return toBukkitRemapper.mapFieldName(owner, srgName, desc, -1);
     }
 

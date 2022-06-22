@@ -7,7 +7,6 @@ import com.google.common.collect.Maps;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodInsnNode;
@@ -106,10 +105,10 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
             .build();
 
     // damn spigot
-    private final Map<String, Map<String, String>> fieldRenames = ImmutableMap.<String, Map<String, String>>builder()
-        .put("net.minecraft.world.level.chunk.LevelChunk", ImmutableMap.of("$$level", "f_62776_"))
-        .put("net.minecraft.server.level.ServerLevel", ImmutableMap.of("$$worldDataServer", "f_8549_"))
-        .build();
+    //private final Map<String, Map<String, String>> fieldRenames = ImmutableMap.<String, Map<String, String>>builder()
+    //    .put("net.minecraft.world.level.chunk.LevelChunk", ImmutableMap.of("$$level", "f_62776_"))
+    //    .put("net.minecraft.server.level.ServerLevel", ImmutableMap.of("$$worldDataServer", "f_8549_"))
+    //    .build();
 
     private final Set<String> modifyConstructor = ImmutableSet.<String>builder()
         .add("net.minecraft.world.level.Level")
@@ -173,23 +172,6 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
             }
         }
         modifyConstructor(targetClassName, targetClass);
-        renameFields(targetClassName, targetClass);
-    }
-
-    private void renameFields(String targetClassName, ClassNode classNode) {
-        Map<String, String> map = this.fieldRenames.get(targetClassName);
-        if (map != null) {
-            for (FieldNode field : classNode.fields) {
-                field.name = map.getOrDefault(field.name, field.name);
-            }
-            for (MethodNode method : classNode.methods) {
-                for (AbstractInsnNode instruction : method.instructions) {
-                    if (instruction instanceof FieldInsnNode node) {
-                        node.name = map.getOrDefault(node.name, node.name);
-                    }
-                }
-            }
-        }
     }
 
     private void modifyConstructor(String targetClassName, ClassNode classNode) {

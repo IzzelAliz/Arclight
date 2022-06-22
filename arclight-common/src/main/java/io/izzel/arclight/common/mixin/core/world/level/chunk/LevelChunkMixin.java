@@ -44,12 +44,12 @@ public abstract class LevelChunkMixin extends ChunkAccessMixin implements ChunkB
     public boolean mustNotSave;
     public boolean needsDecoration;
     private transient boolean arclight$doPlace;
-    public ServerLevel $$level;
+    public ServerLevel q; // TODO f_62776_ check on update
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/UpgradeData;Lnet/minecraft/world/ticks/LevelChunkTicks;Lnet/minecraft/world/ticks/LevelChunkTicks;J[Lnet/minecraft/world/level/chunk/LevelChunkSection;Lnet/minecraft/world/level/chunk/LevelChunk$PostLoadProcessor;Lnet/minecraft/world/level/levelgen/blending/BlendingData;)V", at = @At("RETURN"))
     private void arclight$init(Level worldIn, ChunkPos p_196855_, UpgradeData p_196856_, LevelChunkTicks<Block> p_196857_, LevelChunkTicks<Fluid> p_196858_, long p_196859_, @Nullable LevelChunkSection[] p_196860_, @Nullable LevelChunk.PostLoadProcessor p_196861_, @Nullable BlendingData p_196862_, CallbackInfo ci) {
         if (DistValidate.isValid(worldIn)) {
-            this.$$level = ((ServerLevel) worldIn);
+            this.q = ((ServerLevel) worldIn);
             this.bukkitChunk = new CraftChunk((LevelChunk) (Object) this);
         }
     }
