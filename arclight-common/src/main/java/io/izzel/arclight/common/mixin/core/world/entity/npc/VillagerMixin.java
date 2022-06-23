@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.npc;
 
+import io.izzel.arclight.common.bridge.core.item.MerchantOfferBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LightningBolt;
@@ -20,7 +21,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-import io.izzel.arclight.common.bridge.core.item.MerchantOfferBridge;
 
 @Mixin(net.minecraft.world.entity.npc.Villager.class)
 public abstract class VillagerMixin extends AbstractVillagerMixin {
@@ -39,12 +39,12 @@ public abstract class VillagerMixin extends AbstractVillagerMixin {
         }
     }
 
-    @Redirect(method = "updateSpecialPrices", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/item/trading/MerchantOffer;addToSpecialPriceDiff(I)V"))
-    private void arclight$replenish(MerchantOffer merchantOffer, int add) {
-        VillagerReplenishTradeEvent event = new VillagerReplenishTradeEvent((Villager) this.getBukkitEntity(), ((MerchantOfferBridge) merchantOffer).bridge$asBukkit());
+    @Redirect(method = "catchUpDemand", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/trading/MerchantOffer;resetUses()V"))
+    private void arclight$replenish(MerchantOffer instance) {
+        VillagerReplenishTradeEvent event = new VillagerReplenishTradeEvent((Villager) this.getBukkitEntity(), ((MerchantOfferBridge) instance).bridge$asBukkit());
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
-            merchantOffer.resetUses();
+            instance.resetUses();
         }
     }
 
