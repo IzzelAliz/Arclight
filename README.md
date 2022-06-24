@@ -20,10 +20,7 @@ A Bukkit server implementation utilizing Mixin.
 
 * Download the jar from [release page](https://github.com/IzzelAliz/Arclight/releases) or build server. (see the table
   above)
-* There are 2 ways to start Arclight:
-    * (**Recommended**) Launch with command `java -jar arclight-forge-<mc>-<version>.jar nogui`. The `nogui` argument will disable the
-      server control panel.
-    * Drop the downloaded jar into `mods` folder and start a forge server.
+* Launch with command `java -jar arclight-forge-<mc>-<version>.jar nogui`. The `nogui` argument will disable the server control panel.
 
 ## Support
 
