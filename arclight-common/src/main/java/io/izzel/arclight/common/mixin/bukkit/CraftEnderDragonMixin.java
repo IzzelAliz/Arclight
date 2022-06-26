@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.ArrayList;
 import java.util.List;
 
-@Mixin(CraftEnderDragon.class)
+@Mixin(value = CraftEnderDragon.class,remap = false)
 public class CraftEnderDragonMixin {
 
     @Inject(method = "getPhase", at = @At("HEAD"))
