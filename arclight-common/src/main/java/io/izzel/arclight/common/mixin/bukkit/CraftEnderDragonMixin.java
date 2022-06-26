@@ -17,16 +17,11 @@ import java.util.List;
 @Mixin(CraftEnderDragon.class)
 public class CraftEnderDragonMixin {
 
-    /**
-     * @author sandtechnology
-     */
     @Inject(method = "getPhase", at = @At("HEAD"))
     public void arclight$getPhase(CallbackInfoReturnable<EnderDragon.Phase> cir) {
         checkAndUpdateDragonPhase();
     }
-    /**
-     * @author sandtechnology
-     */
+
     @Inject(method = "getBukkitPhase", at = @At("HEAD"))
     private static void arclight$getBukkitPhase(EnderDragonPhase phase, CallbackInfoReturnable<EnderDragon.Phase> cir) {
         checkAndUpdateDragonPhase();
