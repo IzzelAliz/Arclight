@@ -999,7 +999,8 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                             return null;
                         }
                         String message = String.format(queueEvent.getFormat(), queueEvent.getPlayer().getDisplayName(), queueEvent.getMessage());
-                        Component component = ForgeHooks.onServerChatEvent(handler, queueEvent.getMessage(), ForgeHooks.newChatWithLinks(message));
+                        var event = ForgeHooks.onServerChatEvent(handler, queueEvent.getMessage(), ForgeHooks.newChatWithLinks(message), queueEvent.getMessage(), ForgeHooks.newChatWithLinks(message));
+                        var component = event == null ? null : event.getComponent();
                         if (component == null) return null;
                         Bukkit.getConsoleSender().sendMessage(CraftChatMessage.fromComponent(component));
                         if (((LazyPlayerSet) queueEvent.getRecipients()).isLazy()) {
@@ -1040,7 +1041,8 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 @Override
                 protected Void evaluate() {
                     // this is called on main thread
-                    Component component = ForgeHooks.onServerChatEvent(handler, event.getMessage(), chatWithLinks);
+                    var chatEvent = ForgeHooks.onServerChatEvent(handler, event.getMessage(), chatWithLinks, event.getMessage(), chatWithLinks);
+                    var component = chatEvent != null ? chatEvent.getComponent() : null;
                     if (component == null) return null;
                     Bukkit.getConsoleSender().sendMessage(CraftChatMessage.fromComponent(component));
                     if (((LazyPlayerSet) event.getRecipients()).isLazy()) {

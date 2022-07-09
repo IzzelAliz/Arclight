@@ -11,8 +11,10 @@ import io.izzel.arclight.common.mod.util.BukkitDispatcher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.synchronization.SuggestionProviders;
 import net.minecraft.network.protocol.game.ClientboundCommandsPacket;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.server.command.CommandHelper;
 import org.bukkit.Bukkit;
 import org.bukkit.event.player.PlayerCommandSendEvent;
 import org.spigotmc.SpigotConfig;
@@ -57,11 +59,12 @@ public abstract class CommandsMixin {
         RootCommandNode<SharedSuggestionProvider> vanillaRoot = new RootCommandNode<>();
         Commands vanillaCommands = ((MinecraftServerBridge) player.server).bridge$getVanillaCommands();
         map.put(vanillaCommands.getDispatcher().getRoot(), vanillaRoot);
-        this.fillUsableCommands(vanillaCommands.getDispatcher().getRoot(), vanillaRoot, player.createCommandSourceStack(), map);
+        // FORGE: Use our own command node merging method to handle redirect nodes properly, see issue #7551
+        CommandHelper.mergeCommandNode(vanillaCommands.getDispatcher().getRoot(), vanillaRoot, map, player.createCommandSourceStack(), ctx -> 0, suggest -> SuggestionProviders.safelySwap((com.mojang.brigadier.suggestion.SuggestionProvider<SharedSuggestionProvider>) (com.mojang.brigadier.suggestion.SuggestionProvider<?>) suggest));
 
         RootCommandNode<SharedSuggestionProvider> node = new RootCommandNode<>();
         map.put(this.dispatcher.getRoot(), node);
-        this.fillUsableCommands(this.dispatcher.getRoot(), node, player.createCommandSourceStack(), map);
+        CommandHelper.mergeCommandNode(this.dispatcher.getRoot(), node, map, player.createCommandSourceStack(), ctx -> 0, suggest -> SuggestionProviders.safelySwap((com.mojang.brigadier.suggestion.SuggestionProvider<SharedSuggestionProvider>) (com.mojang.brigadier.suggestion.SuggestionProvider<?>) suggest));
 
         LinkedHashSet<String> set = new LinkedHashSet<>();
         for (CommandNode<SharedSuggestionProvider> child : node.getChildren()) {
