@@ -53,6 +53,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraftforge.common.ForgeHooks;
+import net.minecraftforge.common.extensions.IForgePlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
@@ -88,7 +89,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.List;
 
 @Mixin(net.minecraft.world.entity.player.Player.class)
-public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEntityBridge {
+public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEntityBridge, IForgePlayer {
 
     // @formatter:off
     @Shadow public abstract String getScoreboardName();
@@ -327,7 +328,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                         final float f5 = 1.0f + EnchantmentHelper.getSweepingDamageRatio((net.minecraft.world.entity.player.Player) (Object) this) * f;
                         final List<LivingEntity> list = this.level.getEntitiesOfClass(LivingEntity.class, this.getItemInHand(InteractionHand.MAIN_HAND).getSweepHitBox((net.minecraft.world.entity.player.Player) (Object) this, entity));
                         for (final LivingEntity entityliving : list) {
-                            if (entityliving != (Object) this && entityliving != entity && !this.isAlliedTo(entityliving) && (!(entityliving instanceof ArmorStand) || !((ArmorStand) entityliving).isMarker()) && this.lastHurtByPlayer.canHit(entityliving, 0) && entityliving.hurt(((DamageSourceBridge) DamageSource.playerAttack((net.minecraft.world.entity.player.Player) (Object) this)).bridge$sweep(), f5)) {
+                            if (entityliving != (Object) this && entityliving != entity && !this.isAlliedTo(entityliving) && (!(entityliving instanceof ArmorStand) || !((ArmorStand) entityliving).isMarker()) && this.canHit(entityliving, 0) && entityliving.hurt(((DamageSourceBridge) DamageSource.playerAttack((net.minecraft.world.entity.player.Player) (Object) this)).bridge$sweep(), f5)) {
                                 entityliving.knockback(0.4f, Mth.sin(this.getYRot() * 0.017453292f), -Mth.cos(this.getYRot() * 0.017453292f));
                             }
                         }
