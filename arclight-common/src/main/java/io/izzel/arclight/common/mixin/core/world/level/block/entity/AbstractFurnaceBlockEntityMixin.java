@@ -84,11 +84,11 @@ public abstract class AbstractFurnaceBlockEntityMixin extends LockableBlockEntit
                                             boolean flag, boolean flag1, ItemStack stack, Recipe<?> recipe) {
         if (recipe != null && furnace.cookingProgress == 0) {
             CraftItemStack source = CraftItemStack.asCraftMirror(furnace.getItem(0));
-            CookingRecipe<?> cookingRecipe = (CookingRecipe<?>) ((IRecipeBridge) recipe).bridge$toBukkitRecipe();
-
-            FurnaceStartSmeltEvent event = new FurnaceStartSmeltEvent(CraftBlock.at(level, pos), source, cookingRecipe);
-            Bukkit.getPluginManager().callEvent(event);
-            furnace.cookingTotalTime = event.getTotalCookTime();
+            if (((IRecipeBridge) recipe).bridge$toBukkitRecipe() instanceof CookingRecipe<?> cookingRecipe) {
+                FurnaceStartSmeltEvent event = new FurnaceStartSmeltEvent(CraftBlock.at(level, pos), source, cookingRecipe);
+                Bukkit.getPluginManager().callEvent(event);
+                furnace.cookingTotalTime = event.getTotalCookTime();
+            }
         }
     }
 

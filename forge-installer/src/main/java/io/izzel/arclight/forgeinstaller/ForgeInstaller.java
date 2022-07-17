@@ -28,7 +28,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.security.AccessControlContext;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -235,22 +234,6 @@ public class ForgeInstaller {
         List<String> ignores = new ArrayList<>();
         List<String> merges = new ArrayList<>();
         var self = new File(ForgeInstaller.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath();
-        // todo ugly McModLauncher/securejarhandler#19
-        if (self.getParent() != null && self.getParent().getParent() != null && self.getParent().getParent().getFileName() == null) {
-            var folder = self.resolveSibling(".arclight");
-            var relocation = folder.resolve("tmp.jar");
-            if (!Files.exists(folder)) {
-                Files.createDirectories(folder);
-            }
-            try {
-                if (!Files.isSymbolicLink(relocation)) {
-                    Files.createSymbolicLink(relocation, self);
-                }
-            } catch (Exception e) {
-                Files.copy(self, relocation, StandardCopyOption.REPLACE_EXISTING);
-            }
-            self = relocation;
-        }
         for (String arg : Files.lines(path).collect(Collectors.toList())) {
             if (jvmArgs && arg.startsWith("-")) {
                 if (arg.startsWith("-p ")) {
