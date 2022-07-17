@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.bukkit;
 import io.izzel.arclight.common.bridge.bukkit.CraftItemStackBridge;
 import io.izzel.arclight.common.bridge.bukkit.ItemMetaBridge;
 import io.izzel.arclight.common.bridge.item.ItemStackBridge;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import org.bukkit.Material;
@@ -15,7 +16,9 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.Objects;
 
@@ -50,8 +53,18 @@ public abstract class CraftItemStackMixin implements CraftItemStackBridge {
         ((ItemMetaBridge) meta).bridge$setForgeCaps(((ItemStackBridge) (Object) item).bridge$getForgeCaps());
     }
 
-    @Inject(method = "setItemMeta(Lnet/minecraft/item/ItemStack;Lorg/bukkit/inventory/meta/ItemMeta;)Z", at = @At(value = "INVOKE", ordinal = 1, remap = true, target = "Lnet/minecraft/item/ItemStack;getItem()Lnet/minecraft/item/Item;"))
-    private static void arclight$setCaps(ItemStack item, ItemMeta itemMeta, CallbackInfoReturnable<Boolean> cir) {
+    @Redirect(method = "setItemMeta(Lnet/minecraft/item/ItemStack;Lorg/bukkit/inventory/meta/ItemMeta;)Z", at = @At(value = "INVOKE", ordinal = 1, remap = true, target = "Lnet/minecraft/item/ItemStack;setTag(Lnet/minecraft/nbt/CompoundNBT;)V"))
+    private static void arclight$setTagLater(ItemStack instance, CompoundNBT nbt) {
+    }
+
+    @Inject(method = "setItemMeta(Lnet/minecraft/item/ItemStack;Lorg/bukkit/inventory/meta/ItemMeta;)Z", locals = LocalCapture.CAPTURE_FAILHARD,
+        at = @At(value = "INVOKE", ordinal = 1, remap = true, target = "Lnet/minecraft/item/ItemStack;getItem()Lnet/minecraft/item/Item;"))
+    private static void arclight$setCaps(ItemStack item, ItemMeta itemMeta, CallbackInfoReturnable<Boolean> cir, Item oldItem, Item newItem, CompoundNBT tag) {
+        if (!tag.isEmpty()) {
+            item.setTag(tag);
+        } else {
+            item.setTag(null);
+        }
         CompoundNBT forgeCaps = ((ItemMetaBridge) itemMeta).bridge$getForgeCaps();
         if (forgeCaps != null) {
             ((ItemStackBridge) (Object) item).bridge$setForgeCaps(forgeCaps.copy());
