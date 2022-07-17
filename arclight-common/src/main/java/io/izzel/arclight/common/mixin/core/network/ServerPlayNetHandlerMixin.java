@@ -1288,7 +1288,9 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                     return;
                 }
 
+                ArclightCaptures.captureContainerOwner(this.player);
                 InventoryView inventory = ((ContainerBridge) this.player.containerMenu).bridge$getBukkitView();
+                ArclightCaptures.resetContainerOwner();
                 InventoryType.SlotType type = inventory.getSlotType(packet.getSlotNum());
 
                 InventoryClickEvent event;
