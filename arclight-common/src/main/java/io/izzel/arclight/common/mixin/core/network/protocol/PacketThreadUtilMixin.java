@@ -33,7 +33,14 @@ public class PacketThreadUtilMixin {
                     return;
                 }
                 if (processor.getConnection().isConnected()) {
-                    packetIn.handle(processor);
+                    try {
+                        packetIn.handle(processor);
+                    } catch (Exception exception) {
+                        if (processor.shouldPropagateHandlingExceptions()) {
+                            throw exception;
+                        }
+                        LOGGER.error("Failed to handle packet {}, suppressing error", packetIn, exception);
+                    }
                 } else {
                     LOGGER.debug("Ignoring packet due to disconnection: " + packetIn);
                 }
