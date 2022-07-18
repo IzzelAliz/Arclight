@@ -728,9 +728,10 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Inject(method = "doCloseContainer", at = @At("HEAD"))
     private void arclight$invClose(CallbackInfo ci) {
         if (this.containerMenu != this.inventoryMenu) {
+            var old = ArclightCaptures.getContainerOwner();
             ArclightCaptures.captureContainerOwner((ServerPlayer) (Object) this);
             CraftEventFactory.handleInventoryCloseEvent((ServerPlayer) (Object) this);
-            ArclightCaptures.resetContainerOwner();
+            ArclightCaptures.captureContainerOwner(old);
         }
     }
 
