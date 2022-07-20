@@ -12,7 +12,7 @@ public class ChestBlockDoubleInventoryHacks {
 
     static {
         try {
-            cl = Class.forName("net/minecraft/world/level/block/ChestBlock$2$1");
+            cl = Class.forName("net.minecraft.world.level.block.ChestBlock$2$1");
             Field field = cl.getDeclaredField("inventorylargechest");
             offset = Unsafe.objectFieldOffset(field);
         } catch (Exception e) {
