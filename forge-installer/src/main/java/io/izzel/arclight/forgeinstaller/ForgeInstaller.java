@@ -57,8 +57,12 @@ public class ForgeInstaller {
     };
     private static final String INSTALLER_URL = "https://arclight.mcxk.net/net/minecraftforge/forge/%s-%s/forge-%s-%s-installer.jar";
     private static final String SERVER_URL = "https://arclight.mcxk.net/net/minecraft/server/minecraft_server.%s.jar";
+    private static final String MAPPING_URL = "https://arclight.mcxk.net/net/minecraft/server/mappings_server.%s.txt";
     private static final Map<String, String> VERSION_HASH = Map.of(
         "1.18.2", "c8f83c5655308435b3dcf03c06d9fe8740a77469"
+    );
+    private static final Map<String, String> MAPPING_HASH = Map.of(
+        "1.18.2", "e562f588fea155d96291267465dc3323bfe1551b"
     );
 
     public static List<Path> modInstall(Consumer<String> logger) throws Throwable {
@@ -131,9 +135,9 @@ public class ForgeInstaller {
                 FileSystem system = FileSystems.newFileSystem(path, (ClassLoader) null);
                 Map<String, Map.Entry<String, String>> map = new HashMap<>();
                 Path profile = system.getPath("install_profile.json");
-                map.putAll(profileLibraries(profile));
+                map.putAll(profileLibraries(profile, info.installer.minecraft));
                 Path version = system.getPath("version.json");
-                map.putAll(profileLibraries(version));
+                map.putAll(profileLibraries(version, info.installer.minecraft));
                 List<Supplier<Path>> suppliers = checkMaven(map);
                 CompletableFuture<?>[] array = suppliers.stream().map(reportSupply(pool, logger)).toArray(CompletableFuture[]::new);
                 handleFutures(logger, array);
@@ -162,9 +166,10 @@ public class ForgeInstaller {
         }
     }
 
-    private static Map<String, Map.Entry<String, String>> profileLibraries(Path path) throws IOException {
+    private static Map<String, Map.Entry<String, String>> profileLibraries(Path path, String minecraft) throws IOException {
         Map<String, Map.Entry<String, String>> ret = new HashMap<>();
-        JsonArray array = new JsonParser().parse(Files.newBufferedReader(path)).getAsJsonObject().getAsJsonArray("libraries");
+        var object = new JsonParser().parse(Files.newBufferedReader(path)).getAsJsonObject();
+        JsonArray array = object.getAsJsonArray("libraries");
         for (JsonElement element : array) {
             String name = element.getAsJsonObject().get("name").getAsString();
             JsonObject artifact = element.getAsJsonObject().getAsJsonObject("downloads").getAsJsonObject("artifact");
@@ -172,6 +177,14 @@ public class ForgeInstaller {
             String url = artifact.get("url").getAsString();
             if (url == null || url.trim().isEmpty()) continue;
             ret.put(name, new AbstractMap.SimpleImmutableEntry<>(hash, url));
+        }
+        if (object.has("data")) {
+            var data = object.getAsJsonObject("data");
+            if (data.has("MOJMAPS")) {
+                var serverMapping = data.getAsJsonObject("MOJMAPS").get("server").getAsString();
+                ret.put(serverMapping.substring(1, serverMapping.length() -1),
+                    new AbstractMap.SimpleImmutableEntry<>(MAPPING_HASH.get(minecraft), MAPPING_URL.formatted(minecraft)));
+            }
         }
         return ret;
     }
