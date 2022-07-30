@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -30,6 +31,7 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
 
     // @formatter:off
     @Shadow(remap = false) @Final private Map<String, Tag> unhandledTags;
+    @Shadow(remap = false) private CompoundTag internalTag;
     // @formatter:on
 
     private static final Set<String> EXTEND_TAGS = ImmutableSet.of(
@@ -63,6 +65,21 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
     @ModifyVariable(method = "<init>(Lnet/minecraft/nbt/CompoundTag;)V", at = @At(value = "INVOKE", target = "Lorg/bukkit/UnsafeValues;getDataVersion()I"))
     private CompoundTag arclight$provideTag(CompoundTag tag) {
         return tag == null ? new CompoundTag() : tag;
+    }
+
+    @Redirect(method = "<init>(Ljava/util/Map;)V", at = @At(value = "INVOKE", target = "Ljava/util/Set;contains(Ljava/lang/Object;)Z"))
+    private boolean arclight$forceDeserializeInternalTags(Set<String> handledTags, Object key) {
+        if ((Object) this instanceof CraftMetaItem) {
+            // For mod items or vanilla items that usually don't depend on nbt tags,
+            // force internal tags to be deserialized into item nbt to avoid their vanilla tags being ignored by Bukkit.
+            // e.g. apotheosis:potion_charm{"Potion": "<effect id>"} or minecraft:bread{"Potion": "<effect id>"}
+            return false;
+        }
+        else {
+            // For items that has corresponding ItemMeta representation in Bukkit,
+            // keep their behavior unchanged.
+            return handledTags.contains((String) key);
+        }
     }
 
     private CompoundTag forgeCaps;
