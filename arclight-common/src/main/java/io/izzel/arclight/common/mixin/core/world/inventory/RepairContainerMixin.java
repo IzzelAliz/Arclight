@@ -34,7 +34,11 @@ public abstract class RepairContainerMixin extends ItemCombinerMixin {
     @Shadow public static int calculateIncreasedRepairCost(int oldRepairCost) { return 0; }
     // @formatter:on
 
+    public int cancelThisBySettingCostToMaximum = 40;
+    public int maximumRenameCostThreshold = 40;
+    public int maximumAllowedRenameCost = 39;
     public int maximumRepairCost = 40;
+
     private CraftInventoryView bukkitEntity;
 
     /**
@@ -43,6 +47,12 @@ public abstract class RepairContainerMixin extends ItemCombinerMixin {
      */
     @Overwrite
     public void createResult() {
+        // define constants for ModifyConstant mixins to work
+        cancelThisBySettingCostToMaximum = 40;
+        maximumRenameCostThreshold = 40;
+        maximumAllowedRenameCost = 39;
+        maximumRepairCost = 40;
+
         ItemStack itemstack = this.inputSlots.getItem(0);
         this.cost.set(1);
         int i = 0;
@@ -157,7 +167,7 @@ public abstract class RepairContainerMixin extends ItemCombinerMixin {
 
                                 i += k3 * j2;
                                 if (itemstack.getCount() > 1) {
-                                    i = 40;
+                                    i = cancelThisBySettingCostToMaximum;
                                 }
                             }
                         }
@@ -190,8 +200,8 @@ public abstract class RepairContainerMixin extends ItemCombinerMixin {
                 itemstack1 = ItemStack.EMPTY;
             }
 
-            if (k == i && k > 0 && this.cost.get() >= maximumRepairCost) {
-                this.cost.set(maximumRepairCost - 1);
+            if (k == i && k > 0 && this.cost.get() >= maximumRenameCostThreshold) {
+                this.cost.set(maximumAllowedRenameCost);
             }
 
             if (this.cost.get() >= maximumRepairCost && !this.player.getAbilities().instabuild) {
