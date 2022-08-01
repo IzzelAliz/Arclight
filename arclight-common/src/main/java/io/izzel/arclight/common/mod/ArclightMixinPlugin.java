@@ -244,7 +244,7 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
                 insnList.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false));
                 methodNode.instructions.insert(insnList);
             } else {
-                throw new ClassFormatError("No super constructor call present.");
+                throw new ClassFormatError("No super constructor call present: " + classNode.name);
             }
         }
     }

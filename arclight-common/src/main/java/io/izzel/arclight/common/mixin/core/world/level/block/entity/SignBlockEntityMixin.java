@@ -24,7 +24,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
-import java.util.UUID;
 
 @Mixin(SignBlockEntity.class)
 public abstract class SignBlockEntityMixin extends BlockEntityMixin implements SignTileEntityBridge, CommandSource, ICommandSourceBridge {
@@ -46,7 +45,7 @@ public abstract class SignBlockEntityMixin extends BlockEntityMixin implements S
     }
 
     @Override
-    public void sendMessage(@NotNull Component component, @NotNull UUID uuid) {
+    public void sendSystemMessage(@NotNull Component component) {
     }
 
     @Override

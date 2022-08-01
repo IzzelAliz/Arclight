@@ -6,6 +6,7 @@ import io.izzel.arclight.common.bridge.core.world.spawner.WorldEntitySpawnerBrid
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.ChunkPos;
@@ -27,10 +28,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Random;
-
 @Mixin(NaturalSpawner.class)
-public abstract class WorldEntitySpawnerMixin {
+public abstract class NaturalSpawnerMixin {
 
     // @formatter:off
     @Shadow @Final private static MobCategory[] SPAWNING_CATEGORIES;
@@ -81,7 +80,7 @@ public abstract class WorldEntitySpawnerMixin {
     }
 
     @Inject(method = "spawnMobsForChunkGeneration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ServerLevelAccessor;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V"))
-    private static void arclight$worldGenSpawn(ServerLevelAccessor accessor, Holder<Biome> p_151618_, ChunkPos p_151619_, Random p_151620_, CallbackInfo ci) {
+    private static void arclight$worldGenSpawn(ServerLevelAccessor accessor, Holder<Biome> p_151618_, ChunkPos p_151619_, RandomSource p_151620_, CallbackInfo ci) {
         ((IWorldWriterBridge) accessor).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.CHUNK_GEN);
     }
 }

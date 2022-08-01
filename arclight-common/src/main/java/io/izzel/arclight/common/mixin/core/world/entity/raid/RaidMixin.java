@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.entity.raid;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.raid.RaidBridge;
-import net.minecraft.advancements.critereon.LocationTrigger;
+import net.minecraft.advancements.critereon.PlayerTrigger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -84,8 +84,8 @@ public class RaidMixin implements RaidBridge {
 
     private transient List<Player> arclight$winners;
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/critereon/LocationTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;)V"))
-    public void arclight$addWinner(LocationTrigger trigger, ServerPlayer player) {
+    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/critereon/PlayerTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;)V"))
+    public void arclight$addWinner(PlayerTrigger trigger, ServerPlayer player) {
         trigger.trigger(player);
         if (arclight$winners == null) {
             arclight$winners = new ArrayList<>();

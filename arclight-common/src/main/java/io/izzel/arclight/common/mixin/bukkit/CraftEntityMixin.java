@@ -56,7 +56,7 @@ public abstract class CraftEntityMixin implements org.bukkit.entity.Entity {
     @Override
     public @NotNull EntityType getType() {
         if (this.arclight$type == null) {
-            ResourceLocation location = ForgeRegistries.ENTITIES.getKey(entity.getType());
+            ResourceLocation location = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
             if (location == null) throw new IllegalArgumentException("Unregistered entity type " + entity.getType());
             if (location.getNamespace().equals("minecraft")) {
                 this.arclight$type = Objects.requireNonNull(EntityType.fromName(location.getPath().toUpperCase(Locale.ROOT)));

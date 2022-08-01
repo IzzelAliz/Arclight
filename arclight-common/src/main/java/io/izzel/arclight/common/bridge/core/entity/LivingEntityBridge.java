@@ -1,20 +1,20 @@
 package io.izzel.arclight.common.bridge.core.entity;
 
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ItemStack;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 
 import java.util.Optional;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.item.ItemStack;
 
 public interface LivingEntityBridge extends EntityBridge {
 
     void bridge$setSlot(EquipmentSlot slotIn, ItemStack stack, boolean silent);
 
-    void bridge$playEquipSound(ItemStack stack, boolean silent);
+    void bridge$playEquipSound(EquipmentSlot slot, ItemStack oldItem, ItemStack newItem, boolean silent);
 
     boolean bridge$canPickUpLoot();
 

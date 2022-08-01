@@ -1,8 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.authlib.GameProfileRepository;
-import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.serialization.DynamicOps;
 import io.izzel.arclight.common.bridge.core.command.ICommandSourceBridge;
@@ -26,7 +24,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.status.ServerStatus;
 import net.minecraft.obfuscate.DontObfuscate;
 import net.minecraft.resources.RegistryOps;
@@ -34,6 +32,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ReloadableServerResources;
 import net.minecraft.server.ServerFunctionManager;
+import net.minecraft.server.Services;
 import net.minecraft.server.TickTask;
 import net.minecraft.server.WorldStem;
 import net.minecraft.server.level.ServerChunkCache;
@@ -46,7 +45,6 @@ import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.server.packs.resources.CloseableResourceManager;
 import net.minecraft.server.packs.resources.MultiPackResourceManager;
-import net.minecraft.server.players.GameProfileCache;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.util.Unit;
 import net.minecraft.util.profiling.ProfilerFiller;
@@ -58,11 +56,12 @@ import net.minecraft.world.level.ForcedChunksSavedData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.levelgen.WorldGenSettings;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.level.storage.WorldData;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.internal.BrandingControl;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import org.bukkit.Bukkit;
@@ -93,10 +92,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.Proxy;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -142,7 +139,6 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Shadow protected abstract void endMetricsRecordingTick();
     @Shadow public abstract SystemReport fillSystemReport(SystemReport p_177936_);
     @Shadow private float averageTickTime;
-    @Shadow @Final @Nullable private GameProfileCache profileCache;
     @Shadow @Final private PackRepository packRepository;
     @Shadow public abstract boolean isDedicatedServer();
     @Shadow public abstract int getFunctionCompilationLevel();
@@ -152,7 +148,11 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Shadow private static DataPackConfig getSelectedPacks(PackRepository p_129818_) { return null; }
     @Shadow public abstract PlayerList getPlayerList();
     @Shadow @Final private ServerFunctionManager functionManager;
-    @Shadow @Final private StructureManager structureManager;
+    @Shadow public abstract boolean previewsChat();
+    @Shadow public abstract boolean enforceSecureProfile();
+    @Shadow @Final protected Services services;
+    @Shadow private static CrashReport constructOrExtractCrashReport(Throwable p_206569_) { return null; }
+    @Shadow @Final private StructureTemplateManager structureTemplateManager;
     // @formatter:on
 
     public MinecraftServerMixin(String name) {
@@ -190,7 +190,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    public void arclight$loadOptions(Thread p_206546_, LevelStorageSource.LevelStorageAccess p_206547_, PackRepository p_206548_, WorldStem p_206549_, Proxy p_206550_, DataFixer p_206551_, @Nullable MinecraftSessionService p_206552_, @Nullable GameProfileRepository p_206553_, @Nullable GameProfileCache p_206554_, ChunkProgressListenerFactory p_206555_, CallbackInfo ci) {
+    public void arclight$loadOptions(Thread p_236723_, LevelStorageSource.LevelStorageAccess p_236724_, PackRepository p_236725_, WorldStem worldStem, Proxy p_236727_, DataFixer p_236728_, Services p_236729_, ChunkProgressListenerFactory p_236730_, CallbackInfo ci) {
         String[] arguments = ManagementFactory.getRuntimeMXBean().getInputArguments().toArray(new String[0]);
         OptionParser parser = new BukkitOptionParser();
         try {
@@ -199,8 +199,8 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
             e.printStackTrace();
         }
         this.datapackconfiguration = ArclightCaptures.getDatapackConfig();
-        this.registryreadops = RegistryOps.create(NbtOps.INSTANCE, p_206549_.registryAccess());
-        this.vanillaCommandDispatcher = p_206549_.dataPackResources().getCommands();
+        this.registryreadops = RegistryOps.create(NbtOps.INSTANCE, worldStem.registryAccess());
+        this.vanillaCommandDispatcher = worldStem.dataPackResources().getCommands();
     }
 
     /**
@@ -210,81 +210,70 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Overwrite
     protected void runServer() {
         try {
-            if (this.initServer()) {
-                ServerLifecycleHooks.handleServerStarted((MinecraftServer) (Object) this);
-                this.nextTickTime = Util.getMillis();
-                this.status.setDescription(new TextComponent(this.motd));
-                this.status.setVersion(new ServerStatus.Version(SharedConstants.getCurrentVersion().getName(), SharedConstants.getCurrentVersion().getProtocolVersion()));
-                this.updateStatusIcon(this.status);
-
-                Arrays.fill(recentTps, 20);
-                long curTime, tickSection = Util.getMillis(), tickCount = 1;
-
-                while (this.running) {
-                    long i = (curTime = Util.getMillis()) - this.nextTickTime;
-                    if (i > 2000L && this.nextTickTime - this.lastOverloadWarning >= 15000L) {
-                        long j = i / 50L;
-
-                        if (server.getWarnOnOverload()) {
-                            LOGGER.warn("Can't keep up! Is the server overloaded? Running {}ms or {} ticks behind", i, j);
-                        }
-
-                        this.nextTickTime += j * 50L;
-                        this.lastOverloadWarning = this.nextTickTime;
-                    }
-
-                    if (tickCount++ % SAMPLE_INTERVAL == 0) {
-                        double currentTps = 1E3 / (curTime - tickSection) * SAMPLE_INTERVAL;
-                        recentTps[0] = calcTps(recentTps[0], 0.92, currentTps); // 1/exp(5sec/1min)
-                        recentTps[1] = calcTps(recentTps[1], 0.9835, currentTps); // 1/exp(5sec/5min)
-                        recentTps[2] = calcTps(recentTps[2], 0.9945, currentTps); // 1/exp(5sec/15min)
-                        tickSection = curTime;
-                    }
-
-                    currentTick = (int) (System.currentTimeMillis() / 50);
-
-                    this.nextTickTime += 50L;
-                    this.startMetricsRecordingTick();
-                    this.profiler.push("tick");
-                    this.tickServer(this::haveTime);
-                    this.profiler.popPush("nextTickWait");
-                    this.mayHaveDelayedTasks = true;
-                    this.delayedTasksMaxNextTickTime = Math.max(Util.getMillis() + 50L, this.nextTickTime);
-                    this.waitUntilNextTick();
-                    this.profiler.pop();
-                    this.endMetricsRecordingTick();
-                    this.isReady = true;
-                    JvmProfiler.INSTANCE.onServerTick(this.averageTickTime);
-                }
-                ServerLifecycleHooks.handleServerStopping((MinecraftServer) (Object) this);
-                ServerLifecycleHooks.expectServerStopped(); // has to come before finalTick to avoid race conditions
-            } else {
-                ServerLifecycleHooks.expectServerStopped(); // has to come before finalTick to avoid race conditions
-                this.onServerCrash(null);
+            if (!this.initServer()) {
+                throw new IllegalStateException("Failed to initialize server");
             }
+            ServerLifecycleHooks.handleServerStarted((MinecraftServer) (Object) this);
+            this.nextTickTime = Util.getMillis();
+            this.status.setDescription(Component.literal(this.motd));
+            this.status.setVersion(new ServerStatus.Version(SharedConstants.getCurrentVersion().getName(), SharedConstants.getCurrentVersion().getProtocolVersion()));
+            this.status.setPreviewsChat(this.previewsChat());
+            this.status.setEnforcesSecureChat(this.enforceSecureProfile());
+            this.updateStatusIcon(this.status);
+
+            Arrays.fill(recentTps, 20);
+            long curTime, tickSection = Util.getMillis(), tickCount = 1;
+
+            while (this.running) {
+                long i = (curTime = Util.getMillis()) - this.nextTickTime;
+                if (i > 2000L && this.nextTickTime - this.lastOverloadWarning >= 15000L) {
+                    long j = i / 50L;
+
+                    if (server.getWarnOnOverload()) {
+                        LOGGER.warn("Can't keep up! Is the server overloaded? Running {}ms or {} ticks behind", i, j);
+                    }
+
+                    this.nextTickTime += j * 50L;
+                    this.lastOverloadWarning = this.nextTickTime;
+                }
+
+                if (tickCount++ % SAMPLE_INTERVAL == 0) {
+                    double currentTps = 1E3 / (curTime - tickSection) * SAMPLE_INTERVAL;
+                    recentTps[0] = calcTps(recentTps[0], 0.92, currentTps); // 1/exp(5sec/1min)
+                    recentTps[1] = calcTps(recentTps[1], 0.9835, currentTps); // 1/exp(5sec/5min)
+                    recentTps[2] = calcTps(recentTps[2], 0.9945, currentTps); // 1/exp(5sec/15min)
+                    tickSection = curTime;
+                }
+
+                currentTick = (int) (System.currentTimeMillis() / 50);
+
+                this.nextTickTime += 50L;
+                this.startMetricsRecordingTick();
+                this.profiler.push("tick");
+                this.tickServer(this::haveTime);
+                this.profiler.popPush("nextTickWait");
+                this.mayHaveDelayedTasks = true;
+                this.delayedTasksMaxNextTickTime = Math.max(Util.getMillis() + 50L, this.nextTickTime);
+                this.waitUntilNextTick();
+                this.profiler.pop();
+                this.endMetricsRecordingTick();
+                this.isReady = true;
+                JvmProfiler.INSTANCE.onServerTick(this.averageTickTime);
+            }
+            ServerLifecycleHooks.handleServerStopping((MinecraftServer) (Object) this);
+            ServerLifecycleHooks.expectServerStopped(); // has to come before finalTick to avoid race conditions
         } catch (Throwable throwable1) {
             LOGGER.error("Encountered an unexpected exception", throwable1);
-
-            if (throwable1.getCause() != null) {
-                LOGGER.error("\tCause of unexpected exception was", throwable1.getCause());
-            }
-
-            CrashReport crashreport;
-            if (throwable1 instanceof ReportedException) {
-                crashreport = ((ReportedException) throwable1).getReport();
-            } else {
-                crashreport = new CrashReport("Exception in server tick loop", throwable1);
-            }
-
+            CrashReport crashreport = constructOrExtractCrashReport(throwable1);
             this.fillSystemReport(crashreport.getSystemReport());
-            File file1 = new File(new File(this.getServerDirectory(), "crash-reports"), "crash-" + (new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date()) + "-server.txt");
+            File file1 = new File(new File(this.getServerDirectory(), "crash-reports"), "crash-" + Util.getFilenameFormattedDateTime() + "-server.txt");
             if (crashreport.saveToFile(file1)) {
                 LOGGER.error("This crash report has been saved to: {}", file1.getAbsolutePath());
             } else {
                 LOGGER.error("We were unable to save this crash report to disk.");
             }
 
-            ServerLifecycleHooks.expectServerStopped(); // has to come before finalTick to avoid race conditions
+            net.minecraftforge.server.ServerLifecycleHooks.expectServerStopped(); // Forge: Has to come before MinecraftServer#onServerCrash to avoid race conditions
             this.onServerCrash(crashreport);
         } finally {
             try {
@@ -293,8 +282,8 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
             } catch (Throwable throwable) {
                 LOGGER.error("Exception stopping the server", throwable);
             } finally {
-                if (this.profileCache != null) {
-                    this.profileCache.clearExecutor();
+                if (this.services.profileCache() != null) {
+                    this.services.profileCache().clearExecutor();
                 }
                 WatchdogThread.doStop();
                 ServerLifecycleHooks.handleServerStopped((MinecraftServer) (Object) this);
@@ -451,7 +440,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     // bukkit methods
     public void prepareLevels(ChunkProgressListener listener, ServerLevel serverWorld) {
         this.markWorldsDirty();
-        MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.WorldEvent.Load(serverWorld));
+        MinecraftForge.EVENT_BUS.post(new LevelEvent.Load(serverWorld));
         if (!((WorldBridge) serverWorld).bridge$getWorld().getKeepSpawnInMemory()) {
             return;
         }
@@ -513,16 +502,16 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         }, this).thenCompose((p_212913_) -> {
             CloseableResourceManager closeableresourcemanager = new MultiPackResourceManager(PackType.SERVER_DATA, p_212913_);
             return ReloadableServerResources.loadResources(closeableresourcemanager, registryaccess$frozen, this.isDedicatedServer() ? Commands.CommandSelection.DEDICATED : Commands.CommandSelection.INTEGRATED, this.getFunctionCompilationLevel(), this.executor, this).whenComplete((p_212907_, p_212908_) -> {
-             if (p_212908_ != null) {
-                 closeableresourcemanager.close();
-             }
+                if (p_212908_ != null) {
+                    closeableresourcemanager.close();
+                }
 
             }).thenApply((p_212904_) -> {
-             return new MinecraftServer.ReloadableResources(closeableresourcemanager, p_212904_);
+                return new MinecraftServer.ReloadableResources(closeableresourcemanager, p_212904_);
             });
         }).thenAcceptAsync((p_212919_) -> {
             this.resources.close();
-            this.resources= p_212919_;
+            this.resources = p_212919_;
             this.server.syncCommands();
             this.packRepository.setSelected(p_129862_);
             this.worldData.setDataPackConfig(getSelectedPacks(this.packRepository));
@@ -530,7 +519,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
             this.getPlayerList().saveAll();
             this.getPlayerList().reloadResources();
             this.functionManager.replaceLibrary(this.resources.managers().getFunctionLibrary());
-            this.structureManager.onResourceManagerReload(this.resources.resourceManager());
+            this.structureTemplateManager.onResourceManagerReload(this.resources.resourceManager());
             this.getPlayerList().getPlayers().forEach(this.getPlayerList()::sendPlayerPermissionLevel); //Forge: Fix newly added/modified commands not being sent to the client when commands reload.
         }, this);
         if (this.isSameThread()) {

@@ -7,7 +7,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.Shulker;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
@@ -64,6 +66,7 @@ public abstract class ShulkerMixin extends PathfinderMobMixin {
                         this.setAttachFace(direction);
                         this.playSound(SoundEvents.SHULKER_TELEPORT, 1.0F, 1.0F);
                         this.setPos((double) blockpos1.getX() + 0.5D, blockpos1.getY(), (double) blockpos1.getZ() + 0.5D);
+                        this.level.gameEvent(GameEvent.TELEPORT, blockpos, GameEvent.Context.of((Entity) (Object) this));
                         this.entityData.set(DATA_PEEK_ID, (byte) 0);
                         this.setTarget(null);
                         return true;

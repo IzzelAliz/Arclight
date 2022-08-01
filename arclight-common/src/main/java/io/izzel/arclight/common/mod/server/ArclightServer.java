@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mod.server;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.izzel.arclight.api.Arclight;
 import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
@@ -18,11 +19,28 @@ import org.bukkit.craftbukkit.v.command.ColouredConsoleSender;
 import java.io.File;
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.locks.LockSupport;
 
 public class ArclightServer {
 
     private static final Executor mainThreadExecutor = ArclightServer::executeOnMainThread;
+    private static final ExecutorService chatExecutor = Executors.newCachedThreadPool(
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Async Chat Thread - #%d")
+            .setThreadFactory(chatFactory()).build());
+
+    private static ThreadFactory chatFactory() {
+        var group = Thread.currentThread().getThreadGroup();
+        var classLoader = Thread.currentThread().getContextClassLoader();
+        return r -> {
+            var thread = new Thread(group, r);
+            thread.setContextClassLoader(classLoader);
+            return thread;
+        };
+    }
+
     private static CraftServer server;
 
     @SuppressWarnings("ConstantConditions")
@@ -78,6 +96,10 @@ public class ArclightServer {
 
     public static Executor getMainThreadExecutor() {
         return mainThreadExecutor;
+    }
+
+    public static ExecutorService getChatExecutor() {
+        return chatExecutor;
     }
 
     public static World.Environment getEnvironment(ResourceKey<LevelStem> key) {

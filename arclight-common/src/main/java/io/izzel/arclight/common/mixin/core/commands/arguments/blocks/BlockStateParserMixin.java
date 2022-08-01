@@ -2,6 +2,8 @@ package io.izzel.arclight.common.mixin.core.commands.arguments.blocks;
 
 import com.mojang.brigadier.StringReader;
 import net.minecraft.commands.arguments.blocks.BlockStateParser;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.properties.Property;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,7 +24,7 @@ public class BlockStateParserMixin {
     // @formatter:on
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void arclight$init(StringReader readerIn, boolean allowTags, CallbackInfo ci) {
+    private void arclight$init(HolderLookup<Block> registry, StringReader readerIn, boolean forTesting, boolean allowTags, CallbackInfo ci) {
         this.properties = new LinkedHashMap<>(properties);
     }
 }

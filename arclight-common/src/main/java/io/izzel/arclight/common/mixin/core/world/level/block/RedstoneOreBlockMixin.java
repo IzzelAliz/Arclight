@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.level.block;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -22,8 +23,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.util.Random;
 
 @Mixin(RedStoneOreBlock.class)
 public abstract class RedstoneOreBlockMixin {
@@ -64,7 +63,7 @@ public abstract class RedstoneOreBlockMixin {
     }
 
     @Inject(method = "randomTick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
-    private void arclight$blockFade(BlockState state, ServerLevel worldIn, BlockPos pos, Random random, CallbackInfo ci) {
+    private void arclight$blockFade(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random, CallbackInfo ci) {
         if (CraftEventFactory.callBlockFadeEvent(worldIn, pos, state.setValue(RedStoneOreBlock.LIT, false)).isCancelled()) {
             ci.cancel();
         }

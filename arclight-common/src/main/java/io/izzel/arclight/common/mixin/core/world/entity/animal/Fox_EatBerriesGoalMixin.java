@@ -24,7 +24,7 @@ public abstract class Fox_EatBerriesGoalMixin extends MoveToBlockGoal {
         super(creature, speedIn, length);
     }
 
-    @Inject(method = "pickSweetBerries", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Random;nextInt(I)I"))
+    @Inject(method = "pickSweetBerries", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/util/RandomSource;nextInt(I)I"))
     private void arclight$eatBerry(BlockState state, CallbackInfo ci) {
         if (CraftEventFactory.callEntityChangeBlockEvent(outerThis, this.blockPos, state.setValue(SweetBerryBushBlock.AGE, 1)).isCancelled()) {
             ci.cancel();

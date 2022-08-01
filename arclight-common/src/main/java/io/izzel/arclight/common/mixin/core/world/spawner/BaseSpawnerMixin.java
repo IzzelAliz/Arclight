@@ -19,6 +19,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.SpawnData;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -145,6 +146,7 @@ public abstract class BaseSpawnerMixin {
                         }
 
                         level.levelEvent(2004, pos, 0);
+                        level.gameEvent(entity, GameEvent.ENTITY_PLACE, blockpos);
                         if (entity instanceof Mob) {
                             ((Mob) entity).spawnAnim();
                         }

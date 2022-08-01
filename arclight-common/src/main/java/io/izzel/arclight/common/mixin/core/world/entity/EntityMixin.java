@@ -16,6 +16,7 @@ import net.minecraft.BlockUtil;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.PositionImpl;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -25,8 +26,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
@@ -47,7 +48,6 @@ import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.portal.PortalInfo;
 import net.minecraft.world.level.portal.PortalShape;
@@ -99,7 +99,6 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.UUID;
 
 @SuppressWarnings("ConstantConditions")
@@ -135,7 +134,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow @Nullable public abstract MinecraftServer getServer();
     @Shadow public abstract Vec3 getDeltaMovement();
     @Shadow public abstract EntityType<?> getType();
-    @Shadow @Final protected Random random;
+    @Shadow @Final protected RandomSource random;
     @Shadow public abstract float getBbWidth();
     @Shadow public abstract float getBbHeight();
     @Shadow public abstract boolean isInvisible();
@@ -216,6 +215,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow public abstract void setSharedFlagOnFire(boolean p_146869_);
     @Shadow public abstract int getMaxAirSupply();
     @Shadow public abstract int getAirSupply();
+    @Shadow public abstract void gameEvent(GameEvent p_146851_);
     // @formatter:on
 
     private static final int CURRENT_LEVEL = 2;
@@ -389,9 +389,9 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         if ((Object) this instanceof ServerPlayer) this.handleNetherPortal();// CraftBukkit - // Moved up to postTick
     }
 
-    @Redirect(method = "updateFluidHeightAndDoFluidPushing", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FluidState;getFlow(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/Vec3;"))
-    private Vec3 arclight$setLava(FluidState instance, BlockGetter level, BlockPos pos, TagKey<Fluid> tag) {
-        if (tag == FluidTags.LAVA) {
+    @Redirect(method = "updateFluidHeightAndDoFluidPushing()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FluidState;getFlow(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/Vec3;"))
+    private Vec3 arclight$setLava(FluidState instance, BlockGetter level, BlockPos pos) {
+        if (instance.getType().is(FluidTags.LAVA)) {
             lastLavaContact = pos.immutable();
         }
         return instance.getFlow(level, pos);
@@ -830,24 +830,15 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         return this.boardingCooldown;
     }
 
-    private transient BlockPos arclight$tpPos;
+    private transient PositionImpl arclight$tpPos;
 
-    @Override
-    public BlockPos internal$capturedPos() {
-        try {
-            return arclight$tpPos;
-        } finally {
-            arclight$tpPos = null;
-        }
-    }
-
-    public Entity teleportTo(ServerLevel world, BlockPos blockPos) {
+    public Entity teleportTo(ServerLevel world, PositionImpl blockPos) {
         arclight$tpPos = blockPos;
         return changeDimension(world);
     }
 
     @Override
-    public Entity bridge$teleportTo(ServerLevel world, BlockPos blockPos) {
+    public Entity bridge$teleportTo(ServerLevel world, PositionImpl blockPos) {
         return teleportTo(world, blockPos);
     }
 
@@ -866,7 +857,10 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                 return null;
             }
             this.level.getProfiler().push("reposition");
-            PortalInfo portalinfo = teleporter.getPortalInfo((Entity) (Object) this, server, this::findDimensionEntryPoint);
+            var bukkitPos = arclight$tpPos;
+            arclight$tpPos = null;
+            PortalInfo portalinfo = bukkitPos == null ? teleporter.getPortalInfo((Entity) (Object) this, server, this::findDimensionEntryPoint)
+                : new PortalInfo(new Vec3(bukkitPos.x(), bukkitPos.y(), bukkitPos.z()), Vec3.ZERO, this.yRot, this.xRot);
             if (portalinfo == null) {
                 return null;
             } else {
@@ -935,7 +929,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                 double d0 = DimensionType.getTeleportationScale(this.level.dimensionType(), world.dimensionType());
                 BlockPos blockpos1 = worldborder.clampToBounds(this.getX() * d0, this.getY(), this.getZ() * d0);
 
-                CraftPortalEvent event = this.callPortalEvent((Entity) (Object) this, world, blockpos1, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL, flag2 ? 16 : 128, 16);
+                CraftPortalEvent event = this.callPortalEvent((Entity) (Object) this, world, new PositionImpl(blockpos1.getX(), blockpos1.getY(), blockpos1.getZ()), PlayerTeleportEvent.TeleportCause.NETHER_PORTAL, flag2 ? 16 : 128, 16);
                 if (event == null) {
                     return null;
                 }
@@ -969,23 +963,22 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                 blockpos = world.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, world.getSharedSpawnPos());
             }
 
-            CraftPortalEvent event = this.callPortalEvent((Entity) (Object) this, world, blockpos, PlayerTeleportEvent.TeleportCause.END_PORTAL, 0, 0);
+            CraftPortalEvent event = this.callPortalEvent((Entity) (Object) this, world, new PositionImpl(blockpos.getX() + 0.5D, blockpos.getY(), blockpos.getZ() + 0.5D), PlayerTeleportEvent.TeleportCause.END_PORTAL, 0, 0);
             if (event == null) {
                 return null;
             }
-            blockpos = new BlockPos(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
 
-            PortalInfo portalInfo = new PortalInfo(new Vec3((double) blockpos.getX() + 0.5D, blockpos.getY(), (double) blockpos.getZ() + 0.5D), this.getDeltaMovement(), this.getYRot(), this.getXRot());
+            PortalInfo portalInfo = new PortalInfo(new Vec3(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ()), this.getDeltaMovement(), this.getYRot(), this.getXRot());
             ((PortalInfoBridge) portalInfo).bridge$setWorld(((CraftWorld) event.getTo().getWorld()).getHandle());
             ((PortalInfoBridge) portalInfo).bridge$setPortalEventInfo(event);
             return portalInfo;
         }
     }
 
-    protected CraftPortalEvent callPortalEvent(Entity entity, ServerLevel exitWorldServer, BlockPos exitPosition, PlayerTeleportEvent.TeleportCause cause, int searchRadius, int creationRadius) {
+    protected CraftPortalEvent callPortalEvent(Entity entity, ServerLevel exitWorldServer, PositionImpl exitPosition, PlayerTeleportEvent.TeleportCause cause, int searchRadius, int creationRadius) {
         CraftEntity bukkitEntity = ((EntityBridge) entity).bridge$getBukkitEntity();
         Location enter = bukkitEntity.getLocation();
-        Location exit = new Location(((WorldBridge) exitWorldServer).bridge$getWorld(), exitPosition.getX(), exitPosition.getY(), exitPosition.getZ());
+        Location exit = new Location(((WorldBridge) exitWorldServer).bridge$getWorld(), exitPosition.x(), exitPosition.y(), exitPosition.z());
         EntityPortalEvent event = new EntityPortalEvent(bukkitEntity, enter, exit, searchRadius);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled() || event.getTo() == null || event.getTo().getWorld() == null || !entity.isAlive()) {

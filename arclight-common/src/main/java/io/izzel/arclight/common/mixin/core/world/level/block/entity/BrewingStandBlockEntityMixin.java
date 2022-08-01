@@ -90,8 +90,8 @@ public abstract class BrewingStandBlockEntityMixin extends LockableBlockEntityMi
 
         // BrewingRecipeRegistry.brewPotions(stacks, ing, SLOTS_FOR_SIDES);
         ForgeEventFactory.onPotionBrewed(stacks);
-        if (ing.hasContainerItem()) {
-            ItemStack containerItem = ing.getContainerItem();
+        if (ing.hasCraftingRemainingItem()) {
+            ItemStack containerItem = ing.getCraftingRemainingItem();
             ing.shrink(1);
             if (ing.isEmpty()) {
                 ing = containerItem;

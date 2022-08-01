@@ -7,12 +7,14 @@ import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.ExplosionBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -49,11 +51,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Collections;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 
 @Mixin(Explosion.class)
@@ -63,7 +64,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
     @Shadow @Final private Level level;
     @Shadow @Final private Explosion.BlockInteraction blockInteraction;
     @Shadow @Mutable @Final private float radius;
-    @Shadow @Final private List<BlockPos> toBlow;
+    @Shadow @Final private ObjectArrayList<BlockPos> toBlow;
     @Shadow @Final private double x;
     @Shadow @Final private double y;
     @Shadow @Final private double z;
@@ -75,9 +76,10 @@ public abstract class ExplosionMixin implements ExplosionBridge {
     @Accessor("radius") public abstract void bridge$setSize(float size);
     @Accessor("blockInteraction") public abstract Explosion.BlockInteraction bridge$getMode();
     @Shadow @Final private boolean fire;
-    @Shadow @Final private Random random;
+    @Shadow @Final private RandomSource random;
     @Shadow private static void addBlockDrops(ObjectArrayList<Pair<ItemStack, BlockPos>> dropPositionArray, ItemStack stack, BlockPos pos) { }
     @Shadow @Final private ExplosionDamageCalculator damageCalculator;
+    @Shadow @Nullable public abstract LivingEntity getSourceMob();
     // @formatter:on
 
 
@@ -245,7 +247,8 @@ public abstract class ExplosionMixin implements ExplosionBridge {
 
         if (flag) {
             ObjectArrayList<Pair<ItemStack, BlockPos>> objectarraylist = new ObjectArrayList<>();
-            Collections.shuffle(this.toBlow, this.level.random);
+            boolean flag2 = this.getSourceMob() instanceof Player;
+            Util.shuffle(this.toBlow, this.level.random);
 
             float yield = this.callBlockExplodeEvent();
 
@@ -260,20 +263,20 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                 if (!blockstate.isAir()) {
                     BlockPos blockpos1 = blockpos.immutable();
                     this.level.getProfiler().push("explosion_blocks");
-                    if (blockstate.canDropFromExplosion(this.level, blockpos, (Explosion) (Object) this) && this.level instanceof ServerLevel) {
+                    if (blockstate.canDropFromExplosion(this.level, blockpos, (Explosion) (Object) this) && this.level instanceof ServerLevel serverLevel) {
                         BlockEntity tileentity = blockstate.hasBlockEntity() ? this.level.getBlockEntity(blockpos) : null;
-                        LootContext.Builder lootcontext$builder = (new LootContext.Builder((ServerLevel) this.level)).withRandom(this.level.random).withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(blockpos)).withParameter(LootContextParams.TOOL, ItemStack.EMPTY).withOptionalParameter(LootContextParams.BLOCK_ENTITY, tileentity).withOptionalParameter(LootContextParams.THIS_ENTITY, this.source);
+                        LootContext.Builder lootcontext$builder = new LootContext.Builder(serverLevel).withRandom(this.level.random).withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(blockpos)).withParameter(LootContextParams.TOOL, ItemStack.EMPTY).withOptionalParameter(LootContextParams.BLOCK_ENTITY, tileentity).withOptionalParameter(LootContextParams.THIS_ENTITY, this.source);
                         if (this.blockInteraction == Explosion.BlockInteraction.DESTROY || yield < 1.0F) {
                             lootcontext$builder.withParameter(LootContextParams.EXPLOSION_RADIUS, 1.0F / yield);
                         }
 
+                        blockstate.spawnAfterBreak(serverLevel, blockpos, ItemStack.EMPTY, flag2);
                         blockstate.getDrops(lootcontext$builder).forEach((stack) -> {
                             addBlockDrops(objectarraylist, stack, blockpos1);
                         });
                     }
 
                     blockstate.onBlockExploded(this.level, blockpos, (Explosion) (Object) this);
-                    block.wasExploded(this.level, blockpos, (Explosion) (Object) this);
                     this.level.getProfiler().pop();
                 }
             }

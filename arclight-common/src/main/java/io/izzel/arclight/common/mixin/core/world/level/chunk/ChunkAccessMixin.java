@@ -17,7 +17,6 @@ import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.FeatureAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.levelgen.blending.BlendingData;
@@ -35,7 +34,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Map;
 
 @Mixin(ChunkAccess.class)
-public abstract class ChunkAccessMixin implements BlockGetter, BiomeManager.NoiseBiomeSource, FeatureAccess, ChunkAccessBridge {
+public abstract class ChunkAccessMixin implements BlockGetter, BiomeManager.NoiseBiomeSource, ChunkAccessBridge {
 
     // @formatter:off
     @Shadow public abstract void setUnsaved(boolean p_62094_);

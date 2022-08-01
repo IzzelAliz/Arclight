@@ -1,12 +1,14 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import io.izzel.arclight.common.bridge.core.block.BlockBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.mixin.core.world.level.block.state.BlockBehaviourMixin;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.valueproviders.IntProvider;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -23,6 +25,7 @@ import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityExhaustionEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -63,15 +66,30 @@ public abstract class BlockMixin extends BlockBehaviourMixin implements BlockBri
         }
     }
 
-    public int getExpDrop(BlockState blockState, ServerLevel world, BlockPos blockPos, ItemStack itemStack) {
-        int silkTouch = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH, itemStack);
-        int fortune = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.BLOCK_FORTUNE, itemStack);
-        return ((IForgeBlock) this).getExpDrop(blockState, world, blockPos, fortune, silkTouch);
+    public int getExpDrop(BlockState blockState, ServerLevel world, BlockPos blockPos, ItemStack itemStack, boolean flag) {
+        int silkTouch = itemStack.getEnchantmentLevel(Enchantments.SILK_TOUCH);
+        int fortune = itemStack.getEnchantmentLevel(Enchantments.BLOCK_FORTUNE);
+        return ((IForgeBlock) this).getExpDrop(blockState, world, world.random, blockPos, fortune, silkTouch);
+    }
+
+    protected int tryDropExperience(ServerLevel worldserver, BlockPos blockposition, ItemStack itemstack, IntProvider intprovider) {
+        if (EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH, itemstack) == 0) {
+            int i = intprovider.sample(worldserver.random);
+            if (i > 0) {
+                return i;
+            }
+        }
+        return 0;
     }
 
     @Override
     public int bridge$getExpDrop(BlockState blockState, ServerLevel world, BlockPos blockPos, ItemStack itemStack) {
-        return getExpDrop(blockState, world, blockPos, itemStack);
+        return getExpDrop(blockState, world, blockPos, itemStack, true);
+    }
+
+    @Inject(method = "playerDestroy", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;causeFoodExhaustion(F)V"))
+    private void arclight$reason(Level p_49827_, Player player, BlockPos p_49829_, BlockState p_49830_, BlockEntity p_49831_, ItemStack p_49832_, CallbackInfo ci) {
+        ((PlayerEntityBridge) player).bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.BLOCK_MINED);
     }
 
     @Inject(method = "playerDestroy", at = @At("RETURN"))

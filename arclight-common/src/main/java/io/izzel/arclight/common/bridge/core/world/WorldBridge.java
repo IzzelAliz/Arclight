@@ -34,4 +34,6 @@ public interface WorldBridge extends IWorldWriterBridge, IWorldBridge {
     Object2LongOpenHashMap<SpawnCategory> bridge$ticksPerSpawnCategory();
 
     ResourceKey<LevelStem> bridge$getTypeKey();
+
+    void bridge$setLastPhysicsProblem(BlockPos pos);
 }

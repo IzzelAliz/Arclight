@@ -3,7 +3,6 @@ package io.izzel.arclight.common.bridge.core.network.play;
 import org.bukkit.Location;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
-// todo
 public interface ServerPlayNetHandlerBridge {
 
     void bridge$pushTeleportCause(PlayerTeleportEvent.TeleportCause cause);

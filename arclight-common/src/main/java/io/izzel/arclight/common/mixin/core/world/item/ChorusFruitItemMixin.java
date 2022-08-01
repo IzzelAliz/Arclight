@@ -13,6 +13,9 @@ import net.minecraft.world.item.ChorusFruitItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -60,8 +63,11 @@ public class ChorusFruitItemMixin extends Item {
                 if (entityLiving.isPassenger()) {
                     entityLiving.stopRiding();
                 }
-
+                Vec3 vec3d = entityLiving.position();
+                var event = ForgeEventFactory.onChorusFruitTeleport(entityLiving, d3, d4, d5);
+                if (event.isCanceled()) return itemstack;
                 if (entityLiving.randomTeleport(d3, d4, d5, true)) {
+                    worldIn.gameEvent(GameEvent.TELEPORT, vec3d, GameEvent.Context.of(entityLiving));
                     SoundEvent soundevent = entityLiving instanceof Fox ? SoundEvents.FOX_TELEPORT : SoundEvents.CHORUS_FRUIT_TELEPORT;
                     worldIn.playSound(null, d0, d1, d2, soundevent, SoundSource.PLAYERS, 1.0F, 1.0F);
                     entityLiving.playSound(soundevent, 1.0F, 1.0F);

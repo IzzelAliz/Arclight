@@ -36,7 +36,7 @@ public class DropperBlockMixin {
     public void dispenseFrom(ServerLevel worldIn, BlockPos pos) {
         BlockSourceImpl proxyblocksource = new BlockSourceImpl(worldIn, pos);
         DispenserBlockEntity dispensertileentity = proxyblocksource.getEntity();
-        int i = dispensertileentity.getRandomSlot();
+        int i = dispensertileentity.getRandomSlot(worldIn.getRandom());
         if (i < 0) {
             worldIn.levelEvent(1001, pos, 0);
         } else {

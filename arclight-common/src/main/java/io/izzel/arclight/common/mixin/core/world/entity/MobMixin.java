@@ -227,7 +227,6 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
             }
 
             this.setItemSlotAndDropWhenKilled(equipmentslottype, stack);
-            this.equipEventAndSound(stack);
             return true;
         } else {
             return false;

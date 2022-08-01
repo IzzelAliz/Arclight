@@ -19,7 +19,7 @@ public class StartAttackingMixin<E extends Mob> {
      * @reason
      */
     @Overwrite
-    private void setAttackTarget(E mob, LivingEntity livingEntity) {
+    public static <E extends Mob> void setAttackTarget(E mob, LivingEntity livingEntity) {
         EntityTargetEvent event = CraftEventFactory.callEntityTargetLivingEvent(mob, livingEntity, (livingEntity instanceof ServerPlayer) ? EntityTargetEvent.TargetReason.CLOSEST_PLAYER : EntityTargetEvent.TargetReason.CLOSEST_ENTITY);
         if (event.isCancelled()) {
             return;

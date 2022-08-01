@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.level.block;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
@@ -23,7 +24,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
-import java.util.Random;
 
 @Mixin(ChorusFlowerBlock.class)
 public abstract class ChorusFlowerBlockMixin extends BlockMixin {
@@ -41,7 +41,7 @@ public abstract class ChorusFlowerBlockMixin extends BlockMixin {
      * @reason
      */
     @Overwrite
-    public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, Random random) {
+    public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random) {
         BlockPos blockpos = pos.above();
         if (worldIn.isEmptyBlock(blockpos) && blockpos.getY() < 256) {
             int i = state.getValue(AGE);

@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BambooBlock;
 import net.minecraft.world.level.block.Blocks;
@@ -16,8 +17,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
-
-import java.util.Random;
 
 @Mixin(BambooBlock.class)
 public abstract class BambooBlockMixin extends BlockMixin {
@@ -40,7 +39,7 @@ public abstract class BambooBlockMixin extends BlockMixin {
      * @reason
      */
     @Overwrite
-    protected void growBamboo(BlockState blockStateIn, Level worldIn, BlockPos posIn, Random rand, int height) {
+    protected void growBamboo(BlockState blockStateIn, Level worldIn, BlockPos posIn, RandomSource rand, int height) {
         BlockState blockstate = worldIn.getBlockState(posIn.below());
         BlockPos blockpos = posIn.below(2);
         BlockState blockstate1 = worldIn.getBlockState(blockpos);

@@ -6,7 +6,6 @@ import io.izzel.arclight.common.bridge.core.inventory.container.SlotBridge;
 import io.izzel.arclight.common.mod.server.ArclightContainer;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.SlotAccess;
@@ -19,6 +18,7 @@ import net.minecraft.world.inventory.ContainerSynchronizer;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v.inventory.CraftInventory;
@@ -92,10 +92,11 @@ public abstract class AbstractContainerMenuMixin implements ContainerBridge {
 
     public Component getTitle() {
         if (this.title == null) {
-            if (this.menuType != null && this.menuType.getRegistryName() != null) {
-                return new TextComponent(this.menuType.getRegistryName().toString());
+            if (this.menuType != null) {
+                var key = ForgeRegistries.MENU_TYPES.getKey(this.menuType);
+                return Component.translatable(key.toString());
             } else {
-                return new TextComponent(this.toString());
+                return Component.translatable(this.toString());
             }
         }
         return this.title;
@@ -261,8 +262,8 @@ public abstract class AbstractContainerMenuMixin implements ContainerBridge {
                                 int j3 = clickaction == ClickAction.PRIMARY ? itemstack11.getCount() : 1;
                                 this.setCarried(slot7.safeInsert(itemstack11, j3));
                             } else if (itemstack11.getCount() <= slot7.getMaxStackSize(itemstack11)) {
-                                slot7.set(itemstack11);
                                 this.setCarried(itemstack10);
+                                slot7.set(itemstack11);
                             }
                         } else if (ItemStack.isSameItemSameTags(itemstack10, itemstack11)) {
                             Optional<ItemStack> optional = slot7.tryRemove(itemstack10.getCount(), itemstack11.getMaxStackSize() - itemstack11.getCount(), player);

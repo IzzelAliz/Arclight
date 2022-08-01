@@ -5,7 +5,6 @@ import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.world.level.BaseCommandBlock;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
@@ -24,7 +23,7 @@ public class CommandBlockLogicMixin {
     @Shadow private Component name;
     // @formatter:on
 
-    @Redirect(method = "performCommand", at = @At(value = "INVOKE", target = "Lnet/minecraft/commands/Commands;performCommand(Lnet/minecraft/commands/CommandSourceStack;Ljava/lang/String;)I"))
+    @Redirect(method = "performCommand", at = @At(value = "INVOKE", target = "Lnet/minecraft/commands/Commands;performPrefixedCommand(Lnet/minecraft/commands/CommandSourceStack;Ljava/lang/String;)I"))
     private int arclight$serverCommand(Commands commands, CommandSourceStack sender, String command) {
         Joiner joiner = Joiner.on(" ");
         if (command.startsWith("/")) {
@@ -54,13 +53,13 @@ public class CommandBlockLogicMixin {
             args[0] = "minecraft:" + args[0];
         }
 
-        return commands.performCommand(sender, joiner.join(args));
+        return commands.performPrefixedCommand(sender, joiner.join(args));
     }
 
     @Inject(method = "setName", at = @At("RETURN"))
     public void arclight$setName(Component nameIn, CallbackInfo ci) {
         if (this.name == null) {
-            this.name = new TextComponent("@");
+            this.name = Component.literal("@");
         }
     }
 }

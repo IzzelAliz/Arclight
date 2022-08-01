@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.inventory;
 
 import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.util.IWorldPosCallableBridge;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.inventory.DataSlot;
@@ -181,7 +181,7 @@ public abstract class RepairContainerMixin extends ItemCombinerMixin {
             } else if (!this.itemName.equals(itemstack.getHoverName().getString())) {
                 k = 1;
                 i += k;
-                itemstack1.setHoverName(new TextComponent(this.itemName));
+                itemstack1.setHoverName(Component.literal(this.itemName));
             }
             if (flag && !itemstack1.isBookEnchantable(itemstack2)) itemstack1 = ItemStack.EMPTY;
 

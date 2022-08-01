@@ -35,7 +35,7 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
 
     // @formatter:off
     @Shadow public Map<RecipeType<?>, Map<ResourceLocation, Recipe<?>>> recipes;
-    @Shadow protected abstract <C extends Container, T extends Recipe<C>> Map<ResourceLocation, Recipe<C>> byType(RecipeType<T> recipeTypeIn);
+    @Shadow protected abstract <C extends Container, T extends Recipe<C>> Map<ResourceLocation, T> byType(RecipeType<T> p_44055_);
     @Shadow private boolean hasErrors;
     @Shadow @Final private static Logger LOGGER;
     @Shadow(remap = false) public static Recipe<?> fromJson(ResourceLocation recipeId, JsonObject json, ICondition.IContext context) { return null; }
@@ -65,7 +65,7 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
 
             try {
                 if (entry.getValue().isJsonObject() && !CraftingHelper.processConditions(entry.getValue().getAsJsonObject(), "conditions", this.context)) {
-                    LOGGER.info("Skipping loading recipe {} as it's conditions were not met", resourcelocation);
+                    LOGGER.debug("Skipping loading recipe {} as it's conditions were not met", resourcelocation);
                     continue;
                 }
                 Recipe<?> irecipe = fromJson(resourcelocation, GsonHelper.convertToJsonObject(entry.getValue(), "top element"), this.context);
@@ -92,8 +92,8 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
      */
     @Overwrite
     public <C extends Container, T extends Recipe<C>> Optional<T> getRecipeFor(RecipeType<T> recipeTypeIn, C inventoryIn, Level worldIn) {
-        Optional<T> optional = this.byType(recipeTypeIn).values().stream().flatMap((p_44064_) -> {
-            return recipeTypeIn.tryMatch(p_44064_, worldIn, inventoryIn).stream();
+        Optional<T> optional = this.byType(recipeTypeIn).values().stream().filter((recipe) -> {
+            return recipe.matches(inventoryIn, worldIn);
         }).findFirst();
         ((IInventoryBridge) inventoryIn).setCurrentRecipe(optional.orElse(null));
         return optional;

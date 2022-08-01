@@ -17,7 +17,7 @@ import java.nio.file.Path;
 @Mixin(LevelStorageSource.LevelStorageAccess.class)
 public class LevelStorageSource_LevelStorageAccessMixin implements LevelStorageSourceBridge.LevelStorageAccessBridge {
 
-    @Shadow @Final public Path levelPath;
+    @Shadow @Final LevelStorageSource.LevelDirectory levelDirectory;
 
     public ResourceKey<LevelStem> dimensionType;
 
@@ -43,11 +43,11 @@ public class LevelStorageSource_LevelStorageAccessMixin implements LevelStorageS
     @Inject(method = "getDimensionPath", cancellable = true, at = @At("HEAD"))
     private void arclight$useActualType(ResourceKey<Level> dimensionKey, CallbackInfoReturnable<Path> cir) {
         if (dimensionType == LevelStem.OVERWORLD) {
-            cir.setReturnValue(this.levelPath);
+            cir.setReturnValue(this.levelDirectory.path());
         } else if (dimensionType == LevelStem.NETHER) {
-            cir.setReturnValue(this.levelPath.resolve("DIM-1"));
+            cir.setReturnValue(this.levelDirectory.path().resolve("DIM-1"));
         } else if (dimensionType == LevelStem.END) {
-            cir.setReturnValue(this.levelPath.resolve("DIM1"));
+            cir.setReturnValue(this.levelDirectory.path().resolve("DIM1"));
         }
     }
 }

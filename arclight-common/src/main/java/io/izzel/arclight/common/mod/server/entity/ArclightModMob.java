@@ -15,7 +15,7 @@ public class ArclightModMob extends CraftMob {
 
     public ArclightModMob(CraftServer server, Mob entity) {
         super(server, entity);
-        this.entityType = EntityType.valueOf(ResourceLocationUtil.standardize(ForgeRegistries.ENTITIES.getKey(entity.getType())));
+        this.entityType = EntityType.valueOf(ResourceLocationUtil.standardize(ForgeRegistries.ENTITY_TYPES.getKey(entity.getType())));
     }
 
     @Override

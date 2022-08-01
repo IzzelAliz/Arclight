@@ -33,7 +33,8 @@ public abstract class DistanceManagerMixin implements TicketManagerBridge {
     @Shadow private static int getTicketLevelAt(SortedArraySet<Ticket<?>> p_229844_0_) { return 0; }
     @Shadow @Final public Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> tickets;
     @Shadow abstract TickingTracker tickingTracker();
-    @Shadow@Final private Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> forcedTickets;@Invoker("purgeStaleTickets") public abstract void bridge$tick();
+    @Shadow @Final private Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> forcedTickets;
+    @Invoker("purgeStaleTickets") public abstract void bridge$tick();
     // @formatter:on
 
     @Inject(method = "removePlayer", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", remap = false, target = "Lit/unimi/dsi/fastutil/objects/ObjectSet;remove(Ljava/lang/Object;)Z"))

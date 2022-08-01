@@ -9,7 +9,6 @@ import net.minecraft.SharedConstants;
 import net.minecraft.network.Connection;
 import net.minecraft.network.ConnectionProtocol;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.network.protocol.handshake.ClientIntentionPacket;
 import net.minecraft.network.protocol.login.ClientboundLoginDisconnectPacket;
 import net.minecraft.server.MinecraftServer;
@@ -61,7 +60,7 @@ public class ServerHandshakeNetHandlerMixin {
                     synchronized (throttleTracker) {
                         if (throttleTracker.containsKey(address) && !"127.0.0.1".equals(address.getHostAddress()) && currentTime - throttleTracker.get(address) < connectionThrottle) {
                             throttleTracker.put(address, currentTime);
-                            TranslatableComponent component = new TranslatableComponent("Connection throttled! Please wait before reconnecting.");
+                            var component = Component.translatable("Connection throttled! Please wait before reconnecting.");
                             this.connection.send(new ClientboundLoginDisconnectPacket(component));
                             this.connection.disconnect(component);
                             return;
@@ -79,13 +78,13 @@ public class ServerHandshakeNetHandlerMixin {
 
 
                 if (packetIn.getProtocolVersion() > SharedConstants.getCurrentVersion().getProtocolVersion()) {
-                    TranslatableComponent component = new TranslatableComponent(MessageFormat.format(SpigotConfig.outdatedServerMessage.replaceAll("'", "''"), SharedConstants.getCurrentVersion().getName()));
+                    var component = Component.translatable(MessageFormat.format(SpigotConfig.outdatedServerMessage.replaceAll("'", "''"), SharedConstants.getCurrentVersion().getName()));
                     this.connection.send(new ClientboundLoginDisconnectPacket(component));
                     this.connection.disconnect(component);
                     break;
                 }
                 if (packetIn.getProtocolVersion() < SharedConstants.getCurrentVersion().getProtocolVersion()) {
-                    TranslatableComponent component = new TranslatableComponent(MessageFormat.format(SpigotConfig.outdatedClientMessage.replaceAll("'", "''"), SharedConstants.getCurrentVersion().getName()));
+                    var component = Component.translatable(MessageFormat.format(SpigotConfig.outdatedClientMessage.replaceAll("'", "''"), SharedConstants.getCurrentVersion().getName()));
                     this.connection.send(new ClientboundLoginDisconnectPacket(component));
                     this.connection.disconnect(component);
                     break;
@@ -100,7 +99,7 @@ public class ServerHandshakeNetHandlerMixin {
                         this.connection.address = new InetSocketAddress(split[1], ((InetSocketAddress) this.connection.getRemoteAddress()).getPort());
                         ((NetworkManagerBridge) this.connection).bridge$setSpoofedUUID(UUIDTypeAdapter.fromString(split[2]));
                     } else {
-                        TranslatableComponent component = new TranslatableComponent("If you wish to use IP forwarding, please enable it in your BungeeCord config as well!");
+                        var component = Component.literal("If you wish to use IP forwarding, please enable it in your BungeeCord config as well!");
                         this.connection.send(new ClientboundLoginDisconnectPacket(component));
                         this.connection.disconnect(component);
                         return;

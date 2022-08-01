@@ -30,11 +30,12 @@ import java.util.List;
 import java.util.function.Predicate;
 
 @Mixin(BoatItem.class)
-public class BoatItemMixin extends Item {
+public abstract class BoatItemMixin extends Item {
 
     // @formatter:off
     @Shadow @Final private static Predicate<Entity> ENTITY_PREDICATE;
     @Shadow @Final private Boat.Type type;
+    @Shadow protected abstract Boat getBoat(Level p_220017_, HitResult p_220018_);
     // @formatter:on
 
     public BoatItemMixin(Properties properties) {
@@ -75,7 +76,7 @@ public class BoatItemMixin extends Item {
                     }
                 }
 
-                Boat boatentity = new Boat(worldIn, result.getLocation().x, result.getLocation().y, result.getLocation().z);
+                Boat boatentity = this.getBoat(worldIn, result);
                 boatentity.setType(this.type);
                 boatentity.setYRot(playerIn.getYRot());
                 if (!worldIn.noCollision(boatentity, boatentity.getBoundingBox().inflate(-0.1D))) {

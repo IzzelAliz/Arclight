@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.monster.EnderMan;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -13,8 +14,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.util.Random;
-
 @Mixin(targets = "net.minecraft.world.entity.monster.EnderMan$EndermanTakeBlockGoal")
 public class EnderMan_EndermanTakeBlockGoalMixin {
 
@@ -24,7 +23,7 @@ public class EnderMan_EndermanTakeBlockGoalMixin {
 
     @Inject(method = "tick", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/EnderMan;setCarriedBlock(Lnet/minecraft/world/level/block/state/BlockState;)V"))
-    private void arclight$entityChangeBlock(CallbackInfo ci, Random random, Level world, int i, int j, int k, BlockPos blockPos) {
+    private void arclight$entityChangeBlock(CallbackInfo ci, RandomSource random, Level world, int i, int j, int k, BlockPos blockPos) {
         if (CraftEventFactory.callEntityChangeBlockEvent(this.enderman, blockPos, Blocks.AIR.defaultBlockState()).isCancelled()) {
             ci.cancel();
         }

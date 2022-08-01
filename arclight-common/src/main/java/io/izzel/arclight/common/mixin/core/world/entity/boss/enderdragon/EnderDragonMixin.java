@@ -10,10 +10,11 @@ import net.minecraft.world.entity.boss.enderdragon.phases.DragonPhaseInstance;
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.dimension.end.EndDragonFight;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.AABB;
@@ -22,16 +23,21 @@ import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(EnderDragon.class)
 public abstract class EnderDragonMixin extends MobMixin {
+
+    @Shadow @Final @Nullable private EndDragonFight dragonFight;
 
     private Explosion explosionSource = new Explosion(null, (EnderDragon) (Object) this, null, null, Double.NaN, Double.NaN, Double.NaN, Float.NaN, true, Explosion.BlockInteraction.DESTROY);
 
@@ -71,7 +77,7 @@ public abstract class EnderDragonMixin extends MobMixin {
                 for (int i3 = k; i3 <= j2; ++i3) {
                     final BlockPos blockposition = new BlockPos(k2, l2, i3);
                     final BlockState iblockdata = this.level.getBlockState(blockposition);
-                    if (!iblockdata.isAir() && iblockdata.getMaterial() != Material.FIRE) {
+                    if (!iblockdata.isAir() && !iblockdata.is(BlockTags.DRAGON_TRANSPARENT)) {
                         if (net.minecraftforge.common.ForgeHooks.canEntityDestroy(this.level, blockposition, (EnderDragon) (Object) this) && !iblockdata.is(BlockTags.DRAGON_IMMUNE)) {
                             flag2 = true;
                             destroyedBlocks.add(CraftBlock.at(this.level, blockposition));
@@ -106,11 +112,11 @@ public abstract class EnderDragonMixin extends MobMixin {
                 final net.minecraft.world.level.block.Block nmsBlock = craftBlock.getNMS().getBlock();
                 if (nmsBlock.dropFromExplosion(this.explosionSource)) {
                     BlockEntity tileentity = craftBlock.getNMS().hasBlockEntity() ? this.level.getBlockEntity(blockposition2) : null;
-                    LootContext.Builder loottableinfo_builder = new LootContext.Builder((ServerLevel)this.level).withRandom(this.level.random).withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(blockposition2)).withParameter(LootContextParams.TOOL, ItemStack.EMPTY).withParameter(LootContextParams.EXPLOSION_RADIUS, 1.0f / event.getYield()).withOptionalParameter(LootContextParams.BLOCK_ENTITY, tileentity);
+                    LootContext.Builder loottableinfo_builder = new LootContext.Builder((ServerLevel) this.level).withRandom(this.level.random).withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(blockposition2)).withParameter(LootContextParams.TOOL, ItemStack.EMPTY).withParameter(LootContextParams.EXPLOSION_RADIUS, 1.0f / event.getYield()).withOptionalParameter(LootContextParams.BLOCK_ENTITY, tileentity);
                     for (ItemStack stack : craftBlock.getNMS().getDrops(loottableinfo_builder)) {
                         Block.popResource(this.level, blockposition2, stack);
                     }
-                    craftBlock.getNMS().spawnAfterBreak((ServerLevel) this.level, blockposition2, ItemStack.EMPTY);
+                    craftBlock.getNMS().spawnAfterBreak((ServerLevel) this.level, blockposition2, ItemStack.EMPTY, false);
                     // net.minecraft.block.Block.spawnDrops(craftBlock.getNMS(), loottableinfo_builder);
                 }
                 nmsBlock.wasExploded(this.level, blockposition2, this.explosionSource);
@@ -124,4 +130,17 @@ public abstract class EnderDragonMixin extends MobMixin {
         return flag;
     }
 
+    // TODO FIXME: exp patch for end dragon
+    @Override
+    public int getExpReward() {
+        // CraftBukkit - Moved from #tickDeath method
+        boolean flag = this.level.getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT);
+        short short0 = 500;
+
+        if (this.dragonFight != null && !this.dragonFight.hasPreviouslyKilledDragon()) {
+            short0 = 12000;
+        }
+
+        return flag ? short0 : 0;
+    }
 }

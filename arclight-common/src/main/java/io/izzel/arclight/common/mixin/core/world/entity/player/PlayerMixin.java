@@ -13,6 +13,7 @@ import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.LivingEntityMixin;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -43,6 +44,7 @@ import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.ProfilePublicKey;
 import net.minecraft.world.food.FoodData;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -87,6 +89,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.List;
+import java.util.Optional;
 
 @Mixin(net.minecraft.world.entity.player.Player.class)
 public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEntityBridge, IForgePlayer {
@@ -127,13 +130,15 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
     @Shadow public abstract GameProfile getGameProfile();
     @Shadow public abstract Inventory getInventory();
     @Shadow public abstract Abilities getAbilities();
+    @Shadow public abstract void setLastDeathLocation(Optional<GlobalPos> p_219750_);
+    @Shadow public abstract Optional<GlobalPos> getLastDeathLocation();
     // @formatter:on
 
     public boolean fauxSleeping;
     public int oldLevel;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void arclight$init(Level p_i241920_1_, BlockPos p_i241920_2_, float p_i241920_3_, GameProfile p_i241920_4_, CallbackInfo ci) {
+    private void arclight$init(Level p_219727_, BlockPos p_219728_, float p_219729_, GameProfile p_219730_, ProfilePublicKey p_219731_, CallbackInfo ci) {
         oldLevel = -1;
         ((FoodStatsBridge) this.foodData).bridge$setEntityHuman((net.minecraft.world.entity.player.Player) (Object) this);
         ((IInventoryBridge) this.enderChestInventory).setOwner(this.getBukkitEntity());
@@ -418,7 +423,11 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
 
     public Either<net.minecraft.world.entity.player.Player.BedSleepingProblem, Unit> startSleepInBed(BlockPos at, boolean force) {
         this.arclight$forceSleep = force;
-        return this.startSleepInBed(at);
+        try {
+            return this.startSleepInBed(at);
+        } finally {
+            this.arclight$forceSleep = false;
+        }
     }
 
     @Override
@@ -545,16 +554,14 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
     }
 
     @Override
-    public void setItemSlot(EquipmentSlot slotIn, ItemStack stack, boolean silent) {
-        if (slotIn == EquipmentSlot.MAINHAND) {
-            this.bridge$playEquipSound(stack, silent);
-            this.inventory.items.set(this.inventory.selected, stack);
-        } else if (slotIn == EquipmentSlot.OFFHAND) {
-            this.bridge$playEquipSound(stack, silent);
-            this.inventory.offhand.set(0, stack);
-        } else if (slotIn.getType() == EquipmentSlot.Type.ARMOR) {
-            this.bridge$playEquipSound(stack, silent);
-            this.inventory.armor.set(slotIn.getIndex(), stack);
+    public void setItemSlot(EquipmentSlot slot, ItemStack stack, boolean silent) {
+        this.verifyEquippedItem(stack);
+        if (slot == EquipmentSlot.MAINHAND) {
+            this.equipEventAndSound(slot, this.inventory.items.set(this.inventory.selected, stack), stack, silent);
+        } else if (slot == EquipmentSlot.OFFHAND) {
+            this.equipEventAndSound(slot, this.inventory.offhand.set(0, stack), stack, silent);
+        } else if (slot.getType() == EquipmentSlot.Type.ARMOR) {
+            this.equipEventAndSound(slot, this.inventory.armor.set(slot.getIndex(), stack), stack, silent);
         }
     }
 

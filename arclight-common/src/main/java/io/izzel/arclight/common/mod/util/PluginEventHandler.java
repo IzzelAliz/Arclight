@@ -2,7 +2,6 @@ package io.izzel.arclight.common.mod.util;
 
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.ArclightMod;
-import net.minecraftforge.eventbus.ASMEventHandler;
 import net.minecraftforge.eventbus.EventBus;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -19,6 +18,8 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.WildcardType;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
@@ -27,30 +28,52 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static org.objectweb.asm.Opcodes.*;
 
-public class PluginEventHandler extends ASMEventHandler {
+public class PluginEventHandler implements IEventListener {
 
     private static final String HANDLER_DESC = Type.getInternalName(IEventListener.class);
     private static final String HANDLER_FUNC_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Event.class));
     private static final MethodHandle MH_GET_LISTENERS;
     private static final MethodHandle MH_ADD_LISTENERS;
-    private static final MethodHandle MH_UNIQUE_NAME;
 
     static {
         try {
             MH_GET_LISTENERS = Unsafe.lookup().findGetter(EventBus.class, "listeners", ConcurrentHashMap.class);
             MH_ADD_LISTENERS = Unsafe.lookup().findVirtual(EventBus.class, "addToListeners", MethodType.methodType(void.class,
                 Object.class, Class.class, IEventListener.class, EventPriority.class));
-            MH_UNIQUE_NAME = Unsafe.lookup().findVirtual(ASMEventHandler.class, "getUniqueName", MethodType.methodType(String.class, Method.class));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private final Plugin plugin;
+    private final IEventListener handler;
+    private final SubscribeEvent subInfo;
+    private java.lang.reflect.Type filter = null;
+    private String readable;
 
-    public PluginEventHandler(Plugin plugin, Object target, Method method, boolean isGeneric) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
-        super(target, method, isGeneric);
-        this.plugin = plugin;
+
+    public PluginEventHandler(Plugin plugin, Object target, Method method, boolean isGeneric) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        if (Modifier.isStatic(method.getModifiers())) {
+            handler = (IEventListener) createWrapper(method).getDeclaredConstructor().newInstance();
+        } else {
+            handler = (IEventListener) createWrapper(method).getConstructor(Object.class).newInstance(target);
+        }
+        subInfo = method.getAnnotation(SubscribeEvent.class);
+        readable = "PL: " + plugin.getName() + " ASM: " + target + " " + method.getName() + Type.getMethodDescriptor(method);
+        if (isGeneric) {
+            java.lang.reflect.Type type = method.getGenericParameterTypes()[0];
+            if (type instanceof ParameterizedType) {
+                filter = ((ParameterizedType) type).getActualTypeArguments()[0];
+                if (filter instanceof ParameterizedType) // Unlikely that nested generics will ever be relevant for event filtering, so discard them
+                {
+                    filter = ((ParameterizedType) filter).getRawType();
+                } else if (filter instanceof WildcardType wfilter) {
+                    // If there's a wildcard filter of Object.class, then remove the filter.
+                    if (wfilter.getUpperBounds().length == 1 && wfilter.getUpperBounds()[0] == Object.class && wfilter.getLowerBounds().length == 0) {
+                        filter = null;
+                    }
+                }
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -123,26 +146,26 @@ public class PluginEventHandler extends ASMEventHandler {
 
     private static void register(Class<?> eventType, Object target, Method method, Plugin plugin, EventBus bus) {
         try {
-            ASMEventHandler asm = new PluginEventHandler(plugin, target, method, IGenericEvent.class.isAssignableFrom(eventType));
+            var asm = new PluginEventHandler(plugin, target, method, IGenericEvent.class.isAssignableFrom(eventType));
             MH_ADD_LISTENERS.invokeExact(bus, target, eventType, (IEventListener) asm, asm.getPriority());
         } catch (Throwable e) {
             ArclightMod.LOGGER.error("Error registering event handler: {} {}", eventType, method, e);
         }
     }
 
-    @Override
+    private String getUniqueName(Method callback) {
+        return String.format("%s.__%s_%s_%s", callback.getDeclaringClass().getPackageName(), callback.getDeclaringClass().getSimpleName(),
+            callback.getName(),
+            callback.getParameterTypes()[0].getSimpleName());
+    }
+
     public Class<?> createWrapper(Method callback) {
 
         ClassWriter cw = new ClassWriter(0);
         MethodVisitor mv;
 
         boolean isStatic = Modifier.isStatic(callback.getModifiers());
-        String name;
-        try {
-            name = (String) MH_UNIQUE_NAME.invoke(this, callback);
-        } catch (Throwable throwable) {
-            throw new RuntimeException(throwable);
-        }
+        String name = getUniqueName(callback);
         String desc = name.replace('.', '/');
         String instType = Type.getInternalName(callback.getDeclaringClass());
         String eventType = Type.getInternalName(callback.getParameterTypes()[0]);
@@ -188,8 +211,24 @@ public class PluginEventHandler extends ASMEventHandler {
         return Unsafe.defineClass(name, bytes, 0, bytes.length, callback.getDeclaringClass().getClassLoader(), callback.getDeclaringClass().getProtectionDomain());
     }
 
+    public EventPriority getPriority() {
+        return subInfo.priority();
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public void invoke(Event event) {
+        if (handler != null) {
+            if (!event.isCancelable() || !event.isCanceled() || subInfo.receiveCanceled()) {
+                if (filter == null || filter == ((IGenericEvent) event).getGenericType()) {
+                    handler.invoke(event);
+                }
+            }
+        }
+    }
+
     @Override
     public String toString() {
-        return "PL:" + plugin.getName() + " " + super.toString();
+        return readable;
     }
 }

@@ -5,6 +5,7 @@ import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.inventory.container.PosContainerBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
@@ -36,6 +37,14 @@ public class ArclightContainer {
 
     public static CraftInventory createInv(Player containerOwner, AbstractContainerMenu container) {
         return new CraftInventory(new ContainerInvWrapper(container, containerOwner));
+    }
+
+    public static SimpleContainer copyOf(SimpleContainer container) {
+        var copy = new SimpleContainer(container.getContainerSize());
+        for (int slot = 0; slot < container.getContainerSize(); slot++) {
+            copy.items.set(slot, container.items.get(slot).copy());
+        }
+        return copy;
     }
 
     private static class ContainerInvWrapper implements Container, IInventoryBridge {

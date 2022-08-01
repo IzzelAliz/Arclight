@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.inventory;
 import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.inventory.CraftingInventoryBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -36,7 +36,7 @@ public abstract class PlayerContainerMixin extends AbstractContainerMenuMixin {
         this.playerInventory = playerInventory;
         ((CraftingInventoryBridge) this.craftSlots).bridge$setOwner(playerInventory.player);
         ((CraftingInventoryBridge) this.craftSlots).bridge$setResultInventory(this.resultSlots);
-        this.setTitle(new TranslatableComponent("container.crafting"));
+        this.setTitle(Component.translatable("container.crafting"));
     }
 
     @Inject(method = "slotsChanged", at = @At("HEAD"))

@@ -14,7 +14,7 @@ public class ArclightModMinecart extends CraftMinecart {
 
     public ArclightModMinecart(CraftServer server, AbstractMinecart entity) {
         super(server, entity);
-        this.entityType = EntityType.valueOf(ResourceLocationUtil.standardize(ForgeRegistries.ENTITIES.getKey(entity.getType())));
+        this.entityType = EntityType.valueOf(ResourceLocationUtil.standardize(ForgeRegistries.ENTITY_TYPES.getKey(entity.getType())));
     }
 
     @Override

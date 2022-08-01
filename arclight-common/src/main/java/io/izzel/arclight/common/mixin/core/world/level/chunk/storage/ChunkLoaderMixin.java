@@ -17,7 +17,7 @@ import java.util.List;
 @Mixin(ChunkStorage.class)
 public abstract class ChunkLoaderMixin {
 
-    @Redirect(method = "upgradeChunkTag", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/structure/LegacyStructureDataHandler;getLegacyStructureHandler(Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/storage/DimensionDataStorage;)Lnet/minecraft/world/level/levelgen/structure/LegacyStructureDataHandler;"))
+    @Redirect(method = "getLegacyStructureHandler", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/structure/LegacyStructureDataHandler;getLegacyStructureHandler(Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/storage/DimensionDataStorage;)Lnet/minecraft/world/level/levelgen/structure/LegacyStructureDataHandler;"))
     private LegacyStructureDataHandler arclight$legacyData(ResourceKey<Level> p_236992_0_, DimensionDataStorage p_236992_1_) {
         return legacyDataOf(p_236992_0_, p_236992_1_);
     }

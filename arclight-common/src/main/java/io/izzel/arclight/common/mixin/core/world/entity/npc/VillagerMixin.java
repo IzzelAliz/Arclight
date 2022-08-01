@@ -4,7 +4,6 @@ import io.izzel.arclight.common.bridge.core.item.MerchantOfferBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LightningBolt;
-import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.entity.monster.Witch;
 import net.minecraft.world.item.trading.MerchantOffer;
 import org.bukkit.Bukkit;
@@ -19,7 +18,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(net.minecraft.world.entity.npc.Villager.class)
@@ -57,8 +55,13 @@ public abstract class VillagerMixin extends AbstractVillagerMixin {
         }
     }
 
-    @Inject(method = "trySpawnGolem", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V"))
-    private void arclight$ironGolemReason(ServerLevel world, CallbackInfoReturnable<IronGolem> cir) {
+    @Inject(method = "spawnGolemIfNeeded", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/SpawnUtil;trySpawnMob(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/entity/MobSpawnType;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;IIILnet/minecraft/util/SpawnUtil$Strategy;)Ljava/util/Optional;"))
+    private void arclight$ironGolemReason(ServerLevel world, long p_35399_, int p_35400_, CallbackInfo ci) {
         ((WorldBridge) world).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.VILLAGE_DEFENSE);
+    }
+
+    @Inject(method = "spawnGolemIfNeeded", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/util/SpawnUtil;trySpawnMob(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/entity/MobSpawnType;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;IIILnet/minecraft/util/SpawnUtil$Strategy;)Ljava/util/Optional;"))
+    private void arclight$ironGolemReasonReset(ServerLevel world, long p_35399_, int p_35400_, CallbackInfo ci) {
+        ((WorldBridge) world).bridge$pushAddEntityReason(null);
     }
 }

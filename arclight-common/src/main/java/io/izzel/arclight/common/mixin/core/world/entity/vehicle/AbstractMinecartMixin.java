@@ -18,6 +18,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseRailBlock;
 import net.minecraft.world.level.block.PoweredRailBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -107,6 +108,7 @@ public abstract class AbstractMinecartMixin extends EntityMixin {
         this.setHurtTime(10);
         this.markHurt();
         this.setDamage(this.getDamage() + amount * 10.0f);
+        this.gameEvent(GameEvent.ENTITY_DAMAGE, source.getEntity());
         boolean flag = source.getEntity() instanceof Player && ((Player) source.getEntity()).getAbilities().instabuild;
         if (flag || this.getDamage() > 40.0f) {
             VehicleDestroyEvent destroyEvent = new VehicleDestroyEvent(vehicle, passenger);

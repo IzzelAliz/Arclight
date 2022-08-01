@@ -6,7 +6,6 @@ import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBrid
 import io.izzel.arclight.common.bridge.core.world.ServerEntityBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientboundAddMobPacket;
 import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundRotateHeadPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
@@ -17,6 +16,7 @@ import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
 import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket;
 import net.minecraft.network.protocol.game.ClientboundUpdateMobEffectPacket;
+import net.minecraft.network.protocol.game.VecDeltaCodec;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerEntity;
 import net.minecraft.server.level.ServerLevel;
@@ -69,12 +69,9 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
     @Shadow @Final private int updateInterval;
     @Shadow private int yRotp;
     @Shadow private int xRotp;
-    @Shadow protected abstract void updateSentPos();
+    @Shadow @Final private VecDeltaCodec positionCodec;
     @Shadow private boolean wasRiding;
     @Shadow private int teleportDelay;
-    @Shadow private long xp;
-    @Shadow private long yp;
-    @Shadow private long zp;
     @Shadow private boolean wasOnGround;
     @Shadow @Final private boolean trackDelta;
     @Shadow private Vec3 ap;
@@ -150,29 +147,22 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
                     this.yRotp = i1;
                     this.xRotp = l1;
                 }
-                this.updateSentPos();
+                this.positionCodec.setBase(this.entity.trackingPosition());
                 this.sendDirtyEntityData();
                 this.wasRiding = true;
             } else {
                 this.teleportDelay += elapsedTicks;
                 int l = Mth.floor(this.entity.getYRot() * 256.0F / 360.0F);
                 int k1 = Mth.floor(this.entity.getXRot() * 256.0F / 360.0F);
-                Vec3 vector3d = this.entity.position().subtract(ClientboundMoveEntityPacket.packetToEntity(this.xp, this.yp, this.zp));
-                boolean flag3 = vector3d.lengthSqr() >= (double) 7.6293945E-6F;
+                Vec3 vector3d = this.entity.trackingPosition();
+                boolean flag3 = this.positionCodec.delta(vector3d).lengthSqr() >= 7.62939453125E-6D;
                 Packet<?> ipacket1 = null;
                 boolean flag4 = flag3 || this.tickCount / 60 != this.lastPosUpdate;
                 boolean flag = Math.abs(l - this.yRotp) >= 1 || Math.abs(k1 - this.xRotp) >= 1;
-                if (flag4) {
-                    this.updateSentPos();
-                }
-                if (flag) {
-                    this.yRotp = l;
-                    this.xRotp = k1;
-                }
                 if (this.tickCount > 0 || this.entity instanceof AbstractArrow) {
-                    long i = ClientboundMoveEntityPacket.entityToPacket(vector3d.x);
-                    long j = ClientboundMoveEntityPacket.entityToPacket(vector3d.y);
-                    long k = ClientboundMoveEntityPacket.entityToPacket(vector3d.z);
+                    long i = this.positionCodec.encodeX(vector3d);
+                    long j = this.positionCodec.encodeY(vector3d);
+                    long k = this.positionCodec.encodeZ(vector3d);
                     boolean flag1 = i < -32768L || i > 32767L || j < -32768L || j > 32767L || k < -32768L || k > 32767L;
                     if (!flag1 && this.teleportDelay <= 400 && !this.wasRiding && this.wasOnGround == this.entity.isOnGround()) {
                         if ((!flag4 || !flag) && !(this.entity instanceof AbstractArrow)) {
@@ -202,6 +192,13 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
                     this.broadcast.accept(ipacket1);
                 }
                 this.sendDirtyEntityData();
+                if (flag4) {
+                    this.positionCodec.setBase(vector3d);
+                }
+                if (flag) {
+                    this.yRotp = l;
+                    this.xRotp = k1;
+                }
                 this.wasRiding = false;
             }
             int j1 = Mth.floor(this.entity.getYHeadRot() * 256.0F / 360.0F);
@@ -279,7 +276,7 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
             }
         }
         this.ap = this.entity.getDeltaMovement();
-        if (flag && !(packet instanceof ClientboundAddMobPacket)) {
+        if (flag && !(this.entity instanceof LivingEntity)) {
             consumer.accept(new ClientboundSetEntityMotionPacket(this.entity.getId(), this.ap));
         }
         if (this.entity instanceof LivingEntity) {

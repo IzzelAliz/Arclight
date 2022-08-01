@@ -15,7 +15,7 @@ public class ArclightModProjectile extends CraftProjectile {
 
     public ArclightModProjectile(CraftServer server, Entity entity) {
         super(server, (Projectile) entity);
-        this.entityType = EntityType.valueOf(ResourceLocationUtil.standardize(ForgeRegistries.ENTITIES.getKey(entity.getType())));
+        this.entityType = EntityType.valueOf(ResourceLocationUtil.standardize(ForgeRegistries.ENTITY_TYPES.getKey(entity.getType())));
     }
 
     @Override

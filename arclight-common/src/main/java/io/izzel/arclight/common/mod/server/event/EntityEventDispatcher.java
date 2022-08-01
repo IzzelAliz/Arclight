@@ -22,13 +22,13 @@ public class EntityEventDispatcher {
 
     @SubscribeEvent(receiveCanceled = true)
     public void onLivingDeath(LivingDropsEvent event) {
-        if (event.getEntityLiving() instanceof ServerPlayer) {
+        if (event.getEntity() instanceof ServerPlayer) {
             // handled at ServerPlayerEntityMixin#onDeath
             // Cancelled at io.izzel.arclight.common.mixin.core.world.entity.LivingEntityMixin#arclight$cancelEvent
             // event.setCanceled(true);
             return;
         }
-        LivingEntity livingEntity = event.getEntityLiving();
+        LivingEntity livingEntity = event.getEntity();
         Collection<ItemEntity> drops = event.getDrops();
         if (!(drops instanceof ArrayList)) {
             drops = new ArrayList<>(drops);

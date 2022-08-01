@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
 import io.izzel.arclight.api.ArclightVersion;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.monster.Silverfish;
 import net.minecraft.world.level.Level;
@@ -15,8 +16,6 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-
-import java.util.Random;
 
 @Mixin(targets = "net.minecraft.world.entity.monster.Silverfish$SilverfishWakeUpFriendsGoal")
 public abstract class Silverfish_WakeUpFriendsGoalMixin extends Goal {
@@ -33,7 +32,7 @@ public abstract class Silverfish_WakeUpFriendsGoalMixin extends Goal {
         --this.lookForFriends;
         if (this.lookForFriends <= 0) {
             Level world = this.silverfish.level;
-            Random random = this.silverfish.getRandom();
+            RandomSource random = this.silverfish.getRandom();
             BlockPos blockpos = this.silverfish.blockPosition();
 
             for (int i = 0; i <= 5 && i >= -5; i = (i <= 0 ? 1 : 0) - i) {

@@ -461,7 +461,7 @@ public abstract class MaterialMixin implements MaterialBridge {
 
     private static int tryGetMaxStackSize(Item item) {
         try {
-            return item.getItemStackLimit(new ItemStack(item));
+            return item.getMaxStackSize(new ItemStack(item));
         } catch (Throwable t) {
             try {
                 return item.getMaxStackSize();

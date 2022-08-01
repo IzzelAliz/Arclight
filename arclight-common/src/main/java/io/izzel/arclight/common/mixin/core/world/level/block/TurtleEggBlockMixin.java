@@ -4,6 +4,7 @@ import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -27,8 +28,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.util.Random;
-
 @Mixin(TurtleEggBlock.class)
 public class TurtleEggBlockMixin {
 
@@ -36,7 +35,7 @@ public class TurtleEggBlockMixin {
 
     @Inject(method = "randomTick", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/server/level/ServerLevel;playSound(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/core/BlockPos;Lnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V"))
-    private void arclight$hatch(BlockState state, ServerLevel worldIn, BlockPos pos, Random random, CallbackInfo ci, int i) {
+    private void arclight$hatch(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random, CallbackInfo ci, int i) {
         if (!CraftEventFactory.handleBlockGrowEvent(worldIn, pos, state.setValue(HATCH, i + 1), 2)) {
             ci.cancel();
         }
@@ -48,7 +47,7 @@ public class TurtleEggBlockMixin {
     }
 
     @Inject(method = "randomTick", cancellable = true, at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/server/level/ServerLevel;playSound(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/core/BlockPos;Lnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V"))
-    private void arclight$born(BlockState state, ServerLevel worldIn, BlockPos pos, Random random, CallbackInfo ci) {
+    private void arclight$born(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random, CallbackInfo ci) {
         if (CraftEventFactory.callBlockFadeEvent(worldIn, pos, Blocks.AIR.defaultBlockState()).isCancelled()) {
             ci.cancel();
         } else {

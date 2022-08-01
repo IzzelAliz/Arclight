@@ -39,12 +39,13 @@ repositories {
     maven { url = 'https://files.minecraftforge.net/maven/' }
     maven { url = 'https://jitpack.io/' }
     maven { url = 'https://maven.izzel.io/releases' }
+    mavenCentral()
 }
 
 def embedLibs = [/*"org.spongepowered:mixin:$mixinVersion", */ 'org.yaml:snakeyaml:1.30',
-                 'org.xerial:sqlite-jdbc:3.36.0.3', 'mysql:mysql-connector-java:8.0.27',
+                 'org.xerial:sqlite-jdbc:3.36.0.3', 'mysql:mysql-connector-java:8.0.29',
                  /*'commons-lang:commons-lang:2.6',*/ 'com.googlecode.json-simple:json-simple:1.1.1',
-                 'org.apache.logging.log4j:log4j-jul:2.17.0', 'net.md-5:SpecialSource:1.11.0',
+                 'org.apache.logging.log4j:log4j-jul:2.17.2', 'net.md-5:SpecialSource:1.11.0',
                  'org.jline:jline-terminal-jansi:3.12.1', 'org.fusesource.jansi:jansi:1.18',
                  /*'org.jline:jline-terminal:3.12.1', 'org.jline:jline-reader:3.12.1',*/
                  'jline:jline:2.12.1', 'org.apache.maven:maven-resolver-provider:3.8.1',
@@ -61,18 +62,18 @@ def embedLibs = [/*"org.spongepowered:mixin:$mixinVersion", */ 'org.yaml:snakeya
                  'com.typesafe:config:1.3.1']
 
 dependencies {
-    implementation 'com.google.guava:guava:31.0.1-jre'
-    implementation 'org.ow2.asm:asm:9.2'
-    implementation 'org.ow2.asm:asm-tree:9.2'
-    implementation 'cpw.mods:modlauncher:9.0.7'
-    implementation 'cpw.mods:securejarhandler:0.9.45'
-    implementation 'net.minecraftforge:forgespi:4.0.9'
-    gson 'com.google.code.gson:gson:2.8.9'
-    implementation 'org.apache.logging.log4j:log4j-api:2.17.0'
-    implementation 'org.apache.logging.log4j:log4j-core:2.17.0'
-    implementation 'org.jetbrains:annotations:22.0.0'
+    implementation 'com.google.guava:guava:31.1-jre'
+    implementation 'org.ow2.asm:asm:9.3'
+    implementation 'org.ow2.asm:asm-tree:9.3'
+    implementation 'cpw.mods:modlauncher:9.0.24'
+    implementation 'cpw.mods:securejarhandler:2.1.4'
+    implementation 'net.minecraftforge:forgespi:6.0.0'
+    gson 'com.google.code.gson:gson:2.9.0'
+    implementation 'org.apache.logging.log4j:log4j-api:2.17.2'
+    implementation 'org.apache.logging.log4j:log4j-core:2.17.2'
+    implementation 'org.jetbrains:annotations:23.0.0'
     implementation 'org.spongepowered:mixin:0.8.3'
-    implementation 'org.apache.logging.log4j:log4j-jul:2.17.0'
+    implementation 'org.apache.logging.log4j:log4j-jul:2.17.2'
     for (def lib : embedLibs) {
         installer lib
     }
@@ -194,6 +195,22 @@ compileJava {
 
 compileApplaunchJava {
     sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_7
+}
+
+task runProdServer(type: JavaExec) {
+    classpath = files(tasks.jar)
+    systemProperties 'terminal.ansi': 'true'
+    systemProperties 'mixin.debug.export': 'true'
+    systemProperties 'arclight.alwaysExtract': 'true'
+    systemProperties 'arclight.remapper.dump': './.mixin.out/plugin_classes'
+    workingDir System.env.ARCLIGHT_PROD_DIR ?: file('run_prod')
+    maxHeapSize '4G'
+    args 'nogui'
+    standardInput System.in
+    javaLauncher.convention(javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(17)
+    })
+    dependsOn project(':arclight-common').tasks.build, project.tasks.build
 }
 
 publishing {

@@ -14,6 +14,7 @@ import org.bukkit.TreeType;
 import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityPotionEffectEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -240,6 +241,34 @@ public class ArclightCaptures {
     @SuppressWarnings("unchecked")
     public static <T extends BlockEntity> T getTickingBlockEntity() {
         return (T) tickingBlockEntity;
+    }
+
+    private static EntityPotionEffectEvent.Cause effectCause;
+
+    public static void captureEffectCause(EntityPotionEffectEvent.Cause cause) {
+        effectCause = cause;
+    }
+
+    public static EntityPotionEffectEvent.Cause getEffectCause() {
+        try {
+            return effectCause;
+        } finally {
+            effectCause = null;
+        }
+    }
+
+    private static BlockPos spreadPos;
+
+    public static void captureSpreadSource(BlockPos source) {
+        spreadPos = source.immutable();
+    }
+
+    public static BlockPos getSpreadPos() {
+        return spreadPos;
+    }
+
+    public static void resetSpreadSource() {
+        spreadPos = null;
     }
 
     private static void recapture(String type) {

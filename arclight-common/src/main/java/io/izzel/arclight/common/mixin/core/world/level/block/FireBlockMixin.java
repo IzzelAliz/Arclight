@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -26,8 +27,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.Random;
 
 @Mixin(FireBlock.class)
 public abstract class FireBlockMixin extends BaseFireBlockMixin implements FireBlockBridge {
@@ -57,7 +56,7 @@ public abstract class FireBlockMixin extends BaseFireBlockMixin implements FireB
     }
 
     @Inject(method = "tryCatchFire", cancellable = true, at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/level/Level;getBlockState(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;"))
-    public void arclight$blockBurn(Level worldIn, BlockPos pos, int chance, Random random, int age, Direction face, CallbackInfo ci) {
+    public void arclight$blockBurn(Level worldIn, BlockPos pos, int chance, RandomSource random, int age, Direction face, CallbackInfo ci) {
         Block theBlock = CraftBlock.at(worldIn, pos);
         Block sourceBlock = CraftBlock.at(worldIn, pos.relative(face));
         BlockBurnEvent event = new BlockBurnEvent(theBlock, sourceBlock);

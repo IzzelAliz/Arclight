@@ -6,6 +6,7 @@ import cpw.mods.jarhandling.impl.SimpleJarMetadata;
 import net.minecraftforge.forgespi.language.IModFileInfo;
 import net.minecraftforge.forgespi.locating.IModFile;
 import net.minecraftforge.forgespi.locating.IModLocator;
+import net.minecraftforge.forgespi.locating.IModProvider;
 import net.minecraftforge.forgespi.locating.ModFileFactory;
 
 import java.io.IOException;
@@ -33,8 +34,8 @@ public class ArclightLocator_Forge implements IModLocator {
     }
 
     @Override
-    public List<IModFile> scanMods() {
-        return List.of(arclight);
+    public List<ModFileOrException> scanMods() {
+        return List.of(new ModFileOrException(arclight, null));
     }
 
     @Override
@@ -65,7 +66,7 @@ public class ArclightLocator_Forge implements IModLocator {
         try {
             var cl = forName("net.minecraftforge.fml.loading.moddiscovery.ModFile");
             var lookup = MethodHandles.lookup();
-            var handle = lookup.findConstructor(cl, MethodType.methodType(void.class, SecureJar.class, IModLocator.class, ModFileFactory.ModFileInfoParser.class));
+            var handle = lookup.findConstructor(cl, MethodType.methodType(void.class, SecureJar.class, IModProvider.class, ModFileFactory.ModFileInfoParser.class));
             var version = System.getProperty("arclight.version");
             var path = Paths.get(".arclight", "mod_file", version + ".jar");
             var parserCl = forName("net.minecraftforge.fml.loading.moddiscovery.ModFileParser");

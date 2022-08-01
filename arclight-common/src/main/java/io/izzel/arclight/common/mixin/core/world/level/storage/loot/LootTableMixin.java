@@ -2,15 +2,17 @@ package io.izzel.arclight.common.mixin.core.world.level.storage.loot;
 
 import io.izzel.arclight.common.bridge.core.world.storage.loot.LootTableBridge;
 import io.izzel.arclight.mixin.Eject;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
-import org.slf4j.Logger;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.event.world.LootGenerateEvent;
+import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -18,22 +20,20 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
-import java.util.Random;
-import java.util.stream.Collectors;
 
 @Mixin(LootTable.class)
 public abstract class LootTableMixin implements LootTableBridge {
 
     // @formatter:off
-    @Shadow @Final private static Logger LOGGER;
-    @Shadow public abstract List<ItemStack> getRandomItems(LootContext context);
-    @Shadow protected abstract List<Integer> getAvailableSlots(Container inventory, Random rand);
-    @Shadow protected abstract void shuffleAndSplitItems(List<ItemStack> stacks, int emptySlotsCount, Random rand);
+    @Shadow @Final static Logger LOGGER;
+    @Shadow public abstract ObjectArrayList<ItemStack> getRandomItems(LootContext p_230923_);
+    @Shadow protected abstract List<Integer> getAvailableSlots(Container p_230920_, RandomSource p_230921_);
+    @Shadow protected abstract void shuffleAndSplitItems(ObjectArrayList<ItemStack> p_230925_, int p_230926_, RandomSource p_230927_);
     // @formatter:on
 
-    @Eject(method = "fill", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/loot/LootTable;getRandomItems(Lnet/minecraft/world/level/storage/loot/LootContext;)Ljava/util/List;"))
-    private List<ItemStack> arclight$nonPluginEvent(LootTable lootTable, LootContext context, CallbackInfo ci, Container inv) {
-        List<ItemStack> list = lootTable.getRandomItems(context);
+    @Eject(method = "fill", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/loot/LootTable;getRandomItems(Lnet/minecraft/world/level/storage/loot/LootContext;)Lit/unimi/dsi/fastutil/objects/ObjectArrayList;"))
+    private ObjectArrayList<ItemStack> arclight$nonPluginEvent(LootTable lootTable, LootContext context, CallbackInfo ci, Container inv) {
+        ObjectArrayList<ItemStack> list = lootTable.getRandomItems(context);
         if (!context.hasParam(LootContextParams.ORIGIN) && !context.hasParam(LootContextParams.THIS_ENTITY)) {
             return list;
         }
@@ -42,31 +42,32 @@ public abstract class LootTableMixin implements LootTableBridge {
             ci.cancel();
             return null;
         } else {
-            return event.getLoot().stream().map(CraftItemStack::asNMSCopy).collect(Collectors.toList());
+            return event.getLoot().stream().map(CraftItemStack::asNMSCopy).collect(ObjectArrayList.toList());
         }
     }
 
     public void fillInventory(Container inv, LootContext context, boolean plugin) {
-        List<ItemStack> list = this.getRandomItems(context);
-        Random random = context.getRandom();
-        LootGenerateEvent event = CraftEventFactory.callLootGenerateEvent(inv, (LootTable) (Object) this, context, list, plugin);
+        ObjectArrayList<ItemStack> objectarraylist = this.getRandomItems(context);
+        RandomSource randomsource = context.getRandom();
+        LootGenerateEvent event = CraftEventFactory.callLootGenerateEvent(inv, (LootTable) (Object) this, context, objectarraylist, plugin);
         if (event.isCancelled()) {
             return;
         }
-        list = event.getLoot().stream().map(CraftItemStack::asNMSCopy).collect(Collectors.toList());
-        List<Integer> list1 = this.getAvailableSlots(inv, random);
-        this.shuffleAndSplitItems(list, list1.size(), random);
+        objectarraylist = event.getLoot().stream().map(CraftItemStack::asNMSCopy).collect(ObjectArrayList.toList());
 
-        for (ItemStack itemstack : list) {
-            if (list1.isEmpty()) {
+        List<Integer> list = this.getAvailableSlots(inv, randomsource);
+        this.shuffleAndSplitItems(objectarraylist, list.size(), randomsource);
+
+        for (ItemStack itemstack : objectarraylist) {
+            if (list.isEmpty()) {
                 LOGGER.warn("Tried to over-fill a container");
                 return;
             }
 
             if (itemstack.isEmpty()) {
-                inv.setItem(list1.remove(list1.size() - 1), ItemStack.EMPTY);
+                inv.setItem(list.remove(list.size() - 1), ItemStack.EMPTY);
             } else {
-                inv.setItem(list1.remove(list1.size() - 1), itemstack);
+                inv.setItem(list.remove(list.size() - 1), itemstack);
             }
         }
     }

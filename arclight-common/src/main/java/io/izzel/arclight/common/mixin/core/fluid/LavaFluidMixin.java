@@ -5,6 +5,7 @@ import io.izzel.arclight.common.mod.util.DistValidate;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -21,8 +22,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Random;
-
 @Mixin(LavaFluid.class)
 public abstract class LavaFluidMixin {
 
@@ -36,7 +35,7 @@ public abstract class LavaFluidMixin {
      * @reason
      */
     @Overwrite
-    public void randomTick(Level world, BlockPos pos, FluidState state, Random random) {
+    public void randomTick(Level world, BlockPos pos, FluidState state, RandomSource random) {
         if (world.getGameRules().getBoolean(GameRules.RULE_DOFIRETICK)) {
             int i = random.nextInt(3);
             if (i > 0) {

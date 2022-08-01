@@ -14,15 +14,15 @@ import io.izzel.arclight.common.mod.server.block.ChestBlockDoubleInventoryHacks;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.BlockUtil;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.GlobalPos;
+import net.minecraft.core.PositionImpl;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.ChatType;
+import net.minecraft.network.PacketSendListener;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.network.protocol.game.ClientboundChangeDifficultyPacket;
 import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
 import net.minecraft.network.protocol.game.ClientboundHorseScreenOpenPacket;
@@ -68,6 +68,7 @@ import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.block.NetherPortalBlock;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.dimension.LevelStem;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.portal.PortalInfo;
 import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.phys.AABB;
@@ -102,7 +103,6 @@ import org.bukkit.event.player.PlayerLocaleChangeEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.MainHand;
-import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -121,7 +121,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Random;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 @Mixin(ServerPlayer.class)
@@ -154,12 +153,10 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Shadow public abstract float getRespawnAngle();
     @Shadow protected abstract void tellNeutralMobsThatIDied();
     @Shadow protected abstract void createEndPlatform(ServerLevel p_242110_1_, BlockPos p_242110_2_);
-    @Shadow @Final private static Logger LOGGER;
     @Shadow public abstract boolean isCreative();
     @Shadow public abstract void setRespawnPosition(ResourceKey<Level> p_242111_1_, @org.jetbrains.annotations.Nullable BlockPos p_242111_2_, float p_242111_3_, boolean p_242111_4_, boolean p_242111_5_);
     @Shadow protected abstract boolean bedBlocked(BlockPos p_241156_1_, Direction p_241156_2_);
     @Shadow protected abstract boolean bedInRange(BlockPos p_241147_1_, Direction p_241147_2_);
-    @Shadow public abstract void sendMessage(Component component, UUID senderUUID);
     @Shadow public abstract void setLevel(ServerLevel p_143426_);
     @Shadow(remap = false) private boolean hasTabListName;
     @Shadow(remap = false) private Component tabListDisplayName;
@@ -316,6 +313,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
      */
     @Overwrite
     public void die(DamageSource damagesource) {
+        this.gameEvent(GameEvent.ENTITY_DIE);
         if (net.minecraftforge.common.ForgeHooks.onLivingDeath((ServerPlayer) (Object) this, damagesource))
             return;
         boolean flag = this.level.getGameRules().getBoolean(GameRules.RULE_SHOWDEATHMESSAGES);
@@ -358,30 +356,26 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             } else {
                 itextcomponent = CraftChatMessage.fromStringOrNull(deathMessage);
             }
-            this.connection.send(new ClientboundPlayerCombatKillPacket(this.getCombatTracker(), itextcomponent), (future) -> {
-                if (!future.isSuccess()) {
-                    int i = 256;
-                    String s = itextcomponent.getString(256);
-                    Component itextcomponent1 = new TranslatableComponent("death.attack.message_too_long", (new TextComponent(s)).withStyle(ChatFormatting.YELLOW));
-                    Component itextcomponent2 = (new TranslatableComponent("death.attack.even_more_magic", this.getDisplayName())).withStyle((p_212357_1_) -> {
-                        return p_212357_1_.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, itextcomponent1));
-                    });
-                    this.connection.send(new ClientboundPlayerCombatKillPacket(this.getCombatTracker(), itextcomponent2));
-                }
-
-            });
+            this.connection.send(new ClientboundPlayerCombatKillPacket(this.getCombatTracker(), itextcomponent), PacketSendListener.exceptionallySend(() -> {
+                String s = itextcomponent.getString(256);
+                Component component1 = Component.translatable("death.attack.message_too_long", Component.literal(s).withStyle(ChatFormatting.YELLOW));
+                Component component2 = Component.translatable("death.attack.even_more_magic", this.getDisplayName()).withStyle((p_143420_) -> {
+                    return p_143420_.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, component1));
+                });
+                return new ClientboundPlayerCombatKillPacket(this.getCombatTracker(), component2);
+            }));
             Team scoreboardteambase = this.getTeam();
             if (scoreboardteambase != null && scoreboardteambase.getDeathMessageVisibility() != Team.Visibility.ALWAYS) {
                 if (scoreboardteambase.getDeathMessageVisibility() == Team.Visibility.HIDE_FOR_OTHER_TEAMS) {
-                    this.server.getPlayerList().broadcastToTeam((ServerPlayer) (Object) this, itextcomponent);
+                    this.server.getPlayerList().broadcastSystemToTeam((ServerPlayer) (Object) this, itextcomponent);
                 } else if (scoreboardteambase.getDeathMessageVisibility() == Team.Visibility.HIDE_FOR_OWN_TEAM) {
-                    this.server.getPlayerList().broadcastToAllExceptTeam((ServerPlayer) (Object) this, itextcomponent);
+                    this.server.getPlayerList().broadcastSystemToAllExceptTeam((ServerPlayer) (Object) this, itextcomponent);
                 }
             } else {
-                this.server.getPlayerList().broadcastMessage(itextcomponent, ChatType.SYSTEM, Util.NIL_UUID);
+                this.server.getPlayerList().broadcastSystemMessage(itextcomponent, false);
             }
         } else {
-            this.connection.send(new ClientboundPlayerCombatKillPacket(this.getCombatTracker(), TextComponent.EMPTY));
+            this.connection.send(new ClientboundPlayerCombatKillPacket(this.getCombatTracker(), CommonComponents.EMPTY));
         }
         this.removeEntitiesOnShoulder();
 
@@ -412,6 +406,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         this.setTicksFrozen(0);
         this.setSharedFlagOnFire(false);
         this.getCombatTracker().recheckStatus();
+        this.setLastDeathLocation(Optional.of(GlobalPos.of(this.level.dimension(), this.blockPosition())));
     }
 
     @Redirect(method = "awardKillScore", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/scores/Scoreboard;forAllObjectives(Lnet/minecraft/world/scores/criteria/ObjectiveCriteria;Ljava/lang/String;Ljava/util/function/Consumer;)V"))
@@ -494,7 +489,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
                 }
                 ServerLevel[] exitWorld = new ServerLevel[]{server};
                 LevelData iworldinfo = server.getLevelData();
-                this.connection.send(new ClientboundRespawnPacket(server.dimensionTypeRegistration(), server.dimension(), BiomeManager.obfuscateSeed(server.getSeed()), this.gameMode.getGameModeForPlayer(), this.gameMode.getPreviousGameModeForPlayer(), server.isDebug(), server.isFlat(), true));
+                this.connection.send(new ClientboundRespawnPacket(server.dimensionTypeId(), server.dimension(), BiomeManager.obfuscateSeed(server.getSeed()), this.gameMode.getGameModeForPlayer(), this.gameMode.getPreviousGameModeForPlayer(), server.isDebug(), server.isFlat(), true, this.getLastDeathLocation()));
                 this.connection.send(new ClientboundChangeDifficultyPacket(iworldinfo.getDifficulty(), iworldinfo.isDifficultyLocked()));
                 PlayerList playerlist = this.server.getPlayerList();
                 playerlist.sendPlayerPermissionLevel((ServerPlayer) (Object) this);
@@ -528,7 +523,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
                     if (newWorld != exitWorld[0]) {
                         exitWorld[0] = newWorld;
                         LevelData newWorldInfo = exitWorld[0].getLevelData();
-                        this.connection.send(new ClientboundRespawnPacket(exitWorld[0].dimensionTypeRegistration(), exitWorld[0].dimension(), BiomeManager.obfuscateSeed(exitWorld[0].getSeed()), this.gameMode.getGameModeForPlayer(), this.gameMode.getPreviousGameModeForPlayer(), exitWorld[0].isDebug(), exitWorld[0].isFlat(), true));
+                        this.connection.send(new ClientboundRespawnPacket(exitWorld[0].dimensionTypeId(), exitWorld[0].dimension(), BiomeManager.obfuscateSeed(exitWorld[0].getSeed()), this.gameMode.getGameModeForPlayer(), this.gameMode.getPreviousGameModeForPlayer(), exitWorld[0].isDebug(), exitWorld[0].isFlat(), true, this.getLastDeathLocation()));
                         this.connection.send(new ClientboundChangeDifficultyPacket(newWorldInfo.getDifficulty(), newWorldInfo.isDifficultyLocked()));
                     }
 
@@ -574,9 +569,9 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     }
 
     @Override
-    protected CraftPortalEvent callPortalEvent(Entity entity, ServerLevel exitWorldServer, BlockPos exitPosition, PlayerTeleportEvent.TeleportCause cause, int searchRadius, int creationRadius) {
+    protected CraftPortalEvent callPortalEvent(Entity entity, ServerLevel exitWorldServer, PositionImpl exitPosition, PlayerTeleportEvent.TeleportCause cause, int searchRadius, int creationRadius) {
         Location enter = this.getBukkitEntity().getLocation();
-        Location exit = new Location(((WorldBridge) exitWorldServer).bridge$getWorld(), exitPosition.getX(), exitPosition.getY(), exitPosition.getZ(), this.getYRot(), this.getXRot());
+        Location exit = new Location(((WorldBridge) exitWorldServer).bridge$getWorld(), exitPosition.x(), exitPosition.y(), exitPosition.z(), this.getYRot(), this.getXRot());
         PlayerPortalEvent event = new PlayerPortalEvent(this.getBukkitEntity(), enter, exit, cause, 128, true, creationRadius);
         Bukkit.getServer().getPluginManager().callEvent(event);
         if (event.isCancelled() || event.getTo() == null || event.getTo().getWorld() == null) {
@@ -748,22 +743,6 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Inject(method = "resetSentInfo", at = @At("HEAD"))
     private void arclight$setExpUpdate(CallbackInfo ci) {
         this.lastSentExp = -1;
-    }
-
-    public void sendMessage(UUID uuid, Component[] components) {
-        for (final Component component : components) {
-            this.sendMessage(component, uuid == null ? Util.NIL_UUID : uuid);
-        }
-    }
-
-    @Override
-    public void bridge$sendMessage(Component[] components, UUID uuid) {
-        sendMessage(uuid, components);
-    }
-
-    @Override
-    public void bridge$sendMessage(Component component, UUID uuid) {
-        this.sendMessage(component, uuid == null ? Util.NIL_UUID : uuid);
     }
 
     @Inject(method = "updateOptions", at = @At("HEAD"))

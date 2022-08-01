@@ -22,7 +22,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ItemFrame.class)
 public abstract class ItemFrameMixin extends HangingEntityMixin {
 
+    // @formatter:off
     @Shadow @Final private static EntityDataAccessor<ItemStack> DATA_ITEM;
+    @Shadow protected abstract void onItemChanged(ItemStack p_218866_);
+    // @formatter:on
 
     @Inject(method = "hurt", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/ItemFrame;dropItem(Lnet/minecraft/world/entity/Entity;Z)V"))
     private void arclight$damageNonLiving(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
@@ -35,8 +38,8 @@ public abstract class ItemFrameMixin extends HangingEntityMixin {
         if (!itemstack.isEmpty()) {
             itemstack = itemstack.copy();
             itemstack.setCount(1);
-            itemstack.setEntityRepresentation((ItemFrame) (Object) this);
         }
+        this.onItemChanged(itemstack);
         this.getEntityData().set(DATA_ITEM, itemstack);
         if (!itemstack.isEmpty() && playSound) {
             this.playSound(SoundEvents.ITEM_FRAME_ADD_ITEM, 1.0f, 1.0f);

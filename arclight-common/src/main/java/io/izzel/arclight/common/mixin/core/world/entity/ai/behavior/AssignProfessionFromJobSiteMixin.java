@@ -36,7 +36,7 @@ public class AssignProfessionFromJobSiteMixin {
                 return world.getPoiManager().getType(globalpos.pos());
             }).flatMap((poiType) -> {
                 return Registry.VILLAGER_PROFESSION.stream().filter((profession) -> {
-                    return profession.getJobPoiType() == poiType;
+                    return profession.heldJobSite().test(poiType);
                 }).findFirst();
             }).ifPresent((profession) -> {
                 VillagerCareerChangeEvent event = CraftEventFactory.callVillagerCareerChangeEvent(entityIn, CraftVillager.nmsToBukkitProfession(profession), VillagerCareerChangeEvent.ChangeReason.EMPLOYED);

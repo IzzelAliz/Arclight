@@ -7,7 +7,6 @@ import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.protocol.game.ClientboundBlockBreakAckPacket;
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.server.level.ServerLevel;
@@ -20,10 +19,8 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.DoubleHighBlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CakeBlock;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
@@ -69,7 +66,8 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
     @Shadow private boolean hasDelayedDestroy;
     @Shadow private BlockPos delayedDestroyPos;
     @Shadow private int delayedTickStart;
-    @Shadow public abstract void destroyAndAck(BlockPos p_229860_1_, ServerboundPlayerActionPacket.Action p_229860_2_, String p_229860_3_);
+    @Shadow public abstract void destroyAndAck(BlockPos p_215117_, int p_215118_, String p_215119_);
+    @Shadow protected abstract void debugLogging(BlockPos p_215126_, boolean p_215127_, int p_215128_, String p_215129_);
     // @formatter:on
 
     public boolean interactResult = false;
@@ -89,34 +87,25 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
      * @reason
      */
     @Overwrite
-    public void handleBlockBreakAction(BlockPos blockPos, ServerboundPlayerActionPacket.Action action, Direction direction, int i) {
+    public void handleBlockBreakAction(BlockPos blockPos, ServerboundPlayerActionPacket.Action action, Direction direction, int i, int j) {
         if (!this.level.hasChunkAt(blockPos)) {
             return;
         }
-        double d0 = this.player.getX() - (blockPos.getX() + 0.5);
-        double d2 = this.player.getY() - (blockPos.getY() + 0.5) + 1.5;
-        double d3 = this.player.getZ() - (blockPos.getZ() + 0.5);
-        double d4 = d0 * d0 + d2 * d2 + d3 * d3;
         net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock forgeEvent = net.minecraftforge.common.ForgeHooks.onLeftClickBlock(player, blockPos, direction);
         if (forgeEvent.isCanceled() || (!this.isCreative() && forgeEvent.getUseItem() == net.minecraftforge.eventbus.api.Event.Result.DENY)) { // Restore block and te data
-            player.connection.send(new ClientboundBlockBreakAckPacket(blockPos, level.getBlockState(blockPos), action, false, "mod canceled"));
             level.sendBlockUpdated(blockPos, level.getBlockState(blockPos), level.getBlockState(blockPos), 3);
             return;
         }
         if (!this.player.canInteractWith(blockPos, 1)) {
-            BlockState state;
-            if (this.player.level.getServer() != null && this.player.chunkPosition().getChessboardDistance(new ChunkPos(blockPos)) < this.player.level.getServer().getPlayerList().getViewDistance()) {
-                state = this.level.getBlockState(blockPos);
-            } else {
-                state = Blocks.AIR.defaultBlockState();
-            }
-            this.player.connection.send(new ClientboundBlockBreakAckPacket(blockPos, state, action, false, "too far"));
+            this.debugLogging(blockPos, false, j, "too far");
         } else if (blockPos.getY() >= i) {
-            this.player.connection.send(new ClientboundBlockBreakAckPacket(blockPos, this.level.getBlockState(blockPos), action, false, "too high"));
+            this.player.connection.send(new ClientboundBlockUpdatePacket(blockPos, this.level.getBlockState(blockPos)));
+            this.debugLogging(blockPos, false, j, "too high");
         } else if (action == ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK) {
             if (!this.level.mayInteract(this.player, blockPos)) {
                 CraftEventFactory.callPlayerInteractEvent(this.player, Action.LEFT_CLICK_BLOCK, blockPos, direction, this.player.getInventory().getSelected(), InteractionHand.MAIN_HAND);
-                this.player.connection.send(new ClientboundBlockBreakAckPacket(blockPos, this.level.getBlockState(blockPos), action, false, "may not interact"));
+                this.player.connection.send(new ClientboundBlockUpdatePacket(blockPos, this.level.getBlockState(blockPos)));
+                this.debugLogging(blockPos, false, j, "may not interact");
                 BlockEntity tileentity = this.level.getBlockEntity(blockPos);
                 if (tileentity != null) {
                     this.player.connection.send(tileentity.getUpdatePacket());
@@ -133,11 +122,12 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
                 return;
             }
             if (this.isCreative()) {
-                this.destroyAndAck(blockPos, action, "creative destroy");
+                this.destroyAndAck(blockPos, j, "creative destroy");
                 return;
             }
             if (this.player.blockActionRestricted(this.level, blockPos, this.gameModeForPlayer)) {
-                this.player.connection.send(new ClientboundBlockBreakAckPacket(blockPos, this.level.getBlockState(blockPos), action, false, "block action restricted"));
+                this.player.connection.send(new ClientboundBlockUpdatePacket(blockPos, this.level.getBlockState(blockPos)));
+                this.debugLogging(blockPos, false, j, "block action restricted");
                 return;
             }
             this.destroyProgressStart = this.gameTicks;
@@ -173,18 +163,19 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
                 f = 2.0f;
             }
             if (!iblockdata.isAir() && f >= 1.0f) {
-                this.destroyAndAck(blockPos, action, "insta mine");
+                this.destroyAndAck(blockPos, j, "insta mine");
             } else {
                 if (this.isDestroyingBlock) {
-                    this.player.connection.send(new ClientboundBlockBreakAckPacket(this.destroyPos, this.level.getBlockState(this.destroyPos), ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, false, "abort destroying since another started (client insta mine, server disagreed)"));
+                    this.player.connection.send(new ClientboundBlockUpdatePacket(this.destroyPos, this.level.getBlockState(this.destroyPos)));
+                    this.debugLogging(blockPos, false, j, "abort destroying since another started (client insta mine, server disagreed)");
                 }
                 this.isDestroyingBlock = true;
                 this.destroyPos = blockPos;
-                int j = (int) (f * 10.0f);
-                this.level.destroyBlockProgress(this.player.getId(), blockPos, j);
-                this.player.connection.send(new ClientboundBlockBreakAckPacket(blockPos, this.level.getBlockState(blockPos), action, true, "actual start of destroying"));
+                int state = (int) (f * 10.0f);
+                this.level.destroyBlockProgress(this.player.getId(), blockPos, state);
+                this.debugLogging(blockPos, true, j, "actual start of destroying");
                 CraftEventFactory.callBlockDamageAbortEvent(this.player, blockPos, this.player.getInventory().getSelected());
-                this.lastSentState = j;
+                this.lastSentState = state;
             }
         } else if (action == ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK) {
             if (blockPos.equals(this.destroyPos)) {
@@ -195,7 +186,7 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
                     if (f2 >= 0.7f) {
                         this.isDestroyingBlock = false;
                         this.level.destroyBlockProgress(this.player.getId(), blockPos, -1);
-                        this.destroyAndAck(blockPos, action, "destroyed");
+                        this.destroyAndAck(blockPos, j, "destroyed");
                         return;
                     }
                     if (!this.hasDelayedDestroy) {
@@ -206,16 +197,16 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
                     }
                 }
             }
-            this.player.connection.send(new ClientboundBlockBreakAckPacket(blockPos, this.level.getBlockState(blockPos), action, true, "stopped destroying"));
+            this.debugLogging(blockPos, true, j, "stopped destroying");
         } else if (action == ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK) {
             this.isDestroyingBlock = false;
             if (!Objects.equals(this.destroyPos, blockPos)) {
                 ArclightMod.LOGGER.debug("Mismatch in destroy block pos: " + this.destroyPos + " " + blockPos);
                 this.level.destroyBlockProgress(this.player.getId(), this.destroyPos, -1);
-                this.player.connection.send(new ClientboundBlockBreakAckPacket(this.destroyPos, this.level.getBlockState(this.destroyPos), action, true, "aborted mismatched destroying"));
+                this.debugLogging(blockPos, true, j, "aborted mismatched destroying");
             }
             this.level.destroyBlockProgress(this.player.getId(), blockPos, -1);
-            this.player.connection.send(new ClientboundBlockBreakAckPacket(blockPos, this.level.getBlockState(blockPos), action, true, "aborted destroying"));
+            this.debugLogging(blockPos, true, j, "aborted destroying");
         }
     }
 

@@ -4,12 +4,13 @@ import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBrid
 import io.izzel.arclight.common.bridge.core.item.ItemStackBridge;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.capabilities.CapabilityProvider;
-import net.minecraftforge.registries.IRegistryDelegate;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -26,7 +27,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Random;
 import java.util.function.Consumer;
 
 @Mixin(ItemStack.class)
@@ -36,7 +36,7 @@ public abstract class ItemStackMixin extends CapabilityProvider<ItemStack> imple
     @Shadow @Deprecated private Item item;
     @Shadow private int count;
     @Shadow(remap = false) private CompoundTag capNBT;
-    @Mutable @Shadow(remap = false) @Final private IRegistryDelegate<Item> delegate;
+    @Mutable @Shadow(remap = false) @Final private net.minecraft.core.Holder.Reference<Item> delegate;
     // @formatter:on
 
     protected ItemStackMixin(Class<ItemStack> baseClass) {
@@ -69,8 +69,8 @@ public abstract class ItemStackMixin extends CapabilityProvider<ItemStack> imple
         this.convertStack(version);
     }
 
-    @ModifyVariable(method = "hurt", index = 1, name = "amount", at = @At(value = "JUMP", opcode = Opcodes.IFGT, ordinal = 0))
-    private int arclight$itemDamage(int i, int amount, Random rand, ServerPlayer damager) {
+    @ModifyVariable(method = "hurt", index = 1, at = @At(value = "JUMP", opcode = Opcodes.IFGT, ordinal = 0))
+    private int arclight$itemDamage(int i, int amount, RandomSource rand, ServerPlayer damager) {
         if (damager != null) {
             PlayerItemDamageEvent event = new PlayerItemDamageEvent(((ServerPlayerEntityBridge) damager).bridge$getBukkitEntity(), CraftItemStack.asCraftMirror((ItemStack) (Object) this), i);
             event.getPlayer().getServer().getPluginManager().callEvent(event);
@@ -96,6 +96,6 @@ public abstract class ItemStackMixin extends CapabilityProvider<ItemStack> imple
     @Deprecated
     public void setItem(Item item) {
         this.item = item;
-        this.delegate = item.delegate;
+        this.delegate = ForgeRegistries.ITEMS.getDelegateOrThrow(item);
     }
 }

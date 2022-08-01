@@ -80,7 +80,7 @@ public class ChunkMapMixin_Optimize {
     @Mixin(ChunkMap.TrackedEntity.class)
     public static class TrackedEntityMixin {
 
-        @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Sets;newIdentityHashSet()Ljava/util/Set;"))
+        @Redirect(method = "<init>", at = @At(value = "INVOKE", remap = false, target = "Lcom/google/common/collect/Sets;newIdentityHashSet()Ljava/util/Set;"))
         private Set<ServerPlayerConnection> arclight$useFastUtilSet() {
             return new ReferenceOpenHashSet<>();
         }

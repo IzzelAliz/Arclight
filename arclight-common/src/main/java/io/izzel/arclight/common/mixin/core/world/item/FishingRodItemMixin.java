@@ -16,6 +16,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.gameevent.GameEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.FishHook;
 import org.bukkit.event.player.PlayerFishEvent;
@@ -46,6 +47,7 @@ public class FishingRodItemMixin extends Item {
 
             playerIn.swing(handIn);
             worldIn.playSound(null, playerIn.getX(), playerIn.getY(), playerIn.getZ(), SoundEvents.FISHING_BOBBER_RETRIEVE, SoundSource.NEUTRAL, 1.0F, 0.4F / (worldIn.getRandom().nextFloat() * 0.4F + 0.8F));
+            playerIn.gameEvent(GameEvent.ITEM_INTERACT_FINISH);
         } else {
             if (!worldIn.isClientSide) {
                 int k = EnchantmentHelper.getFishingSpeedBonus(itemstack);
@@ -67,6 +69,7 @@ public class FishingRodItemMixin extends Item {
 
             // playerIn.swingArm(handIn);
             playerIn.awardStat(Stats.ITEM_USED.get(this));
+            playerIn.gameEvent(GameEvent.ITEM_INTERACT_START);
         }
 
         return InteractionResultHolder.sidedSuccess(itemstack, worldIn.isClientSide());

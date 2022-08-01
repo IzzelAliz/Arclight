@@ -26,10 +26,6 @@ public interface ServerPlayerEntityBridge extends PlayerEntityBridge {
 
     void bridge$setCompassTarget(Location location);
 
-    void bridge$sendMessage(Component[] ichatbasecomponent, UUID uuid);
-
-    void bridge$sendMessage(Component component, UUID uuid);
-
     boolean bridge$isJoining();
 
     void bridge$reset();

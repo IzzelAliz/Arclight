@@ -23,6 +23,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.CombatTracker;
 import net.minecraft.world.damagesource.DamageSource;
@@ -41,6 +42,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -51,7 +53,7 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeEventFactory;
-import net.minecraftforge.event.entity.living.PotionEvent;
+import net.minecraftforge.event.entity.living.MobEffectEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.attribute.CraftAttributeMap;
@@ -86,7 +88,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -101,7 +102,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public abstract float getHealth();
     @Shadow public abstract void setHealth(float health);
     @Shadow public abstract float getYHeadRot();
-    @Shadow protected abstract int getExperienceReward(net.minecraft.world.entity.player.Player player);
     @Shadow protected int lastHurtByPlayerTime;
     @Shadow protected abstract boolean shouldDropExperience();
     @Shadow protected abstract boolean isAlwaysExperienceDropper();
@@ -157,7 +157,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow @Nullable public LivingEntity lastHurtByMob;
     @Shadow public CombatTracker combatTracker;
     @Shadow public abstract ItemStack getOffhandItem();
-    @Shadow public abstract Random getRandom();
+    @Shadow public abstract RandomSource getRandom();
     @Shadow public abstract Optional<BlockPos> getSleepingPos();
     @Shadow @Final private static EntityDataAccessor<Integer> DATA_EFFECT_COLOR_ID;
     @Shadow @Final private static EntityDataAccessor<Boolean> DATA_EFFECT_AMBIENCE_ID;
@@ -176,11 +176,15 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow protected abstract void onEffectUpdated(MobEffectInstance p_147192_, boolean p_147193_, @org.jetbrains.annotations.Nullable Entity p_147194_);
     @Shadow protected abstract void onEffectAdded(MobEffectInstance p_147190_, @org.jetbrains.annotations.Nullable Entity p_147191_);
     @Shadow public abstract void knockback(double p_147241_, double p_147242_, double p_147243_);
-    @Shadow protected abstract void equipEventAndSound(ItemStack p_147219_);
     @Shadow public abstract boolean canAttack(LivingEntity p_21171_);
     @Shadow public abstract boolean hasLineOfSight(Entity p_147185_);
     @Shadow protected abstract void hurtHelmet(DamageSource p_147213_, float p_147214_);
     @Shadow public abstract void stopUsingItem();
+    @Shadow protected abstract void playEquipSound(ItemStack p_217042_);
+    @Shadow protected abstract boolean doesEmitEquipEvent(EquipmentSlot p_217035_);
+    @Shadow protected abstract void verifyEquippedItem(ItemStack p_181123_);
+    @Shadow public abstract boolean wasExperienceConsumed();
+    @Shadow public abstract int getExperienceReward();
     // @formatter:on
 
     public int expToDrop;
@@ -231,8 +235,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Overwrite
     protected void dropExperience() {
         // if (!this.world.isRemote && (this.isPlayer() || this.recentlyHit > 0 && this.canDropLoot() && this.world.getGameRules().getBoolean(GameRules.DO_MOB_LOOT))) {
-        if (true) {
-            int reward = ForgeEventFactory.getExperienceDrop((LivingEntity)(Object) this, this.lastHurtByPlayer, this.expToDrop);
+        if (!((Object) this instanceof EnderDragon)) {
+            int reward = ForgeEventFactory.getExperienceDrop((LivingEntity) (Object) this, this.lastHurtByPlayer, this.expToDrop);
             ExperienceOrb.award((ServerLevel) this.level, this.position(), reward);
             bridge$setExpToDrop(0);
         }
@@ -257,7 +261,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 if (!effectinstance.tick((LivingEntity) (Object) this, () -> {
                     onEffectUpdated(effectinstance, true, null);
                 })) {
-                    if (!this.level.isClientSide && !MinecraftForge.EVENT_BUS.post(new PotionEvent.PotionExpiryEvent((LivingEntity) (Object) this, effectinstance))) {
+                    if (!this.level.isClientSide && !MinecraftForge.EVENT_BUS.post(new MobEffectEvent.Expired((LivingEntity) (Object) this, effectinstance))) {
 
                         EntityPotionEffectEvent event = CraftEventFactory.callEntityPotionEffectChangeEvent((LivingEntity) (Object) this, effectinstance, null, EntityPotionEffectEvent.Cause.EXPIRATION);
                         if (event.isCancelled()) {
@@ -345,7 +349,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 return false;
             }
 
-            MinecraftForge.EVENT_BUS.post(new PotionEvent.PotionAddedEvent((LivingEntity) (Object) this, effectinstance, effectInstanceIn, entity));
+            MinecraftForge.EVENT_BUS.post(new MobEffectEvent.Added((LivingEntity) (Object) this, effectinstance, effectInstanceIn, entity));
             if (effectinstance == null) {
                 this.activeEffects.put(effectInstanceIn.getEffect(), effectInstanceIn);
                 this.onEffectAdded(effectInstanceIn, entity);
@@ -398,8 +402,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     }
 
     public int getExpReward() {
-        if (!this.level.isClientSide && (this.lastHurtByPlayerTime > 0 || this.isAlwaysExperienceDropper()) && this.shouldDropExperience() && this.level.getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT)) {
-            int exp = this.getExperienceReward(this.lastHurtByPlayer);
+        if (this.level instanceof ServerLevel && !this.wasExperienceConsumed() && (this.isAlwaysExperienceDropper() || this.lastHurtByPlayerTime > 0 && this.shouldDropExperience() && this.level.getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT))) {
+            int exp = this.getExperienceReward();
             return ForgeEventFactory.getExperienceDrop((LivingEntity) (Object) this, this.lastHurtByPlayer, exp);
         } else {
             return 0;
@@ -796,7 +800,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 if (!human) {
                     this.setAbsorptionAmount(this.getAbsorptionAmount() - f);
                 }
-                this.gameEvent(GameEvent.ENTITY_DAMAGED, damagesource.getEntity());
+                this.gameEvent(GameEvent.ENTITY_DAMAGE, damagesource.getEntity());
 
                 return true;
             } else {
@@ -1102,14 +1106,23 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         this.setItemSlot(slotIn, stack, silent);
     }
 
-    protected void equipEventAndSound(ItemStack stack, boolean silent) {
-        if (!silent) {
-            this.equipEventAndSound(stack);
+    protected void equipEventAndSound(EquipmentSlot slot, ItemStack oldItem, ItemStack newItem, boolean silent) {
+        boolean flag = oldItem.isEmpty() && newItem.isEmpty();
+
+        if (!flag && !ItemStack.isSameIgnoreDurability(oldItem, newItem) && !this.firstTick) {
+            if (slot.getType() == EquipmentSlot.Type.ARMOR && !silent) {
+                this.playEquipSound(newItem);
+            }
+
+            if (this.doesEmitEquipEvent(slot)) {
+                this.gameEvent(GameEvent.EQUIP);
+            }
+
         }
     }
 
     @Override
-    public void bridge$playEquipSound(ItemStack stack, boolean silent) {
-        this.equipEventAndSound(stack, silent);
+    public void bridge$playEquipSound(EquipmentSlot slot, ItemStack oldItem, ItemStack newItem, boolean silent) {
+        this.equipEventAndSound(slot, oldItem, newItem, silent);
     }
 }

@@ -8,7 +8,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraftforge.common.util.BlockSnapshot;
-import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.block.BlockState;
@@ -30,10 +30,10 @@ public class BlockPlaceEventDispatcher {
         if (entity instanceof ServerPlayerEntityBridge playerEntity) {
             Player player = playerEntity.bridge$getBukkitEntity();
             Direction direction = ArclightCaptures.getPlaceEventDirection();
-            if (direction != null && DistValidate.isValid(event.getWorld())) {
+            if (direction != null && DistValidate.isValid(event.getLevel())) {
                 InteractionHand hand = ArclightCaptures.getPlaceEventHand(InteractionHand.MAIN_HAND);
                 CraftBlock placedBlock = ArclightBlockSnapshot.fromBlockSnapshot(event.getBlockSnapshot(), true);
-                CraftBlock againstBlock = CraftBlock.at(event.getWorld(), event.getPos().relative(direction.getOpposite()));
+                CraftBlock againstBlock = CraftBlock.at(event.getLevel(), event.getPos().relative(direction.getOpposite()));
                 ItemStack bukkitStack;
                 EquipmentSlot bukkitHand;
                 if (hand == InteractionHand.MAIN_HAND) {
@@ -65,13 +65,13 @@ public class BlockPlaceEventDispatcher {
         if (entity instanceof ServerPlayerEntityBridge playerEntity) {
             Player player = playerEntity.bridge$getBukkitEntity();
             Direction direction = ArclightCaptures.getPlaceEventDirection();
-            if (direction != null && DistValidate.isValid(event.getWorld())) {
+            if (direction != null && DistValidate.isValid(event.getLevel())) {
                 InteractionHand hand = ArclightCaptures.getPlaceEventHand(InteractionHand.MAIN_HAND);
                 List<BlockState> placedBlocks = new ArrayList<>(event.getReplacedBlockSnapshots().size());
                 for (BlockSnapshot snapshot : event.getReplacedBlockSnapshots()) {
                     placedBlocks.add(ArclightBlockSnapshot.fromBlockSnapshot(snapshot, true).getState());
                 }
-                CraftBlock againstBlock = CraftBlock.at(event.getWorld(), event.getPos().relative(direction.getOpposite()));
+                CraftBlock againstBlock = CraftBlock.at(event.getLevel(), event.getPos().relative(direction.getOpposite()));
                 ItemStack bukkitStack;
                 if (hand == InteractionHand.MAIN_HAND) {
                     bukkitStack = player.getInventory().getItemInMainHand();

@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.level.block;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.VineBlock;
@@ -14,8 +15,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import java.util.Random;
-
 @Mixin(VineBlock.class)
 public abstract class VineBlockMixin extends BlockMixin {
 
@@ -26,7 +25,7 @@ public abstract class VineBlockMixin extends BlockMixin {
     @Shadow @Final public static BooleanProperty UP;
     @Shadow protected abstract boolean canSupportAtFace(BlockGetter blockReader, BlockPos pos, Direction direction);
     @Shadow protected abstract boolean hasHorizontalConnection(BlockState state);
-    @Shadow protected abstract BlockState copyRandomFaces(BlockState state, BlockState state2, Random rand);
+    @Shadow protected abstract BlockState copyRandomFaces(BlockState state, BlockState state2, RandomSource rand);
     // @formatter:on
 
     /**
@@ -35,7 +34,7 @@ public abstract class VineBlockMixin extends BlockMixin {
      */
     @SuppressWarnings("ConstantConditions")
     @Overwrite
-    public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, Random random) {
+    public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random) {
         if (worldIn.random.nextInt(4) == 0 && worldIn.isAreaLoaded(pos, 4)) { // Forge: check area to prevent loading unloaded chunks
             Direction direction = Direction.getRandom(random);
             BlockPos blockpos = pos.above();

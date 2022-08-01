@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 @Mixin(NetworkHooks.class)
 public class NetworkHooksMixin {
 
-    @Inject(method = "openGui(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/MenuProvider;Ljava/util/function/Consumer;)V",
+    @Inject(method = "openScreen(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/MenuProvider;Ljava/util/function/Consumer;)V",
         cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/AbstractContainerMenu;getType()Lnet/minecraft/world/inventory/MenuType;"))
     private static void arclight$openContainer(ServerPlayer player, MenuProvider containerSupplier, Consumer<FriendlyByteBuf> extraDataWriter, CallbackInfo ci,
                                                int currentId, FriendlyByteBuf extraData, FriendlyByteBuf output, AbstractContainerMenu container) {

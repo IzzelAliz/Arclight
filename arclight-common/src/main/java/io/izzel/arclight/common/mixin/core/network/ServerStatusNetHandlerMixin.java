@@ -54,6 +54,7 @@ public class ServerStatusNetHandlerMixin {
             playerSample.setSample(profiles.toArray(new GameProfile[0]));
         }
         ServerStatus ping = new ServerStatus();
+        ping.setPreviewsChat(event.shouldSendChatPreviews());
         ping.setFavicon(event.icon.value);
         ping.setDescription(CraftChatMessage.fromString(event.getMotd(), true)[0]);
         ping.setPlayers(playerSample);

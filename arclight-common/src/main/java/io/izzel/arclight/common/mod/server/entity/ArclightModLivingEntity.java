@@ -14,7 +14,7 @@ public class ArclightModLivingEntity extends CraftLivingEntity {
 
     public ArclightModLivingEntity(CraftServer server, LivingEntity entity) {
         super(server, entity);
-        this.entityType = EntityType.valueOf(ResourceLocationUtil.standardize(ForgeRegistries.ENTITIES.getKey(entity.getType())));
+        this.entityType = EntityType.valueOf(ResourceLocationUtil.standardize(ForgeRegistries.ENTITY_TYPES.getKey(entity.getType())));
     }
 
     @Override

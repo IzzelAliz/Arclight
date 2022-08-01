@@ -22,7 +22,7 @@ public class ArclightPingEvent extends ServerListPingEvent {
     private final Object[] players;
 
     public ArclightPingEvent(Connection networkManager, MinecraftServer server) {
-        super(((InetSocketAddress) networkManager.getRemoteAddress()).getAddress(), server.getMotd(), server.getPlayerList().getMaxPlayers());
+        super(((InetSocketAddress) networkManager.getRemoteAddress()).getAddress(), server.getMotd(), server.previewsChat(), server.getPlayerList().getMaxPlayers());
         this.icon = ((CraftServer) Bukkit.getServer()).getServerIcon();
         this.players = server.getPlayerList().players.toArray();
     }
@@ -38,7 +38,7 @@ public class ArclightPingEvent extends ServerListPingEvent {
     @Override
     @NotNull
     public Iterator<Player> iterator() throws UnsupportedOperationException {
-        return new Iterator<Player>() {
+        return new Iterator<>() {
             int i;
             int ret = Integer.MIN_VALUE;
             ServerPlayer player;

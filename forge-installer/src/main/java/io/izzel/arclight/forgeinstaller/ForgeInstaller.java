@@ -59,10 +59,10 @@ public class ForgeInstaller {
     private static final String SERVER_URL = "https://arclight.mcxk.net/net/minecraft/server/minecraft_server.%s.jar";
     private static final String MAPPING_URL = "https://arclight.mcxk.net/net/minecraft/server/mappings_server.%s.txt";
     private static final Map<String, String> VERSION_HASH = Map.of(
-        "1.18.2", "c8f83c5655308435b3dcf03c06d9fe8740a77469"
+        "1.19.1", "8399e1211e95faa421c1507b322dbeae86d604df"
     );
     private static final Map<String, String> MAPPING_HASH = Map.of(
-        "1.18.2", "e562f588fea155d96291267465dc3323bfe1551b"
+        "1.19.1", "3565648cdd47ae15738fb804a95a659137d7cfd3"
     );
 
     public static List<Path> modInstall(Consumer<String> logger) throws Throwable {

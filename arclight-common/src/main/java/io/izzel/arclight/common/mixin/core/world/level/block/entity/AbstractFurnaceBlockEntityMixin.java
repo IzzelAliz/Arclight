@@ -65,7 +65,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends LockableBlockEntit
 
     @Eject(method = "serverTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;isLit()Z"),
         slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;litDuration:I"),
-            to = @At(value = "INVOKE", remap = false, target = "Lnet/minecraft/world/item/ItemStack;hasContainerItem()Z")))
+            to = @At(value = "INVOKE", remap = false, target = "Lnet/minecraft/world/item/ItemStack;hasCraftingRemainingItem()Z")))
     private static boolean arclight$setBurnTime(AbstractFurnaceBlockEntity furnace, CallbackInfo ci) {
         ItemStack itemStack = furnace.getItem(1);
         CraftItemStack fuel = CraftItemStack.asCraftMirror(itemStack);
@@ -81,7 +81,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends LockableBlockEntit
 
     @Inject(method = "serverTick", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "FIELD", ordinal = 0, target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;cookingProgress:I"))
     private static void arclight$startSmelt(Level level, BlockPos pos, BlockState state, AbstractFurnaceBlockEntity furnace, CallbackInfo ci,
-                                            boolean flag, boolean flag1, ItemStack stack, Recipe<?> recipe) {
+                                            boolean flag, boolean flag1, ItemStack stack, boolean flag2, boolean flag3, Recipe<?> recipe) {
         if (recipe != null && furnace.cookingProgress == 0) {
             CraftItemStack source = CraftItemStack.asCraftMirror(furnace.getItem(0));
             if (((IRecipeBridge) recipe).bridge$toBukkitRecipe() instanceof CookingRecipe<?> cookingRecipe) {

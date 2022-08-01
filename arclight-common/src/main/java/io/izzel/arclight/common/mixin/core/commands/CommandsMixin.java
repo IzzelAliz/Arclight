@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.commands;
 
 import com.google.common.collect.Maps;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
@@ -33,7 +34,8 @@ import java.util.Map;
 public abstract class CommandsMixin {
 
     // @formatter:off
-    @Shadow public abstract int performCommand(CommandSourceStack source, String command);
+    @Shadow public abstract int performCommand(ParseResults<CommandSourceStack> p_242844_, String p_242841_);
+    @Shadow public abstract int performPrefixedCommand(CommandSourceStack p_230958_, String p_230959_);
     @Mutable @Shadow @Final private CommandDispatcher<CommandSourceStack> dispatcher;
     @Shadow protected abstract void fillUsableCommands(CommandNode<CommandSourceStack> rootCommandSource, CommandNode<SharedSuggestionProvider> rootSuggestion, CommandSourceStack source, Map<CommandNode<CommandSourceStack>, CommandNode<SharedSuggestionProvider>> commandNodeToSuggestionNode);
     // @formatter:on
@@ -43,8 +45,12 @@ public abstract class CommandsMixin {
         this.dispatcher.setConsumer((context, b, i) -> context.getSource().onCommandComplete(context, b, i));
     }
 
-    public int performCommand(CommandSourceStack source, String command, String label, boolean strip) {
-        return this.performCommand(source, command);
+    public int performPrefixedCommand(CommandSourceStack commandSourceStack, String s, String label) {
+        return this.performPrefixedCommand(commandSourceStack, s);
+    }
+
+    public int performCommand(ParseResults<CommandSourceStack> parseResults, String s, String label) {
+        return this.performCommand(parseResults, s);
     }
 
     /**

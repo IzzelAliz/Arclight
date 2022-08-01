@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -23,7 +24,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.EnchantmentTableBlock;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -49,7 +49,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 @Mixin(EnchantmentMenu.class)
 public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMixin implements PosContainerBridge {
@@ -57,7 +56,7 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
     // @formatter:off
     @Shadow @Final private Container enchantSlots;
     @Shadow @Final private ContainerLevelAccess access;
-    @Shadow @Final private Random random;
+    @Shadow @Final private RandomSource random;
     @Shadow @Final private DataSlot enchantmentSeed;
     @Shadow @Final public int[] costs;
     @Shadow @Final public int[] enchantClue;

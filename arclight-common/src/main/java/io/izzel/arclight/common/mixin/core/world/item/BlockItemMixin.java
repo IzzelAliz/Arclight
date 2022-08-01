@@ -7,8 +7,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.PlaceOnWaterBlockItem;
 import net.minecraft.world.item.SolidBucketItem;
-import net.minecraft.world.item.WaterLilyBlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -43,7 +43,7 @@ public abstract class BlockItemMixin {
     @Inject(method = "place", locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/item/BlockItem;getPlacementState(Lnet/minecraft/world/item/context/BlockPlaceContext;)Lnet/minecraft/world/level/block/state/BlockState;"))
     private void arclight$prePlaceLilypad(BlockPlaceContext context, CallbackInfoReturnable<InteractionResult> cir, BlockPlaceContext context1) {
-        if ((Object) this instanceof WaterLilyBlockItem || (Object) this instanceof SolidBucketItem) {
+        if ((Object) this instanceof PlaceOnWaterBlockItem || (Object) this instanceof SolidBucketItem) {
             this.arclight$state = CraftBlockStates.getBlockState(context1.getLevel(), context1.getClickedPos());
         }
     }

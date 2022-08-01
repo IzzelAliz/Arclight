@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PrimaryLevelData.class)
-public abstract class ServerWorldInfoMixin implements WorldInfoBridge {
+public abstract class PrimaryLevelDataMixin implements WorldInfoBridge {
 
     // @formatter:off
     @Shadow public abstract String getLevelName();

@@ -13,7 +13,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.players.PlayerList;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.CommandEvent;
-import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.event.level.LevelEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -112,7 +112,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
 
     @Inject(method = "unloadWorld(Lorg/bukkit/World;Z)Z", remap = false, require = 1, at = @At(value = "INVOKE", ordinal = 1, target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))
     private void arclight$unloadForge(World world, boolean save, CallbackInfoReturnable<Boolean> cir) {
-        MinecraftForge.EVENT_BUS.post(new WorldEvent.Unload(((CraftWorld) world).getHandle()));
+        MinecraftForge.EVENT_BUS.post(new LevelEvent.Unload(((CraftWorld) world).getHandle()));
         this.console.markWorldsDirty();
     }
 

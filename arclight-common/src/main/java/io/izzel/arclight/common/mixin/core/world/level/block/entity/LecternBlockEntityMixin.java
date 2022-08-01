@@ -30,7 +30,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import javax.annotation.Nullable;
-import java.util.UUID;
 
 @Mixin(LecternBlockEntity.class)
 public abstract class LecternBlockEntityMixin extends BlockEntityMixin implements CommandSource, ICommandSourceBridge {
@@ -57,7 +56,7 @@ public abstract class LecternBlockEntityMixin extends BlockEntityMixin implement
     }
 
     @Override
-    public void sendMessage(@NotNull Component component, @NotNull UUID uuid) {
+    public void sendSystemMessage(@NotNull Component component) {
     }
 
     @Override
