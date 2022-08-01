@@ -28,7 +28,7 @@ public class PacketThreadUtilMixin {
     @Overwrite
     public static <T extends PacketListener> void ensureRunningOnSameThread(Packet<T> packetIn, T processor, BlockableEventLoop<?> executor) throws RunningOnDifferentThreadException {
         if (!executor.isSameThread()) {
-            executor.execute(() -> {
+            executor.executeIfPossible(() -> {
                 if (((MinecraftServerBridge) ((CraftServer) Bukkit.getServer()).getServer()).bridge$hasStopped() || (processor instanceof ServerGamePacketListenerImpl && ((ServerPlayNetHandlerBridge) processor).bridge$processedDisconnect())) {
                     return;
                 }

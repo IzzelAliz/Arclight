@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mixin.core.network;
 
-import com.google.common.base.Charsets;
 import com.mojang.brigadier.ParseResults;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
@@ -78,6 +77,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.ForgeHooks;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -138,6 +138,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -199,10 +200,8 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     @Shadow protected abstract CompletableFuture<FilteredText> filterTextPacket(String p_243213_);
     @Shadow protected abstract ParseResults<CommandSourceStack> parseCommand(String p_242938_);
     @Shadow protected abstract Map<String, PlayerChatMessage> collectSignedArguments(ServerboundChatCommandPacket p_242876_, PreviewableCommand<?> p_242848_);
+    @Shadow protected abstract void detectRateSpam();
     // @formatter:on
-
-    @Shadow
-    protected abstract void detectRateSpam();
 
     private static final int SURVIVAL_PLACE_DISTANCE_SQUARED = 6 * 6;
     private static final int CREATIVE_PLACE_DISTANCE_SQUARED = 7 * 7;
@@ -1806,48 +1805,51 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     private static final ResourceLocation CUSTOM_REGISTER = new ResourceLocation("register");
     private static final ResourceLocation CUSTOM_UNREGISTER = new ResourceLocation("unregister");
 
-    // TODO FIXME handle custom payload on main thread
-    @Inject(method = "handleCustomPayload", cancellable = true, at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/network/NetworkHooks;onCustomPayload(Lnet/minecraftforge/network/ICustomPacket;Lnet/minecraft/network/Connection;)Z"))
+    @Inject(method = "handleCustomPayload", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/network/NetworkHooks;onCustomPayload(Lnet/minecraftforge/network/ICustomPacket;Lnet/minecraft/network/Connection;)Z"))
     private void arclight$customPayload(ServerboundCustomPayloadPacket packet, CallbackInfo ci) {
-        if (packet.identifier.equals(CUSTOM_REGISTER)) {
-            try {
-                String channels = packet.data.toString(Charsets.UTF_8);
-                for (String channel : channels.split("\0")) {
-                    if (!StringUtil.isNullOrEmpty(channel)) {
-                        this.getCraftPlayer().addChannel(channel);
+        var readerIndex = packet.data.readerIndex();
+        var buf = new byte[packet.data.readableBytes()];
+        packet.data.readBytes(buf);
+        packet.data.readerIndex(readerIndex);
+        ServerLifecycleHooks.getCurrentServer().executeIfPossible(() -> {
+            if (((MinecraftServerBridge) ServerLifecycleHooks.getCurrentServer()).bridge$hasStopped() || bridge$processedDisconnect()) {
+                return;
+            }
+            if (this.connection.isConnected()) {
+                if (packet.identifier.equals(CUSTOM_REGISTER)) {
+                    try {
+                        String channels = new String(buf, StandardCharsets.UTF_8);
+                        for (String channel : channels.split("\0")) {
+                            if (!StringUtil.isNullOrEmpty(channel)) {
+                                this.getCraftPlayer().addChannel(channel);
+                            }
+                        }
+                    } catch (Exception ex) {
+                        LOGGER.error("Couldn't register custom payload", ex);
+                        this.disconnect("Invalid payload REGISTER!");
+                    }
+                } else if (packet.identifier.equals(CUSTOM_UNREGISTER)) {
+                    try {
+                        final String channels = new String(buf, StandardCharsets.UTF_8);
+                        for (String channel : channels.split("\0")) {
+                            if (!StringUtil.isNullOrEmpty(channel)) {
+                                this.getCraftPlayer().removeChannel(channel);
+                            }
+                        }
+                    } catch (Exception ex) {
+                        LOGGER.error("Couldn't unregister custom payload", ex);
+                        this.disconnect("Invalid payload UNREGISTER!");
+                    }
+                } else {
+                    try {
+                        this.cserver.getMessenger().dispatchIncomingMessage(((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity(), packet.identifier.toString(), buf);
+                    } catch (Exception ex) {
+                        LOGGER.error("Couldn't dispatch custom payload", ex);
+                        this.disconnect("Invalid custom payload!");
                     }
                 }
-            } catch (Exception ex) {
-                LOGGER.error("Couldn't register custom payload", ex);
-                this.disconnect("Invalid payload REGISTER!");
-                ci.cancel();
             }
-        } else if (packet.identifier.equals(CUSTOM_UNREGISTER)) {
-            try {
-                final String channels = packet.data.toString(Charsets.UTF_8);
-                for (String channel : channels.split("\0")) {
-                    if (!StringUtil.isNullOrEmpty(channel)) {
-                        this.getCraftPlayer().removeChannel(channel);
-                    }
-                }
-            } catch (Exception ex) {
-                LOGGER.error("Couldn't unregister custom payload", ex);
-                this.disconnect("Invalid payload UNREGISTER!");
-                ci.cancel();
-            }
-        } else {
-            try {
-                int readerIndex = packet.data.readerIndex();
-                final byte[] data = new byte[packet.data.readableBytes()];
-                packet.data.readBytes(data);
-                this.cserver.getMessenger().dispatchIncomingMessage(((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity(), packet.identifier.toString(), data);
-                packet.data.readerIndex(readerIndex);
-            } catch (Exception ex) {
-                LOGGER.error("Couldn't dispatch custom payload", ex);
-                this.disconnect("Invalid custom payload!");
-                ci.cancel();
-            }
-        }
+        });
     }
 
     public final boolean isDisconnected() {
