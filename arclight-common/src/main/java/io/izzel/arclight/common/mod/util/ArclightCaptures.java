@@ -39,9 +39,14 @@ public class ArclightCaptures {
     private static BlockState blockBreakPlayerState;
 
     public static void captureBlockBreakPlayer(BlockBreakEvent event) {
-        blockBreakEvent = event;
-        blockDrops = new ArrayList<>();
-        blockBreakPlayerState = event.getBlock().getState();
+        if (blockBreakEvent == null) {
+            // Force event context to be captured only when no event is being handled.
+            // Otherwise, it should be fired by handlers of current event as the event system is single threaded,
+            // which should not change the event context.
+            blockBreakEvent = event;
+            blockDrops = new ArrayList<>();
+            blockBreakPlayerState = event.getBlock().getState();
+        }
     }
 
     public static BlockBreakEvent getBlockBreakPlayer() {
