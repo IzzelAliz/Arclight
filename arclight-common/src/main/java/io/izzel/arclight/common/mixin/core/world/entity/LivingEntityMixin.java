@@ -206,19 +206,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         this.entityData.set(DATA_HEALTH_ID, (float) this.getAttributeValue(Attributes.MAX_HEALTH));
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    protected void tickDeath() {
-        ++this.deathTime;
-        if (this.deathTime >= 20 && !this.isRemoved() && !this.level.isClientSide()) {
-            this.level.broadcastEntityEvent((LivingEntity) (Object) this, (byte) 60);
-            this.remove(Entity.RemovalReason.KILLED);
-        }
-    }
-
     @Redirect(method = "dropAllDeathLoot", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;dropExperience()V"))
     private void arclight$dropLater(LivingEntity livingEntity) {
     }
