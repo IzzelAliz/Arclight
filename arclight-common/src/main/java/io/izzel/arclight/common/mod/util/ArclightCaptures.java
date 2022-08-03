@@ -17,6 +17,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 public class ArclightCaptures {
 
@@ -34,41 +35,71 @@ public class ArclightCaptures {
         }
     }
 
-    private static BlockBreakEvent blockBreakEvent;
-    private static List<ItemEntity> blockDrops;
-    private static BlockState blockBreakPlayerState;
+    /**
+     * Indicates that next BlockBreakEvent is fired directly by ServerPlayerGameMode#destroyBlock
+     * and need to be captured as primary event.
+     *
+     * @see net.minecraft.server.level.ServerPlayerGameMode#destroyBlock(BlockPos)
+     */
+    public static int primaryEventsToCapture = 0;
+    public static Stack<BlockBreakEventContext> blockBreakEventStack = new Stack<>();
+
+    public static void captureNextBlockBreakEventAsPrimaryEvent() {
+        // fix #674, some mod will implement their own "destroyBlock(...)"
+        // and its context cannot be tracked by Arclight directly.
+        // This is used to tell whether the event is fired by vanilla destroyBlock.
+        ++primaryEventsToCapture;
+    }
 
     public static void captureBlockBreakPlayer(BlockBreakEvent event) {
-        if (blockBreakEvent == null) {
-            // Force event context to be captured only when no event is being handled.
-            // Otherwise, it should be fired by handlers of current event as the event system is single threaded,
-            // which should not change the event context.
-            blockBreakEvent = event;
-            blockDrops = new ArrayList<>();
-            blockBreakPlayerState = event.getBlock().getState();
+        if (primaryEventsToCapture > 0) {
+            blockBreakEventStack.push(new BlockBreakEventContext(event, true));
+            --primaryEventsToCapture;
         }
-    }
-
-    public static BlockBreakEvent getBlockBreakPlayer() {
-        return blockBreakEvent;
-    }
-
-    public static BlockState getBlockBreakPlayerState() {
-        return blockBreakPlayerState;
+        else {
+            blockBreakEventStack.push(new BlockBreakEventContext(event, false));
+        }
     }
 
     public static List<ItemEntity> getBlockDrops() {
-        return blockDrops;
+        if (!blockBreakEventStack.empty()) {
+            return blockBreakEventStack.peek().getBlockDrops();
+        }
+        return null;
     }
 
-    public static BlockBreakEvent resetBlockBreakPlayer() {
-        try {
-            return blockBreakEvent;
-        } finally {
-            blockBreakEvent = null;
-            blockDrops = null;
-            blockBreakPlayerState = null;
+    public static BlockBreakEventContext resetBlockBreakPlayer() {
+        if (blockBreakEventStack.size() > 0) {
+            BlockBreakEventContext eventContext = blockBreakEventStack.pop();
+
+            // deal with unhandled secondary events
+            // should never happen, but just in case
+            ArrayList<BlockBreakEventContext> unhandledEvents = new ArrayList<>();
+            while (!blockBreakEventStack.empty() && !eventContext.isPrimary()) {
+                unhandledEvents.add(eventContext);
+                eventContext = blockBreakEventStack.pop();
+            }
+
+            if (unhandledEvents.size() > 0) {
+                // warn
+                eventContext.mergeAllDrops(unhandledEvents);
+            }
+
+            return eventContext;
         }
+        else {
+            return null;
+        }
+    }
+
+    public static BlockBreakEventContext resetSecondaryBlockBreakPlayer() {
+        if (blockBreakEventStack.size() > 0) {
+            BlockBreakEventContext eventContext = blockBreakEventStack.peek();
+            if (!eventContext.isPrimary()) {
+                return blockBreakEventStack.pop();
+            }
+        }
+        return null;
     }
 
     private static String quitMessage;
@@ -251,4 +282,39 @@ public class ArclightCaptures {
         throw new IllegalStateException("Recapturing " + type);
     }
 
+    public static class BlockBreakEventContext {
+        final private BlockBreakEvent blockBreakEvent;
+        final private ArrayList<ItemEntity> blockDrops;
+        final private BlockState blockBreakPlayerState;
+        final private boolean primary;
+
+        public BlockBreakEventContext(BlockBreakEvent event, boolean primary) {
+            this.blockBreakEvent = event;
+            this.blockDrops = new ArrayList<>();
+            this.blockBreakPlayerState = event.getBlock().getState();
+            this.primary = primary;
+        }
+
+        public BlockBreakEvent getEvent() {
+            return blockBreakEvent;
+        }
+
+        public ArrayList<ItemEntity> getBlockDrops() {
+            return blockDrops;
+        }
+
+        public BlockState getBlockBreakPlayerState() {
+            return blockBreakPlayerState;
+        }
+
+        public void mergeAllDrops(List<BlockBreakEventContext> others) {
+            for (BlockBreakEventContext other : others) {
+                this.getBlockDrops().addAll(other.getBlockDrops());
+            }
+        }
+
+        public boolean isPrimary() {
+            return primary;
+        }
+    }
 }
