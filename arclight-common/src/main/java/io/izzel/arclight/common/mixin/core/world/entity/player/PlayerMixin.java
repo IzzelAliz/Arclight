@@ -54,6 +54,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.extensions.IForgePlayer;
+import net.minecraftforge.entity.PartEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
@@ -372,9 +373,9 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                     }
                     EnchantmentHelper.doPostDamageEffects((net.minecraft.world.entity.player.Player) (Object) this, entity);
                     final ItemStack itemstack2 = this.getMainHandItem();
-                    Object object = entity;
-                    if (entity instanceof EnderDragonPart) {
-                        object = ((EnderDragonPart) entity).parentMob;
+                    Entity object = entity;
+                    if (entity instanceof PartEntity) {
+                        object = ((PartEntity<?>) entity).getParent();
                     }
                     if (!this.level.isClientSide && !itemstack2.isEmpty() && object instanceof LivingEntity) {
                         ItemStack copy = itemstack2.copy();
