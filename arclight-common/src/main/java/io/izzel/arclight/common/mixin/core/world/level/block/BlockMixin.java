@@ -76,7 +76,7 @@ public abstract class BlockMixin extends BlockBehaviourMixin implements BlockBri
 
     @Inject(method = "playerDestroy", at = @At("RETURN"))
     private void arclight$handleBlockDrops(Level worldIn, Player player, BlockPos pos, BlockState blockState, BlockEntity te, ItemStack stack, CallbackInfo ci) {
-        ArclightCaptures.BlockBreakEventContext breakEventContext = ArclightCaptures.resetBlockBreakPlayer();
+        ArclightCaptures.BlockBreakEventContext breakEventContext = ArclightCaptures.popPrimaryBlockBreakEvent();
 
         if (breakEventContext != null) {
             BlockBreakEvent breakEvent = breakEventContext.getEvent();

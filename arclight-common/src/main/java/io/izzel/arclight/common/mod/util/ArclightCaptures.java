@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mod.util;
 
 import io.izzel.arclight.common.mod.ArclightConstants;
+import io.izzel.arclight.common.mod.ArclightMod;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
@@ -41,24 +42,19 @@ public class ArclightCaptures {
      *
      * @see net.minecraft.server.level.ServerPlayerGameMode#destroyBlock(BlockPos)
      */
-    public static int primaryEventsToCapture = 0;
+    public static boolean isPrimaryEvent = false;
     public static Stack<BlockBreakEventContext> blockBreakEventStack = new Stack<>();
 
     public static void captureNextBlockBreakEventAsPrimaryEvent() {
         // fix #674, some mod will implement their own "destroyBlock(...)"
         // and its context cannot be tracked by Arclight directly.
         // This is used to tell whether the event is fired by vanilla destroyBlock.
-        ++primaryEventsToCapture;
+        isPrimaryEvent = true;
     }
 
     public static void captureBlockBreakPlayer(BlockBreakEvent event) {
-        if (primaryEventsToCapture > 0) {
-            blockBreakEventStack.push(new BlockBreakEventContext(event, true));
-            --primaryEventsToCapture;
-        }
-        else {
-            blockBreakEventStack.push(new BlockBreakEventContext(event, false));
-        }
+        blockBreakEventStack.push(new BlockBreakEventContext(event, isPrimaryEvent));
+        isPrimaryEvent = false;
     }
 
     public static List<ItemEntity> getBlockDrops() {
@@ -68,7 +64,7 @@ public class ArclightCaptures {
         return null;
     }
 
-    public static BlockBreakEventContext resetBlockBreakPlayer() {
+    public static BlockBreakEventContext popPrimaryBlockBreakEvent() {
         if (blockBreakEventStack.size() > 0) {
             BlockBreakEventContext eventContext = blockBreakEventStack.pop();
 
@@ -81,7 +77,7 @@ public class ArclightCaptures {
             }
 
             if (unhandledEvents.size() > 0) {
-                // warn
+                ArclightMod.LOGGER.warn("Unhandled secondary block break event");
                 eventContext.mergeAllDrops(unhandledEvents);
             }
 
@@ -92,7 +88,7 @@ public class ArclightCaptures {
         }
     }
 
-    public static BlockBreakEventContext resetSecondaryBlockBreakPlayer() {
+    public static BlockBreakEventContext popSecondaryBlockBreakEvent() {
         if (blockBreakEventStack.size() > 0) {
             BlockBreakEventContext eventContext = blockBreakEventStack.peek();
             if (!eventContext.isPrimary()) {
@@ -100,6 +96,13 @@ public class ArclightCaptures {
             }
         }
         return null;
+    }
+
+    public static void clearBlockBreakEventContexts() {
+        if (!blockBreakEventStack.empty()) {
+            ArclightMod.LOGGER.warn("Unhandled block break event");
+            blockBreakEventStack.clear();
+        }
     }
 
     private static String quitMessage;
