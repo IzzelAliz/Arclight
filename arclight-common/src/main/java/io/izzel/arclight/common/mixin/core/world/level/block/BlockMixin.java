@@ -76,13 +76,18 @@ public abstract class BlockMixin extends BlockBehaviourMixin implements BlockBri
 
     @Inject(method = "playerDestroy", at = @At("RETURN"))
     private void arclight$handleBlockDrops(Level worldIn, Player player, BlockPos pos, BlockState blockState, BlockEntity te, ItemStack stack, CallbackInfo ci) {
-        List<ItemEntity> blockDrops = ArclightCaptures.getBlockDrops();
-        org.bukkit.block.BlockState state = ArclightCaptures.getBlockBreakPlayerState();
-        BlockBreakEvent breakEvent = ArclightCaptures.resetBlockBreakPlayer();
-        if (player instanceof ServerPlayer && blockDrops != null && (breakEvent == null || breakEvent.isDropItems())
-            && DistValidate.isValid(worldIn)) {
-            CraftBlock craftBlock = CraftBlock.at(((CraftWorld) state.getWorld()).getHandle(), pos);
-            CraftEventFactory.handleBlockDropItemEvent(craftBlock, state, ((ServerPlayer) player), blockDrops);
+        ArclightCaptures.BlockBreakEventContext breakEventContext = ArclightCaptures.popPrimaryBlockBreakEvent();
+
+        if (breakEventContext != null) {
+            BlockBreakEvent breakEvent = breakEventContext.getEvent();
+            List<ItemEntity> blockDrops = breakEventContext.getBlockDrops();
+            org.bukkit.block.BlockState state = breakEventContext.getBlockBreakPlayerState();
+
+            if (player instanceof ServerPlayer && blockDrops != null && (breakEvent == null || breakEvent.isDropItems())
+                    && DistValidate.isValid(worldIn)) {
+                CraftBlock craftBlock = CraftBlock.at(((CraftWorld) state.getWorld()).getHandle(), pos);
+                CraftEventFactory.handleBlockDropItemEvent(craftBlock, state, ((ServerPlayer) player), blockDrops);
+            }
         }
     }
 }

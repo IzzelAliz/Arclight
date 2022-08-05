@@ -34,6 +34,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.common.ForgeHooks;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.Event;
@@ -48,6 +49,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
@@ -219,11 +221,42 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
         }
     }
 
+    @Inject(method = "destroyBlock", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/common/ForgeHooks;onBlockBreakEvent(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/GameType;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/core/BlockPos;)I"))
+    public void arclight$beforePrimaryEventFired(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
+        ArclightCaptures.captureNextBlockBreakEventAsPrimaryEvent();
+    }
+
+    @Inject(method = "destroyBlock", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraftforge/common/ForgeHooks;onBlockBreakEvent(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/GameType;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/core/BlockPos;)I"))
+    public void arclight$handleSecondaryBlockBreakEvents(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
+        ArclightCaptures.BlockBreakEventContext breakEventContext = ArclightCaptures.popSecondaryBlockBreakEvent();
+        while (breakEventContext != null) {
+            Block block = breakEventContext.getEvent().getBlock();
+            handleBlockDrop(breakEventContext, new BlockPos(block.getX(), block.getY(), block.getZ()));
+            breakEventContext = ArclightCaptures.popSecondaryBlockBreakEvent();
+        }
+    }
+
     @Inject(method = "destroyBlock", at = @At("RETURN"))
     public void arclight$resetBlockBreak(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
-        List<ItemEntity> blockDrops = ArclightCaptures.getBlockDrops();
-        org.bukkit.block.BlockState state = ArclightCaptures.getBlockBreakPlayerState();
-        BlockBreakEvent breakEvent = ArclightCaptures.resetBlockBreakPlayer();
+        ArclightCaptures.BlockBreakEventContext breakEventContext = ArclightCaptures.popPrimaryBlockBreakEvent();
+
+        if (breakEventContext != null) {
+            handleBlockDrop(breakEventContext, pos);
+        }
+    }
+
+    @Inject(method = {"tick", "destroyAndAck"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayerGameMode;destroyBlock(Lnet/minecraft/core/BlockPos;)Z"))
+    public void arclight$clearCaptures(CallbackInfo ci) {
+        // clear the event stack in case that interrupted events are left here unhandled
+        // it should be a new event capture session each time destroyBlock is called from these two contexts
+        ArclightCaptures.clearBlockBreakEventContexts();
+    }
+
+    private void handleBlockDrop(ArclightCaptures.BlockBreakEventContext breakEventContext, BlockPos pos) {
+        BlockBreakEvent breakEvent = breakEventContext.getEvent();
+        List<ItemEntity> blockDrops = breakEventContext.getBlockDrops();
+        org.bukkit.block.BlockState state = breakEventContext.getBlockBreakPlayerState();
+
         if (blockDrops != null && (breakEvent == null || breakEvent.isDropItems())) {
             CraftBlock craftBlock = CraftBlock.at(this.level, pos);
             CraftEventFactory.handleBlockDropItemEvent(craftBlock, state, this.player, blockDrops);
