@@ -129,7 +129,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
     // @formatter:off
     @Shadow @Final public MinecraftServer server;
-    @Shadow  protected abstract int getCoprime(int p_205735_1_);
+    @Shadow protected abstract int getCoprime(int p_205735_1_);
     @Shadow @Final public ServerPlayerGameMode gameMode;
     @Shadow public ServerGamePacketListenerImpl connection;
     @Shadow public abstract boolean isSpectator();
@@ -165,6 +165,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Shadow(remap = false) private Component tabListDisplayName;
     @Shadow public abstract void resetFallDistance();
     @Shadow public abstract void shadow$nextContainerCounter();
+    @Shadow public abstract void initMenu(AbstractContainerMenu p_143400_);
     // @formatter:on
 
     public String displayName;
@@ -722,6 +723,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         }
         this.connection.send(new ClientboundHorseScreenOpenPacket(this.containerCounter, iinventory.getContainerSize(), entityhorseabstract.getId()));
         this.containerMenu = container;
+        this.initMenu(this.containerMenu);
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.player.PlayerContainerEvent.Open((ServerPlayer) (Object) this, this.containerMenu));
     }
 
