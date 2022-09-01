@@ -4,7 +4,6 @@ import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
@@ -57,10 +56,5 @@ public abstract class ChestBlockEntityMixin extends LockableBlockEntityMixin {
     @Override
     public void setMaxStackSize(int size) {
         this.maxStack = size;
-    }
-
-    @Override
-    public boolean onlyOpCanSetNbt() {
-        return ForgeRegistries.BLOCK_ENTITY_TYPES.getKey(this.getType()).getNamespace().equals("minecraft");
     }
 }
