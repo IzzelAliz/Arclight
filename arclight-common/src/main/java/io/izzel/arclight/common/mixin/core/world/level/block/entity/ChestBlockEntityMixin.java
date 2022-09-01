@@ -57,9 +57,4 @@ public abstract class ChestBlockEntityMixin extends LockableBlockEntityMixin {
     public void setMaxStackSize(int size) {
         this.maxStack = size;
     }
-
-    @Override
-    public boolean onlyOpCanSetNbt() {
-        return this.getType().getRegistryName().getNamespace().equals("minecraft");
-    }
 }
