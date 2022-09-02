@@ -35,12 +35,12 @@ public class SnowballItemMixin extends Item {
         if (!worldIn.isRemote) {
             SnowballEntity snowballentity = new SnowballEntity(worldIn, playerIn);
             snowballentity.setItem(itemstack);
+            snowballentity.setDirectionAndMovement(playerIn, playerIn.rotationPitch, playerIn.rotationYaw, 0.0F, 1.5F, 1.0F);
             if (worldIn.addEntity(snowballentity)) {
                 if (!playerIn.abilities.isCreativeMode) {
                     itemstack.shrink(1);
                 }
                 worldIn.playSound(null, playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ(), SoundEvents.ENTITY_SNOWBALL_THROW, SoundCategory.NEUTRAL, 0.5F, 0.4F / (random.nextFloat() * 0.4F + 0.8F));
-                snowballentity.setDirectionAndMovement(playerIn, playerIn.rotationPitch, playerIn.rotationYaw, 0.0F, 1.5F, 1.0F);
             } else if (playerIn instanceof ServerPlayerEntity) {
                 ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().updateInventory();
             }
