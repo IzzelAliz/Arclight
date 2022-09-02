@@ -11,7 +11,8 @@ import java.util.function.Supplier;
 public class MavenDownloader implements Supplier<Path> {
 
     private static final Function<String, String> FORGE_TO_BMCLAPI =
-        s -> s.replace("https://files.minecraftforge.net/maven/", "https://download.mcbbs.net/maven/");
+        s -> s.replace("https://files.minecraftforge.net/maven/", "https://download.mcbbs.net/maven/")
+            .replace("https://maven.minecraftforge.net/", "https://download.mcbbs.net/maven/");
 
     private final LinkedList<String> urls;
     private final String coord;

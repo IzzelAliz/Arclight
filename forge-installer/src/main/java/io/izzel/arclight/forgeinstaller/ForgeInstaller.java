@@ -28,6 +28,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.AccessControlContext;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -89,16 +90,16 @@ public class ForgeInstaller {
         var installForge = !Files.exists(path) || forgeClasspathMissing(path);
         if (!suppliers.isEmpty() || installForge) {
             System.out.println("Downloading missing libraries ...");
-            ExecutorService pool = Executors.newFixedThreadPool(8);
+            ExecutorService pool = Executors.newWorkStealingPool(8);
             CompletableFuture<?>[] array = suppliers.stream().map(reportSupply(pool, System.out::println)).toArray(CompletableFuture[]::new);
             if (installForge) {
-                CompletableFuture<?>[] futures = installForge(installInfo, pool, System.out::println);
+                var futures = installForge(installInfo, pool, System.out::println);
                 handleFutures(System.out::println, futures);
                 System.out.println("Forge installation is starting, please wait... ");
                 try {
                     ProcessBuilder builder = new ProcessBuilder();
                     File file = new File(System.getProperty("java.home"), "bin/java");
-                    builder.command(file.getCanonicalPath(), "-Djava.net.useSystemProxies=true", "-jar", String.format("forge-%s-%s-installer.jar", installInfo.installer.minecraft, installInfo.installer.forge), "--installServer", ".", "--debug");
+                    builder.command(file.getCanonicalPath(), "-Djava.net.useSystemProxies=true", "-jar", futures[0].join().toString(), "--installServer", ".", "--debug");
                     builder.inheritIO();
                     Process process = builder.start();
                     process.waitFor();
@@ -126,11 +127,12 @@ public class ForgeInstaller {
         });
     }
 
-    private static CompletableFuture<?>[] installForge(InstallInfo info, ExecutorService pool, Consumer<String> logger) throws Exception {
+    @SuppressWarnings("unchecked")
+    private static CompletableFuture<Path>[] installForge(InstallInfo info, ExecutorService pool, Consumer<String> logger) throws Exception {
         String format = String.format(INSTALLER_URL, info.installer.minecraft, info.installer.forge, info.installer.minecraft, info.installer.forge);
         String dist = String.format("forge-%s-%s-installer.jar", info.installer.minecraft, info.installer.forge);
         FileDownloader fd = new FileDownloader(format, dist, info.installer.hash);
-        CompletableFuture<?> installerFuture = reportSupply(pool, logger).apply(fd).thenAccept(path -> {
+        var installerFuture = reportSupply(pool, logger).apply(fd).thenApply(path -> {
             try {
                 FileSystem system = FileSystems.newFileSystem(path, (ClassLoader) null);
                 Map<String, Map.Entry<String, String>> map = new HashMap<>();
@@ -144,12 +146,55 @@ public class ForgeInstaller {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            return stripDownloadMapping(path, logger);
         });
-        CompletableFuture<?> serverFuture = reportSupply(pool, logger).apply(
+        var serverFuture = reportSupply(pool, logger).apply(
             new FileDownloader(String.format(SERVER_URL, info.installer.minecraft),
                 String.format("libraries/net/minecraft/server/%1$s/server-%1$s.jar", info.installer.minecraft), VERSION_HASH.get(info.installer.minecraft))
         );
-        return new CompletableFuture<?>[]{installerFuture, serverFuture};
+        return new CompletableFuture[]{installerFuture, serverFuture};
+    }
+
+    private static Path stripDownloadMapping(Path installer, Consumer<String> logger) {
+        try {
+            logger.accept("Processing forge installer...");
+            var path = Paths.get(".arclight", "installer_stripped.jar");
+            if (!Files.isDirectory(path.getParent())) {
+                Files.createDirectories(path.getParent());
+            }
+            Files.copy(installer, path, StandardCopyOption.REPLACE_EXISTING);
+            try (var fs = FileSystems.newFileSystem(path)) {
+                // strip signature
+                Files.walk(fs.getPath("META-INF"))
+                    .filter(it -> !Files.isDirectory(it))
+                    .filter(it -> it.toString().endsWith(".SF") || it.toString().endsWith(".DSA") || it.toString().endsWith(".RSA"))
+                    .forEach(it -> {
+                        try {
+                            Files.delete(it);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                var profile = fs.getPath("install_profile.json");
+                var element = new JsonParser().parse(Files.readString(profile));
+                var processors = element.getAsJsonObject().getAsJsonArray("processors");
+                outer:
+                for (var i = 0; i < processors.size(); i++) {
+                    var processor = processors.get(i).getAsJsonObject();
+                    var args = processor.getAsJsonArray("args");
+                    for (var arg : args) {
+                        if (arg.getAsString().equals("DOWNLOAD_MOJMAPS")) {
+                            processors.remove(i);
+                            break outer;
+                        }
+                    }
+                }
+                Files.writeString(profile, new Gson().toJson(element));
+            }
+            return path;
+        } catch (Exception e) {
+            throw new CompletionException(e);
+        }
     }
 
     private static void handleFutures(Consumer<String> logger, CompletableFuture<?>... futures) {
@@ -182,7 +227,7 @@ public class ForgeInstaller {
             var data = object.getAsJsonObject("data");
             if (data.has("MOJMAPS")) {
                 var serverMapping = data.getAsJsonObject("MOJMAPS").get("server").getAsString();
-                ret.put(serverMapping.substring(1, serverMapping.length() -1),
+                ret.put(serverMapping.substring(1, serverMapping.length() - 1),
                     new AbstractMap.SimpleImmutableEntry<>(MAPPING_HASH.get(minecraft), MAPPING_URL.formatted(minecraft)));
             }
         }
