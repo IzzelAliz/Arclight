@@ -23,7 +23,6 @@
     "commands.CommandSourceStackMixin",
     "commands.arguments.EntityArgumentMixin",
     "commands.arguments.blocks.BlockStateParserMixin",
-    "commands.arguments.selector.EntitySelectorMixin",
     "commands.arguments.selector.EntitySelectorParserMixin",
     "commands.synchronization.ArgumentTypesMixin",
     "fluid.FlowingFluidMixin",

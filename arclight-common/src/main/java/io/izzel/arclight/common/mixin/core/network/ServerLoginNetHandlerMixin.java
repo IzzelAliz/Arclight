@@ -11,7 +11,6 @@ import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.Connection;
 import net.minecraft.network.PacketSendListener;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.ThrowingComponent;
 import net.minecraft.network.protocol.game.ClientboundDisconnectPacket;
 import net.minecraft.network.protocol.login.ClientboundGameProfilePacket;
 import net.minecraft.network.protocol.login.ClientboundHelloPacket;
@@ -67,7 +66,7 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
     @Shadow public abstract String getUserName();
     @Shadow private ServerPlayer delayedAcceptPlayer;
     @Shadow @Nullable private ProfilePublicKey.Data profilePublicKeyData;
-    @Shadow @Nullable private static ProfilePublicKey validatePublicKey(@org.jetbrains.annotations.Nullable ProfilePublicKey.Data p_240244_, UUID p_240245_, SignatureValidator p_240246_, boolean p_240247_) throws ThrowingComponent { return null; }
+    @Shadow @Nullable private static ProfilePublicKey validatePublicKey(@org.jetbrains.annotations.Nullable ProfilePublicKey.Data p_240244_, UUID p_240245_, SignatureValidator p_240246_, boolean p_240247_) throws ProfilePublicKey.ValidationException { return null; }
     // @formatter:on
 
     public String hostname;
@@ -107,8 +106,8 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
                 SignatureValidator signaturevalidator = this.server.getServiceSignatureValidator();
 
                 profilePublicKey = validatePublicKey(this.profilePublicKeyData, this.gameProfile.getId(), signaturevalidator, this.server.enforceSecureProfile());
-            } catch (ThrowingComponent e) {
-                LOGGER.error(e.getMessage(), e.getCause());
+            } catch (ProfilePublicKey.ValidationException e) {
+                LOGGER.error("Failed to validate profile key: {}", e.getMessage());
                 if (!this.connection.isMemoryConnection()) {
                     this.disconnect(e.getComponent());
                     return;
@@ -217,7 +216,7 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
         try {
             PrivateKey privatekey = this.server.getKeyPair().getPrivate();
             if (this.profilePublicKeyData != null) {
-                ProfilePublicKey profilepublickey = ProfilePublicKey.createTrusted(this.profilePublicKeyData);
+                ProfilePublicKey profilepublickey = new ProfilePublicKey(this.profilePublicKeyData);
                 if (!packetIn.isChallengeSignatureValid(this.nonce, profilepublickey)) {
                     throw new IllegalStateException("Protocol error");
                 }

@@ -69,10 +69,10 @@ public abstract class RepairContainerMixin extends ItemCombinerMixin {
             j = j + itemstack.getBaseRepairCost() + (itemstack2.isEmpty() ? 0 : itemstack2.getBaseRepairCost());
             this.repairItemCountCost = 0;
             boolean flag = false;
+            if (!ForgeHooks.onAnvilChange((AnvilMenu) (Object) this, itemstack, itemstack2, resultSlots, itemName, j, this.player))
+                return;
 
             if (!itemstack2.isEmpty()) {
-                if (!ForgeHooks.onAnvilChange((AnvilMenu) (Object) this, itemstack, itemstack2, resultSlots, itemName, j, this.player))
-                    return;
                 flag = itemstack2.getItem() == Items.ENCHANTED_BOOK && !EnchantedBookItem.getEnchantments(itemstack2).isEmpty();
                 if (itemstack1.isDamageableItem() && itemstack1.getItem().isValidRepairItem(itemstack, itemstack2)) {
                     int l2 = Math.min(itemstack1.getDamageValue(), itemstack1.getMaxDamage() / 4);

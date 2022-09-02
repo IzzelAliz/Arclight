@@ -478,6 +478,18 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         this.forceTicks = false;
     }
 
+    // bukkit callbacks
+    public void addLevel(ServerLevel level) {
+        this.levels.put(level.dimension(), level);
+        this.markWorldsDirty();
+    }
+
+    public void removeLevel(ServerLevel level) {
+        MinecraftForge.EVENT_BUS.post(new LevelEvent.Unload(level));
+        this.levels.remove(level.dimension());
+        this.markWorldsDirty();
+    }
+
     @Inject(method = "tickChildren", at = @At("HEAD"))
     public void arclight$runScheduler(BooleanSupplier hasTimeLeft, CallbackInfo ci) {
         ArclightConstants.currentTick = (int) (System.currentTimeMillis() / 50);

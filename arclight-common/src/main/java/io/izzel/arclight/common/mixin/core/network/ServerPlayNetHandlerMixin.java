@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.network;
 
 import com.mojang.brigadier.ParseResults;
+import com.mojang.datafixers.util.Pair;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.inventory.container.ContainerBridge;
@@ -54,6 +55,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.animal.Bucketable;
+import net.minecraft.world.entity.animal.allay.Allay;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.entity.projectile.AbstractArrow;
@@ -140,6 +142,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -148,6 +151,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.UnaryOperator;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 @Mixin(ServerGamePacketListenerImpl.class)
 public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerBridge {
@@ -973,6 +977,9 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     private ChatDecorator arclight$asyncChatPreview() {
         return (player, component) -> ForgeHooks.getServerChatPreviewDecorator().decorate(player, component)
             .thenApplyAsync(forgeComponent -> {
+                if (player == null) {
+                    return forgeComponent;
+                }
                 AsyncPlayerChatPreviewEvent event = new AsyncPlayerChatPreviewEvent(true, ((ServerPlayerEntityBridge) player).bridge$getBukkitEntity(), CraftChatMessage.fromComponent(forgeComponent), new LazyPlayerSet(server));
                 String originalFormat = event.getFormat(), originalMessage = event.getMessage();
                 this.cserver.getPluginManager().callEvent(event);
@@ -1189,7 +1196,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         float f6 = Mth.sin(-f1 * 0.017453292f);
         float f7 = f4 * f5;
         float f8 = f3 * f5;
-        double d4 = (this.player.gameMode.getGameModeForPlayer() == GameType.CREATIVE) ? 5.0 : 4.5;
+        double d4 = this.player.getReachDistance();
         Vec3 vec3d2 = vec3d.add(f7 * d4, f6 * d4, f8 * d4);
         HitResult result = this.player.level.clip(new ClipContext(vec3d, vec3d2, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, this.player));
         if (result == null || result.getType() != HitResult.Type.BLOCK) {
@@ -1273,6 +1280,10 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                     if (event.isCancelled() || player.getInventory().getSelected() == null || player.getInventory().getSelected().getItem() != origItem) {
                         // Refresh the current entity metadata
                         send(new ClientboundSetEntityDataPacket(entity.getId(), entity.getEntityData(), true));
+                        if (entity instanceof Allay) {
+                            send(new ClientboundSetEquipmentPacket(entity.getId(), Arrays.stream(net.minecraft.world.entity.EquipmentSlot.values()).map((slot) -> Pair.of(slot, ((LivingEntity) entity).getItemBySlot(slot).copy())).collect(Collectors.toList())));
+                            player.containerMenu.sendAllDataToRemote();
+                        }
                     }
 
                     if (event.isCancelled()) {

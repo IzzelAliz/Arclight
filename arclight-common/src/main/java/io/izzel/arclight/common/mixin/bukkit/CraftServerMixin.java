@@ -13,13 +13,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.players.PlayerList;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.CommandEvent;
-import net.minecraftforge.event.level.LevelEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.command.CraftBlockCommandSender;
 import org.bukkit.craftbukkit.v.command.CraftCommandMap;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
@@ -108,12 +106,6 @@ public abstract class CraftServerMixin implements CraftServerBridge {
     @Overwrite(remap = false)
     public ConsoleReader getReader() {
         return null;
-    }
-
-    @Inject(method = "unloadWorld(Lorg/bukkit/World;Z)Z", remap = false, require = 1, at = @At(value = "INVOKE", ordinal = 1, target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))
-    private void arclight$unloadForge(World world, boolean save, CallbackInfoReturnable<Boolean> cir) {
-        MinecraftForge.EVENT_BUS.post(new LevelEvent.Unload(((CraftWorld) world).getHandle()));
-        this.console.markWorldsDirty();
     }
 
     @ModifyVariable(method = "dispatchCommand", remap = false, index = 2, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lorg/spigotmc/AsyncCatcher;catchOp(Ljava/lang/String;)V"))
