@@ -3,12 +3,12 @@ package io.izzel.arclight.common.mixin.bukkit;
 import com.google.common.base.Function;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
-import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
@@ -20,6 +20,7 @@ import org.bukkit.craftbukkit.v.block.CraftBlockStates;
 import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
+import org.bukkit.entity.Item;
 import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockFormEvent;
 import org.bukkit.event.block.BlockGrowEvent;
@@ -31,6 +32,7 @@ import org.bukkit.event.block.NotePlayEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.ItemSpawnEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -70,10 +72,10 @@ public class CraftEventFactoryMixin {
         // todo blockDamage is lost
         EntityDamageEvent event;
         if (source.getEntity() != null) {
-            ArclightMod.LOGGER.debug("Unhandled damage of {} by {} from {}", entity, source.getEntity(), source.msgId);
+            // ArclightMod.LOGGER.debug("Unhandled damage of {} by {} from {}", entity, source.getEntity(), source.msgId);
             event = new EntityDamageByEntityEvent(((EntityBridge) source.getEntity()).bridge$getBukkitEntity(), ((EntityBridge) entity).bridge$getBukkitEntity(), EntityDamageEvent.DamageCause.CUSTOM, modifiers, modifierFunctions);
         } else {
-            ArclightMod.LOGGER.debug("Unhandled damage of {} from {}", entity, source.msgId);
+            // ArclightMod.LOGGER.debug("Unhandled damage of {} from {}", entity, source.msgId);
             event = new EntityDamageEvent(((EntityBridge) entity).bridge$getBukkitEntity(), EntityDamageEvent.DamageCause.CUSTOM, modifiers, modifierFunctions);
         }
         event.setCancelled(cancelled);
@@ -232,5 +234,15 @@ public class CraftEventFactoryMixin {
             Bukkit.getPluginManager().callEvent(event);
         }
         return event;
+    }
+
+    @Inject(method = "callItemSpawnEvent", cancellable = true, at = @At("HEAD"))
+    private static void arclight$noAirDrops(ItemEntity itemEntity, CallbackInfoReturnable<ItemSpawnEvent> cir) {
+        if (itemEntity.getItem().isEmpty()) {
+            Item entity = (Item) ((EntityBridge) itemEntity).bridge$getBukkitEntity();
+            ItemSpawnEvent event = new ItemSpawnEvent(entity);
+            event.setCancelled(true);
+            cir.setReturnValue(event);
+        }
     }
 }
