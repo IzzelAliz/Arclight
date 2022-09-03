@@ -130,6 +130,7 @@ public abstract class ArclightClassCache implements AutoCloseable {
                     Files.createDirectories(blob);
                 }
                 if (obsolete) {
+                    Files.deleteIfExists(version);
                     Files.writeString(version, current, StandardOpenOption.CREATE);
                     ArclightMod.LOGGER.info(MARKER, "Obsolete plugin class cache is cleared");
                 }
