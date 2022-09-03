@@ -39,6 +39,7 @@
     "network.chat.TextColorMixin",
     "network.protocol.PacketThreadUtilMixin",
     "network.protocol.game.CCloseWindowPacketMixin",
+    "network.protocol.game.ClientboundSystemChatPacketMixin",
     "network.protocol.game.CPlayerTryUseItemOnBlockPacketMixin",
     "network.protocol.game.CPlayerTryUseItemPacketMixin",
     "network.protocol.game.SWorldBorderPacketMixin",

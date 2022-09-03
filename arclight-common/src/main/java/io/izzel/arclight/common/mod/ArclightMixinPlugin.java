@@ -126,6 +126,7 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
         .add("net.minecraft.network.chat.TextColor")
         .add("net.minecraft.commands.Commands")
         .add("net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess")
+        .add("net.minecraft.network.protocol.game.ClientboundSystemChatPacket")
         .build();
 
     @Override
