@@ -14,7 +14,7 @@
     "conformVisibility": true
   },
   "mixinPriority": 500,
-  "compatibilityLevel": "JAVA_11",
+  "compatibilityLevel": "JAVA_17",
   "mixins": [
     "advancements.AdvancementMixin",
     "commands.CommandsMixin",
