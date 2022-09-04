@@ -36,6 +36,7 @@ import org.bukkit.craftbukkit.v.inventory.CraftMetaSkull;
 import org.bukkit.craftbukkit.v.inventory.CraftMetaSpawnEgg;
 import org.bukkit.craftbukkit.v.inventory.CraftMetaSuspiciousStew;
 import org.bukkit.craftbukkit.v.inventory.CraftMetaTropicalFishBucket;
+import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
@@ -218,6 +219,13 @@ public abstract class MaterialMixin implements MaterialBridge {
         }
     }
 
+    @Inject(method = "getMaxDurability", cancellable = true, at = @At("HEAD"))
+    private void arclight$getMaxDurability(CallbackInfoReturnable<Integer> cir) {
+        if (arclight$spec != null) {
+            cir.setReturnValue(arclight$spec.maxDurability);
+        }
+    }
+
     @Override
     public MaterialPropertySpec bridge$getSpec() {
         return arclight$spec;
@@ -341,6 +349,10 @@ public abstract class MaterialMixin implements MaterialBridge {
         }
         if (arclight$spec.blastResistance == null) {
             arclight$spec.blastResistance = block != null ? block.getExplosionResistance() : 0;
+        }
+        if (arclight$spec.craftingRemainingItem == null) {
+            // noinspection deprecation
+            arclight$spec.craftingRemainingItem = item != null && item.hasCraftingRemainingItem() ? CraftMagicNumbers.getMaterial(item.getCraftingRemainingItem()).name() : null;
         }
         if (arclight$spec.itemMetaType == null) {
             arclight$spec.itemMetaType = "UNSPECIFIC";
