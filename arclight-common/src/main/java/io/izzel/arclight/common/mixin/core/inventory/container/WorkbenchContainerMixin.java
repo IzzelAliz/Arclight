@@ -81,7 +81,9 @@ public abstract class WorkbenchContainerMixin extends ContainerMixin implements 
                 }
             }
 
-            itemstack = CraftEventFactory.callPreCraftEvent(inventory, resultInventory, itemstack, ((ContainerBridge) container).bridge$getBukkitView(), false);
+            if (container != null) {
+                itemstack = CraftEventFactory.callPreCraftEvent(inventory, resultInventory, itemstack, ((ContainerBridge) container).bridge$getBukkitView(), false);
+            }
 
             resultInventory.setInventorySlotContents(0, itemstack);
             serverplayerentity.connection.sendPacket(new SSetSlotPacket(i, 0, itemstack));
