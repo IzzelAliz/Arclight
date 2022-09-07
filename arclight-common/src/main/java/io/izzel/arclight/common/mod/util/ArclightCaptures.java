@@ -5,10 +5,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.Container;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.datafix.codec.DatapackCodec;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.server.ServerWorld;
 import org.bukkit.TreeType;
 import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
@@ -234,4 +236,52 @@ public class ArclightCaptures {
         throw new IllegalStateException("Recapturing " + type);
     }
 
+    private static TileEntity tickingTileEntity;
+
+    public static void captureTickingTileEntity(TileEntity tileEntity) {
+        tickingTileEntity = tileEntity;
+    }
+
+    public static TileEntity getTickingTileEntity() {
+        return tickingTileEntity;
+    }
+
+    public static void resetTickingTileEntity() {
+        tickingTileEntity = null;
+    }
+
+    private static ServerWorld tickingWorld;
+    private static BlockPos tickingPosition;
+
+    public static void captureTickingBlock(ServerWorld world, BlockPos pos) {
+        tickingWorld = world;
+        tickingPosition = pos;
+    }
+
+    public static ServerWorld getTickingWorld() {
+        return tickingWorld;
+    }
+
+    public static BlockPos getTickingPosition() {
+        return tickingPosition;
+    }
+
+    public static void resetTickingBlock() {
+        tickingWorld = null;
+        tickingPosition = null;
+    }
+
+    private static Entity tickingEntity;
+
+    public static void captureTickingEntity(Entity entity) {
+        tickingEntity = entity;
+    }
+
+    public static Entity getTickingEntity() {
+        return tickingEntity;
+    }
+
+    public static void resetTickingEntity() {
+        tickingEntity = null;
+    }
 }

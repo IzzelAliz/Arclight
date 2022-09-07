@@ -43,6 +43,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -202,6 +203,18 @@ public abstract class WorldMixin implements WorldBridge, IWorldWriter {
         } catch (StackOverflowError e) {
             lastPhysicsProblem = pos;
         }
+    }
+
+    @ModifyVariable(method = "tickBlockEntities", ordinal = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/tileentity/ITickableTileEntity;tick()V"))
+    private TileEntity arclight$captureTileEntity(TileEntity tileEntity) {
+        ArclightCaptures.captureTickingTileEntity(tileEntity);
+        return tileEntity;
+    }
+
+    @ModifyVariable(method = "tickBlockEntities", ordinal = 0, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/tileentity/ITickableTileEntity;tick()V"))
+    private TileEntity arclight$resetTileEntity(TileEntity tileEntity) {
+        ArclightCaptures.resetTickingTileEntity();
+        return tileEntity;
     }
 
     public CraftServer getServer() {

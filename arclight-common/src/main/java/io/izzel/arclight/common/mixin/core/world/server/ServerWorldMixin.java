@@ -39,6 +39,7 @@ import net.minecraft.world.DimensionType;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.ExplosionContext;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.listener.IChunkStatusListener;
@@ -75,6 +76,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -480,5 +482,53 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         if (!portalEvent.isCancelled()) {
             blockList.updateList();
         }
+    }
+
+    @ModifyVariable(method = "tickBlock", ordinal = 0, argsOnly = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;tick(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/util/math/BlockPos;Ljava/util/Random;)V"))
+    private NextTickListEntry<Block> arclight$captureTickingBlock(NextTickListEntry<Block> blockTickEntry) {
+        ArclightCaptures.captureTickingBlock((ServerWorld) (Object) this, blockTickEntry.position);
+        return blockTickEntry;
+    }
+
+    @ModifyVariable(method = "tickBlock", ordinal = 0, argsOnly = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/block/BlockState;tick(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/util/math/BlockPos;Ljava/util/Random;)V"))
+    private NextTickListEntry<Block> arclight$resetTickingBlock(NextTickListEntry<Block> blockTickEntry) {
+        ArclightCaptures.resetTickingBlock();
+        return blockTickEntry;
+    }
+
+    @ModifyVariable(method = "tickEnvironment", ordinal = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;randomTick(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/util/math/BlockPos;Ljava/util/Random;)V"))
+    private BlockPos arclight$captureRandomTick(BlockPos pos) {
+        ArclightCaptures.captureTickingBlock((ServerWorld) (Object) this, pos);
+        return pos;
+    }
+
+    @ModifyVariable(method = "tickEnvironment", ordinal = 0, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/block/BlockState;randomTick(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/util/math/BlockPos;Ljava/util/Random;)V"))
+    private BlockPos arclight$resetRandomTick(BlockPos pos) {
+        ArclightCaptures.resetTickingBlock();
+        return pos;
+    }
+
+    @ModifyVariable(method = "updateEntity", argsOnly = true, ordinal = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;tick()V"))
+    private Entity arclight$captureTickingEntity(Entity entity) {
+        ArclightCaptures.captureTickingEntity(entity);
+        return entity;
+    }
+
+    @ModifyVariable(method = "updateEntity", argsOnly = true, ordinal = 0, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/entity/Entity;tick()V"))
+    private Entity arclight$resetTickingEntity(Entity entity) {
+        ArclightCaptures.resetTickingEntity();
+        return entity;
+    }
+
+    @ModifyVariable(method = "tickPassenger", argsOnly = true, ordinal = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;updateRidden()V"))
+    private Entity arclight$captureTickingPassenger(Entity entity) {
+        ArclightCaptures.captureTickingEntity(entity);
+        return entity;
+    }
+
+    @ModifyVariable(method = "tickPassenger", argsOnly = true, ordinal = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;updateRidden()V"))
+    private Entity arclight$resetTickingPassenger(Entity entity) {
+        ArclightCaptures.resetTickingEntity();
+        return entity;
     }
 }
