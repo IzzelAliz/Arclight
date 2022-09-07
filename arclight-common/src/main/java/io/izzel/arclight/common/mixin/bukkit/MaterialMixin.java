@@ -15,6 +15,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.BlockState;
@@ -210,8 +211,8 @@ public abstract class MaterialMixin implements MaterialBridge {
 
     @Inject(method = "getCraftingRemainingItem", cancellable = true, at = @At("HEAD"))
     private void arclight$getCraftingRemainingItem(CallbackInfoReturnable<Material> cir) {
-        if (arclight$spec != null) {
-            cir.setReturnValue(Material.getMaterial(arclight$spec.craftingRemainingItem));
+        if (arclight$spec != null && arclight$spec.craftingRemainingItem != null) {
+            cir.setReturnValue(CraftMagicNumbers.getMaterial(ForgeRegistries.ITEMS.getValue(new ResourceLocation(arclight$spec.craftingRemainingItem))));
         }
     }
 
@@ -355,7 +356,7 @@ public abstract class MaterialMixin implements MaterialBridge {
         }
         if (arclight$spec.craftingRemainingItem == null) {
             // noinspection deprecation
-            arclight$spec.craftingRemainingItem = item != null && item.hasContainerItem() ? CraftMagicNumbers.getMaterial(item.getContainerItem()).name() : null;
+            arclight$spec.craftingRemainingItem = item != null && item.hasContainerItem() ? ForgeRegistries.ITEMS.getKey(item.getContainerItem()).toString() : null;
         }
         if (arclight$spec.itemMetaType == null) {
             arclight$spec.itemMetaType = "UNSPECIFIC";
