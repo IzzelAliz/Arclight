@@ -44,6 +44,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.extensions.IForgeEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -88,7 +89,7 @@ import java.util.*;
 
 @SuppressWarnings("ConstantConditions")
 @Mixin(Entity.class)
-public abstract class EntityMixin implements InternalEntityBridge, EntityBridge, ICommandSourceBridge {
+public abstract class EntityMixin implements InternalEntityBridge, EntityBridge, ICommandSourceBridge, IForgeEntity {
 
     // @formatter:off
     @Shadow public float rotationYaw;
@@ -896,7 +897,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                     }
 
                     ArclightCaptures.captureCraftPortalEvent(event);
-                    return PortalSize.func_242963_a(worldFinal, result, direction$axis, vector3d, this.getSize(this.getPose()), this.getMotion(), this.rotationYaw, this.rotationPitch);
+                    return PortalSize.func_242963_a(worldFinal, result, direction$axis, vector3d, this.getDimensionsForge(this.getPose()), this.getMotion(), this.rotationYaw, this.rotationPitch);
                 }).orElse(null);
             }
         } else {
