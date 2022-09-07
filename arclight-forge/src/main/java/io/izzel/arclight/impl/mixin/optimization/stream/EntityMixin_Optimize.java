@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 public abstract class EntityMixin_Optimize {
 
     // @formatter:off
-    @Shadow @Final public ImmutableList<Entity> passengers;
+    @Shadow @Final public List<Entity> passengers;
     // @formatter:on
 
     /**
