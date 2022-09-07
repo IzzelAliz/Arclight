@@ -12,6 +12,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FallingBlock;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.BlockState;
@@ -207,8 +208,8 @@ public abstract class MaterialMixin implements MaterialBridge {
 
     @Inject(method = "getCraftingRemainingItem", cancellable = true, at = @At("HEAD"))
     private void arclight$getCraftingRemainingItem(CallbackInfoReturnable<Material> cir) {
-        if (arclight$spec != null) {
-            cir.setReturnValue(Material.getMaterial(arclight$spec.craftingRemainingItem));
+        if (arclight$spec != null && arclight$spec.craftingRemainingItem != null) {
+            cir.setReturnValue(CraftMagicNumbers.getMaterial(ForgeRegistries.ITEMS.getValue(new ResourceLocation(arclight$spec.craftingRemainingItem))));
         }
     }
 
@@ -352,7 +353,7 @@ public abstract class MaterialMixin implements MaterialBridge {
         }
         if (arclight$spec.craftingRemainingItem == null) {
             // noinspection deprecation
-            arclight$spec.craftingRemainingItem = item != null && item.hasCraftingRemainingItem() ? CraftMagicNumbers.getMaterial(item.getCraftingRemainingItem()).name() : null;
+            arclight$spec.craftingRemainingItem = item != null && item.hasCraftingRemainingItem() ? ForgeRegistries.ITEMS.getKey(item.getCraftingRemainingItem()).toString() : null;
         }
         if (arclight$spec.itemMetaType == null) {
             arclight$spec.itemMetaType = "UNSPECIFIC";
