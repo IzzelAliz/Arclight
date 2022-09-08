@@ -81,6 +81,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -474,5 +475,53 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         if (!portalEvent.isCancelled()) {
             blockList.updateList();
         }
+    }
+
+    @ModifyVariable(method = "tickBlock", ordinal = 0, argsOnly = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;tick(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/util/RandomSource;)V"))
+    private BlockPos arclight$captureTickingBlock(BlockPos pos) {
+        ArclightCaptures.captureTickingBlock((ServerLevel) (Object) this, pos);
+        return pos;
+    }
+
+    @ModifyVariable(method = "tickBlock", ordinal = 0, argsOnly = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/level/block/state/BlockState;tick(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/util/RandomSource;)V"))
+    private BlockPos arclight$resetTickingBlock(BlockPos pos) {
+        ArclightCaptures.resetTickingBlock();
+        return pos;
+    }
+
+    @ModifyVariable(method = "tickChunk", ordinal = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;randomTick(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/util/RandomSource;)V"))
+    private BlockPos arclight$captureRandomTick(BlockPos pos) {
+        ArclightCaptures.captureTickingBlock((ServerLevel) (Object) this, pos);
+        return pos;
+    }
+
+    @ModifyVariable(method = "tickChunk", ordinal = 0, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/level/block/state/BlockState;randomTick(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/util/RandomSource;)V"))
+    private BlockPos arclight$resetRandomTick(BlockPos pos) {
+        ArclightCaptures.resetTickingBlock();
+        return pos;
+    }
+
+    @ModifyVariable(method = "tickNonPassenger", argsOnly = true, ordinal = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;tick()V"))
+    private Entity arclight$captureTickingEntity(Entity entity) {
+        ArclightCaptures.captureTickingEntity(entity);
+        return entity;
+    }
+
+    @ModifyVariable(method = "tickNonPassenger", argsOnly = true, ordinal = 0, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/Entity;tick()V"))
+    private Entity arclight$resetTickingEntity(Entity entity) {
+        ArclightCaptures.resetTickingEntity();
+        return entity;
+    }
+
+    @ModifyVariable(method = "tickPassenger", argsOnly = true, ordinal = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;rideTick()V"))
+    private Entity arclight$captureTickingPassenger(Entity entity) {
+        ArclightCaptures.captureTickingEntity(entity);
+        return entity;
+    }
+
+    @ModifyVariable(method = "tickPassenger", argsOnly = true, ordinal = 1, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/Entity;rideTick()V"))
+    private Entity arclight$resetTickingPassenger(Entity entity) {
+        ArclightCaptures.resetTickingEntity();
+        return entity;
     }
 }
