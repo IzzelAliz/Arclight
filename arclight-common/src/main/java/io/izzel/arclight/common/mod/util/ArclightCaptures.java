@@ -4,6 +4,7 @@ import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.ArclightMod;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -82,8 +83,7 @@ public class ArclightCaptures {
             }
 
             return eventContext;
-        }
-        else {
+        } else {
             return null;
         }
     }
@@ -281,11 +281,47 @@ public class ArclightCaptures {
         return (T) tickingBlockEntity;
     }
 
+    private static ServerLevel tickingLevel;
+    private static BlockPos tickingPosition;
+
+    public static void captureTickingBlock(ServerLevel level, BlockPos pos) {
+        tickingLevel = level;
+        tickingPosition = pos;
+    }
+
+    public static ServerLevel getTickingLevel() {
+        return tickingLevel;
+    }
+
+    public static BlockPos getTickingPosition() {
+        return tickingPosition;
+    }
+
+    public static void resetTickingBlock() {
+        tickingLevel = null;
+        tickingPosition = null;
+    }
+
+    private static Entity tickingEntity;
+
+    public static void captureTickingEntity(Entity entity) {
+        tickingEntity = entity;
+    }
+
+    public static Entity getTickingEntity() {
+        return tickingEntity;
+    }
+
+    public static void resetTickingEntity() {
+        tickingEntity = null;
+    }
+
     private static void recapture(String type) {
         throw new IllegalStateException("Recapturing " + type);
     }
 
     public static class BlockBreakEventContext {
+
         final private BlockBreakEvent blockBreakEvent;
         final private ArrayList<ItemEntity> blockDrops;
         final private BlockState blockBreakPlayerState;
