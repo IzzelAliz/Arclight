@@ -526,7 +526,7 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         return entity;
     }
 
-    @ModifyVariable(method = "tickPassenger", argsOnly = true, ordinal = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;updateRidden()V"))
+    @ModifyVariable(method = "tickPassenger", argsOnly = true, ordinal = 1, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/entity/Entity;updateRidden()V"))
     private Entity arclight$resetTickingPassenger(Entity entity) {
         ArclightCaptures.resetTickingEntity();
         return entity;
