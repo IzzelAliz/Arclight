@@ -22,6 +22,7 @@
     "activationrange.entity.ItemEntityMixin_ActivationRange",
     "activationrange.entity.LivingEntityMixin_ActivationRange",
     "activationrange.entity.VillagerEntityMixin_ActivationRange",
+    "chunkload.SleepInBedMixin_Optimize",
     "network.ChunkMapMixin_Optimize",
     "network.ChunkMapMixin_Optimize$TrackedEntityMixin",
     "network.ConnectionMixin_Optimize",
