@@ -224,9 +224,9 @@ public abstract class MaterialMixin implements MaterialBridge {
     }
 
     @Inject(method = "getMaxDurability", cancellable = true, at = @At("HEAD"))
-    private void arclight$getMaxDurability(CallbackInfoReturnable<Integer> cir) {
+    private void arclight$getMaxDurability(CallbackInfoReturnable<Short> cir) {
         if (arclight$spec != null) {
-            cir.setReturnValue(arclight$spec.maxDurability);
+            cir.setReturnValue(arclight$spec.maxDurability.shortValue());
         }
     }
 
