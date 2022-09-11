@@ -7,7 +7,7 @@ A Bukkit server implementation utilizing Mixin.
 | Minecraft |  Forge  | Status |                                                                         Build                                                                          |
 |:---------:|:-------:| :---: |:------------------------------------------------------------------------------------------------------------------------------------------------------:|
 |  1.19.x   | 43.1.3  | ACTIVE | [![1.19 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-19?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-19) |
-|  1.18.x   | 40.1.76 | ACTIVE | [![1.18 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-18?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-18) |
+|  1.18.x   | 40.1.80 | ACTIVE | [![1.18 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-18?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-18) |
 |  1.17.x   | 37.1.0  | [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/1.17/1.0.2) | [![1.17 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-17?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-17) |
 |  1.16.x   | 36.2.39 | ACTIVE | [![1.16 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-16?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-16) |
 |  1.15.x   | 31.2.48 | [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/1.15/1.0.19) | [![1.15 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-15?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-15) |
