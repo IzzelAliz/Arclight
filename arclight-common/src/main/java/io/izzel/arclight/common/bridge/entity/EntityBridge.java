@@ -8,7 +8,6 @@ import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.List;
-import java.util.Set;
 
 public interface EntityBridge extends ICommandSourceBridge {
 
@@ -49,8 +48,6 @@ public interface EntityBridge extends ICommandSourceBridge {
     boolean bridge$addPassenger(Entity entity);
 
     List<Entity> bridge$getPassengers();
-
-    void bridge$getRecursivePassengers(boolean playersOnly, Set<Entity> passengers);
 
     void bridge$setRideCooldown(int rideCooldown);
 

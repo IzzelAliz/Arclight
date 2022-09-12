@@ -85,7 +85,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+import java.util.UUID;
 
 @SuppressWarnings("ConstantConditions")
 @Mixin(Entity.class)
@@ -192,7 +196,6 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow protected boolean firstUpdate;
     @Shadow public abstract boolean isSilent();
     @Shadow public abstract void setInvisible(boolean invisible);
-    @Shadow protected abstract void getRecursivePassengers(boolean playersOnly, Set<Entity> passengers);
     // @formatter:on
 
     private static final int CURRENT_LEVEL = 2;
@@ -595,11 +598,6 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Override
     public List<Entity> bridge$getPassengers() {
         return passengers;
-    }
-
-    @Override
-    public void bridge$getRecursivePassengers(boolean playersOnly, Set<Entity> passengers) {
-        this.getRecursivePassengers(playersOnly, passengers);
     }
 
     @Override

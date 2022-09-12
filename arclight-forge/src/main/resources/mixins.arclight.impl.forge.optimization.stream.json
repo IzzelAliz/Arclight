@@ -6,14 +6,6 @@
   "mixins": [
     "CommandNodeMixin_Optimization",
     "GoalSelectorMixin",
-    "ITaskQueue_PriorityMixin",
-    "AbstractHorseEntityMixin_Optimize",
-    "AbstractMinecraftEntityMixin_Optimize",
-    "BoatEntityMixin_Optimize",
-    "EntityMixin_Optimize",
-    "MixinTrackedEntity_Optimize",
-    "PigEntityMixin_Optimize",
-    "RavagerEntityMixin_Optimize",
-    "SSetPassengersPacketMixin_Optimize"
+    "ITaskQueue_PriorityMixin"
   ]
 }

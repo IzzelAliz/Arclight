@@ -100,11 +100,6 @@ public abstract class TrackedEntityMixin implements TrackedEntityBridge {
         this.trackedPlayers = trackedPlayers;
     }
 
-    @Override
-    public void bridge$setPassengers(List<Entity> passengers) {
-        this.passengers = passengers;
-    }
-
     /**
      * @author IzzelAliz
      * @reason
