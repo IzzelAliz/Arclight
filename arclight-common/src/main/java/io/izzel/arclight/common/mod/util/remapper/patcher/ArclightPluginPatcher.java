@@ -5,6 +5,7 @@ import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.util.remapper.ClassLoaderRemapper;
 import io.izzel.arclight.common.mod.util.remapper.GlobalClassRepo;
 import io.izzel.arclight.common.mod.util.remapper.PluginTransformer;
+import io.izzel.arclight.common.mod.util.remapper.patcher.integrated.IntegratedPatcher;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.objectweb.asm.tree.ClassNode;
 
@@ -37,10 +38,10 @@ public class ArclightPluginPatcher implements PluginTransformer {
     }
 
     public static List<PluginPatcher> load(List<PluginTransformer> transformerList) {
+        List<PluginPatcher> list = new ArrayList<>();
         File pluginFolder = new File("plugins");
         if (pluginFolder.exists()) {
             ArclightMod.LOGGER.info("patcher.loading");
-            ArrayList<PluginPatcher> list = new ArrayList<>();
             File[] files = pluginFolder.listFiles();
             if (files != null) {
                 for (File file : files) {
@@ -49,14 +50,14 @@ public class ArclightPluginPatcher implements PluginTransformer {
                     }
                 }
                 if (!list.isEmpty()) {
-                    list.sort(Comparator.comparing(PluginPatcher::priority));
                     ArclightMod.LOGGER.info("patcher.loaded", list.size());
-                    transformerList.add(new ArclightPluginPatcher(list));
-                    return list;
                 }
             }
         }
-        return Collections.emptyList();
+        list.add(new IntegratedPatcher());
+        list.sort(Comparator.comparing(PluginPatcher::priority));
+        transformerList.add(new ArclightPluginPatcher(list));
+        return list;
     }
 
     private static Optional<PluginPatcher> loadFromJar(File file) {
