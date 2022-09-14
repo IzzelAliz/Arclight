@@ -17,11 +17,6 @@ import java.util.List;
 public interface IInventoryMixin extends IInventoryBridge {
 
     @Override
-    default List<ItemStack> getContents() {
-        return new ArrayList<>();
-    }
-
-    @Override
     default void onOpen(CraftHumanEntity who) {
     }
 
@@ -31,7 +26,7 @@ public interface IInventoryMixin extends IInventoryBridge {
 
     @Override
     default List<HumanEntity> getViewers() {
-        return new ArrayList<>();
+        return SideViewingTracker.getViewers((IInventory) this);
     }
 
     @Override
