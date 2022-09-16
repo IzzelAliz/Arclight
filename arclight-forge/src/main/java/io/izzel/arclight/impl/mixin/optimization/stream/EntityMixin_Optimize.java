@@ -116,9 +116,8 @@ public abstract class EntityMixin_Optimize {
     @Overwrite
     public Stream<Entity> getSelfAndPassengers() {
         if (this.passengers.isEmpty()) {
-            return Stream.empty();
+            return Stream.of((Entity) (((Object) this)));
         }
-
         return Stream.concat(Stream.of((Entity) (((Object) this))), this.passengers.stream().flatMap(Entity::getSelfAndPassengers));
     }
 }
