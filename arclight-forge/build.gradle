@@ -227,3 +227,24 @@ publishing {
 if ('true'.equalsIgnoreCase(System.getenv('APPVEYOR_REPO_TAG'))) {
     tasks.build.dependsOn(tasks.publish)
 }
+
+task runProdServer(type: JavaExec) {
+    File dir = file('run_prod')
+    if (!dir.exists()) {
+        dir.mkdirs()
+    }
+
+    classpath = files(tasks.jar)
+    systemProperties 'terminal.ansi': 'true'
+    systemProperties 'mixin.debug.export': 'true'
+    systemProperties 'arclight.alwaysExtract': 'true'
+    systemProperties 'arclight.remapper.dump': './.mixin.out/plugin_classes'
+    workingDir System.env.ARCLIGHT_PROD_DIR ?: file('run_prod')
+    maxHeapSize '4G'
+    args 'nogui'
+    standardInput System.in
+    javaLauncher.convention(javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(17)
+    })
+    dependsOn project(':arclight-common').tasks.build, project.tasks.build
+}
