@@ -16,6 +16,10 @@ public class AbstractTopPlantBlockMixin {
 
     @Redirect(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Z"))
     private boolean arclight$blockGrow(ServerWorld world, BlockPos to, BlockState state, BlockState state1, ServerWorld worldIn, BlockPos from, Random random) {
+        if (to.getY() < 0) {
+            return false;
+        }
+
         return CraftEventFactory.handleBlockSpreadEvent(world, from, to, state);
     }
 }
