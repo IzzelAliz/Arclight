@@ -110,7 +110,7 @@ public abstract class AbstractFurnaceTileEntityMixin extends LockableTileEntityM
             if (!itemstack1.isEmpty()) {
                 if (itemstack2.isEmpty()) {
                     this.items.set(2, itemstack1.copy());
-                } else if (CraftItemStack.asCraftMirror(itemstack2).isSimilar(result)) {
+                } else if (itemstack2.getItem() == itemstack1.getItem()) {
                     itemstack2.grow(itemstack1.getCount());
                 } else {
                     return;
