@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.core.inventory;
+package io.izzel.arclight.common.mod.inventory;
 
 import net.minecraft.inventory.IInventory;
 import org.bukkit.entity.HumanEntity;
