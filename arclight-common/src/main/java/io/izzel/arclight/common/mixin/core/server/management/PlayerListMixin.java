@@ -22,28 +22,14 @@ import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientboundChangeDifficultyPacket;
-import net.minecraft.network.protocol.game.ClientboundChatPacket;
-import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
-import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
-import net.minecraft.network.protocol.game.ClientboundRespawnPacket;
-import net.minecraft.network.protocol.game.ClientboundSetChunkCacheRadiusPacket;
-import net.minecraft.network.protocol.game.ClientboundSetDefaultSpawnPositionPacket;
-import net.minecraft.network.protocol.game.ClientboundSetExperiencePacket;
-import net.minecraft.network.protocol.game.ClientboundSetSimulationDistancePacket;
-import net.minecraft.network.protocol.game.ClientboundSoundPacket;
-import net.minecraft.network.protocol.game.ClientboundUpdateMobEffectPacket;
+import net.minecraft.network.protocol.game.*;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
-import net.minecraft.server.players.IpBanList;
-import net.minecraft.server.players.IpBanListEntry;
-import net.minecraft.server.players.PlayerList;
-import net.minecraft.server.players.UserBanList;
-import net.minecraft.server.players.UserBanListEntry;
+import net.minecraft.server.players.*;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.ServerStatsCounter;
@@ -69,18 +55,10 @@ import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.util.CraftChatMessage;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.*;
 import org.spigotmc.SpigotConfig;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Mutable;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -319,7 +297,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             location.setWorld(((WorldBridge) worldIn).bridge$getWorld());
         }
         ServerLevel serverWorld = ((CraftWorld) location.getWorld()).getHandle();
-        playerIn.absMoveTo(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+        playerIn.moveTo(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
         playerIn.connection.resetPosition();
         while (avoidSuffocation && !serverWorld.noCollision(playerIn) && playerIn.getY() < 256.0) {
             playerIn.setPos(playerIn.getX(), playerIn.getY() + 1.0, playerIn.getZ());
@@ -337,7 +315,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         this.sendLevelInfo(playerIn, serverWorld);
         this.sendPlayerPermissionLevel(playerIn);
         if (!((ServerPlayNetHandlerBridge) playerIn.connection).bridge$isDisconnected()) {
-            serverWorld.addDuringCommandTeleport(playerIn);
+            serverWorld.addRespawnedPlayer(playerIn);
             this.addPlayer(playerIn);
             this.playersByUUID.put(playerIn.getUUID(), playerIn);
         }
@@ -463,7 +441,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             serverplayerentity.addTag(s);
         }
 
-        serverplayerentity.absMoveTo(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+        serverplayerentity.moveTo(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
         serverplayerentity.connection.resetPosition();
 
         while (avoidSuffocation && !serverWorld.noCollision(serverplayerentity) && serverplayerentity.getY() < serverWorld.getMaxBuildHeight()) {
