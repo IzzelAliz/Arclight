@@ -207,7 +207,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
     }
 
     @Redirect(method = "placeNewPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/EntityType;loadEntityRecursive(Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/world/level/Level;Ljava/util/function/Function;)Lnet/minecraft/world/entity/Entity;"))
-    private net.minecraft.world.entity.Entity aright$handleWorldChangesInVehicle(net.minecraft.nbt.CompoundTag p_20646_, net.minecraft.world.level.Level p_20647_, java.util.function.Function<net.minecraft.world.entity.Entity, net.minecraft.world.entity.Entity> p_20648_) {
+    private net.minecraft.world.entity.Entity arclight$handleWorldChangesInVehicle(net.minecraft.nbt.CompoundTag p_20646_, net.minecraft.world.level.Level p_20647_, java.util.function.Function<net.minecraft.world.entity.Entity, net.minecraft.world.entity.Entity> p_20648_) {
         final ServerLevel serverLevel1 = arclight$placeNewPlayer$serverlevel;
         arclight$placeNewPlayer$serverlevel = null;
         return net.minecraft.world.entity.EntityType.loadEntityRecursive(p_20646_, serverLevel1, (p_11223_) -> {
