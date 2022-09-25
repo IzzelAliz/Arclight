@@ -84,7 +84,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -161,6 +161,8 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         return ((WorldBridge) playerIn.getLevel()).bridge$spigotConfig().simulationDistance;
     }
 
+    private transient ServerLevel arclight$placeNewPlayer$serverlevel = null;
+
     @Eject(method = "placeNewPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;broadcastMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/ChatType;Ljava/util/UUID;)V"))
     private void arclight$playerJoin(PlayerList playerList, Component component, ChatType chatType, UUID uuid, CallbackInfo ci, Connection netManager, ServerPlayer playerIn) {
         PlayerJoinEvent playerJoinEvent = new PlayerJoinEvent(((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity(), CraftChatMessage.fromComponent(component));
@@ -172,6 +174,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             ci.cancel();
             return;
         }
+        arclight$placeNewPlayer$serverlevel = playerIn.getLevel();
         String joinMessage = playerJoinEvent.getJoinMessage();
         if (joinMessage != null && joinMessage.length() > 0) {
             for (Component line : CraftChatMessage.fromString(joinMessage)) {
@@ -193,26 +196,16 @@ public abstract class PlayerListMixin implements PlayerListBridge {
     @Redirect(method = "placeNewPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/bossevents/CustomBossEvents;onPlayerConnect(Lnet/minecraft/server/level/ServerPlayer;)V"))
     private void arclight$bossBarUpdate(net.minecraft.server.bossevents.CustomBossEvents instance, net.minecraft.server.level.ServerPlayer p_136294_) {
         if (arclight$placeNewPlayer$playerAdded) {
-            instance.onPlayerConnect(p_136294_);
             arclight$placeNewPlayer$playerAdded = false;
+            instance.onPlayerConnect(p_136294_);
         }
     }
 
-    private transient ServerLevel arclight$placeNewPlayer$serverlevel = null;
-
-    @ModifyArg(method = "placeNewPlayer", index = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;sendLevelInfo(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/server/level/ServerLevel;)V"))
-    private net.minecraft.server.level.ServerLevel arclight$handleWorldChangesInSendInfo(ServerPlayer player, net.minecraft.server.level.ServerLevel value) {
-        arclight$placeNewPlayer$serverlevel = player.getLevel();
-        return arclight$placeNewPlayer$serverlevel;
-    }
-
-    @Redirect(method = "placeNewPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/EntityType;loadEntityRecursive(Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/world/level/Level;Ljava/util/function/Function;)Lnet/minecraft/world/entity/Entity;"))
-    private net.minecraft.world.entity.Entity arclight$handleWorldChangesInVehicle(net.minecraft.nbt.CompoundTag p_20646_, net.minecraft.world.level.Level p_20647_, java.util.function.Function<net.minecraft.world.entity.Entity, net.minecraft.world.entity.Entity> p_20648_) {
-        final ServerLevel serverLevel1 = arclight$placeNewPlayer$serverlevel;
-        arclight$placeNewPlayer$serverlevel = null;
-        return net.minecraft.world.entity.EntityType.loadEntityRecursive(p_20646_, serverLevel1, (p_11223_) -> {
-            return !serverLevel1.addWithUUID(p_11223_) ? null : p_11223_;
-        });
+    @ModifyVariable(method = "placeNewPlayer", index = 10, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;sendLevelInfo(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/server/level/ServerLevel;)V"))
+    private net.minecraft.server.level.ServerLevel arclight$handleWorldChanges(net.minecraft.server.level.ServerLevel value) {
+        ServerLevel serverLevel=arclight$placeNewPlayer$serverlevel;
+        arclight$placeNewPlayer$serverlevel=null;
+        return serverLevel;
     }
 
     @Inject(method = "save", cancellable = true, at = @At("HEAD"))
