@@ -161,8 +161,6 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         return ((WorldBridge) playerIn.getLevel()).bridge$spigotConfig().simulationDistance;
     }
 
-    private transient ServerLevel arclight$placeNewPlayer$serverlevel = null;
-
     @Eject(method = "placeNewPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;broadcastMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/ChatType;Ljava/util/UUID;)V"))
     private void arclight$playerJoin(PlayerList playerList, Component component, ChatType chatType, UUID uuid, CallbackInfo ci, Connection netManager, ServerPlayer playerIn) {
         PlayerJoinEvent playerJoinEvent = new PlayerJoinEvent(((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity(), CraftChatMessage.fromComponent(component));
@@ -174,7 +172,6 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             ci.cancel();
             return;
         }
-        arclight$placeNewPlayer$serverlevel = playerIn.getLevel();
         String joinMessage = playerJoinEvent.getJoinMessage();
         if (joinMessage != null && joinMessage.length() > 0) {
             for (Component line : CraftChatMessage.fromString(joinMessage)) {
@@ -183,29 +180,16 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         }
     }
 
-    private transient boolean arclight$placeNewPlayer$playerAdded = false;
-
     @Redirect(method = "placeNewPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addNewPlayer(Lnet/minecraft/server/level/ServerPlayer;)V"))
-    private void arclight$addNewPlayer(net.minecraft.server.level.ServerLevel instance, net.minecraft.server.level.ServerPlayer p_8835_) {
-        if (p_8835_.level == instance && !instance.players().contains(p_8835_)) {
-            instance.addNewPlayer(p_8835_);
-            arclight$placeNewPlayer$playerAdded = true;
+    private void arclight$addNewPlayer(ServerLevel instance, ServerPlayer player) {
+        if (player.level == instance && !instance.players().contains(player)) {
+            instance.addNewPlayer(player);
         }
     }
 
-    @Redirect(method = "placeNewPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/bossevents/CustomBossEvents;onPlayerConnect(Lnet/minecraft/server/level/ServerPlayer;)V"))
-    private void arclight$bossBarUpdate(net.minecraft.server.bossevents.CustomBossEvents instance, net.minecraft.server.level.ServerPlayer p_136294_) {
-        if (arclight$placeNewPlayer$playerAdded) {
-            arclight$placeNewPlayer$playerAdded = false;
-            instance.onPlayerConnect(p_136294_);
-        }
-    }
-
-    @ModifyVariable(method = "placeNewPlayer", index = 10, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;sendLevelInfo(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/server/level/ServerLevel;)V"))
-    private net.minecraft.server.level.ServerLevel arclight$handleWorldChanges(net.minecraft.server.level.ServerLevel value) {
-        ServerLevel serverLevel=arclight$placeNewPlayer$serverlevel;
-        arclight$placeNewPlayer$serverlevel=null;
-        return serverLevel;
+    @ModifyVariable(method = "placeNewPlayer", ordinal = 1, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/level/ServerLevel;addNewPlayer(Lnet/minecraft/server/level/ServerPlayer;)V"))
+    private ServerLevel arclight$handleWorldChanges(ServerLevel value, Connection connection, ServerPlayer player) {
+        return player.getLevel();
     }
 
     @Inject(method = "save", cancellable = true, at = @At("HEAD"))
