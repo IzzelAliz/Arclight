@@ -1,7 +1,6 @@
 package io.izzel.arclight.common.mod.util;
 
 import io.izzel.arclight.common.mod.ArclightConstants;
-import io.izzel.arclight.common.mod.ArclightMod;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -79,7 +78,7 @@ public class ArclightCaptures {
             }
 
             if (unhandledEvents.size() > 0) {
-                ArclightMod.LOGGER.warn("Unhandled secondary block break event");
+                // ArclightMod.LOGGER.warn("Unhandled secondary block break event");
                 eventContext.mergeAllDrops(unhandledEvents);
             }
 
@@ -101,7 +100,7 @@ public class ArclightCaptures {
 
     public static void clearBlockBreakEventContexts() {
         if (!blockBreakEventStack.empty()) {
-            ArclightMod.LOGGER.warn("Unhandled block break event");
+            // ArclightMod.LOGGER.warn("Unhandled block break event");
             blockBreakEventStack.clear();
         }
     }
