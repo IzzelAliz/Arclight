@@ -982,7 +982,9 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                             return null;
                         }
                         String message = String.format(queueEvent.getFormat(), queueEvent.getPlayer().getDisplayName(), queueEvent.getMessage());
-                        ITextComponent component = ForgeHooks.onServerChatEvent(handler, queueEvent.getMessage(), ForgeHooks.newChatWithLinks(message));
+                        ITextComponent chatWithLinks = CraftChatMessage.fromStringOrNull(message);
+                        if (chatWithLinks == null) return null;
+                        ITextComponent component = ForgeHooks.onServerChatEvent(handler, queueEvent.getMessage(), chatWithLinks);
                         if (component == null) return null;
                         Bukkit.getConsoleSender().sendMessage(CraftChatMessage.fromComponent(component));
                         if (((LazyPlayerSet) queueEvent.getRecipients()).isLazy()) {
@@ -1017,7 +1019,8 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 return;
             }
             s = String.format(event.getFormat(), event.getPlayer().getDisplayName(), event.getMessage());
-            ITextComponent chatWithLinks = ForgeHooks.newChatWithLinks(s);
+            ITextComponent chatWithLinks = CraftChatMessage.fromStringOrNull(s);
+            if (chatWithLinks == null) return;
             class ForgeChat extends Waitable<Void> {
 
                 @Override
