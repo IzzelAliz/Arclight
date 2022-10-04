@@ -369,6 +369,13 @@ public abstract class ServerWorldMixin extends WorldMixin implements ServerWorld
         }
     }
 
+    @Inject(method = "notifyBlockUpdate", cancellable = true, at = @At("HEAD"))
+    private void arclight$skipOutboundUpdate(BlockPos pos, BlockState oldState, BlockState newState, int flags, CallbackInfo ci) {
+        if (World.isOutsideBuildHeight(pos)) {
+            ci.cancel();
+        }
+    }
+
     @Override
     public TileEntity bridge$getTileEntity(BlockPos blockPos) {
         return this.getTileEntity(blockPos);
