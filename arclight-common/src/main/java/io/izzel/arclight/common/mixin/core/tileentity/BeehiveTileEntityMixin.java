@@ -5,7 +5,6 @@ import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.entity.MobEntityBridge;
 import io.izzel.arclight.common.bridge.tileentity.BeeBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
-import jdk.internal.org.objectweb.asm.Opcodes;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
