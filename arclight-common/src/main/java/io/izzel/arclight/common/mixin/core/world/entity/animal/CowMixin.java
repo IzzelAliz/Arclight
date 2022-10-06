@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.mixin.core.world.entity.animal.AnimalMixin;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
@@ -27,7 +26,7 @@ public abstract class CowMixin extends AnimalMixin {
         ItemStack itemstack = playerEntity.getItemInHand(hand);
         if (itemstack.getItem() == Items.BUCKET && !this.isBaby()) {
             playerEntity.playSound(SoundEvents.COW_MILK, 1.0F, 1.0F);
-            org.bukkit.event.player.PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent((ServerLevel) playerEntity.level, playerEntity, this.blockPosition(), this.blockPosition(), null, itemstack, Items.MILK_BUCKET);
+            org.bukkit.event.player.PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent((ServerLevel) playerEntity.level, playerEntity, this.blockPosition(), this.blockPosition(), null, itemstack, Items.MILK_BUCKET, hand);
 
             if (event.isCancelled()) {
                 return InteractionResult.PASS;

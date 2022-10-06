@@ -56,6 +56,7 @@ import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.entity.living.MobEffectEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.craftbukkit.v.CraftEquipmentSlot;
 import org.bukkit.craftbukkit.v.attribute.CraftAttributeMap;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
@@ -185,6 +186,11 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow protected abstract void verifyEquippedItem(ItemStack p_181123_);
     @Shadow public abstract boolean wasExperienceConsumed();
     @Shadow public abstract int getExperienceReward();
+    @Shadow @Nullable protected abstract SoundEvent getHurtSound(DamageSource p_21239_);
+    @Shadow protected abstract SoundEvent getFallDamageSound(int p_21313_);
+    @Shadow protected abstract SoundEvent getDrinkingSound(ItemStack p_21174_);
+    @Shadow public abstract SoundEvent getEatingSound(ItemStack p_21202_);
+    @Shadow public abstract InteractionHand getUsedItemHand();
     // @formatter:on
 
     public int expToDrop;
@@ -204,6 +210,26 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         this.collides = true;
         this.craftAttributes = new CraftAttributeMap(this.attributes);
         this.entityData.set(DATA_HEALTH_ID, (float) this.getAttributeValue(Attributes.MAX_HEALTH));
+    }
+
+    public SoundEvent getHurtSound0(DamageSource damagesource) {
+        return getHurtSound(damagesource);
+    }
+
+    public SoundEvent getDeathSound0() {
+        return getDeathSound();
+    }
+
+    public SoundEvent getFallDamageSound0(int fallHeight) {
+        return getFallDamageSound(fallHeight);
+    }
+
+    public SoundEvent getDrinkingSound0(ItemStack itemstack) {
+        return getDrinkingSound(itemstack);
+    }
+
+    public SoundEvent getEatingSound0(ItemStack itemstack) {
+        return getEatingSound(itemstack);
     }
 
     @Redirect(method = "dropAllDeathLoot", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;dropExperience()V"))
@@ -890,16 +916,18 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             net.minecraft.world.item.ItemStack itemstack = null;
 
             net.minecraft.world.item.ItemStack itemstack1 = ItemStack.EMPTY;
+            org.bukkit.inventory.EquipmentSlot bukkitHand = null;
             for (InteractionHand hand : InteractionHand.values()) {
                 itemstack1 = this.getItemInHand(hand);
                 if (itemstack1.getItem() == Items.TOTEM_OF_UNDYING) {
                     itemstack = itemstack1.copy();
+                    bukkitHand = CraftEquipmentSlot.getHand(hand);
                     // itemstack1.shrink(1);
                     break;
                 }
             }
 
-            EntityResurrectEvent event = new EntityResurrectEvent(this.getBukkitEntity());
+            EntityResurrectEvent event = new EntityResurrectEvent(this.getBukkitEntity(), bukkitHand);
             event.setCancelled(itemstack == null);
             Bukkit.getPluginManager().callEvent(event);
 
@@ -988,7 +1016,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     private ItemStack arclight$itemConsume(ItemStack itemStack, Level worldIn, LivingEntity entityLiving, CallbackInfo ci) {
         if (this instanceof ServerPlayerEntityBridge) {
             final org.bukkit.inventory.ItemStack craftItem = CraftItemStack.asBukkitCopy(itemStack);
-            final PlayerItemConsumeEvent event = new PlayerItemConsumeEvent((Player) this.getBukkitEntity(), craftItem);
+            final PlayerItemConsumeEvent event = new PlayerItemConsumeEvent((Player) this.getBukkitEntity(), craftItem, CraftEquipmentSlot.getHand(this.getUsedItemHand()));
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
                 ((ServerPlayerEntityBridge) this).bridge$getBukkitEntity().updateInventory();

@@ -10,6 +10,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -66,6 +67,7 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
     @Shadow protected abstract boolean canReplaceCurrentItem(ItemStack candidate, ItemStack existing);
     @Shadow protected abstract void setItemSlotAndDropWhenKilled(EquipmentSlot p_233657_1_, ItemStack p_233657_2_);
     @Shadow @Nullable public abstract <T extends Mob> T convertTo(EntityType<T> p_233656_1_, boolean p_233656_2_);
+    @Shadow @Nullable protected abstract SoundEvent getAmbientSound();
     // @formatter:on
 
     public boolean aware;
@@ -92,6 +94,10 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(EntityType<? extends Mob> type, net.minecraft.world.level.Level worldIn, CallbackInfo ci) {
         this.aware = true;
+    }
+
+    public SoundEvent getAmbientSound0() {
+        return getAmbientSound();
     }
 
     protected transient boolean arclight$targetSuccess = false;
@@ -235,7 +241,7 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
 
     @Inject(method = "interact", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;dropLeash(ZZ)V"))
     private void arclight$unleash(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
-        if (CraftEventFactory.callPlayerUnleashEntityEvent((Mob) (Object) this, player).isCancelled()) {
+        if (CraftEventFactory.callPlayerUnleashEntityEvent((Mob) (Object) this, player, hand).isCancelled()) {
             ((ServerPlayer) player).connection.send(new ClientboundSetEntityLinkPacket((Mob) (Object) this, this.getLeashHolder()));
             cir.setReturnValue(InteractionResult.PASS);
         }
@@ -243,7 +249,7 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
 
     @Inject(method = "checkAndHandleImportantInteractions", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;setLeashedTo(Lnet/minecraft/world/entity/Entity;Z)V"))
     private void arclight$leash(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
-        if (CraftEventFactory.callPlayerLeashEntityEvent((Mob) (Object) this, player, player).isCancelled()) {
+        if (CraftEventFactory.callPlayerLeashEntityEvent((Mob) (Object) this, player, player, hand).isCancelled()) {
             ((ServerPlayer) player).connection.send(new ClientboundSetEntityLinkPacket((Mob) (Object) this, this.getLeashHolder()));
             cir.setReturnValue(InteractionResult.PASS);
         }

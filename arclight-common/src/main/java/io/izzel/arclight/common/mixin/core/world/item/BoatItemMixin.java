@@ -83,7 +83,7 @@ public abstract class BoatItemMixin extends Item {
                     return new InteractionResultHolder<>(InteractionResult.FAIL, itemstack);
                 } else {
                     if (!worldIn.isClientSide) {
-                        if (DistValidate.isValid(worldIn) && CraftEventFactory.callEntityPlaceEvent(worldIn, result.getBlockPos(), result.getDirection(), playerIn, boatentity).isCancelled()) {
+                        if (DistValidate.isValid(worldIn) && CraftEventFactory.callEntityPlaceEvent(worldIn, result.getBlockPos(), result.getDirection(), playerIn, boatentity, handIn).isCancelled()) {
                             return new InteractionResultHolder<>(InteractionResult.FAIL, itemstack);
                         }
                         if (!worldIn.addFreshEntity(boatentity)) {

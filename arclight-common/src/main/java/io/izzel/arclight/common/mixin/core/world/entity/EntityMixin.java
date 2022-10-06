@@ -216,6 +216,9 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow public abstract int getMaxAirSupply();
     @Shadow public abstract int getAirSupply();
     @Shadow public abstract void gameEvent(GameEvent p_146851_);
+    @Shadow protected abstract SoundEvent getSwimSound();
+    @Shadow protected abstract SoundEvent getSwimSplashSound();
+    @Shadow protected abstract SoundEvent getSwimHighSpeedSplashSound();
     // @formatter:on
 
     private static final int CURRENT_LEVEL = 2;
@@ -277,6 +280,18 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
 
     public int getDefaultMaxAirSupply() {
         return Entity.TOTAL_AIR_SUPPLY;
+    }
+
+    public SoundEvent getSwimSound0() {
+        return getSwimSound();
+    }
+
+    public SoundEvent getSwimSplashSound0() {
+        return getSwimSplashSound();
+    }
+
+    public SoundEvent getSwimHighSpeedSplashSound0() {
+        return getSwimHighSpeedSplashSound();
     }
 
     @Inject(method = "getMaxAirSupply", cancellable = true, at = @At("RETURN"))

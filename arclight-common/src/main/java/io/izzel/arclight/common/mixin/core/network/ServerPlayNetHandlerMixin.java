@@ -862,6 +862,10 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 ((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity().updateInventory();
                 return;
             }
+            itemstack = this.player.getItemInHand(enumhand); // Update in case it was changed in the event
+            if (itemstack.isEmpty()) {
+                return;
+            }
             InteractionResult actionresulttype = this.player.gameMode.useItem(this.player, worldserver, itemstack, enumhand);
             if (actionresulttype.shouldSwing()) {
                 this.player.swing(enumhand, true);
@@ -1162,6 +1166,8 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         if (s.isEmpty()) {
             LOGGER.warn(this.player.getScoreboardName() + " tried to send an empty message");
         } else if (getCraftPlayer().isConversing()) {
+            OutgoingPlayerChatMessage outgoing = OutgoingPlayerChatMessage.create(playerchatmessage);
+            outgoing.sendHeadersToRemainingPlayers(this.server.getPlayerList());
             final String conversationInput = s;
             ((MinecraftServerBridge) this.server).bridge$queuedProcess(() -> getCraftPlayer().acceptConversationInput(conversationInput));
         } else if (this.player.getChatVisibility() == ChatVisiblity.SYSTEM) { // Re-add "Command Only" flag check

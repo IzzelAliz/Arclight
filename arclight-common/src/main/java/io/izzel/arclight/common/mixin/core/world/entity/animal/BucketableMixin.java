@@ -37,7 +37,7 @@ public interface BucketableMixin {
             // entity.playSound(entity.getPickupSound(), 1.0F, 1.0F);
             ItemStack itemstack1 = entity.getBucketItemStack();
             entity.saveToBucketTag(itemstack1);
-            PlayerBucketEntityEvent event = CraftEventFactory.callPlayerFishBucketEvent(entity, player, itemstack, itemstack1);
+            PlayerBucketEntityEvent event = CraftEventFactory.callPlayerFishBucketEvent(entity, player, itemstack, itemstack1, hand);
             itemstack1 = CraftItemStack.asNMSCopy(event.getEntityBucket());
             if (event.isCancelled()) {
                 player.containerMenu.sendAllDataToRemote(); // We need to update inventory to resync client's bucket

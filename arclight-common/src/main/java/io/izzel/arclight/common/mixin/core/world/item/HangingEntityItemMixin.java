@@ -14,6 +14,7 @@ import net.minecraft.world.level.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.craftbukkit.v.CraftEquipmentSlot;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.entity.Hanging;
@@ -36,7 +37,7 @@ public class HangingEntityItemMixin {
         Block blockClicked = CraftBlock.at(world, blockPos);
         BlockFace blockFace = CraftBlock.notchToBlockFace(direction);
 
-        HangingPlaceEvent event = new HangingPlaceEvent((Hanging) ((EntityBridge) hangingEntity).bridge$getBukkitEntity(), who, blockClicked, blockFace, CraftItemStack.asBukkitCopy(itemStack));
+        HangingPlaceEvent event = new HangingPlaceEvent((Hanging) ((EntityBridge) hangingEntity).bridge$getBukkitEntity(), who, blockClicked, blockFace, CraftEquipmentSlot.getHand(context.getHand()), CraftItemStack.asBukkitCopy(itemStack));
         Bukkit.getPluginManager().callEvent(event);
 
         if (event.isCancelled()) {

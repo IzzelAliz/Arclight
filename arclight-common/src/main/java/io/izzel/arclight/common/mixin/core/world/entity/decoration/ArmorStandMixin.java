@@ -151,7 +151,8 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
         ArmorStand self = (ArmorStand) ((EntityBridge) this).bridge$getBukkitEntity();
 
         EquipmentSlot slot = CraftEquipmentSlot.getSlot(slotType);
-        PlayerArmorStandManipulateEvent event = new PlayerArmorStandManipulateEvent(player, self, playerHeldItem, armorStandItem, slot);
+        EquipmentSlot bukkitHand = CraftEquipmentSlot.getHand(hand);
+        PlayerArmorStandManipulateEvent event = new PlayerArmorStandManipulateEvent(player, self, playerHeldItem, armorStandItem, slot, bukkitHand);
         Bukkit.getPluginManager().callEvent(event);
 
         if (event.isCancelled()) {

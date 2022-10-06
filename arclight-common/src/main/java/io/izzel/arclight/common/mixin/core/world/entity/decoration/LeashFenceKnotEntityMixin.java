@@ -33,7 +33,7 @@ public abstract class LeashFenceKnotEntityMixin extends HangingEntityMixin {
         final List<Mob> list = this.level.getEntitiesOfClass(Mob.class, new AABB(this.getX() - 7.0, this.getY() - 7.0, this.getZ() - 7.0, this.getX() + 7.0, this.getY() + 7.0, this.getZ() + 7.0));
         for (final Mob entityinsentient : list) {
             if (entityinsentient.getLeashHolder() == entityhuman) {
-                if (CraftEventFactory.callPlayerLeashEntityEvent(entityinsentient, (LeashFenceKnotEntity) (Object) this, entityhuman).isCancelled()) {
+                if (CraftEventFactory.callPlayerLeashEntityEvent(entityinsentient, (LeashFenceKnotEntity) (Object) this, entityhuman, enumhand).isCancelled()) {
                     ((ServerPlayer) entityhuman).connection.send(new ClientboundSetEntityLinkPacket(entityinsentient, entityinsentient.getLeashHolder()));
                 } else {
                     entityinsentient.setLeashedTo((LeashFenceKnotEntity) (Object) this, true);
@@ -45,7 +45,7 @@ public abstract class LeashFenceKnotEntityMixin extends HangingEntityMixin {
             boolean die = true;
             for (final Mob entityinsentient : list) {
                 if (entityinsentient.isLeashed() && entityinsentient.getLeashHolder() == (Object) this) {
-                    if (CraftEventFactory.callPlayerUnleashEntityEvent(entityinsentient, entityhuman).isCancelled()) {
+                    if (CraftEventFactory.callPlayerUnleashEntityEvent(entityinsentient, entityhuman, enumhand).isCancelled()) {
                         die = false;
                     } else {
                         entityinsentient.dropLeash(true, !entityhuman.getAbilities().instabuild);

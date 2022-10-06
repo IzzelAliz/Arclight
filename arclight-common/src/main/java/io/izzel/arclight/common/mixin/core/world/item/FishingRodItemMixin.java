@@ -18,6 +18,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gameevent.GameEvent;
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.v.CraftEquipmentSlot;
 import org.bukkit.entity.FishHook;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -55,7 +56,7 @@ public class FishingRodItemMixin extends Item {
 
                 FishingHook hook = new FishingHook(playerIn, worldIn, j, k);
                 if (DistValidate.isValid(worldIn)) {
-                    PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity(), null, (FishHook) ((EntityBridge) hook).bridge$getBukkitEntity(), PlayerFishEvent.State.FISHING);
+                    PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity(), null, (FishHook) ((EntityBridge) hook).bridge$getBukkitEntity(), CraftEquipmentSlot.getHand(handIn), PlayerFishEvent.State.FISHING);
                     Bukkit.getPluginManager().callEvent(playerFishEvent);
 
                     if (playerFishEvent.isCancelled()) {

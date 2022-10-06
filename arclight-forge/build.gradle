@@ -42,7 +42,7 @@ repositories {
     mavenCentral()
 }
 
-def embedLibs = [/*"org.spongepowered:mixin:$mixinVersion", */ 'org.yaml:snakeyaml:1.30',
+def embedLibs = [/*"org.spongepowered:mixin:$mixinVersion", */ 'org.yaml:snakeyaml:1.33',
                  'org.xerial:sqlite-jdbc:3.36.0.3', 'mysql:mysql-connector-java:8.0.29',
                  /*'commons-lang:commons-lang:2.6',*/ 'com.googlecode.json-simple:json-simple:1.1.1',
                  'org.apache.logging.log4j:log4j-jul:2.17.2', 'net.md-5:SpecialSource:1.11.0',

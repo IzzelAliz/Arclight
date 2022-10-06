@@ -44,7 +44,7 @@ public abstract class BucketItemMixin {
         BlockPos pos = result.getBlockPos();
         BlockState state = worldIn.getBlockState(pos);
         ItemStack dummyFluid = ((BucketPickup) state.getBlock()).pickupBlock(DummyGeneratorAccess.INSTANCE, pos, state);
-        PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent((ServerLevel) worldIn, playerIn, pos, pos, result.getDirection(), stack, dummyFluid.getItem());
+        PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent((ServerLevel) worldIn, playerIn, pos, pos, result.getDirection(), stack, dummyFluid.getItem(), handIn);
         if (event.isCancelled()) {
             ((ServerPlayer) playerIn).connection.send(new ClientboundBlockUpdatePacket(worldIn, pos));
             ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().updateInventory();
@@ -59,6 +59,7 @@ public abstract class BucketItemMixin {
         arclight$direction = result.getDirection();
         arclight$click = result.getBlockPos();
         arclight$stack = stack;
+        arclight$hand = handIn;
     }
 
     @Inject(method = "use", at = @At("RETURN"))
@@ -76,10 +77,11 @@ public abstract class BucketItemMixin {
         return arclight$captureItem == null ? itemStack : CraftItemStack.asNMSCopy(arclight$captureItem);
     }
 
-    public boolean emptyContents(Player entity, Level world, BlockPos pos, @Nullable BlockHitResult result, Direction direction, BlockPos clicked, ItemStack itemstack) {
+    public boolean emptyContents(Player entity, Level world, BlockPos pos, @Nullable BlockHitResult result, Direction direction, BlockPos clicked, ItemStack itemstack, InteractionHand hand) {
         arclight$direction = direction;
         arclight$click = clicked;
         arclight$stack = itemstack;
+        arclight$hand = hand;
         try {
             return this.emptyContents(entity, world, pos, result);
         } finally {
@@ -92,12 +94,13 @@ public abstract class BucketItemMixin {
     private transient Direction arclight$direction;
     private transient BlockPos arclight$click;
     private transient ItemStack arclight$stack;
+    private transient InteractionHand arclight$hand;
 
     @Inject(method = "emptyContents", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/dimension/DimensionType;ultraWarm()Z"))
     private void arclight$bucketEmpty(Player player, Level worldIn, BlockPos posIn, BlockHitResult rayTrace, CallbackInfoReturnable<Boolean> cir) {
         if (!DistValidate.isValid(worldIn)) return;
         if (player != null) {
-            PlayerBucketEmptyEvent event = CraftEventFactory.callPlayerBucketEmptyEvent((ServerLevel) worldIn, player, posIn, arclight$click, arclight$direction, arclight$stack);
+            PlayerBucketEmptyEvent event = CraftEventFactory.callPlayerBucketEmptyEvent((ServerLevel) worldIn, player, posIn, arclight$click, arclight$direction, arclight$stack, arclight$hand == null ? InteractionHand.MAIN_HAND : arclight$hand);
             if (event.isCancelled()) {
                 ((ServerPlayer) player).connection.send(new ClientboundBlockUpdatePacket(worldIn, posIn));
                 ((ServerPlayerEntityBridge) player).bridge$getBukkitEntity().updateInventory();
