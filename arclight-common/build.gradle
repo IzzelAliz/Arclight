@@ -48,8 +48,8 @@ repositories {
     maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
     maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
     maven { url = 'https://files.minecraftforge.net/maven/' }
-    maven { url = 'https://jitpack.io/' }
     maven { url = 'https://maven.izzel.io/releases' }
+    maven { url = 'https://jitpack.io/' }
     mavenCentral()
 }
 
