@@ -3,8 +3,11 @@ package io.izzel.arclight.common.mixin.core.world.server;
 import io.izzel.arclight.common.bridge.world.server.TicketManagerBridge;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.SortedArraySet;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.server.Ticket;
 import net.minecraft.world.server.TicketManager;
 import net.minecraft.world.server.TicketType;
@@ -12,6 +15,10 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Invoker;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.Iterator;
 
@@ -119,5 +126,12 @@ public abstract class TicketManagerMixin implements TicketManagerBridge {
     @Override
     public <T> void bridge$removeAllTicketsFor(TicketType<T> ticketType, int ticketLevel, T ticketIdentifier) {
         removeAllTicketsFor(ticketType, ticketLevel, ticketIdentifier);
+    }
+
+    @Inject(method = "removePlayer", cancellable = true, locals = LocalCapture.CAPTURE_FAILSOFT, at = @At(value = "INVOKE", target = "it/unimi/dsi/fastutil/objects/ObjectSet.remove(Ljava/lang/Object;)Z", remap = false))
+    private void arclight$returnIfNull(SectionPos sectionPosIn, ServerPlayerEntity player, CallbackInfo ci, long i, ObjectSet<ServerPlayerEntity> objectset) {
+        if (objectset == null) {
+            ci.cancel();
+        }
     }
 }
