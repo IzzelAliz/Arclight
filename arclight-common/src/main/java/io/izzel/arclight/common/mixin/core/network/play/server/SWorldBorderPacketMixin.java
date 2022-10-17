@@ -19,7 +19,9 @@ public class SWorldBorderPacketMixin {
 
     @Inject(method = "<init>(Lnet/minecraft/world/border/WorldBorder;Lnet/minecraft/network/play/server/SWorldBorderPacket$Action;)V", at = @At("RETURN"))
     private void arclight$nether(WorldBorder border, SWorldBorderPacket.Action actionIn, CallbackInfo ci) {
-        this.centerX = border.getCenterX() * (((WorldBorderBridge) border).bridge$getWorld().getDimensionType().getCoordinateScale());
-        this.centerZ = border.getCenterZ() * (((WorldBorderBridge) border).bridge$getWorld().getDimensionType().getCoordinateScale());
+        if ((((WorldBorderBridge)border).bridge$getWorld() != null)) {
+            this.centerX = border.getCenterX() * (((WorldBorderBridge) border).bridge$getWorld().getDimensionType().getCoordinateScale());
+            this.centerZ = border.getCenterZ() * (((WorldBorderBridge) border).bridge$getWorld().getDimensionType().getCoordinateScale());
+        }
     }
 }
