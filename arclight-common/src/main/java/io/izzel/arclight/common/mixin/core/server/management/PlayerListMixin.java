@@ -84,6 +84,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -166,17 +167,29 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         this.players.add(playerIn);
         this.playersByUUID.put(playerIn.getUUID(), playerIn);
         this.cserver.getPluginManager().callEvent(playerJoinEvent);
+        this.players.remove(playerIn);
         if (!playerIn.connection.connection.isConnected()) {
             ci.cancel();
             return;
         }
-        this.players.remove(playerIn);
         String joinMessage = playerJoinEvent.getJoinMessage();
         if (joinMessage != null && joinMessage.length() > 0) {
             for (Component line : CraftChatMessage.fromString(joinMessage)) {
                 this.server.getPlayerList().broadcastAll(new ClientboundChatPacket(line, ChatType.SYSTEM, Util.NIL_UUID));
             }
         }
+    }
+
+    @Redirect(method = "placeNewPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addNewPlayer(Lnet/minecraft/server/level/ServerPlayer;)V"))
+    private void arclight$addNewPlayer(ServerLevel instance, ServerPlayer player) {
+        if (player.level == instance && !instance.players().contains(player)) {
+            instance.addNewPlayer(player);
+        }
+    }
+
+    @ModifyVariable(method = "placeNewPlayer", ordinal = 1, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/level/ServerLevel;addNewPlayer(Lnet/minecraft/server/level/ServerPlayer;)V"))
+    private ServerLevel arclight$handleWorldChanges(ServerLevel value, Connection connection, ServerPlayer player) {
+        return player.getLevel();
     }
 
     @Inject(method = "save", cancellable = true, at = @At("HEAD"))
@@ -319,9 +332,9 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             location.setWorld(((WorldBridge) worldIn).bridge$getWorld());
         }
         ServerLevel serverWorld = ((CraftWorld) location.getWorld()).getHandle();
-        playerIn.absMoveTo(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+        playerIn.moveTo(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
         playerIn.connection.resetPosition();
-        while (avoidSuffocation && !serverWorld.noCollision(playerIn) && playerIn.getY() < 256.0) {
+        while (avoidSuffocation && !serverWorld.noCollision(playerIn) && playerIn.getY() < serverWorld.getMaxBuildHeight()) {
             playerIn.setPos(playerIn.getX(), playerIn.getY() + 1.0, playerIn.getZ());
         }
         LevelData worlddata = serverWorld.getLevelData();
@@ -337,7 +350,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         this.sendLevelInfo(playerIn, serverWorld);
         this.sendPlayerPermissionLevel(playerIn);
         if (!((ServerPlayNetHandlerBridge) playerIn.connection).bridge$isDisconnected()) {
-            serverWorld.addDuringCommandTeleport(playerIn);
+            serverWorld.addRespawnedPlayer(playerIn);
             this.addPlayer(playerIn);
             this.playersByUUID.put(playerIn.getUUID(), playerIn);
         }
@@ -463,7 +476,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             serverplayerentity.addTag(s);
         }
 
-        serverplayerentity.absMoveTo(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+        serverplayerentity.moveTo(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
         serverplayerentity.connection.resetPosition();
 
         while (avoidSuffocation && !serverWorld.noCollision(serverplayerentity) && serverplayerentity.getY() < serverWorld.getMaxBuildHeight()) {
