@@ -187,7 +187,6 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
         } else if (action == CPlayerDiggingPacket.Action.ABORT_DESTROY_BLOCK) {
             this.isDestroyingBlock = false;
             if (!Objects.equals(this.destroyPos, blockPos)) {
-                ArclightMod.LOGGER.debug("Mismatch in destroy block pos: " + this.destroyPos + " " + blockPos);
                 this.world.sendBlockBreakProgress(this.player.getEntityId(), this.destroyPos, -1);
                 this.player.connection.sendPacket(new SPlayerDiggingPacket(this.destroyPos, this.world.getBlockState(this.destroyPos), action, true, "aborted mismatched destroying"));
             }
