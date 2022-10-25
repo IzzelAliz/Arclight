@@ -85,19 +85,20 @@ public class AbstractBootstrap {
             var cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
             node.accept(cw);
             byte[] bytes = cw.toByteArray();
-            Unsafe.defineClass("com.mojang.brigadier.tree.CommandNode", bytes, 0, bytes.length, IModLocator.class.getClassLoader() /* MC-BOOTSTRAP */ , getClass().getProtectionDomain());
+            Unsafe.defineClass("com.mojang.brigadier.tree.CommandNode", bytes, 0, bytes.length, IModLocator.class.getClassLoader() /* MC-BOOTSTRAP */, getClass().getProtectionDomain());
         }
     }
 
     protected void setupMod() throws Exception {
-        ArclightVersion.setVersion(ArclightVersion.v1_19_R1);
+        ArclightVersion.setVersion(ArclightVersion.HORN);
         try (InputStream stream = getClass().getModule().getResourceAsStream("/META-INF/MANIFEST.MF")) {
             Manifest manifest = new Manifest(stream);
             Attributes attributes = manifest.getMainAttributes();
             String version = attributes.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
             extract(getClass().getModule().getResourceAsStream("/common.jar"), version);
             String buildTime = attributes.getValue("Implementation-Timestamp");
-            LogManager.getLogger("Arclight").info(ArclightLocale.getInstance().get("logo"), version, buildTime);
+            LogManager.getLogger("Arclight").info(ArclightLocale.getInstance().get("logo"),
+                ArclightLocale.getInstance().get("release-name." + ArclightVersion.current().getReleaseName()), version, buildTime);
         }
     }
 

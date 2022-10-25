@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.server;
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.serialization.DynamicOps;
+import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.common.bridge.core.command.ICommandSourceBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
@@ -548,7 +549,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @DontObfuscate
     @Overwrite
     public String getServerModName() {
-        return BrandingControl.getServerBranding() + " arclight";
+        return BrandingControl.getServerBranding() + " arclight/" + ArclightVersion.current().getReleaseName();
     }
 
     @Override

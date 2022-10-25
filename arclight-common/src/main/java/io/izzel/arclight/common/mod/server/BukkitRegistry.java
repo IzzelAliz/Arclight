@@ -5,6 +5,7 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.api.EnumHelper;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.bridge.bukkit.EntityTypeBridge;
@@ -94,6 +95,7 @@ public class BukkitRegistry {
     private static final BiMap<ResourceLocation, Statistic> STATS = HashBiMap.create(Unsafe.getStatic(CraftStatistic.class, "statistics"));
 
     public static void registerAll() {
+        CrashReportCallables.registerCrashCallable("Arclight Release", ArclightVersion.current()::getReleaseName);
         CrashReportCallables.registerCrashCallable("Arclight", new CraftCrashReport());
         loadMaterials();
         loadPotions();
