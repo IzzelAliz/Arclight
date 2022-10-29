@@ -1298,7 +1298,6 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                     // CraftBukkit end
 
                     InteractionResult enuminteractionresult = interaction.run(player, entity, hand);
-                    if (ForgeHooks.onInteractEntityAt(player, entity, entity.position(), hand) != null) return;
 
                     // CraftBukkit start
                     if (!itemInHand.isEmpty() && itemInHand.getCount() <= -1) {
@@ -1324,7 +1323,11 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
 
                 @Override
                 public void onInteraction(InteractionHand hand, Vec3 vec) {
-                    this.performInteraction(hand, (player, e, h) -> e.interactAt(player, vec, h),
+                    this.performInteraction(hand, (player, e, h) -> {
+                            var onInteractEntityAtResult = ForgeHooks.onInteractEntityAt(player, entity, vec, hand);
+                            if (onInteractEntityAtResult != null) return onInteractEntityAtResult;
+                            return e.interactAt(player, vec, h);
+                        },
                         new PlayerInteractAtEntityEvent(getCraftPlayer(), ((EntityBridge) entity).bridge$getBukkitEntity(),
                             new org.bukkit.util.Vector(vec.x, vec.y, vec.z), (hand == InteractionHand.OFF_HAND) ? EquipmentSlot.OFF_HAND : EquipmentSlot.HAND));
                 }

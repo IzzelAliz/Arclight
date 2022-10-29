@@ -304,6 +304,7 @@
     "world.item.ShearsItemMixin",
     "world.item.SnowballItemMixin",
     "world.item.SpawnEggItemMixin",
+    "world.item.StandingAndWallBlockItemMixin",
     "world.item.TridentItemMixin",
     "world.item.crafting.BlastingRecipeMixin",
     "world.item.crafting.CampfireCookingRecipeMixin",

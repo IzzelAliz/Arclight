@@ -919,7 +919,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             org.bukkit.inventory.EquipmentSlot bukkitHand = null;
             for (InteractionHand hand : InteractionHand.values()) {
                 itemstack1 = this.getItemInHand(hand);
-                if (itemstack1.getItem() == Items.TOTEM_OF_UNDYING) {
+                if (itemstack1.is(Items.TOTEM_OF_UNDYING) && ForgeHooks.onLivingUseTotem((LivingEntity) (Object) this, damageSourceIn, itemstack1, hand)) {
                     itemstack = itemstack1.copy();
                     bukkitHand = CraftEquipmentSlot.getHand(hand);
                     // itemstack1.shrink(1);
