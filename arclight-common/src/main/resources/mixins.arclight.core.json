@@ -96,6 +96,7 @@
     "world.entity.ItemBaseSteeringMixin",
     "world.entity.LightningBoltMixin",
     "world.entity.LivingEntityMixin",
+    "world.entity.LivingEntityMixin$ApotheosisCompatMixin",
     "world.entity.MobMixin",
     "world.entity.PathfinderMobMixin",
     "world.entity.ai.attributes.RangedAttributeMixin",
