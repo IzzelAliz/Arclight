@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.item.crafting;
 
 import io.izzel.arclight.common.bridge.core.item.crafting.IRecipeBridge;
+import io.izzel.arclight.common.mod.util.ArclightSpecialRecipe;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -24,6 +25,9 @@ public abstract class StonecuttingRecipeMixin extends SingleItemRecipe implement
 
     @Override
     public Recipe bridge$toBukkitRecipe() {
+        if (this.result.isEmpty()) {
+            return new ArclightSpecialRecipe(this);
+        }
         CraftItemStack result = CraftItemStack.asCraftMirror(this.result);
         CraftStonecuttingRecipe recipe = new CraftStonecuttingRecipe(CraftNamespacedKey.fromMinecraft(this.getId()), result, CraftRecipe.toBukkit(this.ingredient));
         recipe.setGroup(this.group);
