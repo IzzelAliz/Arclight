@@ -84,6 +84,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -162,11 +163,11 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         this.players.add(playerIn);
         this.uuidToPlayerMap.put(playerIn.getUniqueID(), playerIn);
         this.cserver.getPluginManager().callEvent(playerJoinEvent);
+        this.players.remove(playerIn);
         if (!playerIn.connection.netManager.isChannelOpen()) {
             ci.cancel();
             return;
         }
-        this.players.remove(playerIn);
         String joinMessage = playerJoinEvent.getJoinMessage();
         if (joinMessage != null && joinMessage.length() > 0) {
             for (ITextComponent line : CraftChatMessage.fromString(joinMessage)) {
@@ -174,6 +175,19 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             }
         }
     }
+
+    @Redirect(method = "initializeConnectionToPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;addNewPlayer(Lnet/minecraft/entity/player/ServerPlayerEntity;)V"))
+    private void arclight$initializeConnectionToPlayer(ServerWorld instance, ServerPlayerEntity player) {
+        if (player.world == instance && !instance.getPlayers().contains(player)) {
+            instance.addNewPlayer(player);
+        }
+    }
+
+    @ModifyVariable(method = "initializeConnectionToPlayer", ordinal = 1, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/server/ServerWorld;addNewPlayer(Lnet/minecraft/entity/player/ServerPlayerEntity;)V"))
+    private ServerWorld arclight$handleWorldChanges(ServerWorld value, NetworkManager connection, ServerPlayerEntity player) {
+        return player.getServerWorld();
+    }
+
 
     @Inject(method = "func_212504_a", cancellable = true, at = @At("HEAD"))
     private void arclight$returnIfSet(ServerWorld world, CallbackInfo ci) {
@@ -337,7 +351,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         this.sendWorldInfo(playerIn, serverWorld);
         this.updatePermissionLevel(playerIn);
         if (!((ServerPlayNetHandlerBridge) playerIn.connection).bridge$isDisconnected()) {
-            serverWorld.addDuringCommandTeleport(playerIn);
+            serverWorld.addRespawnedPlayer(playerIn);
             this.addPlayer(playerIn);
             this.uuidToPlayerMap.put(playerIn.getUniqueID(), playerIn);
         }
