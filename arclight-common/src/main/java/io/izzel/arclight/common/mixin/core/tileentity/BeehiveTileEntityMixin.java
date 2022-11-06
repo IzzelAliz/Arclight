@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.tileentity;
 import com.google.common.collect.Lists;
 import io.izzel.arclight.common.bridge.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.entity.MobEntityBridge;
+import io.izzel.arclight.common.bridge.tileentity.BeeBridge;
 import io.izzel.arclight.common.bridge.world.WorldBridge;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
@@ -29,6 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
+import java.util.Iterator;
 import java.util.List;
 
 @Mixin(BeehiveTileEntity.class)
@@ -121,5 +123,28 @@ public abstract class BeehiveTileEntityMixin extends TileEntityMixin {
     @Inject(method = "write", at = @At("RETURN"))
     private void arclight$writeMax(CompoundNBT compound, CallbackInfoReturnable<CompoundNBT> cir) {
         compound.putInt("Bukkit.MaxEntities", this.maxBees);
+    }
+
+    /**
+     * @author danorris709
+     * @reason Stops bees ticking inside their hives from paper patch <a href="https://github.com/PaperMC/Paper/blob/ver/1.18.2/patches/server/0826-Fix-bees-aging-inside-hives.patch">link</a>
+     */
+    @Overwrite
+    private void tickBees() {
+        Iterator<BeehiveTileEntity.Bee> iterator = this.bees.iterator();
+
+        BeehiveTileEntity.Bee beehivetileentity$bee;
+        for(BlockState blockstate = this.getBlockState(); iterator.hasNext(); ((BeeBridge) beehivetileentity$bee).bridge$incrementTicksInHive()) {
+            beehivetileentity$bee = iterator.next();
+            if (((BeeBridge) beehivetileentity$bee).bridge$getExitTicks() > ((BeeBridge) beehivetileentity$bee).bridge$getMinOccupationTicks()) {
+                BeehiveTileEntity.State beehivetileentity$state = beehivetileentity$bee.entityData.getBoolean("HasNectar") ? BeehiveTileEntity.State.HONEY_DELIVERED : BeehiveTileEntity.State.BEE_RELEASED;
+                if (this.func_235651_a_(blockstate, beehivetileentity$bee, (List<Entity>)null, beehivetileentity$state)) {
+                    iterator.remove();
+                }
+            }
+
+            ((BeeBridge) beehivetileentity$bee).bridge$setExitTicks(((BeeBridge) beehivetileentity$bee).bridge$getExitTicks() + 1);
+        }
+
     }
 }

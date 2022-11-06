@@ -394,6 +394,7 @@
     "tileentity.SignTileEntityMixin",
     "tileentity.SkullTileEntityMixin",
     "tileentity.TileEntityMixin",
+    "tileentity.BeeMixin",
     "util.BootstrapMixin",
     "util.DamageSourceMixin",
     "util.FoodStatsMixin",
