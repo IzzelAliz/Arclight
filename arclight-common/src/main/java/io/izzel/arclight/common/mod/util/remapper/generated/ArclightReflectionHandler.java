@@ -175,7 +175,7 @@ public class ArclightReflectionHandler extends ClassLoader {
     public static String redirectTypeGetName(java.lang.reflect.Type type) {
         if (type instanceof Class cl) {
             if (cl.isArray()) {
-                return redirectTypeGetName(cl) + "[]";
+                return redirectClassGetName(cl) + "[]";
             }
             return redirectClassGetName(cl);
         } else if (type instanceof WildcardType wType) {
