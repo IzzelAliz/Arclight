@@ -16,6 +16,7 @@ public class ConnectionMixin implements NetworkManagerBridge {
     @Shadow public Channel channel;
     public java.util.UUID spoofedUUID;
     public com.mojang.authlib.properties.Property[] spoofedProfile;
+    public String hostname;
 
     @Override
     public UUID bridge$getSpoofedUUID() {
@@ -44,5 +45,15 @@ public class ConnectionMixin implements NetworkManagerBridge {
     @Override
     public SocketAddress bridge$getRawAddress() {
         return getRawAddress();
+    }
+
+    @Override
+    public String bridge$getHostname() {
+        return hostname;
+    }
+
+    @Override
+    public void bridge$setHostname(String hostname) {
+        this.hostname = hostname;
     }
 }

@@ -3,7 +3,6 @@ package io.izzel.arclight.common.mixin.core.network;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import io.izzel.arclight.common.bridge.core.network.NetworkManagerBridge;
-import io.izzel.arclight.common.bridge.core.network.login.ServerLoginNetHandlerBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.core.server.management.PlayerListBridge;
 import net.minecraft.DefaultUncaughtExceptionHandler;
@@ -51,7 +50,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static net.minecraft.server.network.ServerLoginPacketListenerImpl.isValidUsername;
 
 @Mixin(ServerLoginPacketListenerImpl.class)
-public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandlerBridge {
+public abstract class ServerLoginNetHandlerMixin {
 
     // @formatter:off
     @Shadow private ServerLoginPacketListenerImpl.State state;
@@ -68,18 +67,6 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
     @Shadow @Nullable private ProfilePublicKey.Data profilePublicKeyData;
     @Shadow @Nullable private static ProfilePublicKey validatePublicKey(@org.jetbrains.annotations.Nullable ProfilePublicKey.Data p_240244_, UUID p_240245_, SignatureValidator p_240246_, boolean p_240247_) throws ProfilePublicKey.ValidationException { return null; }
     // @formatter:on
-
-    public String hostname;
-
-    @Override
-    public String bridge$getHostname() {
-        return hostname;
-    }
-
-    @Override
-    public void bridge$setHostname(String hostname) {
-        this.hostname = hostname;
-    }
 
     public void disconnect(final String s) {
         this.disconnect(Component.literal(s));

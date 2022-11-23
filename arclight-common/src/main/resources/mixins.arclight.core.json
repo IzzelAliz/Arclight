@@ -238,6 +238,7 @@
     "world.entity.vehicle.BoatMixin",
     "world.entity.vehicle.ChestBoatMixin",
     "world.entity.vehicle.MinecartCommandBlock_MinecartCommandBaseMixin",
+    "world.entity.vehicle.MinecartTNTMixin",
     "world.food.FoodDataMixin",
     "world.gen.WorldGenRegionMixin",
     "world.gen.feature.structure.SwampHutPieceMixin",

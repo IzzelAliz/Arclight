@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.mojang.authlib.properties.Property;
 import com.mojang.util.UUIDTypeAdapter;
 import io.izzel.arclight.common.bridge.core.network.NetworkManagerBridge;
-import io.izzel.arclight.common.bridge.core.network.login.ServerLoginNetHandlerBridge;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.Connection;
 import net.minecraft.network.ConnectionProtocol;
@@ -49,6 +48,7 @@ public class ServerHandshakeNetHandlerMixin {
     @Overwrite
     public void handleIntention(ClientIntentionPacket packetIn) {
         if (!ServerLifecycleHooks.handleServerLogin(packetIn, this.connection)) return;
+        ((NetworkManagerBridge) this.connection).bridge$setHostname(packetIn.hostName + ":" + packetIn.port);
         switch (packetIn.getIntention()) {
             case LOGIN: {
                 this.connection.setProtocol(ConnectionProtocol.LOGIN);
@@ -108,8 +108,6 @@ public class ServerHandshakeNetHandlerMixin {
                         ((NetworkManagerBridge) this.connection).bridge$setSpoofedProfile(gson.fromJson(split[3], Property[].class));
                     }
                 }
-                ((ServerLoginNetHandlerBridge) this.connection.getPacketListener()).bridge$setHostname(packetIn.hostName + ":" + packetIn.port);
-
 
                 break;
             }

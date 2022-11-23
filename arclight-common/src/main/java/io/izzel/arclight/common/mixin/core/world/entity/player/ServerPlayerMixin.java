@@ -66,6 +66,7 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.block.NetherPortalBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -93,6 +94,7 @@ import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v.scoreboard.CraftScoreboardManager;
+import org.bukkit.craftbukkit.v.util.BlockStateListPopulator;
 import org.bukkit.craftbukkit.v.util.CraftChatMessage;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -102,6 +104,7 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerLocaleChangeEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.MainHand;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -593,6 +596,29 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             //  LOGGER.error("Unable to create a portal, likely target out of worldborder");
         }
         return optional1;
+    }
+
+    private transient BlockStateListPopulator arclight$populator;
+
+    @Inject(method = "createEndPlatform", at = @At("HEAD"))
+    private void arclight$playerCreatePortalBegin(ServerLevel level, BlockPos pos, CallbackInfo ci) {
+        arclight$populator = new BlockStateListPopulator(level);
+    }
+
+    @Redirect(method = "createEndPlatform", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
+    private boolean arclight$playerCreatePortal(ServerLevel instance, BlockPos pos, BlockState blockState) {
+        return arclight$populator.setBlock(pos, blockState, 3);
+    }
+
+    @Inject(method = "createEndPlatform", at = @At("RETURN"))
+    private void arclight$playerCreatePortalEnd(ServerLevel level, BlockPos pos, CallbackInfo ci) {
+        var blockList = arclight$populator;
+        arclight$populator = null;
+        var portalEvent = new PortalCreateEvent((List<org.bukkit.block.BlockState>) (List) blockList.getList(), ((WorldBridge) level).bridge$getWorld(), this.getBukkitEntity(), PortalCreateEvent.CreateReason.END_PLATFORM);
+        Bukkit.getPluginManager().callEvent(portalEvent);
+        if (!portalEvent.isCancelled()) {
+            blockList.updateList();
+        }
     }
 
     private Either<Player.BedSleepingProblem, Unit> getBedResult(BlockPos blockposition, Direction enumdirection) {

@@ -7,7 +7,6 @@ import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.InternalEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.network.NetworkManagerBridge;
-import io.izzel.arclight.common.bridge.core.network.login.ServerLoginNetHandlerBridge;
 import io.izzel.arclight.common.bridge.core.network.play.ServerPlayNetHandlerBridge;
 import io.izzel.arclight.common.bridge.core.server.management.PlayerListBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
@@ -225,7 +224,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         ServerPlayer entity = new ServerPlayer(this.server, this.server.getLevel(Level.OVERWORLD), gameProfile, profilePublicKey);
         Player player = ((ServerPlayerEntityBridge) entity).bridge$getBukkitEntity();
 
-        String hostname = handler == null ? "" : ((ServerLoginNetHandlerBridge) handler).bridge$getHostname();
+        String hostname = handler == null ? "" : ((NetworkManagerBridge) handler.connection).bridge$getHostname();
         InetAddress realAddress = handler == null ? ((InetSocketAddress) socketAddress).getAddress() : ((InetSocketAddress) ((NetworkManagerBridge) handler.connection).bridge$getRawAddress()).getAddress();
 
         PlayerLoginEvent event = new PlayerLoginEvent(player, hostname, ((InetSocketAddress) socketAddress).getAddress(), realAddress);

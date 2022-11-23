@@ -16,4 +16,8 @@ public interface NetworkManagerBridge {
     void bridge$setSpoofedProfile(Property[] spoofedProfile);
 
     SocketAddress bridge$getRawAddress();
+
+    String bridge$getHostname();
+
+    void bridge$setHostname(String hostname);
 }
