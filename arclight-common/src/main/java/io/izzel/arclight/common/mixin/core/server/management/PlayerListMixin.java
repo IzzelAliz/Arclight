@@ -208,7 +208,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         PlayerQuitEvent playerQuitEvent = new PlayerQuitEvent(((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity(), quitMessage != null ? quitMessage : "\u00A7e" + playerIn.getScoreboardName() + " left the game");
         cserver.getPluginManager().callEvent(playerQuitEvent);
         ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().disconnect(playerQuitEvent.getQuitMessage());
-        playerIn.doTick();
+        // playerIn.doTick();
         ArclightCaptures.captureQuitMessage(playerQuitEvent.getQuitMessage());
         cserver.getScoreboardManager().removePlayer(((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity());
     }
