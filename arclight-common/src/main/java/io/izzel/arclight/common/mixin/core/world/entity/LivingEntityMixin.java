@@ -975,9 +975,14 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         }
     }
 
-    @Redirect(method = "getDamageAfterMagicAbsorb", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hasEffect(Lnet/minecraft/world/effect/MobEffect;)Z"))
-    public boolean arclight$mutePotion(LivingEntity livingEntity, MobEffect potionIn) {
-        return false;
+    // https://github.com/IzzelAliz/Arclight/issues/811
+    @Mixin(value = LivingEntity.class, priority = 1500)
+    public static class ApotheosisCompatMixin {
+
+        @Redirect(method = "getDamageAfterMagicAbsorb", require = 0, at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/LivingEntity;hasEffect(Lnet/minecraft/world/effect/MobEffect;)Z"))
+        public boolean arclight$mutePotion(LivingEntity livingEntity, MobEffect potionIn) {
+            return false;
+        }
     }
 
     @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;setSharedFlag(IZ)V"))
