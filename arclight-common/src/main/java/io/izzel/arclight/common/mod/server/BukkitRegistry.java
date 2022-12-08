@@ -9,6 +9,7 @@ import io.izzel.arclight.api.EnumHelper;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.bridge.bukkit.EntityTypeBridge;
 import io.izzel.arclight.common.bridge.bukkit.MaterialBridge;
+import io.izzel.arclight.common.bridge.bukkit.SimpleRegistryBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.util.ResourceLocationUtil;
 import io.izzel.arclight.common.mod.util.types.ArclightEnchantment;
@@ -62,6 +63,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -107,6 +109,14 @@ public class BukkitRegistry {
         loadCreativeTab();
         loadSpawnCategory();
         loadEndDragonPhase();
+        try {
+            for (var field : org.bukkit.Registry.class.getFields()) {
+                if (Modifier.isStatic(field.getModifiers()) && field.get(null) instanceof org.bukkit.Registry.SimpleRegistry<?> registry) {
+                    ((SimpleRegistryBridge) (Object) registry).bridge$reload();
+                }
+            }
+        } catch (Throwable ignored) {
+        }
     }
 
     private static void loadEndDragonPhase() {
