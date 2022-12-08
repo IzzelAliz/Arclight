@@ -21,6 +21,7 @@ import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.stats.StatType;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.effect.MobEffect;
@@ -96,7 +97,7 @@ public class BukkitRegistry {
     private static final Map<Integer, Art> ART_BY_ID = Unsafe.getStatic(Art.class, "BY_ID");
     private static final BiMap<ResourceLocation, Statistic> STATS = HashBiMap.create(Unsafe.getStatic(CraftStatistic.class, "statistics"));
 
-    public static void registerAll() {
+    public static void registerAll(DedicatedServer console) {
         CrashReportCallables.registerCrashCallable("Arclight Release", ArclightVersion.current()::getReleaseName);
         CrashReportCallables.registerCrashCallable("Arclight", new CraftCrashReport());
         loadMaterials();
@@ -104,7 +105,7 @@ public class BukkitRegistry {
         loadEnchantments();
         loadEntities();
         loadVillagerProfessions();
-        loadBiomes();
+        loadBiomes(console);
         loadArts();
         loadStats();
         loadCreativeTab();
@@ -240,13 +241,14 @@ public class BukkitRegistry {
         EnumHelper.addEnums(Art.class, newTypes);
     }
 
-    private static void loadBiomes() {
+    private static void loadBiomes(DedicatedServer console) {
         int i = Biome.values().length;
         List<Biome> newTypes = new ArrayList<>();
         Field key = Arrays.stream(Biome.class.getDeclaredFields()).filter(it -> it.getName().equals("key")).findAny().orElse(null);
         long keyOffset = Unsafe.objectFieldOffset(key);
-        for (net.minecraft.world.level.biome.Biome biome : ForgeRegistries.BIOMES) {
-            var location = ForgeRegistries.BIOMES.getKey(biome);
+        var registry = console.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY);
+        for (net.minecraft.world.level.biome.Biome biome : registry) {
+            var location = registry.getKey(biome);
             String name = ResourceLocationUtil.standardize(location);
             Biome bukkit;
             try {

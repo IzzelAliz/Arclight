@@ -58,7 +58,7 @@ public class ArclightServer {
             }
             try {
                 ArclightMod.LOGGER.info("registry.begin");
-                BukkitRegistry.registerAll();
+                BukkitRegistry.registerAll(console);
                 org.spigotmc.SpigotConfig.init(new File("./spigot.yml"));
                 org.spigotmc.SpigotConfig.registerCommands();
             } catch (Throwable t) {
