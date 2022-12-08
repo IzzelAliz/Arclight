@@ -288,6 +288,7 @@
     "world.item.FlintAndSteelItemMixin",
     "world.item.HangingEntityItemMixin",
     "world.item.ItemStackMixin",
+    "world.item.ItemStackMixin$TheVaultCompat",
     "world.item.LeadItemMixin",
     "world.item.MapItemMixin",
     "world.item.MerchantMixin",

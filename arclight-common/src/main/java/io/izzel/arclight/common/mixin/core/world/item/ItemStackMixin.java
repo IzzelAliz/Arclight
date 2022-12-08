@@ -69,21 +69,26 @@ public abstract class ItemStackMixin extends CapabilityProvider<ItemStack> imple
         this.convertStack(version);
     }
 
-    @ModifyVariable(method = "hurt", index = 1, name = "amount", at = @At(value = "JUMP", opcode = Opcodes.IFGT, ordinal = 0))
-    private int arclight$itemDamage(int i, int amount, Random rand, ServerPlayer damager) {
-        if (damager != null) {
-            PlayerItemDamageEvent event = new PlayerItemDamageEvent(((ServerPlayerEntityBridge) damager).bridge$getBukkitEntity(), CraftItemStack.asCraftMirror((ItemStack) (Object) this), i);
-            event.getPlayer().getServer().getPluginManager().callEvent(event);
+    // https://github.com/IzzelAliz/Arclight/issues/824
+    @Mixin(value = ItemStack.class, priority = 1500)
+    public static class TheVaultCompat {
 
-            if (i != event.getDamage() || event.isCancelled()) {
-                event.getPlayer().updateInventory();
+        @ModifyVariable(method = "hurt", index = 1, name = "amount", at = @At(value = "JUMP", opcode = Opcodes.IFGT, ordinal = 0), argsOnly = true)
+        private int arclight$itemDamage(int i, int amount, Random rand, ServerPlayer damager) {
+            if (damager != null) {
+                PlayerItemDamageEvent event = new PlayerItemDamageEvent(((ServerPlayerEntityBridge) damager).bridge$getBukkitEntity(), CraftItemStack.asCraftMirror((ItemStack) (Object) this), i);
+                event.getPlayer().getServer().getPluginManager().callEvent(event);
+
+                if (i != event.getDamage() || event.isCancelled()) {
+                    event.getPlayer().updateInventory();
+                }
+                if (event.isCancelled()) {
+                    return -1;
+                }
+                return event.getDamage();
             }
-            if (event.isCancelled()) {
-                return -1;
-            }
-            return event.getDamage();
+            return i;
         }
-        return i;
     }
 
     @Inject(method = "hurtAndBreak", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;shrink(I)V"))
