@@ -966,8 +966,13 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         return CraftEventFactory.handleBlockFormEvent(instance, pPos, pNewState, 3, (Entity) (Object) this);
     }
 
-    @Redirect(method = "getDamageAfterArmorAbsorb", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurtArmor(Lnet/minecraft/world/damagesource/DamageSource;F)V"))
-    public void arclight$muteDamageArmor(LivingEntity entity, DamageSource damageSource, float damage) {
+    // https://github.com/IzzelAliz/Arclight/issues/831
+    @Mixin(value = LivingEntity.class, priority = 1500)
+    public static class ObscureApiCompat {
+
+        @Redirect(method = "getDamageAfterArmorAbsorb", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurtArmor(Lnet/minecraft/world/damagesource/DamageSource;F)V"))
+        private void arclight$muteDamageArmor(LivingEntity entity, DamageSource damageSource, float damage) {
+        }
     }
 
     @Redirect(method = "getDamageAfterMagicAbsorb", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hasEffect(Lnet/minecraft/world/effect/MobEffect;)Z"))

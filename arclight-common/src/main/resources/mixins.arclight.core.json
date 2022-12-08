@@ -96,6 +96,7 @@
     "world.entity.ItemBaseSteeringMixin",
     "world.entity.LightningBoltMixin",
     "world.entity.LivingEntityMixin",
+    "world.entity.LivingEntityMixin$ObscureApiCompat",
     "world.entity.MobMixin",
     "world.entity.PathfinderMobMixin",
     "world.entity.ai.behavior.AssignProfessionFromJobSiteMixin",
