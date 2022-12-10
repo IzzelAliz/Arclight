@@ -4,6 +4,7 @@ image:
 branches:
   only:
     - 1.19
+    - GreatHorn
 environment:
   JAVA_HOME: C:\Program Files\Java\jdk17
 cache:
