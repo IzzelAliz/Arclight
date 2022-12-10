@@ -8,7 +8,7 @@ import com.google.gson.JsonParseException;
 import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.item.crafting.RecipeManagerBridge;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.GsonHelper;
@@ -53,7 +53,7 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
         this.hasErrors = false;
         Map<RecipeType<?>, Object2ObjectLinkedOpenHashMap<ResourceLocation, Recipe<?>>> map = Maps.newHashMap();
 
-        for (RecipeType<?> type : Registry.RECIPE_TYPE) {
+        for (RecipeType<?> type : BuiltInRegistries.RECIPE_TYPE) {
             map.put(type, new Object2ObjectLinkedOpenHashMap<>());
         }
 
@@ -139,7 +139,7 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
 
     public void clearRecipes() {
         this.recipes = new HashMap<>();
-        for (RecipeType<?> type : Registry.RECIPE_TYPE) {
+        for (RecipeType<?> type : BuiltInRegistries.RECIPE_TYPE) {
             this.recipes.put(type, new Object2ObjectLinkedOpenHashMap<>());
         }
         this.byName = new HashMap<>();

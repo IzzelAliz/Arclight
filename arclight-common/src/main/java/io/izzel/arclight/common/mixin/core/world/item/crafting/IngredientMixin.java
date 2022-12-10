@@ -1,20 +1,20 @@
 package io.izzel.arclight.common.mixin.core.world.item.crafting;
 
 import io.izzel.arclight.common.bridge.core.item.crafting.IngredientBridge;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import javax.annotation.Nullable;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Ingredient;
 
 @Mixin(Ingredient.class)
 public abstract class IngredientMixin implements IngredientBridge {
 
     // @formatter:off
-    @Shadow  public abstract void dissolve();
-    @Shadow public ItemStack[] itemStacks;
+    @Shadow public abstract boolean isEmpty();
+    @Shadow public abstract ItemStack[] getItems();
     // @formatter:on
 
     public boolean exact;
@@ -24,28 +24,28 @@ public abstract class IngredientMixin implements IngredientBridge {
      * @reason
      */
     @Overwrite
-    public boolean test(@Nullable ItemStack stack) {
-        if (stack == null) {
+    public boolean test(@Nullable ItemStack itemstack) {
+        if (itemstack == null) {
             return false;
+        } else if (this.isEmpty()) {
+            return itemstack.isEmpty();
         } else {
-            this.dissolve();
-            if (this.itemStacks.length == 0) {
-                return stack.isEmpty();
-            } else {
-                for (ItemStack itemstack : this.itemStacks) {
-                    if (exact) {
-                        if (itemstack.getItem() == stack.getItem() && ItemStack.isSame(itemstack, stack)) {
-                            return true;
-                        }
-                        continue;
-                    }
-                    if (itemstack.getItem() == stack.getItem()) {
+            ItemStack[] items = this.getItems();
+            for (ItemStack stack : items) {
+                // CraftBukkit start
+                if (exact) {
+                    if (stack.getItem() == itemstack.getItem() && ItemStack.tagMatches(itemstack, stack)) {
                         return true;
                     }
+                    continue;
                 }
-
-                return false;
+                // CraftBukkit end
+                if (stack.is(itemstack.getItem())) {
+                    return true;
+                }
             }
+
+            return false;
         }
     }
 

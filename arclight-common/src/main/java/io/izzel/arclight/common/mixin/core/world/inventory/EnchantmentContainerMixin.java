@@ -6,7 +6,7 @@ import io.izzel.arclight.common.bridge.core.inventory.container.PosContainerBrid
 import io.izzel.arclight.common.bridge.core.util.IWorldPosCallableBridge;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -112,7 +112,7 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
                             List<EnchantmentInstance> list = this.getEnchantmentList(itemstack, j1, this.costs[j1]);
                             if (list != null && !list.isEmpty()) {
                                 EnchantmentInstance enchantmentdata = list.get(this.random.nextInt(list.size()));
-                                this.enchantClue[j1] = Registry.ENCHANTMENT.getId(enchantmentdata.enchantment);
+                                this.enchantClue[j1] = BuiltInRegistries.ENCHANTMENT.getId(enchantmentdata.enchantment);
                                 this.levelClue[j1] = enchantmentdata.level;
                             }
                         }
@@ -122,7 +122,7 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
                     CraftItemStack item = CraftItemStack.asCraftMirror(itemstack);
                     org.bukkit.enchantments.EnchantmentOffer[] offers = new EnchantmentOffer[3];
                     for (int j = 0; j < 3; ++j) {
-                        org.bukkit.enchantments.Enchantment enchantment = (this.enchantClue[j] >= 0) ? org.bukkit.enchantments.Enchantment.getByKey(CraftNamespacedKey.fromMinecraft(ForgeRegistries.ENCHANTMENTS.getKey(Registry.ENCHANTMENT.byId(this.enchantClue[j])))) : null;
+                        org.bukkit.enchantments.Enchantment enchantment = (this.enchantClue[j] >= 0) ? org.bukkit.enchantments.Enchantment.getByKey(CraftNamespacedKey.fromMinecraft(ForgeRegistries.ENCHANTMENTS.getKey(BuiltInRegistries.ENCHANTMENT.byId(this.enchantClue[j])))) : null;
                         offers[j] = (enchantment != null) ? new EnchantmentOffer(enchantment, this.levelClue[j], this.costs[j]) : null;
                     }
 
@@ -143,7 +143,7 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
                         EnchantmentOffer offer = event.getOffers()[j];
                         if (offer != null) {
                             this.costs[j] = offer.getCost();
-                            this.enchantClue[j] = Registry.ENCHANTMENT.getId(ForgeRegistries.ENCHANTMENTS.getValue(CraftNamespacedKey.toMinecraft(offer.getEnchantment().getKey())));
+                            this.enchantClue[j] = BuiltInRegistries.ENCHANTMENT.getId(ForgeRegistries.ENCHANTMENTS.getValue(CraftNamespacedKey.toMinecraft(offer.getEnchantment().getKey())));
                             this.levelClue[j] = offer.getEnchantmentLevel();
                         } else {
                             this.costs[j] = 0;

@@ -212,12 +212,12 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
         }
     }
 
-    @Inject(method = "destroyBlock", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/common/ForgeHooks;onBlockBreakEvent(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/GameType;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/core/BlockPos;)I"))
+    @Inject(method = "destroyBlock", remap = true, at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/common/ForgeHooks;onBlockBreakEvent(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/GameType;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/core/BlockPos;)I"))
     public void arclight$beforePrimaryEventFired(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
         ArclightCaptures.captureNextBlockBreakEventAsPrimaryEvent();
     }
 
-    @Inject(method = "destroyBlock", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraftforge/common/ForgeHooks;onBlockBreakEvent(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/GameType;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/core/BlockPos;)I"))
+    @Inject(method = "destroyBlock", remap = true, at = @At(value = "INVOKE_ASSIGN", remap = false, target = "Lnet/minecraftforge/common/ForgeHooks;onBlockBreakEvent(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/GameType;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/core/BlockPos;)I"))
     public void arclight$handleSecondaryBlockBreakEvents(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
         ArclightCaptures.BlockBreakEventContext breakEventContext = ArclightCaptures.popSecondaryBlockBreakEvent();
         while (breakEventContext != null) {
@@ -284,7 +284,9 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
         BlockState blockstate = worldIn.getBlockState(blockpos);
         InteractionResult resultType = InteractionResult.PASS;
         boolean cancelledBlock = false;
-        if (this.gameModeForPlayer == GameType.SPECTATOR) {
+        if (!blockstate.getBlock().isEnabled(worldIn.enabledFeatures())) {
+            return InteractionResult.FAIL;
+        } else if (this.gameModeForPlayer == GameType.SPECTATOR) {
             MenuProvider provider = blockstate.getMenuProvider(worldIn, blockpos);
             cancelledBlock = !(provider instanceof MenuProvider);
         }

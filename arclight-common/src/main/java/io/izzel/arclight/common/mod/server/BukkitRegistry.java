@@ -19,6 +19,8 @@ import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.arclight.i18n.conf.EntityPropertySpec;
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.dedicated.DedicatedServer;
@@ -29,10 +31,10 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
 import net.minecraft.world.entity.npc.VillagerProfession;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.Potions;
+import net.minecraft.world.item.crafting.CookingBookCategory;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.dimension.LevelStem;
@@ -48,7 +50,7 @@ import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.craftbukkit.v.CraftCrashReport;
 import org.bukkit.craftbukkit.v.CraftStatistic;
-import org.bukkit.craftbukkit.v.inventory.CraftCreativeCategory;
+import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
 import org.bukkit.craftbukkit.v.potion.CraftPotionUtil;
 import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
@@ -59,7 +61,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.SpawnCategory;
 import org.bukkit.entity.Villager;
-import org.bukkit.inventory.CreativeCategory;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
@@ -67,12 +68,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @SuppressWarnings({"ConstantConditions", "deprecation"})
 public class BukkitRegistry {
@@ -108,9 +107,9 @@ public class BukkitRegistry {
         loadBiomes(console);
         loadArts();
         loadStats();
-        loadCreativeTab();
         loadSpawnCategory();
         loadEndDragonPhase();
+        loadCookingBookCategory();
         try {
             for (var field : org.bukkit.Registry.class.getFields()) {
                 if (Modifier.isStatic(field.getModifiers()) && field.get(null) instanceof org.bukkit.Registry.SimpleRegistry<?> registry) {
@@ -119,6 +118,22 @@ public class BukkitRegistry {
             }
         } catch (Throwable ignored) {
         }
+    }
+
+    private static void loadCookingBookCategory() {
+        var id = CookingBookCategory.values().length;
+        var newTypes = new ArrayList<org.bukkit.inventory.recipe.CookingBookCategory>();
+        for (CookingBookCategory category : CookingBookCategory.values()) {
+            try {
+                CraftRecipe.getCategory(category);
+            } catch (Exception e) {
+                var name = category.name();
+                var bukkit = EnumHelper.makeEnum(org.bukkit.inventory.recipe.CookingBookCategory.class, name, id++, List.of(), List.of());
+                newTypes.add(bukkit);
+                ArclightMod.LOGGER.debug("Registered {} as cooking category {}", name, bukkit);
+            }
+        }
+        EnumHelper.addEnums(org.bukkit.inventory.recipe.CookingBookCategory.class, newTypes);
     }
 
     private static void loadEndDragonPhase() {
@@ -149,30 +164,6 @@ public class BukkitRegistry {
         EnumHelper.addEnums(SpawnCategory.class, newTypes);
     }
 
-    private static void loadCreativeTab() {
-        var id = new AtomicInteger(CreativeCategory.values().length);
-        var newTypes = new ArrayList<CreativeCategory>();
-        var tabs = CreativeModeTab.TABS;
-        var map = new HashMap<CreativeModeTab, CreativeCategory>(Unsafe.getStatic(CraftCreativeCategory.class, "NMS_TO_BUKKIT"));
-        for (var tab : tabs) {
-            map.computeIfAbsent(tab, k -> {
-                var name = "MOD_" + k.getId();
-                var newTab = EnumHelper.makeEnum(CreativeCategory.class, name, id.getAndIncrement(), List.of(), List.of());
-                newTypes.add(newTab);
-                ArclightMod.LOGGER.debug("Registered {} as creative tab {}", k, newTab);
-                return newTab;
-            });
-        }
-        EnumHelper.addEnums(CreativeCategory.class, newTypes);
-        try {
-            var field = CraftCreativeCategory.class.getDeclaredField("NMS_TO_BUKKIT");
-            field.setAccessible(true);
-            field.set(null, map);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private static void loadStats() {
         int i = Statistic.values().length;
         List<Statistic> newTypes = new ArrayList<>();
@@ -185,11 +176,11 @@ public class BukkitRegistry {
             if (statistic == null) {
                 String standardName = ResourceLocationUtil.standardize(location);
                 Statistic.Type type;
-                if (statType.getRegistry() == Registry.ENTITY_TYPE) {
+                if (statType.getRegistry() == BuiltInRegistries.ENTITY_TYPE) {
                     type = Statistic.Type.ENTITY;
-                } else if (statType.getRegistry() == Registry.BLOCK) {
+                } else if (statType.getRegistry() == BuiltInRegistries.BLOCK) {
                     type = Statistic.Type.BLOCK;
-                } else if (statType.getRegistry() == Registry.ITEM) {
+                } else if (statType.getRegistry() == BuiltInRegistries.ITEM) {
                     type = Statistic.Type.ITEM;
                 } else {
                     type = Statistic.Type.UNTYPED;
@@ -202,7 +193,7 @@ public class BukkitRegistry {
                 i++;
             }
         }
-        for (ResourceLocation location : Registry.CUSTOM_STAT) {
+        for (ResourceLocation location : BuiltInRegistries.CUSTOM_STAT) {
             Statistic statistic = STATS.get(location);
             if (statistic == null) {
                 String standardName = ResourceLocationUtil.standardize(location);
@@ -246,7 +237,7 @@ public class BukkitRegistry {
         List<Biome> newTypes = new ArrayList<>();
         Field key = Arrays.stream(Biome.class.getDeclaredFields()).filter(it -> it.getName().equals("key")).findAny().orElse(null);
         long keyOffset = Unsafe.objectFieldOffset(key);
-        var registry = console.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY);
+        var registry = console.registryAccess().registryOrThrow(Registries.BIOME);
         for (net.minecraft.world.level.biome.Biome biome : registry) {
             var location = registry.getKey(biome);
             String name = ResourceLocationUtil.standardize(location);

@@ -10,7 +10,6 @@
     "EntityMixin_Optimize",
     "GoalMixin",
     "MobMixin_Optimization",
-    "ResourceKeyMixin_Optimize",
     "VoxelShapesMixin",
     "activationrange.ActivationRangeMixin",
     "activationrange.EntityMixin_ActivationRange",

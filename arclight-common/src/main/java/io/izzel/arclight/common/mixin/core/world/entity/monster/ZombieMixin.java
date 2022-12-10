@@ -91,7 +91,7 @@ public abstract class ZombieMixin extends PathfinderMobMixin {
         if (zombieVillager != null) {
             zombieVillager.finalizeSpawn(level, level.getCurrentDifficultyAt(zombieVillager.blockPosition()), MobSpawnType.CONVERSION, new net.minecraft.world.entity.monster.Zombie.ZombieGroupData(false, true), null);
             zombieVillager.setVillagerData(villager.getVillagerData());
-            zombieVillager.setGossips(villager.getGossips().store(NbtOps.INSTANCE).getValue());
+            zombieVillager.setGossips(villager.getGossips().store(NbtOps.INSTANCE));
             zombieVillager.setTradeOffers(villager.getOffers().createTag());
             zombieVillager.setVillagerXp(villager.getVillagerXp());
             net.minecraftforge.event.ForgeEventFactory.onLivingConvert(villager, zombieVillager);

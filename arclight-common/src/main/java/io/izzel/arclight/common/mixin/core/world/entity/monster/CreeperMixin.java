@@ -9,8 +9,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.AreaEffectCloud;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.monster.Creeper;
-import net.minecraft.world.level.Explosion;
-import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraft.world.level.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -35,6 +34,7 @@ public abstract class CreeperMixin extends PathfinderMobMixin implements Creeper
     @Shadow public int explosionRadius;
     @Shadow protected abstract void spawnLingeringCloud();
     @Shadow private int swell;
+    @Shadow public abstract boolean isPowered();
     // @formatter:on
 
     @Inject(method = "thunderHit", cancellable = true, at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/monster/Creeper;entityData:Lnet/minecraft/network/syncher/SynchedEntityData;"))
@@ -51,13 +51,12 @@ public abstract class CreeperMixin extends PathfinderMobMixin implements Creeper
     @Overwrite
     public void explodeCreeper() {
         if (!this.level.isClientSide) {
-            Explosion.BlockInteraction explosion_effect = ForgeEventFactory.getMobGriefingEvent(this.level, (Creeper) (Object) this) ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.NONE;
-            final float f = this.entityData.get(DATA_IS_POWERED) ? 2.0f : 1.0f;
+            final float f = this.isPowered() ? 2.0f : 1.0f;
             final ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), this.explosionRadius * f, false);
             Bukkit.getPluginManager().callEvent(event);
             if (!event.isCancelled()) {
                 this.dead = true;
-                this.level.explode((Creeper) (Object) this, this.getX(), this.getY(), this.getZ(), event.getRadius(), event.getFire(), explosion_effect);
+                this.level.explode((Creeper) (Object) this, this.getX(), this.getY(), this.getZ(), event.getRadius(), event.getFire(), Level.ExplosionInteraction.MOB);
                 this.discard();
                 this.spawnLingeringCloud();
             } else {

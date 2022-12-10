@@ -2,11 +2,9 @@ package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.ButtonBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -26,8 +24,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.util.List;
-
 @Mixin(ButtonBlock.class)
 public class ButtonBlockMixin {
 
@@ -38,25 +34,14 @@ public class ButtonBlockMixin {
     @Inject(method = "checkPressed", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;getValue(Lnet/minecraft/world/level/block/state/properties/Property;)Ljava/lang/Comparable;"))
     public void arclight$entityInteract(BlockState state, Level worldIn, BlockPos pos, CallbackInfo ci,
-                                        List<? extends Entity> list, boolean flag) {
+                                        AbstractArrow abstractarrow, boolean flag) {
         boolean flag1 = state.getValue(ButtonBlock.POWERED);
         if (flag1 != flag && flag) {
             Block block = CraftBlock.at(worldIn, pos);
-            boolean allowed = false;
+            EntityInteractEvent event = new EntityInteractEvent(((EntityBridge) abstractarrow).bridge$getBukkitEntity(), block);
+            Bukkit.getPluginManager().callEvent(event);
 
-            for (Object object : list) {
-                if (object != null) {
-                    EntityInteractEvent event = new EntityInteractEvent(((EntityBridge) object).bridge$getBukkitEntity(), block);
-                    Bukkit.getPluginManager().callEvent(event);
-
-                    if (!event.isCancelled()) {
-                        allowed = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!allowed) {
+            if (event.isCancelled()) {
                 ci.cancel();
             }
         }
@@ -65,7 +50,7 @@ public class ButtonBlockMixin {
     @Inject(method = "checkPressed", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     public void arclight$blockRedstone3(BlockState state, Level worldIn, BlockPos pos, CallbackInfo ci,
-                                        List<? extends Entity> list, boolean flag, boolean flag1) {
+                                        AbstractArrow abstractarrow, boolean flag, boolean flag1) {
         Block block = CraftBlock.at(worldIn, pos);
         int old = (flag1) ? 15 : 0;
         int current = (!flag1) ? 15 : 0;
@@ -92,18 +77,6 @@ public class ButtonBlockMixin {
             if ((event.getNewCurrent() > 0) == (powered)) {
                 cir.setReturnValue(true);
             }
-        }
-    }
-
-    @Inject(method = "tick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
-    private void arclight$blockRedstone2(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource rand, CallbackInfo ci) {
-        Block block = CraftBlock.at(worldIn, pos);
-
-        BlockRedstoneEvent event = new BlockRedstoneEvent(block, 15, 0);
-        Bukkit.getPluginManager().callEvent(event);
-
-        if (event.getNewCurrent() > 0) {
-            ci.cancel();
         }
     }
 }

@@ -3,13 +3,13 @@ package io.izzel.arclight.common.mod.util;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.WorldLoader;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.level.DataPackConfig;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.bukkit.TreeType;
 import org.bukkit.block.BlockState;
@@ -19,6 +19,7 @@ import org.bukkit.event.entity.EntityPotionEffectEvent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Stack;
 
 public class ArclightCaptures {
@@ -252,17 +253,17 @@ public class ArclightCaptures {
         }
     }
 
-    private static transient DataPackConfig datapackCodec;
+    private static transient WorldLoader.DataLoadContext dataLoadContext;
 
-    public static void captureDatapackConfig(DataPackConfig codec) {
-        datapackCodec = codec;
+    public static void captureDataLoadContext(WorldLoader.DataLoadContext context) {
+        dataLoadContext = context;
     }
 
-    public static DataPackConfig getDatapackConfig() {
+    public static WorldLoader.DataLoadContext getDataLoadContext() {
         try {
-            return datapackCodec;
+            return Objects.requireNonNull(dataLoadContext, "dataLoadContext");
         } finally {
-            datapackCodec = null;
+            dataLoadContext = null;
         }
     }
 

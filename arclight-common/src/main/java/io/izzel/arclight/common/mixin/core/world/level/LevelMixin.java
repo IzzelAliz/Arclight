@@ -11,7 +11,7 @@ import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -204,7 +204,7 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
                     }
                     var generator = serverWorld.getChunkSource().getGenerator();
                     if (biomeProvider != null) {
-                        BiomeSource biomeSource = new CustomWorldChunkManager(worldInfo, biomeProvider, serverWorld.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY));
+                        BiomeSource biomeSource = new CustomWorldChunkManager(worldInfo, biomeProvider, serverWorld.registryAccess().registryOrThrow(Registries.BIOME));
                         ((ChunkGeneratorBridge) generator).bridge$setBiomeSource(biomeSource);
                     }
                     CustomChunkGenerator gen = new CustomChunkGenerator(serverWorld, generator, this.generator);

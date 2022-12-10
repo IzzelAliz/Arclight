@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.projectile.ArrowEntityBridge;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -45,11 +45,11 @@ public abstract class ArrowEntityMixin extends AbstractArrowMixin implements Arr
     }
 
     public String getPotionType() {
-        return Registry.POTION.getKey(this.potion).toString();
+        return BuiltInRegistries.POTION.getKey(this.potion).toString();
     }
 
     public void setPotionType(final String string) {
-        this.potion = Registry.POTION.get(new ResourceLocation(string));
+        this.potion = BuiltInRegistries.POTION.get(new ResourceLocation(string));
         this.getEntityData().set(ID_EFFECT_COLOR, PotionUtils.getColor(PotionUtils.getAllEffects(this.potion, this.effects)));
     }
 

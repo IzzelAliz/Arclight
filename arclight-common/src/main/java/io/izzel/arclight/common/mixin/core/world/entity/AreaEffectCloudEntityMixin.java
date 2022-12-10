@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.entity;
 import com.google.common.collect.Lists;
 import io.izzel.arclight.common.bridge.core.entity.AreaEffectCloudEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -208,11 +208,11 @@ public abstract class AreaEffectCloudEntityMixin extends EntityMixin implements 
     }
 
     public String getPotionType() {
-        return Registry.POTION.getKey(this.potion).toString();
+        return BuiltInRegistries.POTION.getKey(this.potion).toString();
     }
 
     public void setPotionType(final String string) {
-        this.setPotion(Registry.POTION.get(new ResourceLocation(string)));
+        this.setPotion(BuiltInRegistries.POTION.get(new ResourceLocation(string)));
     }
 
     @Override

@@ -10,7 +10,7 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.border.WorldBorder;
-import net.minecraft.world.level.levelgen.WorldGenSettings;
+import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.storage.DerivedLevelData;
 import net.minecraft.world.level.storage.PrimaryLevelData;
 import net.minecraft.world.level.storage.ServerLevelData;
@@ -23,9 +23,9 @@ public class DelegateWorldInfo extends PrimaryLevelData {
 
     private final DerivedLevelData derivedWorldInfo;
 
-    public DelegateWorldInfo(LevelSettings worldSettings, WorldGenSettings generatorSettings, Lifecycle lifecycle, DerivedLevelData derivedWorldInfo) {
-        super(worldSettings, generatorSettings, lifecycle);
-        this.derivedWorldInfo = derivedWorldInfo;
+    public DelegateWorldInfo(LevelSettings p_251081_, WorldOptions p_251666_, SpecialWorldProperty p_252268_, Lifecycle p_251714_, DerivedLevelData derivedLevelData) {
+        super(p_251081_, p_251666_, p_252268_, p_251714_);
+        this.derivedWorldInfo = derivedLevelData;
     }
 
     @Override
@@ -234,7 +234,7 @@ public class DelegateWorldInfo extends PrimaryLevelData {
     }
 
     public static DelegateWorldInfo wrap(DerivedLevelData worldInfo) {
-        return new DelegateWorldInfo(worldSettings(worldInfo), generatorSettings(worldInfo), lifecycle(worldInfo), worldInfo);
+        return new DelegateWorldInfo(worldSettings(worldInfo), generatorSettings(worldInfo), specialWorldProperty(worldInfo), lifecycle(worldInfo), worldInfo);
     }
 
     private static LevelSettings worldSettings(ServerLevelData worldInfo) {
@@ -245,11 +245,22 @@ public class DelegateWorldInfo extends PrimaryLevelData {
         }
     }
 
-    private static WorldGenSettings generatorSettings(ServerLevelData worldInfo) {
+    private static WorldOptions generatorSettings(ServerLevelData worldInfo) {
         if (worldInfo instanceof PrimaryLevelData) {
-            return ((PrimaryLevelData) worldInfo).worldGenSettings();
+            return ((PrimaryLevelData) worldInfo).worldGenOptions();
         } else {
             return generatorSettings(((DerivedWorldInfoBridge) worldInfo).bridge$getDelegate());
+        }
+    }
+
+    private static SpecialWorldProperty specialWorldProperty(ServerLevelData serverLevelData) {
+        if (serverLevelData instanceof PrimaryLevelData) {
+            return ((PrimaryLevelData) serverLevelData).isFlatWorld() ?
+                SpecialWorldProperty.FLAT : (
+                ((PrimaryLevelData) serverLevelData).isDebugWorld() ? SpecialWorldProperty.DEBUG : SpecialWorldProperty.NONE
+            );
+        } else {
+            return specialWorldProperty(((DerivedWorldInfoBridge) serverLevelData).bridge$getDelegate());
         }
     }
 

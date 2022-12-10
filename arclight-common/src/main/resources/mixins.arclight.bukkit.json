@@ -16,7 +16,6 @@
     "CraftBlockMixin",
     "CraftBlockStateMixin",
     "CraftConsoleCommandSenderMixin",
-    "CraftCreativeCategoryMixin",
     "CraftEntityMixin",
     "CraftEventFactoryMixin",
     "CraftHumanEntityMixin",

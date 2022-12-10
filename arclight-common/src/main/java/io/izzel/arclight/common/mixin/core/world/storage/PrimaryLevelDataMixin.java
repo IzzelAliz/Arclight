@@ -28,7 +28,7 @@ public abstract class PrimaryLevelDataMixin implements WorldInfoBridge {
     @Shadow private boolean thundering;
     @Shadow private boolean raining;
     @Shadow public abstract boolean isDifficultyLocked();
-    @Shadow private LevelSettings settings;
+    @Shadow public LevelSettings settings;
     @Shadow @Final private Lifecycle worldGenSettingsLifecycle;
     // @formatter:on
 

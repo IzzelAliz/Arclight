@@ -50,19 +50,19 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@Mixin(CraftServer.class)
+@Mixin(value = CraftServer.class, remap = false)
 public abstract class CraftServerMixin implements CraftServerBridge {
 
     // @formatter:off
-    @Shadow(remap = false) @Final private CraftCommandMap commandMap;
-    @Shadow(remap = false) @Final private SimplePluginManager pluginManager;
-    @Shadow(remap = false) @Final private SimpleHelpMap helpMap;
-    @Shadow(remap = false) protected abstract void enablePlugin(Plugin plugin);
-    @Shadow(remap = false) protected abstract void loadCustomPermissions();
-    @Shadow(remap = false) @Final protected DedicatedServer console;
-    @Shadow(remap = false) @Final @Mutable private String serverName;
-    @Shadow(remap = false) @Final @Mutable protected DedicatedPlayerList playerList;
-    @Shadow(remap = false) @Final private Map<String, World> worlds;
+    @Shadow @Final private CraftCommandMap commandMap;
+    @Shadow @Final private SimplePluginManager pluginManager;
+    @Shadow @Final private SimpleHelpMap helpMap;
+    @Shadow protected abstract void enablePlugin(Plugin plugin);
+    @Shadow protected abstract void loadCustomPermissions();
+    @Shadow @Final protected DedicatedServer console;
+    @Shadow @Final @Mutable private String serverName;
+    @Shadow @Final @Mutable protected DedicatedPlayerList playerList;
+    @Shadow @Final private Map<String, World> worlds;
     @Shadow public int reloadCount;
     @Shadow private YamlConfiguration configuration;
     @Shadow protected abstract File getConfigFile();
@@ -77,7 +77,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
     @Shadow public abstract void loadPlugins();
     @Shadow public abstract void enablePlugins(PluginLoadOrder type);
     @Shadow public abstract PluginManager getPluginManager();
-    @Accessor(value = "logger", remap = false) @Mutable public abstract void setLogger(Logger logger);
+    @Accessor("logger") @Mutable public abstract void setLogger(Logger logger);
     // @formatter:on
 
     @Inject(method = "<init>", at = @At("RETURN"))

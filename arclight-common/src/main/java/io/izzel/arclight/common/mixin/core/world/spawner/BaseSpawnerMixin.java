@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.util.random.SimpleWeightedRandomList;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.Entity;
@@ -24,6 +25,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -40,15 +42,15 @@ public abstract class BaseSpawnerMixin {
     @Shadow public SimpleWeightedRandomList<SpawnData> spawnPotentials;
     @Shadow public int spawnDelay;
     @Shadow public int spawnCount;
-    @Shadow public SpawnData nextSpawnData;
     @Shadow public int spawnRange;
     @Shadow public int maxNearbyEntities;
     @Shadow protected abstract boolean isNearPlayer(Level p_151344_, BlockPos p_151345_);
     @Shadow protected abstract void delay(Level p_151351_, BlockPos p_151352_);
+    @Shadow protected abstract SpawnData getOrCreateNextSpawnData(@Nullable Level p_254503_, RandomSource p_253892_, BlockPos p_254487_);
     // @formatter:on
 
     @Inject(method = "setEntityId", at = @At("RETURN"))
-    public void arclight$clearMobs(EntityType<?> type, CallbackInfo ci) {
+    public void arclight$clearMobs(CallbackInfo ci) {
         this.spawnPotentials = SimpleWeightedRandomList.empty();
     }
 
@@ -67,9 +69,11 @@ public abstract class BaseSpawnerMixin {
                 --this.spawnDelay;
             } else {
                 boolean flag = false;
+                RandomSource randomsource = level.getRandom();
+                SpawnData spawnData = this.getOrCreateNextSpawnData(level, randomsource, pos);
 
                 for (int i = 0; i < this.spawnCount; ++i) {
-                    CompoundTag compoundtag = this.nextSpawnData.getEntityToSpawn();
+                    CompoundTag compoundtag = spawnData.getEntityToSpawn();
                     Optional<EntityType<?>> optional = EntityType.by(compoundtag);
                     if (optional.isEmpty()) {
                         this.delay(level, pos);
@@ -83,12 +87,12 @@ public abstract class BaseSpawnerMixin {
                     double d2 = j >= 3 ? listtag.getDouble(2) : (double) pos.getZ() + (level.random.nextDouble() - level.random.nextDouble()) * (double) this.spawnRange + 0.5D;
                     if (level.noCollision(optional.get().getAABB(d0, d1, d2))) {
                         BlockPos blockpos = new BlockPos(d0, d1, d2);
-                        if (this.nextSpawnData.getCustomSpawnRules().isPresent()) {
+                        if (spawnData.getCustomSpawnRules().isPresent()) {
                             if (!optional.get().getCategory().isFriendly() && level.getDifficulty() == Difficulty.PEACEFUL) {
                                 continue;
                             }
 
-                            SpawnData.CustomSpawnRules spawndata$customspawnrules = this.nextSpawnData.getCustomSpawnRules().get();
+                            SpawnData.CustomSpawnRules spawndata$customspawnrules = spawnData.getCustomSpawnRules().get();
                             if (!spawndata$customspawnrules.blockLightLimit().isValueInRange(level.getBrightness(LightLayer.BLOCK, blockpos)) || !spawndata$customspawnrules.skyLightLimit().isValueInRange(level.getBrightness(LightLayer.SKY, blockpos))) {
                                 continue;
                             }
@@ -116,12 +120,12 @@ public abstract class BaseSpawnerMixin {
                             var res = ForgeEventFactory.canEntitySpawn(mob, level, (float) entity.getX(), (float) entity.getY(), (float) entity.getZ(), (BaseSpawner) (Object) this, MobSpawnType.SPAWNER);
                             if (res == net.minecraftforge.eventbus.api.Event.Result.DENY) continue;
                             if (res == net.minecraftforge.eventbus.api.Event.Result.DEFAULT) {
-                                if (this.nextSpawnData.getCustomSpawnRules().isEmpty() && !mob.checkSpawnRules(level, MobSpawnType.SPAWNER) || !mob.checkSpawnObstruction(level)) {
+                                if (spawnData.getCustomSpawnRules().isEmpty() && !mob.checkSpawnRules(level, MobSpawnType.SPAWNER) || !mob.checkSpawnObstruction(level)) {
                                     continue;
                                 }
                             }
 
-                            if (this.nextSpawnData.getEntityToSpawn().size() == 1 && this.nextSpawnData.getEntityToSpawn().contains("id", 8)) {
+                            if (spawnData.getEntityToSpawn().size() == 1 && spawnData.getEntityToSpawn().contains("id", 8)) {
                                 if (!ForgeEventFactory.doSpecialSpawn(mob, (LevelAccessor) level, (float) entity.getX(), (float) entity.getY(), (float) entity.getZ(), (BaseSpawner) (Object) this, MobSpawnType.SPAWNER))
                                     ((Mob) entity).finalizeSpawn(level, level.getCurrentDifficultyAt(entity.blockPosition()), MobSpawnType.SPAWNER, null, null);
                             }

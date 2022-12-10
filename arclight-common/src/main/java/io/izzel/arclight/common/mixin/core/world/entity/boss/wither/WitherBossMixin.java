@@ -8,7 +8,7 @@ import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
-import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.event.ForgeEventFactory;
@@ -51,11 +51,10 @@ public abstract class WitherBossMixin extends PathfinderMobMixin {
             int k1 = this.getInvulnerableTicks() - 1;
             this.bossEvent.setProgress(1.0F - (float) k1 / 220.0F);
             if (k1 <= 0) {
-                Explosion.BlockInteraction explosion$blockinteraction = ForgeEventFactory.getMobGriefingEvent(this.level, (WitherBoss) (Object) this) ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.NONE;
                 ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), 7.0F, false);
                 Bukkit.getPluginManager().callEvent(event);
                 if (!event.isCancelled()) {
-                    this.level.explode((WitherBoss) (Object) this, this.getX(), this.getEyeY(), this.getZ(), event.getRadius(), event.getFire(), explosion$blockinteraction);
+                    this.level.explode((WitherBoss) (Object) this, this.getX(), this.getEyeY(), this.getZ(), event.getRadius(), event.getFire(), Level.ExplosionInteraction.MOB);
                 }
                 if (!this.isSilent()) {
                     this.level.globalLevelEvent(1023, this.blockPosition(), 0);

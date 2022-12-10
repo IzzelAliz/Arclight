@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.core.network.protocol.game;
 import com.mojang.brigadier.arguments.ArgumentType;
 import io.netty.buffer.Unpooled;
 import net.minecraft.commands.synchronization.ArgumentTypeInfo;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.spigotmc.SpigotConfig;
@@ -30,7 +30,7 @@ public class ClientboundCommandsPacket_ArgumentNodeStubMixin {
         ci.cancel();
         buf.writeVarInt(ARCLIGHT_WRAP_INDEX);
         //noinspection deprecation
-        buf.writeVarInt(Registry.COMMAND_ARGUMENT_TYPE.getId(type));
+        buf.writeVarInt(BuiltInRegistries.COMMAND_ARGUMENT_TYPE.getId(type));
         var payload = new FriendlyByteBuf(Unpooled.buffer());
         type.serializeToNetwork((T) node, payload);
         buf.writeVarInt(payload.readableBytes());

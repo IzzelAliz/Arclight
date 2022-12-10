@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.level.levelgen.structure.templatesystem;
 
+import net.minecraft.core.HolderGetter;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataContainer;
 import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataTypeRegistry;
@@ -24,7 +26,7 @@ public class StructureTemplateMixin {
     }
 
     @Inject(method = "load", at = @At("RETURN"))
-    private void arclight$loadPdc(CompoundTag tag, CallbackInfo ci) {
+    private void arclight$loadPdc(HolderGetter<Block> reg, CompoundTag tag, CallbackInfo ci) {
         var base = tag.get("BukkitValues");
         if (base instanceof CompoundTag compoundTag) {
             this.persistentDataContainer.putAll(compoundTag);

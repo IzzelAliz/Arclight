@@ -55,6 +55,7 @@ public abstract class SlimeMixin extends MobMixin {
                 float f1 = ((float) (l % 2) - 0.5F) * f;
                 float f2 = ((float) (l / 2) - 0.5F) * f;
                 net.minecraft.world.entity.monster.Slime slimeentity = this.getType().create(this.level);
+                if (slimeentity == null) continue;
                 if (this.isPersistenceRequired()) {
                     slimeentity.setPersistenceRequired();
                 }

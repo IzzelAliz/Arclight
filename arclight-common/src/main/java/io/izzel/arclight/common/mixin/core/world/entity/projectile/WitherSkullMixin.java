@@ -29,12 +29,12 @@ public abstract class WitherSkullMixin extends AbstractHurtingProjectileMixin {
         ((LivingEntityBridge) result.getEntity()).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.ATTACK);
     }
 
-    @Redirect(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;DDDFZLnet/minecraft/world/level/Explosion$BlockInteraction;)Lnet/minecraft/world/level/Explosion;"))
-    private Explosion arclight$explode(Level world, Entity entityIn, double xIn, double yIn, double zIn, float explosionRadius, boolean causesFire, Explosion.BlockInteraction modeIn) {
+    @Redirect(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;)Lnet/minecraft/world/level/Explosion;"))
+    private Explosion arclight$explode(Level world, Entity entityIn, double xIn, double yIn, double zIn, float explosionRadius, boolean causesFire, Level.ExplosionInteraction interaction) {
         ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), explosionRadius, causesFire);
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
-            return this.level.explode((WitherSkull) (Object) this, xIn, yIn, zIn, event.getRadius(), event.getFire(), modeIn);
+            return this.level.explode((WitherSkull) (Object) this, xIn, yIn, zIn, event.getRadius(), event.getFire(), interaction);
         }
         return null;
     }

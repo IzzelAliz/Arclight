@@ -44,8 +44,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
 
-import static net.minecraft.world.entity.LivingEntity.getEquipmentSlotForItem;
-
 @Mixin(Mob.class)
 public abstract class MobMixin extends LivingEntityMixin implements MobEntityBridge {
 
@@ -69,6 +67,7 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
     @Shadow protected abstract void setItemSlotAndDropWhenKilled(EquipmentSlot p_233657_1_, ItemStack p_233657_2_);
     @Shadow @Nullable public abstract <T extends Mob> T convertTo(EntityType<T> p_233656_1_, boolean p_233656_2_);
     @Shadow @Nullable protected abstract SoundEvent getAmbientSound();
+    @Shadow protected abstract EquipmentSlot getEquipmentSlotForItemStack(ItemStack p_256113_);
     // @formatter:on
 
     public boolean aware;
@@ -221,10 +220,10 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
      * @reason
      */
     @Overwrite
-    public boolean equipItemIfPossible(ItemStack stack) {
+    public ItemStack equipItemIfPossible(ItemStack stack) {
         ItemEntity itemEntity = arclight$item;
         arclight$item = null;
-        EquipmentSlot equipmentslottype = getEquipmentSlotForItem(stack);
+        EquipmentSlot equipmentslottype = this.getEquipmentSlotForItemStack(stack);
         ItemStack itemstack = this.getItemBySlot(equipmentslottype);
         boolean flag = this.canReplaceCurrentItem(stack, itemstack);
         boolean canPickup = flag && this.canHoldItem(stack);
@@ -239,10 +238,16 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
                 forceDrops = false;
             }
 
-            this.setItemSlotAndDropWhenKilled(equipmentslottype, stack);
-            return true;
+            if (equipmentslottype.isArmor() && stack.getCount() > 1) {
+                ItemStack itemstack1 = stack.copyWithCount(1);
+                this.setItemSlotAndDropWhenKilled(equipmentslottype, itemstack1);
+                return itemstack1;
+            } else {
+                this.setItemSlotAndDropWhenKilled(equipmentslottype, stack);
+                return stack;
+            }
         } else {
-            return false;
+            return ItemStack.EMPTY;
         }
     }
 

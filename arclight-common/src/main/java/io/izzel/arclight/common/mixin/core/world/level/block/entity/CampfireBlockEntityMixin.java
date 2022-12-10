@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(CampfireBlockEntity.class)
-public abstract class CampfireTileEntityMixin extends BlockEntityMixin {
+public abstract class CampfireBlockEntityMixin extends BlockEntityMixin {
 
     @Shadow @Final private RecipeManager.CachedCheck<Container, CampfireCookingRecipe> quickCheck;
 
@@ -40,9 +40,11 @@ public abstract class CampfireTileEntityMixin extends BlockEntityMixin {
                 entity.cookingProgress[i]++;
                 if (entity.cookingProgress[i] >= entity.cookingTime[i]) {
                     Container container = new SimpleContainer(itemstack);
-                    ItemStack itemstack1 = ((CampfireTileEntityMixin) (Object) entity).quickCheck.getRecipeFor(container, level).map((p_155305_) -> {
+                    ItemStack itemstack1 = ((CampfireBlockEntityMixin) (Object) entity).quickCheck.getRecipeFor(container, level).map((p_155305_) -> {
                         return p_155305_.assemble(container);
                     }).orElse(itemstack);
+
+                    if (!itemstack1.isItemEnabled(level.enabledFeatures())) continue;
                     CraftItemStack source = CraftItemStack.asCraftMirror(itemstack);
                     org.bukkit.inventory.ItemStack result = CraftItemStack.asBukkitCopy(itemstack1);
 

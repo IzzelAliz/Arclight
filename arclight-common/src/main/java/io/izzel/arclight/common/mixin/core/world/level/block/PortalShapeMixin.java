@@ -9,7 +9,7 @@ import net.minecraft.BlockUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Blocks;
@@ -49,7 +49,7 @@ public abstract class PortalShapeMixin implements PortalSizeBridge {
     @Shadow private int height;
     @Shadow @Final private Direction rightDir;
     @Shadow @Final private int width;
-    @Shadow public static PortalInfo createPortalInfo(ServerLevel world, BlockUtil.FoundRectangle result, Direction.Axis axis, Vec3 offsetVector, EntityDimensions size, Vec3 motion, float rotationYaw, float rotationPitch) { return null; }
+    @Shadow public static PortalInfo createPortalInfo(ServerLevel p_259301_, BlockUtil.FoundRectangle p_259931_, Direction.Axis p_259901_, Vec3 p_259630_, Entity p_259166_, Vec3 p_260043_, float p_259853_, float p_259667_) { return null; }
     // @formatter:on
 
     List<BlockState> blocks = new ArrayList<>();
@@ -101,8 +101,8 @@ public abstract class PortalShapeMixin implements PortalSizeBridge {
         return portalInfo;
     }
 
-    private static PortalInfo createPortalInfo(ServerLevel world, BlockUtil.FoundRectangle result, Direction.Axis axis, Vec3 offsetVector, EntityDimensions size, Vec3 motion, float rotationYaw, float rotationPitch, CraftPortalEvent event) {
+    private static PortalInfo createPortalInfo(ServerLevel world, BlockUtil.FoundRectangle result, Direction.Axis axis, Vec3 offsetVector, Entity entity, Vec3 motion, float rotationYaw, float rotationPitch, CraftPortalEvent event) {
         ArclightCaptures.captureCraftPortalEvent(event);
-        return createPortalInfo(world, result, axis, offsetVector, size, motion, rotationYaw, rotationPitch);
+        return createPortalInfo(world, result, axis, offsetVector, entity, motion, rotationYaw, rotationPitch);
     }
 }

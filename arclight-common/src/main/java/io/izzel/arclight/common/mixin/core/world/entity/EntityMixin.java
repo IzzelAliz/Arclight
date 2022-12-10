@@ -8,7 +8,7 @@ import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.InternalEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.network.datasync.EntityDataManagerBridge;
+import io.izzel.arclight.common.bridge.core.network.datasync.SynchedEntityDataBridge;
 import io.izzel.arclight.common.bridge.core.world.TeleporterBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
@@ -789,7 +789,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         }
         if (event.isCancelled() && this.getAirSupply() != -1) {
             ci.cancel();
-            ((EntityDataManagerBridge) this.getEntityData()).bridge$markDirty(DATA_AIR_SUPPLY_ID);
+            ((SynchedEntityDataBridge) this.getEntityData()).bridge$markDirty(DATA_AIR_SUPPLY_ID);
             return;
         }
         this.entityData.set(DATA_AIR_SUPPLY_ID, event.getAmount());
@@ -967,7 +967,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                     }
 
                     ArclightCaptures.captureCraftPortalEvent(event);
-                    return PortalShape.createPortalInfo(worldFinal, result, direction$axis, vector3d, this.getDimensions(this.getPose()), this.getDeltaMovement(), this.getYRot(), this.getXRot());
+                    return PortalShape.createPortalInfo(worldFinal, result, direction$axis, vector3d, (Entity) (Object) this, this.getDeltaMovement(), this.getYRot(), this.getXRot());
                 }).orElse(null);
             }
         } else {

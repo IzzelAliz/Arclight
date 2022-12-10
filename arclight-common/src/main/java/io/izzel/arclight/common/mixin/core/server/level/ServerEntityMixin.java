@@ -49,6 +49,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -77,6 +78,7 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
     @Shadow private Vec3 ap;
     @Shadow private int yHeadRotp;
     @Shadow protected abstract void broadcastAndSend(Packet<?> packet);
+    @Shadow @Nullable private List<SynchedEntityData.DataValue<?>> trackedDataValues;
     // @formatter:on
 
     private Set<ServerPlayerConnection> trackedPlayers;
@@ -259,8 +261,8 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
         Packet<?> packet = this.entity.getAddEntityPacket();
         this.yHeadRotp = Mth.floor(this.entity.getYHeadRot() * 256.0f / 360.0f);
         consumer.accept(packet);
-        if (!this.entity.getEntityData().isEmpty()) {
-            consumer.accept(new ClientboundSetEntityDataPacket(this.entity.getId(), this.entity.getEntityData(), true));
+        if (this.trackedDataValues != null) {
+            consumer.accept(new ClientboundSetEntityDataPacket(this.entity.getId(), this.trackedDataValues));
         }
         boolean flag = this.trackDelta;
         if (this.entity instanceof LivingEntity livingEntity) {
@@ -310,7 +312,7 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
     }
 
     @Inject(method = "sendDirtyEntityData", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/server/level/ServerEntity;broadcastAndSend(Lnet/minecraft/network/protocol/Packet;)V"))
-    private void arclight$sendScaledHealth(CallbackInfo ci, SynchedEntityData entitydatamanager, Set<AttributeInstance> set) {
+    private void arclight$sendScaledHealth(CallbackInfo ci, SynchedEntityData entitydatamanager, List<SynchedEntityData.DataValue<?>> list, Set<AttributeInstance> set) {
         if (this.entity instanceof ServerPlayerEntityBridge player) {
             player.bridge$getBukkitEntity().injectScaledMaxHealth(set, false);
         }

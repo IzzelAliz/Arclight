@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.server.commands;
 
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.core.Holder;
 import net.minecraft.server.commands.EffectCommands;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.Entity;
@@ -18,7 +19,7 @@ import java.util.Collection;
 public class EffectCommandMixin {
 
     @Inject(method = "giveEffect", at = @At("HEAD"))
-    private static void arclight$addReason(CommandSourceStack source, Collection<? extends Entity> targets, MobEffect effect, Integer seconds, int amplifier, boolean showParticles, CallbackInfoReturnable<Integer> cir) {
+    private static void arclight$addReason(CommandSourceStack p_250553_, Collection<? extends Entity> targets, Holder<MobEffect> p_249495_, Integer p_249652_, int p_251498_, boolean p_249944_, CallbackInfoReturnable<Integer> cir) {
         for (Entity entity : targets) {
             if (entity instanceof LivingEntity) {
                 ((LivingEntityBridge) entity).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.COMMAND);
@@ -36,7 +37,7 @@ public class EffectCommandMixin {
     }
 
     @Inject(method = "clearEffect", at = @At("HEAD"))
-    private static void arclight$removeReason(CommandSourceStack source, Collection<? extends Entity> targets, MobEffect effect, CallbackInfoReturnable<Integer> cir) {
+    private static void arclight$removeReason(CommandSourceStack p_250069_, Collection<? extends Entity> targets, Holder<MobEffect> p_249198_, CallbackInfoReturnable<Integer> cir) {
         for (Entity entity : targets) {
             if (entity instanceof LivingEntity) {
                 ((LivingEntityBridge) entity).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.COMMAND);

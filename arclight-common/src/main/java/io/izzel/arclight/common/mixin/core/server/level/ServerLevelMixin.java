@@ -21,8 +21,9 @@ import io.izzel.arclight.common.mod.util.DelegateWorldInfo;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import io.izzel.arclight.i18n.ArclightConfig;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket;
 import net.minecraft.resources.ResourceKey;
@@ -148,13 +149,13 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         if (typeKey != null) {
             this.typeKey = typeKey;
         } else {
-            var dimensions = shadow$getServer().getWorldData().worldGenSettings().dimensions();
-            var key = dimensions.getKey(levelStem);
-            if (key != null) {
-                this.typeKey = ResourceKey.create(Registry.LEVEL_STEM_REGISTRY, key);
+            var dimensions = shadow$getServer().registryAccess().registryOrThrow(Registries.LEVEL_STEM);
+            var key = dimensions.getResourceKey(levelStem);
+            if (key.isPresent()) {
+                this.typeKey = key.get();
             } else {
                 ArclightMod.LOGGER.warn("Assign {} to unknown level stem {}", dimension.location(), levelStem);
-                this.typeKey = ResourceKey.create(Registry.LEVEL_STEM_REGISTRY, dimension.location());
+                this.typeKey = ResourceKey.create(Registries.LEVEL_STEM, dimension.location());
             }
         }
         if (worldInfo instanceof PrimaryLevelData) {
@@ -185,7 +186,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     private void arclight$gameEventEvent(GameEvent gameEvent, Vec3 pos, GameEvent.Context context, CallbackInfo ci) {
         var entity = context.sourceEntity();
         var i = gameEvent.getNotificationRadius();
-        GenericGameEvent event = new GenericGameEvent(org.bukkit.GameEvent.getByKey(CraftNamespacedKey.fromMinecraft(Registry.GAME_EVENT.getKey(gameEvent))), new Location(this.getWorld(), pos.x(), pos.y(), pos.z()), (entity == null) ? null : ((EntityBridge) entity).bridge$getBukkitEntity(), i, !Bukkit.isPrimaryThread());
+        GenericGameEvent event = new GenericGameEvent(org.bukkit.GameEvent.getByKey(CraftNamespacedKey.fromMinecraft(BuiltInRegistries.GAME_EVENT.getKey(gameEvent))), new Location(this.getWorld(), pos.x(), pos.y(), pos.z()), (entity == null) ? null : ((EntityBridge) entity).bridge$getBukkitEntity(), i, !Bukkit.isPrimaryThread());
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             ci.cancel();
@@ -269,7 +270,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         if (this.serverLevelData instanceof PrimaryLevelData worldInfo) {
             worldInfo.setWorldBorder(this.getWorldBorder().createSettings());
             worldInfo.setCustomBossEvents(this.shadow$getServer().getCustomBossEvents().save());
-            this.convertable.saveDataTag(this.shadow$getServer().registryHolder, worldInfo, this.shadow$getServer().getPlayerList().getSingleplayerData());
+            this.convertable.saveDataTag(this.shadow$getServer().registryAccess(), worldInfo, this.shadow$getServer().getPlayerList().getSingleplayerData());
         }
     }
 
@@ -377,11 +378,10 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         return tryAddFreshEntityWithPassengers(entity, reason);
     }
 
-    @Inject(method = "explode", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER,
-        target = "Lnet/minecraft/world/level/Explosion;finalizeExplosion(Z)V"), locals = LocalCapture.CAPTURE_FAILHARD)
-    public void arclight$doExplosion(Entity entityIn, DamageSource damageSourceIn, @Nullable ExplosionDamageCalculator context, double xIn, double yIn, double zIn,
-                                     float explosionRadius, boolean causesFire, Explosion.BlockInteraction modeIn, CallbackInfoReturnable<Explosion> cir,
-                                     Explosion explosion) {
+    @Inject(method = "explode", cancellable = true, at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/level/Explosion;interactsWithBlocks()Z"), locals = LocalCapture.CAPTURE_FAILHARD)
+    private void arclight$doExplosion(Entity p_256039_, DamageSource p_255778_, ExplosionDamageCalculator p_256002_, double p_256067_, double p_256370_, double p_256153_, float p_256045_, boolean p_255686_, Level.ExplosionInteraction p_255827_,
+                                      CallbackInfoReturnable<Explosion> cir, Explosion explosion) {
         if (((ExplosionBridge) explosion).bridge$wasCancelled()) {
             cir.setReturnValue(explosion);
         }

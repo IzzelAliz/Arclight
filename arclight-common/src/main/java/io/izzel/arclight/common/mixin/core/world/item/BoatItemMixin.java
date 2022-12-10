@@ -77,7 +77,7 @@ public abstract class BoatItemMixin extends Item {
                 }
 
                 Boat boatentity = this.getBoat(worldIn, result);
-                boatentity.setType(this.type);
+                boatentity.setVariant(this.type);
                 boatentity.setYRot(playerIn.getYRot());
                 if (!worldIn.noCollision(boatentity, boatentity.getBoundingBox().inflate(-0.1D))) {
                     return new InteractionResultHolder<>(InteractionResult.FAIL, itemstack);

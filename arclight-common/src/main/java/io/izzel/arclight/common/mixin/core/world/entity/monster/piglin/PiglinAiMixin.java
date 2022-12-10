@@ -67,7 +67,7 @@ public abstract class PiglinAiMixin {
             eat(piglinEntity);
         } else {
             ((MobEntityBridge) piglinEntity).bridge$captureItemDrop(itemEntity);
-            boolean flag = piglinEntity.equipItemIfPossible(itemstack);
+            boolean flag = !piglinEntity.equipItemIfPossible(itemstack).equals(ItemStack.EMPTY);
             if (!flag) {
                 putInInventory(piglinEntity, itemstack);
             }

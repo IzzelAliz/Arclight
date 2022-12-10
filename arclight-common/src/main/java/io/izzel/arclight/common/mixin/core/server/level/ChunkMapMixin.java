@@ -4,7 +4,7 @@ import com.mojang.datafixers.DataFixer;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ChunkMapBridge;
 import io.izzel.arclight.common.mod.util.ArclightCallbackExecutor;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ChunkMap;
@@ -45,7 +45,7 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
     @Shadow protected abstract void tick();
     @Shadow @Mutable public ChunkGenerator generator;
     @Shadow @Final public ServerLevel level;
-    @Shadow private RandomState randomState;
+    @Shadow @Final @Mutable private RandomState randomState;
     @Invoker("tick") public abstract void bridge$tick(BooleanSupplier hasMoreTime);
     @Invoker("setViewDistance") public abstract void bridge$setViewDistance(int i);
     // @formatter:on
@@ -89,9 +89,9 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
             generator = custom.getDelegate();
         }
         if (generator instanceof NoiseBasedChunkGenerator noisebasedchunkgenerator) {
-            this.randomState = RandomState.create(noisebasedchunkgenerator.generatorSettings().value(), this.level.registryAccess().registryOrThrow(Registry.NOISE_REGISTRY), this.level.getSeed());
+            this.randomState = RandomState.create(noisebasedchunkgenerator.generatorSettings().value(), this.level.registryAccess().lookupOrThrow(Registries.NOISE), this.level.getSeed());
         } else {
-            this.randomState = RandomState.create(NoiseGeneratorSettings.dummy(), this.level.registryAccess().registryOrThrow(Registry.NOISE_REGISTRY), this.level.getSeed());
+            this.randomState = RandomState.create(NoiseGeneratorSettings.dummy(), this.level.registryAccess().lookupOrThrow(Registries.NOISE), this.level.getSeed());
         }
     }
 }

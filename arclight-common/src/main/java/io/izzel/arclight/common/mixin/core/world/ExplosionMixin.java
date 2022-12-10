@@ -79,9 +79,9 @@ public abstract class ExplosionMixin implements ExplosionBridge {
     @Shadow @Final private RandomSource random;
     @Shadow private static void addBlockDrops(ObjectArrayList<Pair<ItemStack, BlockPos>> dropPositionArray, ItemStack stack, BlockPos pos) { }
     @Shadow @Final private ExplosionDamageCalculator damageCalculator;
-    @Shadow @Nullable public abstract LivingEntity getSourceMob();
+    @Shadow public abstract boolean interactsWithBlocks();
+    @Shadow @Nullable public abstract LivingEntity getIndirectSourceEntity();
     // @formatter:on
-
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/Entity;DDDFZLnet/minecraft/world/level/Explosion$BlockInteraction;)V",
         at = @At("RETURN"))
@@ -236,7 +236,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
             this.level.playLocalSound(this.x, this.y, this.z, SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4.0F, (1.0F + (this.level.random.nextFloat() - this.level.random.nextFloat()) * 0.2F) * 0.7F, false);
         }
 
-        boolean flag = this.blockInteraction != Explosion.BlockInteraction.NONE;
+        boolean flag = this.interactsWithBlocks();
         if (spawnParticles) {
             if (!(this.radius < 2.0F) && flag) {
                 this.level.addParticle(ParticleTypes.EXPLOSION_EMITTER, this.x, this.y, this.z, 1.0D, 0.0D, 0.0D);
@@ -247,7 +247,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
 
         if (flag) {
             ObjectArrayList<Pair<ItemStack, BlockPos>> objectarraylist = new ObjectArrayList<>();
-            boolean flag2 = this.getSourceMob() instanceof Player;
+            boolean flag2 = this.getIndirectSourceEntity() instanceof Player;
             Util.shuffle(this.toBlow, this.level.random);
 
             float yield = this.callBlockExplodeEvent();
@@ -266,7 +266,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                     if (blockstate.canDropFromExplosion(this.level, blockpos, (Explosion) (Object) this) && this.level instanceof ServerLevel serverLevel) {
                         BlockEntity tileentity = blockstate.hasBlockEntity() ? this.level.getBlockEntity(blockpos) : null;
                         LootContext.Builder lootcontext$builder = new LootContext.Builder(serverLevel).withRandom(this.level.random).withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(blockpos)).withParameter(LootContextParams.TOOL, ItemStack.EMPTY).withOptionalParameter(LootContextParams.BLOCK_ENTITY, tileentity).withOptionalParameter(LootContextParams.THIS_ENTITY, this.source);
-                        if (this.blockInteraction == Explosion.BlockInteraction.DESTROY || yield < 1.0F) {
+                        if (this.blockInteraction == Explosion.BlockInteraction.DESTROY_WITH_DECAY || yield < 1.0F) {
                             lootcontext$builder.withParameter(LootContextParams.EXPLOSION_RADIUS, 1.0F / yield);
                         }
 

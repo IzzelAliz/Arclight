@@ -4,6 +4,7 @@ import io.izzel.arclight.common.bridge.core.item.crafting.IRecipeBridge;
 import io.izzel.arclight.common.mod.util.ArclightSpecialRecipe;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
@@ -24,6 +25,7 @@ public abstract class ShapedRecipeMixin implements IRecipeBridge {
     @Shadow @Final NonNullList<Ingredient> recipeItems;
     @Shadow public abstract int getHeight();
     @Shadow public abstract int getWidth();
+    @Shadow public abstract CraftingBookCategory category();
     // @formatter:on
 
     @Override
@@ -34,6 +36,7 @@ public abstract class ShapedRecipeMixin implements IRecipeBridge {
         CraftItemStack result = CraftItemStack.asCraftMirror(this.result);
         CraftShapedRecipe recipe = new CraftShapedRecipe(result, (ShapedRecipe) (Object) this);
         recipe.setGroup(this.group);
+        recipe.setCategory(CraftRecipe.getCategory(this.category()));
 
         switch (this.getHeight()) {
             case 1:

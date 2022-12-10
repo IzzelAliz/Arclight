@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Map;
 import java.util.function.Predicate;
 
-@Mixin(Registry.SimpleRegistry.class)
+@Mixin(value = Registry.SimpleRegistry.class, remap = false)
 public class Registry_SimpleRegistryMixin<T extends Enum<T> & Keyed> implements SimpleRegistryBridge {
 
     @Shadow @Final @Mutable private Map<NamespacedKey, T> map;

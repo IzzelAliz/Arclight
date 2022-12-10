@@ -2,12 +2,13 @@ package io.izzel.arclight.common.mixin.core.world.level.gameevent.vibrations;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.gameevent.PositionSource;
+import net.minecraft.world.level.gameevent.vibrations.VibrationInfo;
 import net.minecraft.world.level.gameevent.vibrations.VibrationListener;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
@@ -26,11 +27,11 @@ import java.util.Optional;
 public abstract class VibrationListenerMixin {
 
     // @formatter:off
-    @Shadow @Nullable protected VibrationListener.ReceivingEvent receivingEvent;
     @Shadow @Final protected VibrationListener.VibrationListenerConfig config;
     @Shadow @Final protected PositionSource listenerSource;
     @Shadow private static boolean isOccluded(Level p_223776_, Vec3 p_223777_, Vec3 p_223778_) { return false; }
-    @Shadow protected abstract void scheduleSignal(ServerLevel p_223770_, GameEvent p_223771_, GameEvent.Context p_223772_, Vec3 p_223773_, Vec3 p_223774_);
+    @Shadow @Nullable protected VibrationInfo currentVibration;
+    @Shadow public abstract void scheduleVibration(ServerLevel p_250210_, GameEvent p_251063_, GameEvent.Context p_249354_, Vec3 p_250310_, Vec3 p_249553_);
     // @formatter:on
 
     /**
@@ -38,34 +39,33 @@ public abstract class VibrationListenerMixin {
      * @reason
      */
     @Overwrite
-    public boolean handleGameEvent(ServerLevel level, GameEvent.Message p_223768_) {
-        if (this.receivingEvent != null) {
+    public boolean handleGameEvent(ServerLevel worldserver, GameEvent gameevent, GameEvent.Context gameevent_a, Vec3 vec3d) {
+        if (this.currentVibration != null) {
+            return false;
+        } else if (!this.config.isValidVibration(gameevent, gameevent_a)) {
             return false;
         } else {
-            GameEvent gameevent = p_223768_.gameEvent();
-            GameEvent.Context gameevent$context = p_223768_.context();
-            if (!this.config.isValidVibration(gameevent, gameevent$context)) {
+            Optional<Vec3> optional = this.listenerSource.getPosition(worldserver);
+
+            if (optional.isEmpty()) {
                 return false;
             } else {
-                Optional<Vec3> optional = this.listenerSource.getPosition(level);
-                if (optional.isEmpty()) {
+                Vec3 vec3d1 = optional.get();
+
+                // CraftBukkit start
+                boolean defaultCancel = !this.config.shouldListen(worldserver, (VibrationListener) (Object) this, new BlockPos(vec3d), gameevent, gameevent_a);
+                Entity entity = gameevent_a.sourceEntity();
+                BlockReceiveGameEvent event = new BlockReceiveGameEvent(org.bukkit.GameEvent.getByKey(CraftNamespacedKey.fromMinecraft(BuiltInRegistries.GAME_EVENT.getKey(gameevent))), CraftBlock.at(worldserver, new BlockPos(vec3d1)), (entity == null) ? null : ((EntityBridge) entity).bridge$getBukkitEntity());
+                event.setCancelled(defaultCancel);
+                Bukkit.getPluginManager().callEvent(event);
+                if (event.isCancelled()) {
+                    // CraftBukkit end
+                    return false;
+                } else if (isOccluded(worldserver, vec3d, vec3d1)) {
                     return false;
                 } else {
-                    Vec3 vec3 = p_223768_.source();
-                    Vec3 vec31 = optional.get();
-                    boolean cancelled = !this.config.shouldListen(level, (VibrationListener) (Object) this, new BlockPos(vec3), gameevent, gameevent$context);
-                    Entity entity = gameevent$context.sourceEntity();
-                    var event = new BlockReceiveGameEvent(org.bukkit.GameEvent.getByKey(CraftNamespacedKey.fromMinecraft(Registry.GAME_EVENT.getKey(gameevent))), CraftBlock.at(level, new BlockPos(vec31)), (entity == null) ? null : ((EntityBridge) entity).bridge$getBukkitEntity());
-                    event.setCancelled(cancelled);
-                    Bukkit.getPluginManager().callEvent(event);
-                    if (event.isCancelled()) {
-                        return false;
-                    } else if (isOccluded(level, vec3, vec31)) {
-                        return false;
-                    } else {
-                        this.scheduleSignal(level, gameevent, gameevent$context, vec3, vec31);
-                        return true;
-                    }
+                    this.scheduleVibration(worldserver, gameevent, gameevent_a, vec3d, vec3d1);
+                    return true;
                 }
             }
         }

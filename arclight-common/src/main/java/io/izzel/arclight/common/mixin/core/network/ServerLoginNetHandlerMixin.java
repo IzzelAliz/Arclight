@@ -21,8 +21,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
 import net.minecraft.util.Crypt;
 import net.minecraft.util.CryptException;
-import net.minecraft.util.SignatureValidator;
-import net.minecraft.world.entity.player.ProfilePublicKey;
 import net.minecraftforge.fml.util.thread.SidedThreadGroups;
 import org.apache.commons.lang3.Validate;
 import org.bukkit.Bukkit;
@@ -55,7 +53,6 @@ public abstract class ServerLoginNetHandlerMixin {
     // @formatter:off
     @Shadow private ServerLoginPacketListenerImpl.State state;
     @Shadow @Final private MinecraftServer server;
-    @Shadow @Final private byte[] nonce;
     @Shadow @Final public Connection connection;
     @Shadow @Final private static AtomicInteger UNIQUE_THREAD_ID;
     @Shadow private GameProfile gameProfile;
@@ -64,8 +61,7 @@ public abstract class ServerLoginNetHandlerMixin {
     @Shadow public abstract void disconnect(Component reason);
     @Shadow public abstract String getUserName();
     @Shadow private ServerPlayer delayedAcceptPlayer;
-    @Shadow @Nullable private ProfilePublicKey.Data profilePublicKeyData;
-    @Shadow @Nullable private static ProfilePublicKey validatePublicKey(@org.jetbrains.annotations.Nullable ProfilePublicKey.Data p_240244_, UUID p_240245_, SignatureValidator p_240246_, boolean p_240247_) throws ProfilePublicKey.ValidationException { return null; }
+    @Shadow @Final private byte[] challenge;
     // @formatter:on
 
     public void disconnect(final String s) {
@@ -83,26 +79,13 @@ public abstract class ServerLoginNetHandlerMixin {
             this.loginGameProfile = this.getOfflineProfile(this.loginGameProfile);
         }
         */
-        ProfilePublicKey profilePublicKey = null;
 
         if (!this.server.usesAuthentication()) {
             // this.gameProfile = this.createFakeProfile(this.gameProfile); // Spigot - Moved to initUUID
             // Spigot end
-        } else {
-            try {
-                SignatureValidator signaturevalidator = this.server.getServiceSignatureValidator();
-
-                profilePublicKey = validatePublicKey(this.profilePublicKeyData, this.gameProfile.getId(), signaturevalidator, this.server.enforceSecureProfile());
-            } catch (ProfilePublicKey.ValidationException e) {
-                LOGGER.error("Failed to validate profile key: {}", e.getMessage());
-                if (!this.connection.isMemoryConnection()) {
-                    this.disconnect(e.getComponent());
-                    return;
-                }
-            }
         }
 
-        ServerPlayer entity = ((PlayerListBridge) this.server.getPlayerList()).bridge$canPlayerLogin(this.connection.getRemoteAddress(), this.gameProfile, (ServerLoginPacketListenerImpl) (Object) this, profilePublicKey);
+        ServerPlayer entity = ((PlayerListBridge) this.server.getPlayerList()).bridge$canPlayerLogin(this.connection.getRemoteAddress(), this.gameProfile, (ServerLoginPacketListenerImpl) (Object) this);
         if (entity == null) {
             // this.disconnect(itextcomponent);
         } else {
@@ -141,7 +124,6 @@ public abstract class ServerLoginNetHandlerMixin {
         Validate.validState(this.state == ServerLoginPacketListenerImpl.State.HELLO, "Unexpected hello packet");
         Validate.validState(this.state == ServerLoginPacketListenerImpl.State.HELLO, "Unexpected hello packet");
         Validate.validState(isValidUsername(packetIn.name()), "Invalid characters in username");
-        this.profilePublicKeyData = packetIn.publicKey().orElse(null);
         GameProfile gameprofile = this.server.getSingleplayerProfile();
         if (gameprofile != null && packetIn.name().equalsIgnoreCase(gameprofile.getName())) {
             this.gameProfile = gameprofile;
@@ -150,7 +132,7 @@ public abstract class ServerLoginNetHandlerMixin {
             this.gameProfile = new GameProfile(null, packetIn.name());
             if (this.server.usesAuthentication() && !this.connection.isMemoryConnection()) {
                 this.state = ServerLoginPacketListenerImpl.State.KEY;
-                this.connection.send(new ClientboundHelloPacket("", this.server.getKeyPair().getPublic().getEncoded(), this.nonce));
+                this.connection.send(new ClientboundHelloPacket("", this.server.getKeyPair().getPublic().getEncoded(), this.challenge));
             } else {
                 class Handler extends Thread {
 
@@ -202,12 +184,7 @@ public abstract class ServerLoginNetHandlerMixin {
         final String s;
         try {
             PrivateKey privatekey = this.server.getKeyPair().getPrivate();
-            if (this.profilePublicKeyData != null) {
-                ProfilePublicKey profilepublickey = new ProfilePublicKey(this.profilePublicKeyData);
-                if (!packetIn.isChallengeSignatureValid(this.nonce, profilepublickey)) {
-                    throw new IllegalStateException("Protocol error");
-                }
-            } else if (!packetIn.isNonceValid(this.nonce, privatekey)) {
+            if (!packetIn.isChallengeValid(this.challenge, privatekey)) {
                 throw new IllegalStateException("Protocol error");
             }
 

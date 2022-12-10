@@ -29,15 +29,15 @@ public abstract class LargeFireballMixin extends AbstractHurtingProjectileMixin 
         this.isIncendiary = level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
     }
 
-    @Redirect(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;DDDFZLnet/minecraft/world/level/Explosion$BlockInteraction;)Lnet/minecraft/world/level/Explosion;"))
-    private Explosion arclight$explodePrime(Level world, Entity entityIn, double xIn, double yIn, double zIn, float explosionRadius, boolean causesFire, Explosion.BlockInteraction modeIn) {
+    @Redirect(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;)Lnet/minecraft/world/level/Explosion;"))
+    private Explosion arclight$explodePrime(Level world, Entity entityIn, double xIn, double yIn, double zIn, float explosionRadius, boolean causesFire, Level.ExplosionInteraction interaction) {
         ExplosionPrimeEvent event = new ExplosionPrimeEvent((org.bukkit.entity.Explosive) this.getBukkitEntity());
         event.setRadius(explosionRadius);
         event.setFire(causesFire);
         Bukkit.getPluginManager().callEvent(event);
 
         if (!event.isCancelled()) {
-            return this.level.explode((LargeFireball) (Object) this, xIn, yIn, zIn, event.getRadius(), event.getFire(), modeIn);
+            return this.level.explode((LargeFireball) (Object) this, xIn, yIn, zIn, event.getRadius(), event.getFire(), interaction);
         } else {
             return null;
         }

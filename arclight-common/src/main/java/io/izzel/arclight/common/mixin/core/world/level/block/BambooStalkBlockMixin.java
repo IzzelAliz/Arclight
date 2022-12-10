@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.level.block;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BambooBlock;
+import net.minecraft.world.level.block.BambooStalkBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BambooLeaves;
@@ -18,8 +18,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(BambooBlock.class)
-public abstract class BambooBlockMixin extends BlockMixin {
+@Mixin(BambooStalkBlock.class)
+public abstract class BambooStalkBlockMixin extends BlockMixin {
 
     @Shadow @Final public static EnumProperty<BambooLeaves> LEAVES;
     @Shadow @Final public static IntegerProperty AGE;

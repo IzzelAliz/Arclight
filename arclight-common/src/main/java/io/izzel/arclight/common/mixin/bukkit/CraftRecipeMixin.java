@@ -41,7 +41,7 @@ public interface CraftRecipeMixin {
             throw new IllegalArgumentException("Unknown recipe stack instance " + bukkit);
         }
 
-        stack.dissolve();
+        stack.getItems();
         if (stack.isVanilla() && requireNotEmpty && stack.getItems().length == 0) {
             throw new IllegalArgumentException("Recipe requires at least one non-air choice!");
         } else {
@@ -55,7 +55,7 @@ public interface CraftRecipeMixin {
      */
     @Overwrite
     static RecipeChoice toBukkit(Ingredient list) {
-        list.dissolve();
+        list.getItems();
         if (!list.isVanilla()) {
             return new ArclightSpecialIngredient(list);
         }

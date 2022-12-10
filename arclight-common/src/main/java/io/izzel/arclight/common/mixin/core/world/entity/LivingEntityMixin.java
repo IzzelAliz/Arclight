@@ -523,15 +523,9 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
 
             this.noActionTime = 0;
             float f = amount;
-            if (false && (source == DamageSource.ANVIL || source == DamageSource.FALLING_BLOCK) && !this.getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {
-                this.getItemBySlot(EquipmentSlot.HEAD).hurtAndBreak((int) (amount * 4.0F + this.random.nextFloat() * amount * 2.0F), (LivingEntity) (Object) this, (p_213341_0_) -> {
-                    p_213341_0_.broadcastBreakEvent(EquipmentSlot.HEAD);
-                });
-                amount *= 0.75F;
-            }
-
             boolean flag = f > 0.0F && this.isDamageSourceBlocked(source); // Copied from below
             float f1 = 0.0F;
+            // ShieldBlockEvent implemented in damageEntity0
 
             if (false && amount > 0.0F && this.isDamageSourceBlocked(source)) {
                 this.hurtCurrentlyUsedShield(amount);
@@ -623,7 +617,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                     this.markHurt();
                 }
 
-                if (entity1 != null) {
+                if (entity1 != null && !source.isExplosion()) {
                     double d1 = entity1.getX() - this.getX();
 
                     double d0;
@@ -638,7 +632,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 }
             }
 
-            if (this.getHealth() <= 0.0F) {
+            if (this.isDeadOrDying()) {
                 if (!this.checkTotemDeathProtection(source)) {
                     SoundEvent soundevent = this.getDeathSound();
                     if (flag1 && soundevent != null) {
@@ -687,7 +681,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
 
             float originalDamage = f;
             Function<Double, Double> hardHat = f12 -> {
-                if ((damagesource == DamageSource.ANVIL || damagesource == DamageSource.FALLING_BLOCK) && !this.getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {
+                if (damagesource.isDamageHelmet() && !this.getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {
                     return -(f12 - (f12 * 0.75F));
                 }
                 return -0.0;
@@ -953,7 +947,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     }
 
     @Inject(method = "createWitherRose", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
-    private void arclight$witherRoseDrop(LivingEntity livingEntity, CallbackInfo ci, boolean flag, ItemEntity itemEntity) {
+    private void arclight$witherRoseDrop(LivingEntity livingEntity, CallbackInfo ci, boolean flag, ItemEntity
+        itemEntity) {
         org.bukkit.event.entity.EntityDropItemEvent event = new org.bukkit.event.entity.EntityDropItemEvent(this.getBukkitEntity(), (org.bukkit.entity.Item) (((EntityBridge) itemEntity).bridge$getBukkitEntity()));
         CraftEventFactory.callEvent(event);
         if (event.isCancelled()) {
@@ -1023,7 +1018,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     }
 
     @Eject(method = "completeUsingItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;finishUsingItem(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/LivingEntity;)Lnet/minecraft/world/item/ItemStack;"))
-    private ItemStack arclight$itemConsume(ItemStack itemStack, Level worldIn, LivingEntity entityLiving, CallbackInfo ci) {
+    private ItemStack arclight$itemConsume(ItemStack itemStack, Level worldIn, LivingEntity
+        entityLiving, CallbackInfo ci) {
         if (this instanceof ServerPlayerEntityBridge) {
             final org.bukkit.inventory.ItemStack craftItem = CraftItemStack.asBukkitCopy(itemStack);
             final PlayerItemConsumeEvent event = new PlayerItemConsumeEvent((Player) this.getBukkitEntity(), craftItem, CraftEquipmentSlot.getHand(this.getUsedItemHand()));
@@ -1041,7 +1037,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     }
 
     @Eject(method = "randomTeleport", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/LivingEntity;teleportTo(DDD)V"))
-    private void arclight$entityTeleport(LivingEntity entity, double x, double y, double z, CallbackInfoReturnable<Boolean> cir) {
+    private void arclight$entityTeleport(LivingEntity entity, double x, double y, double z, CallbackInfoReturnable<
+        Boolean> cir) {
         EntityTeleportEvent event = new EntityTeleportEvent(getBukkitEntity(), new Location(((WorldBridge) this.level).bridge$getWorld(), this.getX(), this.getY(), this.getZ()),
             new Location(((WorldBridge) this.level).bridge$getWorld(), x, y, z));
         Bukkit.getPluginManager().callEvent(event);
@@ -1054,7 +1051,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     }
 
     @Redirect(method = "dropAllDeathLoot", at = @At(value = "INVOKE", ordinal = 0, remap = false, target = "Lnet/minecraft/world/entity/LivingEntity;captureDrops(Ljava/util/Collection;)Ljava/util/Collection;"))
-    private Collection<ItemEntity> arclight$captureIfNeed(LivingEntity livingEntity, Collection<ItemEntity> value) {
+    private Collection<ItemEntity> arclight$captureIfNeed(LivingEntity
+                                                              livingEntity, Collection<ItemEntity> value) {
         Collection<ItemEntity> drops = livingEntity.captureDrops();
         // todo this instanceof ArmorStandEntity
         return drops == null ? livingEntity.captureDrops(value) : drops;
@@ -1071,7 +1069,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     }
 
     @Inject(method = "addEatEffect", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;)Z"))
-    public void arclight$foodEffectCause(ItemStack p_213349_1_, Level p_213349_2_, LivingEntity livingEntity, CallbackInfo ci) {
+    public void arclight$foodEffectCause(ItemStack p_213349_1_, Level p_213349_2_, LivingEntity
+        livingEntity, CallbackInfo ci) {
         ((LivingEntityBridge) livingEntity).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.FOOD);
     }
 
@@ -1134,7 +1133,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     protected void equipEventAndSound(EquipmentSlot slot, ItemStack oldItem, ItemStack newItem, boolean silent) {
         boolean flag = oldItem.isEmpty() && newItem.isEmpty();
 
-        if (!flag && !ItemStack.isSameIgnoreDurability(oldItem, newItem) && !this.firstTick) {
+        if (!flag && !ItemStack.isSame(oldItem, newItem) && !this.firstTick) {
             if (slot.getType() == EquipmentSlot.Type.ARMOR && !silent) {
                 this.playEquipSound(newItem);
             }
