@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -23,12 +24,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.security.AccessControlContext;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -47,6 +47,8 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -104,18 +106,16 @@ public class ForgeInstaller {
                     Process process = builder.start();
                     process.waitFor();
                 } catch (IOException e) {
-                    URLClassLoader loader = new URLClassLoader(
+                    try (URLClassLoader loader = new URLClassLoader(
                         new URL[]{new File(String.format("forge-%s-%s-installer.jar", installInfo.installer.minecraft, installInfo.installer.forge)).toURI().toURL()},
-                        ForgeInstaller.class.getClassLoader().getParent());
-                    Method method = loader.loadClass("net.minecraftforge.installer.SimpleInstaller").getMethod("main", String[].class);
-                    method.invoke(null, (Object) new String[]{"--installServer", ".", "--debug"});
+                        ForgeInstaller.class.getClassLoader().getParent())) {
+                        Method method = loader.loadClass("net.minecraftforge.installer.SimpleInstaller").getMethod("main", String[].class);
+                        method.invoke(null, (Object) new String[]{"--installServer", ".", "--debug"});
+                    }
                 }
             }
             handleFutures(System.out::println, array);
             pool.shutdownNow();
-            if (installForge) {
-                System.exit(0);
-            }
         }
         return classpath(path, installInfo);
     }
@@ -133,13 +133,12 @@ public class ForgeInstaller {
         String dist = String.format("forge-%s-%s-installer.jar", info.installer.minecraft, info.installer.forge);
         FileDownloader fd = new FileDownloader(format, dist, info.installer.hash);
         var installerFuture = reportSupply(pool, logger).apply(fd).thenApply(path -> {
-            try {
-                FileSystem system = FileSystems.newFileSystem(path, (ClassLoader) null);
+            try (var jarFile = new JarFile(path.toFile())) {
                 Map<String, Map.Entry<String, String>> map = new HashMap<>();
-                Path profile = system.getPath("install_profile.json");
-                map.putAll(profileLibraries(profile, info.installer.minecraft));
-                Path version = system.getPath("version.json");
-                map.putAll(profileLibraries(version, info.installer.minecraft));
+                var profile = jarFile.getEntry("install_profile.json");
+                map.putAll(profileLibraries(new InputStreamReader(jarFile.getInputStream(profile)), info.installer.minecraft));
+                var version = jarFile.getEntry("version.json");
+                map.putAll(profileLibraries(new InputStreamReader(jarFile.getInputStream(version)), info.installer.minecraft));
                 List<Supplier<Path>> suppliers = checkMaven(map);
                 CompletableFuture<?>[] array = suppliers.stream().map(reportSupply(pool, logger)).toArray(CompletableFuture[]::new);
                 handleFutures(logger, array);
@@ -162,34 +161,38 @@ public class ForgeInstaller {
             if (!Files.isDirectory(path.getParent())) {
                 Files.createDirectories(path.getParent());
             }
-            Files.copy(installer, path, StandardCopyOption.REPLACE_EXISTING);
-            try (var fs = FileSystems.newFileSystem(path)) {
-                // strip signature
-                Files.walk(fs.getPath("META-INF"))
-                    .filter(it -> !Files.isDirectory(it))
-                    .filter(it -> it.toString().endsWith(".SF") || it.toString().endsWith(".DSA") || it.toString().endsWith(".RSA"))
-                    .forEach(it -> {
-                        try {
-                            Files.delete(it);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
+            Files.deleteIfExists(path);
+            try (var from = new JarFile(installer.toFile());
+                 var to = new JarOutputStream(Files.newOutputStream(path, StandardOpenOption.CREATE))) {
+                var entries = from.entries();
+                while (entries.hasMoreElements()) {
+                    var entry = entries.nextElement();
+                    // strip signature
+                    var name = entry.getName();
+                    if (name.endsWith(".SF") || name.endsWith(".DSA") || name.endsWith(".RSA")) {
+                        continue;
+                    }
+                    if (name.equals("install_profile.json")) {
+                        var element = new JsonParser().parse(new InputStreamReader(from.getInputStream(entry)));
+                        var processors = element.getAsJsonObject().getAsJsonArray("processors");
+                        outer:
+                        for (var i = 0; i < processors.size(); i++) {
+                            var processor = processors.get(i).getAsJsonObject();
+                            var args = processor.getAsJsonArray("args");
+                            for (var arg : args) {
+                                if (arg.getAsString().equals("DOWNLOAD_MOJMAPS")) {
+                                    processors.remove(i);
+                                    break outer;
+                                }
+                            }
                         }
-                    });
-                var profile = fs.getPath("install_profile.json");
-                var element = new JsonParser().parse(Files.readString(profile));
-                var processors = element.getAsJsonObject().getAsJsonArray("processors");
-                outer:
-                for (var i = 0; i < processors.size(); i++) {
-                    var processor = processors.get(i).getAsJsonObject();
-                    var args = processor.getAsJsonArray("args");
-                    for (var arg : args) {
-                        if (arg.getAsString().equals("DOWNLOAD_MOJMAPS")) {
-                            processors.remove(i);
-                            break outer;
-                        }
+                        to.putNextEntry(entry);
+                        to.write(new Gson().toJson(element).getBytes(StandardCharsets.UTF_8));
+                    } else {
+                        to.putNextEntry(entry);
+                        from.getInputStream(entry).transferTo(to);
                     }
                 }
-                Files.writeString(profile, new Gson().toJson(element));
             }
             return path;
         } catch (Exception e) {
@@ -211,9 +214,9 @@ public class ForgeInstaller {
         }
     }
 
-    private static Map<String, Map.Entry<String, String>> profileLibraries(Path path, String minecraft) throws IOException {
+    private static Map<String, Map.Entry<String, String>> profileLibraries(Reader reader, String minecraft) throws IOException {
         Map<String, Map.Entry<String, String>> ret = new HashMap<>();
-        var object = new JsonParser().parse(Files.newBufferedReader(path)).getAsJsonObject();
+        var object = new JsonParser().parse(reader).getAsJsonObject();
         JsonArray array = object.getAsJsonArray("libraries");
         for (JsonElement element : array) {
             String name = element.getAsJsonObject().get("name").getAsString();
@@ -266,7 +269,7 @@ public class ForgeInstaller {
     }
 
     private static boolean forgeClasspathMissing(Path path) throws Exception {
-        for (String arg : Files.lines(path).collect(Collectors.toList())) {
+        for (String arg : Files.lines(path).toList()) {
             if (arg.startsWith("-p ")) {
                 var modules = arg.substring(2).trim();
                 if (!Arrays.stream(modules.split(File.pathSeparator)).map(Paths::get).allMatch(Files::exists)) {
@@ -292,7 +295,7 @@ public class ForgeInstaller {
         List<String> ignores = new ArrayList<>();
         List<String> merges = new ArrayList<>();
         var self = new File(ForgeInstaller.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath();
-        for (String arg : Files.lines(path).collect(Collectors.toList())) {
+        for (String arg : Files.lines(path).toList()) {
             if (jvmArgs && arg.startsWith("-")) {
                 if (arg.startsWith("-p ")) {
                     addModules(arg.substring(2).trim());
