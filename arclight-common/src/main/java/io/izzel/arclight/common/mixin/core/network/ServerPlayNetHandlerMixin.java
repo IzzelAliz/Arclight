@@ -160,6 +160,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     @Shadow public abstract void resetPosition();
     @Shadow private int awaitingTeleportTime;
     @Shadow public abstract void teleport(double x, double y, double z, float yaw, float pitch);
+    @Shadow public abstract void teleport(double x, double y, double z, float yaw, float pitch, Set<ClientboundPlayerPositionPacket.RelativeArgument> flags, boolean shouldDismount);
     @Shadow private double firstGoodX;
     @Shadow private double firstGoodY;
     @Shadow private double firstGoodZ;
@@ -591,7 +592,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
 
                             this.player.absMoveTo(d0, d1, d2, f, f1);
                             if (!this.player.noPhysics && !this.player.isSleeping() && (flag1 && worldserver.noCollision(this.player, axisalignedbb) || this.isPlayerCollidingWithAnythingNew((LevelReader) worldserver, axisalignedbb))) {
-                                this.internalTeleport(d3, d4, d5, f, f1, Collections.emptySet(), false); // CraftBukkit - SPIGOT-1807: Don't call teleport event, when the client thinks the player is falling, because the chunks are not loaded on the client yet.
+                                this.teleport(d3, d4, d5, f, f1, Collections.emptySet(), false); // CraftBukkit - SPIGOT-1807: Don't call teleport event, when the client thinks the player is falling, because the chunks are not loaded on the client yet.
                             } else {
                                 this.player.absMoveTo(prevX, prevY, prevZ, prevYaw, prevPitch);
                                 CraftPlayer player = this.getCraftPlayer();
@@ -1815,7 +1816,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         if (Float.isNaN(pitch)) {
             pitch = 0.0f;
         }
-        this.internalTeleport(x, y, z, yaw, pitch, relativeSet, false);
+        this.teleport(x, y, z, yaw, pitch, relativeSet, false);
     }
 
     public void teleport(double d0, double d1, double d2, float f, float f1, PlayerTeleportEvent.TeleportCause cause) {
@@ -1827,35 +1828,8 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         this.teleport(d0, d1, d2, f, f1, set);
     }
 
-    private void internalTeleport(double d0, double d1, double d2, float f, float f1, Set<ClientboundPlayerPositionPacket.RelativeArgument> set, boolean flag) {
-        if (Float.isNaN(f)) {
-            f = 0.0f;
-        }
-        if (Float.isNaN(f1)) {
-            f1 = 0.0f;
-        }
-        this.justTeleported = true;
-        double d3 = set.contains(ClientboundPlayerPositionPacket.RelativeArgument.X) ? this.player.getX() : 0.0;
-        double d4 = set.contains(ClientboundPlayerPositionPacket.RelativeArgument.Y) ? this.player.getY() : 0.0;
-        double d5 = set.contains(ClientboundPlayerPositionPacket.RelativeArgument.Z) ? this.player.getZ() : 0.0;
-        float f2 = set.contains(ClientboundPlayerPositionPacket.RelativeArgument.Y_ROT) ? this.player.getYRot() : 0.0f;
-        float f3 = set.contains(ClientboundPlayerPositionPacket.RelativeArgument.X_ROT) ? this.player.getXRot() : 0.0f;
-        this.awaitingPositionFromClient = new Vec3(d0, d1, d2);
-        if (++this.awaitingTeleport == Integer.MAX_VALUE) {
-            this.awaitingTeleport = 0;
-        }
-        this.lastPosX = this.awaitingPositionFromClient.x;
-        this.lastPosY = this.awaitingPositionFromClient.y;
-        this.lastPosZ = this.awaitingPositionFromClient.z;
-        this.lastYaw = f;
-        this.lastPitch = f1;
-        this.awaitingTeleportTime = this.tickCount;
-        this.player.absMoveTo(d0, d1, d2, f, f1);
-        this.player.connection.send(new ClientboundPlayerPositionPacket(d0 - d3, d1 - d4, d2 - d5, f - f2, f1 - f3, set, this.awaitingTeleport, flag));
-    }
-
     public void teleport(Location dest) {
-        this.internalTeleport(dest.getX(), dest.getY(), dest.getZ(), dest.getYaw(), dest.getPitch(), Collections.emptySet(), true);
+        this.teleport(dest.getX(), dest.getY(), dest.getZ(), dest.getYaw(), dest.getPitch(), Collections.emptySet(), true);
     }
 
     private transient PlayerTeleportEvent.TeleportCause arclight$cause;
