@@ -273,7 +273,6 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                     }
 
                     blockstate.onBlockExploded(this.level, blockpos, (Explosion) (Object) this);
-                    block.wasExploded(this.level, blockpos, (Explosion) (Object) this);
                     this.level.getProfiler().pop();
                 }
             }

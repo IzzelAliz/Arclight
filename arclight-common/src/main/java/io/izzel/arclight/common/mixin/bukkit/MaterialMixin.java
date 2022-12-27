@@ -12,6 +12,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FallingBlock;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.BlockState;
@@ -36,6 +37,7 @@ import org.bukkit.craftbukkit.v.inventory.CraftMetaSkull;
 import org.bukkit.craftbukkit.v.inventory.CraftMetaSpawnEgg;
 import org.bukkit.craftbukkit.v.inventory.CraftMetaSuspiciousStew;
 import org.bukkit.craftbukkit.v.inventory.CraftMetaTropicalFishBucket;
+import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
@@ -206,8 +208,8 @@ public abstract class MaterialMixin implements MaterialBridge {
 
     @Inject(method = "getCraftingRemainingItem", cancellable = true, at = @At("HEAD"))
     private void arclight$getCraftingRemainingItem(CallbackInfoReturnable<Material> cir) {
-        if (arclight$spec != null) {
-            cir.setReturnValue(Material.getMaterial(arclight$spec.craftingRemainingItem));
+        if (arclight$spec != null && arclight$spec.craftingRemainingItem != null) {
+            cir.setReturnValue(CraftMagicNumbers.getMaterial(ForgeRegistries.ITEMS.getValue(new ResourceLocation(arclight$spec.craftingRemainingItem))));
         }
     }
 
@@ -215,6 +217,13 @@ public abstract class MaterialMixin implements MaterialBridge {
     private void arclight$getMaxStackSize(CallbackInfoReturnable<Integer> cir) {
         if (arclight$spec != null) {
             cir.setReturnValue(arclight$spec.maxStack);
+        }
+    }
+
+    @Inject(method = "getMaxDurability", cancellable = true, at = @At("HEAD"))
+    private void arclight$getMaxDurability(CallbackInfoReturnable<Short> cir) {
+        if (arclight$spec != null && arclight$spec.maxDurability != null) {
+            cir.setReturnValue(arclight$spec.maxDurability.shortValue());
         }
     }
 
@@ -341,6 +350,10 @@ public abstract class MaterialMixin implements MaterialBridge {
         }
         if (arclight$spec.blastResistance == null) {
             arclight$spec.blastResistance = block != null ? block.getExplosionResistance() : 0;
+        }
+        if (arclight$spec.craftingRemainingItem == null) {
+            // noinspection deprecation
+            arclight$spec.craftingRemainingItem = item != null && item.hasCraftingRemainingItem() ? ForgeRegistries.ITEMS.getKey(item.getCraftingRemainingItem()).toString() : null;
         }
         if (arclight$spec.itemMetaType == null) {
             arclight$spec.itemMetaType = "UNSPECIFIC";

@@ -202,19 +202,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         this.entityData.set(DATA_HEALTH_ID, (float) this.getAttributeValue(Attributes.MAX_HEALTH));
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    protected void tickDeath() {
-        ++this.deathTime;
-        if (this.deathTime >= 20 && !this.isRemoved() && !this.level.isClientSide()) {
-            this.level.broadcastEntityEvent((LivingEntity) (Object) this, (byte) 60);
-            this.remove(Entity.RemovalReason.KILLED);
-        }
-    }
-
     @Redirect(method = "dropAllDeathLoot", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;dropExperience()V"))
     private void arclight$dropLater(LivingEntity livingEntity) {
     }
@@ -232,7 +219,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     protected void dropExperience() {
         // if (!this.world.isRemote && (this.isPlayer() || this.recentlyHit > 0 && this.canDropLoot() && this.world.getGameRules().getBoolean(GameRules.DO_MOB_LOOT))) {
         if (true) {
-            int reward = ForgeEventFactory.getExperienceDrop((LivingEntity)(Object) this, this.lastHurtByPlayer, this.expToDrop);
+            int reward = ForgeEventFactory.getExperienceDrop((LivingEntity) (Object) this, this.lastHurtByPlayer, this.expToDrop);
             ExperienceOrb.award((ServerLevel) this.level, this.position(), reward);
             bridge$setExpToDrop(0);
         }
@@ -947,13 +934,22 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         return CraftEventFactory.handleBlockFormEvent(instance, pPos, pNewState, 3, (Entity) (Object) this);
     }
 
-    @Redirect(method = "getDamageAfterArmorAbsorb", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurtArmor(Lnet/minecraft/world/damagesource/DamageSource;F)V"))
-    public void arclight$muteDamageArmor(LivingEntity entity, DamageSource damageSource, float damage) {
+    // https://github.com/IzzelAliz/Arclight/issues/831
+    @Mixin(value = LivingEntity.class, priority = 1500)
+    public static class ObscureApiCompat {
+
+        @Redirect(method = "getDamageAfterArmorAbsorb", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurtArmor(Lnet/minecraft/world/damagesource/DamageSource;F)V"))
+        private void arclight$muteDamageArmor(LivingEntity entity, DamageSource damageSource, float damage) {
+        }
     }
 
-    @Redirect(method = "getDamageAfterMagicAbsorb", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hasEffect(Lnet/minecraft/world/effect/MobEffect;)Z"))
-    public boolean arclight$mutePotion(LivingEntity livingEntity, MobEffect potionIn) {
-        return false;
+    @Mixin(value = LivingEntity.class, priority = 1500)
+    public static class ApotheosisCompatMixin {
+
+        @Redirect(method = "getDamageAfterMagicAbsorb", require = 0, at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/LivingEntity;hasEffect(Lnet/minecraft/world/effect/MobEffect;)Z"))
+        public boolean arclight$mutePotion(LivingEntity livingEntity, MobEffect potionIn) {
+            return false;
+        }
     }
 
     @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;setSharedFlag(IZ)V"))

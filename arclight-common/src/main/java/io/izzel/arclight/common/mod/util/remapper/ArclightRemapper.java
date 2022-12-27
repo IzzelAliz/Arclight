@@ -6,6 +6,7 @@ import io.izzel.arclight.api.PluginPatcher;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.util.log.ArclightI18nLogger;
 import io.izzel.arclight.common.mod.util.remapper.patcher.ArclightPluginPatcher;
+import io.izzel.arclight.common.mod.util.remapper.patcher.PluginLoggerTransformer;
 import io.izzel.arclight.common.mod.util.remapper.resource.RemapSourceHandler;
 import net.md_5.specialsource.InheritanceMap;
 import net.md_5.specialsource.JarMapping;
@@ -96,6 +97,9 @@ public class ArclightRemapper {
         this.transformerList.add(ArclightInterfaceInvokerGen.INSTANCE);
         this.transformerList.add(ArclightRedirectAdapter.INSTANCE);
         this.transformerList.add(ClassLoaderAdapter.INSTANCE);
+        if (!(java.util.logging.LogManager.getLogManager() instanceof org.apache.logging.log4j.jul.LogManager)) {
+            this.transformerList.add(new PluginLoggerTransformer());
+        }
         this.patchers = ArclightPluginPatcher.load(this.transformerList);
         toBukkitMapping.setFallbackInheritanceProvider(GlobalClassRepo.inheritanceProvider());
         this.toBukkitRemapper = new LenientJarRemapper(toBukkitMapping);

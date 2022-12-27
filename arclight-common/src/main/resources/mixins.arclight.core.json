@@ -14,7 +14,7 @@
     "conformVisibility": true
   },
   "mixinPriority": 500,
-  "compatibilityLevel": "JAVA_11",
+  "compatibilityLevel": "JAVA_17",
   "mixins": [
     "advancements.AdvancementMixin",
     "commands.CommandsMixin",
@@ -96,6 +96,8 @@
     "world.entity.ItemBaseSteeringMixin",
     "world.entity.LightningBoltMixin",
     "world.entity.LivingEntityMixin",
+    "world.entity.LivingEntityMixin$ApotheosisCompatMixin",
+    "world.entity.LivingEntityMixin$ObscureApiCompat",
     "world.entity.MobMixin",
     "world.entity.PathfinderMobMixin",
     "world.entity.ai.attributes.RangedAttributeMixin",
@@ -287,6 +289,7 @@
     "world.item.FlintAndSteelItemMixin",
     "world.item.HangingEntityItemMixin",
     "world.item.ItemStackMixin",
+    "world.item.ItemStackMixin$TheVaultCompat",
     "world.item.LeadItemMixin",
     "world.item.MapItemMixin",
     "world.item.MerchantMixin",

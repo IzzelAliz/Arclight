@@ -98,11 +98,7 @@ public class ModBootstrap extends AbstractBootstrap {
         var plugins = LaunchPluginHandler.class.getDeclaredField("plugins");
         plugins.setAccessible(true);
         var map = (Map<String, ILaunchPluginService>) plugins.get(handler);
-        var transformLogger = !(java.util.logging.LogManager.getLogManager() instanceof org.apache.logging.log4j.jul.LogManager);
-        if (transformLogger && !System.getProperties().contains("log4j.jul.LoggerAdapter")) {
-            System.setProperty("log4j.jul.LoggerAdapter", "io.izzel.arclight.boot.log.ArclightLoggerAdapter");
-        }
-        var plugin = new ArclightImplementer(transformLogger);
+        var plugin = new ArclightImplementer();
         map.put(plugin.name(), plugin);
     }
 

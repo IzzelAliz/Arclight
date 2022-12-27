@@ -1,7 +1,9 @@
 package io.izzel.arclight.common.bridge.core.inventory;
 
-import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.util.WrappedContents;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v.inventory.CraftInventory;
@@ -10,9 +12,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 
 import java.util.List;
-import net.minecraft.world.Container;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Recipe;
 
 public interface IInventoryBridge {
 
@@ -48,7 +47,7 @@ public interface IInventoryBridge {
         if (owner != null) {
             return owner.getInventory();
         } else {
-            ArclightMod.LOGGER.warn("No owner for inventory {}/{}", this, this.getClass());
+            // ArclightMod.LOGGER.warn("No owner for inventory {}/{}", this, this.getClass());
             return new CraftInventory((Container) this);
         }
     }

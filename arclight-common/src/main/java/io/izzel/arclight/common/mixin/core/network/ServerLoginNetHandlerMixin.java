@@ -122,6 +122,7 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
                     this.server.getPlayerList().placeNewPlayer(this.connection, entity);
                 }
             } catch (Exception exception) {
+                LOGGER.error("Couldn't place player in world", exception);
                 TranslatableComponent chatmessage = new TranslatableComponent("multiplayer.disconnect.invalid_player_data");
 
                 this.connection.send(new ClientboundDisconnectPacket(chatmessage));

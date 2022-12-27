@@ -33,11 +33,19 @@ public class ArclightImplementer implements ILaunchPluginService {
     private final boolean logger;
 
     public ArclightImplementer() {
-        this(false);
+        this(detectTransformLogger());
     }
 
     public ArclightImplementer(boolean logger) {
         this.logger = logger;
+    }
+
+    private static boolean detectTransformLogger() {
+        var transformLogger = !(java.util.logging.LogManager.getLogManager() instanceof org.apache.logging.log4j.jul.LogManager);
+        if (transformLogger && !System.getProperties().contains("log4j.jul.LoggerAdapter")) {
+            System.setProperty("log4j.jul.LoggerAdapter", "io.izzel.arclight.boot.log.ArclightLoggerAdapter");
+        }
+        return transformLogger;
     }
 
     @Override

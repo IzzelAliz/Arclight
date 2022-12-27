@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -23,12 +24,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.security.AccessControlContext;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -47,6 +47,8 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,8 +60,12 @@ public class ForgeInstaller {
     };
     private static final String INSTALLER_URL = "https://arclight.mcxk.net/net/minecraftforge/forge/%s-%s/forge-%s-%s-installer.jar";
     private static final String SERVER_URL = "https://arclight.mcxk.net/net/minecraft/server/minecraft_server.%s.jar";
+    private static final String MAPPING_URL = "https://arclight.mcxk.net/net/minecraft/server/mappings_server.%s.txt";
     private static final Map<String, String> VERSION_HASH = Map.of(
         "1.18.2", "c8f83c5655308435b3dcf03c06d9fe8740a77469"
+    );
+    private static final Map<String, String> MAPPING_HASH = Map.of(
+        "1.18.2", "e562f588fea155d96291267465dc3323bfe1551b"
     );
 
     public static List<Path> modInstall(Consumer<String> logger) throws Throwable {
@@ -86,32 +92,30 @@ public class ForgeInstaller {
         var installForge = !Files.exists(path) || forgeClasspathMissing(path);
         if (!suppliers.isEmpty() || installForge) {
             System.out.println("Downloading missing libraries ...");
-            ExecutorService pool = Executors.newFixedThreadPool(8);
+            ExecutorService pool = Executors.newWorkStealingPool(8);
             CompletableFuture<?>[] array = suppliers.stream().map(reportSupply(pool, System.out::println)).toArray(CompletableFuture[]::new);
             if (installForge) {
-                CompletableFuture<?>[] futures = installForge(installInfo, pool, System.out::println);
+                var futures = installForge(installInfo, pool, System.out::println);
                 handleFutures(System.out::println, futures);
                 System.out.println("Forge installation is starting, please wait... ");
                 try {
                     ProcessBuilder builder = new ProcessBuilder();
                     File file = new File(System.getProperty("java.home"), "bin/java");
-                    builder.command(file.getCanonicalPath(), "-Djava.net.useSystemProxies=true", "-jar", String.format("forge-%s-%s-installer.jar", installInfo.installer.minecraft, installInfo.installer.forge), "--installServer", ".", "--debug");
+                    builder.command(file.getCanonicalPath(), "-Djava.net.useSystemProxies=true", "-jar", futures[0].join().toString(), "--installServer", ".", "--debug");
                     builder.inheritIO();
                     Process process = builder.start();
                     process.waitFor();
                 } catch (IOException e) {
-                    URLClassLoader loader = new URLClassLoader(
+                    try (URLClassLoader loader = new URLClassLoader(
                         new URL[]{new File(String.format("forge-%s-%s-installer.jar", installInfo.installer.minecraft, installInfo.installer.forge)).toURI().toURL()},
-                        ForgeInstaller.class.getClassLoader().getParent());
-                    Method method = loader.loadClass("net.minecraftforge.installer.SimpleInstaller").getMethod("main", String[].class);
-                    method.invoke(null, (Object) new String[]{"--installServer", ".", "--debug"});
+                        ForgeInstaller.class.getClassLoader().getParent())) {
+                        Method method = loader.loadClass("net.minecraftforge.installer.SimpleInstaller").getMethod("main", String[].class);
+                        method.invoke(null, (Object) new String[]{"--installServer", ".", "--debug"});
+                    }
                 }
             }
             handleFutures(System.out::println, array);
             pool.shutdownNow();
-            if (installForge) {
-                System.exit(0);
-            }
         }
         return classpath(path, installInfo);
     }
@@ -123,30 +127,77 @@ public class ForgeInstaller {
         });
     }
 
-    private static CompletableFuture<?>[] installForge(InstallInfo info, ExecutorService pool, Consumer<String> logger) throws Exception {
+    @SuppressWarnings("unchecked")
+    private static CompletableFuture<Path>[] installForge(InstallInfo info, ExecutorService pool, Consumer<String> logger) throws Exception {
         String format = String.format(INSTALLER_URL, info.installer.minecraft, info.installer.forge, info.installer.minecraft, info.installer.forge);
         String dist = String.format("forge-%s-%s-installer.jar", info.installer.minecraft, info.installer.forge);
         FileDownloader fd = new FileDownloader(format, dist, info.installer.hash);
-        CompletableFuture<?> installerFuture = reportSupply(pool, logger).apply(fd).thenAccept(path -> {
-            try {
-                FileSystem system = FileSystems.newFileSystem(path, (ClassLoader) null);
+        var installerFuture = reportSupply(pool, logger).apply(fd).thenApply(path -> {
+            try (var jarFile = new JarFile(path.toFile())) {
                 Map<String, Map.Entry<String, String>> map = new HashMap<>();
-                Path profile = system.getPath("install_profile.json");
-                map.putAll(profileLibraries(profile));
-                Path version = system.getPath("version.json");
-                map.putAll(profileLibraries(version));
+                var profile = jarFile.getEntry("install_profile.json");
+                map.putAll(profileLibraries(new InputStreamReader(jarFile.getInputStream(profile)), info.installer.minecraft));
+                var version = jarFile.getEntry("version.json");
+                map.putAll(profileLibraries(new InputStreamReader(jarFile.getInputStream(version)), info.installer.minecraft));
                 List<Supplier<Path>> suppliers = checkMaven(map);
                 CompletableFuture<?>[] array = suppliers.stream().map(reportSupply(pool, logger)).toArray(CompletableFuture[]::new);
                 handleFutures(logger, array);
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            return stripDownloadMapping(path, logger);
         });
-        CompletableFuture<?> serverFuture = reportSupply(pool, logger).apply(
+        var serverFuture = reportSupply(pool, logger).apply(
             new FileDownloader(String.format(SERVER_URL, info.installer.minecraft),
                 String.format("libraries/net/minecraft/server/%1$s/server-%1$s.jar", info.installer.minecraft), VERSION_HASH.get(info.installer.minecraft))
         );
-        return new CompletableFuture<?>[]{installerFuture, serverFuture};
+        return new CompletableFuture[]{installerFuture, serverFuture};
+    }
+
+    private static Path stripDownloadMapping(Path installer, Consumer<String> logger) {
+        try {
+            logger.accept("Processing forge installer...");
+            var path = Paths.get(".arclight", "installer_stripped.jar");
+            if (!Files.isDirectory(path.getParent())) {
+                Files.createDirectories(path.getParent());
+            }
+            Files.deleteIfExists(path);
+            try (var from = new JarFile(installer.toFile());
+                 var to = new JarOutputStream(Files.newOutputStream(path, StandardOpenOption.CREATE))) {
+                var entries = from.entries();
+                while (entries.hasMoreElements()) {
+                    var entry = entries.nextElement();
+                    // strip signature
+                    var name = entry.getName();
+                    if (name.endsWith(".SF") || name.endsWith(".DSA") || name.endsWith(".RSA")) {
+                        continue;
+                    }
+                    if (name.equals("install_profile.json")) {
+                        var element = new JsonParser().parse(new InputStreamReader(from.getInputStream(entry)));
+                        var processors = element.getAsJsonObject().getAsJsonArray("processors");
+                        outer:
+                        for (var i = 0; i < processors.size(); i++) {
+                            var processor = processors.get(i).getAsJsonObject();
+                            var args = processor.getAsJsonArray("args");
+                            for (var arg : args) {
+                                if (arg.getAsString().equals("DOWNLOAD_MOJMAPS")) {
+                                    processors.remove(i);
+                                    break outer;
+                                }
+                            }
+                        }
+                        to.putNextEntry(entry);
+                        to.write(new Gson().toJson(element).getBytes(StandardCharsets.UTF_8));
+                    } else {
+                        to.putNextEntry(entry);
+                        from.getInputStream(entry).transferTo(to);
+                    }
+                }
+            }
+            return path;
+        } catch (Exception e) {
+            throw new CompletionException(e);
+        }
     }
 
     private static void handleFutures(Consumer<String> logger, CompletableFuture<?>... futures) {
@@ -163,9 +214,10 @@ public class ForgeInstaller {
         }
     }
 
-    private static Map<String, Map.Entry<String, String>> profileLibraries(Path path) throws IOException {
+    private static Map<String, Map.Entry<String, String>> profileLibraries(Reader reader, String minecraft) throws IOException {
         Map<String, Map.Entry<String, String>> ret = new HashMap<>();
-        JsonArray array = new JsonParser().parse(Files.newBufferedReader(path)).getAsJsonObject().getAsJsonArray("libraries");
+        var object = new JsonParser().parse(reader).getAsJsonObject();
+        JsonArray array = object.getAsJsonArray("libraries");
         for (JsonElement element : array) {
             String name = element.getAsJsonObject().get("name").getAsString();
             JsonObject artifact = element.getAsJsonObject().getAsJsonObject("downloads").getAsJsonObject("artifact");
@@ -173,6 +225,14 @@ public class ForgeInstaller {
             String url = artifact.get("url").getAsString();
             if (url == null || url.trim().isEmpty()) continue;
             ret.put(name, new AbstractMap.SimpleImmutableEntry<>(hash, url));
+        }
+        if (object.has("data")) {
+            var data = object.getAsJsonObject("data");
+            if (data.has("MOJMAPS")) {
+                var serverMapping = data.getAsJsonObject("MOJMAPS").get("server").getAsString();
+                ret.put(serverMapping.substring(1, serverMapping.length() - 1),
+                    new AbstractMap.SimpleImmutableEntry<>(MAPPING_HASH.get(minecraft), MAPPING_URL.formatted(minecraft)));
+            }
         }
         return ret;
     }
@@ -209,7 +269,7 @@ public class ForgeInstaller {
     }
 
     private static boolean forgeClasspathMissing(Path path) throws Exception {
-        for (String arg : Files.lines(path).collect(Collectors.toList())) {
+        for (String arg : Files.lines(path).toList()) {
             if (arg.startsWith("-p ")) {
                 var modules = arg.substring(2).trim();
                 if (!Arrays.stream(modules.split(File.pathSeparator)).map(Paths::get).allMatch(Files::exists)) {
@@ -235,23 +295,7 @@ public class ForgeInstaller {
         List<String> ignores = new ArrayList<>();
         List<String> merges = new ArrayList<>();
         var self = new File(ForgeInstaller.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath();
-        // todo ugly McModLauncher/securejarhandler#19
-        if (self.getParent() != null && self.getParent().getParent() != null && self.getParent().getParent().getFileName() == null) {
-            var folder = self.resolveSibling(".arclight");
-            var relocation = folder.resolve("tmp.jar");
-            if (!Files.exists(folder)) {
-                Files.createDirectories(folder);
-            }
-            try {
-                if (!Files.isSymbolicLink(relocation)) {
-                    Files.createSymbolicLink(relocation, self);
-                }
-            } catch (Exception e) {
-                Files.copy(self, relocation, StandardCopyOption.REPLACE_EXISTING);
-            }
-            self = relocation;
-        }
-        for (String arg : Files.lines(path).collect(Collectors.toList())) {
+        for (String arg : Files.lines(path).toList()) {
             if (jvmArgs && arg.startsWith("-")) {
                 if (arg.startsWith("-p ")) {
                     addModules(arg.substring(2).trim());

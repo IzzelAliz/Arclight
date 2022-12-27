@@ -743,10 +743,10 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         }
     }
 
-    @Inject(method = "handleUseItemOn", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayerGameMode;useItemOn(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/BlockHitResult;)Lnet/minecraft/world/InteractionResult;"))
-    private void arclight$checkDistance(ServerboundUseItemOnPacket packetIn, CallbackInfo ci) {
-        this.player.stopUsingItem();
-    }
+    // @Inject(method = "handleUseItemOn", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayerGameMode;useItemOn(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/BlockHitResult;)Lnet/minecraft/world/InteractionResult;"))
+    // private void arclight$checkDistance(ServerboundUseItemOnPacket packetIn, CallbackInfo ci) {
+    //     this.player.stopUsingItem();
+    // }
 
     private int limitedPackets;
     private long lastLimitedPacket = -1;
@@ -999,7 +999,10 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                             return null;
                         }
                         String message = String.format(queueEvent.getFormat(), queueEvent.getPlayer().getDisplayName(), queueEvent.getMessage());
-                        Component component = ForgeHooks.onServerChatEvent(handler, queueEvent.getMessage(), ForgeHooks.newChatWithLinks(message));
+                        var chatWithLinks = CraftChatMessage.fromStringOrNull(message);
+                        if (chatWithLinks == null) return null;
+                        var event = ForgeHooks.onServerChatEvent(handler, queueEvent.getMessage(), ForgeHooks.newChatWithLinks(message), queueEvent.getMessage(), chatWithLinks);
+                        var component = event == null ? null : event.getComponent();
                         if (component == null) return null;
                         Bukkit.getConsoleSender().sendMessage(CraftChatMessage.fromComponent(component));
                         if (((LazyPlayerSet) queueEvent.getRecipients()).isLazy()) {
@@ -1034,13 +1037,15 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 return;
             }
             s = String.format(event.getFormat(), event.getPlayer().getDisplayName(), event.getMessage());
-            Component chatWithLinks = ForgeHooks.newChatWithLinks(s);
+            Component chatWithLinks = CraftChatMessage.fromStringOrNull(s);
+            if (chatWithLinks == null) return;
             class ForgeChat extends Waitable<Void> {
 
                 @Override
                 protected Void evaluate() {
                     // this is called on main thread
-                    Component component = ForgeHooks.onServerChatEvent(handler, event.getMessage(), chatWithLinks);
+                    var chatEvent = ForgeHooks.onServerChatEvent(handler, event.getMessage(), chatWithLinks, event.getMessage(), chatWithLinks);
+                    var component = chatEvent != null ? chatEvent.getComponent() : null;
                     if (component == null) return null;
                     Bukkit.getConsoleSender().sendMessage(CraftChatMessage.fromComponent(component));
                     if (((LazyPlayerSet) event.getRecipients()).isLazy()) {
@@ -1286,7 +1291,9 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                     return;
                 }
 
+                ArclightCaptures.captureContainerOwner(this.player);
                 InventoryView inventory = ((ContainerBridge) this.player.containerMenu).bridge$getBukkitView();
+                ArclightCaptures.resetContainerOwner();
                 InventoryType.SlotType type = inventory.getSlotType(packet.getSlotNum());
 
                 InventoryClickEvent event;

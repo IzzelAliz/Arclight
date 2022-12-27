@@ -110,7 +110,7 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin {
         }
         if (!threads.isEmpty()) {
             ArclightMod.LOGGER.debug("Threads {} not shutting down", String.join(", ", threads));
-            ArclightMod.LOGGER.warn("{} threads not shutting down correctly, force exiting", threads.size());
+            ArclightMod.LOGGER.info("{} threads not shutting down correctly, force exiting", threads.size());
         }
         System.exit(0);
     }

@@ -2,18 +2,22 @@ package io.izzel.arclight.common.mixin.core.commands.arguments;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
 import io.izzel.arclight.common.bridge.core.command.arguments.EntityArgumentBridge;
 import io.izzel.arclight.common.bridge.core.command.arguments.EntitySelectorParserBridge;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.selector.EntitySelector;
 import net.minecraft.commands.arguments.selector.EntitySelectorParser;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
-import static net.minecraft.commands.arguments.EntityArgument.ERROR_ONLY_PLAYERS_ALLOWED;
 import static net.minecraft.commands.arguments.EntityArgument.ERROR_NOT_SINGLE_ENTITY;
 import static net.minecraft.commands.arguments.EntityArgument.ERROR_NOT_SINGLE_PLAYER;
+import static net.minecraft.commands.arguments.EntityArgument.ERROR_ONLY_PLAYERS_ALLOWED;
 
 @Mixin(EntityArgument.class)
 public class EntityArgumentMixin implements EntityArgumentBridge {
@@ -46,5 +50,10 @@ public class EntityArgumentMixin implements EntityArgumentBridge {
         } else {
             return entityselector;
         }
+    }
+
+    @Redirect(method = "listSuggestions", at = @At(value = "INVOKE", target = "Lnet/minecraft/commands/SharedSuggestionProvider;hasPermission(I)Z"))
+    private boolean arclight$canUseSelector(SharedSuggestionProvider instance, int i) {
+        return ((CommandSourceBridge) instance).bridge$hasPermission(i, "minecraft.command.selector");
     }
 }
