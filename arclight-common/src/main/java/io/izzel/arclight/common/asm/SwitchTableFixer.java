@@ -36,7 +36,7 @@ public class SwitchTableFixer implements Implementer {
 
     public byte[] processClass(byte[] bytes) {
         ClassNode node = new ClassNode();
-        new ClassReader(bytes).accept(node, ClassReader.SKIP_FRAMES);
+        new ClassReader(bytes).accept(node, 0);
         processClass(node, null);
         ClassWriter writer = new ClassWriter(0);
         node.accept(writer);
