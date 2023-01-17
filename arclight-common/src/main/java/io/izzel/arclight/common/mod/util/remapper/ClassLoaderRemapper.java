@@ -167,12 +167,10 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
         }
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     private void checkFieldTypes(Field field) throws TypeNotPresentException {
         field.getGenericType();
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     private void checkMethodTypes(Method method) throws TypeNotPresentException {
         method.getGenericReturnType();
         method.getGenericParameterTypes();
@@ -361,14 +359,13 @@ public class ClassLoaderRemapper extends LenientJarRemapper {
     private byte[] remapClassFile(ClassReader reader, final ClassRepo repo) {
         ClassNode node = new ClassNode();
         RemappingClassAdapter mapper = new RemappingClassAdapter(node, this, repo);
-        reader.accept(mapper, ClassReader.SKIP_FRAMES);
+        reader.accept(mapper, 0);
 
         for (PluginTransformer transformer : ArclightRemapper.INSTANCE.getTransformerList()) {
             transformer.handleClass(node, this);
         }
 
-        // 有的插件的编译器奇奇怪怪的，所以在这里要重新计算 frame
-        ClassWriter wr = new PluginClassWriter(node.version == Opcodes.V1_5 ? ClassWriter.COMPUTE_MAXS : ClassWriter.COMPUTE_FRAMES);
+        ClassWriter wr = new PluginClassWriter(ClassWriter.COMPUTE_MAXS);
         node.accept(wr);
 
         return dump(wr.toByteArray());
