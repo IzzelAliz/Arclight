@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class ResetProfessionMixin {
 
     @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/npc/Villager;setVillagerData(Lnet/minecraft/world/entity/npc/VillagerData;)V"))
-    private void arclight$careerChangeHook(Villager villagerEntity, VillagerData villagerData) {
+    private static void arclight$careerChangeHook(Villager villagerEntity, VillagerData villagerData) {
         VillagerCareerChangeEvent event = CraftEventFactory.callVillagerCareerChangeEvent(villagerEntity,
             CraftVillager.nmsToBukkitProfession(VillagerProfession.NONE),
             VillagerCareerChangeEvent.ChangeReason.LOSING_JOB); // 这里本来是 EMPLOYED 但是我怀疑他打错了
