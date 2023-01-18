@@ -13,10 +13,13 @@ public class ICommandSource1Mixin implements ICommandSourceBridge {
 
     public CommandSender getBukkitSender(CommandSource wrapper) {
         return new ServerCommandSender() {
-            private final boolean isOp = wrapper.hasPermissionLevel(wrapper.getServer().getOpPermissionLevel());
+            private Boolean isOp = null;
 
             @Override
             public boolean isOp() {
+                if (isOp == null) {
+                    isOp = wrapper.hasPermissionLevel(wrapper.getServer().getOpPermissionLevel());
+                }
                 return isOp;
             }
 
