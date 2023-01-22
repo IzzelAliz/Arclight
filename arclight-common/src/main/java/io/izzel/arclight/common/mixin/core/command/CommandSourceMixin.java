@@ -41,6 +41,11 @@ public abstract class CommandSourceMixin implements CommandSourceBridge {
     }
 
     @Override
+    public int bridge$getPermissionLevel() {
+        return permissionLevel;
+    }
+
+    @Override
     public boolean bridge$hasPermission(int i, String bukkitPermission) {
         return hasPermission(i, bukkitPermission);
     }

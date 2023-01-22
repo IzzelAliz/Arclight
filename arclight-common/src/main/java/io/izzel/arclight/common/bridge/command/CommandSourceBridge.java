@@ -5,6 +5,8 @@ import org.bukkit.command.CommandSender;
 
 public interface CommandSourceBridge {
 
+    int bridge$getPermissionLevel();
+
     CommandNode<?> bridge$getCurrentCommand();
 
     void bridge$setCurrentCommand(CommandNode<?> node);

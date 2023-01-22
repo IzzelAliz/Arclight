@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.command;
 
+import io.izzel.arclight.common.bridge.command.CommandSourceBridge;
 import io.izzel.arclight.common.bridge.command.ICommandSourceBridge;
 import net.minecraft.command.CommandSource;
 import org.bukkit.command.CommandSender;
@@ -13,13 +14,10 @@ public class ICommandSource1Mixin implements ICommandSourceBridge {
 
     public CommandSender getBukkitSender(CommandSource wrapper) {
         return new ServerCommandSender() {
-            private Boolean isOp = null;
+            private final boolean isOp = ((CommandSourceBridge)wrapper).bridge$getPermissionLevel()>=wrapper.getServer().getOpPermissionLevel();
 
             @Override
             public boolean isOp() {
-                if (isOp == null) {
-                    isOp = wrapper.hasPermissionLevel(wrapper.getServer().getOpPermissionLevel());
-                }
                 return isOp;
             }
 
