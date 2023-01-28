@@ -13,6 +13,7 @@ import io.izzel.arclight.common.bridge.core.world.storage.LevelStorageSourceBrid
 import io.izzel.arclight.common.bridge.core.world.storage.MapDataBridge;
 import io.izzel.arclight.common.bridge.core.world.storage.WorldInfoBridge;
 import io.izzel.arclight.common.mixin.core.world.level.LevelMixin;
+import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.server.world.LevelPersistentData;
 import io.izzel.arclight.common.mod.server.world.WorldSymlink;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
@@ -147,11 +148,10 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         } else {
             var dimensions = shadow$getServer().getWorldData().worldGenSettings().dimensions();
             var levelStem = dimensions.get(dimension.location());
-            if (levelStem != null) {
-                this.typeKey = ResourceKey.create(Registry.LEVEL_STEM_REGISTRY, dimension.location());
-            } else {
-                throw new IllegalStateException("No level stem for dimension " + dimension.location());
+            if (levelStem == null) {
+                ArclightMod.LOGGER.warn("Unknown level stem {}", dimension.location());
             }
+            this.typeKey = ResourceKey.create(Registry.LEVEL_STEM_REGISTRY, dimension.location());
         }
         if (worldInfo instanceof PrimaryLevelData) {
             this.M = (PrimaryLevelData) worldInfo;
