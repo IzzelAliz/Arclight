@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.Mixin;
 public class IndirectEntityDamageSourceMixin extends DamageSourceMixin implements IndirectEntityDamageSourceBridge {
 
     public Entity getProximateDamageSource() {
-        return getEntity();
+        return super.getEntity();
     }
 
     @Override
