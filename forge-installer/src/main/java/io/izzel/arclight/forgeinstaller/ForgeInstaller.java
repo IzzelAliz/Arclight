@@ -55,18 +55,6 @@ import java.util.stream.Stream;
 public class ForgeInstaller {
 
     private static final MethodHandles.Lookup IMPL_LOOKUP = Unsafe.lookup();
-    private static final String[] MAVEN_REPO = {
-        "https://arclight.mcxk.net/"
-    };
-    private static final String INSTALLER_URL = "https://arclight.mcxk.net/net/minecraftforge/forge/%s-%s/forge-%s-%s-installer.jar";
-    private static final String SERVER_URL = "https://arclight.mcxk.net/net/minecraft/server/minecraft_server.%s.jar";
-    private static final String MAPPING_URL = "https://arclight.mcxk.net/net/minecraft/server/mappings_server.%s.txt";
-    private static final Map<String, String> VERSION_HASH = Map.of(
-        "1.18.2", "c8f83c5655308435b3dcf03c06d9fe8740a77469"
-    );
-    private static final Map<String, String> MAPPING_HASH = Map.of(
-        "1.18.2", "e562f588fea155d96291267465dc3323bfe1551b"
-    );
 
     public static List<Path> modInstall(Consumer<String> logger) throws Throwable {
         InputStream stream = ForgeInstaller.class.getModule().getResourceAsStream("/META-INF/installer.json");
@@ -127,18 +115,55 @@ public class ForgeInstaller {
         });
     }
 
+    private record MinecraftData(String mirror, String serverUrl, String serverHash, String mappingUrl,
+                                 String mappingHash) {}
+
     @SuppressWarnings("unchecked")
-    private static CompletableFuture<Path>[] installForge(InstallInfo info, ExecutorService pool, Consumer<String> logger) throws Exception {
-        String format = String.format(INSTALLER_URL, info.installer.minecraft, info.installer.forge, info.installer.minecraft, info.installer.forge);
+    private static CompletableFuture<Path>[] installForge(InstallInfo info, ExecutorService pool, Consumer<String> logger) {
+        var minecraftData = CompletableFuture.supplyAsync(() -> {
+            logger.accept("Downloading mc version manifest...");
+            for (Map.Entry<String, String> entry : Mirrors.getVersionManifest()) {
+                try (var stream = FileDownloader.read(entry.getValue())) {
+                    var bytes = stream.readAllBytes();
+                    var element = new JsonParser().parse(new String(bytes, StandardCharsets.UTF_8)).getAsJsonObject();
+                    var versions = element.getAsJsonArray("versions");
+                    for (var version : versions) {
+                        var id = version.getAsJsonObject().get("id").getAsString();
+                        if (Objects.equals(id, info.installer.minecraft)) {
+                            var url = version.getAsJsonObject().get("url").getAsString();
+                            try (var versionStream = FileDownloader.read(url)) {
+                                var object = new JsonParser().parse(new String(versionStream.readAllBytes(), StandardCharsets.UTF_8)).getAsJsonObject();
+                                var downloads = object.getAsJsonObject("downloads");
+                                var server = downloads.getAsJsonObject("server");
+                                var serverUrl = server.get("url").getAsString();
+                                var serverHash = server.get("sha1").getAsString();
+                                var mapping = downloads.getAsJsonObject("server_mappings");
+                                var mappingUrl = mapping.get("url").getAsString();
+                                var mappingHash = mapping.get("sha1").getAsString();
+                                logger.accept("Minecraft version: %s, server: %s, mappings: %s".formatted(info.installer.minecraft, serverHash, mappingHash));
+                                return new MinecraftData(entry.getKey(),
+                                    Mirrors.mapMojangMirror(serverUrl, entry.getKey()), serverHash,
+                                    Mirrors.mapMojangMirror(mappingUrl, entry.getKey()), mappingHash);
+                            }
+                        }
+                    }
+                    logger.accept("Version %s not available in %s".formatted(info.installer.minecraft, entry.getKey()));
+                } catch (Exception e) {
+                    logger.accept("Failed to download manifest from " + entry.getKey() + "\n  " + e);
+                }
+            }
+            return null;
+        }, pool);
+        String coord = String.format("net.minecraftforge:forge:%s-%s:installer", info.installer.minecraft, info.installer.forge);
         String dist = String.format("forge-%s-%s-installer.jar", info.installer.minecraft, info.installer.forge);
-        FileDownloader fd = new FileDownloader(format, dist, info.installer.hash);
-        var installerFuture = reportSupply(pool, logger).apply(fd).thenApply(path -> {
+        MavenDownloader forge = new MavenDownloader(Mirrors.getMavenRepo(), coord, dist, info.installer.hash);
+        var installerFuture = reportSupply(pool, logger).apply(forge).thenCombineAsync(minecraftData, (path, data) -> {
             try (var jarFile = new JarFile(path.toFile())) {
                 Map<String, Map.Entry<String, String>> map = new HashMap<>();
                 var profile = jarFile.getEntry("install_profile.json");
-                map.putAll(profileLibraries(new InputStreamReader(jarFile.getInputStream(profile)), info.installer.minecraft));
+                map.putAll(profileLibraries(new InputStreamReader(jarFile.getInputStream(profile)), info.installer.minecraft, data));
                 var version = jarFile.getEntry("version.json");
-                map.putAll(profileLibraries(new InputStreamReader(jarFile.getInputStream(version)), info.installer.minecraft));
+                map.putAll(profileLibraries(new InputStreamReader(jarFile.getInputStream(version)), info.installer.minecraft, data));
                 List<Supplier<Path>> suppliers = checkMaven(map);
                 CompletableFuture<?>[] array = suppliers.stream().map(reportSupply(pool, logger)).toArray(CompletableFuture[]::new);
                 handleFutures(logger, array);
@@ -147,10 +172,10 @@ public class ForgeInstaller {
             }
             return stripDownloadMapping(path, logger);
         });
-        var serverFuture = reportSupply(pool, logger).apply(
-            new FileDownloader(String.format(SERVER_URL, info.installer.minecraft),
-                String.format("libraries/net/minecraft/server/%1$s/server-%1$s.jar", info.installer.minecraft), VERSION_HASH.get(info.installer.minecraft))
-        );
+        var serverFuture = minecraftData.thenCompose(data -> reportSupply(pool, logger).apply(
+            new FileDownloader(String.format(data.serverUrl, info.installer.minecraft),
+                String.format("libraries/net/minecraft/server/%1$s/server-%1$s.jar", info.installer.minecraft), data.serverHash)
+        ));
         return new CompletableFuture[]{installerFuture, serverFuture};
     }
 
@@ -214,7 +239,7 @@ public class ForgeInstaller {
         }
     }
 
-    private static Map<String, Map.Entry<String, String>> profileLibraries(Reader reader, String minecraft) throws IOException {
+    private static Map<String, Map.Entry<String, String>> profileLibraries(Reader reader, String minecraft, MinecraftData minecraftData) throws IOException {
         Map<String, Map.Entry<String, String>> ret = new HashMap<>();
         var object = new JsonParser().parse(reader).getAsJsonObject();
         JsonArray array = object.getAsJsonArray("libraries");
@@ -231,7 +256,7 @@ public class ForgeInstaller {
             if (data.has("MOJMAPS")) {
                 var serverMapping = data.getAsJsonObject("MOJMAPS").get("server").getAsString();
                 ret.put(serverMapping.substring(1, serverMapping.length() - 1),
-                    new AbstractMap.SimpleImmutableEntry<>(MAPPING_HASH.get(minecraft), MAPPING_URL.formatted(minecraft)));
+                    new AbstractMap.SimpleImmutableEntry<>(minecraftData.mappingHash, minecraftData.mappingUrl));
             }
         }
         return ret;
@@ -256,13 +281,13 @@ public class ForgeInstaller {
                 try {
                     String fileHash = Util.hash(path);
                     if (!fileHash.equals(hash)) {
-                        incomplete.add(new MavenDownloader(MAVEN_REPO, maven, path, hash, url));
+                        incomplete.add(new MavenDownloader(Mirrors.getMavenRepo(), maven, path, hash, url));
                     }
                 } catch (Exception e) {
-                    incomplete.add(new MavenDownloader(MAVEN_REPO, maven, path, hash, url));
+                    incomplete.add(new MavenDownloader(Mirrors.getMavenRepo(), maven, path, hash, url));
                 }
             } else {
-                incomplete.add(new MavenDownloader(MAVEN_REPO, maven, path, hash, url));
+                incomplete.add(new MavenDownloader(Mirrors.getMavenRepo(), maven, path, hash, url));
             }
         }
         return incomplete;
@@ -421,19 +446,7 @@ public class ForgeInstaller {
         return new ParserData(source[0], source[1], all[1]);
     }
 
-    private static class ParserData {
-
-        final String module;
-        final String packages;
-        final String target;
-
-        ParserData(String module, String packages, String target) {
-            this.module = module;
-            this.packages = packages;
-            this.target = target;
-        }
-
-    }
+    private record ParserData(String module, String packages, String target) {}
 
     private static void addExtra(List<String> extras, MethodHandle implAddExtraMH, MethodHandle implAddExtraToAllUnnamedMH) {
         extras.forEach(extra -> {
