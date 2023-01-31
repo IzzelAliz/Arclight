@@ -43,8 +43,7 @@ public record FileDownloader(String url, String target, String hash) implements 
                 Files.createDirectories(path.getParent());
             }
             var tmp = new File(target + ".tmp").toPath();
-            URL url = new URL(this.url);
-            try (InputStream stream = redirect(url)) {
+            try (InputStream stream = read(url)) {
                 Files.copy(stream, tmp, StandardCopyOption.REPLACE_EXISTING);
             } catch (SocketTimeoutException | SSLException e) {
                 throw new RuntimeException("Timeout " + url);
@@ -69,11 +68,15 @@ public record FileDownloader(String url, String target, String hash) implements 
         }
     }
 
-    private InputStream redirect(URL url) throws IOException {
+    static InputStream read(String url) throws IOException {
+        return redirect(new URL(url));
+    }
+
+    private static InputStream redirect(URL url) throws IOException {
         return redirect(url, new HashSet<>());
     }
 
-    private InputStream redirect(URL url, Set<String> history) throws IOException {
+    private static InputStream redirect(URL url, Set<String> history) throws IOException {
         if (history.contains(url.toString())) {
             StringJoiner joiner = new StringJoiner("\n        ");
             joiner.add("");
