@@ -15,6 +15,7 @@ import net.minecraftforge.server.ServerLifecycleHooks;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.command.ColouredConsoleSender;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.Objects;
@@ -23,10 +24,23 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.locks.LockSupport;
+import java.util.function.Supplier;
 
 public class ArclightServer {
 
-    private static final Executor mainThreadExecutor = ArclightServer::executeOnMainThread;
+    private interface ExecutorWithThread extends Executor, Supplier<Thread> {}
+
+    private static final ExecutorWithThread mainThreadExecutor = new ExecutorWithThread() {
+        @Override
+        public void execute(@NotNull Runnable command) {
+            executeOnMainThread(command);
+        }
+
+        @Override
+        public Thread get() {
+            return getMinecraftServer().getRunningThread();
+        }
+    };
     private static final ExecutorService chatExecutor = Executors.newCachedThreadPool(
         new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Async Chat Thread - #%d")
             .setThreadFactory(chatFactory()).build());

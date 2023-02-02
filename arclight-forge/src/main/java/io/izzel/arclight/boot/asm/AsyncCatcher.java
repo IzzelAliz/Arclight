@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
@@ -242,7 +243,15 @@ public class AsyncCatcher implements Implementer {
             case BLOCK: {
                 CallbackInfoReturnable<T> cir = new CallbackInfoReturnable<>(reason, true);
                 CompletableFuture<T> future = CompletableFuture.supplyAsync(method, executor);
-                cir.setReturnValue(future.get(5, TimeUnit.SECONDS));
+                try {
+                    cir.setReturnValue(future.get(5, TimeUnit.SECONDS));
+                } catch (TimeoutException e) {
+                    var thread = ((Supplier<Thread>) executor).get();
+                    var ex = new Exception("Server thread");
+                    ex.setStackTrace(thread.getStackTrace());
+                    ArclightImplementer.LOGGER.error(MARKER, "Async catcher timeout", ex);
+                    throw e;
+                }
                 return cir;
             }
             case DISPATCH: {
