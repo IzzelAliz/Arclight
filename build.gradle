@@ -1,6 +1,6 @@
 allprojects {
     group 'io.izzel.arclight'
-    version '1.0.8'
+    version '1.0.9-SNAPSHOT'
 
     def getGitHash = { ->
         def stdout = new ByteArrayOutputStream()
