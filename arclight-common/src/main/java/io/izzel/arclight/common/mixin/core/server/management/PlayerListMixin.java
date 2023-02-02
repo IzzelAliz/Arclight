@@ -2,11 +2,11 @@ package io.izzel.arclight.common.mixin.core.server.management;
 
 import com.google.common.collect.Lists;
 import com.mojang.authlib.GameProfile;
-import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.InternalEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.network.NetworkManagerBridge;
+import io.izzel.arclight.common.bridge.core.network.datasync.SynchedEntityDataBridge;
 import io.izzel.arclight.common.bridge.core.network.play.ServerPlayNetHandlerBridge;
 import io.izzel.arclight.common.bridge.core.server.management.PlayerListBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
@@ -539,12 +539,11 @@ public abstract class PlayerListMixin implements PlayerListBridge {
     @Redirect(method = "sendAllPlayerInfo", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;resetSentInfo()V"))
     private void arclight$useScaledHealth(ServerPlayer playerEntity) {
         ((ServerPlayerEntityBridge) playerEntity).bridge$getBukkitEntity().updateScaledHealth();
+        ((SynchedEntityDataBridge) playerEntity.getEntityData()).bridge$refresh(playerEntity);
         int i = playerEntity.level.getGameRules().getBoolean(GameRules.RULE_REDUCEDDEBUGINFO) ? 22 : 23;
         playerEntity.connection.send(new ClientboundEntityEventPacket(playerEntity, (byte) i));
-        if (ArclightVersion.atLeast(ArclightVersion.v1_15)) {
-            float immediateRespawn = playerEntity.level.getGameRules().getBoolean(GameRules.RULE_DO_IMMEDIATE_RESPAWN) ? 1.0f : 0.0f;
-            playerEntity.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.IMMEDIATE_RESPAWN, immediateRespawn));
-        }
+        float immediateRespawn = playerEntity.level.getGameRules().getBoolean(GameRules.RULE_DO_IMMEDIATE_RESPAWN) ? 1.0f : 0.0f;
+        playerEntity.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.IMMEDIATE_RESPAWN, immediateRespawn));
     }
 
     public void broadcastMessage(Component[] components) {

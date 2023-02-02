@@ -172,9 +172,6 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                         double d14 = Explosion.getSeenPercent(vec3d, entity);
                         double d10 = (1.0D - d12) * d14;
 
-                        CraftEventFactory.entityDamage = this.source;
-                        ((EntityBridge) entity).bridge$setLastDamageCancelled(false);
-
                         // Special case ender dragon only give knockback if no damage is cancelled
                         // Thinks to note:
                         // - Setting a velocity to a ComplexEntityPart is ignored (and therefore not needed)
@@ -184,6 +181,9 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                         if (entity instanceof PartEntity<?>) {
                             continue;
                         }
+
+                        CraftEventFactory.entityDamage = this.source;
+                        ((EntityBridge) entity).bridge$setLastDamageCancelled(false);
 
                         var parts = entity.getParts();
                         if (parts != null) {

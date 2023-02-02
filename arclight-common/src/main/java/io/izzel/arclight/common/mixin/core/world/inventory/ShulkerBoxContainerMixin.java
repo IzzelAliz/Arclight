@@ -13,6 +13,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ShulkerBoxMenu.class)
 public abstract class ShulkerBoxContainerMixin extends AbstractContainerMenuMixin {
@@ -27,6 +28,11 @@ public abstract class ShulkerBoxContainerMixin extends AbstractContainerMenuMixi
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;)V", at = @At("RETURN"))
     public void arclight$init(int id, Inventory playerInventory, Container inventory, CallbackInfo ci) {
         this.playerInventory = playerInventory;
+    }
+
+    @Inject(method = "stillValid", cancellable = true, at = @At("HEAD"))
+    public void arclight$unreachable(net.minecraft.world.entity.player.Player playerIn, CallbackInfoReturnable<Boolean> cir) {
+        if (!bridge$isCheckReachable()) cir.setReturnValue(true);
     }
 
     @Override
