@@ -13,7 +13,7 @@ FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
-COPY --from=builder /home/gradle/src/build/libs/*.jar /app/server.jar
+COPY --from=builder /home/gradle/src/build/libs/arclight-forge-*.jar /app/server.jar
 
 RUN echo "eula=true" > /app/eula.txt
 
