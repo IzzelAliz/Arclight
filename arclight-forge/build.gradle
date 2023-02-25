@@ -80,7 +80,7 @@ def embedLibs = [/*'org.spongepowered:mixin:0.8.1',*/ 'org.ow2.asm:asm-util:9.0'
                  'org.apache.maven.resolver:maven-resolver-spi:1.6.2', 'org.apache.maven.resolver:maven-resolver-util:1.6.2',
                  'org.apache.maven.resolver:maven-resolver-impl:1.6.2', 'org.apache.httpcomponents:httpclient:4.5.12',
                  'org.apache.httpcomponents:httpcore:4.4.13', 'commons-codec:commons-codec:1.11',
-                 'org.slf4j:jcl-over-slf4j:1.7.30']
+                 'org.slf4j:jcl-over-slf4j:1.7.30', 'javax.inject:javax.inject:1']
 
 configurations.all {
     resolutionStrategy {
