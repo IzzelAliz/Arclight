@@ -25,7 +25,14 @@ public class StartAttackingMixin<E extends Mob> {
             return;
         }
         livingEntity = ((event.getTarget() != null) ? ((CraftLivingEntity) event.getTarget()).getHandle() : null);
+        var changeTargetEvent = net.minecraftforge.common.ForgeHooks.onLivingChangeTarget(mob, livingEntity, net.minecraftforge.event.entity.living.LivingChangeTargetEvent.LivingTargetType.BEHAVIOR_TARGET);
+        if (changeTargetEvent.isCanceled()) {
+            return;
+        }
+        livingEntity = changeTargetEvent.getNewTarget();
         mob.getBrain().setMemory(MemoryModuleType.ATTACK_TARGET, livingEntity);
         mob.getBrain().eraseMemory(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
+        // noinspection removal
+        net.minecraftforge.common.ForgeHooks.onLivingSetAttackTarget(mob, livingEntity, net.minecraftforge.event.entity.living.LivingChangeTargetEvent.LivingTargetType.BEHAVIOR_TARGET);
     }
 }

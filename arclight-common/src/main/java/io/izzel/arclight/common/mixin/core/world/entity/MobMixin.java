@@ -21,6 +21,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.ForgeHooks;
+import net.minecraftforge.event.entity.living.LivingChangeTargetEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -135,9 +136,15 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
                 livingEntity = null;
             }
         }
-        this.target = livingEntity;
-        ForgeHooks.onLivingSetAttackTarget((Mob) (Object) this, this.target);
-        arclight$targetSuccess = true;
+        var changeTargetEvent = ForgeHooks.onLivingChangeTarget((Mob) (Object) this, livingEntity, LivingChangeTargetEvent.LivingTargetType.MOB_TARGET);
+        if (changeTargetEvent.isCanceled()) {
+            this.target = changeTargetEvent.getNewTarget();
+            // noinspection removal
+            ForgeHooks.onLivingSetAttackTarget((Mob) (Object) this, this.target);
+            arclight$targetSuccess = true;
+        } else {
+            arclight$targetSuccess = false;
+        }
     }
 
     public boolean setTarget(LivingEntity livingEntity, EntityTargetEvent.TargetReason reason, boolean fireEvent) {
