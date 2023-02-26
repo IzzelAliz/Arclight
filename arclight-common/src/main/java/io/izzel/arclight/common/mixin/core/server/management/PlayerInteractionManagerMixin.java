@@ -2,7 +2,6 @@ package io.izzel.arclight.common.mixin.core.server.management;
 
 import io.izzel.arclight.common.bridge.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.server.management.PlayerInteractionManagerBridge;
-import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.block.BlockState;
@@ -234,34 +233,38 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
     public ActionResultType func_219441_a(ServerPlayerEntity playerIn, World worldIn, ItemStack stackIn, Hand handIn, BlockRayTraceResult blockRaytraceResultIn) {
         BlockPos blockpos = blockRaytraceResultIn.getPos();
         BlockState blockstate = worldIn.getBlockState(blockpos);
-        ActionResultType resultType = ActionResultType.PASS;
-        boolean cancelledBlock = false;
-        if (this.gameType == GameType.SPECTATOR) {
-            INamedContainerProvider provider = blockstate.getContainer(worldIn, blockpos);
-            cancelledBlock = !(provider instanceof INamedContainerProvider);
-        }
-        if (playerIn.getCooldownTracker().hasCooldown(stackIn.getItem())) {
-            cancelledBlock = true;
-        }
-
-        PlayerInteractEvent bukkitEvent = CraftEventFactory.callPlayerInteractEvent(playerIn, Action.RIGHT_CLICK_BLOCK, blockpos, blockRaytraceResultIn.getFace(), stackIn, cancelledBlock, handIn);
-        bridge$setFiredInteract(true);
-        bridge$setInteractResult(bukkitEvent.useItemInHand() == Event.Result.DENY);
-        if (bukkitEvent.useInteractedBlock() == Event.Result.DENY) {
-            if (blockstate.getBlock() instanceof DoorBlock) {
-                boolean bottom = blockstate.get(DoorBlock.HALF) == DoubleBlockHalf.LOWER;
-                playerIn.connection.sendPacket(new SChangeBlockPacket(this.world, bottom ? blockpos.up() : blockpos.down()));
-            } else if (blockstate.getBlock() instanceof CakeBlock) {
-                ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().sendHealthUpdate();
-            } else if (stackIn.getItem() instanceof TallBlockItem) {
-                // send a correcting update to the client, as it already placed the upper half of the bisected item
-                playerIn.connection.sendPacket(new SChangeBlockPacket(world, blockpos.offset(blockRaytraceResultIn.getFace()).up()));
-                // send a correcting update to the client for the block above as well, this because of replaceable blocks (such as grass, sea grass etc)
-                playerIn.connection.sendPacket(new SChangeBlockPacket(world, blockpos.up()));
+        // ActionResultType resultType = ActionResultType.PASS;
+        {   // compatible with questadditions
+            // these variables are not available inside next if block
+            boolean cancelledBlock = false;
+            if (this.gameType == GameType.SPECTATOR) {
+                INamedContainerProvider provider = blockstate.getContainer(worldIn, blockpos);
+                cancelledBlock = !(provider instanceof INamedContainerProvider);
             }
-            ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().updateInventory();
-            resultType = ((bukkitEvent.useItemInHand() != Event.Result.ALLOW) ? ActionResultType.SUCCESS : ActionResultType.PASS);
-        } else if (this.gameType == GameType.SPECTATOR) {
+            if (playerIn.getCooldownTracker().hasCooldown(stackIn.getItem())) {
+                cancelledBlock = true;
+            }
+
+            PlayerInteractEvent bukkitEvent = CraftEventFactory.callPlayerInteractEvent(playerIn, Action.RIGHT_CLICK_BLOCK, blockpos, blockRaytraceResultIn.getFace(), stackIn, cancelledBlock, handIn);
+            bridge$setFiredInteract(true);
+            bridge$setInteractResult(bukkitEvent.useItemInHand() == Event.Result.DENY);
+            if (bukkitEvent.useInteractedBlock() == Event.Result.DENY) {
+                if (blockstate.getBlock() instanceof DoorBlock) {
+                    boolean bottom = blockstate.get(DoorBlock.HALF) == DoubleBlockHalf.LOWER;
+                    playerIn.connection.sendPacket(new SChangeBlockPacket(this.world, bottom ? blockpos.up() : blockpos.down()));
+                } else if (blockstate.getBlock() instanceof CakeBlock) {
+                    ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().sendHealthUpdate();
+                } else if (stackIn.getItem() instanceof TallBlockItem) {
+                    // send a correcting update to the client, as it already placed the upper half of the bisected item
+                    playerIn.connection.sendPacket(new SChangeBlockPacket(world, blockpos.offset(blockRaytraceResultIn.getFace()).up()));
+                    // send a correcting update to the client for the block above as well, this because of replaceable blocks (such as grass, sea grass etc)
+                    playerIn.connection.sendPacket(new SChangeBlockPacket(world, blockpos.up()));
+                }
+                ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().updateInventory();
+                return ((bukkitEvent.useItemInHand() != Event.Result.ALLOW) ? ActionResultType.SUCCESS : ActionResultType.PASS);
+            }
+        }
+        if (this.gameType == GameType.SPECTATOR) {
             INamedContainerProvider inamedcontainerprovider = blockstate.getContainer(worldIn, blockpos);
             if (inamedcontainerprovider != null) {
                 playerIn.openContainer(inamedcontainerprovider);
@@ -280,6 +283,7 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
             boolean flag = !playerIn.getHeldItemMainhand().isEmpty() || !playerIn.getHeldItemOffhand().isEmpty();
             boolean flag1 = (playerIn.isSecondaryUseActive() && flag) && !(playerIn.getHeldItemMainhand().doesSneakBypassUse(worldIn, blockpos, playerIn) && playerIn.getHeldItemOffhand().doesSneakBypassUse(worldIn, blockpos, playerIn));
             ItemStack itemstack = stackIn.copy();
+            ActionResultType resultType = ActionResultType.PASS;
             if (event.getUseBlock() == net.minecraftforge.eventbus.api.Event.Result.ALLOW || (event.getUseBlock() != net.minecraftforge.eventbus.api.Event.Result.DENY && !flag1)) {
                 resultType = blockstate.onBlockActivated(worldIn, playerIn, handIn, blockRaytraceResultIn);
                 if (resultType.isSuccessOrConsume()) {
@@ -307,6 +311,5 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
                 return resultType;
             }
         }
-        return resultType;
     }
 }
