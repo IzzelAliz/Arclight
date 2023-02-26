@@ -17,14 +17,17 @@ import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.event.block.BrewingStartEvent;
 import org.bukkit.event.inventory.BrewEvent;
 import org.bukkit.event.inventory.BrewingStandFuelEvent;
 import org.bukkit.inventory.BrewerInventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
@@ -53,6 +56,13 @@ public abstract class BrewingStandBlockEntityMixin extends LockableBlockEntityMi
                 stack.shrink(count);
             }
         }
+    }
+
+    @Inject(method = "serverTick", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/level/block/entity/BrewingStandBlockEntity;ingredient:Lnet/minecraft/world/item/Item;"))
+    private static void arclight$brewBegin(Level level, BlockPos pos, BlockState p_155288_, BrewingStandBlockEntity entity, CallbackInfo ci) {
+        var event = new BrewingStartEvent(CraftBlock.at(level, pos), CraftItemStack.asCraftMirror(entity.getItem(3)), entity.brewTime);
+        Bukkit.getPluginManager().callEvent(event);
+        entity.brewTime = event.getTotalBrewTime();
     }
 
     /**
