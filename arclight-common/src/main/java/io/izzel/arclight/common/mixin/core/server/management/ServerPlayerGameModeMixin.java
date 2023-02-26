@@ -291,34 +291,38 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
     public InteractionResult useItemOn(ServerPlayer playerIn, Level worldIn, ItemStack stackIn, InteractionHand handIn, BlockHitResult blockRaytraceResultIn) {
         BlockPos blockpos = blockRaytraceResultIn.getBlockPos();
         BlockState blockstate = worldIn.getBlockState(blockpos);
-        InteractionResult resultType = InteractionResult.PASS;
-        boolean cancelledBlock = false;
-        if (this.gameModeForPlayer == GameType.SPECTATOR) {
-            MenuProvider provider = blockstate.getMenuProvider(worldIn, blockpos);
-            cancelledBlock = !(provider instanceof MenuProvider);
-        }
-        if (playerIn.getCooldowns().isOnCooldown(stackIn.getItem())) {
-            cancelledBlock = true;
-        }
-
-        PlayerInteractEvent bukkitEvent = CraftEventFactory.callPlayerInteractEvent(playerIn, Action.RIGHT_CLICK_BLOCK, blockpos, blockRaytraceResultIn.getDirection(), stackIn, cancelledBlock, handIn);
-        bridge$setFiredInteract(true);
-        bridge$setInteractResult(bukkitEvent.useItemInHand() == Event.Result.DENY);
-        if (bukkitEvent.useInteractedBlock() == Event.Result.DENY) {
-            if (blockstate.getBlock() instanceof DoorBlock) {
-                boolean bottom = blockstate.getValue(DoorBlock.HALF) == DoubleBlockHalf.LOWER;
-                playerIn.connection.send(new ClientboundBlockUpdatePacket(this.level, bottom ? blockpos.above() : blockpos.below()));
-            } else if (blockstate.getBlock() instanceof CakeBlock) {
-                ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().sendHealthUpdate();
-            } else if (stackIn.getItem() instanceof DoubleHighBlockItem) {
-                // send a correcting update to the client, as it already placed the upper half of the bisected item
-                playerIn.connection.send(new ClientboundBlockUpdatePacket(level, blockpos.relative(blockRaytraceResultIn.getDirection()).above()));
-                // send a correcting update to the client for the block above as well, this because of replaceable blocks (such as grass, sea grass etc)
-                playerIn.connection.send(new ClientboundBlockUpdatePacket(level, blockpos.above()));
+        // InteractionResult resultType = InteractionResult.PASS;
+        {   // compatible with questadditions
+            // these variables are not available inside next if block
+            boolean cancelledBlock = false;
+            if (this.gameModeForPlayer == GameType.SPECTATOR) {
+                MenuProvider provider = blockstate.getMenuProvider(worldIn, blockpos);
+                cancelledBlock = !(provider instanceof MenuProvider);
             }
-            ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().updateInventory();
-            resultType = ((bukkitEvent.useItemInHand() != Event.Result.ALLOW) ? InteractionResult.SUCCESS : InteractionResult.PASS);
-        } else if (this.gameModeForPlayer == GameType.SPECTATOR) {
+            if (playerIn.getCooldowns().isOnCooldown(stackIn.getItem())) {
+                cancelledBlock = true;
+            }
+
+            PlayerInteractEvent bukkitEvent = CraftEventFactory.callPlayerInteractEvent(playerIn, Action.RIGHT_CLICK_BLOCK, blockpos, blockRaytraceResultIn.getDirection(), stackIn, cancelledBlock, handIn);
+            bridge$setFiredInteract(true);
+            bridge$setInteractResult(bukkitEvent.useItemInHand() == Event.Result.DENY);
+            if (bukkitEvent.useInteractedBlock() == Event.Result.DENY) {
+                if (blockstate.getBlock() instanceof DoorBlock) {
+                    boolean bottom = blockstate.getValue(DoorBlock.HALF) == DoubleBlockHalf.LOWER;
+                    playerIn.connection.send(new ClientboundBlockUpdatePacket(this.level, bottom ? blockpos.above() : blockpos.below()));
+                } else if (blockstate.getBlock() instanceof CakeBlock) {
+                    ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().sendHealthUpdate();
+                } else if (stackIn.getItem() instanceof DoubleHighBlockItem) {
+                    // send a correcting update to the client, as it already placed the upper half of the bisected item
+                    playerIn.connection.send(new ClientboundBlockUpdatePacket(level, blockpos.relative(blockRaytraceResultIn.getDirection()).above()));
+                    // send a correcting update to the client for the block above as well, this because of replaceable blocks (such as grass, sea grass etc)
+                    playerIn.connection.send(new ClientboundBlockUpdatePacket(level, blockpos.above()));
+                }
+                ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().updateInventory();
+                return ((bukkitEvent.useItemInHand() != Event.Result.ALLOW) ? InteractionResult.SUCCESS : InteractionResult.PASS);
+            }
+        }
+        if (this.gameModeForPlayer == GameType.SPECTATOR) {
             MenuProvider inamedcontainerprovider = blockstate.getMenuProvider(worldIn, blockpos);
             if (inamedcontainerprovider != null) {
                 playerIn.openMenu(inamedcontainerprovider);
@@ -337,6 +341,7 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
             boolean flag = !playerIn.getMainHandItem().isEmpty() || !playerIn.getOffhandItem().isEmpty();
             boolean flag1 = (playerIn.isSecondaryUseActive() && flag) && !(playerIn.getMainHandItem().doesSneakBypassUse(worldIn, blockpos, playerIn) && playerIn.getOffhandItem().doesSneakBypassUse(worldIn, blockpos, playerIn));
             ItemStack itemstack = stackIn.copy();
+            InteractionResult resultType = InteractionResult.PASS;
             if (event.getUseBlock() == net.minecraftforge.eventbus.api.Event.Result.ALLOW || (event.getUseBlock() != net.minecraftforge.eventbus.api.Event.Result.DENY && !flag1)) {
                 resultType = blockstate.use(worldIn, playerIn, handIn, blockRaytraceResultIn);
                 if (resultType.consumesAction()) {
@@ -364,6 +369,5 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
                 return resultType;
             }
         }
-        return resultType;
     }
 }
