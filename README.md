@@ -4,11 +4,11 @@ A Bukkit server implementation utilizing Mixin.
 
 ![Downloads](https://img.shields.io/github/downloads/IzzelAliz/Arclight/total?style=flat-square)  ![GitHub](https://img.shields.io/github/license/IzzelAliz/Arclight?style=flat-square)
 
-|       Release       |  Forge  | Status |                                                                         Build                                                                          |
-|:-------------------:|:-------:|:------:|:------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| Great Horn (1.19.3) | 44.1.8  | ACTIVE | [![1.19 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-19?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-19) |
-|       1.18.x        | 40.1.80 |  LTS   | [![1.18 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-18?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-18) |
-|       1.16.x        | 36.2.39 |  LTS   | [![1.16 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-16?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-16) |
+|       Release       |  Forge  | Status |                                                                                              Build                                                                                              |
+|:-------------------:|:-------:|:------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| Great Horn (1.19.3) | 44.1.8  | ACTIVE | [![1.19 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=GreatHorn&style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-19) |
+|       1.18.x        | 40.1.80 |  LTS   |   [![1.18 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=1.18&style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-18)    |
+|       1.16.x        | 36.2.39 |  LTS   |                     [![1.16 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=1.16&style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-16)                      |
 
 **Legacy versions**:
 
