@@ -47,7 +47,6 @@ public interface IInventoryBridge {
         if (owner != null) {
             return owner.getInventory();
         } else {
-            // ArclightMod.LOGGER.warn("No owner for inventory {}/{}", this, this.getClass());
             return new CraftInventory((Container) this);
         }
     }

@@ -81,6 +81,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
     @Shadow @Final private ExplosionDamageCalculator damageCalculator;
     @Shadow public abstract boolean interactsWithBlocks();
     @Shadow @Nullable public abstract LivingEntity getIndirectSourceEntity();
+    @Shadow public static float getSeenPercent(Vec3 p_46065_, Entity p_46066_) { return 0f; }
     // @formatter:on
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/Entity;DDDFZLnet/minecraft/world/level/Explosion$BlockInteraction;)V",
@@ -188,8 +189,11 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                         var parts = entity.getParts();
                         if (parts != null) {
                             for (var part : parts) {
-                                if (list.contains(part)) {
-                                    part.hurt(this.getDamageSource(), (float) ((int) ((d10 * d10 + d10) / 2.0D * 7.0D * (double) f3 + 1.0D)));
+                                // Calculate damage separately for each part
+                                double dist;
+                                if (list.contains(part) && (dist = Math.sqrt(part.distanceToSqr(vec3d)) / f3) <= 1.0D) {
+                                    double dmg = (1.0D - dist) * getSeenPercent(vec3d, part);
+                                    part.hurt(this.getDamageSource(), (float) ((int) ((dmg * dmg + dmg) / 2.0D * 7.0D * (double) f3 + 1.0D)));
                                 }
                             }
                         } else {
@@ -266,7 +270,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                     if (blockstate.canDropFromExplosion(this.level, blockpos, (Explosion) (Object) this) && this.level instanceof ServerLevel serverLevel) {
                         BlockEntity tileentity = blockstate.hasBlockEntity() ? this.level.getBlockEntity(blockpos) : null;
                         LootContext.Builder lootcontext$builder = new LootContext.Builder(serverLevel).withRandom(this.level.random).withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(blockpos)).withParameter(LootContextParams.TOOL, ItemStack.EMPTY).withOptionalParameter(LootContextParams.BLOCK_ENTITY, tileentity).withOptionalParameter(LootContextParams.THIS_ENTITY, this.source);
-                        if (this.blockInteraction == Explosion.BlockInteraction.DESTROY_WITH_DECAY || yield < 1.0F) {
+                        if (yield < 1.0F) {
                             lootcontext$builder.withParameter(LootContextParams.EXPLOSION_RADIUS, 1.0F / yield);
                         }
 
@@ -321,13 +325,13 @@ public abstract class ExplosionMixin implements ExplosionBridge {
         float bukkitYield;
 
         if (exploder != null) {
-            EntityExplodeEvent event = new EntityExplodeEvent(exploder, location, blockList, this.blockInteraction == Explosion.BlockInteraction.DESTROY ? 1.0F / this.radius : 1.0F);
+            EntityExplodeEvent event = new EntityExplodeEvent(exploder, location, blockList, this.blockInteraction == Explosion.BlockInteraction.DESTROY_WITH_DECAY ? 1.0F / this.radius : 1.0F);
             Bukkit.getPluginManager().callEvent(event);
             cancelled = event.isCancelled();
             bukkitBlocks = event.blockList();
             bukkitYield = event.getYield();
         } else {
-            BlockExplodeEvent event = new BlockExplodeEvent(location.getBlock(), blockList, this.blockInteraction == Explosion.BlockInteraction.DESTROY ? 1.0F / this.radius : 1.0F);
+            BlockExplodeEvent event = new BlockExplodeEvent(location.getBlock(), blockList, this.blockInteraction == Explosion.BlockInteraction.DESTROY_WITH_DECAY ? 1.0F / this.radius : 1.0F);
             Bukkit.getPluginManager().callEvent(event);
             cancelled = event.isCancelled();
             bukkitBlocks = event.blockList();

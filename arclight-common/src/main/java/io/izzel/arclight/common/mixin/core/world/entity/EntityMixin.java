@@ -230,6 +230,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     public boolean persistentInvisibility = false;
     public BlockPos lastLavaContact;
     public int maxAirTicks = getDefaultMaxAirSupply();
+    public boolean visibleByDefault = true;
 
     private CraftEntity bukkitEntity;
 
@@ -547,6 +548,9 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         if (!this.persist) {
             compound.putBoolean("Bukkit.persist", this.persist);
         }
+        if (!this.visibleByDefault) {
+            compound.putBoolean("Bukkit.visibleByDefault", this.visibleByDefault);
+        }
         if (this.persistentInvisibility) {
             compound.putBoolean("Bukkit.invisible", this.persistentInvisibility);
         }
@@ -573,6 +577,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             this.tickCount = compound.getInt("Spigot.ticksLived");
         }
         this.persist = !compound.contains("Bukkit.persist") || compound.getBoolean("Bukkit.persist");
+        this.visibleByDefault = !compound.contains("Bukkit.visibleByDefault") || compound.getBoolean("Bukkit.visibleByDefault");
         // CraftBukkit end
 
         // CraftBukkit start - Reset world
