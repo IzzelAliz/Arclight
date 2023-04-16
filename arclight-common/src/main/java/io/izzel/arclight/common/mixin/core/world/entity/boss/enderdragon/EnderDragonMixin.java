@@ -39,7 +39,7 @@ public abstract class EnderDragonMixin extends MobMixin {
 
     @Shadow @Final @Nullable private EndDragonFight dragonFight;
 
-    private Explosion explosionSource = new Explosion(null, (EnderDragon) (Object) this, null, null, Double.NaN, Double.NaN, Double.NaN, Float.NaN, true, Explosion.BlockInteraction.DESTROY);
+    private Explosion explosionSource = new Explosion(this.level, (EnderDragon) (Object) this, null, null, Double.NaN, Double.NaN, Double.NaN, Float.NaN, true, Explosion.BlockInteraction.DESTROY);
 
     @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/boss/enderdragon/phases/DragonPhaseInstance;getFlyTargetLocation()Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 arclight$noMoveHovering(DragonPhaseInstance phase) {
