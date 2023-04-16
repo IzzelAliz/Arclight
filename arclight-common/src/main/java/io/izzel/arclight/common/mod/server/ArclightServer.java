@@ -35,6 +35,7 @@ public class ArclightServer {
                 ((MinecraftServerBridge) console).bridge$setConsole(ColouredConsoleSender.getInstance());
 
                 Class.forName("org.sqlite.JDBC");
+                Class.forName("com.mysql.cj.jdbc.Driver");
             } catch (Throwable t) {
                 throw new RuntimeException("Error initializing Arclight", t);
             }
