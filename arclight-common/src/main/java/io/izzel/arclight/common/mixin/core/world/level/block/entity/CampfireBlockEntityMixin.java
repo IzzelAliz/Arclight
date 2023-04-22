@@ -56,7 +56,7 @@ public abstract class CampfireBlockEntityMixin extends BlockEntityMixin {
                 if (entity.cookingProgress[i] >= entity.cookingTime[i]) {
                     Container container = new SimpleContainer(itemstack);
                     ItemStack itemstack1 = ((CampfireBlockEntityMixin) (Object) entity).quickCheck.getRecipeFor(container, level).map((p_155305_) -> {
-                        return p_155305_.assemble(container);
+                        return p_155305_.assemble(container, level.registryAccess());
                     }).orElse(itemstack);
 
                     if (!itemstack1.isItemEnabled(level.enabledFeatures())) continue;

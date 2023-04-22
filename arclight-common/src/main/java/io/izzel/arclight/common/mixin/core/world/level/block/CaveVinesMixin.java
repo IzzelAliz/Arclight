@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
-import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import jline.internal.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -15,6 +15,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CaveVines;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.event.player.PlayerHarvestBlockEvent;
@@ -31,9 +32,8 @@ public interface CaveVinesMixin {
      * @reason
      */
     @Overwrite
-    static InteractionResult use(BlockState state, Level level, BlockPos pos) {
+    static InteractionResult use(@Nullable Entity entity, BlockState state, Level level, BlockPos pos) {
         if (state.getValue(CaveVines.BERRIES)) {
-            Entity entity = ArclightCaptures.getEntityChangeBlock();
             if (entity != null) {
                 if (CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state.setValue(CaveVines.BERRIES, false)).isCancelled()) {
                     return InteractionResult.SUCCESS;
@@ -54,7 +54,9 @@ public interface CaveVinesMixin {
             Block.popResource(level, pos, new ItemStack(Items.GLOW_BERRIES, 1));
             float f = Mth.randomBetween(level.random, 0.8F, 1.2F);
             level.playSound(null, pos, SoundEvents.CAVE_VINES_PICK_BERRIES, SoundSource.BLOCKS, 1.0F, f);
-            level.setBlock(pos, state.setValue(CaveVines.BERRIES, Boolean.FALSE), 2);
+            var newState = state.setValue(CaveVines.BERRIES, Boolean.FALSE);
+            level.setBlock(pos, newState, 2);
+            level.gameEvent(GameEvent.BLOCK_CHANGE, pos, GameEvent.Context.of(entity, newState));
             return InteractionResult.sidedSuccess(level.isClientSide);
         } else {
             return InteractionResult.PASS;

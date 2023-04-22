@@ -37,7 +37,7 @@ public abstract class ComposterBlock_OutputContainerMixin extends SimpleContaine
     @Overwrite
     public void setChanged() {
         if (this.isEmpty()) {
-            ComposterBlock.empty(this.state, this.level, this.pos);
+            ComposterBlock.empty(null, this.state, this.level, this.pos);
             this.changed = true;
         } else {
             this.level.setBlock(this.pos, this.state, 3);

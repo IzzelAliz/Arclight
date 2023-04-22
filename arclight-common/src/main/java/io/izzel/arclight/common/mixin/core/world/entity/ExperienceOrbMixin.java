@@ -118,9 +118,4 @@ public abstract class ExperienceOrbMixin extends EntityMixin {
         if (expValue > 4957) { cir.setReturnValue(4957); }
         // @formatter:on
     }
-
-    @Override
-    public void burn(float amount) {
-        this.hurt(DamageSource.IN_FIRE, amount);
-    }
 }

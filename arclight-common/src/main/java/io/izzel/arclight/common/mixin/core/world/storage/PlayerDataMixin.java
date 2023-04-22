@@ -27,7 +27,7 @@ public class PlayerDataMixin implements PlayerDataBridge {
     @Shadow @Final private static Logger LOGGER;
     // @formatter:on
 
-    @Inject(method = "load", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundTag;contains(Ljava/lang/String;I)Z"))
+    @Inject(method = "load", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/NbtUtils;getDataVersion(Lnet/minecraft/nbt/CompoundTag;I)I"))
     private void arclight$lastSeenTime(Player player, CallbackInfoReturnable<CompoundTag> cir) {
         if (player instanceof ServerPlayer) {
             CraftPlayer craftPlayer = ((ServerPlayerEntityBridge) player).bridge$getBukkitEntity();

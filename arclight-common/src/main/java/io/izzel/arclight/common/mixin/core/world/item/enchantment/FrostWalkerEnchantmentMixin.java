@@ -25,11 +25,11 @@ public class FrostWalkerEnchantmentMixin {
     public static void onEntityMoved(LivingEntity living, Level worldIn, BlockPos pos, int level) {
         if (living.isOnGround()) {
             BlockState blockstate = Blocks.FROSTED_ICE.defaultBlockState();
-            float f = (float) Math.min(16, 2 + level);
+            int f = Math.min(16, 2 + level);
             BlockPos.MutableBlockPos blockpos$mutable = new BlockPos.MutableBlockPos();
 
-            for (BlockPos blockpos : BlockPos.betweenClosed(pos.offset((double) (-f), -1.0D, (double) (-f)), pos.offset((double) f, -1.0D, (double) f))) {
-                if (blockpos.closerToCenterThan(living.position(), (double) f)) {
+            for (BlockPos blockpos : BlockPos.betweenClosed(pos.offset(-f, -1, -f), pos.offset(f, -1, f))) {
+                if (blockpos.closerToCenterThan(living.position(), f)) {
                     blockpos$mutable.set(blockpos.getX(), blockpos.getY() + 1, blockpos.getZ());
                     BlockState blockstate1 = worldIn.getBlockState(blockpos$mutable);
                     if (blockstate1.isAir()) {

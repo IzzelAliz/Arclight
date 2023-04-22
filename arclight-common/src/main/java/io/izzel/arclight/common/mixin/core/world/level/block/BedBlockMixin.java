@@ -4,7 +4,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BedBlock;
@@ -75,7 +74,7 @@ public abstract class BedBlockMixin {
                         }
 
                         Vec3 vec3d = pos.getCenter();
-                        level.explode(null, DamageSource.badRespawnPointExplosion(vec3d), null, vec3d, 5.0F, true, Level.ExplosionInteraction.BLOCK);
+                        level.explode(null, level.damageSources().badRespawnPointExplosion(vec3d), null, vec3d, 5.0F, true, Level.ExplosionInteraction.BLOCK);
                     } else if (p_49477_.getMessage() != null) {
                         p_49518_.displayClientMessage(p_49477_.getMessage(), true);
                     }

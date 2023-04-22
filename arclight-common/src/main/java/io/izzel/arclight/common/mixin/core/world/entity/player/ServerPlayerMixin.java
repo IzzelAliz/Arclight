@@ -53,6 +53,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Monster;
@@ -104,6 +105,7 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerLocaleChangeEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.MainHand;
 import org.spongepowered.asm.mixin.Final;
@@ -124,6 +126,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Random;
+import java.util.Set;
 import java.util.function.Consumer;
 
 @Mixin(ServerPlayer.class)
@@ -166,6 +169,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Shadow public abstract void resetFallDistance();
     @Shadow public abstract void shadow$nextContainerCounter();
     @Shadow public abstract void initMenu(AbstractContainerMenu p_143400_);
+    @Shadow public abstract boolean teleportTo(ServerLevel p_265564_, double p_265424_, double p_265680_, double p_265312_, Set<RelativeMovement> p_265192_, float p_265059_, float p_265266_);
     // @formatter:on
 
     public String displayName;
@@ -456,6 +460,18 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
     private transient PlayerTeleportEvent.TeleportCause arclight$cause;
 
+    public boolean teleportTo(ServerLevel worldserver, double d0, double d1, double d2, Set<RelativeMovement> set, float f, float f1, PlayerTeleportEvent.TeleportCause cause) {
+        this.arclight$cause = cause;
+        return this.teleportTo(worldserver, d0, d1, d2, set, f, f1);
+    }
+
+    @Inject(method = "teleportTo(Lnet/minecraft/server/level/ServerLevel;DDDLjava/util/Set;FF)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;teleport(DDDFFLjava/util/Set;)V"))
+    private void arclight$forwardReason(ServerLevel p_265564_, double p_265424_, double p_265680_, double p_265312_, Set<RelativeMovement> p_265192_, float p_265059_, float p_265266_, CallbackInfoReturnable<Boolean> cir) {
+        var teleportCause = arclight$cause;
+        arclight$cause = null;
+        ((ServerPlayNetHandlerBridge) this.connection).bridge$pushTeleportCause(teleportCause);
+    }
+
     /**
      * @author IzzelAliz
      * @reason
@@ -506,7 +522,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
                             this.enteredNetherPosition = this.position();
                         } else if (spawnPortal && ((WorldBridge) exitWorld[0]).bridge$getTypeKey() == LevelStem.END
                             && (((PortalInfoBridge) portalinfo).bridge$getPortalEventInfo() == null || ((PortalInfoBridge) portalinfo).bridge$getPortalEventInfo().getCanCreatePortal())) {
-                            this.createEndPlatform(exitWorld[0], new BlockPos(portalinfo.pos));
+                            this.createEndPlatform(exitWorld[0], BlockPos.containing(portalinfo.pos));
                         }
                     }
 
@@ -758,6 +774,18 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         }
     }
 
+    @Inject(method = "setPlayerInput", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;setShiftKeyDown(Z)V"))
+    private void arclight$toggleSneak(float p_8981_, float p_8982_, boolean p_8983_, boolean shift, CallbackInfo ci) {
+        if (shift != this.isShiftKeyDown()) {
+            PlayerToggleSneakEvent event = new PlayerToggleSneakEvent(this.getBukkitEntity(), shift);
+            Bukkit.getPluginManager().callEvent(event);
+
+            if (event.isCancelled()) {
+                ci.cancel();
+            }
+        }
+    }
+
     @Redirect(method = "awardStat", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/scores/Scoreboard;forAllObjectives(Lnet/minecraft/world/scores/criteria/ObjectiveCriteria;Ljava/lang/String;Ljava/util/function/Consumer;)V"))
     private void arclight$addStats(Scoreboard scoreboard, ObjectiveCriteria p_197893_1_, String p_197893_2_, Consumer<Score> p_197893_3_) {
         ((CraftScoreboardManager) Bukkit.getScoreboardManager()).getScoreboardScores(p_197893_1_, p_197893_2_, p_197893_3_);
@@ -787,7 +815,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         this.clientViewDistance = packetIn.viewDistance();
     }
 
-    @Inject(method = "setCamera", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;teleport(DDDFF)V"))
+    @Inject(method = "setCamera", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;teleportTo(Lnet/minecraft/server/level/ServerLevel;DDDLjava/util/Set;FF)Z"))
     private void arclight$spectatorReason(Entity entityToSpectate, CallbackInfo ci) {
         this.bridge$pushChangeDimensionCause(PlayerTeleportEvent.TeleportCause.SPECTATE);
     }

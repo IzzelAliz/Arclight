@@ -263,7 +263,7 @@ public abstract class AbstractContainerMenuMixin implements ContainerBridge {
                                 this.setCarried(slot7.safeInsert(itemstack11, j3));
                             } else if (itemstack11.getCount() <= slot7.getMaxStackSize(itemstack11)) {
                                 this.setCarried(itemstack10);
-                                slot7.set(itemstack11);
+                                slot7.setByPlayer(itemstack11);
                             }
                         } else if (ItemStack.isSameItemSameTags(itemstack10, itemstack11)) {
                             Optional<ItemStack> optional = slot7.tryRemove(itemstack10.getCount(), itemstack11.getMaxStackSize() - itemstack11.getCount(), player);
@@ -294,30 +294,30 @@ public abstract class AbstractContainerMenuMixin implements ContainerBridge {
                     if (slot2.mayPickup(player)) {
                         inventory.setItem(dragType, itemstack7);
                         ((SlotBridge) slot2).bridge$onSwapCraft(itemstack7.getCount());
-                        slot2.set(ItemStack.EMPTY);
+                        slot2.setByPlayer(ItemStack.EMPTY);
                         slot2.onTake(player, itemstack7);
                     }
                 } else if (itemstack7.isEmpty()) {
                     if (slot2.mayPlace(itemstack4)) {
                         int l1 = slot2.getMaxStackSize(itemstack4);
                         if (itemstack4.getCount() > l1) {
-                            slot2.set(itemstack4.split(l1));
+                            slot2.setByPlayer(itemstack4.split(l1));
                         } else {
                             inventory.setItem(dragType, ItemStack.EMPTY);
-                            slot2.set(itemstack4);
+                            slot2.setByPlayer(itemstack4);
                         }
                     }
                 } else if (slot2.mayPickup(player) && slot2.mayPlace(itemstack4)) {
                     int i2 = slot2.getMaxStackSize(itemstack4);
                     if (itemstack4.getCount() > i2) {
-                        slot2.set(itemstack4.split(i2));
+                        slot2.setByPlayer(itemstack4.split(i2));
                         slot2.onTake(player, itemstack7);
                         if (!inventory.add(itemstack7)) {
                             player.drop(itemstack7, true);
                         }
                     } else {
                         inventory.setItem(dragType, itemstack7);
-                        slot2.set(itemstack4);
+                        slot2.setByPlayer(itemstack4);
                         slot2.onTake(player, itemstack7);
                     }
                 }

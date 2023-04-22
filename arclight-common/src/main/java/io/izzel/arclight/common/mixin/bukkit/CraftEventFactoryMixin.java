@@ -7,6 +7,7 @@ import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.Level;
@@ -54,14 +55,14 @@ public class CraftEventFactoryMixin {
         Entity damageEventEntity = ArclightCaptures.getDamageEventEntity();
         BlockPos damageEventBlock = ArclightCaptures.getDamageEventBlock();
         if (damageEventEntity != null && entityDamage == null) {
-            if (source.msgId.equals(DamageSource.LIGHTNING_BOLT.msgId)) {
+            if (source.is(DamageTypes.LIGHTNING_BOLT)) {
                 entityDamage = damageEventEntity;
             }
         }
         if (damageEventBlock != null && blockDamage == null) {
-            if (source.msgId.equals(DamageSource.CACTUS.msgId)
-                || source.msgId.equals(DamageSource.SWEET_BERRY_BUSH.msgId)
-                || source.msgId.equals(DamageSource.HOT_FLOOR.msgId)) {
+            if (source.is(DamageTypes.CACTUS)
+                || source.is(DamageTypes.SWEET_BERRY_BUSH)
+                || source.is(DamageTypes.HOT_FLOOR)) {
                 blockDamage = CraftBlock.at(entity.getCommandSenderWorld(), damageEventBlock);
             }
         }

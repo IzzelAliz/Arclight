@@ -32,7 +32,7 @@ public class PacketThreadUtilMixin {
                 if (((MinecraftServerBridge) ((CraftServer) Bukkit.getServer()).getServer()).bridge$hasStopped() || (processor instanceof ServerGamePacketListenerImpl && ((ServerPlayNetHandlerBridge) processor).bridge$processedDisconnect())) {
                     return;
                 }
-                if (processor.getConnection().isConnected()) {
+                if (processor.isAcceptingMessages()) {
                     try {
                         packetIn.handle(processor);
                     } catch (Exception exception) {

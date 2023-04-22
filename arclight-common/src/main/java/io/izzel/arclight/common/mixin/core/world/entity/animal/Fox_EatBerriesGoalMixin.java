@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.MoveToBlockGoal;
 import net.minecraft.world.entity.animal.Fox;
@@ -29,15 +28,5 @@ public abstract class Fox_EatBerriesGoalMixin extends MoveToBlockGoal {
         if (CraftEventFactory.callEntityChangeBlockEvent(outerThis, this.blockPos, state.setValue(SweetBerryBushBlock.AGE, 1)).isCancelled()) {
             ci.cancel();
         }
-    }
-
-    @Inject(method = "pickGlowBerry", at = @At("HEAD"))
-    private void arclight$pickGlowBerryPre(BlockState p_148927_, CallbackInfo ci) {
-        ArclightCaptures.captureEntityChangeBlock(outerThis);
-    }
-
-    @Inject(method = "pickGlowBerry", at = @At("RETURN"))
-    private void arclight$pickGlowBerryPost(BlockState p_148927_, CallbackInfo ci) {
-        ArclightCaptures.getEntityChangeBlock();
     }
 }

@@ -10,6 +10,7 @@ import net.minecraft.network.ConnectionProtocol;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.handshake.ClientIntentionPacket;
 import net.minecraft.network.protocol.login.ClientboundLoginDisconnectPacket;
+import net.minecraft.network.protocol.status.ServerStatus;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerHandshakePacketListenerImpl;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
@@ -112,9 +113,10 @@ public class ServerHandshakeNetHandlerMixin {
                 break;
             }
             case STATUS: {
-                if (this.server.repliesToStatus()) {
+                ServerStatus serverstatus = this.server.getStatus();
+                if (this.server.repliesToStatus() && serverstatus != null) {
                     this.connection.setProtocol(ConnectionProtocol.STATUS);
-                    this.connection.setListener(new ServerStatusPacketListenerImpl(this.server, this.connection));
+                    this.connection.setListener(new ServerStatusPacketListenerImpl(serverstatus, this.connection));
                 } else {
                     this.connection.disconnect(IGNORE_STATUS_REASON);
                 }

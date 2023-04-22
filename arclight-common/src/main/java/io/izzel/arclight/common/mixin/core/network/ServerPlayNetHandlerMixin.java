@@ -54,6 +54,7 @@ import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.entity.animal.Bucketable;
 import net.minecraft.world.entity.animal.allay.Allay;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -637,7 +638,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
 
                             this.player.absMoveTo(d0, d1, d2, f, f1);
                             if (!this.player.noPhysics && !this.player.isSleeping() && (flag1 && worldserver.noCollision(this.player, axisalignedbb) || this.isPlayerCollidingWithAnythingNew((LevelReader) worldserver, axisalignedbb))) {
-                                this.internalTeleport(d3, d4, d5, f, f1, Collections.emptySet(), false); // CraftBukkit - SPIGOT-1807: Don't call teleport event, when the client thinks the player is falling, because the chunks are not loaded on the client yet.
+                                this.internalTeleport(d3, d4, d5, f, f1, Collections.emptySet()); // CraftBukkit - SPIGOT-1807: Don't call teleport event, when the client thinks the player is falling, because the chunks are not loaded on the client yet.
                                 this.player.doCheckFallDamage(this.player.getY() - d6, packetplayinflying.isOnGround());
                             } else {
                                 this.player.absMoveTo(prevX, prevY, prevZ, prevYaw, prevPitch);
@@ -1018,7 +1019,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         this.server.getCommands().performCommand(parseresults, command);
     }
 
-    @Inject(method = "tryHandleChat", cancellable = true, at = @At("HEAD"))
+    @Inject(method = "tryHandleChat", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;unpackAndApplyLastSeen(Lnet/minecraft/network/chat/LastSeenMessages$Update;)Ljava/util/Optional;"))
     private void arclight$deadMenTellNoTales(String p_242372_, Instant p_242311_, LastSeenMessages.Update p_242217_, CallbackInfoReturnable<Boolean> cir) {
         if (this.player.isRemoved()) {
             this.send(new ClientboundSystemChatPacket(Component.translatable("chat.disabled.options").withStyle(ChatFormatting.RED), false));
@@ -1176,7 +1177,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         float f6 = Mth.sin(-f1 * 0.017453292f);
         float f7 = f4 * f5;
         float f8 = f3 * f5;
-        double d4 = this.player.getReachDistance();
+        double d4 = this.player.getBlockReach();
         Vec3 vec3d2 = vec3d.add(f7 * d4, f6 * d4, f8 * d4);
         HitResult result = this.player.level.clip(new ClipContext(vec3d, vec3d2, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, this.player));
         if (result == null || result.getType() != HitResult.Type.BLOCK) {
@@ -1236,8 +1237,6 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             class Handler implements ServerboundInteractPacket.Handler {
 
                 private void performInteraction(InteractionHand hand, ServerGamePacketListenerImpl.EntityInteraction interaction, PlayerInteractEntityEvent event) { // CraftBukkit
-                    if (!player.canInteractWith(entity, 1.5D))
-                        return; //Forge: If the entity cannot be reached, do nothing. Original check was dist < 6, range is 4.5, so vanilla used padding=1.5
                     var stack = player.getItemInHand(hand);
                     if (!stack.isItemEnabled(world.enabledFeatures()))
                         return;
@@ -1314,7 +1313,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                     if (!(entity instanceof ItemEntity) && !(entity instanceof ExperienceOrb) && !(entity instanceof AbstractArrow) && (entity != player || player.isSpectator())) {
                         ItemStack itemInHand = player.getMainHandItem();
                         if (!itemInHand.isItemEnabled(world.enabledFeatures())) return;
-                        if (player.canHit(entity, 3)) { //Forge: Perform attack range check. Original check was dist < 6, range is 3, so vanilla used padding=3
+                        if (player.canReach(entity, 3)) { //Forge: Perform attack range check. Original check was dist < 6, range is 3, so vanilla used padding=3
                             player.attack(entity);
                         }
 
@@ -1718,7 +1717,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 }
             }
             if (flag2 && flag3) {
-                this.player.inventoryMenu.getSlot(packetplayinsetcreativeslot.getSlotNum()).set(itemstack);
+                this.player.inventoryMenu.getSlot(packetplayinsetcreativeslot.getSlotNum()).setByPlayer(itemstack);
                 this.player.inventoryMenu.broadcastChanges();
             } else if (flag && flag3 && this.dropSpamTickCount < 200) {
                 this.dropSpamTickCount += 20;
@@ -1864,7 +1863,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
      * @reason
      */
     @Overwrite
-    public void teleport(double x, double y, double z, float yaw, float pitch, Set<ClientboundPlayerPositionPacket.RelativeArgument> relativeSet) {
+    public void teleport(double x, double y, double z, float yaw, float pitch, Set<RelativeMovement> relativeSet) {
         PlayerTeleportEvent.TeleportCause cause = arclight$cause == null ? PlayerTeleportEvent.TeleportCause.UNKNOWN : arclight$cause;
         arclight$cause = null;
         Player player = this.getCraftPlayer();
@@ -1890,19 +1889,19 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         if (Float.isNaN(pitch)) {
             pitch = 0.0f;
         }
-        this.internalTeleport(x, y, z, yaw, pitch, relativeSet, false);
+        this.internalTeleport(x, y, z, yaw, pitch, relativeSet);
     }
 
     public void teleport(double d0, double d1, double d2, float f, float f1, PlayerTeleportEvent.TeleportCause cause) {
         this.teleport(d0, d1, d2, f, f1, Collections.emptySet(), cause);
     }
 
-    public void teleport(double d0, double d1, double d2, float f, float f1, Set<ClientboundPlayerPositionPacket.RelativeArgument> set, PlayerTeleportEvent.TeleportCause cause) {
+    public void teleport(double d0, double d1, double d2, float f, float f1, Set<RelativeMovement> set, PlayerTeleportEvent.TeleportCause cause) {
         bridge$pushTeleportCause(cause);
         this.teleport(d0, d1, d2, f, f1, set);
     }
 
-    private void internalTeleport(double d0, double d1, double d2, float f, float f1, Set<ClientboundPlayerPositionPacket.RelativeArgument> set, boolean flag) {
+    private void internalTeleport(double d0, double d1, double d2, float f, float f1, Set<RelativeMovement> set) {
         if (Float.isNaN(f)) {
             f = 0.0f;
         }
@@ -1910,11 +1909,11 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             f1 = 0.0f;
         }
         this.justTeleported = true;
-        double d3 = set.contains(ClientboundPlayerPositionPacket.RelativeArgument.X) ? this.player.getX() : 0.0;
-        double d4 = set.contains(ClientboundPlayerPositionPacket.RelativeArgument.Y) ? this.player.getY() : 0.0;
-        double d5 = set.contains(ClientboundPlayerPositionPacket.RelativeArgument.Z) ? this.player.getZ() : 0.0;
-        float f2 = set.contains(ClientboundPlayerPositionPacket.RelativeArgument.Y_ROT) ? this.player.getYRot() : 0.0f;
-        float f3 = set.contains(ClientboundPlayerPositionPacket.RelativeArgument.X_ROT) ? this.player.getXRot() : 0.0f;
+        double d3 = set.contains(RelativeMovement.X) ? this.player.getX() : 0.0;
+        double d4 = set.contains(RelativeMovement.Y) ? this.player.getY() : 0.0;
+        double d5 = set.contains(RelativeMovement.Z) ? this.player.getZ() : 0.0;
+        float f2 = set.contains(RelativeMovement.Y_ROT) ? this.player.getYRot() : 0.0f;
+        float f3 = set.contains(RelativeMovement.X_ROT) ? this.player.getXRot() : 0.0f;
         this.awaitingPositionFromClient = new Vec3(d0, d1, d2);
         if (++this.awaitingTeleport == Integer.MAX_VALUE) {
             this.awaitingTeleport = 0;
@@ -1926,11 +1925,11 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         this.lastPitch = f1;
         this.awaitingTeleportTime = this.tickCount;
         this.player.absMoveTo(d0, d1, d2, f, f1);
-        this.player.connection.send(new ClientboundPlayerPositionPacket(d0 - d3, d1 - d4, d2 - d5, f - f2, f1 - f3, set, this.awaitingTeleport, flag));
+        this.player.connection.send(new ClientboundPlayerPositionPacket(d0 - d3, d1 - d4, d2 - d5, f - f2, f1 - f3, set, this.awaitingTeleport));
     }
 
     public void teleport(Location dest) {
-        this.internalTeleport(dest.getX(), dest.getY(), dest.getZ(), dest.getYaw(), dest.getPitch(), Collections.emptySet(), true);
+        this.internalTeleport(dest.getX(), dest.getY(), dest.getZ(), dest.getYaw(), dest.getPitch(), Collections.emptySet());
     }
 
     private transient PlayerTeleportEvent.TeleportCause arclight$cause;

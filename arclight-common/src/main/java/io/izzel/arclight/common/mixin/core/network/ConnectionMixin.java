@@ -7,7 +7,6 @@ import net.minecraft.network.Connection;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-import java.net.SocketAddress;
 import java.util.UUID;
 
 @Mixin(Connection.class)
@@ -36,15 +35,6 @@ public class ConnectionMixin implements NetworkManagerBridge {
     @Override
     public void bridge$setSpoofedProfile(Property[] spoofedProfile) {
         this.spoofedProfile = spoofedProfile;
-    }
-
-    public SocketAddress getRawAddress() {
-        return this.channel.remoteAddress();
-    }
-
-    @Override
-    public SocketAddress bridge$getRawAddress() {
-        return getRawAddress();
     }
 
     @Override

@@ -24,7 +24,7 @@ apply plugin: 'io.izzel.arclight'
 arclight {
     mcVersion = minecraftVersion
     forgeVersion = project.ext.forgeVersion
-    bukkitVersion = 'v1_19_R2'
+    bukkitVersion = 'v1_19_R3'
     wipeVersion = true
     reobfVersion = true
     accessTransformer = project.file('bukkit.at')

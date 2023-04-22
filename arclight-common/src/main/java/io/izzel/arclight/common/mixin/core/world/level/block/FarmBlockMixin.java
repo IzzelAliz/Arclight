@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FarmBlock;
@@ -17,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class FarmBlockMixin extends BlockMixin {
 
     @Inject(method = "turnToDirt", cancellable = true, at = @At("HEAD"))
-    private static void arclight$blockFade(BlockState state, Level worldIn, BlockPos pos, CallbackInfo ci) {
+    private static void arclight$blockFade(Entity entity, BlockState state, Level worldIn, BlockPos pos, CallbackInfo ci) {
         if (CraftEventFactory.callBlockFadeEvent(worldIn, pos, Blocks.DIRT.defaultBlockState()).isCancelled()) {
             ci.cancel();
         }

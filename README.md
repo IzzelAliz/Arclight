@@ -4,22 +4,23 @@ A Bukkit server implementation utilizing Mixin.
 
 ![Downloads](https://img.shields.io/github/downloads/IzzelAliz/Arclight/total?style=flat-square)  ![GitHub](https://img.shields.io/github/license/IzzelAliz/Arclight?style=flat-square)
 
-|       Release       |  Forge  | Status |                                                                                              Build                                                                                              |
-|:-------------------:|:-------:|:------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| Great Horn (1.19.3) | 44.1.8  | ACTIVE | [![1.19 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=GreatHorn&style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-19) |
-|       1.18.x        | 40.1.80 |  LTS   |   [![1.18 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=1.18&style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-18)    |
-|       1.16.x        | 36.2.39 |  LTS   |                     [![1.16 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=1.16&style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-16)                      |
+|       Release       |  Forge  | Status |                                                                                                        Build                                                                                                         |
+|:-------------------:|:-------:|:------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| Executions (1.19.4) | 45.0.43 | ACTIVE | [![1.19.4 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Executions&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3AExecutions) |
+|       1.18.x        | 40.1.80 |  LTS   |              [![1.18 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=1.18&style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-18)              |
+|       1.16.x        | 36.2.39 |  LTS   |              [![1.16 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=1.16&style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-16)              |
 
 **Legacy versions**:
 
 <details>
 
-| Release |  Forge  |                                  Status                                  |                                                                         Build                                                                          |
-|:-------:|:-------:|:------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| Horn (1.19-1.19.2)  | 43.2.0  | [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/horn/1.0.1)  | [![Horn Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-19?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-19) |
-| 1.17.x  | 37.1.0  | [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/1.17/1.0.2)  | [![1.17 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-17?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-17) |
-| 1.15.x  | 31.2.48 | [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/1.15/1.0.19) | [![1.15 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-15?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-15) |
-| 1.14.x  | 28.2.0  |    [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/1.0.6)    |    [![1.14 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight)    |
+| Release |  Forge  |                                    Status                                    |                                                                         Build                                                                          |
+|:-------:|:-------:|:----------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| Great Horn (1.19.3) | 44.1.22 | [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/GreatHorn/1.0.3) | [![1.19 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=GreatHorn&style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-19) |
+| Horn (1.19-1.19.2)  | 43.2.0  |   [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/horn/1.0.1)    | [![Horn Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-19?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-19) |
+| 1.17.x  | 37.1.0  |   [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/1.17/1.0.2)    | [![1.17 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-17?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-17) |
+| 1.15.x  | 31.2.48 |   [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/1.15/1.0.19)   | [![1.15 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-15?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-15) |
+| 1.14.x  | 28.2.0  |      [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/1.0.6)      |    [![1.14 Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight)    |
 
 * Legacy version still accepts pull requests.
 

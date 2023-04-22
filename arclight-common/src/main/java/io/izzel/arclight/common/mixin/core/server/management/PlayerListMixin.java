@@ -225,7 +225,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         Player player = ((ServerPlayerEntityBridge) entity).bridge$getBukkitEntity();
 
         String hostname = handler == null ? "" : ((NetworkManagerBridge) handler.connection).bridge$getHostname();
-        InetAddress realAddress = handler == null ? ((InetSocketAddress) socketAddress).getAddress() : ((InetSocketAddress) ((NetworkManagerBridge) handler.connection).bridge$getRawAddress()).getAddress();
+        InetAddress realAddress = handler == null ? ((InetSocketAddress) socketAddress).getAddress() : ((InetSocketAddress) handler.connection.channel.remoteAddress()).getAddress();
 
         PlayerLoginEvent event = new PlayerLoginEvent(player, hostname, ((InetSocketAddress) socketAddress).getAddress(), realAddress);
         if (this.getBans().isBanned(gameProfile) && !this.getBans().get(gameProfile).hasExpired()) {
@@ -257,7 +257,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         return entity;
     }
 
-    public ServerPlayer respawn(ServerPlayer playerIn, ServerLevel worldIn, boolean flag, Location location, boolean avoidSuffocation) {
+    public ServerPlayer respawn(ServerPlayer playerIn, ServerLevel worldIn, boolean flag, Location location, boolean avoidSuffocation, PlayerRespawnEvent.RespawnReason respawnReason) {
         playerIn.stopRiding();
         this.players.remove(playerIn);
         playerIn.getLevel().removePlayerImmediately(playerIn, Entity.RemovalReason.DISCARDED);
@@ -313,7 +313,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                 location = new Location(((WorldBridge) spawnWorld).bridge$getWorld(), pos.getX() + 0.5f, pos.getY() + 0.1f, pos.getZ() + 0.5f);
             }
             Player respawnPlayer = ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity();
-            PlayerRespawnEvent respawnEvent = new PlayerRespawnEvent(respawnPlayer, location, isBedSpawn && !flag3, flag3);
+            PlayerRespawnEvent respawnEvent = new PlayerRespawnEvent(respawnPlayer, location, isBedSpawn && !flag3, flag3, respawnReason);
             this.cserver.getPluginManager().callEvent(respawnEvent);
             if (((ServerPlayNetHandlerBridge) playerIn.connection).bridge$isDisconnected()) {
                 return playerIn;
@@ -372,6 +372,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
 
     private transient Location arclight$loc;
     private transient Boolean arclight$suffo;
+    private transient PlayerRespawnEvent.RespawnReason arclight$respawnReason;
 
     /**
      * @author IzzelAliz
@@ -383,6 +384,8 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         arclight$loc = null;
         boolean avoidSuffocation = arclight$suffo == null || arclight$suffo;
         arclight$suffo = null;
+        var respawnReason = arclight$respawnReason == null ? PlayerRespawnEvent.RespawnReason.DEATH : arclight$respawnReason;
+        arclight$respawnReason = null;
         playerIn.stopRiding();
         this.players.remove(playerIn);
         playerIn.getLevel().removePlayerImmediately(playerIn, Entity.RemovalReason.DISCARDED);
@@ -431,7 +434,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                 location = new Location(((WorldBridge) spawnWorld).bridge$getWorld(), pos.getX() + 0.5f, pos.getY() + 0.1f, pos.getZ() + 0.5f);
             }
             Player respawnPlayer = ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity();
-            PlayerRespawnEvent respawnEvent = new PlayerRespawnEvent(respawnPlayer, location, isBedSpawn && !flag3, flag3);
+            PlayerRespawnEvent respawnEvent = new PlayerRespawnEvent(respawnPlayer, location, isBedSpawn && !flag3, flag3, respawnReason);
             this.cserver.getPluginManager().callEvent(respawnEvent);
             if (((ServerPlayNetHandlerBridge) playerIn.connection).bridge$isDisconnected()) {
                 return playerIn;

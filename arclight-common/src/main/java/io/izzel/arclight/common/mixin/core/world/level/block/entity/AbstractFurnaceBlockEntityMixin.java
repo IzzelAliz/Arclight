@@ -7,6 +7,7 @@ import io.izzel.arclight.mixin.Eject;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -57,7 +58,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends LockableBlockEntit
     @Shadow protected abstract boolean isLit();
     @Shadow @Final private Object2IntOpenHashMap<ResourceLocation> recipesUsed;
     @Shadow public abstract List<Recipe<?>> getRecipesToAwardAndPopExperience(ServerLevel p_154996_, Vec3 p_154997_);
-    @Shadow protected abstract boolean canBurn(@org.jetbrains.annotations.Nullable Recipe<?> p_155006_, NonNullList<ItemStack> p_155007_, int p_155008_);
+    @Shadow protected abstract boolean canBurn(RegistryAccess p_266924_, @org.jetbrains.annotations.Nullable Recipe<?> p_155006_, NonNullList<ItemStack> p_155007_, int p_155008_);
     // @formatter:on
 
     public List<HumanEntity> transaction = new ArrayList<>();
@@ -97,10 +98,10 @@ public abstract class AbstractFurnaceBlockEntityMixin extends LockableBlockEntit
      * @reason
      */
     @Overwrite
-    private boolean burn(@Nullable Recipe<?> recipe, NonNullList<ItemStack> items, int i) {
-        if (recipe != null && this.canBurn(recipe, items, i)) {
+    private boolean burn(RegistryAccess registryAccess, @Nullable Recipe<?> recipe, NonNullList<ItemStack> items, int i) {
+        if (recipe != null && this.canBurn(registryAccess, recipe, items, i)) {
             ItemStack itemstack = items.get(0);
-            ItemStack itemstack1 = ((Recipe<WorldlyContainer>) recipe).assemble((AbstractFurnaceBlockEntity) (Object) this);
+            ItemStack itemstack1 = ((Recipe<WorldlyContainer>) recipe).assemble((AbstractFurnaceBlockEntity) (Object) this, registryAccess);
             ItemStack itemstack2 = items.get(2);
             CraftItemStack source = CraftItemStack.asCraftMirror(itemstack);
             org.bukkit.inventory.ItemStack result = CraftItemStack.asBukkitCopy(itemstack1);

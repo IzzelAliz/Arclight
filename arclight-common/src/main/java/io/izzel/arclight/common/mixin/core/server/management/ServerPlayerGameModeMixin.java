@@ -98,7 +98,7 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
             level.sendBlockUpdated(blockPos, level.getBlockState(blockPos), level.getBlockState(blockPos), 3);
             return;
         }
-        if (!this.player.canInteractWith(blockPos, 1)) {
+        if (!this.player.canReach(blockPos, 1.5)) { // Vanilla check is eye-to-center distance < 6, so padding is 6 - 4.5 = 1.5
             this.debugLogging(blockPos, false, j, "too far");
         } else if (blockPos.getY() >= i) {
             this.player.connection.send(new ClientboundBlockUpdatePacket(blockPos, this.level.getBlockState(blockPos)));
@@ -127,6 +127,13 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
                 this.destroyAndAck(blockPos, j, "creative destroy");
                 return;
             }
+            // Spigot start - handle debug stick left click for non-creative
+            if (this.player.getMainHandItem().is(net.minecraft.world.item.Items.DEBUG_STICK)
+                && ((net.minecraft.world.item.DebugStickItem) net.minecraft.world.item.Items.DEBUG_STICK).handleInteraction(this.player, this.level.getBlockState(blockPos), this.level, blockPos, false, this.player.getMainHandItem())) {
+                this.player.connection.send(new ClientboundBlockUpdatePacket(this.level, blockPos));
+                return;
+            }
+            // Spigot end
             if (this.player.blockActionRestricted(this.level, blockPos, this.gameModeForPlayer)) {
                 this.player.connection.send(new ClientboundBlockUpdatePacket(blockPos, this.level.getBlockState(blockPos)));
                 this.debugLogging(blockPos, false, j, "block action restricted");

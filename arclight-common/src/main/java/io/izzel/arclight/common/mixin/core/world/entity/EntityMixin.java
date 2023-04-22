@@ -25,10 +25,12 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
@@ -36,6 +38,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -99,6 +102,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @SuppressWarnings("ConstantConditions")
@@ -125,7 +129,6 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow protected abstract Vec3 collide(Vec3 vec);
     @Shadow public int tickCount;
     @Shadow private Entity vehicle;
-    @Shadow @Nullable public abstract Entity getControllingPassenger();
     @Shadow public abstract boolean isSwimming();
     @Shadow public abstract boolean isAlive();
     @Shadow public abstract void unRide();
@@ -219,6 +222,12 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow protected abstract SoundEvent getSwimSound();
     @Shadow protected abstract SoundEvent getSwimSplashSound();
     @Shadow protected abstract SoundEvent getSwimHighSpeedSplashSound();
+    @Shadow public abstract boolean isShiftKeyDown();
+    @Shadow public abstract DamageSources damageSources();
+    @Shadow @Nullable public abstract Entity getFirstPassenger();
+    @Shadow public abstract boolean teleportTo(ServerLevel p_265257_, double p_265407_, double p_265727_, double p_265410_, Set<RelativeMovement> p_265083_, float p_265573_, float p_265094_);
+    @Shadow public abstract boolean isSpectator();
+    @Shadow public abstract SoundSource getSoundSource();
     // @formatter:on
 
     private static final int CURRENT_LEVEL = 2;
@@ -495,17 +504,6 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         }
     }
 
-    public void burn(float amount) {
-        if (!this.fireImmune()) {
-            this.hurt(DamageSource.IN_FIRE, amount);
-        }
-    }
-
-    @Override
-    public void bridge$burn(float amount) {
-        burn(amount);
-    }
-
     @Inject(method = "absMoveTo(DDDFF)V", at = @At("RETURN"))
     private void arclight$loadChunk(double x, double y, double z, float yaw, float pitch, CallbackInfo ci) {
         if (this.valid)
@@ -703,7 +701,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             } else {
                 List<Entity> list = Lists.newArrayList(this.passengers);
 
-                if (!this.level.isClientSide && entity instanceof Player && !(this.getControllingPassenger() instanceof Player)) {
+                if (!this.level.isClientSide && entity instanceof Player && !(this.getFirstPassenger() instanceof Player)) {
                     list.add(0, entity);
                 } else {
                     list.add(entity);
@@ -712,6 +710,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                 this.passengers = ImmutableList.copyOf(list);
             }
 
+            this.gameEvent(GameEvent.ENTITY_MOUNT, entity);
         }
         return true; // CraftBukkit
     }
@@ -762,6 +761,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             }
 
             entity.boardingCooldown = 60;
+            this.gameEvent(GameEvent.ENTITY_DISMOUNT, entity);
         }
         return true; // CraftBukkit
     }
@@ -833,7 +833,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             return false;
         }
         CraftEventFactory.entityDamage = entity;
-        if (!this.hurt(DamageSource.LIGHTNING_BOLT, amount)) {
+        if (!this.hurt(this.damageSources().lightningBolt(), amount)) {
             CraftEventFactory.entityDamage = null;
             return false;
         }
@@ -855,6 +855,10 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     public Entity teleportTo(ServerLevel world, PositionImpl blockPos) {
         arclight$tpPos = blockPos;
         return changeDimension(world);
+    }
+
+    public boolean teleportTo(ServerLevel worldserver, double d0, double d1, double d2, Set<RelativeMovement> set, float f, float f1, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause cause) {
+        return this.teleportTo(worldserver, d0, d1, d2, set, f, f1);
     }
 
     @Override

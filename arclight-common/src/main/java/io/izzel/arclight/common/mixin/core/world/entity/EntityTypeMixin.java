@@ -54,8 +54,6 @@ public abstract class EntityTypeMixin<T extends Entity> implements EntityTypeBri
     public T spawn(ServerLevel p_262704_, @Nullable CompoundTag p_262603_, @Nullable Consumer<T> p_262621_, BlockPos p_262672_, MobSpawnType p_262644_, boolean p_262690_, boolean p_262590_, CreatureSpawnEvent.SpawnReason spawnReason) {
         T t = this.create(p_262704_, p_262603_, p_262621_, p_262672_, p_262644_, p_262690_, p_262590_);
         if (t != null) {
-            if (t instanceof net.minecraft.world.entity.Mob && net.minecraftforge.event.ForgeEventFactory.doSpecialSpawn((net.minecraft.world.entity.Mob) t, p_262704_, p_262672_.getX(), p_262672_.getY(), p_262672_.getZ(), null, p_262644_))
-                return null;
             ((IWorldWriterBridge) p_262704_).bridge$pushAddEntityReason(spawnReason);
             p_262704_.addFreshEntityWithPassengers(t);
             return t.isRemoved() ? null : t;

@@ -5,6 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.VineBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -35,6 +36,9 @@ public abstract class VineBlockMixin extends BlockMixin {
     @SuppressWarnings("ConstantConditions")
     @Overwrite
     public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random) {
+        if (!worldIn.getGameRules().getBoolean(GameRules.RULE_DO_VINES_SPREAD)) {
+            return;
+        }
         if (worldIn.random.nextInt(4) == 0 && worldIn.isAreaLoaded(pos, 4)) { // Forge: check area to prevent loading unloaded chunks
             Direction direction = Direction.getRandom(random);
             BlockPos blockpos = pos.above();

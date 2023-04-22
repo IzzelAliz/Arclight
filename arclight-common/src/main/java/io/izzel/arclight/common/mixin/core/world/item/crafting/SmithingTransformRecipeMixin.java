@@ -5,22 +5,23 @@ import io.izzel.arclight.common.mod.util.ArclightSpecialRecipe;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.LegacyUpgradeRecipe;
+import net.minecraft.world.item.crafting.SmithingTransformRecipe;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
-import org.bukkit.craftbukkit.v.inventory.CraftSmithingRecipe;
+import org.bukkit.craftbukkit.v.inventory.CraftSmithingTransformRecipe;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.inventory.Recipe;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(LegacyUpgradeRecipe.class)
-public class SmithingRecipeMixin implements IRecipeBridge {
+@Mixin(SmithingTransformRecipe.class)
+public class SmithingTransformRecipeMixin implements IRecipeBridge {
 
     // @formatter:off
     @Shadow @Final ItemStack result;
     @Shadow @Final private ResourceLocation id;
+    @Shadow @Final Ingredient template;
     @Shadow @Final Ingredient base;
     @Shadow @Final Ingredient addition;
     // @formatter:on
@@ -28,9 +29,10 @@ public class SmithingRecipeMixin implements IRecipeBridge {
     @Override
     public Recipe bridge$toBukkitRecipe() {
         if (this.result.isEmpty()) {
-            return new ArclightSpecialRecipe((LegacyUpgradeRecipe) (Object) this);
+            return new ArclightSpecialRecipe((SmithingTransformRecipe) (Object) this);
         }
         CraftItemStack result = CraftItemStack.asCraftMirror(this.result);
-        return new CraftSmithingRecipe(CraftNamespacedKey.fromMinecraft(this.id), result, CraftRecipe.toBukkit(this.base), CraftRecipe.toBukkit(this.addition));
+
+        return new CraftSmithingTransformRecipe(CraftNamespacedKey.fromMinecraft(this.id), result, CraftRecipe.toBukkit(this.template), CraftRecipe.toBukkit(this.base), CraftRecipe.toBukkit(this.addition));
     }
 }

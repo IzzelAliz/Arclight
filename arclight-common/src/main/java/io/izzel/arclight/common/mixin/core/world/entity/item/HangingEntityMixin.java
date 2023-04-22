@@ -1,12 +1,11 @@
 package io.izzel.arclight.common.mixin.core.world.entity.item;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.core.util.IndirectEntityDamageSourceBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.EntityMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.IndirectEntityDamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.decoration.HangingEntity;
@@ -49,12 +48,12 @@ public abstract class HangingEntityMixin extends EntityMixin {
 
     @Inject(method = "hurt", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/HangingEntity;kill()V"))
     private void arclight$hangingBreakByAttack(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        Entity damager = (source instanceof IndirectEntityDamageSource) ? ((IndirectEntityDamageSourceBridge) source).bridge$getProximateDamageSource() : source.getEntity();
+        Entity damager = (source.isIndirect()) ? source.getEntity() : source.getDirectEntity();
         HangingBreakEvent event;
         if (damager != null) {
-            event = new HangingBreakByEntityEvent((Hanging) this.getBukkitEntity(), ((EntityBridge) damager).bridge$getBukkitEntity(), source.isExplosion() ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.ENTITY);
+            event = new HangingBreakByEntityEvent((Hanging) this.getBukkitEntity(), ((EntityBridge) damager).bridge$getBukkitEntity(), source.is(DamageTypeTags.IS_EXPLOSION) ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.ENTITY);
         } else {
-            event = new HangingBreakEvent((Hanging) this.getBukkitEntity(), source.isExplosion() ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.DEFAULT);
+            event = new HangingBreakEvent((Hanging) this.getBukkitEntity(), source.is(DamageTypeTags.IS_EXPLOSION) ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.DEFAULT);
         }
         Bukkit.getPluginManager().callEvent(event);
         if (this.isRemoved() || event.isCancelled()) {

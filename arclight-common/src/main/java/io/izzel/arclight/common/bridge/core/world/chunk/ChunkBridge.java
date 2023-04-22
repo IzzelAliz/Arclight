@@ -9,8 +9,6 @@ public interface ChunkBridge {
 
     Chunk bridge$getBukkitChunk();
 
-    void bridge$setBukkitChunk(Chunk chunk);
-
     BlockState bridge$setType(BlockPos pos, BlockState state, boolean isMoving, boolean doPlace);
 
     boolean bridge$isMustNotSave();

@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
+import io.izzel.arclight.common.bridge.core.util.DamageSourcesBridge;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageSources;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,9 +19,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(SnowGolem.class)
 public abstract class SnowGolemMixin extends PathfinderMobMixin {
 
-    @Redirect(method = "aiStep", at = @At(value = "FIELD", target = "Lnet/minecraft/world/damagesource/DamageSource;ON_FIRE:Lnet/minecraft/world/damagesource/DamageSource;"))
-    private DamageSource arclight$useMelting() {
-        return CraftEventFactory.MELTING;
+    @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/damagesource/DamageSources;onFire()Lnet/minecraft/world/damagesource/DamageSource;"))
+    private DamageSource arclight$useMelting(DamageSources instance) {
+        return ((DamageSourcesBridge) instance).bridge$melting();
     }
 
     @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))

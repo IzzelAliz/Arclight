@@ -56,6 +56,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 @Mixin(ServerEntity.class)
 public abstract class ServerEntityMixin implements ServerEntityBridge {
@@ -79,6 +80,7 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
     @Shadow private int yHeadRotp;
     @Shadow protected abstract void broadcastAndSend(Packet<?> packet);
     @Shadow @Nullable private List<SynchedEntityData.DataValue<?>> trackedDataValues;
+    @Shadow protected abstract Stream<Entity> changedPassengers(List<Entity> p_275537_, List<Entity> p_275682_);
     // @formatter:on
 
     private Set<ServerPlayerConnection> trackedPlayers;
@@ -116,6 +118,13 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
         if (!list.equals(this.lastPassengers)) {
             this.lastPassengers = list;
             this.broadcastAndSend(new ClientboundSetPassengersPacket(this.entity));
+            this.changedPassengers(list, this.lastPassengers).forEach((p_275907_) -> {
+                if (p_275907_ instanceof ServerPlayer serverplayer1) {
+                    if (!list.contains(serverplayer1)) {
+                        serverplayer1.connection.teleport(serverplayer1.getX(), serverplayer1.getY(), serverplayer1.getZ(), serverplayer1.getYRot(), serverplayer1.getXRot());
+                    }
+                }
+            });
         }
         int elapsedTicks = ArclightConstants.currentTick - this.lastTick;
         if (elapsedTicks < 0) {
@@ -161,6 +170,8 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
                 Packet<?> ipacket1 = null;
                 boolean flag4 = flag3 || this.tickCount / 60 != this.lastPosUpdate;
                 boolean flag = Math.abs(l - this.yRotp) >= 1 || Math.abs(k1 - this.xRotp) >= 1;
+                boolean pos = false;
+                boolean rot = false;
                 if (this.tickCount > 0 || this.entity instanceof AbstractArrow) {
                     long i = this.positionCodec.encodeX(vector3d);
                     long j = this.positionCodec.encodeY(vector3d);
@@ -170,16 +181,20 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
                         if ((!flag4 || !flag) && !(this.entity instanceof AbstractArrow)) {
                             if (flag4) {
                                 ipacket1 = new ClientboundMoveEntityPacket.Pos(this.entity.getId(), (short) ((int) i), (short) ((int) j), (short) ((int) k), this.entity.isOnGround());
+                                pos = true;
                             } else if (flag) {
                                 ipacket1 = new ClientboundMoveEntityPacket.Rot(this.entity.getId(), (byte) l, (byte) k1, this.entity.isOnGround());
+                                rot = true;
                             }
                         } else {
                             ipacket1 = new ClientboundMoveEntityPacket.PosRot(this.entity.getId(), (short) ((int) i), (short) ((int) j), (short) ((int) k), (byte) l, (byte) k1, this.entity.isOnGround());
+                            pos = rot = true;
                         }
                     } else {
                         this.wasOnGround = this.entity.isOnGround();
                         this.teleportDelay = 0;
                         ipacket1 = new ClientboundTeleportEntityPacket(this.entity);
+                        pos = rot = true;
                     }
                 }
                 if ((this.trackDelta || this.entity.hasImpulse || this.entity instanceof LivingEntity && ((LivingEntity) this.entity).isFallFlying()) && this.tickCount > 0) {
@@ -194,10 +209,10 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
                     this.broadcast.accept(ipacket1);
                 }
                 this.sendDirtyEntityData();
-                if (flag4) {
+                if (pos) {
                     this.positionCodec.setBase(vector3d);
                 }
-                if (flag) {
+                if (rot) {
                     this.yRotp = l;
                     this.xRotp = k1;
                 }

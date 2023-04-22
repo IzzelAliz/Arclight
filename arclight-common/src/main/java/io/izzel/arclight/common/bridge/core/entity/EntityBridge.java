@@ -41,8 +41,6 @@ public interface EntityBridge extends ICommandSourceBridge {
 
     void bridge$postTick();
 
-    void bridge$burn(float amount);
-
     boolean bridge$removePassenger(Entity passenger);
 
     boolean bridge$addPassenger(Entity entity);

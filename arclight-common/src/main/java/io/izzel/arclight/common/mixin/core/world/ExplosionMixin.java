@@ -99,7 +99,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
         if (this.radius < 0.1F) {
             return;
         }
-        this.level.gameEvent(this.source, GameEvent.EXPLODE, new BlockPos(this.x, this.y, this.z));
+        this.level.gameEvent(this.source, GameEvent.EXPLODE, new Vec3(this.x, this.y, this.z));
         Set<BlockPos> set = Sets.newHashSet();
         int i = 16;
 
@@ -120,7 +120,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                         double d8 = this.z;
 
                         for (float f1 = 0.3F; f > 0.0F; f -= 0.22500001F) {
-                            BlockPos blockpos = new BlockPos(d4, d6, d8);
+                            BlockPos blockpos = BlockPos.containing(d4, d6, d8);
                             BlockState blockstate = this.level.getBlockState(blockpos);
                             FluidState fluidstate = this.level.getFluidState(blockpos);
 
@@ -205,15 +205,22 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                             continue;
                         }
 
-                        double d11 = d10;
+                        double d11;
                         if (entity instanceof LivingEntity) {
                             d11 = ProtectionEnchantment.getExplosionKnockbackAfterDampener((LivingEntity) entity, d10);
+                        } else {
+                            d11 = d10;
                         }
 
-                        entity.setDeltaMovement(entity.getDeltaMovement().add(d5 * d11, d7 * d11, d9 * d11));
+                        d5 *= d11;
+                        d7 *= d11;
+                        d9 *= d11;
+                        Vec3 vec3d1 = new Vec3(d5, d7, d9);
+
+                        entity.setDeltaMovement(entity.getDeltaMovement().add(vec3d1));
                         if (entity instanceof Player playerentity) {
                             if (!playerentity.isSpectator() && (!playerentity.isCreative() || !playerentity.getAbilities().flying)) {
-                                this.hitPlayers.put(playerentity, new Vec3(d5 * d10, d7 * d10, d9 * d10));
+                                this.hitPlayers.put(playerentity, vec3d1);
                             }
                         }
                     }

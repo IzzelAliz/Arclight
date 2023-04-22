@@ -67,7 +67,6 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
     @Shadow protected abstract void setItemSlotAndDropWhenKilled(EquipmentSlot p_233657_1_, ItemStack p_233657_2_);
     @Shadow @Nullable public abstract <T extends Mob> T convertTo(EntityType<T> p_233656_1_, boolean p_233656_2_);
     @Shadow @Nullable protected abstract SoundEvent getAmbientSound();
-    @Shadow protected abstract EquipmentSlot getEquipmentSlotForItemStack(ItemStack p_256113_);
     // @formatter:on
 
     public boolean aware;
@@ -223,9 +222,16 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
     public ItemStack equipItemIfPossible(ItemStack stack) {
         ItemEntity itemEntity = arclight$item;
         arclight$item = null;
-        EquipmentSlot equipmentslottype = this.getEquipmentSlotForItemStack(stack);
+        EquipmentSlot equipmentslottype = getEquipmentSlotForItem(stack);
         ItemStack itemstack = this.getItemBySlot(equipmentslottype);
         boolean flag = this.canReplaceCurrentItem(stack, itemstack);
+
+        if (equipmentslottype.isArmor() && !flag) {
+            equipmentslottype = EquipmentSlot.MAINHAND;
+            itemstack = this.getItemBySlot(equipmentslottype);
+            flag = this.canReplaceCurrentItem(stack, itemstack);
+        }
+
         boolean canPickup = flag && this.canHoldItem(stack);
         if (itemEntity != null) {
             canPickup = !CraftEventFactory.callEntityPickupItemEvent((Mob) (Object) this, itemEntity, 0, !canPickup).isCancelled();

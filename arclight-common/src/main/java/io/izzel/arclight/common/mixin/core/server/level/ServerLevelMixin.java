@@ -115,7 +115,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     // @formatter:on
 
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
-    public PrimaryLevelData N; // TODO f_8549_ check on update
+    public PrimaryLevelData J; // TODO f_8549_ check on update
     public LevelStorageSource.LevelStorageAccess convertable;
     public UUID uuid;
     public ResourceKey<LevelStem> typeKey;
@@ -159,10 +159,10 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
             }
         }
         if (worldInfo instanceof PrimaryLevelData) {
-            this.N = (PrimaryLevelData) worldInfo;
+            this.J = (PrimaryLevelData) worldInfo;
         } else if (worldInfo instanceof DerivedLevelData) {
             // damn spigot again
-            this.N = DelegateWorldInfo.wrap(((DerivedLevelData) worldInfo));
+            this.J = DelegateWorldInfo.wrap(((DerivedLevelData) worldInfo));
             ((DerivedWorldInfoBridge) worldInfo).bridge$setDimType(this.getTypeKey());
             if (ArclightConfig.spec().getCompat().isSymlinkWorld()) {
                 WorldSymlink.create((DerivedLevelData) worldInfo, levelSave.getDimensionPath(this.dimension()).toFile());
@@ -171,7 +171,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         this.spigotConfig = new SpigotWorldConfig(worldInfo.getLevelName());
         this.uuid = WorldUUID.getUUID(levelSave.getDimensionPath(this.dimension()).toFile());
         ((ServerChunkProviderBridge) this.chunkSource).bridge$setViewDistance(spigotConfig.viewDistance);
-        ((WorldInfoBridge) this.N).bridge$setWorld((ServerLevel) (Object) this);
+        ((WorldInfoBridge) this.J).bridge$setWorld((ServerLevel) (Object) this);
         var data = this.getDataStorage().computeIfAbsent(LevelPersistentData::new, () -> new LevelPersistentData(null), "bukkit_pdc");
         this.bridge$getWorld().readBukkitValues(data.getTag());
     }

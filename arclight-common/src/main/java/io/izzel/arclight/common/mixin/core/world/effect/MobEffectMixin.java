@@ -2,9 +2,11 @@ package io.izzel.arclight.common.mixin.core.world.effect;
 
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.util.DamageSourcesBridge;
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -37,9 +39,9 @@ public class MobEffectMixin {
         ((LivingEntityBridge) livingEntity).bridge$pushHealReason(EntityRegainHealthEvent.RegainReason.MAGIC);
     }
 
-    @Redirect(method = "applyEffectTick", at = @At(value = "FIELD", ordinal = 0, target = "Lnet/minecraft/world/damagesource/DamageSource;MAGIC:Lnet/minecraft/world/damagesource/DamageSource;"))
-    private DamageSource arclight$redirectPoison() {
-        return CraftEventFactory.POISON;
+    @Redirect(method = "applyEffectTick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/damagesource/DamageSources;magic()Lnet/minecraft/world/damagesource/DamageSource;"))
+    private DamageSource arclight$redirectPoison(DamageSources instance) {
+        return ((DamageSourcesBridge) instance).bridge$poison();
     }
 
     @Redirect(method = "applyEffectTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/food/FoodData;eat(IF)V"))

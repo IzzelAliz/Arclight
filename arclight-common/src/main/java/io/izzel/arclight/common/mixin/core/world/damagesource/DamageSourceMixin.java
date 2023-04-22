@@ -16,6 +16,8 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
     // @formatter:on
 
     private boolean sweep;
+    private boolean melting;
+    private boolean poison;
 
     public boolean isSweep() {
         return sweep;
@@ -34,5 +36,33 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
     @Override
     public DamageSource bridge$sweep() {
         return sweep();
+    }
+
+    public boolean isMelting() {
+        return melting;
+    }
+
+    public DamageSource melting() {
+        this.melting = true;
+        return (DamageSource) (Object) this;
+    }
+
+    @Override
+    public DamageSource bridge$melting() {
+        return melting();
+    }
+
+    public boolean isPoison() {
+        return poison;
+    }
+
+    public DamageSource poison() {
+        this.poison = true;
+        return (DamageSource) (Object) this;
+    }
+
+    @Override
+    public DamageSource bridge$poison() {
+        return poison();
     }
 }

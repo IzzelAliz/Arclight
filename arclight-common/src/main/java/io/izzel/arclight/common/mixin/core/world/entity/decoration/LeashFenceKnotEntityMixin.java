@@ -8,6 +8,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.decoration.LeashFenceKnotEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.AABB;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -41,6 +42,7 @@ public abstract class LeashFenceKnotEntityMixin extends HangingEntityMixin {
                 }
             }
         }
+        boolean flag1 = false;
         if (!flag) {
             boolean die = true;
             for (final Mob entityinsentient : list) {
@@ -49,12 +51,16 @@ public abstract class LeashFenceKnotEntityMixin extends HangingEntityMixin {
                         die = false;
                     } else {
                         entityinsentient.dropLeash(true, !entityhuman.getAbilities().instabuild);
+                        flag1 = true;
                     }
                 }
             }
             if (die) {
                 this.discard();
             }
+        }
+        if (flag || flag1) {
+            this.gameEvent(GameEvent.BLOCK_ATTACH, entityhuman);
         }
         return InteractionResult.CONSUME;
     }

@@ -53,9 +53,9 @@ public abstract class VibrationListenerMixin {
                 Vec3 vec3d1 = optional.get();
 
                 // CraftBukkit start
-                boolean defaultCancel = !this.config.shouldListen(worldserver, (VibrationListener) (Object) this, new BlockPos(vec3d), gameevent, gameevent_a);
+                boolean defaultCancel = !this.config.shouldListen(worldserver, (VibrationListener) (Object) this, BlockPos.containing(vec3d), gameevent, gameevent_a);
                 Entity entity = gameevent_a.sourceEntity();
-                BlockReceiveGameEvent event = new BlockReceiveGameEvent(org.bukkit.GameEvent.getByKey(CraftNamespacedKey.fromMinecraft(BuiltInRegistries.GAME_EVENT.getKey(gameevent))), CraftBlock.at(worldserver, new BlockPos(vec3d1)), (entity == null) ? null : ((EntityBridge) entity).bridge$getBukkitEntity());
+                BlockReceiveGameEvent event = new BlockReceiveGameEvent(org.bukkit.GameEvent.getByKey(CraftNamespacedKey.fromMinecraft(BuiltInRegistries.GAME_EVENT.getKey(gameevent))), CraftBlock.at(worldserver, BlockPos.containing(vec3d1)), (entity == null) ? null : ((EntityBridge) entity).bridge$getBukkitEntity());
                 event.setCancelled(defaultCancel);
                 Bukkit.getPluginManager().callEvent(event);
                 if (event.isCancelled()) {

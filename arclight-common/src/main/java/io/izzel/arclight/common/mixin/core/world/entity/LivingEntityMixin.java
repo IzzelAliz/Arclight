@@ -22,12 +22,13 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.stats.Stats;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.CombatTracker;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.EntityDamageSource;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -37,6 +38,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.WalkAnimationState;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeMap;
@@ -44,6 +46,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.Equipable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameRules;
@@ -122,11 +125,9 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public abstract boolean isDamageSourceBlocked(DamageSource damageSourceIn);
     @Shadow protected abstract void hurtCurrentlyUsedShield(float damage);
     @Shadow protected abstract void blockUsingShield(LivingEntity entityIn);
-    @Shadow public float animationSpeed;
     @Shadow public float lastHurt;
     @Shadow public int hurtDuration;
     @Shadow public int hurtTime;
-    @Shadow public float hurtDir;
     @Shadow public abstract void setLastHurtByMob(@Nullable LivingEntity livingBase);
     @Shadow @Nullable protected abstract SoundEvent getDeathSound();
     @Shadow protected abstract float getSoundVolume();
@@ -181,7 +182,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public abstract boolean hasLineOfSight(Entity p_147185_);
     @Shadow protected abstract void hurtHelmet(DamageSource p_147213_, float p_147214_);
     @Shadow public abstract void stopUsingItem();
-    @Shadow protected abstract void playEquipSound(ItemStack p_217042_);
     @Shadow protected abstract boolean doesEmitEquipEvent(EquipmentSlot p_217035_);
     @Shadow protected abstract void verifyEquippedItem(ItemStack p_181123_);
     @Shadow public abstract boolean wasExperienceConsumed();
@@ -191,6 +191,10 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow protected abstract SoundEvent getDrinkingSound(ItemStack p_21174_);
     @Shadow public abstract SoundEvent getEatingSound(ItemStack p_21202_);
     @Shadow public abstract InteractionHand getUsedItemHand();
+    @Shadow @Final public WalkAnimationState walkAnimation;
+    @Shadow public int invulnerableDuration;
+    @Shadow public abstract void indicateDamage(double p_270514_, double p_270826_);
+    @Shadow public static EquipmentSlot getEquipmentSlotForItem(ItemStack p_147234_) { return null; }
     // @formatter:on
 
     public int expToDrop;
@@ -514,7 +518,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             return false;
         } else if (this.dead || this.isRemoved() || this.getHealth() <= 0.0F) {
             return false;
-        } else if (source.isFire() && this.hasEffect(MobEffects.FIRE_RESISTANCE)) {
+        } else if (source.is(DamageTypeTags.IS_FIRE) && this.hasEffect(MobEffects.FIRE_RESISTANCE)) {
             return false;
         } else {
             if (this.isSleeping() && !this.level.isClientSide) {
@@ -531,7 +535,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 this.hurtCurrentlyUsedShield(amount);
                 f1 = amount;
                 amount = 0.0F;
-                if (!source.isProjectile()) {
+                if (!source.is(DamageTypeTags.IS_PROJECTILE)) {
                     Entity entity = source.getDirectEntity();
                     if (entity instanceof LivingEntity) {
                         this.blockUsingShield((LivingEntity) entity);
@@ -541,9 +545,13 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 flag = true;
             }
 
-            this.animationSpeed = 1.5F;
+            if (source.is(DamageTypeTags.IS_FREEZING) && this.getType().is(EntityTypeTags.FREEZE_HURTS_EXTRA_TYPES)) {
+                f *= 5.0F;
+            }
+
+            this.walkAnimation.setSpeed(1.5F);
             boolean flag1 = true;
-            if ((float) this.invulnerableTime > 10.0F) {
+            if ((float) this.invulnerableTime > (float) this.invulnerableDuration / 2.0F && !source.is(DamageTypeTags.BYPASSES_COOLDOWN)) {
                 if (amount <= this.lastHurt) {
                     return false;
                 }
@@ -570,10 +578,9 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 }
             }
 
-            this.hurtDir = 0.0F;
             Entity entity1 = source.getEntity();
             if (entity1 != null) {
-                if (entity1 instanceof LivingEntity) {
+                if (entity1 instanceof LivingEntity && !source.is(DamageTypeTags.NO_ANGER)) {
                     this.setLastHurtByMob((LivingEntity) entity1);
                 }
 
@@ -584,7 +591,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                     if (wolfentity.isTame()) {
                         this.lastHurtByPlayerTime = 100;
                         LivingEntity livingentity = wolfentity.getOwner();
-                        if (livingentity != null && livingentity.getType() == EntityType.PLAYER) {
+                        if (livingentity instanceof net.minecraft.world.entity.player.Player) {
                             this.lastHurtByPlayer = (net.minecraft.world.entity.player.Player) livingentity;
                         } else {
                             this.lastHurtByPlayer = null;
@@ -596,28 +603,15 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             if (flag1) {
                 if (flag) {
                     this.level.broadcastEntityEvent((LivingEntity) (Object) this, (byte) 29);
-                } else if (source instanceof EntityDamageSource && ((EntityDamageSource) source).isThorns()) {
-                    this.level.broadcastEntityEvent((LivingEntity) (Object) this, (byte) 33);
                 } else {
-                    byte b0;
-                    if (source == DamageSource.DROWN) {
-                        b0 = 36;
-                    } else if (source.isFire()) {
-                        b0 = 37;
-                    } else if (source == DamageSource.SWEET_BERRY_BUSH) {
-                        b0 = 44;
-                    } else {
-                        b0 = 2;
-                    }
-
-                    this.level.broadcastEntityEvent((LivingEntity) (Object) this, b0);
+                    this.level.broadcastDamageEvent((LivingEntity) (Object) this, source);
                 }
 
-                if (source != DamageSource.DROWN && (!flag || amount > 0.0F)) {
+                if (!source.is(DamageTypeTags.NO_IMPACT) && (!flag || amount > 0.0F)) {
                     this.markHurt();
                 }
 
-                if (entity1 != null && !source.isExplosion()) {
+                if (entity1 != null && !source.is(DamageTypeTags.IS_EXPLOSION)) {
                     double d1 = entity1.getX() - this.getX();
 
                     double d0;
@@ -625,10 +619,10 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                         d1 = (Math.random() - Math.random()) * 0.01D;
                     }
 
-                    this.hurtDir = (float) (Mth.atan2(d0, d1) * (double) (180F / (float) Math.PI) - (double) this.getYRot());
                     this.knockback(0.4F, d1, d0);
-                } else {
-                    this.hurtDir = (float) ((int) (Math.random() * 2.0D) * 180);
+                    if (!flag) {
+                        this.indicateDamage(d1, d0);
+                    }
                 }
             }
 
@@ -681,7 +675,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
 
             float originalDamage = f;
             Function<Double, Double> hardHat = f12 -> {
-                if (damagesource.isDamageHelmet() && !this.getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {
+                if (damagesource.is(DamageTypeTags.DAMAGES_HELMET) && !this.getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {
                     return -(f12 - (f12 * 0.75F));
                 }
                 return -0.0;
@@ -711,7 +705,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             f += armorModifier;
 
             Function<Double, Double> resistance = f15 -> {
-                if (!damagesource.isBypassMagic() && this.hasEffect(MobEffects.DAMAGE_RESISTANCE) && damagesource != DamageSource.OUT_OF_WORLD) {
+                if (!damagesource.is(DamageTypeTags.BYPASSES_EFFECTS) && this.hasEffect(MobEffects.DAMAGE_RESISTANCE) && !damagesource.is(DamageTypeTags.BYPASSES_RESISTANCE)) {
                     int i = (this.getEffect(MobEffects.DAMAGE_RESISTANCE).getAmplifier() + 1) * 5;
                     int j = 25 - i;
                     float f1 = f15.floatValue() * (float) j;
@@ -753,12 +747,12 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             }
 
             // Apply damage to helmet
-            if (damagesource.isDamageHelmet() && !this.getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {
+            if (damagesource.is(DamageTypeTags.DAMAGES_HELMET) && !this.getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {
                 this.hurtHelmet(damagesource, f);
             }
 
             // Apply damage to armor
-            if (!damagesource.isBypassArmor()) {
+            if (!damagesource.is(DamageTypeTags.BYPASSES_ARMOR)) {
                 float armorDamage = (float) (event.getDamage() + event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) + event.getDamage(EntityDamageEvent.DamageModifier.HARD_HAT));
                 this.hurtArmor(damagesource, armorDamage);
             }
@@ -904,7 +898,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
      */
     @Overwrite
     private boolean checkTotemDeathProtection(DamageSource damageSourceIn) {
-        if (damageSourceIn.isBypassInvul()) {
+        if (damageSourceIn.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
             return false;
         } else {
             net.minecraft.world.item.ItemStack itemstack = null;
@@ -1131,15 +1125,17 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     }
 
     protected void equipEventAndSound(EquipmentSlot slot, ItemStack oldItem, ItemStack newItem, boolean silent) {
-        boolean flag = oldItem.isEmpty() && newItem.isEmpty();
+        boolean flag = newItem.isEmpty() && oldItem.isEmpty();
+        if (!flag && !ItemStack.isSameItemSameTags(oldItem, newItem) && !this.firstTick) {
+            Equipable equipable = Equipable.get(newItem);
+            if (equipable != null && !this.isSpectator() && equipable.getEquipmentSlot() == slot) {
+                if (!this.level.isClientSide() && !this.isSilent() && !silent) {
+                    this.level.playSound(null, this.getX(), this.getY(), this.getZ(), equipable.getEquipSound(), this.getSoundSource(), 1.0F, 1.0F);
+                }
 
-        if (!flag && !ItemStack.isSame(oldItem, newItem) && !this.firstTick) {
-            if (slot.getType() == EquipmentSlot.Type.ARMOR && !silent) {
-                this.playEquipSound(newItem);
-            }
-
-            if (this.doesEmitEquipEvent(slot)) {
-                this.gameEvent(GameEvent.EQUIP);
+                if (this.doesEmitEquipEvent(slot)) {
+                    this.gameEvent(GameEvent.EQUIP);
+                }
             }
 
         }

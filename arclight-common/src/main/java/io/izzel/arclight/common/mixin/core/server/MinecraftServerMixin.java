@@ -14,7 +14,6 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
-import net.minecraft.SharedConstants;
 import net.minecraft.SystemReport;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
@@ -23,7 +22,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.LayeredRegistryAccess;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.status.ServerStatus;
 import net.minecraft.obfuscate.DontObfuscate;
 import net.minecraft.resources.ResourceKey;
@@ -89,6 +87,7 @@ import java.lang.management.ManagementFactory;
 import java.net.Proxy;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.function.BooleanSupplier;
 
@@ -99,9 +98,8 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Shadow private int tickCount;
     @Shadow protected abstract boolean initServer() throws IOException;
     @Shadow protected long nextTickTime;
-    @Shadow @Final private ServerStatus status;
+    @Shadow private ServerStatus status;
     @Shadow @Nullable private String motd;
-    @Shadow protected abstract void updateStatusIcon(ServerStatus response);
     @Shadow private volatile boolean running;
     @Shadow private long lastOverloadWarning;
     @Shadow @Final static Logger LOGGER;
@@ -147,6 +145,9 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Shadow private boolean debugCommandProfilerDelayStart;
     @Shadow @Nullable private MinecraftServer.TimeProfiler debugCommandProfiler;
     @Shadow public abstract LayeredRegistryAccess<RegistryLayer> registries();
+    @Shadow protected abstract ServerStatus buildServerStatus();
+    @Shadow @Nullable private ServerStatus.Favicon statusIcon;
+    @Shadow protected abstract Optional<ServerStatus.Favicon> loadStatusIcon();
     // @formatter:on
 
     public MinecraftServerMixin(String name) {
@@ -207,10 +208,8 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
             }
             ServerLifecycleHooks.handleServerStarted((MinecraftServer) (Object) this);
             this.nextTickTime = Util.getMillis();
-            this.status.setDescription(Component.literal(this.motd));
-            this.status.setVersion(new ServerStatus.Version(SharedConstants.getCurrentVersion().getName(), SharedConstants.getCurrentVersion().getProtocolVersion()));
-            this.status.setEnforcesSecureChat(this.enforceSecureProfile());
-            this.updateStatusIcon(this.status);
+            this.statusIcon = this.loadStatusIcon().orElse(null);
+            this.status = this.buildServerStatus();
 
             Arrays.fill(recentTps, 20);
             long curTime, tickSection = Util.getMillis(), tickCount = 1;

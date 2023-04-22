@@ -39,7 +39,7 @@ public abstract class ItemEntityMixin extends EntityMixin {
     @Shadow @Final private static EntityDataAccessor<ItemStack> DATA_ITEM;
     @Shadow public int pickupDelay;
     @Shadow public abstract ItemStack getItem();
-    @Shadow private UUID owner;
+    @Shadow public UUID target;
     // @formatter:on
 
     @Inject(method = "merge(Lnet/minecraft/world/entity/item/ItemEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/item/ItemEntity;Lnet/minecraft/world/item/ItemStack;)V", cancellable = true, at = @At("HEAD"))
@@ -54,11 +54,6 @@ public abstract class ItemEntityMixin extends EntityMixin {
         if (CraftEventFactory.handleNonLivingEntityDamageEvent((ItemEntity) (Object) this, source, amount)) {
             cir.setReturnValue(false);
         }
-    }
-
-    @Override
-    public void burn(float amount) {
-        this.hurt(DamageSource.IN_FIRE, amount);
     }
 
     /**
@@ -104,7 +99,7 @@ public abstract class ItemEntityMixin extends EntityMixin {
                 this.pickupDelay = -1;
             }
             ItemStack copy = itemstack.copy();
-            if (this.pickupDelay == 0 && (this.owner == null /*|| 6000 - this.age <= 200*/ || this.owner.equals(entity.getUUID())) && (hook == 1 || entity.getInventory().add(itemstack))) {
+            if (this.pickupDelay == 0 && (this.target == null /*|| 6000 - this.age <= 200*/ || this.target.equals(entity.getUUID())) && (hook == 1 || entity.getInventory().add(itemstack))) {
                 copy.setCount(copy.getCount() - itemstack.getCount());
                 ForgeEventFactory.firePlayerItemPickupEvent(entity, (ItemEntity) (Object) this, copy);
                 entity.take((ItemEntity) (Object) this, i);

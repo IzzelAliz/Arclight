@@ -12,7 +12,6 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.world.CompoundContainer;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.vehicle.MinecartHopper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.Hopper;
@@ -105,8 +104,6 @@ public abstract class HopperBlockEntityMixin extends LockableBlockEntityMixin {
             inv.setItem(index, origin);
             if (destination instanceof HopperBlockEntity) {
                 ((HopperBlockEntity) destination).setCooldown(8); // Delay hopper checks
-            } else if (destination instanceof MinecartHopper) {
-                ((MinecartHopper) destination).setCooldown(4); // Delay hopper minecart checks
             }
             cir.setReturnValue(false);
             return null;
@@ -141,7 +138,7 @@ public abstract class HopperBlockEntityMixin extends LockableBlockEntityMixin {
     @Inject(method = "getSourceContainer", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At("RETURN"))
     private static void arclight$searchFrom(Level level, Hopper hopper, CallbackInfoReturnable<Container> cir) {
         var container = cir.getReturnValue();
-        var blockPos = new BlockPos(hopper.getLevelX(), hopper.getLevelY(), hopper.getLevelZ());
+        var blockPos = BlockPos.containing(hopper.getLevelX(), hopper.getLevelY(), hopper.getLevelZ());
         var hopperBlock = CraftBlock.at(level, blockPos);
         var containerBlock = CraftBlock.at(level, blockPos.above());
         cir.setReturnValue(runHopperInventorySearchEvent(container, hopperBlock, containerBlock, HopperInventorySearchEvent.ContainerType.SOURCE));
