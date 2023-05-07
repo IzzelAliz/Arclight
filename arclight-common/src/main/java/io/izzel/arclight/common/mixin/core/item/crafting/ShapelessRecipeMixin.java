@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.item.crafting;
 
 import io.izzel.arclight.common.bridge.item.crafting.IRecipeBridge;
+import io.izzel.arclight.common.mod.util.ArclightSpecialRecipe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.item.crafting.ShapelessRecipe;
@@ -20,12 +21,15 @@ public class ShapelessRecipeMixin implements IRecipeBridge {
     @Shadow @Final private ItemStack recipeOutput;
     @Shadow @Final private String group;
     @Shadow @Final private NonNullList<Ingredient> recipeItems;
-    // @formatter:off
+    // @formatter:on
 
     @Override
     public Recipe bridge$toBukkitRecipe() {
+        if (this.recipeOutput.isEmpty()) {
+            return new ArclightSpecialRecipe((ShapelessRecipe) (Object) this);
+        }
         CraftItemStack result = CraftItemStack.asCraftMirror(this.recipeOutput);
-        CraftShapelessRecipe recipe = new CraftShapelessRecipe(result, (ShapelessRecipe)(Object) this);
+        CraftShapelessRecipe recipe = new CraftShapelessRecipe(result, (ShapelessRecipe) (Object) this);
         recipe.setGroup(this.group);
         for (Ingredient list : this.recipeItems) {
             recipe.addIngredient(CraftRecipe.toBukkit(list));

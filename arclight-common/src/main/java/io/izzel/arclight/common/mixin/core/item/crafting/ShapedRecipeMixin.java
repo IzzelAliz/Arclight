@@ -29,7 +29,7 @@ public abstract class ShapedRecipeMixin implements IRecipeBridge {
 
     @Override
     public Recipe bridge$toBukkitRecipe() {
-        if (this.getWidth() < 0 || this.getWidth() > 3 || this.getHeight() < 0 || this.getHeight() > 3) {
+        if (this.getWidth() < 0 || this.getWidth() > 3 || this.getHeight() < 0 || this.getHeight() > 3 || this.recipeOutput.isEmpty()) {
             return new ArclightSpecialRecipe((IRecipe<?>) this);
         }
         CraftItemStack result = CraftItemStack.asCraftMirror(this.recipeOutput);

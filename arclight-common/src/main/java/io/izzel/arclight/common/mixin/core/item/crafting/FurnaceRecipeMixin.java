@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.item.crafting;
 
 import io.izzel.arclight.common.bridge.item.crafting.IRecipeBridge;
+import io.izzel.arclight.common.mod.util.ArclightSpecialRecipe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.AbstractCookingRecipe;
 import net.minecraft.item.crafting.FurnaceRecipe;
@@ -23,6 +24,9 @@ public abstract class FurnaceRecipeMixin extends AbstractCookingRecipe implement
 
     @Override
     public Recipe bridge$toBukkitRecipe() {
+        if (this.result.isEmpty()) {
+            return new ArclightSpecialRecipe((FurnaceRecipe) (Object) this);
+        }
         CraftItemStack result = CraftItemStack.asCraftMirror(this.result);
 
         CraftFurnaceRecipe recipe = new CraftFurnaceRecipe(CraftNamespacedKey.fromMinecraft(this.id), result, CraftRecipe.toBukkit(this.ingredient), this.experience, this.cookTime);

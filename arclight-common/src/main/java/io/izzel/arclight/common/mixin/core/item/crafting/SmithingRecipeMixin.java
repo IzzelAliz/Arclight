@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.item.crafting;
 
 import io.izzel.arclight.common.bridge.item.crafting.IRecipeBridge;
+import io.izzel.arclight.common.mod.util.ArclightSpecialRecipe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.item.crafting.SmithingRecipe;
@@ -26,6 +27,9 @@ public class SmithingRecipeMixin implements IRecipeBridge {
 
     @Override
     public Recipe bridge$toBukkitRecipe() {
+        if (this.result.isEmpty()) {
+            return new ArclightSpecialRecipe((SmithingRecipe) (Object) this);
+        }
         CraftItemStack result = CraftItemStack.asCraftMirror(this.result);
         return new CraftSmithingRecipe(CraftNamespacedKey.fromMinecraft(this.recipeId), result, CraftRecipe.toBukkit(this.base), CraftRecipe.toBukkit(this.addition));
     }
