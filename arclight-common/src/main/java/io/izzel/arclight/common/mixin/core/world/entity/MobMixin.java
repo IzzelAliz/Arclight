@@ -137,7 +137,7 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
             }
         }
         var changeTargetEvent = ForgeHooks.onLivingChangeTarget((Mob) (Object) this, livingEntity, LivingChangeTargetEvent.LivingTargetType.MOB_TARGET);
-        if (changeTargetEvent.isCanceled()) {
+        if (!changeTargetEvent.isCanceled()) {
             this.target = changeTargetEvent.getNewTarget();
             // noinspection removal
             ForgeHooks.onLivingSetAttackTarget((Mob) (Object) this, this.target);
