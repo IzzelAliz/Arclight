@@ -35,7 +35,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 public abstract class BucketItemMixin {
 
     // @formatter:off
-    @Shadow public abstract boolean emptyContents(@javax.annotation.Nullable Player player, Level worldIn, BlockPos posIn, @javax.annotation.Nullable BlockHitResult rayTrace);
+    @Shadow(remap = false) public abstract boolean emptyContents(@javax.annotation.Nullable Player player, Level worldIn, BlockPos posIn, @javax.annotation.Nullable BlockHitResult rayTrace, ItemStack stack);
     // @formatter:on
 
     @Inject(method = "use", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/BucketPickup;pickupBlock(Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Lnet/minecraft/world/item/ItemStack;"))
@@ -54,11 +54,10 @@ public abstract class BucketItemMixin {
         }
     }
 
-    @Inject(method = "use", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/BucketItem;emptyContents(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/phys/BlockHitResult;)Z"))
+    @Inject(method = "use", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraft/world/item/BucketItem;emptyContents(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/phys/BlockHitResult;Lnet/minecraft/world/item/ItemStack;)Z"))
     private void arclight$capture(Level worldIn, Player playerIn, InteractionHand handIn, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir, ItemStack stack, BlockHitResult result) {
         arclight$direction = result.getDirection();
         arclight$click = result.getBlockPos();
-        arclight$stack = stack;
         arclight$hand = handIn;
     }
 
@@ -67,7 +66,6 @@ public abstract class BucketItemMixin {
         arclight$captureItem = null;
         arclight$direction = null;
         arclight$click = null;
-        arclight$stack = null;
     }
 
     private transient org.bukkit.inventory.@Nullable ItemStack arclight$captureItem;
@@ -80,27 +78,24 @@ public abstract class BucketItemMixin {
     public boolean emptyContents(Player entity, Level world, BlockPos pos, @Nullable BlockHitResult result, Direction direction, BlockPos clicked, ItemStack itemstack, InteractionHand hand) {
         arclight$direction = direction;
         arclight$click = clicked;
-        arclight$stack = itemstack;
         arclight$hand = hand;
         try {
-            return this.emptyContents(entity, world, pos, result);
+            return this.emptyContents(entity, world, pos, result, itemstack);
         } finally {
             arclight$direction = null;
             arclight$click = null;
-            arclight$stack = null;
         }
     }
 
     private transient Direction arclight$direction;
     private transient BlockPos arclight$click;
-    private transient ItemStack arclight$stack;
     private transient InteractionHand arclight$hand;
 
-    @Inject(method = "emptyContents", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/dimension/DimensionType;ultraWarm()Z"))
-    private void arclight$bucketEmpty(Player player, Level worldIn, BlockPos posIn, BlockHitResult rayTrace, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "emptyContents(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/phys/BlockHitResult;Lnet/minecraft/world/item/ItemStack;)Z", remap = false, cancellable = true, at = @At(value = "INVOKE", remap = true, target = "Lnet/minecraft/world/level/dimension/DimensionType;ultraWarm()Z"))
+    private void arclight$bucketEmpty(Player player, Level worldIn, BlockPos posIn, BlockHitResult rayTrace, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
         if (!DistValidate.isValid(worldIn)) return;
         if (player != null) {
-            PlayerBucketEmptyEvent event = CraftEventFactory.callPlayerBucketEmptyEvent((ServerLevel) worldIn, player, posIn, arclight$click, arclight$direction, arclight$stack, arclight$hand == null ? InteractionHand.MAIN_HAND : arclight$hand);
+            PlayerBucketEmptyEvent event = CraftEventFactory.callPlayerBucketEmptyEvent((ServerLevel) worldIn, player, posIn, arclight$click, arclight$direction, stack, arclight$hand == null ? InteractionHand.MAIN_HAND : arclight$hand);
             if (event.isCancelled()) {
                 ((ServerPlayer) player).connection.send(new ClientboundBlockUpdatePacket(worldIn, posIn));
                 ((ServerPlayerEntityBridge) player).bridge$getBukkitEntity().updateInventory();
