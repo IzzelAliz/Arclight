@@ -9,12 +9,14 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootTable;
@@ -54,7 +56,13 @@ public abstract class FishingHookMixin extends ProjectileMixin {
 
     public int minWaitTime = 100;
     public int maxWaitTime = 600;
+    public int minLureTime = 20;
+    public int maxLureTime = 80;
+    public float minLureAngle = 0.0F;
+    public float maxLureAngle = 360.0F;
     public boolean applyLure = true;
+    public boolean rainInfluenced = true;
+    public boolean skyInfluenced = true;
 
     @Redirect(method = "checkCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/FishingHook;onHit(Lnet/minecraft/world/phys/HitResult;)V"))
     private void arclight$collide(FishingHook fishingHook, HitResult hitResult) {
@@ -82,6 +90,26 @@ public abstract class FishingHookMixin extends ProjectileMixin {
             this.timeUntilLured = Mth.nextInt(this.random, this.minWaitTime, this.maxWaitTime);
             this.timeUntilLured -= (this.applyLure) ? this.lureSpeed * 20 * 5 : 0;
         }
+    }
+
+    @Redirect(method = "catchingFish", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;isRainingAt(Lnet/minecraft/core/BlockPos;)Z"))
+    private boolean arclight$rainInfluenced(Level level, BlockPos pos) {
+        return this.rainInfluenced && level.isRainingAt(pos);
+    }
+
+    @Redirect(method = "catchingFish", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;canSeeSky(Lnet/minecraft/core/BlockPos;)Z"))
+    private boolean arclight$skyInfluenced(Level instance, BlockPos blockPos) {
+        return this.skyInfluenced && instance.canSeeSky(blockPos);
+    }
+
+    @Redirect(method = "catchingFish", at = @At(value = "INVOKE", ordinal = 2, target = "Lnet/minecraft/util/Mth;nextFloat(Lnet/minecraft/util/RandomSource;FF)F"))
+    private float arclight$lureAngleParam(RandomSource random, float p_216269_, float p_216270_) {
+        return Mth.nextFloat(random, this.minLureAngle, this.maxLureAngle);
+    }
+
+    @Redirect(method = "catchingFish", at = @At(value = "INVOKE", ordinal = 2, target = "Lnet/minecraft/util/Mth;nextInt(Lnet/minecraft/util/RandomSource;II)I"))
+    private int arclight$lureTimeParam(RandomSource random, int p_216273_, int p_216274_) {
+        return Mth.nextInt(random, this.minLureTime, this.maxLureTime);
     }
 
     /**

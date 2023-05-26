@@ -12,6 +12,8 @@ import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+import org.bukkit.event.player.PlayerExpCooldownChangeEvent;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -65,6 +67,11 @@ public abstract class ExperienceOrbMixin extends EntityMixin {
     @Redirect(method = "playerTouch", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;giveExperiencePoints(I)V"))
     private void arclight$expChange(Player player, int amount) {
         player.giveExperiencePoints(CraftEventFactory.callPlayerExpChangeEvent(player, amount).getAmount());
+    }
+
+    @Redirect(method = "playerTouch", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/entity/player/Player;takeXpDelay:I"))
+    private void arclight$cooldown(Player instance, int value) {
+        instance.takeXpDelay = CraftEventFactory.callPlayerXpCooldownEvent(instance, value, PlayerExpCooldownChangeEvent.ChangeReason.PICKUP_ORB).getNewCooldown();
     }
 
     /**

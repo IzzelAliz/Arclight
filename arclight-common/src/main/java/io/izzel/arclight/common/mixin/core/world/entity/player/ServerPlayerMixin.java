@@ -10,6 +10,7 @@ import io.izzel.arclight.common.bridge.core.network.play.ServerPlayNetHandlerBri
 import io.izzel.arclight.common.bridge.core.util.FoodStatsBridge;
 import io.izzel.arclight.common.bridge.core.world.TeleporterBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
 import io.izzel.arclight.common.mod.server.block.ChestBlockDoubleInventoryHacks;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.BlockUtil;
@@ -99,13 +100,7 @@ import org.bukkit.craftbukkit.v.util.BlockStateListPopulator;
 import org.bukkit.craftbukkit.v.util.CraftChatMessage;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerBedLeaveEvent;
-import org.bukkit.event.player.PlayerChangedMainHandEvent;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerLocaleChangeEvent;
-import org.bukkit.event.player.PlayerPortalEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.event.player.PlayerToggleSneakEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.MainHand;
 import org.spongepowered.asm.mixin.Final;
@@ -160,7 +155,6 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Shadow protected abstract void tellNeutralMobsThatIDied();
     @Shadow protected abstract void createEndPlatform(ServerLevel p_242110_1_, BlockPos p_242110_2_);
     @Shadow public abstract boolean isCreative();
-    @Shadow public abstract void setRespawnPosition(ResourceKey<Level> p_242111_1_, @org.jetbrains.annotations.Nullable BlockPos p_242111_2_, float p_242111_3_, boolean p_242111_4_, boolean p_242111_5_);
     @Shadow protected abstract boolean bedBlocked(BlockPos p_241156_1_, Direction p_241156_2_);
     @Shadow protected abstract boolean bedInRange(BlockPos p_241147_1_, Direction p_241147_2_);
     @Shadow public abstract void setLevel(ServerLevel p_143426_);
@@ -170,6 +164,10 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Shadow public abstract void shadow$nextContainerCounter();
     @Shadow public abstract void initMenu(AbstractContainerMenu p_143400_);
     @Shadow public abstract boolean teleportTo(ServerLevel p_265564_, double p_265424_, double p_265680_, double p_265312_, Set<RelativeMovement> p_265192_, float p_265059_, float p_265266_);
+    @Shadow @Nullable private BlockPos respawnPosition;
+    @Shadow public abstract void sendSystemMessage(Component p_215097_);
+    @Shadow private float respawnAngle;
+    @Shadow private boolean respawnForced;
     // @formatter:on
 
     public String displayName;
@@ -521,7 +519,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
                         if (registrykey == LevelStem.OVERWORLD && ((WorldBridge) exitWorld[0]).bridge$getTypeKey() == LevelStem.NETHER) {
                             this.enteredNetherPosition = this.position();
                         } else if (spawnPortal && ((WorldBridge) exitWorld[0]).bridge$getTypeKey() == LevelStem.END
-                            && (((PortalInfoBridge) portalinfo).bridge$getPortalEventInfo() == null || ((PortalInfoBridge) portalinfo).bridge$getPortalEventInfo().getCanCreatePortal())) {
+                                && (((PortalInfoBridge) portalinfo).bridge$getPortalEventInfo() == null || ((PortalInfoBridge) portalinfo).bridge$getPortalEventInfo().getCanCreatePortal())) {
                             this.createEndPlatform(exitWorld[0], BlockPos.containing(portalinfo.pos));
                         }
                     }
@@ -648,7 +646,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             if (this.bedBlocked(blockposition, enumdirection)) {
                 return Either.left(Player.BedSleepingProblem.OBSTRUCTED);
             }
-            this.setRespawnPosition(this.level.dimension(), blockposition, this.getYRot(), false, true);
+            this.setRespawnPosition(this.level.dimension(), blockposition, this.getYRot(), false, true, PlayerSpawnChangeEvent.Cause.BED);
             if (this.level.isDay()) {
                 return Either.left(Player.BedSleepingProblem.NOT_POSSIBLE_NOW);
             }
@@ -675,6 +673,11 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Redirect(method = "startSleepInBed", at = @At(value = "INVOKE", remap = false, target = "Lcom/mojang/datafixers/util/Either;ifRight(Ljava/util/function/Consumer;)Lcom/mojang/datafixers/util/Either;"))
     private <L, R> Either<L, R> arclight$successSleep(Either<L, R> either, Consumer<? super R> consumer, BlockPos pos) {
         return arclight$fireBedEvent(either, pos).ifRight(consumer);
+    }
+
+    @Inject(method = "startSleepInBed", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;setRespawnPosition(Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/core/BlockPos;FZZ)V"))
+    private void arclight$bedCause(BlockPos p_9115_, CallbackInfoReturnable<Either<Player.BedSleepingProblem, Unit>> cir) {
+        this.bridge$pushChangeSpawnCause(PlayerSpawnChangeEvent.Cause.BED);
     }
 
     @SuppressWarnings("unchecked")
@@ -946,6 +949,68 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Override
     public boolean isImmobile() {
         return super.isImmobile() || !this.getBukkitEntity().isOnline();
+    }
+
+    private transient PlayerSpawnChangeEvent.Cause arclight$spawnChangeCause;
+
+    @Override
+    public void bridge$pushChangeSpawnCause(PlayerSpawnChangeEvent.Cause cause) {
+        this.arclight$spawnChangeCause = cause;
+    }
+
+    public void setRespawnPosition(ResourceKey<Level> p_9159_, @Nullable BlockPos p_9160_, float p_9161_, boolean p_9162_, boolean p_9163_, PlayerSpawnChangeEvent.Cause cause) {
+        arclight$spawnChangeCause = cause;
+        this.setRespawnPosition(p_9159_, p_9160_, p_9161_, p_9162_, p_9163_);
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    public void setRespawnPosition(ResourceKey<Level> p_9159_, @Nullable BlockPos p_9160_, float p_9161_, boolean p_9162_, boolean p_9163_) {
+        if (ForgeEventFactory.onPlayerSpawnSet((ServerPlayer) (Object) this, p_9160_ == null ? Level.OVERWORLD : p_9159_, p_9160_, p_9162_))
+            return;
+        var cause = arclight$spawnChangeCause == null ? PlayerSpawnChangeEvent.Cause.UNKNOWN : arclight$spawnChangeCause;
+        arclight$spawnChangeCause = null;
+        var newWorld = this.server.getLevel(p_9159_);
+        Location newSpawn = (p_9160_ != null) ? new Location(((ServerWorldBridge) newWorld).bridge$getWorld(), p_9160_.getX(), p_9160_.getY(), p_9160_.getZ(), p_9161_, 0) : null;
+
+        PlayerSpawnChangeEvent event = new PlayerSpawnChangeEvent(this.getBukkitEntity(), newSpawn, p_9162_, cause);
+        Bukkit.getServer().getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return;
+        }
+        newSpawn = event.getNewSpawn();
+        p_9162_ = event.isForced();
+
+        if (newSpawn != null) {
+            p_9159_ = ((CraftWorld) newSpawn.getWorld()).getHandle().dimension();
+            p_9160_ = BlockPos.containing(newSpawn.getX(), newSpawn.getY(), newSpawn.getZ());
+            p_9161_ = newSpawn.getYaw();
+        } else {
+            p_9159_ = Level.OVERWORLD;
+            p_9160_ = null;
+            p_9161_ = 0.0F;
+        }
+
+        if (p_9160_ != null) {
+            boolean flag = p_9160_.equals(this.respawnPosition) && p_9159_.equals(this.respawnDimension);
+            if (p_9163_ && !flag) {
+                this.sendSystemMessage(Component.translatable("block.minecraft.set_spawn"));
+            }
+
+            this.respawnPosition = p_9160_;
+            this.respawnDimension = p_9159_;
+            this.respawnAngle = p_9161_;
+            this.respawnForced = p_9162_;
+        } else {
+            this.respawnPosition = null;
+            this.respawnDimension = Level.OVERWORLD;
+            this.respawnAngle = 0.0F;
+            this.respawnForced = false;
+        }
+
     }
 
     @Override

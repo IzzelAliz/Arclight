@@ -11,6 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FireBlock;
+import net.minecraft.world.level.block.TntBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
@@ -20,6 +21,7 @@ import org.bukkit.craftbukkit.v.block.CraftBlockStates;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockFadeEvent;
+import org.bukkit.event.block.TNTPrimeEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -62,6 +64,10 @@ public abstract class FireBlockMixin extends BaseFireBlockMixin implements FireB
         BlockBurnEvent event = new BlockBurnEvent(theBlock, sourceBlock);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
+            ci.cancel();
+            return;
+        }
+        if (worldIn.getBlockState(pos).getBlock() instanceof TntBlock && !CraftEventFactory.callTNTPrimeEvent(worldIn, pos, TNTPrimeEvent.PrimeCause.FIRE, null, pos.relative(face))) {
             ci.cancel();
         }
     }

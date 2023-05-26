@@ -436,8 +436,8 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     }
 
     @Inject(method = "handleAcceptTeleportPacket",
-        at = @At(value = "FIELD", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;awaitingPositionFromClient:Lnet/minecraft/world/phys/Vec3;"),
-        slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;isChangingDimension()Z")))
+            at = @At(value = "FIELD", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;awaitingPositionFromClient:Lnet/minecraft/world/phys/Vec3;"),
+            slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;isChangingDimension()Z")))
     private void arclight$updateLoc(ServerboundAcceptTeleportationPacket packetIn, CallbackInfo ci) {
         if (((ServerPlayerEntityBridge) this.player).bridge$isValid()) {
             this.player.getLevel().getChunkSource().move(this.player);
@@ -985,6 +985,13 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         }
     }
 
+    @Inject(method = "*", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;performChatCommand(Lnet/minecraft/network/protocol/game/ServerboundChatCommandPacket;Lnet/minecraft/network/chat/LastSeenMessages;)V"))
+    private void arclight$rejectIfDisconnect(CallbackInfo ci) {
+        if (this.player.hasDisconnected()) {
+            ci.cancel();
+        }
+    }
+
     /**
      * @author IzzelAliz
      * @reason
@@ -1293,19 +1300,19 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 @Override
                 public void onInteraction(InteractionHand hand) {
                     this.performInteraction(hand, net.minecraft.world.entity.player.Player::interactOn,
-                        new PlayerInteractEntityEvent(getCraftPlayer(), ((EntityBridge) entity).bridge$getBukkitEntity(),
-                            (hand == InteractionHand.OFF_HAND) ? EquipmentSlot.OFF_HAND : EquipmentSlot.HAND));
+                            new PlayerInteractEntityEvent(getCraftPlayer(), ((EntityBridge) entity).bridge$getBukkitEntity(),
+                                    (hand == InteractionHand.OFF_HAND) ? EquipmentSlot.OFF_HAND : EquipmentSlot.HAND));
                 }
 
                 @Override
                 public void onInteraction(InteractionHand hand, Vec3 vec) {
                     this.performInteraction(hand, (player, e, h) -> {
-                            var onInteractEntityAtResult = ForgeHooks.onInteractEntityAt(player, entity, vec, hand);
-                            if (onInteractEntityAtResult != null) return onInteractEntityAtResult;
-                            return e.interactAt(player, vec, h);
-                        },
-                        new PlayerInteractAtEntityEvent(getCraftPlayer(), ((EntityBridge) entity).bridge$getBukkitEntity(),
-                            new org.bukkit.util.Vector(vec.x, vec.y, vec.z), (hand == InteractionHand.OFF_HAND) ? EquipmentSlot.OFF_HAND : EquipmentSlot.HAND));
+                                var onInteractEntityAtResult = ForgeHooks.onInteractEntityAt(player, entity, vec, hand);
+                                if (onInteractEntityAtResult != null) return onInteractEntityAtResult;
+                                return e.interactAt(player, vec, h);
+                            },
+                            new PlayerInteractAtEntityEvent(getCraftPlayer(), ((EntityBridge) entity).bridge$getBukkitEntity(),
+                                    new org.bukkit.util.Vector(vec.x, vec.y, vec.z), (hand == InteractionHand.OFF_HAND) ? EquipmentSlot.OFF_HAND : EquipmentSlot.HAND));
                 }
 
                 @Override

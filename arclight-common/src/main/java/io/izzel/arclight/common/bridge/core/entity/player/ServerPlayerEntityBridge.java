@@ -1,15 +1,14 @@
 package io.izzel.arclight.common.bridge.core.entity.player;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
+import org.bukkit.event.player.PlayerSpawnChangeEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.Optional;
-import java.util.UUID;
 
 public interface ServerPlayerEntityBridge extends PlayerEntityBridge {
 
@@ -17,6 +16,8 @@ public interface ServerPlayerEntityBridge extends PlayerEntityBridge {
     CraftPlayer bridge$getBukkitEntity();
 
     void bridge$pushChangeDimensionCause(PlayerTeleportEvent.TeleportCause cause);
+
+    void bridge$pushChangeSpawnCause(PlayerSpawnChangeEvent.Cause cause);
 
     Optional<PlayerTeleportEvent.TeleportCause> bridge$getTeleportCause();
 

@@ -66,11 +66,7 @@ import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.util.CraftChatMessage;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.*;
 import org.spigotmc.SpigotConfig;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 import org.spongepowered.asm.mixin.Final;
@@ -298,12 +294,13 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                         f2 = (float) Mth.wrapDegrees(Mth.atan2(vec3d2.z, vec3d2.x) * 57.2957763671875 - 90.0);
                     }
                     // playerIn.setLocationAndAngles(vec3d.x, vec3d.y, vec3d.z, f2, 0.0f);
-                    playerIn.setRespawnPosition(spawnWorld.dimension(), pos, f2, flag2, false);
+                    // playerIn.setRespawnPosition(spawnWorld.dimension(), pos, f2, flag2, false);
                     flag3 = (!flag && flag4);
                     isBedSpawn = true;
                     location = new Location(((WorldBridge) spawnWorld).bridge$getWorld(), vec3d.x, vec3d.y, vec3d.z);
                 } else if (pos != null) {
                     playerIn.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.NO_RESPAWN_BLOCK_AVAILABLE, 0.0f));
+                    ((ServerPlayerEntityBridge) playerIn).bridge$pushChangeSpawnCause(PlayerSpawnChangeEvent.Cause.RESET);
                     playerIn.setRespawnPosition(Level.OVERWORLD, null, 0f, false, false); // CraftBukkit - SPIGOT-5988: Clear respawn location when obstructed
                 }
             }
@@ -419,12 +416,13 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                         f2 = (float) Mth.wrapDegrees(Mth.atan2(vec3d2.z, vec3d2.x) * 57.2957763671875 - 90.0);
                     }
                     // playerIn.setLocationAndAngles(vec3d.x, vec3d.y, vec3d.z, f2, 0.0f);
-                    playerIn.setRespawnPosition(spawnWorld.dimension(), pos, f2, flag2, false);
+                    // playerIn.setRespawnPosition(spawnWorld.dimension(), pos, f2, flag2, false);
                     flag3 = (!flag2 && flag4);
                     isBedSpawn = true;
                     location = new Location(((WorldBridge) spawnWorld).bridge$getWorld(), vec3d.x, vec3d.y, vec3d.z);
                 } else if (pos != null) {
                     playerIn.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.NO_RESPAWN_BLOCK_AVAILABLE, 0.0f));
+                    ((ServerPlayerEntityBridge) playerIn).bridge$pushChangeSpawnCause(PlayerSpawnChangeEvent.Cause.RESET);
                     playerIn.setRespawnPosition(Level.OVERWORLD, null, 0f, false, false);
                 }
             }
@@ -462,7 +460,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         serverplayerentity.connection = playerIn.connection;
         serverplayerentity.restoreFrom(playerIn, conqueredEnd);
         serverplayerentity.setRespawnPosition(playerIn.getRespawnDimension(), playerIn.getRespawnPosition(),
-            playerIn.getRespawnAngle(), playerIn.isRespawnForced(), false);
+                playerIn.getRespawnAngle(), playerIn.isRespawnForced(), false);
         if (!conqueredEnd) {  // keep inventory here since inventory dropped at ServerPlayerEntity#onDeath
             serverplayerentity.getInventory().replaceWith(playerIn.getInventory());
         }
