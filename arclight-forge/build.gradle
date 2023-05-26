@@ -63,8 +63,8 @@ def embedLibs = [/*"org.spongepowered:mixin:$mixinVersion", */ 'org.yaml:snakeya
 
 dependencies {
     implementation 'com.google.guava:guava:31.1-jre'
-    implementation 'org.ow2.asm:asm:9.3'
-    implementation 'org.ow2.asm:asm-tree:9.3'
+    implementation 'org.ow2.asm:asm:9.5'
+    implementation 'org.ow2.asm:asm-tree:9.5'
     implementation 'cpw.mods:modlauncher:9.0.24'
     implementation 'cpw.mods:securejarhandler:2.1.4'
     implementation 'net.minecraftforge:forgespi:6.0.0'
