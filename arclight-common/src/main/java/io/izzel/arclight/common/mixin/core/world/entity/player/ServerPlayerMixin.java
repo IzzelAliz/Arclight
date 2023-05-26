@@ -944,7 +944,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     }
 
     @Override
-    protected boolean isImmobile() {
+    public boolean isImmobile() {
         return super.isImmobile() || !this.getBukkitEntity().isOnline();
     }
 
