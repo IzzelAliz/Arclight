@@ -80,7 +80,7 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
     @Shadow private int yHeadRotp;
     @Shadow protected abstract void broadcastAndSend(Packet<?> packet);
     @Shadow @Nullable private List<SynchedEntityData.DataValue<?>> trackedDataValues;
-    @Shadow protected abstract Stream<Entity> changedPassengers(List<Entity> p_275537_, List<Entity> p_275682_);
+    @Shadow private static Stream<Entity> removedPassengers(List<Entity> p_277592_, List<Entity> p_277658_) { return null; }
     // @formatter:on
 
     private Set<ServerPlayerConnection> trackedPlayers;
@@ -118,11 +118,9 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
         if (!list.equals(this.lastPassengers)) {
             this.lastPassengers = list;
             this.broadcastAndSend(new ClientboundSetPassengersPacket(this.entity));
-            this.changedPassengers(list, this.lastPassengers).forEach((p_275907_) -> {
-                if (p_275907_ instanceof ServerPlayer serverplayer1) {
-                    if (!list.contains(serverplayer1)) {
-                        serverplayer1.connection.teleport(serverplayer1.getX(), serverplayer1.getY(), serverplayer1.getZ(), serverplayer1.getYRot(), serverplayer1.getXRot());
-                    }
+            removedPassengers(list, this.lastPassengers).forEach((p_289307_) -> {
+                if (p_289307_ instanceof ServerPlayer serverplayer1) {
+                    serverplayer1.connection.teleport(serverplayer1.getX(), serverplayer1.getY(), serverplayer1.getZ(), serverplayer1.getYRot(), serverplayer1.getXRot());
                 }
             });
         }
@@ -154,7 +152,7 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
                 int l1 = Mth.floor(this.entity.getXRot() * 256.0F / 360.0F);
                 boolean flag2 = Math.abs(i1 - this.yRotp) >= 1 || Math.abs(l1 - this.xRotp) >= 1;
                 if (flag2) {
-                    this.broadcast.accept(new ClientboundMoveEntityPacket.Rot(this.entity.getId(), (byte) i1, (byte) l1, this.entity.isOnGround()));
+                    this.broadcast.accept(new ClientboundMoveEntityPacket.Rot(this.entity.getId(), (byte) i1, (byte) l1, this.entity.onGround()));
                     this.yRotp = i1;
                     this.xRotp = l1;
                 }
@@ -177,21 +175,21 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
                     long j = this.positionCodec.encodeY(vector3d);
                     long k = this.positionCodec.encodeZ(vector3d);
                     boolean flag1 = i < -32768L || i > 32767L || j < -32768L || j > 32767L || k < -32768L || k > 32767L;
-                    if (!flag1 && this.teleportDelay <= 400 && !this.wasRiding && this.wasOnGround == this.entity.isOnGround()) {
+                    if (!flag1 && this.teleportDelay <= 400 && !this.wasRiding && this.wasOnGround == this.entity.onGround()) {
                         if ((!flag4 || !flag) && !(this.entity instanceof AbstractArrow)) {
                             if (flag4) {
-                                ipacket1 = new ClientboundMoveEntityPacket.Pos(this.entity.getId(), (short) ((int) i), (short) ((int) j), (short) ((int) k), this.entity.isOnGround());
+                                ipacket1 = new ClientboundMoveEntityPacket.Pos(this.entity.getId(), (short) ((int) i), (short) ((int) j), (short) ((int) k), this.entity.onGround());
                                 pos = true;
                             } else if (flag) {
-                                ipacket1 = new ClientboundMoveEntityPacket.Rot(this.entity.getId(), (byte) l, (byte) k1, this.entity.isOnGround());
+                                ipacket1 = new ClientboundMoveEntityPacket.Rot(this.entity.getId(), (byte) l, (byte) k1, this.entity.onGround());
                                 rot = true;
                             }
                         } else {
-                            ipacket1 = new ClientboundMoveEntityPacket.PosRot(this.entity.getId(), (short) ((int) i), (short) ((int) j), (short) ((int) k), (byte) l, (byte) k1, this.entity.isOnGround());
+                            ipacket1 = new ClientboundMoveEntityPacket.PosRot(this.entity.getId(), (short) ((int) i), (short) ((int) j), (short) ((int) k), (byte) l, (byte) k1, this.entity.onGround());
                             pos = rot = true;
                         }
                     } else {
-                        this.wasOnGround = this.entity.isOnGround();
+                        this.wasOnGround = this.entity.onGround();
                         this.teleportDelay = 0;
                         ipacket1 = new ClientboundTeleportEntityPacket(this.entity);
                         pos = rot = true;
@@ -249,26 +247,12 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
         }
     }
 
-    @Inject(method = "addPairing", at = @At("HEAD"))
-    private void arclight$addPlayer(ServerPlayer player, CallbackInfo ci) {
-        this.arclight$player = player;
-    }
-
-    private transient ServerPlayer arclight$player;
-
-    public void a(final Consumer<Packet<?>> consumer, ServerPlayer playerEntity) {
-        this.arclight$player = playerEntity;
-        this.sendPairingData(consumer);
-    }
-
     /**
      * @author IzzelAliz
      * @reason
      */
     @Overwrite
-    public void sendPairingData(final Consumer<Packet<?>> consumer) {
-        ServerPlayer player = arclight$player;
-        arclight$player = null;
+    public void sendPairingData(ServerPlayer player, final Consumer<Packet<?>> consumer) {
         Mob entityinsentient;
         if (this.entity.isRemoved()) {
             return;
@@ -309,12 +293,6 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
         }
         this.yHeadRotp = Mth.floor(this.entity.getYHeadRot() * 256.0f / 360.0f);
         consumer.accept(new ClientboundRotateHeadPacket(this.entity, (byte) this.yHeadRotp));
-        if (this.entity instanceof LivingEntity livingEntity) {
-            for (MobEffectInstance mobeffect : livingEntity.getActiveEffects()) {
-                consumer.accept(new ClientboundUpdateMobEffectPacket(this.entity.getId(), mobeffect));
-            }
-            livingEntity.detectEquipmentUpdates();
-        }
         if (!this.entity.getPassengers().isEmpty()) {
             consumer.accept(new ClientboundSetPassengersPacket(this.entity));
         }

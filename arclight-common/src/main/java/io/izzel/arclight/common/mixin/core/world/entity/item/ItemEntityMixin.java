@@ -62,7 +62,7 @@ public abstract class ItemEntityMixin extends EntityMixin {
      */
     @Overwrite
     public void playerTouch(final Player entity) {
-        if (!this.level.isClientSide) {
+        if (!this.level().isClientSide) {
             if (this.pickupDelay > 0) return;
             ItemStack itemstack = this.getItem();
             int i = itemstack.getCount();
@@ -134,7 +134,7 @@ public abstract class ItemEntityMixin extends EntityMixin {
 
     @Redirect(method = "mergeWithNeighbours", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;inflate(DDD)Lnet/minecraft/world/phys/AABB;"))
     private AABB arclight$mergeRadius(AABB instance, double pX, double pY, double pZ) {
-        double radius = ((WorldBridge) level).bridge$spigotConfig().itemMerge;
+        double radius = ((WorldBridge) level()).bridge$spigotConfig().itemMerge;
         return instance.inflate(radius);
     }
 }

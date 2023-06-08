@@ -34,7 +34,7 @@ public abstract class StopAttackingIfTargetInvalidMixin {
             return p_258801_.group(p_258801_.present(MemoryModuleType.ATTACK_TARGET), p_258801_.registered(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE)).apply(p_258801_, (p_258787_, p_258788_) -> {
                 return (p_258795_, p_258796_, p_258797_) -> {
                     LivingEntity livingentity = p_258801_.get(p_258787_);
-                    if (p_258796_.canAttack(livingentity) && (!p_260319_ || !isTiredOfTryingToReachTarget(p_258796_, p_258801_.tryGet(p_258788_))) && livingentity.isAlive() && livingentity.level == p_258796_.level && !p_260357_.test(livingentity)) {
+                    if (p_258796_.canAttack(livingentity) && (!p_260319_ || !isTiredOfTryingToReachTarget(p_258796_, p_258801_.tryGet(p_258788_))) && livingentity.isAlive() && livingentity.level() == p_258796_.level() && !p_260357_.test(livingentity)) {
                         return true;
                     } else {
                         // CraftBukkit start

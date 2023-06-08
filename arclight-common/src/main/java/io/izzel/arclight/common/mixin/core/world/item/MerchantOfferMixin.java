@@ -15,9 +15,9 @@ public class MerchantOfferMixin implements MerchantOfferBridge {
 
     // @formatter:off
     @Shadow public ItemStack baseCostA;
+    @Shadow private int demand;
     // @formatter:on
 
-    @Shadow private int demand;
     private CraftMerchantRecipe bukkitHandle;
 
     public CraftMerchantRecipe asBukkit() {

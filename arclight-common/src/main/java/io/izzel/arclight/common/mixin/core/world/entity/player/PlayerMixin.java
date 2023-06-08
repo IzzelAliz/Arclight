@@ -202,16 +202,16 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                 return false;
             } else {
                 if (source.scalesWithDifficulty()) {
-                    if (this.level.getDifficulty() == Difficulty.PEACEFUL) {
+                    if (this.level().getDifficulty() == Difficulty.PEACEFUL) {
                         // amount = 0.0F;
                         return false;
                     }
 
-                    if (this.level.getDifficulty() == Difficulty.EASY) {
+                    if (this.level().getDifficulty() == Difficulty.EASY) {
                         amount = Math.min(amount / 2.0F + 1.0F, amount);
                     }
 
-                    if (this.level.getDifficulty() == Difficulty.HARD) {
+                    if (this.level().getDifficulty() == Difficulty.HARD) {
                         amount = amount * 3.0F / 2.0F;
                     }
                 }
@@ -284,7 +284,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                 float i = (float) this.getAttributeValue(Attributes.ATTACK_KNOCKBACK); // Forge: Initialize this value to the attack knockback attribute of the player, which is by default 0
                 i += EnchantmentHelper.getKnockbackBonus((net.minecraft.world.entity.player.Player) (Object) this);
                 if (this.isSprinting() && flag) {
-                    this.level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, this.getSoundSource(), 1.0f, 1.0f);
+                    this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, this.getSoundSource(), 1.0f, 1.0f);
                     ++i;
                     flag2 = true;
                 }
@@ -330,14 +330,14 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                     }
                     if (flag4) {
                         final float f5 = 1.0f + EnchantmentHelper.getSweepingDamageRatio((net.minecraft.world.entity.player.Player) (Object) this) * f;
-                        final List<LivingEntity> list = this.level.getEntitiesOfClass(LivingEntity.class, this.getItemInHand(InteractionHand.MAIN_HAND).getSweepHitBox((net.minecraft.world.entity.player.Player) (Object) this, entity));
+                        final List<LivingEntity> list = this.level().getEntitiesOfClass(LivingEntity.class, this.getItemInHand(InteractionHand.MAIN_HAND).getSweepHitBox((net.minecraft.world.entity.player.Player) (Object) this, entity));
                         double entityReachSq = Mth.square(this.getEntityReach()); // Use entity reach instead of constant 9.0. Vanilla uses bottom center-to-center checks here, so don't update this to use canReach, since it uses closest-corner checks.
                         for (final LivingEntity entityliving : list) {
                             if (entityliving != (Object) this && entityliving != entity && !this.isAlliedTo(entityliving) && (!(entityliving instanceof ArmorStand) || !((ArmorStand) entityliving).isMarker()) && this.distanceToSqr(entityliving) < entityReachSq && entityliving.hurt(((DamageSourceBridge) this.damageSources().playerAttack((net.minecraft.world.entity.player.Player) (Object) this)).bridge$sweep(), f5)) {
                                 entityliving.knockback(0.4f, Mth.sin(this.getYRot() * 0.017453292f), -Mth.cos(this.getYRot() * 0.017453292f));
                             }
                         }
-                        this.level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, this.getSoundSource(), 1.0f, 1.0f);
+                        this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, this.getSoundSource(), 1.0f, 1.0f);
                         this.sweepAttack();
                     }
                     if (entity instanceof ServerPlayer && entity.hurtMarked) {
@@ -358,14 +358,14 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                         }
                     }
                     if (flag3) {
-                        this.level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, this.getSoundSource(), 1.0f, 1.0f);
+                        this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, this.getSoundSource(), 1.0f, 1.0f);
                         this.crit(entity);
                     }
                     if (!flag3 && !flag4) {
                         if (flag) {
-                            this.level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_STRONG, this.getSoundSource(), 1.0f, 1.0f);
+                            this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_STRONG, this.getSoundSource(), 1.0f, 1.0f);
                         } else {
-                            this.level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_WEAK, this.getSoundSource(), 1.0f, 1.0f);
+                            this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_WEAK, this.getSoundSource(), 1.0f, 1.0f);
                         }
                     }
                     if (f2 > 0.0f) {
@@ -381,7 +381,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                     if (entity instanceof PartEntity) {
                         object = ((PartEntity<?>) entity).getParent();
                     }
-                    if (!this.level.isClientSide && !itemstack2.isEmpty() && object instanceof LivingEntity) {
+                    if (!this.level().isClientSide && !itemstack2.isEmpty() && object instanceof LivingEntity) {
                         ItemStack copy = itemstack2.copy();
                         itemstack2.hurtEnemy((LivingEntity) object, (net.minecraft.world.entity.player.Player) (Object) this);
                         if (itemstack2.isEmpty()) {
@@ -399,15 +399,15 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                                 ((EntityBridge) entity).bridge$setOnFire(combustEvent2.getDuration(), false);
                             }
                         }
-                        if (this.level instanceof ServerLevel && f6 > 2.0f) {
+                        if (this.level() instanceof ServerLevel && f6 > 2.0f) {
                             final int k = (int) (f6 * 0.5);
-                            ((ServerLevel) this.level).sendParticles(ParticleTypes.DAMAGE_INDICATOR, entity.getX(), entity.getY() + entity.getBbHeight() * 0.5f, entity.getZ(), k, 0.1, 0.0, 0.1, 0.2);
+                            ((ServerLevel) this.level()).sendParticles(ParticleTypes.DAMAGE_INDICATOR, entity.getX(), entity.getY() + entity.getBbHeight() * 0.5f, entity.getZ(), k, 0.1, 0.0, 0.1, 0.2);
                         }
                     }
                     bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.ATTACK);
-                    this.causeFoodExhaustion(((WorldBridge) level).bridge$spigotConfig().combatExhaustion);
+                    this.causeFoodExhaustion(((WorldBridge) level()).bridge$spigotConfig().combatExhaustion);
                 } else {
-                    this.level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_NODAMAGE, this.getSoundSource(), 1.0f, 1.0f);
+                    this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_NODAMAGE, this.getSoundSource(), 1.0f, 1.0f);
                     if (flag5) {
                         entity.clearFire();
                     }
@@ -441,9 +441,9 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
         if (this.bridge$getBukkitEntity() instanceof Player player) {
             Block bed;
             if (blockPos != null) {
-                bed = CraftBlock.at(this.level, blockPos);
+                bed = CraftBlock.at(this.level(), blockPos);
             } else {
-                bed = ((WorldBridge) this.level).bridge$getWorld().getBlockAt(player.getLocation());
+                bed = ((WorldBridge) this.level()).bridge$getWorld().getBlockAt(player.getLocation());
             }
             PlayerBedLeaveEvent event = new PlayerBedLeaveEvent(player, bed, true);
             Bukkit.getPluginManager().callEvent(event);
@@ -452,7 +452,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
 
     @ModifyArg(method = "jumpFromGround", index = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;causeFoodExhaustion(F)V"))
     private float arclight$exhaustInfo(float f) {
-        SpigotWorldConfig config = ((WorldBridge) level).bridge$spigotConfig();
+        SpigotWorldConfig config = ((WorldBridge) level()).bridge$spigotConfig();
         if (config != null) {
             if (this.isSprinting()) {
                 f = config.jumpSprintExhaustion;
@@ -524,23 +524,23 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
      */
     @Overwrite
     protected void removeEntitiesOnShoulder() {
-        if (this.timeEntitySatOnShoulder + 20L < this.level.getGameTime()) {
-            if (this.spawnEntityFromShoulder(this.getShoulderEntityLeft())) {
+        if (this.timeEntitySatOnShoulder + 20L < this.level().getGameTime()) {
+            if (this.respawnEntityOnShoulder(this.getShoulderEntityLeft())) {
                 this.setShoulderEntityLeft(new CompoundTag());
             }
-            if (this.spawnEntityFromShoulder(this.getShoulderEntityRight())) {
+            if (this.respawnEntityOnShoulder(this.getShoulderEntityRight())) {
                 this.setShoulderEntityRight(new CompoundTag());
             }
         }
     }
 
-    private boolean spawnEntityFromShoulder(final CompoundTag nbttagcompound) {
-        return this.level.isClientSide || nbttagcompound.isEmpty() || EntityType.create(nbttagcompound, this.level).map(entity -> {
+    private boolean respawnEntityOnShoulder(final CompoundTag nbttagcompound) {
+        return this.level().isClientSide || nbttagcompound.isEmpty() || EntityType.create(nbttagcompound, this.level()).map(entity -> {
             if (entity instanceof TamableAnimal) {
                 ((TamableAnimal) entity).setOwnerUUID(this.uuid);
             }
             entity.setPos(this.getX(), this.getY() + 0.699999988079071, this.getZ());
-            return ((ServerWorldBridge) this.level).bridge$addEntitySerialized(entity, CreatureSpawnEvent.SpawnReason.SHOULDER_ENTITY);
+            return ((ServerWorldBridge) this.level()).bridge$addEntitySerialized(entity, CreatureSpawnEvent.SpawnReason.SHOULDER_ENTITY);
         }).orElse(true);
     }
 

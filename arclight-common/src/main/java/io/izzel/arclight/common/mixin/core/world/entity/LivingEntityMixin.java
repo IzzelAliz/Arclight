@@ -254,7 +254,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         // if (!this.world.isRemote && (this.isPlayer() || this.recentlyHit > 0 && this.canDropLoot() && this.world.getGameRules().getBoolean(GameRules.DO_MOB_LOOT))) {
         if (!((Object) this instanceof EnderDragon)) {
             int reward = ForgeEventFactory.getExperienceDrop((LivingEntity) (Object) this, this.lastHurtByPlayer, this.expToDrop);
-            ExperienceOrb.award((ServerLevel) this.level, this.position(), reward);
+            ExperienceOrb.award((ServerLevel) this.level(), this.position(), reward);
             bridge$setExpToDrop(0);
         }
     }
@@ -278,7 +278,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 if (!effectinstance.tick((LivingEntity) (Object) this, () -> {
                     onEffectUpdated(effectinstance, true, null);
                 })) {
-                    if (!this.level.isClientSide && !MinecraftForge.EVENT_BUS.post(new MobEffectEvent.Expired((LivingEntity) (Object) this, effectinstance))) {
+                    if (!this.level().isClientSide && !MinecraftForge.EVENT_BUS.post(new MobEffectEvent.Expired((LivingEntity) (Object) this, effectinstance))) {
 
                         EntityPotionEffectEvent event = CraftEventFactory.callEntityPotionEffectChangeEvent((LivingEntity) (Object) this, effectinstance, null, EntityPotionEffectEvent.Cause.EXPIRATION);
                         if (event.isCancelled()) {
@@ -309,7 +309,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         effectsToProcess.clear();
 
         if (this.effectsDirty) {
-            if (!this.level.isClientSide) {
+            if (!this.level().isClientSide) {
                 this.updateInvisibilityStatus();
             }
 
@@ -334,7 +334,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 double d0 = (double) (i >> 16 & 255) / 255.0D;
                 double d1 = (double) (i >> 8 & 255) / 255.0D;
                 double d2 = (double) (i >> 0 & 255) / 255.0D;
-                this.level.addParticle(flag1 ? ParticleTypes.AMBIENT_ENTITY_EFFECT : ParticleTypes.ENTITY_EFFECT, this.getX() + (this.random.nextDouble() - 0.5D) * (double) this.getBbWidth(), this.getY() + this.random.nextDouble() * (double) this.getBbHeight(), this.getZ() + (this.random.nextDouble() - 0.5D) * (double) this.getBbWidth(), d0, d1, d2);
+                this.level().addParticle(flag1 ? ParticleTypes.AMBIENT_ENTITY_EFFECT : ParticleTypes.ENTITY_EFFECT, this.getX() + (this.random.nextDouble() - 0.5D) * (double) this.getBbWidth(), this.getY() + this.random.nextDouble() * (double) this.getBbHeight(), this.getZ() + (this.random.nextDouble() - 0.5D) * (double) this.getBbWidth(), d0, d1, d2);
             }
         }
     }
@@ -419,7 +419,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     }
 
     public int getExpReward() {
-        if (this.level instanceof ServerLevel && !this.wasExperienceConsumed() && (this.isAlwaysExperienceDropper() || this.lastHurtByPlayerTime > 0 && this.shouldDropExperience() && this.level.getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT))) {
+        if (this.level() instanceof ServerLevel && !this.wasExperienceConsumed() && (this.isAlwaysExperienceDropper() || this.lastHurtByPlayerTime > 0 && this.shouldDropExperience() && this.level().getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT))) {
             int exp = this.getExperienceReward();
             return ForgeEventFactory.getExperienceDrop((LivingEntity) (Object) this, this.lastHurtByPlayer, exp);
         } else {
@@ -514,14 +514,14 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         if (!ForgeHooks.onLivingAttack((LivingEntity) (Object) this, source, amount)) return false;
         if (this.isInvulnerableTo(source)) {
             return false;
-        } else if (this.level.isClientSide) {
+        } else if (this.level().isClientSide) {
             return false;
         } else if (this.dead || this.isRemoved() || this.getHealth() <= 0.0F) {
             return false;
         } else if (source.is(DamageTypeTags.IS_FIRE) && this.hasEffect(MobEffects.FIRE_RESISTANCE)) {
             return false;
         } else {
-            if (this.isSleeping() && !this.level.isClientSide) {
+            if (this.isSleeping() && !this.level().isClientSide) {
                 this.stopSleeping();
             }
 
@@ -602,9 +602,9 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
 
             if (flag1) {
                 if (flag) {
-                    this.level.broadcastEntityEvent((LivingEntity) (Object) this, (byte) 29);
+                    this.level().broadcastEntityEvent((LivingEntity) (Object) this, (byte) 29);
                 } else {
-                    this.level.broadcastDamageEvent((LivingEntity) (Object) this, source);
+                    this.level().broadcastDamageEvent((LivingEntity) (Object) this, source);
                 }
 
                 if (!source.is(DamageTypeTags.NO_IMPACT) && (!flag || amount > 0.0F)) {
@@ -642,7 +642,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             boolean flag2 = !flag || amount > 0.0F;
             if (flag2) {
                 this.lastDamageSource = source;
-                this.lastDamageStamp = this.level.getGameTime();
+                this.lastDamageStamp = this.level().getGameTime();
             }
 
             if ((Object) this instanceof ServerPlayer) {
@@ -759,7 +759,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
 
             // Apply blocking code // PAIL: steal from above
             if (event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) < 0) {
-                this.level.broadcastEntityEvent((Entity) (Object) this, (byte) 29); // SPIGOT-4635 - shield damage sound
+                this.level().broadcastEntityEvent((Entity) (Object) this, (byte) 29); // SPIGOT-4635 - shield damage sound
                 if (shieldTakesDamage) {
                     this.hurtCurrentlyUsedShield((float) -event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING));
                 }
@@ -795,7 +795,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 // CraftBukkit end
                 float f3 = this.getHealth();
 
-                this.getCombatTracker().recordDamage(damagesource, f3, f);
+                this.getCombatTracker().recordDamage(damagesource, f);
                 this.setHealth(f3 - f); // Forge: moved to fix MC-121048
                 // CraftBukkit start
                 if (!human) {
@@ -934,7 +934,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 bridge$pushEffectCause(EntityPotionEffectEvent.Cause.TOTEM);
                 this.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 100, 1), EntityPotionEffectEvent.Cause.TOTEM);
                 this.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 800, 1), EntityPotionEffectEvent.Cause.TOTEM);
-                this.level.broadcastEntityEvent((Entity) (Object) this, (byte) 35);
+                this.level().broadcastEntityEvent((Entity) (Object) this, (byte) 35);
             }
             return !event.isCancelled();
         }
@@ -1033,8 +1033,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Eject(method = "randomTeleport", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/LivingEntity;teleportTo(DDD)V"))
     private void arclight$entityTeleport(LivingEntity entity, double x, double y, double z, CallbackInfoReturnable<
         Boolean> cir) {
-        EntityTeleportEvent event = new EntityTeleportEvent(getBukkitEntity(), new Location(((WorldBridge) this.level).bridge$getWorld(), this.getX(), this.getY(), this.getZ()),
-            new Location(((WorldBridge) this.level).bridge$getWorld(), x, y, z));
+        EntityTeleportEvent event = new EntityTeleportEvent(getBukkitEntity(), new Location(((WorldBridge) this.level()).bridge$getWorld(), this.getX(), this.getY(), this.getZ()),
+            new Location(((WorldBridge) this.level()).bridge$getWorld(), x, y, z));
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
             this.teleportTo(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
@@ -1129,8 +1129,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         if (!flag && !ItemStack.isSameItemSameTags(oldItem, newItem) && !this.firstTick) {
             Equipable equipable = Equipable.get(newItem);
             if (equipable != null && !this.isSpectator() && equipable.getEquipmentSlot() == slot) {
-                if (!this.level.isClientSide() && !this.isSilent() && !silent) {
-                    this.level.playSound(null, this.getX(), this.getY(), this.getZ(), equipable.getEquipSound(), this.getSoundSource(), 1.0F, 1.0F);
+                if (!this.level().isClientSide() && !this.isSilent() && !silent) {
+                    this.level().playSound(null, this.getX(), this.getY(), this.getZ(), equipable.getEquipSound(), this.getSoundSource(), 1.0F, 1.0F);
                 }
 
                 if (this.doesEmitEquipEvent(slot)) {

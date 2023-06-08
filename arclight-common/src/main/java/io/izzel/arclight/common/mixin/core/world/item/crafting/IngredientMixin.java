@@ -34,7 +34,7 @@ public abstract class IngredientMixin implements IngredientBridge {
             for (ItemStack stack : items) {
                 // CraftBukkit start
                 if (exact) {
-                    if (stack.getItem() == itemstack.getItem() && ItemStack.tagMatches(itemstack, stack)) {
+                    if (ItemStack.isSameItemSameTags(itemstack, stack)) {
                         return true;
                     }
                     continue;

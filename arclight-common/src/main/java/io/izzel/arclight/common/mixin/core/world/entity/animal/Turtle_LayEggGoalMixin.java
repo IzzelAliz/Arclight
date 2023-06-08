@@ -37,7 +37,7 @@ public abstract class Turtle_LayEggGoalMixin extends MoveToBlockGoal {
             if (((TurtleEntityBridge) this.turtle).bridge$getDigging() < 1) {
                 ((TurtleEntityBridge) this.turtle).bridge$setDigging(true);
             } else if (((TurtleEntityBridge) this.turtle).bridge$getDigging() > 200) {
-                Level world = this.turtle.level;
+                Level world = this.turtle.level();
                 if (!CraftEventFactory.callEntityChangeBlockEvent(this.turtle, this.blockPos.above(), (Blocks.TURTLE_EGG.defaultBlockState()).setValue(TurtleEggBlock.EGGS, this.turtle.getRandom().nextInt(4) + 1)).isCancelled()) {
                     BlockPos blockpos1 = this.blockPos.above();
                     BlockState blockstate = Blocks.TURTLE_EGG.defaultBlockState().setValue(TurtleEggBlock.EGGS, this.turtle.getRandom().nextInt(4) + 1);

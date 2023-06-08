@@ -21,7 +21,7 @@ public abstract class EntityMixin_ActivationRange implements EntityBridge_Activa
     // @formatter:off
     @Shadow public abstract void refreshDimensions();
     @Shadow public int tickCount;
-    @Shadow public Level level;
+    @Shadow public abstract Level level();
     @Shadow public abstract AABB getBoundingBox();
     @Shadow public abstract void discard();
     // @formatter:on

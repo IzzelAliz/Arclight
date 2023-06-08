@@ -35,7 +35,7 @@ public abstract class SlimeMixin extends MobMixin {
     @Override
     public void remove(Entity.RemovalReason p_149847_) {
         int i = this.getSize();
-        if (!this.level.isClientSide && i > 1 && this.isDeadOrDying()) {
+        if (!this.level().isClientSide && i > 1 && this.isDeadOrDying()) {
             Component itextcomponent = this.getCustomName();
             boolean flag = this.isNoAi();
             float f = (float) i / 4.0F;
@@ -54,7 +54,7 @@ public abstract class SlimeMixin extends MobMixin {
             for (int l = 0; l < k; ++l) {
                 float f1 = ((float) (l % 2) - 0.5F) * f;
                 float f2 = ((float) (l / 2) - 0.5F) * f;
-                net.minecraft.world.entity.monster.Slime slimeentity = this.getType().create(this.level);
+                net.minecraft.world.entity.monster.Slime slimeentity = this.getType().create(this.level());
                 if (slimeentity == null) continue;
                 if (this.isPersistenceRequired()) {
                     slimeentity.setPersistenceRequired();
@@ -72,8 +72,8 @@ public abstract class SlimeMixin extends MobMixin {
                 return;
             }
             for (LivingEntity living : slimes) {
-                ((WorldBridge) this.level).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.SLIME_SPLIT);
-                this.level.addFreshEntity(living);
+                ((WorldBridge) this.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.SLIME_SPLIT);
+                this.level().addFreshEntity(living);
             }
         }
         super.remove(p_149847_);

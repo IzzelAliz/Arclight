@@ -32,7 +32,7 @@ public abstract class GoToWantedItemMixin<E extends LivingEntity> {
             return p_258371_.group(p_258371_.registered(MemoryModuleType.LOOK_TARGET), behaviorbuilder, p_258371_.present(MemoryModuleType.NEAREST_VISIBLE_WANTED_ITEM), p_258371_.registered(MemoryModuleType.ITEM_PICKUP_COOLDOWN_TICKS)).apply(p_258371_, (p_258387_, p_258388_, p_258389_, p_258390_) -> {
                 return (p_258380_, p_258381_, p_258382_) -> {
                     ItemEntity itementity = p_258371_.get(p_258389_);
-                    if (p_258371_.tryGet(p_258390_).isEmpty() && p_259490_.test(p_258381_) && itementity.closerThan(p_258381_, (double) p_259054_) && p_258381_.level.getWorldBorder().isWithinBounds(itementity.blockPosition())) {
+                    if (p_258371_.tryGet(p_258390_).isEmpty() && p_259490_.test(p_258381_) && itementity.closerThan(p_258381_, (double) p_259054_) && p_258381_.level().getWorldBorder().isWithinBounds(itementity.blockPosition())) {
                         // CraftBukkit start
                         if (p_258381_ instanceof net.minecraft.world.entity.animal.allay.Allay) {
                             var event = CraftEventFactory.callEntityTargetEvent(p_258381_, itementity, EntityTargetEvent.TargetReason.CLOSEST_ENTITY);

@@ -31,7 +31,7 @@ public class ServerLevel_EntityCallbacksMixin {
     @Inject(method = "onTrackingEnd(Lnet/minecraft/world/entity/Entity;)V", at = @At("HEAD"))
     private void arclight$entityCleanup(Entity entity, CallbackInfo ci) {
         if (entity instanceof Player player) {
-            for (ServerLevel serverLevel : ServerLifecycleHooks.getCurrentServer().levels.values()) {
+            for (ServerLevel serverLevel : ServerLifecycleHooks.getCurrentServer().getAllLevels()) {
                 DimensionDataStorage worldData = serverLevel.getDataStorage();
                 for (Object o : worldData.cache.values()) {
                     if (o instanceof MapItemSavedData map) {

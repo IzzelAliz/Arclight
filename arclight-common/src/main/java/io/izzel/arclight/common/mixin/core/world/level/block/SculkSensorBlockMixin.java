@@ -46,10 +46,10 @@ public class SculkSensorBlockMixin {
         }
     }
 
-    @Unique private static int newCurrent;
+    @Unique private int newCurrent;
 
     @Inject(method = "activate", cancellable = true, at = @At("HEAD"))
-    private static void arclight$activate(Entity p_222126_, Level level, BlockPos pos, BlockState state, int i, CallbackInfo ci) {
+    private void arclight$activate(Entity p_222126_, Level level, BlockPos pos, BlockState state, int i, int j, CallbackInfo ci) {
         BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(CraftBlock.at(level, pos), state.getValue(SculkSensorBlock.POWER), i);
         Bukkit.getPluginManager().callEvent(eventRedstone);
         if (eventRedstone.getNewCurrent() <= 0) {
@@ -59,7 +59,7 @@ public class SculkSensorBlockMixin {
     }
 
     @ModifyVariable(method = "activate", ordinal = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"), argsOnly = true)
-    private static int arclight$updateCurrent(int old) {
+    private int arclight$updateCurrent(int old) {
         return newCurrent;
     }
 }

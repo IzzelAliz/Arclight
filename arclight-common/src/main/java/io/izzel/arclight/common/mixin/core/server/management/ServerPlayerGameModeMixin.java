@@ -155,7 +155,7 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
                 if (forgeEvent.getUseBlock() != net.minecraftforge.eventbus.api.Event.Result.DENY) {
                     iblockdata.attack(this.level, blockPos, this.player);
                 }
-                f = iblockdata.getDestroyProgress(this.player, this.player.level, blockPos);
+                f = iblockdata.getDestroyProgress(this.player, this.player.level(), blockPos);
             }
             if (event.useItemInHand() == Event.Result.DENY) {
                 if (f > 1.0f) {
@@ -191,7 +191,7 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
                 int k = this.gameTicks - this.destroyProgressStart;
                 BlockState iblockdata = this.level.getBlockState(blockPos);
                 if (!iblockdata.isAir()) {
-                    float f2 = iblockdata.getDestroyProgress(this.player, this.player.level, blockPos) * (k + 1);
+                    float f2 = iblockdata.getDestroyProgress(this.player, this.player.level(), blockPos) * (k + 1);
                     if (f2 >= 0.7f) {
                         this.isDestroyingBlock = false;
                         this.level.destroyBlockProgress(this.player.getId(), blockPos, -1);

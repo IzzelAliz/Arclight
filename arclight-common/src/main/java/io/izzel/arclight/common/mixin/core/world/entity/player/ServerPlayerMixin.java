@@ -137,7 +137,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Shadow public abstract void closeContainer();
     @Shadow public abstract void setCamera(Entity entityToSpectate);
     @Shadow public boolean isChangingDimension;
-    @Shadow public abstract ServerLevel getLevel();
+    @Shadow public abstract ServerLevel serverLevel();
     @Shadow public boolean wonGame;
     @Shadow private boolean seenCredits;
     @Shadow @Nullable private Vec3 enteredNetherPosition;
@@ -157,7 +157,6 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Shadow public abstract boolean isCreative();
     @Shadow protected abstract boolean bedBlocked(BlockPos p_241156_1_, Direction p_241156_2_);
     @Shadow protected abstract boolean bedInRange(BlockPos p_241147_1_, Direction p_241147_2_);
-    @Shadow public abstract void setLevel(ServerLevel p_143426_);
     @Shadow(remap = false) private boolean hasTabListName;
     @Shadow(remap = false) private Component tabListDisplayName;
     @Shadow public abstract void resetFallDistance();
@@ -168,6 +167,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Shadow public abstract void sendSystemMessage(Component p_215097_);
     @Shadow private float respawnAngle;
     @Shadow private boolean respawnForced;
+    @Shadow public abstract void setServerLevel(ServerLevel p_284971_);
     // @formatter:on
 
     public String displayName;
@@ -267,7 +267,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     }
 
     public void spawnIn(Level world) {
-        this.level = world;
+        this.setLevel(world);
         if (world == null) {
             this.revive();
             Vec3 position = null;
@@ -278,7 +278,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
                 world = ((CraftWorld) Bukkit.getServer().getWorlds().get(0)).getHandle();
                 position = Vec3.atCenterOf(((ServerLevel) world).getSharedSpawnPos());
             }
-            this.level = world;
+            this.setLevel(world);
             this.setPos(position.x(), position.y(), position.z());
         }
         this.gameMode.setLevel((ServerLevel) world);
@@ -322,11 +322,11 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         this.gameEvent(GameEvent.ENTITY_DIE);
         if (net.minecraftforge.common.ForgeHooks.onLivingDeath((ServerPlayer) (Object) this, damagesource))
             return;
-        boolean flag = this.level.getGameRules().getBoolean(GameRules.RULE_SHOWDEATHMESSAGES);
+        boolean flag = this.level().getGameRules().getBoolean(GameRules.RULE_SHOWDEATHMESSAGES);
         if (this.isRemoved()) {
             return;
         }
-        boolean keepInventory = this.level.getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY) || this.isSpectator();
+        boolean keepInventory = this.level().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY) || this.isSpectator();
         Inventory copyInv;
         if (keepInventory) {
             copyInv = this.getInventory();
@@ -362,13 +362,13 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             } else {
                 itextcomponent = CraftChatMessage.fromStringOrNull(deathMessage);
             }
-            this.connection.send(new ClientboundPlayerCombatKillPacket(this.getCombatTracker(), itextcomponent), PacketSendListener.exceptionallySend(() -> {
+            this.connection.send(new ClientboundPlayerCombatKillPacket(this.getId(), itextcomponent), PacketSendListener.exceptionallySend(() -> {
                 String s = itextcomponent.getString(256);
                 Component component1 = Component.translatable("death.attack.message_too_long", Component.literal(s).withStyle(ChatFormatting.YELLOW));
                 Component component2 = Component.translatable("death.attack.even_more_magic", this.getDisplayName()).withStyle((p_143420_) -> {
                     return p_143420_.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, component1));
                 });
-                return new ClientboundPlayerCombatKillPacket(this.getCombatTracker(), component2);
+                return new ClientboundPlayerCombatKillPacket(this.getId(), component2);
             }));
             Team scoreboardteambase = this.getTeam();
             if (scoreboardteambase != null && scoreboardteambase.getDeathMessageVisibility() != Team.Visibility.ALWAYS) {
@@ -381,11 +381,11 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
                 this.server.getPlayerList().broadcastSystemMessage(itextcomponent, false);
             }
         } else {
-            this.connection.send(new ClientboundPlayerCombatKillPacket(this.getCombatTracker(), CommonComponents.EMPTY));
+            this.connection.send(new ClientboundPlayerCombatKillPacket(this.getId(), CommonComponents.EMPTY));
         }
         this.removeEntitiesOnShoulder();
 
-        if (this.level.getGameRules().getBoolean(GameRules.RULE_FORGIVE_DEAD_PLAYERS)) {
+        if (this.level().getGameRules().getBoolean(GameRules.RULE_FORGIVE_DEAD_PLAYERS)) {
             this.tellNeutralMobsThatIDied();
         }
 
@@ -404,7 +404,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             this.createWitherRose(entityliving);
         }
 
-        this.level.broadcastEntityEvent((ServerPlayer) (Object) this, (byte) 3);
+        this.level().broadcastEntityEvent((ServerPlayer) (Object) this, (byte) 3);
         this.awardStat(Stats.DEATHS);
         this.resetStat(Stats.CUSTOM.get(Stats.TIME_SINCE_DEATH));
         this.resetStat(Stats.CUSTOM.get(Stats.TIME_SINCE_REST));
@@ -412,7 +412,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         this.setTicksFrozen(0);
         this.setSharedFlagOnFire(false);
         this.getCombatTracker().recheckStatus();
-        this.setLastDeathLocation(Optional.of(GlobalPos.of(this.level.dimension(), this.blockPosition())));
+        this.setLastDeathLocation(Optional.of(GlobalPos.of(this.level().dimension(), this.blockPosition())));
     }
 
     @Redirect(method = "awardKillScore", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/scores/Scoreboard;forAllObjectives(Lnet/minecraft/world/scores/criteria/ObjectiveCriteria;Ljava/lang/String;Ljava/util/function/Consumer;)V"))
@@ -427,7 +427,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
     @Inject(method = "isPvpAllowed", cancellable = true, at = @At("HEAD"))
     private void arclight$pvpMode(CallbackInfoReturnable<Boolean> cir) {
-        cir.setReturnValue(((WorldBridge) this.level).bridge$isPvpMode());
+        cir.setReturnValue(((WorldBridge) this.level()).bridge$isPvpMode());
     }
 
     /**
@@ -439,7 +439,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     protected PortalInfo findDimensionEntryPoint(ServerLevel level) {
         PortalInfo portalinfo = super.findDimensionEntryPoint(level);
         level = portalinfo == null || ((PortalInfoBridge) portalinfo).bridge$getWorld() == null ? level : ((PortalInfoBridge) portalinfo).bridge$getWorld();
-        if (portalinfo != null && ((WorldBridge) this.level).bridge$getTypeKey() == LevelStem.OVERWORLD && ((WorldBridge) level).bridge$getTypeKey() == LevelStem.END) {
+        if (portalinfo != null && ((WorldBridge) this.level()).bridge$getTypeKey() == LevelStem.OVERWORLD && ((WorldBridge) level).bridge$getTypeKey() == LevelStem.END) {
             Vec3 vector3d = portalinfo.pos.add(0.0D, -1.0D, 0.0D);
             PortalInfo newInfo = new PortalInfo(vector3d, Vec3.ZERO, 90.0F, 0.0F);
             ((PortalInfoBridge) newInfo).bridge$setWorld(level);
@@ -486,12 +486,12 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         arclight$cause = null;
 
         // this.invulnerableDimensionChange = true;
-        ServerLevel serverworld = this.getLevel();
+        ServerLevel serverworld = this.serverLevel();
         ResourceKey<LevelStem> registrykey = ((WorldBridge) serverworld).bridge$getTypeKey();
         if (registrykey == LevelStem.END && ((WorldBridge) server).bridge$getTypeKey() == LevelStem.OVERWORLD && teleporter.isVanilla()) { //Forge: Fix non-vanilla teleporters triggering end credits
             this.isChangingDimension = true;
             this.unRide();
-            this.getLevel().removePlayerImmediately((ServerPlayer) (Object) this, Entity.RemovalReason.CHANGED_DIMENSION);
+            this.serverLevel().removePlayerImmediately((ServerPlayer) (Object) this, Entity.RemovalReason.CHANGED_DIMENSION);
             if (!this.wonGame) {
                 this.wonGame = true;
                 this.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.WIN_GAME, this.seenCredits ? 0.0F : 1.0F));
@@ -507,11 +507,11 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
                 }
                 ServerLevel[] exitWorld = new ServerLevel[]{server};
                 LevelData iworldinfo = server.getLevelData();
-                this.connection.send(new ClientboundRespawnPacket(server.dimensionTypeId(), server.dimension(), BiomeManager.obfuscateSeed(server.getSeed()), this.gameMode.getGameModeForPlayer(), this.gameMode.getPreviousGameModeForPlayer(), server.isDebug(), server.isFlat(), (byte) 3, this.getLastDeathLocation()));
+                this.connection.send(new ClientboundRespawnPacket(server.dimensionTypeId(), server.dimension(), BiomeManager.obfuscateSeed(server.getSeed()), this.gameMode.getGameModeForPlayer(), this.gameMode.getPreviousGameModeForPlayer(), server.isDebug(), server.isFlat(), (byte) 3, this.getLastDeathLocation(), this.getPortalCooldown()));
                 this.connection.send(new ClientboundChangeDifficultyPacket(iworldinfo.getDifficulty(), iworldinfo.isDifficultyLocked()));
                 PlayerList playerlist = this.server.getPlayerList();
                 playerlist.sendPlayerPermissionLevel((ServerPlayer) (Object) this);
-                this.getLevel().removePlayerImmediately((ServerPlayer) (Object) this, Entity.RemovalReason.CHANGED_DIMENSION);
+                this.serverLevel().removePlayerImmediately((ServerPlayer) (Object) this, Entity.RemovalReason.CHANGED_DIMENSION);
                 this.revive();
                 Entity e = teleporter.placeEntity((ServerPlayer) (Object) this, serverworld, exitWorld[0], this.getYRot(), spawnPortal -> {//Forge: Start vanilla logic
                     serverworld.getProfiler().push("moving");
@@ -541,11 +541,11 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
                     if (newWorld != exitWorld[0]) {
                         exitWorld[0] = newWorld;
                         LevelData newWorldInfo = exitWorld[0].getLevelData();
-                        this.connection.send(new ClientboundRespawnPacket(exitWorld[0].dimensionTypeId(), exitWorld[0].dimension(), BiomeManager.obfuscateSeed(exitWorld[0].getSeed()), this.gameMode.getGameModeForPlayer(), this.gameMode.getPreviousGameModeForPlayer(), exitWorld[0].isDebug(), exitWorld[0].isFlat(), (byte) 3, this.getLastDeathLocation()));
+                        this.connection.send(new ClientboundRespawnPacket(exitWorld[0].dimensionTypeId(), exitWorld[0].dimension(), BiomeManager.obfuscateSeed(exitWorld[0].getSeed()), this.gameMode.getGameModeForPlayer(), this.gameMode.getPreviousGameModeForPlayer(), exitWorld[0].isDebug(), exitWorld[0].isFlat(), (byte) 3, this.getLastDeathLocation(), this.getPortalCooldown()));
                         this.connection.send(new ClientboundChangeDifficultyPacket(newWorldInfo.getDifficulty(), newWorldInfo.isDifficultyLocked()));
                     }
 
-                    this.setLevel(exitWorld[0]);
+                    this.setServerLevel(exitWorld[0]);
                     exitWorld[0].addDuringPortalTeleport((ServerPlayer) (Object) this);
 
                     ((ServerPlayNetHandlerBridge) this.connection).bridge$teleport(exit);
@@ -604,7 +604,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         if (optional.isPresent() || !canCreatePortal) {
             return optional;
         }
-        Direction.Axis enumdirection_enumaxis = this.level.getBlockState(this.portalEntrancePos).getOptionalValue(NetherPortalBlock.AXIS).orElse(Direction.Axis.X);
+        Direction.Axis enumdirection_enumaxis = this.level().getBlockState(this.portalEntrancePos).getOptionalValue(NetherPortalBlock.AXIS).orElse(Direction.Axis.X);
         Optional<BlockUtil.FoundRectangle> optional1 = ((TeleporterBridge) worldserver.getPortalForcer()).bridge$createPortal(blockposition, enumdirection_enumaxis, (ServerPlayer) (Object) this, createRadius);
         if (!optional1.isPresent()) {
             //  LOGGER.error("Unable to create a portal, likely target out of worldborder");
@@ -637,7 +637,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
     private Either<Player.BedSleepingProblem, Unit> getBedResult(BlockPos blockposition, Direction enumdirection) {
         if (!this.isSleeping() && this.isAlive()) {
-            if (!this.level.dimensionType().natural() || !this.level.dimensionType().bedWorks()) {
+            if (!this.level().dimensionType().natural() || !this.level().dimensionType().bedWorks()) {
                 return Either.left(Player.BedSleepingProblem.NOT_POSSIBLE_HERE);
             }
             if (!this.bedInRange(blockposition, enumdirection)) {
@@ -646,15 +646,15 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             if (this.bedBlocked(blockposition, enumdirection)) {
                 return Either.left(Player.BedSleepingProblem.OBSTRUCTED);
             }
-            this.setRespawnPosition(this.level.dimension(), blockposition, this.getYRot(), false, true, PlayerSpawnChangeEvent.Cause.BED);
-            if (this.level.isDay()) {
+            this.setRespawnPosition(this.level().dimension(), blockposition, this.getYRot(), false, true, PlayerSpawnChangeEvent.Cause.BED);
+            if (this.level().isDay()) {
                 return Either.left(Player.BedSleepingProblem.NOT_POSSIBLE_NOW);
             }
             if (!this.isCreative()) {
                 double d0 = 8.0;
                 double d1 = 5.0;
                 Vec3 vec3d = Vec3.atBottomCenterOf(blockposition);
-                List<Monster> list = this.level.getEntitiesOfClass(Monster.class, new AABB(vec3d.x() - 8.0, vec3d.y() - 5.0, vec3d.z() - 8.0, vec3d.x() + 8.0, vec3d.y() + 5.0, vec3d.z() + 8.0), entitymonster -> entitymonster.isPreventingPlayerRest((ServerPlayer) (Object) this));
+                List<Monster> list = this.level().getEntitiesOfClass(Monster.class, new AABB(vec3d.x() - 8.0, vec3d.y() - 5.0, vec3d.z() - 8.0, vec3d.x() + 8.0, vec3d.y() + 5.0, vec3d.z() + 8.0), entitymonster -> entitymonster.isPreventingPlayerRest((ServerPlayer) (Object) this));
                 if (!list.isEmpty()) {
                     return Either.left(Player.BedSleepingProblem.NOT_SAFE);
                 }
@@ -704,7 +704,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
         org.bukkit.block.Block bed;
         if (bedPosition != null) {
-            bed = CraftBlock.at(this.level, bedPosition);
+            bed = CraftBlock.at(this.level(), bedPosition);
         } else {
             bed = player.getLocation().getBlock();
         }
@@ -878,9 +878,9 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
     public long getPlayerTime() {
         if (this.relativeTime) {
-            return this.level.getDayTime() + this.timeOffset;
+            return this.level().getDayTime() + this.timeOffset;
         }
-        return this.level.getDayTime() - this.level.getDayTime() % 24000L + this.timeOffset;
+        return this.level().getDayTime() - this.level().getDayTime() % 24000L + this.timeOffset;
     }
 
     public WeatherType getPlayerWeather() {
@@ -933,7 +933,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
     public void resetPlayerWeather() {
         this.weather = null;
-        this.setPlayerWeather(this.level.getLevelData().isRaining() ? WeatherType.DOWNFALL : WeatherType.CLEAR, false);
+        this.setPlayerWeather(this.level().getLevelData().isRaining() ? WeatherType.DOWNFALL : WeatherType.CLEAR, false);
     }
 
     @Override

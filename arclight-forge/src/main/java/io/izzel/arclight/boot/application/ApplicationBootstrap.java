@@ -6,6 +6,7 @@ import io.izzel.arclight.boot.AbstractBootstrap;
 import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.arclight.i18n.ArclightLocale;
 
+import java.util.Arrays;
 import java.util.ServiceLoader;
 import java.util.function.Consumer;
 
@@ -36,6 +37,10 @@ public class ApplicationBootstrap extends AbstractBootstrap implements Consumer<
         try {
             this.setupMod();
             this.dirtyHacks();
+            int targetIndex = Arrays.asList(args).indexOf("--launchTarget");
+            if (targetIndex >= 0 && targetIndex < args.length - 1) {
+                args[targetIndex + 1] = "arclightserver";
+            }
             ServiceLoader.load(getClass().getModule().getLayer(), Consumer.class).stream()
                 .filter(it -> !it.type().getName().contains("arclight"))
                 .findFirst().orElseThrow().get().accept(args);

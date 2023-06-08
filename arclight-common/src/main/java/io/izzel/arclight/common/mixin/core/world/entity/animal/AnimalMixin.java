@@ -29,6 +29,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
+import java.util.Optional;
 
 @Mixin(Animal.class)
 public abstract class AnimalMixin extends AgeableMobMixin implements AnimalEntityBridge {
@@ -76,57 +77,43 @@ public abstract class AnimalMixin extends AgeableMobMixin implements AnimalEntit
         return breedItem;
     }
 
+    @Inject(method = "spawnChildFromBreeding", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V"))
+    private void arclight$reason(ServerLevel level, Animal p_27565_, CallbackInfo ci) {
+        ((WorldBridge) level).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.BREEDING);
+    }
+
     /**
      * @author IzzelAliz
      * @reason
      */
     @Overwrite
-    public void spawnChildFromBreeding(ServerLevel world, Animal animalEntity) {
-        AgeableMob child = this.getBreedOffspring(world, animalEntity);
-        final BabyEntitySpawnEvent event = new BabyEntitySpawnEvent((Animal) (Object) this, animalEntity, child);
-        final boolean cancelled = MinecraftForge.EVENT_BUS.post(event);
-        child = event.getChild();
-        if (cancelled) {
-            //Reset the "inLove" state for the animals
-            this.setAge(6000);
-            animalEntity.setAge(6000);
-            this.resetLove();
-            animalEntity.resetLove();
+    public void finalizeSpawnChildFromBreeding(ServerLevel worldserver, Animal entityanimal, @Nullable AgeableMob entityageable) {
+        // CraftBukkit start - call EntityBreedEvent
+        Optional<ServerPlayer> cause = Optional.ofNullable(this.getLoveCause()).or(() -> {
+            return Optional.ofNullable(entityanimal.getLoveCause());
+        });
+        int experience = this.getRandom().nextInt(7) + 1;
+        org.bukkit.event.entity.EntityBreedEvent entityBreedEvent = CraftEventFactory.callEntityBreedEvent(entityageable, (Animal) (Object) this, entityanimal, cause.orElse(null), this.breedItem, experience);
+        if (entityBreedEvent.isCancelled()) {
             return;
         }
-        if (child != null) {
-            ServerPlayer serverplayerentity = this.getLoveCause();
-            if (serverplayerentity == null && animalEntity.getLoveCause() != null) {
-                serverplayerentity = animalEntity.getLoveCause();
+        experience = entityBreedEvent.getExperience();
+        cause.ifPresent((entityplayer) -> {
+            // CraftBukkit end
+            entityplayer.awardStat(Stats.ANIMALS_BRED);
+            CriteriaTriggers.BRED_ANIMALS.trigger(entityplayer, (Animal) (Object) this, entityanimal, entityageable);
+        });
+        this.setAge(6000);
+        entityanimal.setAge(6000);
+        this.resetLove();
+        entityanimal.resetLove();
+        worldserver.broadcastEntityEvent((Animal) (Object) this, (byte) 18);
+        if (worldserver.getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT)) {
+            // CraftBukkit start - use event experience
+            if (experience > 0) {
+                worldserver.addFreshEntity(new ExperienceOrb(worldserver, this.getX(), this.getY(), this.getZ(), experience));
             }
-
-            int experience = this.getRandom().nextInt(7) + 1;
-            org.bukkit.event.entity.EntityBreedEvent entityBreedEvent = CraftEventFactory.callEntityBreedEvent(child, (Animal) (Object) this, animalEntity, serverplayerentity, this.breedItem, experience);
-            if (entityBreedEvent.isCancelled()) {
-                return;
-            }
-            experience = entityBreedEvent.getExperience();
-
-            if (serverplayerentity != null) {
-                serverplayerentity.awardStat(Stats.ANIMALS_BRED);
-                CriteriaTriggers.BRED_ANIMALS.trigger(serverplayerentity, (Animal) (Object) this, animalEntity, child);
-            }
-
-            this.setAge(6000);
-            animalEntity.setAge(6000);
-            this.resetLove();
-            animalEntity.resetLove();
-            child.setBaby(true);
-            child.moveTo(this.getX(), this.getY(), this.getZ(), 0.0F, 0.0F);
-            ((WorldBridge) world).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.BREEDING);
-            world.addFreshEntityWithPassengers(child);
-            world.broadcastEntityEvent((Animal) (Object) this, (byte) 18);
-            if (world.getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT)) {
-                if (experience > 0) {
-                    world.addFreshEntity(new ExperienceOrb(world, this.getX(), this.getY(), this.getZ(), experience));
-                }
-            }
-
+            // CraftBukkit end
         }
     }
 }

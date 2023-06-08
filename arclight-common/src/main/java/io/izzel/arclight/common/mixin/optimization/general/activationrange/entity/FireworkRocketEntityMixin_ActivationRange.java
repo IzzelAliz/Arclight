@@ -19,7 +19,7 @@ public abstract class FireworkRocketEntityMixin_ActivationRange extends EntityMi
     public void inactiveTick() {
         super.inactiveTick();
         ++this.life;
-        if (!this.level.isClientSide && this.life > this.lifetime) {
+        if (!this.level().isClientSide && this.life > this.lifetime) {
             if (!CraftEventFactory.callFireworkExplodeEvent((FireworkRocketEntity)(Object) this).isCancelled()) {
                 this.explode();
             }

@@ -24,7 +24,7 @@ apply plugin: 'io.izzel.arclight'
 arclight {
     mcVersion = minecraftVersion
     forgeVersion = project.ext.forgeVersion
-    bukkitVersion = 'v1_19_R3'
+    bukkitVersion = 'v1_20_R1'
     wipeVersion = true
     reobfVersion = true
     accessTransformer = project.file('bukkit.at')
@@ -40,6 +40,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 minecraft {
     //mappings channel: 'parchment', version: "2021.08.22-$minecraftVersion"
     mappings channel: 'official', version: minecraftVersion
+    copyIdeResources = true
     accessTransformer = project.file('src/main/resources/META-INF/accesstransformer.cfg')
 }
 
@@ -69,7 +70,7 @@ dependencies {
     implementation 'org.apache.logging.log4j:log4j-jul:2.15.0'
     implementation 'net.md-5:bungeecord-chat:1.16-R0.4'
     implementation 'mysql:mysql-connector-java:5.1.49'
-    implementation 'org.yaml:snakeyaml:1.30'
+    implementation 'org.yaml:snakeyaml:2.0'
     implementation "io.izzel:tools:$toolsVersion"
     implementation "io.izzel.arclight:arclight-api:$apiVersion"
     implementation project(':i18n-config')

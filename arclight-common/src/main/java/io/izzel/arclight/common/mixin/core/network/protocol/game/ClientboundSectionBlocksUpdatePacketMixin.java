@@ -13,13 +13,11 @@ import org.spongepowered.asm.mixin.Shadow;
 public class ClientboundSectionBlocksUpdatePacketMixin {
 
     @Shadow @Final @Mutable private SectionPos sectionPos;
-    @Shadow @Final @Mutable private boolean suppressLightUpdates;
     @Shadow @Final @Mutable private short[] positions;
     @Shadow @Final @Mutable private BlockState[] states;
 
-    public void arclight$constructor(SectionPos sectionposition, ShortSet shortset, BlockState[] states, boolean flag) {
+    public void arclight$constructor(SectionPos sectionposition, ShortSet shortset, BlockState[] states) {
         this.sectionPos = sectionposition;
-        this.suppressLightUpdates = flag;
         this.positions = shortset.toShortArray();
         this.states = states;
     }

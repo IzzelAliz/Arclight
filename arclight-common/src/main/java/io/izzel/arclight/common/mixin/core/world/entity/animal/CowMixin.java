@@ -26,14 +26,14 @@ public abstract class CowMixin extends AnimalMixin {
         ItemStack itemstack = playerEntity.getItemInHand(hand);
         if (itemstack.getItem() == Items.BUCKET && !this.isBaby()) {
             playerEntity.playSound(SoundEvents.COW_MILK, 1.0F, 1.0F);
-            org.bukkit.event.player.PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent((ServerLevel) playerEntity.level, playerEntity, this.blockPosition(), this.blockPosition(), null, itemstack, Items.MILK_BUCKET, hand);
+            org.bukkit.event.player.PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent((ServerLevel) playerEntity.level(), playerEntity, this.blockPosition(), this.blockPosition(), null, itemstack, Items.MILK_BUCKET, hand);
 
             if (event.isCancelled()) {
                 return InteractionResult.PASS;
             }
             ItemStack itemstack1 = ItemUtils.createFilledResult(itemstack, playerEntity, CraftItemStack.asNMSCopy(event.getItemStack()));
             playerEntity.setItemInHand(hand, itemstack1);
-            return InteractionResult.sidedSuccess(this.level.isClientSide);
+            return InteractionResult.sidedSuccess(this.level().isClientSide);
         } else {
             return super.mobInteract(playerEntity, hand);
         }

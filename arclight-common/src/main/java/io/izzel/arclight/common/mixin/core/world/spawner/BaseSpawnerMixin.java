@@ -123,7 +123,7 @@ public abstract class BaseSpawnerMixin {
                             if (event != null && spawnData.getEntityToSpawn().size() == 1 && spawnData.getEntityToSpawn().contains("id", 8)) {
                                 ((Mob) entity).finalizeSpawn(level, event.getDifficulty(), event.getSpawnType(), event.getSpawnData(), event.getSpawnTag());
                             }
-                            if (((WorldBridge) mob.level).bridge$spigotConfig().nerfSpawnerMobs) {
+                            if (((WorldBridge) mob.level()).bridge$spigotConfig().nerfSpawnerMobs) {
                                 ((MobEntityBridge) mob).bridge$setAware(false);
                             }
                         }

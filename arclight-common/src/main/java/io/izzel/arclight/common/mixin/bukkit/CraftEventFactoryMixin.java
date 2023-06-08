@@ -199,11 +199,11 @@ public class CraftEventFactoryMixin {
      */
     @Overwrite
     public static EntityChangeBlockEvent callEntityChangeBlockEvent(Entity entity, BlockPos position, net.minecraft.world.level.block.state.BlockState newBlock, boolean cancelled) {
-        Block block = CraftBlock.at(entity.level, position);
+        Block block = CraftBlock.at(entity.level(), position);
         EntityChangeBlockEvent event = new EntityChangeBlockEvent(((EntityBridge) entity).bridge$getBukkitEntity(), block, CraftBlockData.fromData(newBlock));
         event.setCancelled(cancelled);
         // Suppress during worldgen
-        if (DistValidate.isValid(entity.level)) {
+        if (DistValidate.isValid(entity.level())) {
             Bukkit.getPluginManager().callEvent(event);
         }
         return event;

@@ -26,7 +26,7 @@ public abstract class ThrownEggMixin extends ThrowableProjectileMixin {
     @Overwrite
     protected void onHit(final HitResult result) {
         super.onHit(result);
-        if (!this.level.isClientSide) {
+        if (!this.level().isClientSide) {
             boolean hatching = this.random.nextInt(8) == 0;
             byte b0 = 1;
             if (this.random.nextInt(32) == 0) {
@@ -46,17 +46,17 @@ public abstract class ThrownEggMixin extends ThrowableProjectileMixin {
             }
             if (hatching) {
                 for (int i = 0; i < b0; ++i) {
-                    Entity entity = ((WorldBridge) this.level).bridge$getWorld().createEntity(new Location(((WorldBridge) this.level).bridge$getWorld(), this.getX(), this.getY(), this.getZ(), this.getYRot(), 0.0f), hatchingType.getEntityClass());
+                    Entity entity = ((WorldBridge) this.level()).bridge$getWorld().createEntity(new Location(((WorldBridge) this.level()).bridge$getWorld(), this.getX(), this.getY(), this.getZ(), this.getYRot(), 0.0f), hatchingType.getEntityClass());
                     if (entity != null) {
                         if (((EntityBridge) entity).bridge$getBukkitEntity() instanceof Ageable) {
                             ((Ageable) ((EntityBridge) entity).bridge$getBukkitEntity()).setBaby();
                         }
-                        ((WorldBridge) this.level).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.EGG);
-                        this.level.addFreshEntity(entity);
+                        ((WorldBridge) this.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.EGG);
+                        this.level().addFreshEntity(entity);
                     }
                 }
             }
-            this.level.broadcastEntityEvent((ThrownEgg) (Object) this, (byte) 3);
+            this.level().broadcastEntityEvent((ThrownEgg) (Object) this, (byte) 3);
             this.discard();
         }
     }

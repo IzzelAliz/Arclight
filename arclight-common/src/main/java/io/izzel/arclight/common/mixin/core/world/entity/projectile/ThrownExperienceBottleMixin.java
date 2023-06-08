@@ -21,14 +21,14 @@ public abstract class ThrownExperienceBottleMixin extends ThrowableItemProjectil
     @Overwrite
     protected void onHit(HitResult result) {
         super.onHit(result);
-        if (!this.level.isClientSide) {
-            int i = 3 + this.level.random.nextInt(5) + this.level.random.nextInt(5);
+        if (!this.level().isClientSide) {
+            int i = 3 + this.level().random.nextInt(5) + this.level().random.nextInt(5);
             ExpBottleEvent event = CraftEventFactory.callExpBottleEvent((ThrownExperienceBottle) (Object) this, i);
             i = event.getExperience();
             if (event.getShowEffect()) {
-                this.level.levelEvent(2002, this.blockPosition(), PotionUtils.getColor(Potions.WATER));
+                this.level().levelEvent(2002, this.blockPosition(), PotionUtils.getColor(Potions.WATER));
             }
-            ExperienceOrb.award((ServerLevel) this.level, this.position(), i);
+            ExperienceOrb.award((ServerLevel) this.level(), this.position(), i);
             this.discard();
         }
     }

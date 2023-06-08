@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.inventory;
 
 import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.util.IWorldPosCallableBridge;
+import net.minecraft.Util;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.AnvilMenu;
@@ -12,7 +13,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraftforge.common.ForgeHooks;
-import org.apache.commons.lang3.StringUtils;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftInventory;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryAnvil;
@@ -182,16 +182,16 @@ public abstract class RepairContainerMixin extends ItemCombinerMixin {
                 }
             }
 
-            if (StringUtils.isBlank(this.itemName)) {
-                if (itemstack.hasCustomHoverName()) {
+            if (this.itemName != null && !Util.isBlank(this.itemName)) {
+                if (!this.itemName.equals(itemstack.getHoverName().getString())) {
                     k = 1;
                     i += k;
-                    itemstack1.resetHoverName();
+                    itemstack1.setHoverName(Component.literal(this.itemName));
                 }
-            } else if (!this.itemName.equals(itemstack.getHoverName().getString())) {
+            } else if (itemstack.hasCustomHoverName()) {
                 k = 1;
                 i += k;
-                itemstack1.setHoverName(Component.literal(this.itemName));
+                itemstack1.resetHoverName();
             }
             if (flag && !itemstack1.isBookEnchantable(itemstack2)) itemstack1 = ItemStack.EMPTY;
 

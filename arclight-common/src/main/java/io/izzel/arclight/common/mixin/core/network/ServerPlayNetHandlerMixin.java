@@ -26,13 +26,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.PacketSendListener;
-import net.minecraft.network.chat.ChatType;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.LastSeenMessages;
-import net.minecraft.network.chat.OutgoingChatMessage;
-import net.minecraft.network.chat.PlayerChatMessage;
-import net.minecraft.network.chat.SignableCommand;
-import net.minecraft.network.chat.SignedMessageChain;
+import net.minecraft.network.chat.*;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketUtils;
 import net.minecraft.network.protocol.game.*;
@@ -49,12 +43,7 @@ import net.minecraft.util.StringUtil;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.ExperienceOrb;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.MoverType;
-import net.minecraft.world.entity.RelativeMovement;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.animal.Bucketable;
 import net.minecraft.world.entity.animal.allay.Allay;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -73,8 +62,6 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.SignBlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -85,7 +72,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.block.CraftSign;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
@@ -96,42 +82,15 @@ import org.bukkit.craftbukkit.v.util.Waitable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.block.SignChangeEvent;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.CraftItemEvent;
-import org.bukkit.event.inventory.InventoryAction;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCreativeEvent;
-import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.inventory.SmithItemEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerAnimationEvent;
-import org.bukkit.event.player.PlayerAnimationType;
-import org.bukkit.event.player.PlayerChatEvent;
-import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.player.PlayerInteractAtEntityEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerItemHeldEvent;
-import org.bukkit.event.player.PlayerKickEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerResourcePackStatusEvent;
-import org.bukkit.event.player.PlayerSwapHandItemsEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.event.player.PlayerToggleFlightEvent;
-import org.bukkit.event.player.PlayerToggleSneakEvent;
-import org.bukkit.event.player.PlayerToggleSprintEvent;
+import org.bukkit.event.inventory.*;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.SmithingInventory;
 import org.slf4j.Logger;
 import org.spigotmc.SpigotConfig;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Mutable;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -142,12 +101,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.UnaryOperator;
@@ -191,7 +145,6 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     @Shadow private int chatSpamTickCount;
     @Shadow private int dropSpamTickCount;
     @Shadow protected abstract boolean noBlocksAround(Entity p_241162_1_);
-    @Shadow protected abstract boolean isPlayerCollidingWithAnythingNew(LevelReader p_241163_1_, AABB p_241163_2_);
     @Shadow private static double clampHorizontal(double p_143610_) { return 0; }
     @Shadow private static double clampVertical(double p_143654_) { return 0; }
     @Shadow private static boolean containsInvalidValues(double p_143664_, double p_143665_, double p_143666_, float p_143667_, float p_143668_) { return false; }
@@ -206,6 +159,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     @Shadow protected abstract PlayerChatMessage getSignedMessage(ServerboundChatPacket p_251061_, LastSeenMessages p_250566_) throws SignedMessageChain.DecodeException;
     @Shadow protected abstract void handleMessageDecodeFailure(SignedMessageChain.DecodeException p_252068_);
     @Shadow protected abstract Map<String, PlayerChatMessage> collectSignedArguments(ServerboundChatCommandPacket p_249441_, SignableCommand<?> p_250039_, LastSeenMessages p_249207_) throws SignedMessageChain.DecodeException;
+    @Shadow protected abstract boolean isPlayerCollidingWithAnythingNew(LevelReader p_289008_, AABB p_288986_, double p_288990_, double p_288991_, double p_288967_);
     // @formatter:on
 
     private static final int SURVIVAL_PLACE_DISTANCE_SQUARED = 6 * 6;
@@ -309,13 +263,13 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
      */
     @Overwrite
     public void handleMoveVehicle(final ServerboundMoveVehiclePacket packetplayinvehiclemove) {
-        PacketUtils.ensureRunningOnSameThread(packetplayinvehiclemove, (ServerGamePacketListenerImpl) (Object) this, this.player.getLevel());
+        PacketUtils.ensureRunningOnSameThread(packetplayinvehiclemove, (ServerGamePacketListenerImpl) (Object) this, this.player.serverLevel());
         if (containsInvalidValues(packetplayinvehiclemove.getX(), packetplayinvehiclemove.getY(), packetplayinvehiclemove.getZ(), packetplayinvehiclemove.getYRot(), packetplayinvehiclemove.getXRot())) {
             this.disconnect(Component.translatable("multiplayer.disconnect.invalid_vehicle_movement"));
         } else {
             Entity entity = this.player.getRootVehicle();
             if (entity != this.player && entity.getControllingPassenger() == this.player && entity == this.lastVehicle) {
-                ServerLevel worldserver = this.player.getLevel();
+                ServerLevel worldserver = this.player.serverLevel();
                 double d0 = entity.getX();
                 double d2 = entity.getY();
                 double d3 = entity.getZ();
@@ -359,6 +313,14 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 d7 = d4 - this.vehicleLastGoodX;
                 d8 = d5 - this.vehicleLastGoodY - 1.0E-6;
                 d9 = d6 - this.vehicleLastGoodZ;
+                boolean flag1 = entity.verticalCollisionBelow;
+
+                if (entity instanceof LivingEntity entityliving) {
+                    if (entityliving.onClimbable()) {
+                        entityliving.resetFallDistance();
+                    }
+                }
+
                 entity.move(MoverType.PLAYER, new Vec3(d7, d8, d9));
                 double d12 = d8;
                 d7 = d4 - entity.getX();
@@ -425,9 +387,9 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                         }
                     }
                 }
-                this.player.getLevel().getChunkSource().move(this.player);
+                this.player.serverLevel().getChunkSource().move(this.player);
                 this.player.checkMovementStatistics(this.player.getX() - d0, this.player.getY() - d2, this.player.getZ() - d3);
-                this.clientVehicleIsFloating = d12 >= -0.03125 && !this.server.isFlightAllowed() && this.noBlocksAround(entity);
+                this.clientVehicleIsFloating = d11 >= -0.03125D && !flag1 && !this.server.isFlightAllowed() && !entity.isNoGravity() && this.noBlocksAround(entity);
                 this.vehicleLastGoodX = entity.getX();
                 this.vehicleLastGoodY = entity.getY();
                 this.vehicleLastGoodZ = entity.getZ();
@@ -440,7 +402,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;isChangingDimension()Z")))
     private void arclight$updateLoc(ServerboundAcceptTeleportationPacket packetIn, CallbackInfo ci) {
         if (((ServerPlayerEntityBridge) this.player).bridge$isValid()) {
-            this.player.getLevel().getChunkSource().move(this.player);
+            this.player.serverLevel().getChunkSource().move(this.player);
         }
     }
 
@@ -519,11 +481,11 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
      */
     @Overwrite
     public void handleMovePlayer(ServerboundMovePlayerPacket packetplayinflying) {
-        PacketUtils.ensureRunningOnSameThread(packetplayinflying, (ServerGamePacketListenerImpl) (Object) this, this.player.getLevel());
+        PacketUtils.ensureRunningOnSameThread(packetplayinflying, (ServerGamePacketListenerImpl) (Object) this, this.player.serverLevel());
         if (containsInvalidValues(packetplayinflying.getX(0.0D), packetplayinflying.getY(0.0D), packetplayinflying.getZ(0.0D), packetplayinflying.getYRot(0.0F), packetplayinflying.getXRot(0.0F))) {
             this.disconnect(Component.translatable("multiplayer.disconnect.invalid_player_movement"));
         } else {
-            ServerLevel worldserver = this.player.getLevel();
+            ServerLevel worldserver = this.player.serverLevel();
             if (!this.player.wonGame && !((ServerPlayerEntityBridge) this.player).bridge$isMovementBlocked()) {
                 if (this.tickCount == 0) {
                     this.resetPosition();
@@ -544,7 +506,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
 
                     if (this.player.isPassenger()) {
                         this.player.absMoveTo(this.player.getX(), this.player.getY(), this.player.getZ(), f, f1);
-                        this.player.getLevel().getChunkSource().move(this.player);
+                        this.player.serverLevel().getChunkSource().move(this.player);
                         this.allowedPlayerTicks = 20; // CraftBukkit
                     } else {
                         // CraftBukkit - Make sure the move is valid but then reset it for plugins to modify
@@ -595,7 +557,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                                 speed = player.getAbilities().walkingSpeed * 10f;
                             }
 
-                            if (!this.player.isChangingDimension() && (!this.player.getLevel().getGameRules().getBoolean(GameRules.RULE_DISABLE_ELYTRA_MOVEMENT_CHECK) || !this.player.isFallFlying())) {
+                            if (!this.player.isChangingDimension() && (!this.player.serverLevel().getGameRules().getBoolean(GameRules.RULE_DISABLE_ELYTRA_MOVEMENT_CHECK) || !this.player.isFallFlying())) {
                                 float f2 = this.player.isFallFlying() ? 300.0F : 100.0F;
 
                                 if (d11 - d10 > Math.max(f2, Math.pow((double) (org.spigotmc.SpigotConfig.movedTooQuicklyMultiplier * (float) i * speed), 2)) && !this.isSingleplayerOwner()) {
@@ -613,7 +575,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                             d9 = d2 - this.lastGoodZ;
                             boolean flag = d8 > 0.0D;
 
-                            if (this.player.isOnGround() && !packetplayinflying.isOnGround() && flag) {
+                            if (this.player.onGround() && !packetplayinflying.isOnGround() && flag) {
                                 this.player.jumpFromGround();
                             }
 
@@ -636,12 +598,10 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                                 LOGGER.warn("{} moved wrongly!", this.player.getName().getString());
                             }
 
-                            this.player.absMoveTo(d0, d1, d2, f, f1);
-                            if (!this.player.noPhysics && !this.player.isSleeping() && (flag1 && worldserver.noCollision(this.player, axisalignedbb) || this.isPlayerCollidingWithAnythingNew((LevelReader) worldserver, axisalignedbb))) {
+                            if (!this.player.noPhysics && !this.player.isSleeping() && (flag1 && worldserver.noCollision(this.player, axisalignedbb) || this.isPlayerCollidingWithAnythingNew(worldserver, axisalignedbb, d0, d1, d2))) {
                                 this.internalTeleport(d3, d4, d5, f, f1, Collections.emptySet()); // CraftBukkit - SPIGOT-1807: Don't call teleport event, when the client thinks the player is falling, because the chunks are not loaded on the client yet.
-                                this.player.doCheckFallDamage(this.player.getY() - d6, packetplayinflying.isOnGround());
+                                this.player.doCheckFallDamage(this.player.getX() - d3, this.player.getY() - d4, this.player.getZ() - d5, packetplayinflying.isOnGround());
                             } else {
-                                this.player.absMoveTo(prevX, prevY, prevZ, prevYaw, prevPitch);
                                 CraftPlayer player = this.getCraftPlayer();
                                 Location from = new Location(player.getWorld(), this.lastPosX, this.lastPosY, this.lastPosZ, this.lastYaw, this.lastPitch);
                                 Location to = player.getLocation().clone();
@@ -680,14 +640,13 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                                         }
                                     }
                                 }
-                                this.player.absMoveTo(d0, d1, d2, f, f1); // Copied from above
 
-                                // MC-135989, SPIGOT-5564: isRiptiding
+                                this.player.absMoveTo(d0, d1, d2, f, f1); // Copied from above
                                 this.clientIsFloating = d12 >= -0.03125D && this.player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR && !this.server.isFlightAllowed() && !this.player.getAbilities().mayfly && !this.player.hasEffect(MobEffects.LEVITATION) && !this.player.isFallFlying() && this.noBlocksAround((Entity) this.player) && !this.player.isAutoSpinAttack();
                                 // CraftBukkit end
-                                this.player.getLevel().getChunkSource().move(this.player);
-                                this.player.doCheckFallDamage(this.player.getY() - d6, packetplayinflying.isOnGround());
-                                this.player.setOnGround(packetplayinflying.isOnGround());
+                                this.player.serverLevel().getChunkSource().move(this.player);
+                                this.player.doCheckFallDamage(this.player.getX() - d3, this.player.getY() - d4, this.player.getZ() - d5, packetplayinflying.isOnGround());
+                                this.player.setOnGroundWithKnownMovement(packetplayinflying.isOnGround(), new Vec3(this.player.getX() - d3, this.player.getY() - d4, this.player.getZ() - d5));
                                 if (flag) {
                                     this.player.resetFallDistance();
                                 }
@@ -710,7 +669,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
      */
     @Overwrite
     public void handlePlayerAction(ServerboundPlayerActionPacket packetplayinblockdig) {
-        PacketUtils.ensureRunningOnSameThread(packetplayinblockdig, (ServerGamePacketListenerImpl) (Object) this, this.player.getLevel());
+        PacketUtils.ensureRunningOnSameThread(packetplayinblockdig, (ServerGamePacketListenerImpl) (Object) this, this.player.serverLevel());
         if (((ServerPlayerEntityBridge) this.player).bridge$isMovementBlocked()) {
             return;
         }
@@ -772,7 +731,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             case START_DESTROY_BLOCK:
             case ABORT_DESTROY_BLOCK:
             case STOP_DESTROY_BLOCK: {
-                this.player.gameMode.handleBlockBreakAction(blockposition, packetplayinblockdig_enumplayerdigtype, packetplayinblockdig.getDirection(), this.player.level.getMaxBuildHeight(), packetplayinblockdig.getSequence());
+                this.player.gameMode.handleBlockBreakAction(blockposition, packetplayinblockdig_enumplayerdigtype, packetplayinblockdig.getDirection(), this.player.level().getMaxBuildHeight(), packetplayinblockdig.getSequence());
                 this.player.connection.ackBlockChangesUpTo(packetplayinblockdig.getSequence());
                 return;
             }
@@ -782,7 +741,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         }
     }
 
-    @Inject(method = "handleUseItemOn", cancellable = true, at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/server/level/ServerPlayer;getLevel()Lnet/minecraft/server/level/ServerLevel;"))
+    @Inject(method = "handleUseItemOn", cancellable = true, at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/server/level/ServerPlayer;serverLevel()Lnet/minecraft/server/level/ServerLevel;"))
     private void arclight$frozenUseItem(ServerboundUseItemOnPacket packetIn, CallbackInfo ci) {
         if (((ServerPlayerEntityBridge) this.player).bridge$isMovementBlocked()) {
             ci.cancel();
@@ -821,7 +780,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
      */
     @Overwrite
     public void handleUseItem(ServerboundUseItemPacket packet) {
-        PacketUtils.ensureRunningOnSameThread(packet, (ServerGamePacketListenerImpl) (Object) this, this.player.getLevel());
+        PacketUtils.ensureRunningOnSameThread(packet, (ServerGamePacketListenerImpl) (Object) this, this.player.serverLevel());
         if (((ServerPlayerEntityBridge) this.player).bridge$isMovementBlocked()) {
             return;
         }
@@ -829,7 +788,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             return;
         }
         this.ackBlockChangesUpTo(packet.getSequence());
-        ServerLevel worldserver = this.player.getLevel();
+        ServerLevel worldserver = this.player.serverLevel();
         InteractionHand enumhand = packet.getHand();
         ItemStack itemstack = this.player.getItemInHand(enumhand);
         this.player.resetLastActionTime();
@@ -848,7 +807,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             float f8 = f3 * f5;
             double d4 = (this.player.gameMode.getGameModeForPlayer() == GameType.CREATIVE) ? 5.0 : 4.5;
             Vec3 vec3d2 = vec3d.add(f7 * d4, f6 * d4, f8 * d4);
-            BlockHitResult movingobjectposition = this.player.level.clip(new ClipContext(vec3d, vec3d2, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, this.player));
+            BlockHitResult movingobjectposition = this.player.level().clip(new ClipContext(vec3d, vec3d2, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, this.player));
             boolean cancelled;
             if (movingobjectposition == null || movingobjectposition.getType() != HitResult.Type.BLOCK) {
                 PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(this.player, Action.RIGHT_CLICK_AIR, itemstack, enumhand);
@@ -857,6 +816,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 ((PlayerInteractionManagerBridge) this.player.gameMode).bridge$setFiredInteract(false);
                 cancelled = ((PlayerInteractionManagerBridge) this.player.gameMode).bridge$getInteractResult();
             } else {
+                // TODO 1.20 update this
                 BlockHitResult movingobjectpositionblock = movingobjectposition;
                 PlayerInteractEvent event2 = CraftEventFactory.callPlayerInteractEvent(this.player, Action.RIGHT_CLICK_BLOCK, movingobjectpositionblock.getBlockPos(), movingobjectpositionblock.getDirection(), itemstack, true, enumhand);
                 cancelled = (event2.useItemInHand() == Event.Result.DENY);
@@ -925,7 +885,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
      */
     @Overwrite
     public void handleSetCarriedItem(ServerboundSetCarriedItemPacket packet) {
-        PacketUtils.ensureRunningOnSameThread(packet, (ServerGamePacketListenerImpl) (Object) this, this.player.getLevel());
+        PacketUtils.ensureRunningOnSameThread(packet, (ServerGamePacketListenerImpl) (Object) this, this.player.serverLevel());
         if (((ServerPlayerEntityBridge) this.player).bridge$isMovementBlocked()) {
             return;
         }
@@ -1167,7 +1127,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
      */
     @Overwrite
     public void handleAnimate(ServerboundSwingPacket packet) {
-        PacketUtils.ensureRunningOnSameThread(packet, (ServerGamePacketListenerImpl) (Object) this, this.player.getLevel());
+        PacketUtils.ensureRunningOnSameThread(packet, (ServerGamePacketListenerImpl) (Object) this, this.player.serverLevel());
         if (((ServerPlayerEntityBridge) this.player).bridge$isMovementBlocked()) {
             return;
         }
@@ -1186,7 +1146,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         float f8 = f3 * f5;
         double d4 = this.player.getBlockReach();
         Vec3 vec3d2 = vec3d.add(f7 * d4, f6 * d4, f8 * d4);
-        HitResult result = this.player.level.clip(new ClipContext(vec3d, vec3d2, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, this.player));
+        HitResult result = this.player.level().clip(new ClipContext(vec3d, vec3d2, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, this.player));
         if (result == null || result.getType() != HitResult.Type.BLOCK) {
             CraftEventFactory.callPlayerInteractEvent(this.player, Action.LEFT_CLICK_AIR, this.player.getInventory().getSelected(), InteractionHand.MAIN_HAND);
         }
@@ -1225,11 +1185,11 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
      */
     @Overwrite
     public void handleInteract(final ServerboundInteractPacket packetIn) {
-        PacketUtils.ensureRunningOnSameThread(packetIn, (ServerGamePacketListenerImpl) (Object) this, this.player.getLevel());
+        PacketUtils.ensureRunningOnSameThread(packetIn, (ServerGamePacketListenerImpl) (Object) this, this.player.serverLevel());
         if (((ServerPlayerEntityBridge) this.player).bridge$isMovementBlocked()) {
             return;
         }
-        final ServerLevel world = this.player.getLevel();
+        final ServerLevel world = this.player.serverLevel();
         final Entity entity = packetIn.getTarget(world);
         if (entity == player && !player.isSpectator()) {
             disconnect("Cannot interact with self!");
@@ -1351,7 +1311,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
      */
     @Overwrite
     public void handleContainerClick(ServerboundContainerClickPacket packet) {
-        PacketUtils.ensureRunningOnSameThread(packet, (ServerGamePacketListenerImpl) (Object) this, this.player.getLevel());
+        PacketUtils.ensureRunningOnSameThread(packet, (ServerGamePacketListenerImpl) (Object) this, this.player.serverLevel());
         if (((ServerPlayerEntityBridge) this.player).bridge$isMovementBlocked()) {
             return;
         }
@@ -1410,7 +1370,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                                         if (cursor.isEmpty()) {
                                             action = packet.getButtonNum() == 0 ? InventoryAction.PICKUP_ALL : InventoryAction.PICKUP_HALF;
                                         } else if (slot.mayPlace(cursor)) {
-                                            if (clickedItem.sameItem(cursor) && ItemStack.tagMatches(clickedItem, cursor)) {
+                                            if (ItemStack.isSameItemSameTags(clickedItem, cursor)) {
                                                 int toPlace = packet.getButtonNum() == 0 ? cursor.getCount() : 1;
                                                 toPlace = Math.min(toPlace, clickedItem.getMaxStackSize() - clickedItem.getCount());
                                                 toPlace = Math.min(toPlace, slot.container.getMaxStackSize() - clickedItem.getCount());
@@ -1426,7 +1386,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                                             } else if (cursor.getCount() <= slot.getMaxStackSize()) {
                                                 action = InventoryAction.SWAP_WITH_CURSOR;
                                             }
-                                        } else if (cursor.getItem() == clickedItem.getItem() && ItemStack.tagMatches(cursor, clickedItem)) {
+                                        } else if (ItemStack.isSameItemSameTags(cursor, clickedItem)) {
                                             if (clickedItem.getCount() >= 0) {
                                                 if (clickedItem.getCount() + cursor.getCount() <= cursor.getMaxStackSize()) {
                                                     // As of 1.5, this is result slots only
@@ -1675,15 +1635,15 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
      */
     @Overwrite
     public void handleSetCreativeModeSlot(final ServerboundSetCreativeModeSlotPacket packetplayinsetcreativeslot) {
-        PacketUtils.ensureRunningOnSameThread(packetplayinsetcreativeslot, (ServerGamePacketListenerImpl) (Object) this, this.player.getLevel());
+        PacketUtils.ensureRunningOnSameThread(packetplayinsetcreativeslot, (ServerGamePacketListenerImpl) (Object) this, this.player.serverLevel());
         if (this.player.gameMode.isCreative()) {
             final boolean flag = packetplayinsetcreativeslot.getSlotNum() < 0;
             ItemStack itemstack = packetplayinsetcreativeslot.getItem();
             final CompoundTag nbttagcompound = BlockItem.getBlockEntityData(itemstack);
             if (!itemstack.isEmpty() && nbttagcompound != null && nbttagcompound.contains("x") && nbttagcompound.contains("y") && nbttagcompound.contains("z")) {
                 BlockPos blockpos = BlockEntity.getPosFromTag(nbttagcompound);
-                if (this.player.level.isLoaded(blockpos)) {
-                    BlockEntity blockentity = this.player.level.getBlockEntity(blockpos);
+                if (this.player.level().isLoaded(blockpos)) {
+                    BlockEntity blockentity = this.player.level().getBlockEntity(blockpos);
                     if (blockentity != null) {
                         blockentity.saveToItem(itemstack);
                     }
@@ -1733,58 +1693,10 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         }
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    private void updateSignText(ServerboundSignUpdatePacket packet, List<FilteredText> list) {
+    @Inject(method = "updateSignText", cancellable = true, at = @At("HEAD"))
+    private void arclight$updateSignText(ServerboundSignUpdatePacket p_9923_, List<FilteredText> p_9924_, CallbackInfo ci) {
         if (((ServerPlayerEntityBridge) player).bridge$isMovementBlocked()) {
-            return;
-        }
-        this.player.resetLastActionTime();
-        ServerLevel serverlevel = this.player.getLevel();
-        BlockPos blockpos = packet.getPos();
-        if (serverlevel.hasChunkAt(blockpos)) {
-            BlockState blockstate = serverlevel.getBlockState(blockpos);
-            BlockEntity blockentity = serverlevel.getBlockEntity(blockpos);
-            if (!(blockentity instanceof SignBlockEntity signblockentity)) {
-                return;
-            }
-
-            if (!signblockentity.isEditable() || !this.player.getUUID().equals(signblockentity.getPlayerWhoMayEdit())) {
-                LOGGER.warn("Player {} just tried to change non-editable sign", this.player.getName().getString());
-                this.send(blockentity.getUpdatePacket());
-                return;
-            }
-
-            Player player = ((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity();
-            int x = packet.getPos().getX();
-            int y = packet.getPos().getY();
-            int z = packet.getPos().getZ();
-            String[] lines = new String[4];
-
-            for (int i = 0; i < list.size(); ++i) {
-                FilteredText text = list.get(i);
-
-                if (this.player.isTextFilteringEnabled()) {
-                    lines[i] = ChatFormatting.stripFormatting(text.filteredOrEmpty());
-                } else {
-                    lines[i] = ChatFormatting.stripFormatting(text.raw());
-                }
-            }
-            SignChangeEvent event = new SignChangeEvent(player.getWorld().getBlockAt(x, y, z), player, lines);
-            Bukkit.getPluginManager().callEvent(event);
-            if (!event.isCancelled()) {
-                Component[] components = CraftSign.sanitizeLines(event.getLines());
-                for (int i = 0; i < components.length; i++) {
-                    signblockentity.setMessage(i, components[i]);
-                }
-                signblockentity.isEditable = false;
-            }
-
-            signblockentity.setChanged();
-            serverlevel.sendBlockUpdated(blockpos, blockstate, blockstate, 3);
+            ci.cancel();
         }
     }
 
@@ -1794,7 +1706,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
      */
     @Overwrite
     public void handlePlayerAbilities(ServerboundPlayerAbilitiesPacket packet) {
-        PacketUtils.ensureRunningOnSameThread(packet, (ServerGamePacketListenerImpl) (Object) this, this.player.getLevel());
+        PacketUtils.ensureRunningOnSameThread(packet, (ServerGamePacketListenerImpl) (Object) this, this.player.serverLevel());
         if (this.player.getAbilities().mayfly && this.player.getAbilities().flying != packet.isFlying()) {
             PlayerToggleFlightEvent event = new PlayerToggleFlightEvent(getCraftPlayer(), packet.isFlying());
             this.cserver.getPluginManager().callEvent(event);

@@ -79,7 +79,7 @@ public abstract class BoatMixin extends EntityMixin {
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/Boat;tickBubbleColumn()V"))
     private void arclight$updateVehicle(CallbackInfo ci) {
-        final org.bukkit.World bworld = ((WorldBridge) this.level).bridge$getWorld();
+        final org.bukkit.World bworld = ((WorldBridge) this.level()).bridge$getWorld();
         final Location to = new Location(bworld, this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
         final Vehicle vehicle = (Vehicle) this.getBukkitEntity();
         Bukkit.getPluginManager().callEvent(new VehicleUpdateEvent(vehicle));

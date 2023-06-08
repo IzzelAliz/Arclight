@@ -58,7 +58,6 @@ public class StartAttackingMixin {
                                 // CraftBukkit end
                                 p_258778_.set(changeTargetEvent.getNewTarget());
                                 p_258779_.erase();
-                                ForgeHooks.onLivingSetAttackTarget(p_258774_, changeTargetEvent.getNewTarget(), LivingChangeTargetEvent.LivingTargetType.BEHAVIOR_TARGET); // TODO: Remove in 1.20
                                 return true;
                             }
                         }

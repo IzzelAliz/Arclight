@@ -20,7 +20,7 @@ public abstract class ThrownTridentMixin extends AbstractArrowMixin implements T
 
     @Redirect(method = "onHitEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private boolean arclight$lightning(Level world, Entity entityIn) {
-        ((ServerWorldBridge) this.level).bridge$strikeLightning((LightningBolt) entityIn, LightningStrikeEvent.Cause.TRIDENT);
+        ((ServerWorldBridge) this.level()).bridge$strikeLightning((LightningBolt) entityIn, LightningStrikeEvent.Cause.TRIDENT);
         return true;
     }
 

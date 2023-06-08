@@ -26,12 +26,12 @@ public abstract class LeashFenceKnotEntityMixin extends HangingEntityMixin {
     @SuppressWarnings("ConstantConditions")
     @Overwrite
     public InteractionResult interact(final Player entityhuman, final InteractionHand enumhand) {
-        if (this.level.isClientSide) {
+        if (this.level().isClientSide) {
             return InteractionResult.SUCCESS;
         }
         boolean flag = false;
         final double d0 = 7.0;
-        final List<Mob> list = this.level.getEntitiesOfClass(Mob.class, new AABB(this.getX() - 7.0, this.getY() - 7.0, this.getZ() - 7.0, this.getX() + 7.0, this.getY() + 7.0, this.getZ() + 7.0));
+        final List<Mob> list = this.level().getEntitiesOfClass(Mob.class, new AABB(this.getX() - 7.0, this.getY() - 7.0, this.getZ() - 7.0, this.getX() + 7.0, this.getY() + 7.0, this.getZ() + 7.0));
         for (final Mob entityinsentient : list) {
             if (entityinsentient.getLeashHolder() == entityhuman) {
                 if (CraftEventFactory.callPlayerLeashEntityEvent(entityinsentient, (LeashFenceKnotEntity) (Object) this, entityhuman, enumhand).isCancelled()) {

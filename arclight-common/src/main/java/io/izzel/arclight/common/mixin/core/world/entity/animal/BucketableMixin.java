@@ -48,7 +48,7 @@ public interface BucketableMixin {
             entity.playSound(entity.getPickupSound(), 1.0F, 1.0F);
             ItemStack itemstack2 = ItemUtils.createFilledResult(itemstack, player, itemstack1, false);
             player.setItemInHand(hand, itemstack2);
-            Level level = entity.level;
+            Level level = entity.level();
             if (!level.isClientSide) {
                 CriteriaTriggers.FILLED_BUCKET.trigger((ServerPlayer) player, itemstack1);
             }

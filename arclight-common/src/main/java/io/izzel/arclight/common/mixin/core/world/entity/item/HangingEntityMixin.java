@@ -9,7 +9,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.decoration.HangingEntity;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
@@ -32,9 +31,9 @@ public abstract class HangingEntityMixin extends EntityMixin {
 
     @Inject(method = "tick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/HangingEntity;discard()V"))
     private void arclight$hangingBreak(CallbackInfo ci) {
-        Material material = this.level.getBlockState(new BlockPos(this.blockPosition())).getMaterial();
+        var state = this.level().getBlockState(new BlockPos(this.blockPosition()));
         HangingBreakEvent.RemoveCause cause;
-        if (!material.equals(Material.AIR)) {
+        if (!state.isAir()) {
             cause = HangingBreakEvent.RemoveCause.OBSTRUCTION;
         } else {
             cause = HangingBreakEvent.RemoveCause.PHYSICS;

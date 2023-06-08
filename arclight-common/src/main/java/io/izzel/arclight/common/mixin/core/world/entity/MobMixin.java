@@ -147,7 +147,6 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
             livingEntity = changeTargetEvent.getNewTarget();
         }
         this.target = livingEntity;
-        ForgeHooks.onLivingSetAttackTarget((Mob) (Object) this, this.target);
         arclight$targetSuccess = true;
     }
 
@@ -229,7 +228,7 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
         if (equipmentslottype.isArmor() && !flag) {
             equipmentslottype = EquipmentSlot.MAINHAND;
             itemstack = this.getItemBySlot(equipmentslottype);
-            flag = this.canReplaceCurrentItem(stack, itemstack);
+            flag = itemstack.isEmpty();
         }
 
         boolean canPickup = flag && this.canHoldItem(stack);
@@ -323,12 +322,12 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
 
     @Inject(method = "convertTo", at = @At("RETURN"))
     private <T extends Mob> void arclight$cleanReason(EntityType<T> p_233656_1_, boolean p_233656_2_, CallbackInfoReturnable<T> cir) {
-        ((WorldBridge) this.level).bridge$pushAddEntityReason(null);
+        ((WorldBridge) this.level()).bridge$pushAddEntityReason(null);
         this.arclight$transform = null;
     }
 
     public <T extends Mob> T convertTo(EntityType<T> entityType, boolean flag, EntityTransformEvent.TransformReason transformReason, CreatureSpawnEvent.SpawnReason spawnReason) {
-        ((WorldBridge) this.level).bridge$pushAddEntityReason(spawnReason);
+        ((WorldBridge) this.level()).bridge$pushAddEntityReason(spawnReason);
         bridge$pushTransformReason(transformReason);
         return this.convertTo(entityType, flag);
     }

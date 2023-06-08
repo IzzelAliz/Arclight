@@ -368,7 +368,6 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         BlockPos blockpos = serverworld.getSharedSpawnPos();
         listener.updateSpawnPos(new ChunkPos(blockpos));
         ServerChunkCache serverchunkprovider = serverworld.getChunkSource();
-        serverchunkprovider.getLightEngine().setTaskPerBatch(500);
         this.nextTickTime = Util.getMillis();
         serverchunkprovider.addRegionTicket(TicketType.START, new ChunkPos(blockpos), 11, Unit.INSTANCE);
 
@@ -397,7 +396,6 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
 
         this.executeModerately();
         listener.stop();
-        serverchunkprovider.getLightEngine().setTaskPerBatch(5);
         this.updateMobSpawningFlags();
         this.forceTicks = false;
     }
@@ -444,7 +442,6 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         BlockPos blockpos = serverWorld.getSharedSpawnPos();
         listener.updateSpawnPos(new ChunkPos(blockpos));
         ServerChunkCache serverchunkprovider = serverWorld.getChunkSource();
-        serverchunkprovider.getLightEngine().setTaskPerBatch(500);
         this.nextTickTime = Util.getMillis();
         serverchunkprovider.addRegionTicket(TicketType.START, new ChunkPos(blockpos), 11, Unit.INSTANCE);
 
@@ -467,7 +464,6 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         }
         this.executeModerately();
         listener.stop();
-        serverchunkprovider.getLightEngine().setTaskPerBatch(5);
         // this.updateMobSpawningFlags();
         serverWorld.setSpawnSettings(this.isSpawningMonsters(), this.isSpawningAnimals());
         this.forceTicks = false;

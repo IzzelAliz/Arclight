@@ -9,15 +9,14 @@ import io.izzel.arclight.common.mod.compat.CommandNodeHooks;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
-import net.minecraftforge.common.util.FakePlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.command.VanillaCommandWrapper;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -28,10 +27,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class CommandSourceStackMixin implements CommandSourceBridge {
 
     // @formatter:off
-    @Shadow @Final public CommandSource source;
+    @Shadow @Final @Mutable public CommandSource source;
     @Shadow public abstract ServerLevel getLevel();
     @Shadow @Final private int permissionLevel;
     // @formatter:on
+
+    @Override
+    public void bridge$setSource(CommandSource source) {
+        this.source = source;
+    }
 
     public CommandNode currentCommand;
 

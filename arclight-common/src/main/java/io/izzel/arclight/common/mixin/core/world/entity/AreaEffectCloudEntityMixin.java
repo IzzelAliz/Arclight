@@ -61,7 +61,7 @@ public abstract class AreaEffectCloudEntityMixin extends EntityMixin implements 
         super.tick();
         boolean flag = this.isWaiting();
         float f = this.getRadius();
-        if (this.level.isClientSide) {
+        if (this.level().isClientSide) {
             if (flag && this.random.nextBoolean()) {
                 return;
             }
@@ -103,7 +103,7 @@ public abstract class AreaEffectCloudEntityMixin extends EntityMixin implements 
                     d7 = (float) (k & 255) / 255.0F;
                 }
 
-                this.level.addAlwaysVisibleParticle(particleoptions, d0, d2, d4, d5, d6, d7);
+                this.level().addAlwaysVisibleParticle(particleoptions, d0, d2, d4, d5, d6, d7);
             }
         } else {
             if (this.tickCount >= this.waitTime + this.duration) {
@@ -144,7 +144,7 @@ public abstract class AreaEffectCloudEntityMixin extends EntityMixin implements 
                 if (list.isEmpty()) {
                     this.victims.clear();
                 } else {
-                    List<LivingEntity> list1 = this.level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox());
+                    List<LivingEntity> list1 = this.level().getEntitiesOfClass(LivingEntity.class, this.getBoundingBox());
                     if (!list1.isEmpty()) {
                         List<org.bukkit.entity.LivingEntity> entities = new java.util.ArrayList<org.bukkit.entity.LivingEntity>(); // CraftBukkit
                         for (LivingEntity livingentity : list1) {

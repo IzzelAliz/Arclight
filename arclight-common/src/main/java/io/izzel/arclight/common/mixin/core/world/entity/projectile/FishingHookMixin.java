@@ -18,7 +18,7 @@ import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
-import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
@@ -119,7 +119,7 @@ public abstract class FishingHookMixin extends ProjectileMixin {
     @Overwrite
     public int retrieve(ItemStack stack) {
         Player playerentity = this.getPlayerOwner();
-        if (!this.level.isClientSide && playerentity != null) {
+        if (!this.level().isClientSide && playerentity != null) {
             int i = 0;
             ItemFishedEvent event = null;
             if (this.hookedIn != null) {
@@ -130,12 +130,12 @@ public abstract class FishingHookMixin extends ProjectileMixin {
                 }
                 this.pullEntity(this.hookedIn);
                 CriteriaTriggers.FISHING_ROD_HOOKED.trigger((ServerPlayer) playerentity, stack, (FishingHook) (Object) this, Collections.emptyList());
-                this.level.broadcastEntityEvent((FishingHook) (Object) this, (byte) 31);
+                this.level().broadcastEntityEvent((FishingHook) (Object) this, (byte) 31);
                 i = this.hookedIn instanceof ItemEntity ? 3 : 5;
             } else if (this.nibble > 0) {
-                LootContext.Builder lootcontext$builder = (new LootContext.Builder((ServerLevel) this.level)).withParameter(LootContextParams.ORIGIN, this.position()).withParameter(LootContextParams.TOOL, stack).withParameter(LootContextParams.THIS_ENTITY, (FishingHook) (Object) this).withRandom(this.random).withLuck((float) this.luck + playerentity.getLuck());
-                LootTable loottable = this.level.getServer().getLootTables().get(BuiltInLootTables.FISHING);
-                List<ItemStack> list = loottable.getRandomItems(lootcontext$builder.create(LootContextParamSets.FISHING));
+                LootParams params = (new LootParams.Builder((ServerLevel) this.level())).withParameter(LootContextParams.ORIGIN, this.position()).withParameter(LootContextParams.TOOL, stack).withParameter(LootContextParams.THIS_ENTITY, (FishingHook) (Object) this).withLuck((float) this.luck + playerentity.getLuck()).create(LootContextParamSets.FISHING);
+                LootTable loottable = this.level().getServer().getLootData().getLootTable(BuiltInLootTables.FISHING);
+                List<ItemStack> list = loottable.getRandomItems(params);
                 event = new ItemFishedEvent(list, this.onGround ? 2 : 1, (FishingHook) (Object) this);
                 MinecraftForge.EVENT_BUS.post(event);
                 if (event.isCanceled()) {
@@ -145,7 +145,7 @@ public abstract class FishingHookMixin extends ProjectileMixin {
                 CriteriaTriggers.FISHING_ROD_HOOKED.trigger((ServerPlayer) playerentity, stack, (FishingHook) (Object) this, list);
 
                 for (ItemStack itemstack : list) {
-                    ItemEntity itementity = new ItemEntity(this.level, this.getX(), this.getY(), this.getZ(), itemstack);
+                    ItemEntity itementity = new ItemEntity(this.level(), this.getX(), this.getY(), this.getZ(), itemstack);
                     PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerEntityBridge) playerentity).bridge$getBukkitEntity(), ((EntityBridge) itementity).bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.CAUGHT_FISH);
                     playerFishEvent.setExpToDrop(this.random.nextInt(6) + 1);
                     Bukkit.getPluginManager().callEvent(playerFishEvent);
@@ -158,9 +158,9 @@ public abstract class FishingHookMixin extends ProjectileMixin {
                     double d2 = playerentity.getZ() - this.getZ();
                     double d3 = 0.1D;
                     itementity.setDeltaMovement(d0 * 0.1D, d1 * 0.1D + Math.sqrt(Math.sqrt(d0 * d0 + d1 * d1 + d2 * d2)) * 0.08D, d2 * 0.1D);
-                    this.level.addFreshEntity(itementity);
+                    this.level().addFreshEntity(itementity);
                     if (playerFishEvent.getExpToDrop() > 0) {
-                        playerentity.level.addFreshEntity(new ExperienceOrb(playerentity.level, playerentity.getX(), playerentity.getY() + 0.5D, playerentity.getZ() + 0.5D, playerFishEvent.getExpToDrop()));
+                        playerentity.level().addFreshEntity(new ExperienceOrb(playerentity.level(), playerentity.getX(), playerentity.getY() + 0.5D, playerentity.getZ() + 0.5D, playerFishEvent.getExpToDrop()));
                     }
                     if (itemstack.is(ItemTags.FISHES)) {
                         playerentity.awardStat(Stats.FISH_CAUGHT, 1);

@@ -90,7 +90,7 @@ public class AbstractBootstrap {
     }
 
     protected void setupMod() throws Exception {
-        ArclightVersion.setVersion(ArclightVersion.EXECUTIONS);
+        ArclightVersion.setVersion(ArclightVersion.TRIALS);
         try (InputStream stream = getClass().getModule().getResourceAsStream("/META-INF/MANIFEST.MF")) {
             Manifest manifest = new Manifest(stream);
             Attributes attributes = manifest.getMainAttributes();

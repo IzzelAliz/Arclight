@@ -8,7 +8,9 @@ import io.izzel.arclight.common.mod.ArclightMod;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ChunkLevel;
 import net.minecraft.server.level.ChunkMap;
+import net.minecraft.server.level.FullChunkStatus;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
@@ -38,7 +40,7 @@ public abstract class ChunkHolderMixin implements ChunkHolderBridge {
     // @formatter:on
 
     public LevelChunk getFullChunkNow() {
-        if (!ChunkHolder.getFullChunkStatus(this.oldTicketLevel).isOrAfter(ChunkHolder.FullChunkStatus.BORDER)) {
+        if (!ChunkLevel.fullStatus(this.oldTicketLevel).isOrAfter(FullChunkStatus.FULL)) {
             return null; // note: using oldTicketLevel for isLoaded checks
         }
         return this.getFullChunkNowUnchecked();
@@ -72,8 +74,8 @@ public abstract class ChunkHolderMixin implements ChunkHolderBridge {
         locals = LocalCapture.CAPTURE_FAILHARD)
     public void arclight$onChunkUnload(ChunkMap chunkManager, Executor executor, CallbackInfo ci, ChunkStatus chunkStatus,
                                        ChunkStatus chunkStatus1, boolean flag, boolean flag1,
-                                       ChunkHolder.FullChunkStatus locationType, ChunkHolder.FullChunkStatus locationType1) {
-        if (locationType.isOrAfter(ChunkHolder.FullChunkStatus.BORDER) && !locationType1.isOrAfter(ChunkHolder.FullChunkStatus.BORDER)) {
+                                       FullChunkStatus locationType, FullChunkStatus locationType1) {
+        if (locationType.isOrAfter(FullChunkStatus.FULL) && !locationType1.isOrAfter(FullChunkStatus.FULL)) {
             this.getFutureIfPresentUnchecked(ChunkStatus.FULL).thenAccept((either) -> {
                 LevelChunk chunk = (LevelChunk) either.left().orElse(null);
                 if (chunk != null) {
@@ -96,8 +98,8 @@ public abstract class ChunkHolderMixin implements ChunkHolderBridge {
     @Inject(method = "updateFutures", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
     public void arclight$onChunkLoad(ChunkMap chunkManager, Executor executor, CallbackInfo ci, ChunkStatus chunkStatus,
                                      ChunkStatus chunkStatus1, boolean flag, boolean flag1,
-                                     ChunkHolder.FullChunkStatus locationType, ChunkHolder.FullChunkStatus locationType1) {
-        if (!locationType.isOrAfter(ChunkHolder.FullChunkStatus.BORDER) && locationType1.isOrAfter(ChunkHolder.FullChunkStatus.BORDER)) {
+                                     FullChunkStatus locationType, FullChunkStatus locationType1) {
+        if (!locationType.isOrAfter(FullChunkStatus.FULL) && locationType1.isOrAfter(FullChunkStatus.FULL)) {
             this.getFutureIfPresentUnchecked(ChunkStatus.FULL).thenAccept((either) -> {
                 LevelChunk chunk = (LevelChunk) either.left().orElse(null);
                 if (chunk != null) {

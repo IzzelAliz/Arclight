@@ -1,33 +1,31 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
-import com.google.common.collect.Lists;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.util.Tuple;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.BucketPickup;
-import net.minecraft.world.level.block.LiquidBlock;
-import net.minecraft.world.level.block.SpongeBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.level.material.Material;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.block.CraftBlockState;
 import org.bukkit.craftbukkit.v.util.BlockStateListPopulator;
 import org.bukkit.event.block.SpongeAbsorbEvent;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.List;
-import java.util.Queue;
+
+import static net.minecraft.world.level.block.Block.dropResources;
 
 @Mixin(SpongeBlock.class)
 public class SpongeBlockMixin {
+
+    @Shadow @Final private static Direction[] ALL_DIRECTIONS;
 
     /**
      * @author IzzelAliz
@@ -35,54 +33,63 @@ public class SpongeBlockMixin {
      */
     @SuppressWarnings("unchecked")
     @Overwrite
-    private boolean removeWaterBreadthFirstSearch(Level worldIn, BlockPos pos) {
-        Queue<Tuple<BlockPos, Integer>> queue = Lists.newLinkedList();
-        queue.add(new Tuple<>(pos, 0));
-        int i = 0;
-        BlockStateListPopulator blockList = new BlockStateListPopulator(worldIn);
+    private boolean removeWaterBreadthFirstSearch(Level world, BlockPos blockposition) {
+        BlockStateListPopulator blockList = new BlockStateListPopulator(world); // CraftBukkit - Use BlockStateListPopulator
+        BlockPos.breadthFirstTraversal(blockposition, 6, 65, (blockposition1, consumer) -> {
+            Direction[] aenumdirection = ALL_DIRECTIONS;
+            int i = aenumdirection.length;
 
-        while (!queue.isEmpty()) {
-            Tuple<BlockPos, Integer> tuple = queue.poll();
-            BlockPos blockpos = tuple.getA();
-            int j = tuple.getB();
+            for (int j = 0; j < i; ++j) {
+                Direction enumdirection = aenumdirection[j];
 
-            for (Direction direction : Direction.values()) {
-                BlockPos blockpos1 = blockpos.relative(direction);
-                BlockState blockstate = blockList.getBlockState(blockpos1);
-                FluidState ifluidstate = blockList.getFluidState(blockpos1);
-                Material material = blockstate.getMaterial();
-                if (ifluidstate.is(FluidTags.WATER)) {
-                    if (blockstate.getBlock() instanceof BucketPickup && !((BucketPickup) blockstate.getBlock()).pickupBlock(worldIn, blockpos1, blockstate).isEmpty()) {
-                        ++i;
-                        if (j < 6) {
-                            queue.add(new Tuple<>(blockpos1, j + 1));
-                        }
-                    } else if (blockstate.getBlock() instanceof LiquidBlock) {
-                        worldIn.setBlock(blockpos1, Blocks.AIR.defaultBlockState(), 3);
-                        ++i;
-                        if (j < 6) {
-                            queue.add(new Tuple<>(blockpos1, j + 1));
-                        }
-                    } else if (material == Material.WATER_PLANT || material == Material.REPLACEABLE_WATER_PLANT) {
-                        //TileEntity tileentity = blockstate.getBlock().hasTileEntity() ? worldIn.getTileEntity(blockpos1) : null;
-                        // Block.spawnDrops(blockstate, worldIn, blockpos1, tileentity);
-                        blockList.setBlock(blockpos1, Blocks.AIR.defaultBlockState(), 3);
-                        ++i;
-                        if (j < 6) {
-                            queue.add(new Tuple<>(blockpos1, j + 1));
+                consumer.accept(blockposition1.relative(enumdirection));
+            }
+
+        }, (blockposition1) -> {
+            if (blockposition1.equals(blockposition)) {
+                return true;
+            } else {
+                // CraftBukkit start
+                BlockState iblockdata = blockList.getBlockState(blockposition1);
+                FluidState fluid = blockList.getFluidState(blockposition1);
+                // CraftBukkit end
+
+                if (!fluid.is(FluidTags.WATER)) {
+                    return false;
+                } else {
+                    Block block = iblockdata.getBlock();
+
+                    if (block instanceof BucketPickup) {
+                        BucketPickup ifluidsource = (BucketPickup) block;
+
+                        if (!ifluidsource.pickupBlock(blockList, blockposition1, iblockdata).isEmpty()) { // CraftBukkit
+                            return true;
                         }
                     }
+
+                    if (iblockdata.getBlock() instanceof LiquidBlock) {
+                        blockList.setBlock(blockposition1, Blocks.AIR.defaultBlockState(), 3); // CraftBukkit
+                    } else {
+                        if (!iblockdata.is(Blocks.KELP) && !iblockdata.is(Blocks.KELP_PLANT) && !iblockdata.is(Blocks.SEAGRASS) && !iblockdata.is(Blocks.TALL_SEAGRASS)) {
+                            return false;
+                        }
+
+                        // CraftBukkit start
+                        // TileEntity tileentity = iblockdata.hasBlockEntity() ? world.getBlockEntity(blockposition1) : null;
+
+                        // dropResources(iblockdata, world, blockposition1, tileentity);
+                        blockList.setBlock(blockposition1, Blocks.AIR.defaultBlockState(), 3);
+                        // CraftBukkit end
+                    }
+
+                    return true;
                 }
             }
-
-            if (i > 64) {
-                break;
-            }
-        }
-
+        });
+        // CraftBukkit start
         List<CraftBlockState> blocks = blockList.getList(); // Is a clone
         if (!blocks.isEmpty()) {
-            final org.bukkit.block.Block bblock = CraftBlock.at(worldIn, pos);
+            final org.bukkit.block.Block bblock = CraftBlock.at(world, blockposition);
 
             SpongeAbsorbEvent event = new SpongeAbsorbEvent(bblock, (List<org.bukkit.block.BlockState>) (List) blocks);
             Bukkit.getPluginManager().callEvent(event);
@@ -92,25 +99,27 @@ public class SpongeBlockMixin {
             }
 
             for (CraftBlockState block : blocks) {
-                BlockPos blockposition2 = block.getPosition();
-                BlockState iblockdata = worldIn.getBlockState(blockposition2);
-                FluidState fluid = worldIn.getFluidState(blockposition2);
-                Material material = iblockdata.getMaterial();
+                BlockPos blockposition1 = block.getPosition();
+                BlockState iblockdata = world.getBlockState(blockposition1);
+                FluidState fluid = world.getFluidState(blockposition1);
 
                 if (fluid.is(FluidTags.WATER)) {
-                    if (iblockdata.getBlock() instanceof BucketPickup && !((BucketPickup) iblockdata.getBlock()).pickupBlock(blockList, blockposition2, iblockdata).isEmpty()) {
+                    if (iblockdata.getBlock() instanceof BucketPickup && !((BucketPickup) iblockdata.getBlock()).pickupBlock(blockList, blockposition1, iblockdata).isEmpty()) {
                         // NOP
                     } else if (iblockdata.getBlock() instanceof LiquidBlock) {
                         // NOP
-                    } else if (material == Material.WATER_PLANT || material == Material.REPLACEABLE_WATER_PLANT) {
-                        BlockEntity tileentity = iblockdata.hasBlockEntity() ? worldIn.getBlockEntity(blockposition2) : null;
+                    } else if (iblockdata.is(Blocks.KELP) || iblockdata.is(Blocks.KELP_PLANT) || iblockdata.is(Blocks.SEAGRASS) || iblockdata.is(Blocks.TALL_SEAGRASS)) {
+                        BlockEntity tileentity = iblockdata.hasBlockEntity() ? world.getBlockEntity(blockposition1) : null;
 
-                        Block.dropResources(iblockdata, worldIn, blockposition2, tileentity);
+                        dropResources(iblockdata, world, blockposition1, tileentity);
                     }
                 }
-                worldIn.setBlock(blockposition2, block.getHandle(), block.getFlag());
+                world.setBlock(blockposition1, block.getHandle(), block.getFlag());
             }
+
+            return true;
         }
-        return i > 0;
+        return false;
+        // CraftBukkit end
     }
 }

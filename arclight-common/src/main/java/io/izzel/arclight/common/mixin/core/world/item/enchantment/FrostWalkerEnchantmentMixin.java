@@ -6,9 +6,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.enchantment.FrostWalkerEnchantment;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.LiquidBlock;
+import net.minecraft.world.level.block.FrostedIceBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,7 +22,7 @@ public class FrostWalkerEnchantmentMixin {
      */
     @Overwrite
     public static void onEntityMoved(LivingEntity living, Level worldIn, BlockPos pos, int level) {
-        if (living.isOnGround()) {
+        if (living.onGround()) {
             BlockState blockstate = Blocks.FROSTED_ICE.defaultBlockState();
             int f = Math.min(16, 2 + level);
             BlockPos.MutableBlockPos blockpos$mutable = new BlockPos.MutableBlockPos();
@@ -34,8 +33,7 @@ public class FrostWalkerEnchantmentMixin {
                     BlockState blockstate1 = worldIn.getBlockState(blockpos$mutable);
                     if (blockstate1.isAir()) {
                         BlockState blockstate2 = worldIn.getBlockState(blockpos);
-                        boolean isFull = blockstate2.getBlock() == Blocks.WATER && blockstate2.getValue(LiquidBlock.LEVEL) == 0; //TODO: Forge, modded waters?
-                        if (blockstate2.getMaterial() == Material.WATER && isFull && blockstate.canSurvive(worldIn, blockpos) && worldIn.isUnobstructed(blockstate, blockpos, CollisionContext.empty()) && !net.minecraftforge.event.ForgeEventFactory.onBlockPlace(living, net.minecraftforge.common.util.BlockSnapshot.create(worldIn.dimension(), worldIn, blockpos), net.minecraft.core.Direction.UP)) {
+                        if (blockstate2 == FrostedIceBlock.meltsInto() && blockstate.canSurvive(worldIn, blockpos) && worldIn.isUnobstructed(blockstate, blockpos, CollisionContext.empty()) && !net.minecraftforge.event.ForgeEventFactory.onBlockPlace(living, net.minecraftforge.common.util.BlockSnapshot.create(worldIn.dimension(), worldIn, blockpos), net.minecraft.core.Direction.UP)) {
                             if (CraftEventFactory.handleBlockFormEvent(worldIn, blockpos, blockstate, living)) {
                                 worldIn.scheduleTick(blockpos, Blocks.FROSTED_ICE, Mth.nextInt(living.getRandom(), 60, 120));
                             }

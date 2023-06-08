@@ -42,8 +42,8 @@ repositories {
     mavenCentral()
 }
 
-def embedLibs = [/*"org.spongepowered:mixin:$mixinVersion", */ 'org.yaml:snakeyaml:1.33',
-                 'org.xerial:sqlite-jdbc:3.41.2.2', 'com.mysql:mysql-connector-j:8.0.32',
+def embedLibs = [/*"org.spongepowered:mixin:$mixinVersion", */ 'org.yaml:snakeyaml:2.0',
+                 'org.xerial:sqlite-jdbc:3.42.0.0', 'com.mysql:mysql-connector-j:8.0.33',
                  /*'commons-lang:commons-lang:2.6',*/ 'com.googlecode.json-simple:json-simple:1.1.1',
                  'org.apache.logging.log4j:log4j-jul:2.17.2', 'net.md-5:SpecialSource:1.11.0',
                  'org.jline:jline-terminal-jansi:3.12.1', 'org.fusesource.jansi:jansi:1.18',
@@ -74,6 +74,7 @@ dependencies {
     implementation 'org.jetbrains:annotations:23.0.0'
     implementation 'org.spongepowered:mixin:0.8.3'
     implementation 'org.apache.logging.log4j:log4j-jul:2.17.2'
+    implementation "net.minecraftforge:fmlloader:${minecraftVersion}-${forgeVersion}"
     for (def lib : embedLibs) {
         installer lib
     }

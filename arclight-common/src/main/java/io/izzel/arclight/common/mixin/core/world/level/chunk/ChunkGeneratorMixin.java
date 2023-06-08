@@ -23,7 +23,7 @@ import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.generator.CraftLimitedRegion;
-import org.bukkit.craftbukkit.v.generator.strucutre.CraftStructure;
+import org.bukkit.craftbukkit.v.generator.structure.CraftStructure;
 import org.bukkit.craftbukkit.v.util.RandomSourceWrapper;
 import org.bukkit.generator.BlockPopulator;
 import org.spongepowered.asm.mixin.Final;

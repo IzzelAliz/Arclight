@@ -37,7 +37,7 @@ public abstract class LargeFireballMixin extends AbstractHurtingProjectileMixin 
         Bukkit.getPluginManager().callEvent(event);
 
         if (!event.isCancelled()) {
-            return this.level.explode((LargeFireball) (Object) this, xIn, yIn, zIn, event.getRadius(), event.getFire(), interaction);
+            return this.level().explode((LargeFireball) (Object) this, xIn, yIn, zIn, event.getRadius(), event.getFire(), interaction);
         } else {
             return null;
         }

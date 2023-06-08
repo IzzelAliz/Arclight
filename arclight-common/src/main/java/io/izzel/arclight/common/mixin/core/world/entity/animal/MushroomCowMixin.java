@@ -40,7 +40,7 @@ public abstract class MushroomCowMixin extends AnimalMixin {
         if (CraftEventFactory.callEntityTransformEvent((MushroomCow) (Object) this, cowEntity, EntityTransformEvent.TransformReason.SHEARED).isCancelled()) {
             cir.setReturnValue(Collections.emptyList());
         } else {
-            ((WorldBridge) this.level).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.SHEARED);
+            ((WorldBridge) this.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.SHEARED);
             this.discard();
         }
     }
@@ -52,13 +52,13 @@ public abstract class MushroomCowMixin extends AnimalMixin {
     @Overwrite
     public void shear(SoundSource pCategory) {
         for (ItemStack s : shearInternal(pCategory)) {
-            var itemEntity = new ItemEntity(this.level, this.getX(), this.getY(1.0D), this.getZ(), s);
+            var itemEntity = new ItemEntity(this.level(), this.getX(), this.getY(1.0D), this.getZ(), s);
             EntityDropItemEvent event = new EntityDropItemEvent(this.getBukkitEntity(), (org.bukkit.entity.Item) ((EntityBridge) itemEntity).bridge$getBukkitEntity());
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
                 continue;
             }
-            this.level.addFreshEntity(itemEntity);
+            this.level().addFreshEntity(itemEntity);
         }
     }
 }

@@ -8,7 +8,7 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.inventory.TransientCraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import org.bukkit.Location;
@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.ArrayList;
 import java.util.List;
 
-@Mixin(CraftingContainer.class)
+@Mixin(TransientCraftingContainer.class)
 public abstract class CraftingInventoryMixin implements CraftingInventoryBridge, Container {
 
     // @formatter:off

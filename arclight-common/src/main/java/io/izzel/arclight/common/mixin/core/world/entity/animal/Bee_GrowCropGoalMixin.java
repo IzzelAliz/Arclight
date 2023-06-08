@@ -20,8 +20,8 @@ public class Bee_GrowCropGoalMixin {
     private Bee outerThis;
 
     @Inject(method = "tick", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;levelEvent(ILnet/minecraft/core/BlockPos;I)V"))
-    private void arclight$entityChangeBlock(CallbackInfo ci, int i, BlockPos blockPos, BlockState blockState, Block block, boolean flag, IntegerProperty property) {
-        if (CraftEventFactory.callEntityChangeBlockEvent(outerThis, blockPos, blockState.setValue(property, blockState.getValue(property) + 1)).isCancelled()) {
+    private void arclight$entityChangeBlock(CallbackInfo ci, int i, BlockPos blockPos, BlockState blockState, Block block, BlockState state) {
+        if (CraftEventFactory.callEntityChangeBlockEvent(outerThis, blockPos, state).isCancelled()) {
             ci.cancel();
         }
     }

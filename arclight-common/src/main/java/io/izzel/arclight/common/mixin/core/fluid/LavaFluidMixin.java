@@ -58,7 +58,7 @@ public abstract class LavaFluidMixin {
                             world.setBlockAndUpdate(blockpos, ForgeEventFactory.fireFluidPlaceBlockEvent(world, blockpos, pos, Blocks.FIRE.defaultBlockState()));
                             return;
                         }
-                    } else if (blockstate.getMaterial().blocksMotion()) {
+                    } else if (blockstate.blocksMotion()) {
                         return;
                     }
                 }

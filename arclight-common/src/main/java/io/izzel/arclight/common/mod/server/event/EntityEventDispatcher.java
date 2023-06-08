@@ -36,7 +36,7 @@ public class EntityEventDispatcher {
         List<ItemStack> itemStackList = XmapList.create((List<ItemEntity>) drops, ItemStack.class,
             (ItemEntity entity) -> CraftItemStack.asCraftMirror(entity.getItem()),
             itemStack -> {
-                ItemEntity itemEntity = new ItemEntity(livingEntity.level, livingEntity.getX(), livingEntity.getY(), livingEntity.getZ(), CraftItemStack.asNMSCopy(itemStack));
+                ItemEntity itemEntity = new ItemEntity(livingEntity.level(), livingEntity.getX(), livingEntity.getY(), livingEntity.getZ(), CraftItemStack.asNMSCopy(itemStack));
                 itemEntity.setDefaultPickUpDelay();
                 return itemEntity;
             });
