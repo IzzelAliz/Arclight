@@ -6,7 +6,7 @@ A Bukkit server implementation utilizing Mixin.
 
 |       Release       |  Forge  | Status |                                                                                                        Build                                                                                                         |
 |:-------------------:|:-------:|:------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| Executions (1.19.4) | 45.0.64  | ACTIVE | [![1.19.4 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Executions&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3AExecutions) |
+| Executions (1.19.4) | 45.1.0  | ACTIVE | [![1.19.4 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Executions&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3AExecutions) |
 |       1.18.x        | 40.1.80 |  LTS   |              [![1.18 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=1.18&style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-18)              |
 |       1.16.x        | 36.2.39 |  LTS   |              [![1.16 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=1.16&style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-16)              |
 
