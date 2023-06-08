@@ -31,7 +31,6 @@ allprojects {
 
 task collect(type: Copy) {
     destinationDir = file('build/libs')
-    subprojects.each { p ->
-        from p.file('build/libs')
-    }
+    from project(':arclight-forge').file('build/libs')
+    dependsOn project(':arclight-forge').tasks.jar
 }
