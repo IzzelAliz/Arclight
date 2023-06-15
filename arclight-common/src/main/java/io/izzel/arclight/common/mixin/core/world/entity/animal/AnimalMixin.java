@@ -16,8 +16,6 @@ import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.living.BabyEntitySpawnEvent;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityEnterLoveModeEvent;
@@ -93,11 +91,13 @@ public abstract class AnimalMixin extends AgeableMobMixin implements AnimalEntit
             return Optional.ofNullable(entityanimal.getLoveCause());
         });
         int experience = this.getRandom().nextInt(7) + 1;
-        org.bukkit.event.entity.EntityBreedEvent entityBreedEvent = CraftEventFactory.callEntityBreedEvent(entityageable, (Animal) (Object) this, entityanimal, cause.orElse(null), this.breedItem, experience);
-        if (entityBreedEvent.isCancelled()) {
-            return;
+        if (entityageable != null) {
+            org.bukkit.event.entity.EntityBreedEvent entityBreedEvent = CraftEventFactory.callEntityBreedEvent(entityageable, (Animal) (Object) this, entityanimal, cause.orElse(null), this.breedItem, experience);
+            if (entityBreedEvent.isCancelled()) {
+                return;
+            }
+            experience = entityBreedEvent.getExperience();
         }
-        experience = entityBreedEvent.getExperience();
         cause.ifPresent((entityplayer) -> {
             // CraftBukkit end
             entityplayer.awardStat(Stats.ANIMALS_BRED);

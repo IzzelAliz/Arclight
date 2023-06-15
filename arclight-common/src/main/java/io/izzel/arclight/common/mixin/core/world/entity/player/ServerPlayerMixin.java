@@ -1027,7 +1027,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         }
         this.setHealth(this.getMaxHealth());
         this.stopUsingItem();
-        this.remainingFireTicks = 0;
+        this.setRemainingFireTicks(0);
         this.resetFallDistance();
         this.foodData = new FoodData();
         ((FoodStatsBridge) this.foodData).bridge$setEntityHuman((ServerPlayer) (Object) this);

@@ -131,6 +131,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
     @Shadow public abstract Abilities getAbilities();
     @Shadow public abstract void setLastDeathLocation(Optional<GlobalPos> p_219750_);
     @Shadow public abstract Optional<GlobalPos> getLastDeathLocation();
+    @Shadow public abstract void setRemainingFireTicks(int p_36353_);
     // @formatter:on
 
     public boolean fauxSleeping;

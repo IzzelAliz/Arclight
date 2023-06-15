@@ -602,6 +602,8 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                                 this.internalTeleport(d3, d4, d5, f, f1, Collections.emptySet()); // CraftBukkit - SPIGOT-1807: Don't call teleport event, when the client thinks the player is falling, because the chunks are not loaded on the client yet.
                                 this.player.doCheckFallDamage(this.player.getX() - d3, this.player.getY() - d4, this.player.getZ() - d5, packetplayinflying.isOnGround());
                             } else {
+                                // Reset to old location first
+                                this.player.absMoveTo(prevX, prevY, prevZ, prevYaw, prevPitch);
                                 CraftPlayer player = this.getCraftPlayer();
                                 Location from = new Location(player.getWorld(), this.lastPosX, this.lastPosY, this.lastPosZ, this.lastYaw, this.lastPitch);
                                 Location to = player.getLocation().clone();

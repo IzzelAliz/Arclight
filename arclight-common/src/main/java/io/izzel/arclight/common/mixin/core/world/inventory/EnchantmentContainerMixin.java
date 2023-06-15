@@ -89,11 +89,11 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
                 this.access.execute((p_217002_2_, p_217002_3_) -> {
                     float power = 0;
 
-                    for(BlockPos blockpos : EnchantmentTableBlock.BOOKSHELF_OFFSETS) {
+                    for (BlockPos blockpos : EnchantmentTableBlock.BOOKSHELF_OFFSETS) {
                         if (EnchantmentTableBlock.isValidBookShelf(p_217002_2_, p_217002_3_, blockpos)) {
-                           power += p_217002_2_.getBlockState(p_217002_3_.offset(blockpos)).getEnchantPowerBonus(p_217002_2_, p_217002_3_.offset(blockpos));
+                            power += p_217002_2_.getBlockState(p_217002_3_.offset(blockpos)).getEnchantPowerBonus(p_217002_2_, p_217002_3_.offset(blockpos));
                         }
-                     }
+                    }
 
                     this.random.setSeed(this.enchantmentSeed.get());
 
@@ -192,7 +192,9 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
                     }
                     CraftItemStack item = CraftItemStack.asCraftMirror(itemstack2);
 
-                    EnchantItemEvent event = new EnchantItemEvent(((Player) ((PlayerEntityBridge) playerIn).bridge$getBukkitEntity()), this.getBukkitView(), ((IWorldPosCallableBridge) this.access).bridge$getLocation().getBlock(), item, this.costs[id], enchants, id);
+                    var hintedEnchantment = org.bukkit.enchantments.Enchantment.getByKey(CraftNamespacedKey.fromMinecraft(BuiltInRegistries.ENCHANTMENT.getKey(net.minecraft.world.item.enchantment.Enchantment.byId(enchantClue[id]))));
+                    int hintedEnchantmentLevel = levelClue[id];
+                    EnchantItemEvent event = new EnchantItemEvent(((Player) ((PlayerEntityBridge) playerIn).bridge$getBukkitEntity()), this.getBukkitView(), ((IWorldPosCallableBridge) this.access).bridge$getLocation().getBlock(), item, this.costs[id], enchants, hintedEnchantment, hintedEnchantmentLevel, id);
                     Bukkit.getPluginManager().callEvent(event);
 
                     int level = event.getExpLevelCost();

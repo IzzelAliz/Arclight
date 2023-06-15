@@ -14,6 +14,9 @@ import org.bukkit.inventory.InventoryHolder;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,5 +67,12 @@ public abstract class ChiseledBookShelfBlockEntityMixin extends BlockEntityMixin
     public Location getLocation() {
         if (!DistValidate.isValid(level)) return null;
         return new org.bukkit.Location(((WorldBridge) level).bridge$getWorld(), worldPosition.getX(), worldPosition.getY(), worldPosition.getZ());
+    }
+
+    @Inject(method = "setItem", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/ChiseledBookShelfBlockEntity;updateState(I)V"))
+    private void arclight$skipIfNull(int p_256610_, ItemStack p_255789_, CallbackInfo ci) {
+        if (level == null) {
+            ci.cancel();
+        }
     }
 }

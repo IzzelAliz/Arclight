@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
 import org.bukkit.Bukkit;
+import org.bukkit.block.sign.Side;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.block.CraftSign;
@@ -27,6 +28,8 @@ import org.bukkit.craftbukkit.v.util.CraftChatMessage;
 import org.bukkit.event.block.SignChangeEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -36,6 +39,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.function.UnaryOperator;
 
 @Mixin(SignBlockEntity.class)
 public abstract class SignBlockEntityMixin extends BlockEntityMixin implements SignTileEntityBridge, CommandSource, ICommandSourceBridge {
@@ -43,19 +49,33 @@ public abstract class SignBlockEntityMixin extends BlockEntityMixin implements S
     // @formatter:off
     @Shadow public abstract ClientboundBlockEntityDataPacket getUpdatePacket();
     @Shadow private static CommandSourceStack createCommandSourceStack(@Nullable Player p_279428_, Level p_279359_, BlockPos p_279430_) { return null; }
+    @Shadow public abstract boolean isWaxed();
+    @Shadow @javax.annotation.Nullable public abstract UUID getPlayerWhoMayEdit();
+    @Shadow public abstract boolean updateText(UnaryOperator<SignText> p_277877_, boolean p_277426_);
+    @Shadow public abstract void setAllowedPlayerEditor(@Nullable UUID p_155714_);
+    @Shadow @Final private static Logger LOGGER;
     // @formatter:on
-
-    @Inject(method = "updateSignText", at = @At(value = "INVOKE", remap = false, target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;)V"))
-    private void arclight$updatePacket(Player player, boolean p_278103_, List<FilteredText> p_277990_, CallbackInfo ci) {
-        ((ServerPlayer) player).connection.send(this.getUpdatePacket());
-    }
 
     /**
      * @author IzzelAliz
      * @reason
      */
     @Overwrite
-    private SignText setMessages(net.minecraft.world.entity.player.Player entityhuman, List<FilteredText> list, SignText signtext) {
+    public void updateSignText(Player p_278048_, boolean p_278103_, List<FilteredText> p_277990_) {
+        if (!this.isWaxed() && p_278048_.getUUID().equals(this.getPlayerWhoMayEdit()) && this.level != null) {
+            this.updateText((p_277776_) -> {
+                return this.setMessages(p_278048_, p_277990_, p_277776_, p_278103_);
+            }, p_278103_);
+            this.setAllowedPlayerEditor(null);
+            this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+        } else {
+            LOGGER.warn("Player {} just tried to change non-editable sign", p_278048_.getName().getString());
+            ((ServerPlayer) p_278048_).connection.send(this.getUpdatePacket());
+        }
+    }
+
+    private SignText setMessages(net.minecraft.world.entity.player.Player entityhuman, List<FilteredText> list, SignText signtext, boolean front) {
+        SignText orig = signtext;
         for (int i = 0; i < list.size(); ++i) {
             FilteredText filteredtext = list.get(i);
             Style chatmodifier = signtext.getMessage(i, entityhuman.isTextFilteringEnabled()).getStyle();
@@ -65,26 +85,30 @@ public abstract class SignBlockEntityMixin extends BlockEntityMixin implements S
             } else {
                 signtext = signtext.setMessage(i, Component.literal(filteredtext.raw()).setStyle(chatmodifier), Component.literal(filteredtext.filteredOrEmpty()).setStyle(chatmodifier));
             }
-
-            // CraftBukkit start
-            org.bukkit.entity.Player player = ((ServerPlayerEntityBridge) entityhuman).bridge$getBukkitEntity();
-            String[] lines = new String[4];
-
-            for (int j = 0; j < list.size(); ++j) {
-                lines[j] = CraftChatMessage.fromComponent(signtext.getMessage(j, entityhuman.isTextFilteringEnabled()));
-            }
-
-            SignChangeEvent event = new SignChangeEvent(CraftBlock.at(this.level, this.worldPosition), player, lines);
-            Bukkit.getPluginManager().callEvent(event);
-
-            if (!event.isCancelled()) {
-                Component[] components = CraftSign.sanitizeLines(event.getLines());
-                for (int j = 0; j < components.length; j++) {
-                    signtext = signtext.setMessage(j, components[j]);
-                }
-            }
-            // CraftBukkit end
         }
+
+        // CraftBukkit start
+        org.bukkit.entity.Player player = ((ServerPlayerEntityBridge) entityhuman).bridge$getBukkitEntity();
+        String[] lines = new String[4];
+
+        for (int j = 0; j < list.size(); ++j) {
+            lines[j] = CraftChatMessage.fromComponent(signtext.getMessage(j, entityhuman.isTextFilteringEnabled()));
+        }
+
+        SignChangeEvent event = new SignChangeEvent(CraftBlock.at(this.level, this.worldPosition), player, lines.clone(), front ? Side.FRONT : Side.BACK);
+        Bukkit.getPluginManager().callEvent(event);
+
+        if (event.isCancelled()) {
+            return orig;
+        }
+
+        Component[] components = CraftSign.sanitizeLines(event.getLines());
+        for (int j = 0; j < components.length; j++) {
+            if (!Objects.equals(lines[j], event.getLine(j))) {
+                signtext = signtext.setMessage(j, components[j]);
+            }
+        }
+        // CraftBukkit end
 
         return signtext;
     }

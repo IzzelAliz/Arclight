@@ -4,12 +4,12 @@ A Bukkit server implementation utilizing Mixin.
 
 ![Downloads](https://img.shields.io/github/downloads/IzzelAliz/Arclight/total?style=flat-square)  ![GitHub](https://img.shields.io/github/license/IzzelAliz/Arclight?style=flat-square)
 
-|       Release       |  Forge  | Status |                                                                                                        Build                                                                                                         |
-|:-------------------:|:-------:|:------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-|    Trials (1.20)    | 46.0.1  | ACTIVE |   [![1.19.4 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Trials&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3ATrials)   |
-| Executions (1.19.4) | 45.1.0  |  LTS   | [![1.19.4 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Executions&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3AExecutions) |
-|       1.18.x        | 40.1.80 |  LTS   |              [![1.18 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=1.18&style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-18)              |
-|       1.16.x        | 36.2.39 |  LTS   |              [![1.16 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=1.16&style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-16)              |
+|       Release        |  Forge  | Status |                                                                                                        Build                                                                                                         |
+|:--------------------:|:-------:|:------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| Trials (1.20-1.20.1) | 47.0.1  | ACTIVE |   [![1.19.4 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Trials&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3ATrials)   |
+| Executions (1.19.4)  | 45.1.0  |  LTS   | [![1.19.4 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Executions&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3AExecutions) |
+|        1.18.x        | 40.1.80 |  LTS   |              [![1.18 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=1.18&style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-18)              |
+|        1.16.x        | 36.2.39 |  LTS   |              [![1.16 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=1.16&style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-16)              |
 
 **Legacy versions**:
 
