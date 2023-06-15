@@ -38,6 +38,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -95,7 +96,7 @@ public abstract class SignBlockEntityMixin extends BlockEntityMixin implements S
             lines[j] = CraftChatMessage.fromComponent(signtext.getMessage(j, entityhuman.isTextFilteringEnabled()));
         }
 
-        SignChangeEvent event = new SignChangeEvent(CraftBlock.at(this.level, this.worldPosition), player, lines.clone(), front ? Side.FRONT : Side.BACK);
+        SignChangeEvent event = new SignChangeEvent(CraftBlock.at(this.level, this.worldPosition), player, Arrays.copyOf(lines, lines.length), front ? Side.FRONT : Side.BACK);
         Bukkit.getPluginManager().callEvent(event);
 
         if (event.isCancelled()) {
