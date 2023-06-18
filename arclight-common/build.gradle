@@ -40,7 +40,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 minecraft {
     //mappings channel: 'parchment', version: "2021.08.22-$minecraftVersion"
     mappings channel: 'official', version: minecraftVersion
-    copyIdeResources = true
+    // copyIdeResources = true
     accessTransformer = project.file('src/main/resources/META-INF/accesstransformer.cfg')
 }
 
