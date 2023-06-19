@@ -303,7 +303,7 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
                 cancelledBlock = true;
             }
 
-            PlayerInteractEvent bukkitEvent = CraftEventFactory.callPlayerInteractEvent(playerIn, Action.RIGHT_CLICK_BLOCK, blockpos, blockRaytraceResultIn.getDirection(), stackIn, cancelledBlock, handIn);
+            PlayerInteractEvent bukkitEvent = CraftEventFactory.callPlayerInteractEvent(playerIn, Action.RIGHT_CLICK_BLOCK, blockpos, blockRaytraceResultIn.getDirection(), stackIn, cancelledBlock, handIn, blockRaytraceResultIn.getLocation());
             bridge$setFiredInteract(true);
             bridge$setInteractResult(bukkitEvent.useItemInHand() == Event.Result.DENY);
             if (bukkitEvent.useInteractedBlock() == Event.Result.DENY) {

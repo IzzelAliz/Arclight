@@ -69,7 +69,7 @@ public abstract class BoatItemMixin extends Item {
 
             if (result.getType() == HitResult.Type.BLOCK) {
                 if (DistValidate.isValid(worldIn)) {
-                    PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(playerIn, Action.RIGHT_CLICK_BLOCK, result.getBlockPos(), result.getDirection(), itemstack, handIn);
+                    PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(playerIn, Action.RIGHT_CLICK_BLOCK, result.getBlockPos(), result.getDirection(), itemstack, false, handIn, result.getLocation());
 
                     if (event.isCancelled()) {
                         return new InteractionResultHolder<>(InteractionResult.PASS, itemstack);

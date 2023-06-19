@@ -820,7 +820,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             } else {
                 // TODO 1.20 update this
                 BlockHitResult movingobjectpositionblock = movingobjectposition;
-                PlayerInteractEvent event2 = CraftEventFactory.callPlayerInteractEvent(this.player, Action.RIGHT_CLICK_BLOCK, movingobjectpositionblock.getBlockPos(), movingobjectpositionblock.getDirection(), itemstack, true, enumhand);
+                PlayerInteractEvent event2 = CraftEventFactory.callPlayerInteractEvent(this.player, Action.RIGHT_CLICK_BLOCK, movingobjectpositionblock.getBlockPos(), movingobjectpositionblock.getDirection(), itemstack, true, enumhand, movingobjectpositionblock.getLocation());
                 cancelled = (event2.useItemInHand() == Event.Result.DENY);
             }
             if (cancelled) {

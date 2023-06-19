@@ -4,6 +4,7 @@ import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
@@ -69,10 +70,15 @@ public abstract class ChiseledBookShelfBlockEntityMixin extends BlockEntityMixin
         return new org.bukkit.Location(((WorldBridge) level).bridge$getWorld(), worldPosition.getX(), worldPosition.getY(), worldPosition.getZ());
     }
 
-    @Inject(method = "setItem", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/ChiseledBookShelfBlockEntity;updateState(I)V"))
-    private void arclight$skipIfNull(int p_256610_, ItemStack p_255789_, CallbackInfo ci) {
+    @Inject(method = "updateState", cancellable = true, at = @At("HEAD"))
+    private void arclight$skipIfNull(int p_261806_, CallbackInfo ci) {
         if (level == null) {
             ci.cancel();
         }
+    }
+
+    @Inject(method = "load", at = @At("HEAD"))
+    private void arclight$load(CompoundTag p_277597_, CallbackInfo ci) {
+        super.load(p_277597_);
     }
 }
