@@ -38,6 +38,7 @@ import net.minecraft.world.item.crafting.CookingBookCategory;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.dimension.LevelStem;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fml.CrashReportCallables;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistry;
@@ -95,6 +96,7 @@ public class BukkitRegistry {
     private static final Map<String, Art> ART_BY_NAME = Unsafe.getStatic(Art.class, "BY_NAME");
     private static final Map<Integer, Art> ART_BY_ID = Unsafe.getStatic(Art.class, "BY_ID");
     private static final BiMap<ResourceLocation, Statistic> STATS = HashBiMap.create(Unsafe.getStatic(CraftStatistic.class, "statistics"));
+    private static final BiMap<Fluid, org.bukkit.Fluid> FLUIDTYPE_FLUID = Unsafe.getStatic(CraftMagicNumbers.class, "FLUIDTYPE_FLUID");
 
     public static void registerAll(DedicatedServer console) {
         CrashReportCallables.registerCrashCallable("Arclight Release", ArclightVersion.current()::getReleaseName);
@@ -110,6 +112,7 @@ public class BukkitRegistry {
         loadSpawnCategory();
         loadEndDragonPhase();
         loadCookingBookCategory();
+        loadFluids();
         try {
             for (var field : org.bukkit.Registry.class.getFields()) {
                 if (Modifier.isStatic(field.getModifiers()) && field.get(null) instanceof org.bukkit.Registry.SimpleRegistry<?> registry) {
@@ -118,6 +121,25 @@ public class BukkitRegistry {
             }
         } catch (Throwable ignored) {
         }
+    }
+
+    private static void loadFluids() {
+        var id = org.bukkit.Fluid.values().length;
+        var newTypes = new ArrayList<org.bukkit.Fluid>();
+        Field keyField = Arrays.stream(org.bukkit.Fluid.class.getDeclaredFields()).filter(it -> it.getName().equals("key")).findAny().orElse(null);
+        long keyOffset = Unsafe.objectFieldOffset(keyField);
+        for (var fluidType : ForgeRegistries.FLUIDS) {
+            if (!FLUIDTYPE_FLUID.containsKey(fluidType)) {
+                var key = ForgeRegistries.FLUIDS.getKey(fluidType);
+                var name = ResourceLocationUtil.standardize(key);
+                var bukkit = EnumHelper.makeEnum(org.bukkit.Fluid.class, name, id++, List.of(), List.of());
+                Unsafe.putObject(bukkit, keyOffset, CraftNamespacedKey.fromMinecraft(key));
+                newTypes.add(bukkit);
+                FLUIDTYPE_FLUID.put(fluidType, bukkit);
+                ArclightMod.LOGGER.debug("Registered {} as fluid {}", key, bukkit);
+            }
+        }
+        EnumHelper.addEnums(org.bukkit.Fluid.class, newTypes);
     }
 
     private static void loadCookingBookCategory() {
