@@ -7,7 +7,7 @@ import net.minecraft.world.inventory.SmithingMenu;
 import net.minecraft.world.item.ItemStack;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftInventory;
-import org.bukkit.craftbukkit.v.inventory.CraftInventorySmithingNew;
+import org.bukkit.craftbukkit.v.inventory.CraftInventorySmithing;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,7 +28,7 @@ public abstract class SmithingTableContainerMixin extends ItemCombinerMixin {
         if (this.bukkitEntity != null) {
             return this.bukkitEntity;
         }
-        CraftInventory inventory = new CraftInventorySmithingNew(((IWorldPosCallableBridge) this.access).bridge$getLocation(), this.inputSlots, this.resultSlots);
+        CraftInventory inventory = new CraftInventorySmithing(((IWorldPosCallableBridge) this.access).bridge$getLocation(), this.inputSlots, this.resultSlots);
         return this.bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.player).bridge$getBukkitEntity(), inventory, (SmithingMenu) (Object) this);
     }
 }

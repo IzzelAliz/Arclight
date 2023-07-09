@@ -56,7 +56,7 @@ public abstract class ComposterBlockMixin {
             double rand = world.random.nextDouble();
             BlockState state1 = addItem(entity, state, DummyGeneratorAccess.INSTANCE, pos, stack, rand);
 
-            if (state == state1 || CraftEventFactory.callEntityChangeBlockEvent(ArclightCaptures.getEntityChangeBlock(), pos, state1).isCancelled()) {
+            if (state == state1 || !CraftEventFactory.callEntityChangeBlockEvent(ArclightCaptures.getEntityChangeBlock(), pos, state1)) {
                 return state;
             }
 
@@ -72,7 +72,7 @@ public abstract class ComposterBlockMixin {
     private static void arclight$emptyComposter(Entity entity, BlockState state, Level world, BlockPos pos, CallbackInfoReturnable<BlockState> cir) {
         if (entity != null && !(entity instanceof Player)) {
             BlockState blockState = empty(entity, state, DummyGeneratorAccess.INSTANCE, pos);
-            if (CraftEventFactory.callEntityChangeBlockEvent(entity, pos, blockState).isCancelled()) {
+            if (!CraftEventFactory.callEntityChangeBlockEvent(entity, pos, blockState)) {
                 cir.setReturnValue(state);
             }
         }

@@ -24,7 +24,7 @@ public class EnderMan_EndermanTakeBlockGoalMixin {
     @Inject(method = "tick", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/EnderMan;setCarriedBlock(Lnet/minecraft/world/level/block/state/BlockState;)V"))
     private void arclight$entityChangeBlock(CallbackInfo ci, RandomSource random, Level world, int i, int j, int k, BlockPos blockPos) {
-        if (CraftEventFactory.callEntityChangeBlockEvent(this.enderman, blockPos, Blocks.AIR.defaultBlockState()).isCancelled()) {
+        if (!CraftEventFactory.callEntityChangeBlockEvent(this.enderman, blockPos, Blocks.AIR.defaultBlockState())) {
             ci.cancel();
         }
     }

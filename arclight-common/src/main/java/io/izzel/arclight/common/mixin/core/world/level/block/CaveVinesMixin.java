@@ -35,7 +35,7 @@ public interface CaveVinesMixin {
     static InteractionResult use(@Nullable Entity entity, BlockState state, Level level, BlockPos pos) {
         if (state.getValue(CaveVines.BERRIES)) {
             if (entity != null) {
-                if (CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state.setValue(CaveVines.BERRIES, false)).isCancelled()) {
+                if (!CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state.setValue(CaveVines.BERRIES, false))) {
                     return InteractionResult.SUCCESS;
                 }
 

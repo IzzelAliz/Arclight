@@ -44,7 +44,7 @@ public abstract class ItemEntityMixin extends EntityMixin {
 
     @Inject(method = "merge(Lnet/minecraft/world/entity/item/ItemEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/item/ItemEntity;Lnet/minecraft/world/item/ItemStack;)V", cancellable = true, at = @At("HEAD"))
     private static void arclight$itemMerge(ItemEntity from, ItemStack stack1, ItemEntity to, ItemStack stack2, CallbackInfo ci) {
-        if (CraftEventFactory.callItemMergeEvent(to, from).isCancelled()) {
+        if (!CraftEventFactory.callItemMergeEvent(to, from)) {
             ci.cancel();
         }
     }

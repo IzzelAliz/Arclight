@@ -112,21 +112,21 @@ public abstract class ThrownPotionMixin extends ThrowableItemProjectileMixin {
 
     @Inject(method = "dowseFire", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;removeBlock(Lnet/minecraft/core/BlockPos;Z)Z"))
     private void arclight$entityChangeBlock(BlockPos pos, CallbackInfo ci) {
-        if (CraftEventFactory.callEntityChangeBlockEvent((ThrownPotion) (Object) this, pos, Blocks.AIR.defaultBlockState()).isCancelled()) {
+        if (!CraftEventFactory.callEntityChangeBlockEvent((ThrownPotion) (Object) this, pos, Blocks.AIR.defaultBlockState())) {
             ci.cancel();
         }
     }
 
     @Inject(method = "dowseFire", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;levelEvent(Lnet/minecraft/world/entity/player/Player;ILnet/minecraft/core/BlockPos;I)V"))
     private void arclight$entityChangeBlock2(BlockPos pos, CallbackInfo ci, BlockState state) {
-        if (CraftEventFactory.callEntityChangeBlockEvent((ThrownPotion) (Object) this, pos, state.setValue(CampfireBlock.LIT, false)).isCancelled()) {
+        if (!CraftEventFactory.callEntityChangeBlockEvent((ThrownPotion) (Object) this, pos, state.setValue(CampfireBlock.LIT, false))) {
             ci.cancel();
         }
     }
 
     @Inject(method = "dowseFire", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/AbstractCandleBlock;extinguish(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;)V"))
     private void arclight$entityChangeBlock3(BlockPos pos, CallbackInfo ci, BlockState state) {
-        if (CraftEventFactory.callEntityChangeBlockEvent((ThrownPotion) (Object) this, pos, state.setValue(AbstractCandleBlock.LIT, false)).isCancelled()) {
+        if (!CraftEventFactory.callEntityChangeBlockEvent((ThrownPotion) (Object) this, pos, state.setValue(AbstractCandleBlock.LIT, false))) {
             ci.cancel();
         }
     }

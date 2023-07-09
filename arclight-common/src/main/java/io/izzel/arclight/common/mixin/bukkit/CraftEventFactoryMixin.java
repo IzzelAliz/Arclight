@@ -198,7 +198,7 @@ public class CraftEventFactoryMixin {
      * @reason
      */
     @Overwrite
-    public static EntityChangeBlockEvent callEntityChangeBlockEvent(Entity entity, BlockPos position, net.minecraft.world.level.block.state.BlockState newBlock, boolean cancelled) {
+    public static boolean callEntityChangeBlockEvent(Entity entity, BlockPos position, net.minecraft.world.level.block.state.BlockState newBlock, boolean cancelled) {
         Block block = CraftBlock.at(entity.level(), position);
         EntityChangeBlockEvent event = new EntityChangeBlockEvent(((EntityBridge) entity).bridge$getBukkitEntity(), block, CraftBlockData.fromData(newBlock));
         event.setCancelled(cancelled);
@@ -206,7 +206,7 @@ public class CraftEventFactoryMixin {
         if (DistValidate.isValid(entity.level())) {
             Bukkit.getPluginManager().callEvent(event);
         }
-        return event;
+        return !event.isCancelled();
     }
 
     /**

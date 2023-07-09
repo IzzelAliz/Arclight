@@ -145,7 +145,7 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
     private boolean processCaptures(BlockPos pos, BlockState newState, int flags) {
         Entity entityChangeBlock = ArclightCaptures.getEntityChangeBlock();
         if (entityChangeBlock != null) {
-            if (CraftEventFactory.callEntityChangeBlockEvent(entityChangeBlock, pos, newState).isCancelled()) {
+            if (!CraftEventFactory.callEntityChangeBlockEvent(entityChangeBlock, pos, newState)) {
                 return false;
             }
         }

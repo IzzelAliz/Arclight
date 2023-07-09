@@ -115,7 +115,7 @@ public abstract class BaseSpawnerMixin {
 
                         entity.moveTo(entity.getX(), entity.getY(), entity.getZ(), level.random.nextFloat() * 360.0F, 0.0F);
                         if (entity instanceof Mob mob) {
-                            if (spawnData.getCustomSpawnRules().isEmpty() && !mob.checkSpawnRules(level, MobSpawnType.SPAWNER) || !mob.checkSpawnObstruction(level)) {
+                            if (!net.minecraftforge.event.ForgeEventFactory.checkSpawnPositionSpawner(mob, level, MobSpawnType.SPAWNER, spawnData, (BaseSpawner) (Object) this)) {
                                 continue;
                             }
 

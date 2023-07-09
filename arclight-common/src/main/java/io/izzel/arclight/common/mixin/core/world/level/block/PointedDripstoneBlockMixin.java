@@ -30,7 +30,7 @@ public class PointedDripstoneBlockMixin {
 
     @Inject(method = "onProjectileHit", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;destroyBlock(Lnet/minecraft/core/BlockPos;Z)Z"))
     private void arclight$projectile(Level p_154042_, BlockState p_154043_, BlockHitResult hitResult, Projectile projectile, CallbackInfo ci) {
-        if (CraftEventFactory.callEntityChangeBlockEvent(projectile, hitResult.getBlockPos(), Blocks.AIR.defaultBlockState()).isCancelled()) {
+        if (!CraftEventFactory.callEntityChangeBlockEvent(projectile, hitResult.getBlockPos(), Blocks.AIR.defaultBlockState())) {
             ci.cancel();
         }
     }

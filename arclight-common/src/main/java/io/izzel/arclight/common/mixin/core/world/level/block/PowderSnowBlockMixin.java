@@ -17,7 +17,7 @@ public class PowderSnowBlockMixin {
 
     @Inject(method = "entityInside", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;destroyBlock(Lnet/minecraft/core/BlockPos;Z)Z"))
     private void arclight$entityChangeBlock(BlockState p_154263_, Level p_154264_, BlockPos pos, Entity entity, CallbackInfo ci) {
-        if (CraftEventFactory.callEntityChangeBlockEvent(entity, pos, Blocks.AIR.defaultBlockState()).isCancelled()) {
+        if (!CraftEventFactory.callEntityChangeBlockEvent(entity, pos, Blocks.AIR.defaultBlockState())) {
             ci.cancel();
         }
     }

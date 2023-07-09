@@ -50,7 +50,7 @@ public class BlockBreakEventDispatcher {
             return;
         }
 
-        if (CraftEventFactory.callEntityChangeBlockEvent(entity, event.getPos(), Blocks.DIRT.defaultBlockState()).isCancelled()) {
+        if (!CraftEventFactory.callEntityChangeBlockEvent(entity, event.getPos(), Blocks.DIRT.defaultBlockState())) {
             event.setCanceled(true);
         }
     }

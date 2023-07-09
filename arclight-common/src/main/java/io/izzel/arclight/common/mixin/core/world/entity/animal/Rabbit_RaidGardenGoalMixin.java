@@ -25,15 +25,15 @@ public class Rabbit_RaidGardenGoalMixin {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     private void arclight$entityChangeBlock(CallbackInfo ci, Level world, BlockPos blockPos, BlockState blockState, Block block, int i) {
         if (i == 0) {
-            if (CraftEventFactory.callEntityChangeBlockEvent(this.rabbit, blockPos, Blocks.AIR.defaultBlockState()).isCancelled()) {
+            if (!CraftEventFactory.callEntityChangeBlockEvent(this.rabbit, blockPos, Blocks.AIR.defaultBlockState())) {
                 ci.cancel();
             }
         } else {
-            if (CraftEventFactory.callEntityChangeBlockEvent(
+            if (!CraftEventFactory.callEntityChangeBlockEvent(
                 this.rabbit,
                 blockPos,
                 blockState.setValue(CarrotBlock.AGE, i - 1)
-            ).isCancelled()) {
+            )) {
                 ci.cancel();
             }
         }

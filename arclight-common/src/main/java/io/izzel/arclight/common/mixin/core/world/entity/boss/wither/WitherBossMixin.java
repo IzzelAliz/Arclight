@@ -133,7 +133,7 @@ public abstract class WitherBossMixin extends PathfinderMobMixin {
                                 BlockPos blockpos = new BlockPos(l2, l, i1);
                                 BlockState blockstate = this.level().getBlockState(blockpos);
                                 if (blockstate.canEntityDestroy(this.level(), blockpos, (WitherBoss) (Object) this) && ForgeEventFactory.onEntityDestroyBlock((WitherBoss) (Object) this, blockpos, blockstate)) {
-                                    if (CraftEventFactory.callEntityChangeBlockEvent((WitherBoss) (Object) this, blockpos, Blocks.AIR.defaultBlockState()).isCancelled()) {
+                                    if (!CraftEventFactory.callEntityChangeBlockEvent((WitherBoss) (Object) this, blockpos, Blocks.AIR.defaultBlockState())) {
                                         continue;
                                     }
                                     flag = this.level().destroyBlock(blockpos, true, (WitherBoss) (Object) this) || flag;

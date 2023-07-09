@@ -12,7 +12,6 @@ import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -31,8 +30,7 @@ public class CropBlockMixin {
     @Redirect(method = "entityInside", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/event/ForgeEventFactory;getMobGriefingEvent(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/Entity;)Z"))
     public boolean arclight$entityChangeBlock(Level world, Entity entity, BlockState state, Level worldIn, BlockPos pos) {
         boolean result = ForgeEventFactory.getMobGriefingEvent(world, entity);
-        EntityChangeBlockEvent event = CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state, result);
-        return event.isCancelled();
+        return !CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state, result);
     }
 
     @Redirect(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))

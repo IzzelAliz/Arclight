@@ -42,7 +42,7 @@ public abstract class Silverfish_WakeUpFriendsGoalMixin extends Goal {
                         BlockState blockstate = world.getBlockState(blockpos1);
                         Block block = blockstate.getBlock();
                         if (block instanceof InfestedBlock) {
-                            if (CraftEventFactory.callEntityChangeBlockEvent(this.silverfish, blockpos1, Blocks.AIR.defaultBlockState()).isCancelled()) {
+                            if (!CraftEventFactory.callEntityChangeBlockEvent(this.silverfish, blockpos1, Blocks.AIR.defaultBlockState())) {
                                 continue;
                             }
                             if (ForgeEventFactory.getMobGriefingEvent(world, this.silverfish)) {
