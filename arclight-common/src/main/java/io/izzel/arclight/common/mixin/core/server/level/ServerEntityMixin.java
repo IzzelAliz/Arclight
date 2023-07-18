@@ -256,9 +256,13 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
 
     private transient ServerPlayer arclight$player;
 
-    public void a(final Consumer<Packet<?>> consumer, ServerPlayer playerEntity) {
+    public void sendPairingData(final Consumer<Packet<?>> consumer, ServerPlayer playerEntity) { // CraftBukkit - add player
         this.arclight$player = playerEntity;
         this.sendPairingData(consumer);
+    }
+
+    public void a(final Consumer<Packet<?>> consumer, ServerPlayer playerEntity) { // for backward compatability
+        this.sendPairingData(consumer, playerEntity);
     }
 
     /**
