@@ -3,6 +3,9 @@ package io.izzel.arclight.common.mixin.bukkit;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.izzel.arclight.common.bridge.bukkit.ItemMetaBridge;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.Tag;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.bukkit.craftbukkit.v.inventory.CraftMetaItem;
@@ -22,9 +25,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.Tag;
 
 @Mixin(value = CraftMetaItem.class, remap = false)
 public class CraftMetaItemMixin implements ItemMetaBridge {
@@ -59,7 +59,9 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
         "Effects",
         "LodestoneDimension",
         "LodestonePos",
-        "LodestoneTracked"
+        "LodestoneTracked",
+        "Items",
+        "instrument"
     );
 
     @ModifyVariable(method = "<init>(Lnet/minecraft/nbt/CompoundTag;)V", at = @At(value = "INVOKE", target = "Lorg/bukkit/UnsafeValues;getDataVersion()I"))
