@@ -463,6 +463,10 @@ public abstract class PlayerListMixin implements PlayerListBridge {
                 playerIn.getRespawnAngle(), playerIn.isRespawnForced(), false);
         if (!conqueredEnd) {  // keep inventory here since inventory dropped at ServerPlayerEntity#onDeath
             serverplayerentity.getInventory().replaceWith(playerIn.getInventory());
+            serverplayerentity.experienceLevel = playerIn.experienceLevel;
+            serverplayerentity.totalExperience = playerIn.totalExperience;
+            serverplayerentity.experienceProgress = playerIn.experienceProgress;
+            serverplayerentity.setScore(playerIn.getScore());
         }
         serverplayerentity.setId(playerIn.getId());
         serverplayerentity.setMainArm(playerIn.getMainArm());
