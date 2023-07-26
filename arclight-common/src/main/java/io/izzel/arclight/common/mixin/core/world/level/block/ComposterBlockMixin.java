@@ -1,7 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
-import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -56,7 +55,7 @@ public abstract class ComposterBlockMixin {
             double rand = world.random.nextDouble();
             BlockState state1 = addItem(entity, state, DummyGeneratorAccess.INSTANCE, pos, stack, rand);
 
-            if (state == state1 || !CraftEventFactory.callEntityChangeBlockEvent(ArclightCaptures.getEntityChangeBlock(), pos, state1)) {
+            if (state == state1 || !CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state1)) {
                 return state;
             }
 
