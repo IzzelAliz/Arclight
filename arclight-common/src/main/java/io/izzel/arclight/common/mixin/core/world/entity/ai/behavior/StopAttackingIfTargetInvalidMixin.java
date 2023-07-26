@@ -18,7 +18,7 @@ public class StopAttackingIfTargetInvalidMixin<E extends Mob> {
     @Inject(method = "clearAttackTarget", cancellable = true, at = @At("HEAD"))
     private void arclight$attackEvent(E mob, CallbackInfo ci) {
         LivingEntity old = mob.getBrain().getMemory(MemoryModuleType.ATTACK_TARGET).orElse(null);
-        EntityTargetEvent event = CraftEventFactory.callEntityTargetLivingEvent(mob, old, (old != null && !old.isAlive()) ? EntityTargetEvent.TargetReason.TARGET_DIED : EntityTargetEvent.TargetReason.FORGOT_TARGET);
+        EntityTargetEvent event = CraftEventFactory.callEntityTargetLivingEvent(mob, null, (old != null && !old.isAlive()) ? EntityTargetEvent.TargetReason.TARGET_DIED : EntityTargetEvent.TargetReason.FORGOT_TARGET);
         if (event.isCancelled()) {
             ci.cancel();
             return;
