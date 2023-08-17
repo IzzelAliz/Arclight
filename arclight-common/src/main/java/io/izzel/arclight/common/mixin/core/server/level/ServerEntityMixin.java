@@ -15,7 +15,6 @@ import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
 import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
 import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket;
-import net.minecraft.network.protocol.game.ClientboundUpdateMobEffectPacket;
 import net.minecraft.network.protocol.game.VecDeltaCodec;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerEntity;
@@ -23,7 +22,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerPlayerConnection;
 import net.minecraft.util.Mth;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -290,9 +288,13 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
             if (!list.isEmpty()) {
                 consumer.accept(new ClientboundSetEquipmentPacket(this.entity.getId(), list));
             }
+            ((LivingEntity) this.entity).detectEquipmentUpdates();
         }
-        this.yHeadRotp = Mth.floor(this.entity.getYHeadRot() * 256.0f / 360.0f);
-        consumer.accept(new ClientboundRotateHeadPacket(this.entity, (byte) this.yHeadRotp));
+        // CraftBukkit start - MC-109346: Fix for nonsensical head yaw
+        if (this.entity instanceof ServerPlayer) {
+            consumer.accept(new ClientboundRotateHeadPacket(this.entity, (byte) Mth.floor(this.entity.getYHeadRot() * 256.0F / 360.0F)));
+        }
+        // CraftBukkit end
         if (!this.entity.getPassengers().isEmpty()) {
             consumer.accept(new ClientboundSetPassengersPacket(this.entity));
         }

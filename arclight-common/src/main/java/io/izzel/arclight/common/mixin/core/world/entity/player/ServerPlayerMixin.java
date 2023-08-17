@@ -713,6 +713,10 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             ci.cancel();
+        } else {
+            if (this.connection != null) {
+                ((ServerPlayNetHandlerBridge) this.connection).bridge$pushTeleportCause(PlayerTeleportEvent.TeleportCause.EXIT_BED);
+            }
         }
     }
 
