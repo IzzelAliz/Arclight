@@ -68,14 +68,14 @@ public abstract class VineBlockMixin extends BlockMixin {
                             }
                         }
                     } else if (isAcceptableNeighbour(worldIn, blockpos4, direction)) {
-                        worldIn.setBlock(pos, state.setValue(getPropertyForFace(direction), Boolean.TRUE), 2);
+                        CraftEventFactory.handleBlockGrowEvent(worldIn, pos, state.setValue(getPropertyForFace(direction), Boolean.TRUE), 2);
                     }
 
                 }
             } else {
                 if (direction == Direction.UP && pos.getY() < worldIn.getMaxBuildHeight() - 1) {
                     if (this.canSupportAtFace(worldIn, pos, direction)) {
-                        worldIn.setBlock(pos, state.setValue(UP, Boolean.TRUE), 2);
+                        CraftEventFactory.handleBlockGrowEvent(worldIn, pos, state.setValue(UP, Boolean.TRUE), 2);
                         return;
                     }
 

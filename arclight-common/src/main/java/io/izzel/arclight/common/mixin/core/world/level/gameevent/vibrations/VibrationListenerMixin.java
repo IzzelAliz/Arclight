@@ -2,7 +2,6 @@ package io.izzel.arclight.common.mixin.core.world.level.gameevent.vibrations;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
@@ -10,8 +9,8 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.gameevent.vibrations.VibrationSystem;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.v.CraftGameEvent;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.event.block.BlockReceiveGameEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -52,7 +51,7 @@ public abstract class VibrationListenerMixin {
                 // CraftBukkit start
                 boolean defaultCancel = !vibrationsystem_d.canReceiveVibration(worldserver, BlockPos.containing(vec3d), gameevent, gameevent_a);
                 Entity entity = gameevent_a.sourceEntity();
-                BlockReceiveGameEvent event = new BlockReceiveGameEvent(org.bukkit.GameEvent.getByKey(CraftNamespacedKey.fromMinecraft(BuiltInRegistries.GAME_EVENT.getKey(gameevent))), CraftBlock.at(worldserver, BlockPos.containing(vec3d1)), (entity == null) ? null : ((EntityBridge) entity).bridge$getBukkitEntity());
+                BlockReceiveGameEvent event = new BlockReceiveGameEvent(CraftGameEvent.minecraftToBukkit(gameevent), CraftBlock.at(worldserver, BlockPos.containing(vec3d1)), (entity == null) ? null : ((EntityBridge) entity).bridge$getBukkitEntity());
                 event.setCancelled(defaultCancel);
                 Bukkit.getPluginManager().callEvent(event);
                 if (event.isCancelled()) {

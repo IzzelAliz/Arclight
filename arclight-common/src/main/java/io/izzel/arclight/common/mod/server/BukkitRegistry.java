@@ -1,6 +1,10 @@
 package io.izzel.arclight.common.mod.server;
 
-import com.google.common.collect.*;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.api.EnumHelper;
 import io.izzel.arclight.api.Unsafe;
@@ -39,7 +43,11 @@ import net.minecraftforge.fml.CrashReportCallables;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistry;
 import net.minecraftforge.registries.IForgeRegistry;
-import org.bukkit.*;
+import org.bukkit.Art;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Statistic;
+import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.craftbukkit.v.CraftCrashReport;
 import org.bukkit.craftbukkit.v.CraftStatistic;
@@ -49,13 +57,22 @@ import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.craftbukkit.v.util.CraftSpawnCategory;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.*;
+import org.bukkit.entity.EnderDragon;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.SpawnCategory;
+import org.bukkit.entity.Villager;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 @SuppressWarnings({"ConstantConditions", "deprecation"})
 public class BukkitRegistry {
@@ -96,7 +113,6 @@ public class BukkitRegistry {
         loadEndDragonPhase();
         loadCookingBookCategory();
         loadFluids();
-        loadGameEvents();
         try {
             for (var field : org.bukkit.Registry.class.getFields()) {
                 if (Modifier.isStatic(field.getModifiers()) && field.get(null) instanceof org.bukkit.Registry.SimpleRegistry<?> registry) {
@@ -104,24 +120,6 @@ public class BukkitRegistry {
                 }
             }
         } catch (Throwable ignored) {
-        }
-    }
-
-    private static void loadGameEvents() {
-        try {
-            var constructor = GameEvent.class.getDeclaredConstructor(NamespacedKey.class);
-            constructor.setAccessible(true);
-            var handle = Unsafe.lookup().unreflectConstructor(constructor);
-            for (var gameEvent : BuiltInRegistries.GAME_EVENT) {
-                var key = BuiltInRegistries.GAME_EVENT.getKey(gameEvent);
-                var bukkit = GameEvent.getByKey(CraftNamespacedKey.fromMinecraft(key));
-                if (bukkit == null) {
-                    bukkit = (GameEvent) handle.invoke(CraftNamespacedKey.fromMinecraft(key));
-                    ArclightMod.LOGGER.debug("Registered {} as game event {}", key, bukkit);
-                }
-            }
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
         }
     }
 
