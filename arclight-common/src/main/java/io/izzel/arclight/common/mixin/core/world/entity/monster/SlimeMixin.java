@@ -27,6 +27,8 @@ public abstract class SlimeMixin extends MobMixin {
     @Shadow public abstract EntityType<? extends net.minecraft.world.entity.monster.Slime> getType();
     // @formatter:on
 
+    private transient List<LivingEntity> arclight$slimes;
+
     /**
      * @author IzzelAliz
      * @reason
@@ -42,14 +44,16 @@ public abstract class SlimeMixin extends MobMixin {
             int j = i / 2;
             int k = 2 + this.random.nextInt(3);
 
-            SlimeSplitEvent event = new SlimeSplitEvent((Slime) this.getBukkitEntity(), k);
-            Bukkit.getPluginManager().callEvent(event);
-            if (event.isCancelled() || event.getCount() <= 0) {
-                super.remove(p_149847_);
-                return;
+            {
+                SlimeSplitEvent event = new SlimeSplitEvent((Slime) this.getBukkitEntity(), k);
+                Bukkit.getPluginManager().callEvent(event);
+                if (event.isCancelled() || event.getCount() <= 0) {
+                    super.remove(p_149847_);
+                    return;
+                }
+                k = event.getCount();
             }
-            k = event.getCount();
-            List<LivingEntity> slimes = new ArrayList<>(k);
+            arclight$slimes = new ArrayList<>(k);
 
             for (int l = 0; l < k; ++l) {
                 float f1 = ((float) (l % 2) - 0.5F) * f;
@@ -65,16 +69,22 @@ public abstract class SlimeMixin extends MobMixin {
                 slimeentity.setInvulnerable(this.isInvulnerable());
                 slimeentity.setSize(j, true);
                 slimeentity.moveTo(this.getX() + (double) f1, this.getY() + 0.5D, this.getZ() + (double) f2, this.random.nextFloat() * 360.0F, 0.0F);
-                slimes.add(slimeentity);
+                arclight$slimes.add(slimeentity);
             }
-            if (CraftEventFactory.callEntityTransformEvent((net.minecraft.world.entity.monster.Slime) (Object) this, slimes, EntityTransformEvent.TransformReason.SPLIT).isCancelled()) {
+            if (CraftEventFactory.callEntityTransformEvent((net.minecraft.world.entity.monster.Slime) (Object) this, arclight$slimes, EntityTransformEvent.TransformReason.SPLIT).isCancelled()) {
                 super.remove(p_149847_);
+                arclight$slimes = null;
                 return;
             }
-            for (LivingEntity living : slimes) {
+            for (int l = 0; l < arclight$slimes.size(); l++) {
+                // Apotheosis compat, see https://github.com/IzzelAliz/Arclight/issues/1078
+                float f1 = ((float) (l % 2) - 0.5F) * f;
+                float f2 = ((float) (l / 2) - 0.5F) * f;
+                net.minecraft.world.entity.monster.Slime living = (net.minecraft.world.entity.monster.Slime) arclight$slimes.get(l);
                 ((WorldBridge) this.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.SLIME_SPLIT);
                 this.level().addFreshEntity(living);
             }
+            arclight$slimes = null;
         }
         super.remove(p_149847_);
     }
