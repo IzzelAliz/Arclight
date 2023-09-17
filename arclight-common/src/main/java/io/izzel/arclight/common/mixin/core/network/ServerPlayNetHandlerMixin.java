@@ -1012,7 +1012,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 }
 
                 CompletableFuture<FilteredText> completablefuture = this.filterTextPacket(playerchatmessage.signedContent());
-                CompletableFuture<Component> completablefuture1 = this.server.getChatDecorator().decorate(this.player, playerchatmessage.decoratedContent());
+                CompletableFuture<Component> completablefuture1 = ForgeHooks.getServerChatSubmittedDecorator().decorate(this.player, playerchatmessage.decoratedContent());
 
                 this.chatMessageChain.append((executor) -> {
                     return CompletableFuture.allOf(completablefuture, completablefuture1).thenAcceptAsync((ovoid) -> {
