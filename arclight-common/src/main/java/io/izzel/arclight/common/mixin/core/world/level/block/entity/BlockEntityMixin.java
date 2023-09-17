@@ -37,6 +37,7 @@ public abstract class BlockEntityMixin implements TileEntityBridge {
     @Shadow protected static void setChanged(Level p_155233_, BlockPos p_155234_, BlockState p_155235_) { }
     @Shadow public abstract BlockEntityType<?> getType();
     @Shadow public void load(CompoundTag p_155245_) {}
+    @Shadow public void setLevel(Level p_155231_) {}
     // @formatter:on
 
     @Inject(method = "load", at = @At("RETURN"))
