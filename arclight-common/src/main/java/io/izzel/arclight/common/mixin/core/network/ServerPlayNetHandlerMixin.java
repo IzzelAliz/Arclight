@@ -759,16 +759,20 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         switch (packetplayinblockdig_enumplayerdigtype) {
             case SWAP_ITEM_WITH_OFFHAND: {
                 if (!this.player.isSpectator()) {
-                    ItemStack itemstack = this.player.getItemInHand(InteractionHand.OFF_HAND);
+                    // ItemStack itemstack = this.player.getItemInHand(InteractionHand.OFF_HAND);
+                    var event = net.minecraftforge.common.ForgeHooks.onLivingSwapHandItems(this.player);
+                    if (event.isCanceled()) return;
+                    ItemStack itemstack = event.getItemSwappedToMainHand();
+                    ItemStack originMainHand = event.getItemSwappedToOffHand();
                     CraftItemStack mainHand = CraftItemStack.asCraftMirror(itemstack);
-                    CraftItemStack offHand = CraftItemStack.asCraftMirror(this.player.getItemInHand(InteractionHand.MAIN_HAND));
+                    CraftItemStack offHand = CraftItemStack.asCraftMirror(originMainHand);
                     PlayerSwapHandItemsEvent swapItemsEvent = new PlayerSwapHandItemsEvent(this.getCraftPlayer(), mainHand.clone(), offHand.clone());
                     this.cserver.getPluginManager().callEvent(swapItemsEvent);
                     if (swapItemsEvent.isCancelled()) {
                         return;
                     }
                     if (swapItemsEvent.getOffHandItem().equals(offHand)) {
-                        this.player.setItemInHand(InteractionHand.OFF_HAND, this.player.getItemInHand(InteractionHand.MAIN_HAND));
+                        this.player.setItemInHand(InteractionHand.OFF_HAND, originMainHand);
                     } else {
                         this.player.setItemInHand(InteractionHand.OFF_HAND, CraftItemStack.asNMSCopy(swapItemsEvent.getOffHandItem()));
                     }
