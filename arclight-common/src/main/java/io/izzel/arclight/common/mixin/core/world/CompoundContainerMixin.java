@@ -4,7 +4,7 @@ import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import net.minecraft.world.CompoundContainer;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
@@ -75,8 +75,8 @@ public abstract class CompoundContainerMixin implements IInventoryBridge, Contai
     }
 
     @Override
-    public Recipe<?> getCurrentRecipe() { return null; }
+    public RecipeHolder<?> getCurrentRecipe() { return null; }
 
     @Override
-    public void setCurrentRecipe(Recipe<?> recipe) { }
+    public void setCurrentRecipe(RecipeHolder<?> recipe) { }
 }

@@ -356,6 +356,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             return false;
         } else {
             MobEffectInstance effectinstance = this.activeEffects.get(effectInstanceIn.getEffect());
+            boolean flag = false;
 
             boolean override = false;
             if (effectinstance != null) {
@@ -371,14 +372,15 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             if (effectinstance == null) {
                 this.activeEffects.put(effectInstanceIn.getEffect(), effectInstanceIn);
                 this.onEffectAdded(effectInstanceIn, entity);
-                return true;
+                flag = true;
             } else if (event.isOverride()) {
                 effectinstance.update(effectInstanceIn);
                 this.onEffectUpdated(effectinstance, true, entity);
-                return true;
-            } else {
-                return false;
+                flag = true;
             }
+
+            effectInstanceIn.onEffectStarted((LivingEntity) (Object) this);
+            return flag;
         }
     }
 
@@ -614,7 +616,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                     this.markHurt();
                 }
 
-                if (entity1 != null && !source.is(DamageTypeTags.IS_EXPLOSION)) {
+                if (entity1 != null && !source.is(DamageTypeTags.NO_KNOCKBACK)) {
                     double d1 = entity1.getX() - this.getX();
 
                     double d0;
@@ -691,7 +693,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             Function<Double, Double> blocking;
             var shieldTakesDamage = false;
             if (this.isDamageSourceBlocked(damagesource)) {
-                var shieldEvent = ForgeHooks.onShieldBlock((LivingEntity) (Object) this, damagesource, f);
+                var shieldEvent = ForgeEventFactory.onShieldBlock((LivingEntity) (Object) this, damagesource, f);
                 if (!shieldEvent.isCanceled()) {
                     var blocked = shieldEvent.getBlockedDamage();
                     shieldTakesDamage = shieldEvent.shieldTakesDamage();
@@ -931,6 +933,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 if (itemstack != null && (Object) this instanceof ServerPlayer serverplayerentity) {
                     serverplayerentity.awardStat(Stats.ITEM_USED.get(Items.TOTEM_OF_UNDYING));
                     CriteriaTriggers.USED_TOTEM.trigger(serverplayerentity, itemstack);
+                    this.gameEvent(GameEvent.ITEM_INTERACT_FINISH);
                 }
 
                 this.setHealth(1.0F);
@@ -1133,13 +1136,13 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         boolean flag = newItem.isEmpty() && oldItem.isEmpty();
         if (!flag && !ItemStack.isSameItemSameTags(oldItem, newItem) && !this.firstTick) {
             Equipable equipable = Equipable.get(newItem);
-            if (equipable != null && !this.isSpectator() && equipable.getEquipmentSlot() == slot) {
-                if (!this.level().isClientSide() && !this.isSilent() && !silent) {
+            if (!this.level().isClientSide() && !this.isSpectator()) {
+                if (!this.isSilent() && equipable != null && equipable.getEquipmentSlot() == slot && !silent) {
                     this.level().playSound(null, this.getX(), this.getY(), this.getZ(), equipable.getEquipSound(), this.getSoundSource(), 1.0F, 1.0F);
                 }
 
                 if (this.doesEmitEquipEvent(slot)) {
-                    this.gameEvent(GameEvent.EQUIP);
+                    this.gameEvent(equipable != null ? GameEvent.EQUIP : GameEvent.UNEQUIP);
                 }
             }
 

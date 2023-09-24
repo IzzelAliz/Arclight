@@ -38,7 +38,6 @@ import net.minecraft.world.item.crafting.CookingBookCategory;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.dimension.LevelStem;
-import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fml.CrashReportCallables;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistry;
@@ -96,7 +95,6 @@ public class BukkitRegistry {
     private static final Map<String, Art> ART_BY_NAME = Unsafe.getStatic(Art.class, "BY_NAME");
     private static final Map<Integer, Art> ART_BY_ID = Unsafe.getStatic(Art.class, "BY_ID");
     private static final BiMap<ResourceLocation, Statistic> STATS = HashBiMap.create(Unsafe.getStatic(CraftStatistic.class, "statistics"));
-    private static final BiMap<Fluid, org.bukkit.Fluid> FLUIDTYPE_FLUID = Unsafe.getStatic(CraftMagicNumbers.class, "FLUIDTYPE_FLUID");
 
     public static void registerAll(DedicatedServer console) {
         CrashReportCallables.registerCrashCallable("Arclight Release", ArclightVersion.current()::getReleaseName);
@@ -129,13 +127,14 @@ public class BukkitRegistry {
         Field keyField = Arrays.stream(org.bukkit.Fluid.class.getDeclaredFields()).filter(it -> it.getName().equals("key")).findAny().orElse(null);
         long keyOffset = Unsafe.objectFieldOffset(keyField);
         for (var fluidType : ForgeRegistries.FLUIDS) {
-            if (!FLUIDTYPE_FLUID.containsKey(fluidType)) {
-                var key = ForgeRegistries.FLUIDS.getKey(fluidType);
-                var name = ResourceLocationUtil.standardize(key);
+            var key = ForgeRegistries.FLUIDS.getKey(fluidType);
+            var name = ResourceLocationUtil.standardize(key);
+            try {
+                org.bukkit.Fluid.valueOf(name);
+            } catch (Exception e) {
                 var bukkit = EnumHelper.makeEnum(org.bukkit.Fluid.class, name, id++, List.of(), List.of());
                 Unsafe.putObject(bukkit, keyOffset, CraftNamespacedKey.fromMinecraft(key));
                 newTypes.add(bukkit);
-                FLUIDTYPE_FLUID.put(fluidType, bukkit);
                 ArclightMod.LOGGER.debug("Registered {} as fluid {}", key, bukkit);
             }
         }
@@ -373,8 +372,7 @@ public class BukkitRegistry {
     private static void loadPotions() {
         int origin = PotionEffectType.values().length;
         int size = ForgeRegistries.MOB_EFFECTS.getEntries().size();
-        int maxId = ForgeRegistries.MOB_EFFECTS.getValues().stream().mapToInt(MobEffect::getId).max().orElse(0);
-        PotionEffectType[] types = new PotionEffectType[maxId + 1];
+        PotionEffectType[] types = new PotionEffectType[Math.max(origin + 1, size + 1)];
         putStatic(PotionEffectType.class, "byId", types);
         putBool(PotionEffectType.class, "acceptingNew", true);
         for (MobEffect eff : ForgeRegistries.MOB_EFFECTS) {
@@ -401,7 +399,7 @@ public class BukkitRegistry {
                 MobEffectInstance effectInstance = potion.getEffects().isEmpty() ? null : potion.getEffects().get(0);
                 PotionType potionType = EnumHelper.makeEnum(PotionType.class, name, typeId++,
                     Arrays.asList(PotionEffectType.class, boolean.class, boolean.class),
-                    Arrays.asList(effectInstance == null ? null : PotionEffectType.getById(MobEffect.getId(effectInstance.getEffect())), false, false));
+                    Arrays.asList(effectInstance == null ? null : PotionEffectType.getByKey(CraftNamespacedKey.fromMinecraft(ForgeRegistries.MOB_EFFECTS.getKey(effectInstance.getEffect()))), false, false));
                 newTypes.add(potionType);
                 map.put(potionType, location.toString());
                 ArclightMod.LOGGER.debug("Registered {} as potion type {}", location, potionType);

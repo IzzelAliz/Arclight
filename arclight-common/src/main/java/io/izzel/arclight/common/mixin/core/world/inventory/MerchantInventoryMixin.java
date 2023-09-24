@@ -7,7 +7,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.inventory.MerchantContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.trading.Merchant;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftAbstractVillager;
@@ -78,9 +78,9 @@ public abstract class MerchantInventoryMixin implements IInventoryBridge, Contai
     }
 
     @Override
-    public Recipe<?> getCurrentRecipe() { return null; }
+    public RecipeHolder<?> getCurrentRecipe() { return null; }
 
     @Override
-    public void setCurrentRecipe(Recipe<?> recipe) {
+    public void setCurrentRecipe(RecipeHolder<?> recipe) {
     }
 }

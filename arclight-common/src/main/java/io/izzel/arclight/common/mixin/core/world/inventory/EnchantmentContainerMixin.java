@@ -185,7 +185,6 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
                 if (true || !list.isEmpty()) {
 
                     //  playerIn.onEnchant(itemstack, i);
-                    boolean flag = itemstack.getItem() == Items.BOOK;
                     Map<Enchantment, Integer> enchants = new java.util.HashMap<>();
                     for (EnchantmentInstance obj : list) {
                         enchants.put(org.bukkit.enchantments.Enchantment.getByKey(CraftNamespacedKey.fromMinecraft(ForgeRegistries.ENCHANTMENTS.getKey(obj.enchantment))), obj.level);
@@ -201,6 +200,7 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
                     if (event.isCancelled() || (level > playerIn.experienceLevel && !playerIn.getAbilities().instabuild) || event.getEnchantsToAdd().isEmpty()) {
                         return;
                     }
+                    boolean flag = itemstack.is(Items.BOOK);
 
                     if (flag) {
                         itemstack2 = new ItemStack(Items.ENCHANTED_BOOK);

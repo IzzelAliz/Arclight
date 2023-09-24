@@ -1,24 +1,26 @@
 package io.izzel.arclight.common.mixin.core.network;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.properties.Property;
 import io.izzel.arclight.common.bridge.core.network.NetworkManagerBridge;
+import io.izzel.arclight.common.bridge.core.network.common.ServerCommonPacketListenerBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.core.server.management.PlayerListBridge;
 import net.minecraft.DefaultUncaughtExceptionHandler;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.Connection;
-import net.minecraft.network.PacketSendListener;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.game.ClientboundDisconnectPacket;
-import net.minecraft.network.protocol.login.ClientboundGameProfilePacket;
 import net.minecraft.network.protocol.login.ClientboundHelloPacket;
-import net.minecraft.network.protocol.login.ClientboundLoginCompressionPacket;
 import net.minecraft.network.protocol.login.ServerboundHelloPacket;
 import net.minecraft.network.protocol.login.ServerboundKeyPacket;
+import net.minecraft.network.protocol.login.ServerboundLoginAcknowledgedPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.server.network.ServerConfigurationPacketListenerImpl;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
+import net.minecraft.server.players.PlayerList;
 import net.minecraft.util.Crypt;
 import net.minecraft.util.CryptException;
 import net.minecraftforge.fml.util.thread.SidedThreadGroups;
@@ -33,6 +35,11 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
 import javax.crypto.Cipher;
@@ -42,6 +49,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.security.PrivateKey;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -55,14 +63,19 @@ public abstract class ServerLoginNetHandlerMixin {
     @Shadow @Final private MinecraftServer server;
     @Shadow @Final public Connection connection;
     @Shadow @Final private static AtomicInteger UNIQUE_THREAD_ID;
-    @Shadow private GameProfile gameProfile;
     @Shadow @Final private static Logger LOGGER;
-    @Shadow protected abstract GameProfile createFakeProfile(GameProfile original);
     @Shadow public abstract void disconnect(Component reason);
     @Shadow public abstract String getUserName();
-    @Shadow private ServerPlayer delayedAcceptPlayer;
     @Shadow @Final private byte[] challenge;
+    @Shadow @Nullable private String requestedUsername;
+    @Shadow abstract void startClientVerification(GameProfile p_301095_);
+    @Shadow protected abstract boolean isPlayerAlreadyInWorld(GameProfile p_298499_);
+    @Shadow @Nullable private GameProfile authenticatedProfile;
     // @formatter:on
+
+    private static final java.util.regex.Pattern PROP_PATTERN = java.util.regex.Pattern.compile("\\w{0,16}");
+
+    private ServerPlayer player;
 
     public void disconnect(final String s) {
         this.disconnect(Component.literal(s));
@@ -73,63 +86,14 @@ public abstract class ServerLoginNetHandlerMixin {
      * @reason
      */
     @Overwrite
-    public void handleAcceptedLogin() {
-        /*
-        if (!this.loginGameProfile.isComplete()) {
-            this.loginGameProfile = this.getOfflineProfile(this.loginGameProfile);
-        }
-        */
-
-        if (!this.server.usesAuthentication()) {
-            // this.gameProfile = this.createFakeProfile(this.gameProfile); // Spigot - Moved to initUUID
-            // Spigot end
-        }
-
-        ServerPlayer entity = ((PlayerListBridge) this.server.getPlayerList()).bridge$canPlayerLogin(this.connection.getRemoteAddress(), this.gameProfile, (ServerLoginPacketListenerImpl) (Object) this);
-        if (entity == null) {
-            // this.disconnect(itextcomponent);
-        } else {
-            this.state = ServerLoginPacketListenerImpl.State.ACCEPTED;
-            if (this.server.getCompressionThreshold() >= 0 && !this.connection.isMemoryConnection()) {
-                this.connection.send(new ClientboundLoginCompressionPacket(this.server.getCompressionThreshold()), PacketSendListener.thenRun(() -> {
-                    this.connection.setupCompression(this.server.getCompressionThreshold(), true);
-                }));
-            }
-
-            this.connection.send(new ClientboundGameProfilePacket(this.gameProfile));
-            ServerPlayer serverplayerentity = this.server.getPlayerList().getPlayer(this.gameProfile.getId());
-            try {
-                if (serverplayerentity != null) {
-                    this.state = ServerLoginPacketListenerImpl.State.DELAY_ACCEPT;
-                    this.delayedAcceptPlayer = entity;
-                } else {
-                    this.server.getPlayerList().placeNewPlayer(this.connection, entity);
-                }
-            } catch (Exception exception) {
-                LOGGER.error("Couldn't place player in world", exception);
-                var chatmessage = Component.translatable("multiplayer.disconnect.invalid_player_data");
-
-                this.connection.send(new ClientboundDisconnectPacket(chatmessage));
-                this.connection.disconnect(chatmessage);
-            }
-        }
-    }
-
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
     public void handleHello(ServerboundHelloPacket packetIn) {
         Validate.validState(this.state == ServerLoginPacketListenerImpl.State.HELLO, "Unexpected hello packet");
-        Validate.validState(this.state == ServerLoginPacketListenerImpl.State.HELLO, "Unexpected hello packet");
         Validate.validState(isValidUsername(packetIn.name()), "Invalid characters in username");
+        this.requestedUsername = packetIn.name();
         GameProfile gameprofile = this.server.getSingleplayerProfile();
-        if (gameprofile != null && packetIn.name().equalsIgnoreCase(gameprofile.getName())) {
-            this.gameProfile = gameprofile;
-            this.state = ServerLoginPacketListenerImpl.State.NEGOTIATING; // FORGE: continue NEGOTIATING, we move to READY_TO_ACCEPT after Forge is ready
+        if (gameprofile != null && this.requestedUsername.equalsIgnoreCase(gameprofile.getName())) {
+            this.startClientVerification(gameprofile);
         } else {
-            this.gameProfile = new GameProfile(null, packetIn.name());
             if (this.server.usesAuthentication() && !this.connection.isMemoryConnection()) {
                 this.state = ServerLoginPacketListenerImpl.State.KEY;
                 this.connection.send(new ClientboundHelloPacket("", this.server.getKeyPair().getPublic().getEncoded(), this.challenge));
@@ -143,11 +107,11 @@ public abstract class ServerLoginNetHandlerMixin {
                     @Override
                     public void run() {
                         try {
-                            initUUID();
-                            arclight$preLogin();
+                            var gameProfile = arclight$createOfflineProfile(connection, requestedUsername);
+                            arclight$preLogin(gameProfile);
                         } catch (Exception ex) {
                             disconnect("Failed to verify username!");
-                            LOGGER.warn("Exception verifying {} ", gameProfile.getName(), ex);
+                            LOGGER.warn("Exception verifying {} ", requestedUsername, ex);
                         }
                     }
                 }
@@ -156,21 +120,48 @@ public abstract class ServerLoginNetHandlerMixin {
         }
     }
 
-    public void initUUID() {
+    private static GameProfile arclight$createOfflineProfile(Connection connection, String name) {
         UUID uuid;
-        if (((NetworkManagerBridge) this.connection).bridge$getSpoofedUUID() != null) {
-            uuid = ((NetworkManagerBridge) this.connection).bridge$getSpoofedUUID();
+        if (((NetworkManagerBridge) connection).bridge$getSpoofedUUID() != null) {
+            uuid = ((NetworkManagerBridge) connection).bridge$getSpoofedUUID();
         } else {
-            uuid = UUIDUtil.createOfflinePlayerUUID(this.gameProfile.getName());
+            uuid = UUIDUtil.createOfflinePlayerUUID(name);
         }
-        this.gameProfile = new GameProfile(uuid, this.gameProfile.getName());
-        if (((NetworkManagerBridge) this.connection).bridge$getSpoofedProfile() != null) {
+
+        GameProfile gameProfile = new GameProfile(uuid, name);
+
+        if (((NetworkManagerBridge) connection).bridge$getSpoofedProfile() != null) {
             Property[] spoofedProfile;
-            for (int length = (spoofedProfile = ((NetworkManagerBridge) this.connection).bridge$getSpoofedProfile()).length, i = 0; i < length; ++i) {
+            for (int length = (spoofedProfile = ((NetworkManagerBridge) connection).bridge$getSpoofedProfile()).length, i = 0; i < length; ++i) {
                 final Property property = spoofedProfile[i];
-                this.gameProfile.getProperties().put(property.getName(), property);
+                if (!PROP_PATTERN.matcher(property.name()).matches()) continue;
+                gameProfile.getProperties().put(property.name(), property);
             }
         }
+        return gameProfile;
+    }
+
+    @Redirect(method = "verifyLoginAndFinishConnectionSetup", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;canPlayerLogin(Ljava/net/SocketAddress;Lcom/mojang/authlib/GameProfile;)Lnet/minecraft/network/chat/Component;"))
+    private Component arclight$canLogin(PlayerList instance, SocketAddress socketAddress, GameProfile gameProfile) {
+        this.player = ((PlayerListBridge) instance).bridge$canPlayerLogin(socketAddress, gameProfile, (ServerLoginPacketListenerImpl) (Object) this);
+        return null;
+    }
+
+    @Inject(method = "verifyLoginAndFinishConnectionSetup", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/players/PlayerList;canPlayerLogin(Ljava/net/SocketAddress;Lcom/mojang/authlib/GameProfile;)Lnet/minecraft/network/chat/Component;"))
+    private void arclight$returnIfFail(GameProfile p_299507_, CallbackInfo ci) {
+        if (this.player == null) {
+            ci.cancel();
+        }
+    }
+
+    @Redirect(method = "verifyLoginAndFinishConnectionSetup", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;disconnectAllPlayersWithProfile(Lcom/mojang/authlib/GameProfile;)Z"))
+    private boolean arclight$skipKick(PlayerList instance, GameProfile gameProfile) {
+        return this.isPlayerAlreadyInWorld(Objects.requireNonNull(this.authenticatedProfile));
+    }
+
+    @Inject(method = "handleLoginAcknowledgement", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Connection;setListener(Lnet/minecraft/network/PacketListener;)V"))
+    private void arclight$setPlayer(ServerboundLoginAcknowledgedPacket p_298815_, CallbackInfo ci, CommonListenerCookie cookie, ServerConfigurationPacketListenerImpl listener) {
+        ((ServerCommonPacketListenerBridge) listener).bridge$setPlayer(this.player);
     }
 
     /**
@@ -205,32 +196,34 @@ public abstract class ServerLoginNetHandlerMixin {
             }
 
             public void run() {
-                GameProfile gameprofile = gameProfile;
+                String name = Objects.requireNonNull(requestedUsername, "Player name not initialized");
 
                 try {
-                    gameProfile = server.getSessionService().hasJoinedServer(new GameProfile(null, gameprofile.getName()), s, this.getAddress());
-                    if (gameProfile != null) {
+                    var profileResult = server.getSessionService().hasJoinedServer(name, s, this.getAddress());
+                    if (profileResult != null) {
+                        var gameProfile = profileResult.profile();
                         if (!connection.isConnected()) {
                             return;
                         }
-                        arclight$preLogin();
+                        arclight$preLogin(gameProfile);
                     } else if (server.isSingleplayer()) {
                         LOGGER.warn("Failed to verify username but will let them in anyway!");
-                        gameProfile = createFakeProfile(gameprofile);
-                        state = ServerLoginPacketListenerImpl.State.NEGOTIATING;
+                        startClientVerification(arclight$createOfflineProfile(connection, name));
                     } else {
                         disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
-                        LOGGER.error("Username '{}' tried to join with an invalid session", gameprofile.getName());
+                        LOGGER.error("Username '{}' tried to join with an invalid session", name);
                     }
-                } catch (Exception var3) {
+                } catch (AuthenticationException e) {
                     if (server.isSingleplayer()) {
                         LOGGER.warn("Authentication servers are down but will let them in anyway!");
-                        gameProfile = createFakeProfile(gameprofile);
-                        state = ServerLoginPacketListenerImpl.State.NEGOTIATING;
+                        startClientVerification(arclight$createOfflineProfile(connection, name));
                     } else {
                         disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
                         LOGGER.error("Couldn't verify username because servers are unavailable");
                     }
+                } catch (Exception e) {
+                    disconnect("Failed to verify username!");
+                    LOGGER.error("Exception verifying " + name, e);
                 }
 
             }
@@ -246,7 +239,7 @@ public abstract class ServerLoginNetHandlerMixin {
         thread.start();
     }
 
-    void arclight$preLogin() throws Exception {
+    void arclight$preLogin(GameProfile gameProfile) throws Exception {
         String playerName = gameProfile.getName();
         InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
         UUID uniqueId = gameProfile.getId();
@@ -277,6 +270,6 @@ public abstract class ServerLoginNetHandlerMixin {
             return;
         }
         LOGGER.info("UUID of player {} is {}", gameProfile.getName(), gameProfile.getId());
-        state = ServerLoginPacketListenerImpl.State.NEGOTIATING;
+        this.startClientVerification(gameProfile);
     }
 }

@@ -118,7 +118,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Shadow private ProfilerFiller profiler;
     @Shadow protected abstract void updateMobSpawningFlags();
     @Shadow public abstract ServerLevel overworld();
-    @Shadow @Final public Map<ResourceKey<Level>, ServerLevel> levels;
+    @Shadow private Map<ResourceKey<Level>, ServerLevel> levels;
     @Shadow protected abstract void setupDebugLevel(WorldData p_240778_1_);
     @Shadow protected WorldData worldData;
     @Shadow(remap = false) @Deprecated public abstract void markWorldsDirty();
@@ -379,7 +379,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
 
         for (ServerLevel serverWorld : this.levels.values()) {
             if (((WorldBridge) serverWorld).bridge$getWorld().getKeepSpawnInMemory()) {
-                ForcedChunksSavedData forcedchunkssavedata = serverWorld.getDataStorage().get(ForcedChunksSavedData::load, "chunks");
+                ForcedChunksSavedData forcedchunkssavedata = serverWorld.getDataStorage().get(ForcedChunksSavedData.factory(), "chunks");
                 if (forcedchunkssavedata != null) {
                     LongIterator longiterator = forcedchunkssavedata.getChunks().iterator();
 
@@ -451,7 +451,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
 
         this.executeModerately();
 
-        ForcedChunksSavedData forcedchunkssavedata = serverWorld.getDataStorage().get(ForcedChunksSavedData::load, "chunks");
+        ForcedChunksSavedData forcedchunkssavedata = serverWorld.getDataStorage().get(ForcedChunksSavedData.factory(), "chunks");
         if (forcedchunkssavedata != null) {
             LongIterator longiterator = forcedchunkssavedata.getChunks().iterator();
 

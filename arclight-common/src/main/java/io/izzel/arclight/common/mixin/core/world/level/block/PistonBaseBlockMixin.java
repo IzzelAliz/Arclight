@@ -27,7 +27,7 @@ import java.util.AbstractList;
 import java.util.List;
 
 @Mixin(PistonBaseBlock.class)
-public class PistonBlockMixin {
+public class PistonBaseBlockMixin {
 
     // @formatter:off
     @Shadow @Final private boolean isSticky;

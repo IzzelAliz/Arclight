@@ -39,12 +39,12 @@ public abstract class BucketItemMixin {
     @Shadow(remap = false) public abstract boolean emptyContents(@Nullable Player p_150716_, Level p_150717_, BlockPos p_150718_, @Nullable BlockHitResult p_150719_, @Nullable ItemStack container);
     // @formatter:on
 
-    @Inject(method = "use", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/BucketPickup;pickupBlock(Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Lnet/minecraft/world/item/ItemStack;"))
+    @Inject(method = "use", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/BucketPickup;pickupBlock(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Lnet/minecraft/world/item/ItemStack;"))
     private void arclight$bucketFill(Level worldIn, Player playerIn, InteractionHand handIn, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir, ItemStack stack, BlockHitResult result) {
         if (!DistValidate.isValid(worldIn)) return;
         BlockPos pos = result.getBlockPos();
         BlockState state = worldIn.getBlockState(pos);
-        ItemStack dummyFluid = ((BucketPickup) state.getBlock()).pickupBlock(DummyGeneratorAccess.INSTANCE, pos, state);
+        ItemStack dummyFluid = ((BucketPickup) state.getBlock()).pickupBlock(playerIn, DummyGeneratorAccess.INSTANCE, pos, state);
         PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent((ServerLevel) worldIn, playerIn, pos, pos, result.getDirection(), stack, dummyFluid.getItem(), handIn);
         if (event.isCancelled()) {
             ((ServerPlayer) playerIn).connection.send(new ClientboundBlockUpdatePacket(worldIn, pos));

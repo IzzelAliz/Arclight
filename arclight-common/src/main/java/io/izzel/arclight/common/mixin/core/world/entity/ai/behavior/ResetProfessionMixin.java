@@ -17,10 +17,10 @@ public class ResetProfessionMixin {
     @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/npc/Villager;setVillagerData(Lnet/minecraft/world/entity/npc/VillagerData;)V"))
     private static void arclight$careerChangeHook(Villager villagerEntity, VillagerData villagerData) {
         VillagerCareerChangeEvent event = CraftEventFactory.callVillagerCareerChangeEvent(villagerEntity,
-            CraftVillager.nmsToBukkitProfession(VillagerProfession.NONE),
-            VillagerCareerChangeEvent.ChangeReason.LOSING_JOB); // 这里本来是 EMPLOYED 但是我怀疑他打错了
+            CraftVillager.CraftProfession.minecraftToBukkit(VillagerProfession.NONE),
+            VillagerCareerChangeEvent.ChangeReason.LOSING_JOB);
         if (!event.isCancelled()) {
-            VillagerData newData = villagerEntity.getVillagerData().setProfession(CraftVillager.bukkitToNmsProfession(event.getProfession()));
+            VillagerData newData = villagerEntity.getVillagerData().setProfession(CraftVillager.CraftProfession.bukkitToMinecraft(event.getProfession()));
             villagerEntity.setVillagerData(newData);
         }
     }

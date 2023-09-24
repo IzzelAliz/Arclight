@@ -102,6 +102,13 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
                         new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "fall", "(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lorg/bukkit/event/entity/CreatureSpawnEvent$SpawnReason;)Lnet/minecraft/world/entity/item/FallingBlockEntity;", null, null)
                     )
                 ))
+            .put("net.minecraft.world.item.BoneMealItem",
+                Map.entry(
+                    List.of(),
+                    List.of(
+                        new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "applyBonemeal", "(Lnet/minecraft/world/item/context/UseOnContext;)Lnet/minecraft/world/InteractionResult;", null, null)
+                    )
+                ))
             .build();
 
     // damn spigot

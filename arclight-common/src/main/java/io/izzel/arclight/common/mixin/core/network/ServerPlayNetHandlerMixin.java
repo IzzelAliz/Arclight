@@ -26,7 +26,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.network.Connection;
-import net.minecraft.network.PacketSendListener;
 import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.LastSeenMessages;
@@ -34,15 +33,12 @@ import net.minecraft.network.chat.OutgoingChatMessage;
 import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.network.chat.SignableCommand;
 import net.minecraft.network.chat.SignedMessageChain;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketUtils;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
-import net.minecraft.network.protocol.game.ClientboundDisconnectPacket;
 import net.minecraft.network.protocol.game.ClientboundMoveVehiclePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundSetCarriedItemPacket;
-import net.minecraft.network.protocol.game.ClientboundSetDefaultSpawnPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
@@ -52,7 +48,6 @@ import net.minecraft.network.protocol.game.ServerboundChatPacket;
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket;
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
-import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
 import net.minecraft.network.protocol.game.ServerboundEditBookPacket;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
@@ -61,7 +56,6 @@ import net.minecraft.network.protocol.game.ServerboundPlaceRecipePacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerAbilitiesPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
-import net.minecraft.network.protocol.game.ServerboundResourcePackPacket;
 import net.minecraft.network.protocol.game.ServerboundSelectTradePacket;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket;
@@ -74,12 +68,12 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.network.FilteredText;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.util.FutureChain;
 import net.minecraft.util.Mth;
-import net.minecraft.util.StringUtil;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffects;
@@ -112,11 +106,10 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.ForgeHooks;
-import net.minecraftforge.server.ServerLifecycleHooks;
+import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -145,9 +138,7 @@ import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
-import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerToggleFlightEvent;
@@ -172,7 +163,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
@@ -187,18 +177,15 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 @Mixin(ServerGamePacketListenerImpl.class)
-public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerBridge {
+public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListenerImplMixin implements ServerPlayNetHandlerBridge {
 
     // @formatter:off
-    @Shadow @Final private MinecraftServer server;
     @Shadow public ServerPlayer player;
-    @Shadow @Final public Connection connection;
     @Shadow public abstract void onDisconnect(Component reason);
     @Shadow private Entity lastVehicle;
     @Shadow private double vehicleFirstGoodX;
     @Shadow private double vehicleFirstGoodY;
     @Shadow private double vehicleFirstGoodZ;
-    @Shadow protected abstract boolean isSingleplayerOwner();
     @Shadow private double vehicleLastGoodX;
     @Shadow private double vehicleLastGoodY;
     @Shadow private double vehicleLastGoodZ;
@@ -219,7 +206,6 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     @Shadow private double lastGoodZ;
     @Shadow private boolean clientIsFloating;
     @Shadow private int awaitingTeleport;
-    @Shadow public abstract void send(Packet<?> packetIn);
     @Shadow private int chatSpamTickCount;
     @Shadow private int dropSpamTickCount;
     @Shadow protected abstract boolean noBlocksAround(Entity p_241162_1_);
@@ -242,8 +228,6 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
 
     private static final int SURVIVAL_PLACE_DISTANCE_SQUARED = 6 * 6;
     private static final int CREATIVE_PLACE_DISTANCE_SQUARED = 7 * 7;
-    private CraftServer cserver;
-    public boolean processedDisconnect;
     private int allowedPlayerTicks;
     private int dropCount;
     private int lastTick;
@@ -258,18 +242,8 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
     private boolean justTeleported;
     private boolean hasMoved;
 
-    public CraftPlayer getCraftPlayer() {
-        return (this.player == null) ? null : ((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity();
-    }
-
-    @Override
-    public boolean bridge$processedDisconnect() {
-        return this.processedDisconnect;
-    }
-
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void arclight$init(MinecraftServer server, Connection networkManagerIn, ServerPlayer playerIn, CallbackInfo ci) {
-        this.cserver = ((CraftServer) Bukkit.getServer());
+    private void arclight$init(MinecraftServer server, Connection networkManagerIn, ServerPlayer playerIn, CommonListenerCookie cookie, CallbackInfo ci) {
         allowedPlayerTicks = 1;
         dropCount = 0;
         lastPosX = Double.MAX_VALUE;
@@ -279,60 +253,29 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         lastYaw = Float.MAX_VALUE;
         justTeleported = false;
         this.chatMessageChain = new FutureChain(ArclightServer.getChatExecutor());
+        bridge$setPlayer(playerIn);
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    public void disconnect(Component textComponent) {
-        this.disconnect(CraftChatMessage.fromComponent(textComponent));
+    @Inject(method = "onDisconnect", cancellable = true, at = @At("HEAD"))
+    private void arclight$returnIfProcessed(Component reason, CallbackInfo ci) {
+        if (processedDisconnect) {
+            ci.cancel();
+        } else {
+            processedDisconnect = true;
+        }
     }
 
-    public void disconnect(String s) {
-        if (this.processedDisconnect) {
-            return;
-        }
-        if (!this.cserver.isPrimaryThread()) {
-            Waitable<?> waitable = new Waitable<>() {
-                @Override
-                protected Object evaluate() {
-                    disconnect(s);
-                    return null;
-                }
-            };
-
-            ((MinecraftServerBridge) this.server).bridge$queuedProcess(waitable);
-
-            try {
-                waitable.get();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            } catch (ExecutionException e) {
-                throw new RuntimeException(e);
-            }
-            return;
-        }
-        String leaveMessage = ChatFormatting.YELLOW + this.player.getScoreboardName() + " left the game.";
-        PlayerKickEvent event = new PlayerKickEvent(getCraftPlayer(), s, leaveMessage);
-        if (this.cserver.getServer().isRunning()) {
-            this.cserver.getPluginManager().callEvent(event);
-        }
-        if (event.isCancelled()) {
-            return;
-        }
-        ArclightCaptures.captureQuitMessage(event.getLeaveMessage());
-        Component textComponent = CraftChatMessage.fromString(event.getReason(), true)[0];
-        this.connection.send(new ClientboundDisconnectPacket(textComponent), PacketSendListener.thenRun(() -> this.connection.disconnect(textComponent)));
-        this.onDisconnect(textComponent);
-        this.connection.setReadOnly();
-        this.server.executeBlocking(this.connection::handleDisconnection);
+    @Redirect(method = "removePlayerFromWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;broadcastSystemMessage(Lnet/minecraft/network/chat/Component;Z)V"))
+    public void arclight$captureQuit(PlayerList instance, Component p_240618_, boolean p_240644_) {
+        // do nothing
     }
 
-    @Override
-    public void bridge$disconnect(String str) {
-        disconnect(str);
+    @Inject(method = "removePlayerFromWorld", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/players/PlayerList;remove(Lnet/minecraft/server/level/ServerPlayer;)V"))
+    public void arclight$processQuit(CallbackInfo ci) {
+        String quitMessage = ArclightCaptures.getQuitMessage();
+        if (quitMessage != null && quitMessage.length() > 0) {
+            ((PlayerListBridge) this.server.getPlayerList()).bridge$sendMessage(CraftChatMessage.fromString(quitMessage));
+        }
     }
 
     /**
@@ -384,7 +327,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 speed *= 2.0;
                 if (d11 - d10 > Math.max(100.0, Math.pow(10.0f * i * speed, 2.0)) && !this.isSingleplayerOwner()) {
                     LOGGER.warn("{} (vehicle of {}) moved too quickly! {},{},{}", entity.getName().getString(), this.player.getName().getString(), d7, d8, d9);
-                    this.connection.send(new ClientboundMoveVehiclePacket(entity));
+                    this.send(new ClientboundMoveVehiclePacket(entity));
                     return;
                 }
                 boolean flag = worldserver.noCollision(entity, entity.getBoundingBox().deflate(0.0625));
@@ -420,7 +363,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 if (flag && (flag2 || !flag3)) {
                     entity.absMoveTo(d0, d2, d3, f, f2);
                     this.player.absMoveTo(d0, d2, d3, this.player.getYRot(), this.player.getXRot());
-                    this.connection.send(new ClientboundMoveVehiclePacket(entity));
+                    this.send(new ClientboundMoveVehiclePacket(entity));
                     return;
                 }
                 Player player = this.getCraftPlayer();
@@ -760,7 +703,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
             case SWAP_ITEM_WITH_OFFHAND: {
                 if (!this.player.isSpectator()) {
                     // ItemStack itemstack = this.player.getItemInHand(InteractionHand.OFF_HAND);
-                    var event = net.minecraftforge.common.ForgeHooks.onLivingSwapHandItems(this.player);
+                    var event = ForgeEventFactory.onLivingSwapHandItems(this.player);
                     if (event.isCanceled()) return;
                     ItemStack itemstack = event.getItemSwappedToMainHand();
                     ItemStack originMainHand = event.getItemSwappedToOffHand();
@@ -925,44 +868,6 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         ((ServerPlayerEntityBridge) this.player).bridge$pushChangeDimensionCause(PlayerTeleportEvent.TeleportCause.SPECTATE);
     }
 
-    @Inject(method = "handleResourcePackResponse", at = @At("RETURN"))
-    private void arclight$handleResourcePackStatus(ServerboundResourcePackPacket packetIn, CallbackInfo ci) {
-        this.cserver.getPluginManager().callEvent(new PlayerResourcePackStatusEvent(this.getCraftPlayer(), PlayerResourcePackStatusEvent.Status.values()[packetIn.action.ordinal()]));
-    }
-
-    @Inject(method = "onDisconnect", cancellable = true, at = @At("HEAD"))
-    private void arclight$returnIfProcessed(Component reason, CallbackInfo ci) {
-        if (processedDisconnect) {
-            ci.cancel();
-        } else {
-            processedDisconnect = true;
-        }
-    }
-
-    @Redirect(method = "onDisconnect", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;broadcastSystemMessage(Lnet/minecraft/network/chat/Component;Z)V"))
-    public void arclight$captureQuit(PlayerList instance, Component p_240618_, boolean p_240644_) {
-        // do nothing
-    }
-
-    @Inject(method = "onDisconnect", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/players/PlayerList;remove(Lnet/minecraft/server/level/ServerPlayer;)V"))
-    public void arclight$processQuit(Component reason, CallbackInfo ci) {
-        String quitMessage = ArclightCaptures.getQuitMessage();
-        if (quitMessage != null && quitMessage.length() > 0) {
-            ((PlayerListBridge) this.server.getPlayerList()).bridge$sendMessage(CraftChatMessage.fromString(quitMessage));
-        }
-    }
-
-    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketSendListener;)V", cancellable = true, at = @At("HEAD"))
-    private void arclight$updateCompassTarget(Packet<?> packetIn, PacketSendListener futureListeners, CallbackInfo ci) {
-        if (packetIn == null || processedDisconnect) {
-            ci.cancel();
-            return;
-        }
-        if (packetIn instanceof ClientboundSetDefaultSpawnPositionPacket packet6) {
-            ((ServerPlayerEntityBridge) this.player).bridge$setCompassTarget(new Location(this.getCraftPlayer().getWorld(), packet6.pos.getX(), packet6.pos.getY(), packet6.pos.getZ()));
-        }
-    }
-
     /**
      * @author IzzelAliz
      * @reason
@@ -1016,11 +921,12 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 }
 
                 CompletableFuture<FilteredText> completablefuture = this.filterTextPacket(playerchatmessage.signedContent());
-                CompletableFuture<Component> completablefuture1 = ForgeHooks.getServerChatSubmittedDecorator().decorate(this.player, playerchatmessage.decoratedContent());
+                var component = ForgeHooks.onServerChatSubmittedEvent(this.player, playerchatmessage.decoratedContent());
 
                 this.chatMessageChain.append((executor) -> {
-                    return CompletableFuture.allOf(completablefuture, completablefuture1).thenAcceptAsync((ovoid) -> {
-                        PlayerChatMessage playerchatmessage1 = playerchatmessage.withUnsignedContent(completablefuture1.join()).filter(completablefuture.join().mask());
+                    return completablefuture.thenAcceptAsync((ovoid) -> {
+                        if (component == null) return;
+                        PlayerChatMessage playerchatmessage1 = playerchatmessage.withUnsignedContent(component).filter(completablefuture.join().mask());
 
                         this.broadcastChatMessage(playerchatmessage1);
                     }, ArclightServer.getChatExecutor()); // CraftBukkit - async chat
@@ -1066,7 +972,7 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
 
         CommandSigningContext.SignedArguments arguments = new CommandSigningContext.SignedArguments(map);
 
-        parseresults = Commands.mapSource(parseresults, (stack) -> stack.withSigningContext(arguments));
+        parseresults = Commands.mapSource(parseresults, (stack) -> stack.withSigningContext(arguments, this.chatMessageChain));
         this.server.getCommands().performCommand(parseresults, command);
     }
 
@@ -1803,65 +1709,6 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
                 this.player.onUpdateAbilities();
             }
         }
-    }
-
-    private static final ResourceLocation CUSTOM_REGISTER = new ResourceLocation("register");
-    private static final ResourceLocation CUSTOM_UNREGISTER = new ResourceLocation("unregister");
-
-    @Inject(method = "handleCustomPayload", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/network/NetworkHooks;onCustomPayload(Lnet/minecraftforge/network/ICustomPacket;Lnet/minecraft/network/Connection;)Z"))
-    private void arclight$customPayload(ServerboundCustomPayloadPacket packet, CallbackInfo ci) {
-        var readerIndex = packet.data.readerIndex();
-        var buf = new byte[packet.data.readableBytes()];
-        packet.data.readBytes(buf);
-        packet.data.readerIndex(readerIndex);
-        ServerLifecycleHooks.getCurrentServer().executeIfPossible(() -> {
-            if (((MinecraftServerBridge) ServerLifecycleHooks.getCurrentServer()).bridge$hasStopped() || bridge$processedDisconnect()) {
-                return;
-            }
-            if (this.connection.isConnected()) {
-                if (packet.identifier.equals(CUSTOM_REGISTER)) {
-                    try {
-                        String channels = new String(buf, StandardCharsets.UTF_8);
-                        for (String channel : channels.split("\0")) {
-                            if (!StringUtil.isNullOrEmpty(channel)) {
-                                this.getCraftPlayer().addChannel(channel);
-                            }
-                        }
-                    } catch (Exception ex) {
-                        LOGGER.error("Couldn't register custom payload", ex);
-                        this.disconnect("Invalid payload REGISTER!");
-                    }
-                } else if (packet.identifier.equals(CUSTOM_UNREGISTER)) {
-                    try {
-                        final String channels = new String(buf, StandardCharsets.UTF_8);
-                        for (String channel : channels.split("\0")) {
-                            if (!StringUtil.isNullOrEmpty(channel)) {
-                                this.getCraftPlayer().removeChannel(channel);
-                            }
-                        }
-                    } catch (Exception ex) {
-                        LOGGER.error("Couldn't unregister custom payload", ex);
-                        this.disconnect("Invalid payload UNREGISTER!");
-                    }
-                } else {
-                    try {
-                        this.cserver.getMessenger().dispatchIncomingMessage(((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity(), packet.identifier.toString(), buf);
-                    } catch (Exception ex) {
-                        LOGGER.error("Couldn't dispatch custom payload", ex);
-                        this.disconnect("Invalid custom payload!");
-                    }
-                }
-            }
-        });
-    }
-
-    public final boolean isDisconnected() {
-        return !((ServerPlayerEntityBridge) this.player).bridge$isJoining() && !this.connection.isConnected();
-    }
-
-    @Override
-    public boolean bridge$isDisconnected() {
-        return this.isDisconnected();
     }
 
     /**

@@ -6,7 +6,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.vehicle.AbstractMinecartContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
@@ -92,12 +92,12 @@ public abstract class AbstractMinecartContainerMixin extends AbstractMinecartMix
     }
 
     @Override
-    public Recipe<?> getCurrentRecipe() {
+    public RecipeHolder<?> getCurrentRecipe() {
         return null;
     }
 
     @Override
-    public void setCurrentRecipe(Recipe<?> recipe) {
+    public void setCurrentRecipe(RecipeHolder<?> recipe) {
 
     }
 }

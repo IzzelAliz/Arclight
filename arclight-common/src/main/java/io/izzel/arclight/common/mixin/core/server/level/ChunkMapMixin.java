@@ -47,7 +47,7 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
     @Shadow @Final public ServerLevel level;
     @Shadow @Final @Mutable private RandomState randomState;
     @Invoker("tick") public abstract void bridge$tick(BooleanSupplier hasMoreTime);
-    @Invoker("setViewDistance") public abstract void bridge$setViewDistance(int i);
+    @Invoker("setServerViewDistance") public abstract void bridge$setViewDistance(int i);
     // @formatter:on
 
     @Inject(method = "<init>", at = @At("RETURN"))

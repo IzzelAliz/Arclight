@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mod.util;
 
 import io.izzel.arclight.common.bridge.core.item.crafting.RecipeManagerBridge;
 import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import org.bukkit.NamespacedKey;
 import org.bukkit.craftbukkit.v.inventory.CraftComplexRecipe;
@@ -14,8 +15,8 @@ public class ArclightSpecialRecipe extends CraftComplexRecipe {
 
     private final Recipe<?> recipe;
 
-    public ArclightSpecialRecipe(Recipe<?> recipe) {
-        super(null);
+    public ArclightSpecialRecipe(NamespacedKey id, Recipe<?> recipe) {
+        super(id, null);
         this.recipe = recipe;
     }
 
@@ -25,12 +26,7 @@ public class ArclightSpecialRecipe extends CraftComplexRecipe {
     }
 
     @Override
-    public @NotNull NamespacedKey getKey() {
-        return CraftNamespacedKey.fromMinecraft(this.recipe.getId());
-    }
-
-    @Override
     public void addToCraftingManager() {
-        ((RecipeManagerBridge) ServerLifecycleHooks.getCurrentServer().getRecipeManager()).bridge$addRecipe(this.recipe);
+        ((RecipeManagerBridge) ServerLifecycleHooks.getCurrentServer().getRecipeManager()).bridge$addRecipe(new RecipeHolder<>(CraftNamespacedKey.toMinecraft(this.getKey()), this.recipe));
     }
 }

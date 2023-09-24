@@ -5,7 +5,7 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
@@ -86,12 +86,12 @@ public abstract class SimpleContainerMixin implements Container, IInventoryBridg
     }
 
     @Override
-    public Recipe<?> getCurrentRecipe() {
+    public RecipeHolder<?> getCurrentRecipe() {
         return null;
     }
 
     @Override
-    public void setCurrentRecipe(Recipe<?> recipe) {
+    public void setCurrentRecipe(RecipeHolder<?> recipe) {
 
     }
 }

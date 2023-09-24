@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
 import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import net.minecraft.world.Container;
-import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
@@ -17,11 +17,11 @@ public abstract class LockableBlockEntityMixin extends BlockEntityMixin implemen
     }
 
     @Override
-    public Recipe<?> getCurrentRecipe() {
+    public RecipeHolder<?> getCurrentRecipe() {
         return null;
     }
 
     @Override
-    public void setCurrentRecipe(Recipe<?> recipe) {
+    public void setCurrentRecipe(RecipeHolder<?> recipe) {
     }
 }

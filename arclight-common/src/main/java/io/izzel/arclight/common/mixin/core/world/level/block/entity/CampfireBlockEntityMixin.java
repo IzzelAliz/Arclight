@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
-import io.izzel.arclight.common.bridge.core.item.crafting.IRecipeBridge;
+import io.izzel.arclight.common.bridge.core.item.crafting.RecipeHolderBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
 import net.minecraft.world.Containers;
@@ -8,6 +8,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CampfireCookingRecipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.CampfireBlockEntity;
@@ -33,12 +34,11 @@ import java.util.Optional;
 @Mixin(CampfireBlockEntity.class)
 public abstract class CampfireBlockEntityMixin extends BlockEntityMixin {
 
+    // @formatter:off
     @Shadow @Final private RecipeManager.CachedCheck<Container, CampfireCookingRecipe> quickCheck;
-
-    @Shadow
-    public abstract Optional<CampfireCookingRecipe> getCookableRecipe(ItemStack p_59052_);
-
+    @Shadow public abstract Optional<RecipeHolder<CampfireCookingRecipe>> getCookableRecipe(ItemStack p_59052_);
     @Shadow @Final public int[] cookingTime;
+    // @formatter:on
 
     /**
      * @author IzzelAliz
@@ -56,7 +56,7 @@ public abstract class CampfireBlockEntityMixin extends BlockEntityMixin {
                 if (entity.cookingProgress[i] >= entity.cookingTime[i]) {
                     Container container = new SimpleContainer(itemstack);
                     ItemStack itemstack1 = ((CampfireBlockEntityMixin) (Object) entity).quickCheck.getRecipeFor(container, level).map((p_155305_) -> {
-                        return p_155305_.assemble(container, level.registryAccess());
+                        return p_155305_.value().assemble(container, level.registryAccess());
                     }).orElse(itemstack);
 
                     if (!itemstack1.isItemEnabled(level.enabledFeatures())) continue;
@@ -90,7 +90,7 @@ public abstract class CampfireBlockEntityMixin extends BlockEntityMixin {
     @Inject(method = "placeFood", locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/block/entity/CampfireBlockEntity;cookingProgress:[I"))
     private void arclight$cookStart(Entity p_238285_, ItemStack stack, int p_238287_, CallbackInfoReturnable<Boolean> cir, int i) {
-        var event = new CampfireStartEvent(CraftBlock.at(this.level, this.worldPosition), CraftItemStack.asCraftMirror(stack), (CampfireRecipe) ((IRecipeBridge) getCookableRecipe(stack).get()).bridge$toBukkitRecipe());
+        var event = new CampfireStartEvent(CraftBlock.at(this.level, this.worldPosition), CraftItemStack.asCraftMirror(stack), (CampfireRecipe) ((RecipeHolderBridge) (Object) getCookableRecipe(stack).get()).bridge$toBukkitRecipe());
         Bukkit.getPluginManager().callEvent(event);
         this.cookingTime[i] = event.getTotalCookTime();
     }

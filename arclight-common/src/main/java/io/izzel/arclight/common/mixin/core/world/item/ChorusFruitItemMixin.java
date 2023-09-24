@@ -71,6 +71,7 @@ public class ChorusFruitItemMixin extends Item {
                     SoundEvent soundevent = entityLiving instanceof Fox ? SoundEvents.FOX_TELEPORT : SoundEvents.CHORUS_FRUIT_TELEPORT;
                     worldIn.playSound(null, d0, d1, d2, soundevent, SoundSource.PLAYERS, 1.0F, 1.0F);
                     entityLiving.playSound(soundevent, 1.0F, 1.0F);
+                    entityLiving.resetFallDistance();
                     break;
                 }
             }

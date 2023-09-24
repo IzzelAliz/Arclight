@@ -7,7 +7,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Mixin(PacketDistributor.class)
 public class PacketDistributorMixin {
@@ -17,11 +16,10 @@ public class PacketDistributorMixin {
      * @reason
      */
     @Overwrite(remap = false)
-    private Consumer<Packet<?>> playerConsumer(Supplier<ServerPlayer> entityPlayerMPSupplier) {
+    private Consumer<Packet<?>> playerConsumer(ServerPlayer entity) {
         return p -> {
-            ServerPlayer entity = entityPlayerMPSupplier.get();
-            if (entity.connection != null && entity.connection.connection != null) {
-                entity.connection.connection.send(p);
+            if (entity.connection != null && entity.connection.isAcceptingMessages()) {
+                entity.connection.send(p);
             }
         };
     }

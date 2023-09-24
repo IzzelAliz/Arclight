@@ -10,7 +10,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.TransientCraftingContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(TransientCraftingContainer.class)
-public abstract class CraftingInventoryMixin implements CraftingInventoryBridge, Container {
+public abstract class TransientCraftingContainerMixin implements CraftingInventoryBridge, Container {
 
     // @formatter:off
     @Shadow @Final private NonNullList<ItemStack> items;
@@ -32,7 +32,7 @@ public abstract class CraftingInventoryMixin implements CraftingInventoryBridge,
     // @formatter:on
 
     public List<HumanEntity> transaction = new ArrayList<>();
-    private Recipe<?> currentRecipe;
+    private RecipeHolder<?> currentRecipe;
     public Container resultInventory;
     private Player owner;
     private InventoryHolder bukkitOwner;
@@ -114,12 +114,12 @@ public abstract class CraftingInventoryMixin implements CraftingInventoryBridge,
     }
 
     @Override
-    public Recipe<?> getCurrentRecipe() {
+    public RecipeHolder<?> getCurrentRecipe() {
         return this.currentRecipe;
     }
 
     @Override
-    public void setCurrentRecipe(Recipe<?> recipe) {
+    public void setCurrentRecipe(RecipeHolder<?> recipe) {
         this.currentRecipe = recipe;
     }
 }

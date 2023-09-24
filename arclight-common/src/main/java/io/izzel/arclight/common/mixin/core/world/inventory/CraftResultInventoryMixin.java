@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
 import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
@@ -15,7 +16,6 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.world.Container;
 import net.minecraft.world.inventory.ResultContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Recipe;
 
 @Mixin(ResultContainer.class)
 public abstract class CraftResultInventoryMixin implements IInventoryBridge, Container {
@@ -63,8 +63,8 @@ public abstract class CraftResultInventoryMixin implements IInventoryBridge, Con
     public Location getLocation() { return null; }
 
     @Override
-    public Recipe<?> getCurrentRecipe() { return null; }
+    public RecipeHolder<?> getCurrentRecipe() { return null; }
 
     @Override
-    public void setCurrentRecipe(Recipe<?> recipe) { }
+    public void setCurrentRecipe(RecipeHolder<?> recipe) { }
 }

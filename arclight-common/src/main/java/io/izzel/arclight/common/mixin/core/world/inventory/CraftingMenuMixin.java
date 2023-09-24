@@ -4,6 +4,7 @@ import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.inventory.CraftingInventoryBridge;
 import io.izzel.arclight.common.bridge.core.inventory.container.ContainerBridge;
 import io.izzel.arclight.common.bridge.core.inventory.container.PosContainerBridge;
+import io.izzel.arclight.common.bridge.core.item.crafting.RecipeHolderBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
@@ -14,6 +15,8 @@ import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.inventory.CraftingMenu;
 import net.minecraft.world.inventory.ResultContainer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RepairItemRecipe;
 import net.minecraft.world.level.Level;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -58,8 +61,8 @@ public abstract class CraftingMenuMixin extends AbstractContainerMenuMixin imple
     private static transient boolean arclight$isRepair;
 
     @Redirect(method = "slotChangedCraftingGrid", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Optional;isPresent()Z"))
-    private static boolean arclight$testRepair(Optional<?> optional) {
-        arclight$isRepair = optional.orElse(null) instanceof RepairItemRecipe;
+    private static boolean arclight$testRepair(Optional<RecipeHolder<CraftingRecipe>> optional) {
+        arclight$isRepair = optional.map(it -> ((RecipeHolderBridge) (Object) it).bridge$toBukkitRecipe()).orElse(null) instanceof RepairItemRecipe;
         return optional.isPresent();
     }
 

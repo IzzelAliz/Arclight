@@ -21,8 +21,8 @@ import io.izzel.arclight.common.mod.util.DelegateWorldInfo;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import io.izzel.arclight.i18n.ArclightConfig;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket;
@@ -70,7 +70,6 @@ import org.bukkit.craftbukkit.v.util.WorldUUID;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.LightningStrike;
 import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.event.server.MapInitializeEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.world.GenericGameEvent;
 import org.bukkit.event.world.PortalCreateEvent;
@@ -91,7 +90,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executor;
@@ -173,13 +171,13 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         this.uuid = WorldUUID.getUUID(levelSave.getDimensionPath(this.dimension()).toFile());
         ((ServerChunkProviderBridge) this.chunkSource).bridge$setViewDistance(spigotConfig.viewDistance);
         ((WorldInfoBridge) this.K).bridge$setWorld((ServerLevel) (Object) this);
-        var data = this.getDataStorage().computeIfAbsent(LevelPersistentData::new, () -> new LevelPersistentData(null), "bukkit_pdc");
+        var data = this.getDataStorage().computeIfAbsent(LevelPersistentData.factory(), "bukkit_pdc");
         this.bridge$getWorld().readBukkitValues(data.getTag());
     }
 
     @Inject(method = "saveLevelData", at = @At("RETURN"))
     private void arclight$savePdc(CallbackInfo ci) {
-        var data = this.getDataStorage().computeIfAbsent(LevelPersistentData::new, () -> new LevelPersistentData(null), "bukkit_pdc");
+        var data = this.getDataStorage().computeIfAbsent(LevelPersistentData.factory(), "bukkit_pdc");
         data.save(this.world);
     }
 
@@ -254,7 +252,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         return this.addFreshEntity(entity);
     }
 
-    @Redirect(method = "tickChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
+    @Redirect(method = "tickIceAndSnow", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
     public boolean arclight$snowForm(ServerLevel serverWorld, BlockPos pos, BlockState state) {
         return CraftEventFactory.handleBlockFormEvent(serverWorld, pos, state, null);
     }
@@ -386,22 +384,6 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         if (((ExplosionBridge) explosion).bridge$wasCancelled()) {
             cir.setReturnValue(explosion);
         }
-    }
-
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    @Nullable
-    public MapItemSavedData getMapData(String mapName) {
-        return this.shadow$getServer().overworld().getDataStorage().get((nbt) -> {
-            MapItemSavedData newMap = MapItemSavedData.load(nbt);
-            ((MapDataBridge) newMap).bridge$setId(mapName);
-            MapInitializeEvent event = new MapInitializeEvent(((MapDataBridge) newMap).bridge$getMapView());
-            Bukkit.getServer().getPluginManager().callEvent(event);
-            return newMap;
-        }, mapName);
     }
 
     @Inject(method = "setMapData", at = @At("HEAD"))

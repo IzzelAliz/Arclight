@@ -50,20 +50,20 @@ public abstract class AbstractMinecartMixin extends EntityMixin {
     @Shadow public abstract float getDamage();
     @Shadow public abstract void destroy(DamageSource source);
     @Shadow public abstract int getHurtTime();
-    @Shadow private int lSteps;
-    @Shadow private double lx;
-    @Shadow private double ly;
-    @Shadow private double lz;
-    @Shadow private double lyr;
-    @Shadow private double lxr;
+    @Shadow private int lerpSteps;
+    @Shadow private double lerpX;
+    @Shadow private double lerpY;
+    @Shadow private double lerpZ;
+    @Shadow private double lerpYRot;
+    @Shadow private double lerpXRot;
     @Shadow protected abstract void moveAlongTrack(BlockPos pos, BlockState state);
     @Shadow public abstract void activateMinecart(int x, int y, int z, boolean receivingPower);
     @Shadow private boolean flipped;
     @Shadow public abstract AbstractMinecart.Type getMinecartType();
     @Shadow(remap = false) public abstract boolean canUseRail();
+    @Shadow private boolean onRails;
     // @formatter:on
 
-    @Shadow private boolean onRails;
     public boolean slowWhenEmpty = true;
     private double derailedX = 0.5;
     private double derailedY = 0.5;
@@ -147,18 +147,11 @@ public abstract class AbstractMinecartMixin extends EntityMixin {
         }
         this.checkBelowWorld();
         if (this.level().isClientSide) {
-            if (this.lSteps > 0) {
-                double d0 = this.getX() + (this.lx - this.getX()) / this.lSteps;
-                double d2 = this.getY() + (this.ly - this.getY()) / this.lSteps;
-                double d3 = this.getZ() + (this.lz - this.getZ()) / this.lSteps;
-                double d4 = Mth.wrapDegrees(this.lyr - this.getYRot());
-                this.setYRot(this.getYRot() + (float) (d4 / this.lSteps));
-                this.setXRot(this.getXRot() + (float) ((this.lxr - this.getXRot()) / this.lSteps));
-                --this.lSteps;
-                this.setPos(d0, d2, d3);
-                this.setRot(this.getYRot(), this.getXRot());
+            if (this.lerpSteps > 0) {
+                this.lerpPositionAndRotationStep(this.lerpSteps, this.lerpX, this.lerpY, this.lerpZ, this.lerpYRot, this.lerpXRot);
+                --this.lerpSteps;
             } else {
-                this.setPos(this.getX(), this.getY(), this.getZ());
+                this.reapplyPosition();
                 this.setRot(this.getYRot(), this.getXRot());
             }
         } else {

@@ -16,7 +16,6 @@ import net.minecraft.BlockUtil;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.PositionImpl;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -57,7 +56,7 @@ import net.minecraft.world.level.portal.PortalShape;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Team;
-import net.minecraftforge.common.ForgeHooks;
+import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -90,7 +89,11 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -226,9 +229,10 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow public abstract SoundSource getSoundSource();
     @Shadow public abstract int getPortalCooldown();
     @Shadow public abstract void checkBelowWorld();
-    // @formatter:on
-
     @Shadow protected abstract void setLevel(Level p_285201_);
+    @Shadow protected abstract void lerpPositionAndRotationStep(int p_298722_, double p_297490_, double p_300716_, double p_298684_, double p_300659_, double p_298926_);
+    @Shadow protected abstract void reapplyPosition();
+    // @formatter:on
 
     private static final int CURRENT_LEVEL = 2;
     public boolean persist = true;
@@ -851,9 +855,9 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         return this.boardingCooldown;
     }
 
-    private transient PositionImpl arclight$tpPos;
+    private transient Vec3 arclight$tpPos;
 
-    public Entity teleportTo(ServerLevel world, PositionImpl blockPos) {
+    public Entity teleportTo(ServerLevel world, Vec3 blockPos) {
         arclight$tpPos = blockPos;
         return changeDimension(world);
     }
@@ -863,7 +867,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     }
 
     @Override
-    public Entity bridge$teleportTo(ServerLevel world, PositionImpl blockPos) {
+    public Entity bridge$teleportTo(ServerLevel world, Vec3 blockPos) {
         return teleportTo(world, blockPos);
     }
 
@@ -874,7 +878,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Overwrite(remap = false)
     @Nullable
     public Entity changeDimension(ServerLevel server, net.minecraftforge.common.util.ITeleporter teleporter) {
-        if (!ForgeHooks.onTravelToDimension((Entity) (Object) this, server.dimension()))
+        if (!ForgeEventFactory.onTravelToDimension((Entity) (Object) this, server.dimension()))
             return null;
         if (this.level() instanceof ServerLevel && !this.isRemoved()) {
             this.level().getProfiler().push("changeDimension");
@@ -954,7 +958,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                 double d0 = DimensionType.getTeleportationScale(this.level().dimensionType(), world.dimensionType());
                 BlockPos blockpos1 = worldborder.clampToBounds(this.getX() * d0, this.getY(), this.getZ() * d0);
 
-                CraftPortalEvent event = this.callPortalEvent((Entity) (Object) this, world, new PositionImpl(blockpos1.getX(), blockpos1.getY(), blockpos1.getZ()), PlayerTeleportEvent.TeleportCause.NETHER_PORTAL, flag2 ? 16 : 128, 16);
+                CraftPortalEvent event = this.callPortalEvent((Entity) (Object) this, world, new Vec3(blockpos1.getX(), blockpos1.getY(), blockpos1.getZ()), PlayerTeleportEvent.TeleportCause.NETHER_PORTAL, flag2 ? 16 : 128, 16);
                 if (event == null) {
                     return null;
                 }
@@ -988,7 +992,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                 blockpos = world.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, world.getSharedSpawnPos());
             }
 
-            CraftPortalEvent event = this.callPortalEvent((Entity) (Object) this, world, new PositionImpl(blockpos.getX() + 0.5D, blockpos.getY(), blockpos.getZ() + 0.5D), PlayerTeleportEvent.TeleportCause.END_PORTAL, 0, 0);
+            CraftPortalEvent event = this.callPortalEvent((Entity) (Object) this, world, new Vec3(blockpos.getX() + 0.5D, blockpos.getY(), blockpos.getZ() + 0.5D), PlayerTeleportEvent.TeleportCause.END_PORTAL, 0, 0);
             if (event == null) {
                 return null;
             }
@@ -1000,7 +1004,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         }
     }
 
-    protected CraftPortalEvent callPortalEvent(Entity entity, ServerLevel exitWorldServer, PositionImpl exitPosition, PlayerTeleportEvent.TeleportCause cause, int searchRadius, int creationRadius) {
+    protected CraftPortalEvent callPortalEvent(Entity entity, ServerLevel exitWorldServer, Vec3 exitPosition, PlayerTeleportEvent.TeleportCause cause, int searchRadius, int creationRadius) {
         CraftEntity bukkitEntity = ((EntityBridge) entity).bridge$getBukkitEntity();
         Location enter = bukkitEntity.getLocation();
         Location exit = new Location(((WorldBridge) exitWorldServer).bridge$getWorld(), exitPosition.x(), exitPosition.y(), exitPosition.z());

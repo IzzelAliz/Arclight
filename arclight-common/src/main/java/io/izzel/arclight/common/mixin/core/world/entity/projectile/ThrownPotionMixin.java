@@ -6,6 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.AreaEffectCloud;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -78,11 +79,8 @@ public abstract class ThrownPotionMixin extends ThrowableItemProjectileMixin {
                 for (MobEffectInstance mobeffect : list) {
                     MobEffect mobeffectlist = mobeffect.getEffect();
                     if (!((WorldBridge) this.level()).bridge$isPvpMode() && this.getOwner() instanceof ServerPlayer && entityliving2 instanceof ServerPlayer && entityliving2 != this.getOwner()) {
-                        int i = MobEffect.getId(mobeffectlist);
-                        if (i == 2 || i == 4 || i == 7 || i == 15 || i == 17 || i == 18) {
-                            continue;
-                        }
-                        if (i == 19) {
+                        if (mobeffectlist == MobEffects.MOVEMENT_SLOWDOWN || mobeffectlist == MobEffects.DIG_SLOWDOWN || mobeffectlist == MobEffects.HARM || mobeffectlist == MobEffects.BLINDNESS
+                            || mobeffectlist == MobEffects.HUNGER || mobeffectlist == MobEffects.WEAKNESS || mobeffectlist == MobEffects.POISON) {
                             continue;
                         }
                     }
@@ -110,7 +108,7 @@ public abstract class ThrownPotionMixin extends ThrowableItemProjectileMixin {
         }
     }
 
-    @Inject(method = "dowseFire", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;removeBlock(Lnet/minecraft/core/BlockPos;Z)Z"))
+    @Inject(method = "dowseFire", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;destroyBlock(Lnet/minecraft/core/BlockPos;ZLnet/minecraft/world/entity/Entity;)Z"))
     private void arclight$entityChangeBlock(BlockPos pos, CallbackInfo ci) {
         if (!CraftEventFactory.callEntityChangeBlockEvent((ThrownPotion) (Object) this, pos, Blocks.AIR.defaultBlockState())) {
             ci.cancel();

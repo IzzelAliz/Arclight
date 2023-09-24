@@ -12,8 +12,9 @@
   "mixins": [
     "ForgeEventFactoryMixin",
     "ForgeHooksMixin",
-    "NetworkHooksMixin",
+    "IForgeServerPlayerMixin",
     "PacketDistributorMixin",
-    "PermissionAPIMixin"
+    "PermissionAPIMixin",
+    "RegisterChannelsTaskMixin"
   ]
 }

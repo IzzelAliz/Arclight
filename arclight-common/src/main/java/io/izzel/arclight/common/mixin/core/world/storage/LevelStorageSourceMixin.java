@@ -28,7 +28,7 @@ public abstract class LevelStorageSourceMixin implements LevelStorageSourceBridg
 
     public LevelStorageSource.LevelStorageAccess validateAndCreateAccess(String s, ResourceKey<LevelStem> dimensionType) throws IOException, ContentValidationException {
         Path path = this.getLevelPath(s);
-        List<ForbiddenSymlinkInfo> list = this.worldDirValidator.validateSave(path, true);
+        List<ForbiddenSymlinkInfo> list = this.worldDirValidator.validateDirectory(path, true);
         if (!list.isEmpty()) {
             throw new ContentValidationException(path, list);
         } else {

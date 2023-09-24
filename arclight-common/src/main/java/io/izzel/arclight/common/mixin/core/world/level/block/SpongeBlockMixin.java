@@ -62,7 +62,7 @@ public class SpongeBlockMixin {
                     if (block instanceof BucketPickup) {
                         BucketPickup ifluidsource = (BucketPickup) block;
 
-                        if (!ifluidsource.pickupBlock(blockList, blockposition1, iblockdata).isEmpty()) { // CraftBukkit
+                        if (!ifluidsource.pickupBlock(null, blockList, blockposition1, iblockdata).isEmpty()) { // CraftBukkit
                             return true;
                         }
                     }
@@ -104,7 +104,7 @@ public class SpongeBlockMixin {
                 FluidState fluid = world.getFluidState(blockposition1);
 
                 if (fluid.is(FluidTags.WATER)) {
-                    if (iblockdata.getBlock() instanceof BucketPickup && !((BucketPickup) iblockdata.getBlock()).pickupBlock(blockList, blockposition1, iblockdata).isEmpty()) {
+                    if (iblockdata.getBlock() instanceof BucketPickup && !((BucketPickup) iblockdata.getBlock()).pickupBlock(null, blockList, blockposition1, iblockdata).isEmpty()) {
                         // NOP
                     } else if (iblockdata.getBlock() instanceof LiquidBlock) {
                         // NOP
