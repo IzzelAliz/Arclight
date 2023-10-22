@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.util.SortedArraySet;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.Ticket;
 import net.minecraft.world.server.TicketManager;
 import net.minecraft.world.server.TicketType;
@@ -12,8 +13,12 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Invoker;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.Iterator;
+import java.util.Set;
+import java.util.function.Consumer;
 
 @Mixin(TicketManager.class)
 public abstract class TicketManagerMixin implements TicketManagerBridge {
@@ -26,6 +31,26 @@ public abstract class TicketManagerMixin implements TicketManagerBridge {
     @Shadow @Final public Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> tickets;
     @Invoker("tick") public abstract void bridge$tick();
     // @formatter:on
+
+    @Redirect(method = "processUpdates", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Set;forEach(Ljava/util/function/Consumer;)V"))
+    private void arclight$safeIter(Set<ChunkHolder> instance, Consumer<ChunkHolder> consumer) {
+        // Iterate pending chunk updates with protection against concurrent modification exceptions
+        Iterator<ChunkHolder> iter = instance.iterator();
+        int expectedSize = instance.size();
+        do {
+            ChunkHolder chunkHolder = iter.next();
+            iter.remove();
+            expectedSize--;
+
+            consumer.accept(chunkHolder);
+
+            // Reset iterator if set was modified using add()
+            if (instance.size() != expectedSize) {
+                expectedSize = instance.size();
+                iter = instance.iterator();
+            }
+        } while (iter.hasNext());
+    }
 
     @SuppressWarnings("unused") // mock
     public <T> boolean func_219356_a(TicketType<T> type, ChunkPos pos, int level, T value) {
