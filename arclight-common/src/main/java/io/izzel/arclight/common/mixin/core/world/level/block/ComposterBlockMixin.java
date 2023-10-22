@@ -55,7 +55,7 @@ public abstract class ComposterBlockMixin {
             double rand = world.random.nextDouble();
             BlockState state1 = addItem(entity, state, DummyGeneratorAccess.INSTANCE, pos, stack, rand);
 
-            if (state == state1 || !CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state1)) {
+            if (state == state1 || (entity != null && !CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state1))) {
                 return state;
             }
 
