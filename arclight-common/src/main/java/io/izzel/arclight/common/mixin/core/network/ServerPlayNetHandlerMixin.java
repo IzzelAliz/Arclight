@@ -759,11 +759,8 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
         switch (packetplayinblockdig_enumplayerdigtype) {
             case SWAP_ITEM_WITH_OFFHAND: {
                 if (!this.player.isSpectator()) {
-                    // ItemStack itemstack = this.player.getItemInHand(InteractionHand.OFF_HAND);
-                    var event = net.minecraftforge.common.ForgeHooks.onLivingSwapHandItems(this.player);
-                    if (event.isCanceled()) return;
-                    ItemStack itemstack = event.getItemSwappedToMainHand();
-                    ItemStack originMainHand = event.getItemSwappedToOffHand();
+                    ItemStack itemstack = this.player.getItemInHand(InteractionHand.OFF_HAND);
+                    ItemStack originMainHand = this.player.getItemInHand(InteractionHand.MAIN_HAND);
                     CraftItemStack mainHand = CraftItemStack.asCraftMirror(itemstack);
                     CraftItemStack offHand = CraftItemStack.asCraftMirror(originMainHand);
                     PlayerSwapHandItemsEvent swapItemsEvent = new PlayerSwapHandItemsEvent(this.getCraftPlayer(), mainHand.clone(), offHand.clone());
