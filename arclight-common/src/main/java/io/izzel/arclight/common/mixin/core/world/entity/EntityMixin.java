@@ -878,7 +878,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Overwrite(remap = false)
     @Nullable
     public Entity changeDimension(ServerLevel server, net.minecraftforge.common.util.ITeleporter teleporter) {
-        if (!ForgeEventFactory.onTravelToDimension((Entity) (Object) this, server.dimension()))
+        if (ForgeEventFactory.onTravelToDimension((Entity) (Object) this, server.dimension()))
             return null;
         if (this.level() instanceof ServerLevel && !this.isRemoved()) {
             this.level().getProfiler().push("changeDimension");

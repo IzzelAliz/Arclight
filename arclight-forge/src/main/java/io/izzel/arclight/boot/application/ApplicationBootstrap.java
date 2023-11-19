@@ -39,7 +39,7 @@ public class ApplicationBootstrap extends AbstractBootstrap implements Consumer<
             this.dirtyHacks();
             int targetIndex = Arrays.asList(args).indexOf("--launchTarget");
             if (targetIndex >= 0 && targetIndex < args.length - 1) {
-                args[targetIndex + 1] = "arclightserver";
+                args[targetIndex + 1] = "arclight_server";
             }
             ServiceLoader.load(getClass().getModule().getLayer(), Consumer.class).stream()
                 .filter(it -> !it.type().getName().contains("arclight"))

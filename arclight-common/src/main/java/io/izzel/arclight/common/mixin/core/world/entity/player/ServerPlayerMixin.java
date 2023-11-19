@@ -485,7 +485,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         if (this.isSleeping()) {
             return (ServerPlayer) (Object) this;
         }
-        if (!ForgeEventFactory.onTravelToDimension((ServerPlayer) (Object) this, server.dimension())) return null;
+        if (ForgeEventFactory.onTravelToDimension((ServerPlayer) (Object) this, server.dimension())) return null;
 
         PlayerTeleportEvent.TeleportCause cause = arclight$cause == null ? PlayerTeleportEvent.TeleportCause.UNKNOWN : arclight$cause;
         arclight$cause = null;

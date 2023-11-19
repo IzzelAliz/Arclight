@@ -65,7 +65,7 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
                 continue; //Forge: filter anything beginning with "_" as it's used for metadata.
 
             try {
-                if (entry.getValue().isJsonObject() && !CraftingHelper.processConditions(entry.getValue().getAsJsonObject(), "conditions", this.context)) {
+                if (entry.getValue().isJsonObject() && !net.minecraftforge.common.ForgeHooks.readAndTestCondition(this.context, entry.getValue().getAsJsonObject())) {
                     LOGGER.debug("Skipping loading recipe {} as it's conditions were not met", resourcelocation);
                     continue;
                 }

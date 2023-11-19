@@ -41,9 +41,13 @@ public class FishingRodItemMixin extends Item {
         if (playerIn.fishing != null) {
             if (!worldIn.isClientSide) {
                 int i = playerIn.fishing.retrieve(itemstack);
+                ItemStack original = itemstack.copy();
                 itemstack.hurtAndBreak(i, playerIn, (player) -> {
                     player.broadcastBreakEvent(handIn);
                 });
+                if(itemstack.isEmpty()) {
+                    net.minecraftforge.event.ForgeEventFactory.onPlayerDestroyItem(playerIn, original, handIn);
+                }
             }
 
             playerIn.swing(handIn);

@@ -11,20 +11,29 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.server.MapInitializeEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+import org.spongepowered.asm.mixin.Shadow;
 
 import javax.annotation.Nullable;
 
 @Mixin(MapItem.class)
 public abstract class MapItemMixin {
 
-    @Inject(method = "createNewSavedData", locals = LocalCapture.CAPTURE_FAILHARD, at = @At("RETURN"))
-    private static void arclight$mapInit(Level p_151121_, int p_151122_, int p_151123_, int p_151124_, boolean p_151125_, boolean p_151126_, ResourceKey<Level> p_151127_, CallbackInfoReturnable<Integer> cir, MapItemSavedData mapData) {
-        MapInitializeEvent event = new MapInitializeEvent(((MapDataBridge) mapData).bridge$getMapView());
+    // @formatter:off
+    @Shadow public static String makeKey(int p_42849_) { return null; }
+    // @formatter:on
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    public static int createNewSavedData(Level p_151121_, int p_151122_, int p_151123_, int p_151124_, boolean p_151125_, boolean p_151126_, ResourceKey<Level> p_151127_) {
+        MapItemSavedData mapitemsaveddata = MapItemSavedData.createFresh((double) p_151122_, (double) p_151123_, (byte) p_151124_, p_151125_, p_151126_, p_151127_);
+        MapInitializeEvent event = new MapInitializeEvent(((MapDataBridge) mapitemsaveddata).bridge$getMapView());
         Bukkit.getPluginManager().callEvent(event);
+        int i = p_151121_.getFreeMapId();
+        p_151121_.setMapData(makeKey(i), mapitemsaveddata);
+        return i;
     }
 
     /**

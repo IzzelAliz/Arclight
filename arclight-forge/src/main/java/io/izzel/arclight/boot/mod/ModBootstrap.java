@@ -1,7 +1,5 @@
 package io.izzel.arclight.boot.mod;
 
-import cpw.mods.cl.JarModuleFinder;
-import cpw.mods.cl.ModuleClassLoader;
 import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.jarhandling.impl.Jar;
 import cpw.mods.modlauncher.LaunchPluginHandler;
@@ -12,6 +10,8 @@ import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.boot.AbstractBootstrap;
 import io.izzel.arclight.boot.asm.ArclightImplementer;
 import io.izzel.arclight.forgeinstaller.ForgeInstaller;
+import net.minecraftforge.securemodules.SecureModuleClassLoader;
+import net.minecraftforge.securemodules.SecureModuleFinder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.MarkerManager;
 
@@ -35,7 +35,7 @@ import java.util.jar.Manifest;
 
 public class ModBootstrap extends AbstractBootstrap {
 
-    public static record ModBoot(Configuration configuration, ClassLoader parent) {}
+    public record ModBoot(Configuration configuration, ClassLoader parent) {}
 
     private static ModBoot modBoot;
 
@@ -60,8 +60,8 @@ public class ModBootstrap extends AbstractBootstrap {
         try {
             var conf = modBoot.configuration();
             var parent = modBoot.parent();
-            var classLoader = (ModuleClassLoader) Thread.currentThread().getContextClassLoader();
-            var parentField = ModuleClassLoader.class.getDeclaredField("parentLoaders");
+            var classLoader = (SecureModuleClassLoader) Thread.currentThread().getContextClassLoader();
+            var parentField = SecureModuleClassLoader.class.getDeclaredField("packageToParentLoader");
             var parentLoaders = (Map<String, ClassLoader>) Unsafe.getObject(classLoader, Unsafe.objectFieldOffset(parentField));
             for (var mod : conf.modules()) {
                 for (var pk : mod.reference().descriptor().packages()) {
@@ -115,19 +115,19 @@ public class ModBootstrap extends AbstractBootstrap {
 
     @SuppressWarnings("unchecked")
     private static void load(Path[] file) throws Throwable {
-        var classLoader = (ModuleClassLoader) ModBootstrap.class.getClassLoader();
+        var classLoader = (SecureModuleClassLoader) ModBootstrap.class.getClassLoader();
         var secureJar = SecureJar.from((path, base) -> EXCLUDES.stream().noneMatch(path::startsWith), file);
-        var configurationField = ModuleClassLoader.class.getDeclaredField("configuration");
+        var configurationField = SecureModuleClassLoader.class.getDeclaredField("configuration");
         var confOffset = Unsafe.objectFieldOffset(configurationField);
         var oldConf = (Configuration) Unsafe.getObject(classLoader, confOffset);
-        var conf = oldConf.resolveAndBind(JarModuleFinder.of(secureJar), ModuleFinder.of(), List.of(secureJar.name()));
+        var conf = oldConf.resolveAndBind(SecureModuleFinder.of(secureJar), ModuleFinder.of(), List.of(secureJar.name()));
         modBoot = new ModBoot(conf, classLoader);
         Unsafe.putObjectVolatile(classLoader, confOffset, conf);
-        var pkgField = ModuleClassLoader.class.getDeclaredField("packageLookup");
+        var pkgField = SecureModuleClassLoader.class.getDeclaredField("packageToOurModules");
         var packageLookup = (Map<String, ResolvedModule>) Unsafe.getObject(classLoader, Unsafe.objectFieldOffset(pkgField));
-        var rootField = ModuleClassLoader.class.getDeclaredField("resolvedRoots");
+        var rootField = SecureModuleClassLoader.class.getDeclaredField("ourModulesSecure");
         var resolvedRoots = (Map<String, Object>) Unsafe.getObject(classLoader, Unsafe.objectFieldOffset(rootField));
-        var moduleRefCtor = Unsafe.lookup().findConstructor(Class.forName("cpw.mods.cl.JarModuleFinder$JarModuleReference"),
+        var moduleRefCtor = Unsafe.lookup().findConstructor(Class.forName("net.minecraftforge.securemodules.SecureModuleFinder$Reference"),
             MethodType.methodType(void.class, SecureJar.ModuleDataProvider.class));
         for (var mod : conf.modules()) {
             for (var pk : mod.reference().descriptor().packages()) {
