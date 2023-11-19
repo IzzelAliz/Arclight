@@ -60,7 +60,7 @@ public abstract class AbstractArrowMixin extends ProjectileMixin {
             ItemStack itemstack = this.getPickupItem();
             if (this.pickup == net.minecraft.world.entity.projectile.AbstractArrow.Pickup.ALLOWED && !itemstack.isEmpty() && ((PlayerInventoryBridge) playerEntity.getInventory()).bridge$canHold(itemstack) > 0) {
                 ItemEntity item = new ItemEntity(this.level(), this.getX(), this.getY(), this.getZ(), itemstack);
-                PlayerPickupArrowEvent event = new PlayerPickupArrowEvent(((ServerPlayerEntityBridge) playerEntity).bridge$getBukkitEntity(), new CraftItem(((CraftServer) Bukkit.getServer()), (net.minecraft.world.entity.projectile.AbstractArrow) (Object) this, item), (AbstractArrow) this.getBukkitEntity());
+                PlayerPickupArrowEvent event = new PlayerPickupArrowEvent(((ServerPlayerEntityBridge) playerEntity).bridge$getBukkitEntity(), new CraftItem(((CraftServer) Bukkit.getServer()), item), (AbstractArrow) this.getBukkitEntity());
                 Bukkit.getPluginManager().callEvent(event);
                 if (event.isCancelled()) {
                     return;

@@ -41,6 +41,7 @@
     "MaterialMixin",
     "PluginClassLoaderMixin",
     "PotionEffectTypeMixin",
+    "PotionTypeMixin",
     "RecipeIteratorMixin",
     "Registry_SimpleRegistryMixin",
     "WatchdogThreadMixin"

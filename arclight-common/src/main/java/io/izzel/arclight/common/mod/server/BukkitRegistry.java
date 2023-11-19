@@ -27,13 +27,11 @@ import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.stats.StatType;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.crafting.CookingBookCategory;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -51,7 +49,6 @@ import org.bukkit.block.Biome;
 import org.bukkit.craftbukkit.v.CraftCrashReport;
 import org.bukkit.craftbukkit.v.CraftStatistic;
 import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
-import org.bukkit.craftbukkit.v.potion.CraftPotionUtil;
 import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.craftbukkit.v.util.CraftSpawnCategory;
@@ -387,21 +384,19 @@ public class BukkitRegistry {
             }
         }
         PotionEffectType.stopAcceptingRegistrations();
-        ArclightMod.LOGGER.info("registry.potion", size - origin);
+        ArclightMod.LOGGER.debug("registry.potion", size - origin);
         int typeId = PotionType.values().length;
         List<PotionType> newTypes = new ArrayList<>();
-        BiMap<PotionType, String> map = HashBiMap.create(Unsafe.getStatic(CraftPotionUtil.class, "regular"));
-        putStatic(CraftPotionUtil.class, "regular", map);
         for (var potion : ForgeRegistries.POTIONS) {
             var location = ForgeRegistries.POTIONS.getKey(potion);
-            if (CraftPotionUtil.toBukkit(location.toString()).getType() == PotionType.UNCRAFTABLE && potion != Potions.EMPTY) {
-                String name = ResourceLocationUtil.standardize(location);
-                MobEffectInstance effectInstance = potion.getEffects().isEmpty() ? null : potion.getEffects().get(0);
+            String name = ResourceLocationUtil.standardize(location);
+            try {
+                PotionType.valueOf(name);
+            } catch (Exception e) {
                 PotionType potionType = EnumHelper.makeEnum(PotionType.class, name, typeId++,
-                    Arrays.asList(PotionEffectType.class, boolean.class, boolean.class),
-                    Arrays.asList(effectInstance == null ? null : PotionEffectType.getByKey(CraftNamespacedKey.fromMinecraft(ForgeRegistries.MOB_EFFECTS.getKey(effectInstance.getEffect()))), false, false));
+                    List.of(String.class),
+                    List.of(location.toString()));
                 newTypes.add(potionType);
-                map.put(potionType, location.toString());
                 ArclightMod.LOGGER.debug("Registered {} as potion type {}", location, potionType);
             }
         }

@@ -56,6 +56,7 @@ import net.minecraft.network.protocol.game.ServerboundPlaceRecipePacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerAbilitiesPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.network.protocol.game.ServerboundRecipeBookChangeSettingsPacket;
 import net.minecraft.network.protocol.game.ServerboundSelectTradePacket;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket;
@@ -1599,6 +1600,11 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
                 }
             }
         }
+    }
+
+    @Inject(method = "handleRecipeBookChangeSettingsPacket", at = @At(value = "INVOKE", target = "Lnet/minecraft/stats/ServerRecipeBook;setBookSetting(Lnet/minecraft/world/inventory/RecipeBookType;ZZ)V"))
+    private void arclight$recipeBookSettings(ServerboundRecipeBookChangeSettingsPacket packet, CallbackInfo ci) {
+        CraftEventFactory.callRecipeBookSettingsEvent(this.player, packet.getBookType(), packet.isOpen(), packet.isFiltering());
     }
 
     @Redirect(method = "handlePlaceRecipe", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/game/ServerboundPlaceRecipePacket;getRecipe()Lnet/minecraft/resources/ResourceLocation;"))
