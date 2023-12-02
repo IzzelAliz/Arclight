@@ -33,6 +33,7 @@
     "CraftSchedulerMixin",
     "CraftServerMixin",
     "CraftSpawnCategoryMixin",
+    "CraftSpellcasterMixin",
     "CraftWorldMixin",
     "EntityTypeMixin",
     "JavaPluginLoaderMixin",

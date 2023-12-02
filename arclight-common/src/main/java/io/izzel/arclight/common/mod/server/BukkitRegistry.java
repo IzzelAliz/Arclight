@@ -29,6 +29,7 @@ import net.minecraft.stats.Stats;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
+import net.minecraft.world.entity.monster.SpellcasterIllager;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -56,7 +57,9 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Pose;
 import org.bukkit.entity.SpawnCategory;
+import org.bukkit.entity.Spellcaster;
 import org.bukkit.entity.Villager;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
@@ -464,6 +467,21 @@ public class BukkitRegistry {
 
     private static EntityPropertySpec entitySpec(ResourceLocation location) {
         return ArclightConfig.spec().getCompat().getEntity(location.toString()).orElse(EntityPropertySpec.EMPTY);
+    }
+
+    public static Pose toBukkitPose(net.minecraft.world.entity.Pose nms) {
+        if (Pose.values().length <= nms.ordinal()) {
+            var newTypes = new ArrayList<Pose>();
+            var forgeCount = net.minecraft.world.entity.Pose.values().length;
+            for (var id = Pose.values().length; id < forgeCount; id++) {
+                var name = net.minecraft.world.entity.Pose.values()[id].name();
+                var newPhase = EnumHelper.makeEnum(Pose.class, name, id, List.of(), List.of());
+                newTypes.add(newPhase);
+                ArclightMod.LOGGER.debug("Registered {} as pose {}", name, newPhase);
+            }
+            EnumHelper.addEnums(Pose.class, newTypes);
+        }
+        return org.bukkit.entity.Pose.values()[nms.ordinal()];
     }
 
     private static void putStatic(Class<?> cl, String name, Object o) {

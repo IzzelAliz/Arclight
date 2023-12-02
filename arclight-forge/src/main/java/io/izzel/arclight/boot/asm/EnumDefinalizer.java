@@ -22,7 +22,9 @@ public class EnumDefinalizer implements Implementer {
         "org/bukkit/entity/SpawnCategory",
         "org/bukkit/entity/EnderDragon$Phase",
         "org/bukkit/inventory/recipe/CookingBookCategory",
-        "org/bukkit/Fluid"
+        "org/bukkit/Fluid",
+        "org/bukkit/entity/Spellcaster$Spell",
+        "org/bukkit/entity/Pose"
     );
 
     @Override
