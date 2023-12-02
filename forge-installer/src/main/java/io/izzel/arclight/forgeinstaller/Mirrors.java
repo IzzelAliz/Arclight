@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 public class Mirrors {
 
     private static final String[] MAVEN_REPO = {
-        "https://arclight.mcxk.net/",
+        "https://arclight.hypertention.cn/",
         "https://download.mcbbs.net/maven/",
         "https://repo.spongepowered.org/maven/"
     };
