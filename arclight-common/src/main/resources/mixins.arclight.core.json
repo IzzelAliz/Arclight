@@ -476,6 +476,7 @@
     "world.level.entity.PersistentEntitySectionManagerMixin",
     "world.level.gameevent.GameEventDispatcherMixin",
     "world.level.gameevent.vibrations.VibrationListenerMixin",
+    "world.level.levelgen.structure.templatesystem.StructurePlaceSettingsMixin",
     "world.level.levelgen.structure.templatesystem.StructureTemplateMixin",
     "world.level.portal.PortalForcerMixin",
     "world.level.redstone.NeighborUpdaterMixin",
