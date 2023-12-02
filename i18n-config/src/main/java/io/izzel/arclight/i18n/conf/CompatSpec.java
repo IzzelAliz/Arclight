@@ -26,6 +26,9 @@ public class CompatSpec {
     @Setting("forward-permission")
     private String forwardPermission;
 
+    @Setting("valid-username-regex")
+    private String validUsernameRegex;
+
     public Map<String, MaterialPropertySpec> getMaterials() {
         return materials;
     }
@@ -56,5 +59,9 @@ public class CompatSpec {
 
     public boolean isForwardPermissionReverse() {
         return Objects.equals(forwardPermission, "reverse");
+    }
+
+    public String getValidUsernameRegex() {
+        return validUsernameRegex;
     }
 }

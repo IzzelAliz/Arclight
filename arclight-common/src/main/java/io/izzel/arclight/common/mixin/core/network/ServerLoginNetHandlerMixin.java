@@ -7,6 +7,7 @@ import io.izzel.arclight.common.bridge.core.network.NetworkManagerBridge;
 import io.izzel.arclight.common.bridge.core.network.common.ServerCommonPacketListenerBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.core.server.management.PlayerListBridge;
+import io.izzel.arclight.i18n.ArclightConfig;
 import net.minecraft.DefaultUncaughtExceptionHandler;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.Connection;
@@ -81,6 +82,11 @@ public abstract class ServerLoginNetHandlerMixin {
         this.disconnect(Component.literal(s));
     }
 
+    private static boolean arclight$validUsernameCheck(String name) {
+        var regex = ArclightConfig.spec().getCompat().getValidUsernameRegex();
+        return !regex.isBlank() && name.matches(regex);
+    }
+
     /**
      * @author IzzelAliz
      * @reason
@@ -88,7 +94,7 @@ public abstract class ServerLoginNetHandlerMixin {
     @Overwrite
     public void handleHello(ServerboundHelloPacket packetIn) {
         Validate.validState(this.state == ServerLoginPacketListenerImpl.State.HELLO, "Unexpected hello packet");
-        Validate.validState(isValidUsername(packetIn.name()), "Invalid characters in username");
+        Validate.validState(arclight$validUsernameCheck(packetIn.name()) || isValidUsername(packetIn.name()), "Invalid characters in username");
         this.requestedUsername = packetIn.name();
         GameProfile gameprofile = this.server.getSingleplayerProfile();
         if (gameprofile != null && this.requestedUsername.equalsIgnoreCase(gameprofile.getName())) {
