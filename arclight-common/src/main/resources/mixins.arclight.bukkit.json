@@ -35,6 +35,7 @@
     "CraftSchedulerMixin",
     "CraftServerMixin",
     "CraftSpawnCategoryMixin",
+    "CraftSpellcasterMixin",
     "CraftVillagerMixin",
     "CraftWorldMixin",
     "EntityTypeMixin",

@@ -11,6 +11,7 @@ import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBrid
 import io.izzel.arclight.common.bridge.core.network.datasync.SynchedEntityDataBridge;
 import io.izzel.arclight.common.bridge.core.world.TeleporterBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.mod.server.BukkitRegistry;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.BlockUtil;
 import net.minecraft.commands.CommandSourceStack;
@@ -315,7 +316,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             callbackInfo.cancel();
             return;
         }
-        EntityPoseChangeEvent event = new EntityPoseChangeEvent(this.internal$getBukkitEntity(), org.bukkit.entity.Pose.values()[poseIn.ordinal()]);
+        EntityPoseChangeEvent event = new EntityPoseChangeEvent(this.internal$getBukkitEntity(), BukkitRegistry.toBukkitPose(poseIn));
         Bukkit.getPluginManager().callEvent(event);
     }
 
