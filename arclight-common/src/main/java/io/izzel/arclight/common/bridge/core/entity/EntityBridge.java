@@ -27,6 +27,10 @@ public interface EntityBridge extends ICommandSourceBridge {
 
     void bridge$setValid(boolean valid);
 
+    boolean bridge$isInWorld();
+
+    void bridge$setInWorld(boolean inWorld);
+
     ProjectileSource bridge$getProjectileSource();
 
     void bridge$setProjectileSource(ProjectileSource projectileSource);

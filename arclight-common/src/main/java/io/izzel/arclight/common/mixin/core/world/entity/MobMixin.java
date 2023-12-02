@@ -32,12 +32,14 @@ import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
 import org.bukkit.event.entity.EntityUnleashEvent;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -176,6 +178,11 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
         arclight$fireEvent = fireEvent;
     }
 
+    @Redirect(method = "addAdditionalSaveData", at = @At(value = "FIELD", ordinal = 0, opcode = Opcodes.GETFIELD, target = "Lnet/minecraft/world/entity/Mob;leashHolder:Lnet/minecraft/world/entity/Entity;"))
+    private Entity arclight$skipLeaseSave(Mob instance) {
+        return this.pluginRemoved ? null : instance.getLeashHolder();
+    }
+
     @Inject(method = "addAdditionalSaveData", at = @At("HEAD"))
     private void arclight$setAware(CompoundTag compound, CallbackInfo ci) {
         compound.putBoolean("Bukkit.Aware", this.aware);
@@ -276,6 +283,11 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
     public void arclight$unleash2(CallbackInfo ci) {
         Bukkit.getPluginManager().callEvent(new EntityUnleashEvent(this.getBukkitEntity(), this.isAlive() ?
             EntityUnleashEvent.UnleashReason.HOLDER_GONE : EntityUnleashEvent.UnleashReason.PLAYER_UNLEASH));
+    }
+
+    @ModifyArg(method = "tickLeash", index = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;dropLeash(ZZ)V"))
+    private boolean arclight$skipOnPluginRemove(boolean b) {
+        return !this.pluginRemoved;
     }
 
     @Inject(method = "dropLeash", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/Mob;spawnAtLocation(Lnet/minecraft/world/level/ItemLike;)Lnet/minecraft/world/entity/item/ItemEntity;"))

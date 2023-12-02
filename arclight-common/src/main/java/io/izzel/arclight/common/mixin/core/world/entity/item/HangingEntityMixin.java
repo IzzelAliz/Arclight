@@ -4,6 +4,7 @@ import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.EntityMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -28,6 +29,13 @@ public abstract class HangingEntityMixin extends EntityMixin {
     // @formatter:off
     @Shadow public BlockPos pos;
     // @formatter:on
+
+    @Inject(method = "addAdditionalSaveData", cancellable = true, at = @At("HEAD"))
+    private void arclight$skipSave(CompoundTag p_31736_, CallbackInfo ci) {
+        if (this.arclight$saveNotIncludeAll) {
+            ci.cancel();
+        }
+    }
 
     @Inject(method = "tick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/HangingEntity;discard()V"))
     private void arclight$hangingBreak(CallbackInfo ci) {
