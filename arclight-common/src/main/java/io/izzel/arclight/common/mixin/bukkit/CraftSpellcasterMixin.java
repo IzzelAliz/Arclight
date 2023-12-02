@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import java.util.ArrayList;
 import java.util.List;
 
-@Mixin(CraftSpellcaster.class)
+@Mixin(value = CraftSpellcaster.class, remap = false)
 public class CraftSpellcasterMixin {
 
     /**
