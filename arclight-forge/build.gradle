@@ -46,7 +46,7 @@ def embedLibs = [/*"org.spongepowered:mixin:$mixinVersion", */ 'org.yaml:snakeya
                  'org.xerial:sqlite-jdbc:3.42.0.0', 'com.mysql:mysql-connector-j:8.0.33',
                  /*'commons-lang:commons-lang:2.6',*/ 'com.googlecode.json-simple:json-simple:1.1.1',
                  'org.apache.logging.log4j:log4j-jul:2.17.2', 'net.md-5:SpecialSource:1.11.0',
-                 'org.jline:jline-terminal-jansi:3.12.1', 'org.fusesource.jansi:jansi:1.18',
+                 'org.jline:jline-terminal-jansi:3.12.1',/* 'org.fusesource.jansi:jansi:1.18',*/
                  /*'org.jline:jline-terminal:3.12.1', 'org.jline:jline-reader:3.12.1',*/
                  'jline:jline:2.12.1', 'org.apache.maven:maven-resolver-provider:3.8.1',
                  'org.apache.maven.resolver:maven-resolver-connector-basic:1.6.2', 'org.apache.maven.resolver:maven-resolver-transport-http:1.6.2',
@@ -65,9 +65,11 @@ dependencies {
     implementation 'com.google.guava:guava:31.1-jre'
     implementation 'org.ow2.asm:asm:9.5'
     implementation 'org.ow2.asm:asm-tree:9.5'
-    implementation 'net.minecraftforge:modlauncher:10.1.1'
-    implementation 'net.minecraftforge:securemodules:2.2.3'
+    implementation 'net.minecraftforge:modlauncher:10.1.2'
+    implementation 'net.minecraftforge:securemodules:2.2.7'
     implementation 'net.minecraftforge:forgespi:7.1.0'
+    implementation 'net.minecraftforge:bootstrap:2.0.0'
+    implementation 'net.minecraftforge:bootstrap-api:2.0.0'
     gson 'com.google.code.gson:gson:2.9.0'
     implementation 'org.apache.logging.log4j:log4j-api:2.17.2'
     implementation 'org.apache.logging.log4j:log4j-core:2.17.2'
@@ -200,6 +202,7 @@ compileApplaunchJava {
 
 task runProdServer(type: JavaExec) {
     classpath = files(tasks.jar)
+    // systemProperties 'bsl.debug': 'true'
     systemProperties 'terminal.ansi': 'true'
     systemProperties 'mixin.debug.export': 'true'
     systemProperties 'arclight.alwaysExtract': 'true'

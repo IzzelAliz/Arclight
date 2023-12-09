@@ -41,7 +41,6 @@
     "LibraryLoaderMixin",
     "MaterialMixin",
     "PluginClassLoaderMixin",
-    "PotionEffectTypeMixin",
     "PotionTypeMixin",
     "RecipeIteratorMixin",
     "Registry_SimpleRegistryMixin",

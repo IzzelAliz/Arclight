@@ -23,10 +23,10 @@ public abstract class ShapedRecipeMixin implements RecipeBridge {
     // @formatter:off
     @Shadow @Final ItemStack result;
     @Shadow @Final String group;
-    @Shadow @Final NonNullList<Ingredient> recipeItems;
     @Shadow public abstract int getHeight();
     @Shadow public abstract int getWidth();
     @Shadow public abstract CraftingBookCategory category();
+    @Shadow public abstract NonNullList<Ingredient> getIngredients();
     // @formatter:on
 
     @Override
@@ -81,7 +81,7 @@ public abstract class ShapedRecipeMixin implements RecipeBridge {
                 break;
         }
         char c = 'a';
-        for (Ingredient list : this.recipeItems) {
+        for (Ingredient list : this.getIngredients()) {
             RecipeChoice choice = CraftRecipe.toBukkit(list);
             if (choice != null) {
                 recipe.setIngredient(c, choice);

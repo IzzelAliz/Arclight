@@ -34,6 +34,7 @@ public abstract class AbstractArrowMixin extends ProjectileMixin {
     @Shadow public int shakeTime;
     @Shadow public net.minecraft.world.entity.projectile.AbstractArrow.Pickup pickup;
     @Shadow protected abstract ItemStack getPickupItem();
+    @Shadow public ItemStack pickupItemStack;
     // @formatter:on
 
     @Redirect(method = "tick", at = @At(value = "INVOKE", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/entity/projectile/AbstractArrow;onHit(Lnet/minecraft/world/phys/HitResult;)V"))

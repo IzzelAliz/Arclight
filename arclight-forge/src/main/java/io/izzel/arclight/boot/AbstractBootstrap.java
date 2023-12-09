@@ -30,9 +30,9 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
-public class AbstractBootstrap {
+public interface AbstractBootstrap {
 
-    protected void dirtyHacks() throws Exception {
+    default void dirtyHacks() throws Exception {
         TypeAdapters.ENUM_FACTORY.create(null, TypeToken.get(Object.class));
         Field field = TypeAdapters.class.getDeclaredField("ENUM_FACTORY");
         Object base = Unsafe.staticFieldBase(field);
@@ -89,8 +89,8 @@ public class AbstractBootstrap {
         }
     }
 
-    protected void setupMod() throws Exception {
-        ArclightVersion.setVersion(ArclightVersion.NET);
+    default void setupMod() throws Exception {
+        ArclightVersion.setVersion(ArclightVersion.WHISPER);
         try (InputStream stream = getClass().getModule().getResourceAsStream("/META-INF/MANIFEST.MF")) {
             Manifest manifest = new Manifest(stream);
             Attributes attributes = manifest.getMainAttributes();

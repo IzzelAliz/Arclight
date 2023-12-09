@@ -53,17 +53,16 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin {
         this.remoteConsole = new CraftRemoteConsoleCommandSender(this.rconConsoleSource);
     }
 
-    @Redirect(method = "handleConsoleInputs", at = @At(value = "INVOKE", target = "Lnet/minecraft/commands/Commands;performPrefixedCommand(Lnet/minecraft/commands/CommandSourceStack;Ljava/lang/String;)I"))
-    private int arclight$serverCommandEvent(Commands commands, CommandSourceStack source, String command) {
+    @Redirect(method = "handleConsoleInputs", at = @At(value = "INVOKE", target = "Lnet/minecraft/commands/Commands;performPrefixedCommand(Lnet/minecraft/commands/CommandSourceStack;Ljava/lang/String;)V"))
+    private void arclight$serverCommandEvent(Commands commands, CommandSourceStack source, String command) {
         if (command.isEmpty()) {
-            return 0;
+            return;
         }
         ServerCommandEvent event = new ServerCommandEvent(console, command);
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
             server.dispatchServerCommand(console, new ConsoleInput(event.getCommand(), source));
         }
-        return 0;
     }
 
     /**

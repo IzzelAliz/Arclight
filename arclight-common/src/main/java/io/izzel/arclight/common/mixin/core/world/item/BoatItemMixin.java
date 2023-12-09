@@ -35,7 +35,7 @@ public abstract class BoatItemMixin extends Item {
     // @formatter:off
     @Shadow @Final private static Predicate<Entity> ENTITY_PREDICATE;
     @Shadow @Final private Boat.Type type;
-    @Shadow protected abstract Boat getBoat(Level p_220017_, HitResult p_220018_);
+    @Shadow protected abstract Boat getBoat(Level p_220017_, HitResult p_220018_, ItemStack p_311821_, Player p_313119_);
     // @formatter:on
 
     public BoatItemMixin(Properties properties) {
@@ -76,7 +76,7 @@ public abstract class BoatItemMixin extends Item {
                     }
                 }
 
-                Boat boatentity = this.getBoat(worldIn, result);
+                Boat boatentity = this.getBoat(worldIn, result, itemstack, playerIn);
                 boatentity.setVariant(this.type);
                 boatentity.setYRot(playerIn.getYRot());
                 if (!worldIn.noCollision(boatentity, boatentity.getBoundingBox().inflate(-0.1D))) {

@@ -14,8 +14,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(DoublePlantBlock.class)
 public class DoublePlantBlockMixin {
 
-    @Inject(method = "playerWillDestroy", cancellable = true, at = @At("HEAD"))
-    public void arclight$blockPhysics(Level worldIn, BlockPos pos, BlockState state, Player player, CallbackInfo ci) {
+    @Inject(method = "preventDropFromBottomPart", cancellable = true, at = @At("HEAD"))
+    private static void arclight$blockPhysics(Level worldIn, BlockPos pos, BlockState state, Player player, CallbackInfo ci) {
         if (CraftEventFactory.callBlockPhysicsEvent(worldIn, pos).isCancelled()) {
             ci.cancel();
         }

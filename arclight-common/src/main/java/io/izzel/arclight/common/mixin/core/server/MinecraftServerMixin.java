@@ -28,6 +28,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.RegistryLayer;
 import net.minecraft.server.ServerFunctionManager;
+import net.minecraft.server.ServerTickRateManager;
 import net.minecraft.server.Services;
 import net.minecraft.server.TickTask;
 import net.minecraft.server.WorldLoader;
@@ -39,6 +40,7 @@ import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.server.level.progress.ChunkProgressListenerFactory;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.server.players.PlayerList;
+import net.minecraft.util.TimeUtil;
 import net.minecraft.util.Unit;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.util.profiling.jfr.JvmProfiler;
@@ -97,16 +99,16 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     // @formatter:off
     @Shadow private int tickCount;
     @Shadow protected abstract boolean initServer() throws IOException;
-    @Shadow protected long nextTickTime;
+    @Shadow protected long nextTickTimeNanos;
     @Shadow private ServerStatus status;
     @Shadow @Nullable private String motd;
     @Shadow private volatile boolean running;
-    @Shadow private long lastOverloadWarning;
+    @Shadow private long lastOverloadWarningNanos;
     @Shadow @Final static Logger LOGGER;
     @Shadow public abstract void tickServer(BooleanSupplier hasTimeLeft);
     @Shadow protected abstract boolean haveTime();
     @Shadow private boolean mayHaveDelayedTasks;
-    @Shadow private long delayedTasksMaxNextTickTime;
+    @Shadow private long delayedTasksMaxNextTickTimeNanos;
     @Shadow protected abstract void waitUntilNextTick();
     @Shadow private volatile boolean isReady;
     @Shadow protected abstract void onServerCrash(CrashReport report);
@@ -128,7 +130,6 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Shadow protected abstract void startMetricsRecordingTick();
     @Shadow protected abstract void endMetricsRecordingTick();
     @Shadow public abstract SystemReport fillSystemReport(SystemReport p_177936_);
-    @Shadow private float averageTickTime;
     @Shadow @Final private PackRepository packRepository;
     @Shadow public abstract boolean isDedicatedServer();
     @Shadow public abstract int getFunctionCompilationLevel();
@@ -148,6 +149,11 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Shadow protected abstract ServerStatus buildServerStatus();
     @Shadow @Nullable private ServerStatus.Favicon statusIcon;
     @Shadow protected abstract Optional<ServerStatus.Favicon> loadStatusIcon();
+    @Shadow public abstract boolean isPaused();
+    @Shadow @Final private ServerTickRateManager tickRateManager;
+    @Shadow @Final private static long OVERLOADED_THRESHOLD_NANOS;
+    @Shadow @Final private static long OVERLOADED_WARNING_INTERVAL_NANOS;
+    @Shadow private float smoothedTickTimeMillis;
     // @formatter:on
 
     public MinecraftServerMixin(String name) {
@@ -207,33 +213,43 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
                 throw new IllegalStateException("Failed to initialize server");
             }
             ServerLifecycleHooks.handleServerStarted((MinecraftServer) (Object) this);
-            this.nextTickTime = Util.getMillis();
+            this.nextTickTimeNanos = Util.getNanos();
             this.statusIcon = this.loadStatusIcon().orElse(null);
             this.status = this.buildServerStatus();
 
             Arrays.fill(recentTps, 20);
-            long curTime, tickSection = Util.getMillis(), tickCount = 1;
+            long tickSection = Util.getMillis(), tickCount = 1;
 
             while (this.running) {
-                long i = (curTime = Util.getMillis()) - this.nextTickTime;
-                if (i > 2000L && this.nextTickTime - this.lastOverloadWarning >= 15000L) {
-                    long j = i / 50L;
+                long i;
+                if (!this.isPaused() && this.tickRateManager.isSprinting() && this.tickRateManager.checkShouldSprintThisTick()) {
+                    i = 0L;
+                    this.nextTickTimeNanos = Util.getNanos();
+                    this.lastOverloadWarningNanos = this.nextTickTimeNanos;
+                } else {
+                    i = this.tickRateManager.nanosecondsPerTick();
+                    long j = Util.getNanos() - this.nextTickTimeNanos;
 
-                    if (server.getWarnOnOverload()) {
-                        LOGGER.warn("Can't keep up! Is the server overloaded? Running {}ms or {} ticks behind", i, j);
+                    if (j > OVERLOADED_THRESHOLD_NANOS + 20L * i && this.nextTickTimeNanos - this.lastOverloadWarningNanos >= OVERLOADED_WARNING_INTERVAL_NANOS + 100L * i) {
+                        long k = j / i;
+
+                        if (server.getWarnOnOverload()) // CraftBukkit
+                            MinecraftServer.LOGGER.warn("Can't keep up! Is the server overloaded? Running {}ms or {} ticks behind", j / TimeUtil.NANOSECONDS_PER_MILLISECOND, k);
+                        this.nextTickTimeNanos += k * i;
+                        this.lastOverloadWarningNanos = this.nextTickTimeNanos;
                     }
-
-                    this.nextTickTime += j * 50L;
-                    this.lastOverloadWarning = this.nextTickTime;
                 }
 
                 if (tickCount++ % SAMPLE_INTERVAL == 0) {
+                    long curTime = Util.getMillis();
                     double currentTps = 1E3 / (curTime - tickSection) * SAMPLE_INTERVAL;
                     recentTps[0] = calcTps(recentTps[0], 0.92, currentTps); // 1/exp(5sec/1min)
                     recentTps[1] = calcTps(recentTps[1], 0.9835, currentTps); // 1/exp(5sec/5min)
                     recentTps[2] = calcTps(recentTps[2], 0.9945, currentTps); // 1/exp(5sec/15min)
                     tickSection = curTime;
                 }
+
+                boolean flag = i == 0L;
 
                 currentTick = (int) (System.currentTimeMillis() / 50);
 
@@ -242,18 +258,21 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
                     this.debugCommandProfiler = new MinecraftServer.TimeProfiler(Util.getNanos(), this.tickCount);
                 }
 
-                this.nextTickTime += 50L;
+                this.nextTickTimeNanos += i;
                 this.startMetricsRecordingTick();
                 this.profiler.push("tick");
-                this.tickServer(this::haveTime);
+                this.tickServer(flag ? () -> false : this::haveTime);
                 this.profiler.popPush("nextTickWait");
                 this.mayHaveDelayedTasks = true;
-                this.delayedTasksMaxNextTickTime = Math.max(Util.getMillis() + 50L, this.nextTickTime);
+                this.delayedTasksMaxNextTickTimeNanos = Math.max(Util.getNanos() + i, this.nextTickTimeNanos);
                 this.waitUntilNextTick();
+                if (flag) {
+                    this.tickRateManager.endTickWork();
+                }
                 this.profiler.pop();
                 this.endMetricsRecordingTick();
                 this.isReady = true;
-                JvmProfiler.INSTANCE.onServerTick(this.averageTickTime);
+                JvmProfiler.INSTANCE.onServerTick(this.smoothedTickTimeMillis);
             }
             ServerLifecycleHooks.handleServerStopping((MinecraftServer) (Object) this);
             ServerLifecycleHooks.expectServerStopped(); // has to come before finalTick to avoid race conditions
@@ -335,7 +354,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         if (this.forceTicks) cir.setReturnValue(true);
     }
 
-    @Inject(method = "createLevels", at = @At(value = "NEW", ordinal = 0, target = "net/minecraft/server/level/ServerLevel"))
+    @Inject(method = "createLevels", at = @At(value = "NEW", ordinal = 0, target = "(Lnet/minecraft/server/MinecraftServer;Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/world/level/storage/ServerLevelData;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/dimension/LevelStem;Lnet/minecraft/server/level/progress/ChunkProgressListener;ZJLjava/util/List;ZLnet/minecraft/world/RandomSequences;)Lnet/minecraft/server/level/ServerLevel;"))
     private void arclight$registerEnv(ChunkProgressListener p_240787_1_, CallbackInfo ci) {
         BukkitRegistry.registerEnvironments(this.registryAccess().registryOrThrow(Registries.LEVEL_STEM));
     }
@@ -368,7 +387,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         BlockPos blockpos = serverworld.getSharedSpawnPos();
         listener.updateSpawnPos(new ChunkPos(blockpos));
         ServerChunkCache serverchunkprovider = serverworld.getChunkSource();
-        this.nextTickTime = Util.getMillis();
+        this.nextTickTimeNanos = Util.getNanos();
         serverchunkprovider.addRegionTicket(TicketType.START, new ChunkPos(blockpos), 11, Unit.INSTANCE);
 
         while (serverchunkprovider.getTickingGenerated() < 441) {
@@ -442,7 +461,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         BlockPos blockpos = serverWorld.getSharedSpawnPos();
         listener.updateSpawnPos(new ChunkPos(blockpos));
         ServerChunkCache serverchunkprovider = serverWorld.getChunkSource();
-        this.nextTickTime = Util.getMillis();
+        this.nextTickTimeNanos = Util.getNanos();
         serverchunkprovider.addRegionTicket(TicketType.START, new ChunkPos(blockpos), 11, Unit.INSTANCE);
 
         while (serverchunkprovider.getTickingGenerated() < 441) {

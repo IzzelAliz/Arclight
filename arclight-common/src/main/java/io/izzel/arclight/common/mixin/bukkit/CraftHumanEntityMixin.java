@@ -31,7 +31,7 @@ public abstract class CraftHumanEntityMixin extends CraftEntity {
         super(server, entity);
     }
 
-    @Redirect(method = "<init>", at = @At(value = "NEW", target = "org/bukkit/permissions/PermissibleBase"))
+    @Redirect(method = "<init>", at = @At(value = "NEW", target = "(Lorg/bukkit/permissions/ServerOperator;)Lorg/bukkit/permissions/PermissibleBase;"))
     private PermissibleBase arclight$forwardPerm(ServerOperator opable) {
         if (ArclightConfig.spec().getCompat().isForwardPermissionReverse()) {
             return new ArclightForgePermissible(opable);

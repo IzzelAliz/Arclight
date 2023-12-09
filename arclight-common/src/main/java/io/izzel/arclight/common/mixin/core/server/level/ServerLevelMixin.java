@@ -32,6 +32,7 @@ import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.progress.ChunkProgressListener;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.ProgressListener;
 import net.minecraft.world.Container;
 import net.minecraft.world.RandomSequences;
@@ -70,6 +71,7 @@ import org.bukkit.craftbukkit.v.util.WorldUUID;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.LightningStrike;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.server.MapInitializeEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.world.GenericGameEvent;
 import org.bukkit.event.world.PortalCreateEvent;
@@ -252,7 +254,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         return this.addFreshEntity(entity);
     }
 
-    @Redirect(method = "tickIceAndSnow", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
+    @Redirect(method = "tickPrecipitation", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
     public boolean arclight$snowForm(ServerLevel serverWorld, BlockPos pos, BlockState state) {
         return CraftEventFactory.handleBlockFormEvent(serverWorld, pos, state, null);
     }
@@ -379,16 +381,26 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
 
     @Inject(method = "explode", cancellable = true, at = @At(value = "INVOKE",
         target = "Lnet/minecraft/world/level/Explosion;interactsWithBlocks()Z"), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void arclight$doExplosion(Entity p_256039_, DamageSource p_255778_, ExplosionDamageCalculator p_256002_, double p_256067_, double p_256370_, double p_256153_, float p_256045_, boolean p_255686_, Level.ExplosionInteraction p_255827_,
+    private void arclight$doExplosion(Entity p_256039_, DamageSource p_255778_, ExplosionDamageCalculator p_256002_, double p_256067_, double p_256370_, double p_256153_, float p_256045_, boolean p_255686_, Level.ExplosionInteraction p_255827_, ParticleOptions p_310962_, ParticleOptions p_310322_, SoundEvent p_309795_,
                                       CallbackInfoReturnable<Explosion> cir, Explosion explosion) {
         if (((ExplosionBridge) explosion).bridge$wasCancelled()) {
             cir.setReturnValue(explosion);
         }
     }
 
+    @Inject(method = "getMapData", at = @At("RETURN"))
+    private void arclight$mapSetId(String id, CallbackInfoReturnable<MapItemSavedData> cir) {
+        var data = cir.getReturnValue();
+        if (data != null) {
+            ((MapDataBridge) data).bridge$setId(id);
+        }
+    }
+
     @Inject(method = "setMapData", at = @At("HEAD"))
     private void arclight$mapSetId(String id, MapItemSavedData data, CallbackInfo ci) {
         ((MapDataBridge) data).bridge$setId(id);
+        MapInitializeEvent event = new MapInitializeEvent(((MapDataBridge) data).bridge$getMapView());
+        Bukkit.getServer().getPluginManager().callEvent(event);
     }
 
     @Inject(method = "blockUpdated", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;updateNeighborsAt(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;)V"))

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.izzel.arclight.common.bridge.bukkit.ItemMetaBridge;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.Tag;
 import org.apache.commons.codec.binary.Base64;
@@ -168,7 +169,7 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
             Object forgeCaps = map.get("forgeCaps");
             try {
                 ByteArrayInputStream buf = new ByteArrayInputStream(Base64.decodeBase64(forgeCaps.toString()));
-                this.forgeCaps = NbtIo.readCompressed(buf);
+                this.forgeCaps = NbtIo.readCompressed(buf, NbtAccounter.unlimitedHeap());
             } catch (IOException e) {
                 LogManager.getLogger(getClass()).error("Reading forge caps", e);
             }

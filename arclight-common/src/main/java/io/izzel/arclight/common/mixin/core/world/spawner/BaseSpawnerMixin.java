@@ -11,6 +11,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.util.random.SimpleWeightedRandomList;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
@@ -19,6 +20,7 @@ import net.minecraft.world.level.BaseSpawner;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.SpawnData;
+import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.AABB;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -107,7 +109,7 @@ public abstract class BaseSpawnerMixin {
                             return;
                         }
 
-                        int k = level.getEntitiesOfClass(entity.getClass(), (new AABB(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1)).inflate(this.spawnRange)).size();
+                        int k = level.getEntities(EntityTypeTest.forExactClass(entity.getClass()), (new AABB(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1)).inflate(this.spawnRange), EntitySelector.NO_SPECTATORS).size();
                         if (k >= this.maxNearbyEntities) {
                             this.delay(level, pos);
                             return;

@@ -11,6 +11,7 @@ import io.izzel.arclight.common.mod.compat.CommandNodeHooks;
 import io.izzel.arclight.common.mod.util.BukkitDispatcher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.ExecutionCommandSource;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.synchronization.SuggestionProviders;
 import net.minecraft.network.protocol.game.ClientboundCommandsPacket;
@@ -34,23 +35,23 @@ import java.util.Map;
 public abstract class CommandsMixin {
 
     // @formatter:off
-    @Shadow public abstract int performCommand(ParseResults<CommandSourceStack> p_242844_, String p_242841_);
-    @Shadow public abstract int performPrefixedCommand(CommandSourceStack p_230958_, String p_230959_);
+    @Shadow public abstract void performCommand(ParseResults<CommandSourceStack> p_242844_, String p_242841_);
+    @Shadow public abstract void performPrefixedCommand(CommandSourceStack p_230958_, String p_230959_);
     @Mutable @Shadow @Final private CommandDispatcher<CommandSourceStack> dispatcher;
     @Shadow protected abstract void fillUsableCommands(CommandNode<CommandSourceStack> rootCommandSource, CommandNode<SharedSuggestionProvider> rootSuggestion, CommandSourceStack source, Map<CommandNode<CommandSourceStack>, CommandNode<SharedSuggestionProvider>> commandNodeToSuggestionNode);
     // @formatter:on
 
     public void arclight$constructor() {
         this.dispatcher = new BukkitDispatcher((Commands) (Object) this);
-        this.dispatcher.setConsumer((context, b, i) -> context.getSource().onCommandComplete(context, b, i));
+        this.dispatcher.setConsumer(ExecutionCommandSource.resultConsumer());
     }
 
-    public int performPrefixedCommand(CommandSourceStack commandSourceStack, String s, String label) {
-        return this.performPrefixedCommand(commandSourceStack, s);
+    public void performPrefixedCommand(CommandSourceStack commandSourceStack, String s, String label) {
+        this.performPrefixedCommand(commandSourceStack, s);
     }
 
-    public int performCommand(ParseResults<CommandSourceStack> parseResults, String s, String label) {
-        return this.performCommand(parseResults, s);
+    public void performCommand(ParseResults<CommandSourceStack> parseResults, String s, String label) {
+        this.performCommand(parseResults, s);
     }
 
     /**

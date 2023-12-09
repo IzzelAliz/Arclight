@@ -12,6 +12,7 @@ import io.izzel.arclight.common.bridge.core.util.FoodStatsBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.LivingEntityMixin;
+import io.izzel.arclight.i18n.ArclightConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -79,6 +80,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
@@ -473,36 +475,6 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
         }
     }
 
-    @Inject(method = "checkMovementStatistics", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/player/Player;causeFoodExhaustion(F)V"))
-    private void arclight$exhauseCause1(double p_36379_, double p_36380_, double p_36381_, CallbackInfo ci) {
-        bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.SWIM);
-    }
-
-    @Inject(method = "checkMovementStatistics", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/entity/player/Player;causeFoodExhaustion(F)V"))
-    private void arclight$exhauseCause2(double p_36379_, double p_36380_, double p_36381_, CallbackInfo ci) {
-        bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.WALK_UNDERWATER);
-    }
-
-    @Inject(method = "checkMovementStatistics", at = @At(value = "INVOKE", ordinal = 2, target = "Lnet/minecraft/world/entity/player/Player;causeFoodExhaustion(F)V"))
-    private void arclight$exhauseCause3(double p_36379_, double p_36380_, double p_36381_, CallbackInfo ci) {
-        bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.WALK_ON_WATER);
-    }
-
-    @Inject(method = "checkMovementStatistics", at = @At(value = "INVOKE", ordinal = 3, target = "Lnet/minecraft/world/entity/player/Player;causeFoodExhaustion(F)V"))
-    private void arclight$exhauseCause4(double p_36379_, double p_36380_, double p_36381_, CallbackInfo ci) {
-        bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.SPRINT);
-    }
-
-    @Inject(method = "checkMovementStatistics", at = @At(value = "INVOKE", ordinal = 4, target = "Lnet/minecraft/world/entity/player/Player;causeFoodExhaustion(F)V"))
-    private void arclight$exhauseCause5(double p_36379_, double p_36380_, double p_36381_, CallbackInfo ci) {
-        bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.CROUCH);
-    }
-
-    @Inject(method = "checkMovementStatistics", at = @At(value = "INVOKE", ordinal = 5, target = "Lnet/minecraft/world/entity/player/Player;causeFoodExhaustion(F)V"))
-    private void arclight$exhauseCause6(double p_36379_, double p_36380_, double p_36381_, CallbackInfo ci) {
-        bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.WALK);
-    }
-
     @Inject(method = "startFallFlying", cancellable = true, at = @At("HEAD"))
     private void arclight$startGlidingEvent(CallbackInfo ci) {
         if (CraftEventFactory.callToggleGlideEvent((net.minecraft.world.entity.player.Player) (Object) this, true).isCancelled()) {
@@ -586,5 +558,18 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
     @Override
     public void bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason reason) {
         arclight$exhaustReason = reason;
+    }
+
+    @Unique
+    private static boolean arclight$validUsernameCheck(String name) {
+        var regex = ArclightConfig.spec().getCompat().getValidUsernameRegex();
+        return !regex.isBlank() && name.matches(regex);
+    }
+
+    @Inject(method = "isValidUsername", cancellable = true, at = @At("HEAD"))
+    private static void arclight$checkUsername(String name, CallbackInfoReturnable<Boolean> cir) {
+        if (arclight$validUsernameCheck(name)) {
+            cir.setReturnValue(true);
+        }
     }
 }

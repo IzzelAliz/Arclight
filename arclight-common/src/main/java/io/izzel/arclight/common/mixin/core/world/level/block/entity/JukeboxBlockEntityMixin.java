@@ -4,7 +4,6 @@ import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.NonNullList;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -13,19 +12,19 @@ import net.minecraft.world.level.block.entity.JukeboxBlockEntity;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Mixin(JukeboxBlockEntity.class)
 public abstract class JukeboxBlockEntityMixin extends BlockEntityMixin implements IInventoryBridge, Container {
 
-    @Shadow @Final private NonNullList<ItemStack> items;
+    @Shadow private ItemStack item;
 
     public List<HumanEntity> transaction = new ArrayList<>();
     private int maxStack = MAX_STACK;
@@ -38,7 +37,7 @@ public abstract class JukeboxBlockEntityMixin extends BlockEntityMixin implement
 
     @Override
     public List<ItemStack> getContents() {
-        return this.items;
+        return Collections.singletonList(this.item);
     }
 
     @Override

@@ -287,7 +287,7 @@ public abstract class AbstractContainerMenuMixin implements ContainerBridge {
                     }
                 }
             }
-        } else if (clickType == ClickType.SWAP) {
+        } else if (clickType == ClickType.SWAP && (dragType >= 0 && dragType < 9 || dragType == 40)) {
             Slot slot2 = this.slots.get(slotId);
             ItemStack itemstack4 = inventory.getItem(dragType);
             ItemStack itemstack7 = slot2.getItem();

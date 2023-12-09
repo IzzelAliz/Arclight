@@ -30,7 +30,7 @@ public abstract class AbstractHorseMixin extends AnimalMixin {
         this.maxDomestication = 100;
     }
 
-    @Redirect(method = "createInventory", at = @At(value = "NEW", target = "net/minecraft/world/SimpleContainer"))
+    @Redirect(method = "createInventory", at = @At(value = "NEW", target = "(I)Lnet/minecraft/world/SimpleContainer;"))
     private SimpleContainer arclight$createInv(int slots) {
         SimpleContainer inventory = new SimpleContainer(slots);
         ((IInventoryBridge) inventory).setOwner((InventoryHolder) this.getBukkitEntity());

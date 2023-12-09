@@ -4,11 +4,11 @@ A Bukkit server implementation utilizing Mixin.
 
 ![Downloads](https://img.shields.io/github/downloads/IzzelAliz/Arclight/total?style=flat-square)  ![GitHub](https://img.shields.io/github/license/IzzelAliz/Arclight?style=flat-square)
 
-|       Release        |  Forge  | Status |                                                                                                    Build                                                                                                     |
-|:--------------------:|:-------:|:------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-|     Net (1.20.2)     | 48.1.0  | ACTIVE |    [![1.20.2 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Net&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3ANet)    |
-| Trials (1.20-1.20.1) | 47.2.16 |  LTS   | [![1.20.1 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Trials&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3ATrials) |
-|  Horn (1.19-1.19.2)  | 43.3.2  |  LTS   |                            [![Horn Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-19?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-19)                            |
+|       Release        |  Forge  | Status |                                                                                                     Build                                                                                                      |
+|:--------------------:|:-------:|:------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+|   Whisper (1.20.4)   | 49.0.3  | ACTIVE | [![1.20.4 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Whisper&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3AWhisper) |
+| Trials (1.20-1.20.1) | 47.2.16 |  LTS   |  [![1.20.1 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Trials&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3ATrials)  |
+|  Horn (1.19-1.19.2)  | 43.3.2  |  LTS   |                             [![Horn Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-19?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-19)                             |
 
 **Legacy versions**:
 
@@ -16,6 +16,7 @@ A Bukkit server implementation utilizing Mixin.
 
 |       Release       |  Forge  |                                     Status                                      |                                                                                                        Build                                                                                                         |
 |:-------------------:|:-------:|:-------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+|    Net (1.20.2)     | 48.1.0  |    [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/Net%2F1.0.1)     |        [![1.20.2 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Net&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3ANet)        |
 | Executions (1.19.4) | 45.2.6  | [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/Executions%2F1.0.6) | [![1.19.4 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Executions&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3AExecutions) |
 | Great Horn (1.19.3) | 44.1.22 |  [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/GreatHorn/1.0.3)   |           [![1.19 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=GreatHorn&style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-19)            |
 |       1.18.x        | 40.2.14 |   [LEGACY](https://github.com/IzzelAliz/Arclight/releases/tag/1.18%2F1.0.10)    |              [![1.18 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=1.18&style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-18)              |

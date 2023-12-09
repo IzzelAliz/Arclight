@@ -93,7 +93,7 @@ public abstract class PortalShapeMixin implements PortalSizeBridge {
     }
 
     @SuppressWarnings("ConstantConditions")
-    @Redirect(method = "createPortalInfo", at = @At(value = "NEW", target = "net/minecraft/world/level/portal/PortalInfo"))
+    @Redirect(method = "createPortalInfo", at = @At(value = "NEW", target = "(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;FF)Lnet/minecraft/world/level/portal/PortalInfo;"))
     private static PortalInfo arclight$setPortalInfo(Vec3 pos, Vec3 motion, float rotationYaw, float rotationPitch, ServerLevel world) {
         PortalInfo portalInfo = new PortalInfo(pos, motion, rotationYaw, rotationPitch);
         ((PortalInfoBridge) portalInfo).bridge$setWorld(world);

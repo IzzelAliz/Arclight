@@ -75,7 +75,8 @@ import net.minecraft.world.level.portal.PortalInfo;
 import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.scores.Score;
+import net.minecraft.world.scores.ScoreAccess;
+import net.minecraft.world.scores.ScoreHolder;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.Team;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
@@ -96,6 +97,7 @@ import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v.scoreboard.CraftScoreboardManager;
 import org.bukkit.craftbukkit.v.util.BlockStateListPopulator;
 import org.bukkit.craftbukkit.v.util.CraftChatMessage;
+import org.bukkit.event.entity.EntityExhaustionEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerBedLeaveEvent;
@@ -296,7 +298,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         }
     }
 
-    @Redirect(method = "doTick", at = @At(value = "NEW", target = "net/minecraft/network/protocol/game/ClientboundSetHealthPacket"))
+    @Redirect(method = "doTick", at = @At(value = "NEW", target = "(FIF)Lnet/minecraft/network/protocol/game/ClientboundSetHealthPacket;"))
     private ClientboundSetHealthPacket arclight$useScaledHealth(float healthIn, int foodLevelIn, float saturationLevelIn) {
         return new ClientboundSetHealthPacket(this.getBukkitEntity().getScaledHealth(), foodLevelIn, saturationLevelIn);
     }
@@ -400,7 +402,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             this.getInventory().clearContent();
         }
         this.setCamera((ServerPlayer) (Object) this);
-        ((CraftScoreboardManager) Bukkit.getScoreboardManager()).getScoreboardScores(ObjectiveCriteria.DEATH_COUNT, this.getScoreboardName(), Score::increment);
+        ((CraftScoreboardManager) Bukkit.getScoreboardManager()).forAllObjectives(ObjectiveCriteria.DEATH_COUNT, (ServerPlayer) (Object) this, ScoreAccess::increment);
 
         LivingEntity entityliving = this.getKillCredit();
         if (entityliving != null) {
@@ -420,14 +422,14 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         this.setLastDeathLocation(Optional.of(GlobalPos.of(this.level().dimension(), this.blockPosition())));
     }
 
-    @Redirect(method = "awardKillScore", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/scores/Scoreboard;forAllObjectives(Lnet/minecraft/world/scores/criteria/ObjectiveCriteria;Ljava/lang/String;Ljava/util/function/Consumer;)V"))
-    private void arclight$useCustomScoreboard(Scoreboard scoreboard, ObjectiveCriteria p_197893_1_, String p_197893_2_, Consumer<Score> p_197893_3_) {
-        ((CraftServer) Bukkit.getServer()).getScoreboardManager().getScoreboardScores(p_197893_1_, p_197893_2_, p_197893_3_);
+    @Redirect(method = "awardKillScore", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/scores/Scoreboard;forAllObjectives(Lnet/minecraft/world/scores/criteria/ObjectiveCriteria;Lnet/minecraft/world/scores/ScoreHolder;Ljava/util/function/Consumer;)V"))
+    private void arclight$useCustomScoreboard(Scoreboard instance, ObjectiveCriteria p_83428_, ScoreHolder p_310719_, Consumer<ScoreAccess> p_83430_) {
+        ((CraftServer) Bukkit.getServer()).getScoreboardManager().forAllObjectives(p_83428_, p_310719_, p_83430_);
     }
 
-    @Redirect(method = "handleTeamKill", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/scores/Scoreboard;forAllObjectives(Lnet/minecraft/world/scores/criteria/ObjectiveCriteria;Ljava/lang/String;Ljava/util/function/Consumer;)V"))
-    private void arclight$teamKill(Scoreboard scoreboard, ObjectiveCriteria p_197893_1_, String p_197893_2_, Consumer<Score> p_197893_3_) {
-        ((CraftServer) Bukkit.getServer()).getScoreboardManager().getScoreboardScores(p_197893_1_, p_197893_2_, p_197893_3_);
+    @Redirect(method = "handleTeamKill", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/scores/Scoreboard;forAllObjectives(Lnet/minecraft/world/scores/criteria/ObjectiveCriteria;Lnet/minecraft/world/scores/ScoreHolder;Ljava/util/function/Consumer;)V"))
+    private void arclight$teamKill(Scoreboard instance, ObjectiveCriteria p_83428_, ScoreHolder p_310719_, Consumer<ScoreAccess> p_83430_) {
+        ((CraftServer) Bukkit.getServer()).getScoreboardManager().forAllObjectives(p_83428_, p_310719_, p_83430_);
     }
 
     @Inject(method = "isPvpAllowed", cancellable = true, at = @At("HEAD"))
@@ -798,14 +800,14 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         }
     }
 
-    @Redirect(method = "awardStat", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/scores/Scoreboard;forAllObjectives(Lnet/minecraft/world/scores/criteria/ObjectiveCriteria;Ljava/lang/String;Ljava/util/function/Consumer;)V"))
-    private void arclight$addStats(Scoreboard scoreboard, ObjectiveCriteria p_197893_1_, String p_197893_2_, Consumer<Score> p_197893_3_) {
-        ((CraftScoreboardManager) Bukkit.getScoreboardManager()).getScoreboardScores(p_197893_1_, p_197893_2_, p_197893_3_);
+    @Redirect(method = "awardStat", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/scores/Scoreboard;forAllObjectives(Lnet/minecraft/world/scores/criteria/ObjectiveCriteria;Lnet/minecraft/world/scores/ScoreHolder;Ljava/util/function/Consumer;)V"))
+    private void arclight$addStats(Scoreboard instance, ObjectiveCriteria p_83428_, ScoreHolder p_310719_, Consumer<ScoreAccess> p_83430_) {
+        ((CraftServer) Bukkit.getServer()).getScoreboardManager().forAllObjectives(p_83428_, p_310719_, p_83430_);
     }
 
-    @Redirect(method = "resetStat", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/scores/Scoreboard;forAllObjectives(Lnet/minecraft/world/scores/criteria/ObjectiveCriteria;Ljava/lang/String;Ljava/util/function/Consumer;)V"))
-    private void arclight$takeStats(Scoreboard scoreboard, ObjectiveCriteria p_197893_1_, String p_197893_2_, Consumer<Score> p_197893_3_) {
-        ((CraftScoreboardManager) Bukkit.getScoreboardManager()).getScoreboardScores(p_197893_1_, p_197893_2_, p_197893_3_);
+    @Redirect(method = "resetStat", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/scores/Scoreboard;forAllObjectives(Lnet/minecraft/world/scores/criteria/ObjectiveCriteria;Lnet/minecraft/world/scores/ScoreHolder;Ljava/util/function/Consumer;)V"))
+    private void arclight$takeStats(Scoreboard instance, ObjectiveCriteria p_83428_, ScoreHolder p_310719_, Consumer<ScoreAccess> p_83430_) {
+        ((CraftServer) Bukkit.getServer()).getScoreboardManager().forAllObjectives(p_83428_, p_310719_, p_83430_);
     }
 
     @Inject(method = "resetSentInfo", at = @At("HEAD"))
@@ -1077,5 +1079,35 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Override
     public void bridge$reset() {
         reset();
+    }
+
+    @Inject(method = "checkMovementStatistics", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/server/level/ServerPlayer;causeFoodExhaustion(F)V"))
+    private void arclight$exhauseCause1(double p_36379_, double p_36380_, double p_36381_, CallbackInfo ci) {
+        bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.SWIM);
+    }
+
+    @Inject(method = "checkMovementStatistics", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/server/level/ServerPlayer;causeFoodExhaustion(F)V"))
+    private void arclight$exhauseCause2(double p_36379_, double p_36380_, double p_36381_, CallbackInfo ci) {
+        bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.WALK_UNDERWATER);
+    }
+
+    @Inject(method = "checkMovementStatistics", at = @At(value = "INVOKE", ordinal = 2, target = "Lnet/minecraft/server/level/ServerPlayer;causeFoodExhaustion(F)V"))
+    private void arclight$exhauseCause3(double p_36379_, double p_36380_, double p_36381_, CallbackInfo ci) {
+        bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.WALK_ON_WATER);
+    }
+
+    @Inject(method = "checkMovementStatistics", at = @At(value = "INVOKE", ordinal = 3, target = "Lnet/minecraft/server/level/ServerPlayer;causeFoodExhaustion(F)V"))
+    private void arclight$exhauseCause4(double p_36379_, double p_36380_, double p_36381_, CallbackInfo ci) {
+        bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.SPRINT);
+    }
+
+    @Inject(method = "checkMovementStatistics", at = @At(value = "INVOKE", ordinal = 4, target = "Lnet/minecraft/server/level/ServerPlayer;causeFoodExhaustion(F)V"))
+    private void arclight$exhauseCause5(double p_36379_, double p_36380_, double p_36381_, CallbackInfo ci) {
+        bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.CROUCH);
+    }
+
+    @Inject(method = "checkMovementStatistics", at = @At(value = "INVOKE", ordinal = 5, target = "Lnet/minecraft/server/level/ServerPlayer;causeFoodExhaustion(F)V"))
+    private void arclight$exhauseCause6(double p_36379_, double p_36380_, double p_36381_, CallbackInfo ci) {
+        bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.WALK);
     }
 }

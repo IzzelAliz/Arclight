@@ -23,13 +23,9 @@ public class ServerLevel_EntityCallbacksMixin {
 
     @Shadow(aliases = {"f_143351_", "this$0"}) private ServerLevel outerThis;
 
-    @Inject(method = "onCreated(Lnet/minecraft/world/entity/Entity;)V", at = @At("HEAD"))
-    private void arclight$addedToWorld(Entity entity, CallbackInfo ci) {
-        ((EntityBridge) entity).bridge$setInWorld(true);
-    }
-
     @Inject(method = "onTrackingStart(Lnet/minecraft/world/entity/Entity;)V", at = @At("RETURN"))
     private void arclight$valid(Entity entity, CallbackInfo ci) {
+        ((EntityBridge) entity).bridge$setInWorld(true);
         ((EntityBridge) entity).bridge$setValid(true);
     }
 

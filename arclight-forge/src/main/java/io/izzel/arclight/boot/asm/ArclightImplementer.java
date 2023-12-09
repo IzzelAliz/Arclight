@@ -1,6 +1,5 @@
 package io.izzel.arclight.boot.asm;
 
-import cpw.mods.modlauncher.api.NamedPath;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 import io.izzel.arclight.boot.log.ArclightI18nLogger;
 import io.izzel.arclight.boot.mod.ModBootstrap;
@@ -54,7 +53,7 @@ public class ArclightImplementer implements ILaunchPluginService {
     }
 
     @Override
-    public void initializeLaunch(ITransformerLoader transformerLoader, NamedPath[] specialPaths) {
+    public void initializeLaunch(ITransformerLoader transformerLoader) {
         // runs after TX CL built
         ModBootstrap.postRun();
         this.transformerLoader = transformerLoader;

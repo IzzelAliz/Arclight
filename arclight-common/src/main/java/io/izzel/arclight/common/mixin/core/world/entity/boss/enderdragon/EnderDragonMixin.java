@@ -2,7 +2,9 @@ package io.izzel.arclight.common.mixin.core.world.entity.boss.enderdragon;
 
 import io.izzel.arclight.common.mixin.core.world.entity.MobMixin;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
@@ -38,7 +40,7 @@ public abstract class EnderDragonMixin extends MobMixin {
 
     @Shadow @Nullable private EndDragonFight dragonFight;
 
-    private final Explosion explosionSource = new Explosion(this.level(), (EnderDragon) (Object) this, null, null, Double.NaN, Double.NaN, Double.NaN, Float.NaN, true, Explosion.BlockInteraction.DESTROY);
+    private final Explosion explosionSource = new Explosion(this.level(), (EnderDragon) (Object) this, null, null, Double.NaN, Double.NaN, Double.NaN, Float.NaN, true, Explosion.BlockInteraction.DESTROY, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER, SoundEvents.GENERIC_EXPLODE);
 
     @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/boss/enderdragon/phases/DragonPhaseInstance;getFlyTargetLocation()Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 arclight$noMoveHovering(DragonPhaseInstance phase) {

@@ -15,7 +15,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityInteractEvent;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,7 +23,6 @@ import org.spongepowered.asm.mixin.Shadow;
 public abstract class PressurePlateBlockMixin extends BasePressurePlateBlockMixin {
 
     // @formatter:off
-    @Shadow @Final private PressurePlateBlock.Sensitivity sensitivity;
     @Shadow protected abstract int getSignalForState(BlockState state);
     // @formatter:on
 
@@ -42,7 +40,7 @@ public abstract class PressurePlateBlockMixin extends BasePressurePlateBlockMixi
     protected int getSignalStrength(Level world, BlockPos blockposition) {
         Class<? extends Entity> oclass; // CraftBukkit
 
-        switch (this.sensitivity) {
+        switch (this.type.pressurePlateSensitivity()) {
             case EVERYTHING:
                 oclass = Entity.class;
                 break;

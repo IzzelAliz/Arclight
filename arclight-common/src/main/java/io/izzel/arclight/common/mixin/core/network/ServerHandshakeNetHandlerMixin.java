@@ -63,7 +63,7 @@ public class ServerHandshakeNetHandlerMixin {
                     synchronized (throttleTracker) {
                         if (throttleTracker.containsKey(address) && !"127.0.0.1".equals(address.getHostAddress()) && currentTime - throttleTracker.get(address) < connectionThrottle) {
                             throttleTracker.put(address, currentTime);
-                            var component = Component.translatable("Connection throttled! Please wait before reconnecting.");
+                            var component = Component.literal("Connection throttled! Please wait before reconnecting.");
                             this.connection.send(new ClientboundLoginDisconnectPacket(component));
                             this.connection.disconnect(component);
                             return;

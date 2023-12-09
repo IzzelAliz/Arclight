@@ -216,6 +216,6 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
 
     @Inject(method = "handleResourcePackResponse", at = @At("RETURN"))
     private void arclight$handleResourcePackStatus(ServerboundResourcePackPacket packetIn, CallbackInfo ci) {
-        this.cserver.getPluginManager().callEvent(new PlayerResourcePackStatusEvent(this.getCraftPlayer(), PlayerResourcePackStatusEvent.Status.values()[packetIn.getAction().ordinal()]));
+        this.cserver.getPluginManager().callEvent(new PlayerResourcePackStatusEvent(this.getCraftPlayer(), packetIn.id(), PlayerResourcePackStatusEvent.Status.values()[packetIn.action().ordinal()]));
     }
 }

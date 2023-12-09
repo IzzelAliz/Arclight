@@ -18,7 +18,6 @@ import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.CriteriaTriggers;
-import net.minecraft.commands.CommandRuntimeException;
 import net.minecraft.commands.CommandSigningContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -111,6 +110,7 @@ import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.command.CommandException;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -164,7 +164,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -173,6 +172,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -220,11 +220,11 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
     @Shadow protected abstract CompletableFuture<FilteredText> filterTextPacket(String p_243213_);
     @Shadow protected abstract ParseResults<CommandSourceStack> parseCommand(String p_242938_);
     @Shadow protected abstract void detectRateSpam();
-    @Shadow protected abstract Optional<LastSeenMessages> tryHandleChat(String p_251364_, Instant p_248959_, LastSeenMessages.Update p_249613_);
     @Shadow protected abstract PlayerChatMessage getSignedMessage(ServerboundChatPacket p_251061_, LastSeenMessages p_250566_) throws SignedMessageChain.DecodeException;
     @Shadow protected abstract void handleMessageDecodeFailure(SignedMessageChain.DecodeException p_252068_);
     @Shadow protected abstract Map<String, PlayerChatMessage> collectSignedArguments(ServerboundChatCommandPacket p_249441_, SignableCommand<?> p_250039_, LastSeenMessages p_249207_) throws SignedMessageChain.DecodeException;
     @Shadow protected abstract boolean isPlayerCollidingWithAnythingNew(LevelReader p_289008_, AABB p_288986_, double p_288990_, double p_288991_, double p_288967_);
+    @Shadow protected abstract Optional<LastSeenMessages> tryHandleChat(LastSeenMessages.Update p_249613_);
     // @formatter:on
 
     private static final int SURVIVAL_PLACE_DISTANCE_SQUARED = 6 * 6;
@@ -554,39 +554,41 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
                             }
 
                         } else {
-                            ++this.receivedMovePacketCount;
-                            int i = this.receivedMovePacketCount - this.knownMovePacketCount;
+                            if (worldserver.tickRateManager().runsNormally()) {
+                                ++this.receivedMovePacketCount;
+                                int i = this.receivedMovePacketCount - this.knownMovePacketCount;
 
-                            // CraftBukkit start - handle custom speeds and skipped ticks
-                            this.allowedPlayerTicks += (System.currentTimeMillis() / 50) - this.lastTick;
-                            this.allowedPlayerTicks = Math.max(this.allowedPlayerTicks, 1);
-                            this.lastTick = (int) (System.currentTimeMillis() / 50);
+                                // CraftBukkit start - handle custom speeds and skipped ticks
+                                this.allowedPlayerTicks += (System.currentTimeMillis() / 50) - this.lastTick;
+                                this.allowedPlayerTicks = Math.max(this.allowedPlayerTicks, 1);
+                                this.lastTick = (int) (System.currentTimeMillis() / 50);
 
-                            if (i > Math.max(this.allowedPlayerTicks, 5)) {
-                                LOGGER.debug("{} is sending move packets too frequently ({} packets since last tick)", this.player.getName().getString(), i);
-                                i = 1;
-                            }
+                                if (i > Math.max(this.allowedPlayerTicks, 5)) {
+                                    LOGGER.debug("{} is sending move packets too frequently ({} packets since last tick)", this.player.getName().getString(), i);
+                                    i = 1;
+                                }
 
-                            if (packetplayinflying.hasRot || d11 > 0) {
-                                allowedPlayerTicks -= 1;
-                            } else {
-                                allowedPlayerTicks = 20;
-                            }
-                            double speed;
-                            if (player.getAbilities().flying) {
-                                speed = player.getAbilities().flyingSpeed * 20f;
-                            } else {
-                                speed = player.getAbilities().walkingSpeed * 10f;
-                            }
+                                if (packetplayinflying.hasRot || d11 > 0) {
+                                    allowedPlayerTicks -= 1;
+                                } else {
+                                    allowedPlayerTicks = 20;
+                                }
+                                double speed;
+                                if (player.getAbilities().flying) {
+                                    speed = player.getAbilities().flyingSpeed * 20f;
+                                } else {
+                                    speed = player.getAbilities().walkingSpeed * 10f;
+                                }
 
-                            if (!this.player.isChangingDimension() && (!this.player.serverLevel().getGameRules().getBoolean(GameRules.RULE_DISABLE_ELYTRA_MOVEMENT_CHECK) || !this.player.isFallFlying())) {
-                                float f2 = this.player.isFallFlying() ? 300.0F : 100.0F;
+                                if (!this.player.isChangingDimension() && (!this.player.serverLevel().getGameRules().getBoolean(GameRules.RULE_DISABLE_ELYTRA_MOVEMENT_CHECK) || !this.player.isFallFlying())) {
+                                    float f2 = this.player.isFallFlying() ? 300.0F : 100.0F;
 
-                                if (d11 - d10 > Math.max(f2, Math.pow((double) (org.spigotmc.SpigotConfig.movedTooQuicklyMultiplier * (float) i * speed), 2)) && !this.isSingleplayerOwner()) {
-                                    // CraftBukkit end
-                                    LOGGER.warn("{} moved too quickly! {},{},{}", this.player.getName().getString(), d7, d8, d9);
-                                    this.teleport(this.player.getX(), this.player.getY(), this.player.getZ(), this.player.getYRot(), this.player.getXRot());
-                                    return;
+                                    if (d11 - d10 > Math.max(f2, Math.pow((double) (org.spigotmc.SpigotConfig.movedTooQuicklyMultiplier * (float) i * speed), 2)) && !this.isSingleplayerOwner()) {
+                                        // CraftBukkit end
+                                        LOGGER.warn("{} moved too quickly! {},{},{}", this.player.getName().getString(), d7, d8, d9);
+                                        this.teleport(this.player.getX(), this.player.getY(), this.player.getZ(), this.player.getYRot(), this.player.getXRot());
+                                        return;
+                                    }
                                 }
                             }
 
@@ -910,7 +912,7 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
         if (isChatMessageIllegal(packet.message())) {
             this.disconnect(Component.translatable("multiplayer.disconnect.illegal_characters"));
         } else {
-            var optional = this.tryHandleChat(packet.message(), packet.timeStamp(), packet.lastSeenMessages());
+            var optional = this.tryHandleChat(packet.lastSeenMessages());
             if (optional.isPresent()) {
                 PlayerChatMessage playerchatmessage;
 
@@ -921,17 +923,16 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
                     return;
                 }
 
-                CompletableFuture<FilteredText> completablefuture = this.filterTextPacket(playerchatmessage.signedContent());
+                CompletableFuture<FilteredText> completablefuture = this.filterTextPacket(playerchatmessage.signedContent()).thenApplyAsync(Function.identity(), ArclightServer.getChatExecutor());
                 var component = ForgeHooks.onServerChatSubmittedEvent(this.player, playerchatmessage.decoratedContent());
 
-                this.chatMessageChain.append((executor) -> {
-                    return completablefuture.thenAcceptAsync((ovoid) -> {
+                this.chatMessageChain.append(completablefuture, (text) -> {
                         if (component == null) return;
                         PlayerChatMessage playerchatmessage1 = playerchatmessage.withUnsignedContent(component).filter(completablefuture.join().mask());
 
                         this.broadcastChatMessage(playerchatmessage1);
-                    }, ArclightServer.getChatExecutor()); // CraftBukkit - async chat
-                });
+                    }
+                );
             }
         }
     }
@@ -978,7 +979,7 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
     }
 
     @Inject(method = "tryHandleChat", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;unpackAndApplyLastSeen(Lnet/minecraft/network/chat/LastSeenMessages$Update;)Ljava/util/Optional;"))
-    private void arclight$deadMenTellNoTales(String p_242372_, Instant p_242311_, LastSeenMessages.Update p_242217_, CallbackInfoReturnable<Optional<LastSeenMessages>> cir) {
+    private void arclight$deadMenTellNoTales(LastSeenMessages.Update p_249613_, CallbackInfoReturnable<Optional<LastSeenMessages>> cir) {
         if (this.player.isRemoved()) {
             this.send(new ClientboundSystemChatPacket(Component.translatable("chat.disabled.options").withStyle(ChatFormatting.RED), false));
             cir.setReturnValue(Optional.empty());
@@ -1078,7 +1079,7 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
         }
         try {
             this.cserver.dispatchCommand(event.getPlayer(), event.getMessage().substring(1));
-        } catch (CommandRuntimeException ex) {
+        } catch (CommandException ex) {
             player.sendMessage(ChatColor.RED + "An internal error occurred while attempting to perform this command");
             java.util.logging.Logger.getLogger(ServerGamePacketListenerImpl.class.getName()).log(Level.SEVERE, null, ex);
         }

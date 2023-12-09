@@ -33,7 +33,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.jar.Manifest;
 
-public class ModBootstrap extends AbstractBootstrap {
+public class ModBootstrap implements AbstractBootstrap {
 
     public record ModBoot(Configuration configuration, ClassLoader parent) {}
 

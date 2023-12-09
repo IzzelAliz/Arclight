@@ -23,8 +23,8 @@ public class CommandBlockLogicMixin {
     @Shadow private Component name;
     // @formatter:on
 
-    @Redirect(method = "performCommand", at = @At(value = "INVOKE", target = "Lnet/minecraft/commands/Commands;performPrefixedCommand(Lnet/minecraft/commands/CommandSourceStack;Ljava/lang/String;)I"))
-    private int arclight$serverCommand(Commands commands, CommandSourceStack sender, String command) {
+    @Redirect(method = "performCommand", at = @At(value = "INVOKE", target = "Lnet/minecraft/commands/Commands;performPrefixedCommand(Lnet/minecraft/commands/CommandSourceStack;Ljava/lang/String;)V"))
+    private void arclight$serverCommand(Commands commands, CommandSourceStack sender, String command) {
         Joiner joiner = Joiner.on(" ");
         if (command.startsWith("/")) {
             command = command.substring(1);
@@ -33,7 +33,7 @@ public class CommandBlockLogicMixin {
         ServerCommandEvent event = new ServerCommandEvent(((CommandSourceBridge) sender).bridge$getBukkitSender(), command);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
-            return 0;
+            return;
         }
         command = event.getCommand();
 
@@ -46,14 +46,14 @@ public class CommandBlockLogicMixin {
         if (cmd.equalsIgnoreCase("stop") || cmd.equalsIgnoreCase("kick") || cmd.equalsIgnoreCase("op")
             || cmd.equalsIgnoreCase("deop") || cmd.equalsIgnoreCase("ban") || cmd.equalsIgnoreCase("ban-ip")
             || cmd.equalsIgnoreCase("pardon") || cmd.equalsIgnoreCase("pardon-ip") || cmd.equalsIgnoreCase("reload")) {
-            return 0;
+            return;
         }
 
         if (((CraftServer) Bukkit.getServer()).getCommandBlockOverride(args[0])) {
             args[0] = "minecraft:" + args[0];
         }
 
-        return commands.performPrefixedCommand(sender, joiner.join(args));
+        commands.performPrefixedCommand(sender, joiner.join(args));
     }
 
     @Inject(method = "setName", at = @At("RETURN"))

@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.storage;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.storage.PlayerDataBridge;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -47,7 +48,7 @@ public class PlayerDataMixin implements PlayerDataBridge {
         try {
             final File file1 = new File(this.playerDir, uuid + ".dat");
             if (file1.exists()) {
-                return NbtIo.readCompressed(new FileInputStream(file1));
+                return NbtIo.readCompressed(new FileInputStream(file1), NbtAccounter.unlimitedHeap());
             }
         } catch (Exception exception) {
             LOGGER.warn("Failed to load player data for " + uuid);

@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.network.protocol;
 
 import io.izzel.arclight.common.bridge.core.network.common.ServerCommonPacketListenerBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
+import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
 import net.minecraft.network.PacketListener;
 import net.minecraft.network.protocol.Packet;
@@ -42,7 +43,14 @@ public class PacketThreadUtilMixin {
                             }
                         }
                         if (processor.shouldPropagateHandlingExceptions()) {
-                            throw exception;
+                            if (exception instanceof ReportedException r) {
+                                processor.fillCrashReport(r.getReport());
+                                throw exception;
+                            } else {
+                                CrashReport crashreport = CrashReport.forThrowable(exception, "Main thread packet handler");
+                                processor.fillCrashReport(crashreport);
+                                throw new ReportedException(crashreport);
+                            }
                         }
                         LOGGER.error("Failed to handle packet {}, suppressing error", packetIn, exception);
                     }

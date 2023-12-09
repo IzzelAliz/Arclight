@@ -56,7 +56,7 @@ import net.minecraft.world.level.portal.PortalInfo;
 import net.minecraft.world.level.portal.PortalShape;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.scores.Team;
+import net.minecraft.world.scores.PlayerTeam;
 import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -181,7 +181,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow public abstract void setDeltaMovement(double x, double y, double z);
     @Shadow public abstract void move(MoverType typeIn, Vec3 pos);
     @Shadow @Nullable public abstract Entity getVehicle();
-    @Shadow @Nullable public abstract Team getTeam();
+    @Shadow @Nullable public abstract PlayerTeam getTeam();
     @Shadow public abstract void clearFire();
     @Shadow public abstract void setSharedFlag(int flag, boolean set);
     @Shadow public abstract void moveTo(double x, double y, double z, float yaw, float pitch);

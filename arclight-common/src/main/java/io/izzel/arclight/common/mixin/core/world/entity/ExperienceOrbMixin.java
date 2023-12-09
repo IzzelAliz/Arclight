@@ -84,7 +84,7 @@ public abstract class ExperienceOrbMixin extends EntityMixin {
 
         if (entry != null) {
             ItemStack itemstack = entry.getValue();
-            int j = Math.min(this.xpToDurability(this.value), itemstack.getDamageValue());
+            int j = Math.min(this.xpToDurability(i), itemstack.getDamageValue());
             // CraftBukkit start
             org.bukkit.event.player.PlayerItemMendEvent event = CraftEventFactory.callPlayerItemMendEvent(player, (ExperienceOrb) (Object) this, itemstack, entry.getKey(), j);
             j = event.getRepairAmount();
