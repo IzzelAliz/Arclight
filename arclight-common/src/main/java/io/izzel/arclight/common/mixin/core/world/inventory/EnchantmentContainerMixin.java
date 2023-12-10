@@ -50,7 +50,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 import java.util.Map;
 
-@Mixin(EnchantmentMenu.class)
+// morejs https://github.com/AlmostReliable/morejs/blob/fd738a28a054d780031c7666fc8a01533c86f63b/Common/src/main/java/com/almostreliable/morejs/mixin/enchanting/EnchantmentMenuMixin.java
+@Mixin(value = EnchantmentMenu.class, priority = 39)
 public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMixin implements PosContainerBridge {
 
     // @formatter:off
@@ -86,6 +87,8 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
         if (inventoryIn == this.enchantSlots) {
             ItemStack itemstack = inventoryIn.getItem(0);
             if (!itemstack.isEmpty()) {
+                // morejs https://github.com/AlmostReliable/morejs/blob/fd738a28a054d780031c7666fc8a01533c86f63b/Common/src/main/java/com/almostreliable/morejs/mixin/enchanting/EnchantmentMenuMixin.java
+                boolean enchantable = itemstack.isEnchantable();
                 this.access.execute((p_217002_2_, p_217002_3_) -> {
                     float power = 0;
 
@@ -127,7 +130,7 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
                     }
 
                     PrepareItemEnchantEvent event = new PrepareItemEnchantEvent(((ServerPlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), this.getBukkitView(), ((IWorldPosCallableBridge) this.access).bridge$getLocation().getBlock(), item, offers, (int) power);
-                    event.setCancelled(!itemstack.isEnchantable());
+                    event.setCancelled(!enchantable);
                     Bukkit.getPluginManager().callEvent(event);
 
                     if (event.isCancelled()) {
