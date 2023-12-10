@@ -3,8 +3,10 @@ package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.mod.util.Blackhole;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.animal.Chicken;
 import net.minecraft.world.entity.projectile.ThrownEgg;
 import net.minecraft.world.phys.HitResult;
 import org.bukkit.Bukkit;
@@ -47,6 +49,11 @@ public abstract class ThrownEggMixin extends ThrowableProjectileMixin {
             if (hatching) {
                 for (int i = 0; i < b0; ++i) {
                     Entity entity = ((WorldBridge) this.level()).bridge$getWorld().createEntity(new Location(((WorldBridge) this.level()).bridge$getWorld(), this.getX(), this.getY(), this.getZ(), this.getYRot(), 0.0f), hatchingType.getEntityClass());
+                    // Let's do: Meadow mixin compatibility https://github.com/IzzelAliz/Arclight/issues/1149
+                    if (entity instanceof Chicken) {
+                        Chicken chicken = (Chicken) entity;
+                        Blackhole.consume(chicken);
+                    }
                     if (entity != null) {
                         if (((EntityBridge) entity).bridge$getBukkitEntity() instanceof Ageable) {
                             ((Ageable) ((EntityBridge) entity).bridge$getBukkitEntity()).setBaby();
