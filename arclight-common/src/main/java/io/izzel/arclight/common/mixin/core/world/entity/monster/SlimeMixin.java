@@ -77,6 +77,8 @@ public abstract class SlimeMixin extends MobMixin {
             }
             for (int l = 0; l < arclight$slimes.size(); l++) {
                 // Apotheosis compat, see https://github.com/IzzelAliz/Arclight/issues/1078
+                float f1 = ((float) (l % 2) - 0.5F) * f;
+                float f2 = ((float) (l / 2) - 0.5F) * f;
                 net.minecraft.world.entity.monster.Slime living = (net.minecraft.world.entity.monster.Slime) arclight$slimes.get(l);
                 ((WorldBridge) this.level).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.SLIME_SPLIT);
                 this.level.addFreshEntity(living);
