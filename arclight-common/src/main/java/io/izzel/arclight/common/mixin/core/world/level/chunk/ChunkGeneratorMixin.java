@@ -55,7 +55,7 @@ public abstract class ChunkGeneratorMixin implements ChunkGeneratorBridge {
     private void arclight$structureSpawn(StructureSet.StructureSelectionEntry p_223105_, StructureManager manager, RegistryAccess registryAccess, RandomState p_223108_, StructureTemplateManager p_223109_, long p_223110_, ChunkAccess p_223111_, ChunkPos chunkPos, SectionPos p_223113_, CallbackInfoReturnable<Boolean> cir,
                                          Structure structure, int i, HolderSet<Biome> holderset, Predicate<Holder<Biome>> predicate, StructureStart structurestart) {
         var box = structurestart.getBoundingBox();
-        var event = new org.bukkit.event.world.AsyncStructureSpawnEvent(((WorldBridge) ((IWorldBridge) manager.level).bridge$getMinecraftWorld()).bridge$getWorld(), CraftStructure.minecraftToBukkit(structure, registryAccess), new org.bukkit.util.BoundingBox(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ()), chunkPos.x, chunkPos.z);
+        var event = new org.bukkit.event.world.AsyncStructureSpawnEvent(((WorldBridge) ((IWorldBridge) manager.level).bridge$getMinecraftWorld()).bridge$getWorld(), CraftStructure.minecraftToBukkit(structure), new org.bukkit.util.BoundingBox(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ()), chunkPos.x, chunkPos.z);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             cir.setReturnValue(true);

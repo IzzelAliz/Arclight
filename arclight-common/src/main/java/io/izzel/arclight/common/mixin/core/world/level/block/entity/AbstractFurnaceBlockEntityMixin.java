@@ -25,7 +25,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
+import org.bukkit.craftbukkit.v.inventory.CraftItemType;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.FurnaceBurnEvent;
 import org.bukkit.event.inventory.FurnaceExtractEvent;
@@ -168,7 +168,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends LockableBlockEntit
     private static void arclight$expEvent(ServerLevel level, Vec3 vec3, int amount) {
         if (arclight$capturePlayer != null && arclight$captureAmount != 0) {
             FurnaceExtractEvent event = new FurnaceExtractEvent(((ServerPlayerEntityBridge) arclight$capturePlayer).bridge$getBukkitEntity(),
-                CraftBlock.at(level, arclight$captureFurnace.getBlockPos()), CraftMagicNumbers.getMaterial(arclight$item.getItem()), arclight$captureAmount, amount);
+                CraftBlock.at(level, arclight$captureFurnace.getBlockPos()), CraftItemType.minecraftToBukkit(arclight$item.getItem()), arclight$captureAmount, amount);
             Bukkit.getPluginManager().callEvent(event);
             amount = event.getExpToDrop();
         }

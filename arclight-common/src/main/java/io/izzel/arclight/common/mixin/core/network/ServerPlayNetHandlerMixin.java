@@ -115,8 +115,8 @@ import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v.inventory.CraftItemType;
 import org.bukkit.craftbukkit.v.util.CraftChatMessage;
-import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.craftbukkit.v.util.LazyPlayerSet;
 import org.bukkit.craftbukkit.v.util.Waitable;
@@ -292,6 +292,15 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
             Entity entity = this.player.getRootVehicle();
             if (entity != this.player && entity.getControllingPassenger() == this.player && entity == this.lastVehicle) {
                 ServerLevel worldserver = this.player.serverLevel();
+
+                // CraftBukkit - store current player position
+                double prevX = player.getX();
+                double prevY = player.getY();
+                double prevZ = player.getZ();
+                float prevYaw = player.getYRot();
+                float prevPitch = player.getXRot();
+                // CraftBukkit end
+
                 double d0 = entity.getX();
                 double d2 = entity.getY();
                 double d3 = entity.getZ();
@@ -369,12 +378,12 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
                 }
                 Player player = this.getCraftPlayer();
                 if (!hasMoved) {
-                    lastPosX = curPos.getX();
-                    lastPosY = curPos.getY();
-                    lastPosZ = curPos.getZ();
-                    lastYaw = curPos.getYaw();
-                    lastPitch = curPos.getPitch();
-                    hasMoved = true;
+                    this.lastPosX = prevX;
+                    this.lastPosY = prevY;
+                    this.lastPosZ = prevZ;
+                    this.lastYaw = prevYaw;
+                    this.lastPitch = prevPitch;
+                    this.hasMoved = true;
                 }
                 Location from = new Location(player.getWorld(), this.lastPosX, this.lastPosY, this.lastPosZ, this.lastYaw, this.lastPitch);
                 Location to = player.getLocation().clone();
@@ -391,22 +400,20 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
                     this.lastPosZ = to.getZ();
                     this.lastYaw = to.getYaw();
                     this.lastPitch = to.getPitch();
-                    if (true) {
-                        Location oldTo = to.clone();
-                        PlayerMoveEvent event = new PlayerMoveEvent(player, from, to);
-                        this.cserver.getPluginManager().callEvent(event);
-                        if (event.isCancelled()) {
-                            this.bridge$teleport(from);
-                            return;
-                        }
-                        if (!oldTo.equals(event.getTo()) && !event.isCancelled()) {
-                            ((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity().teleport(event.getTo(), PlayerTeleportEvent.TeleportCause.PLUGIN);
-                            return;
-                        }
-                        if (!from.equals(this.getCraftPlayer().getLocation()) && this.justTeleported) {
-                            this.justTeleported = false;
-                            return;
-                        }
+                    Location oldTo = to.clone();
+                    PlayerMoveEvent event = new PlayerMoveEvent(player, from, to);
+                    this.cserver.getPluginManager().callEvent(event);
+                    if (event.isCancelled()) {
+                        this.bridge$teleport(from);
+                        return;
+                    }
+                    if (!oldTo.equals(event.getTo()) && !event.isCancelled()) {
+                        ((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity().teleport(event.getTo(), PlayerTeleportEvent.TeleportCause.PLUGIN);
+                        return;
+                    }
+                    if (!from.equals(this.getCraftPlayer().getLocation()) && this.justTeleported) {
+                        this.justTeleported = false;
+                        return;
                     }
                 }
                 this.player.serverLevel().getChunkSource().move(this.player);
@@ -629,6 +636,14 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
                                 // Reset to old location first
                                 this.player.absMoveTo(prevX, prevY, prevZ, prevYaw, prevPitch);
                                 CraftPlayer player = this.getCraftPlayer();
+                                if (!this.hasMoved) {
+                                    this.lastPosX = prevX;
+                                    this.lastPosY = prevY;
+                                    this.lastPosZ = prevZ;
+                                    this.lastYaw = prevYaw;
+                                    this.lastPitch = prevPitch;
+                                    this.hasMoved = true;
+                                }
                                 Location from = new Location(player.getWorld(), this.lastPosX, this.lastPosY, this.lastPosZ, this.lastYaw, this.lastPitch);
                                 Location to = player.getLocation().clone();
                                 if (packetplayinflying.hasPos) {
@@ -648,22 +663,20 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
                                     this.lastPosZ = to.getZ();
                                     this.lastYaw = to.getYaw();
                                     this.lastPitch = to.getPitch();
-                                    if (from.getX() != Double.MAX_VALUE) {
-                                        Location oldTo = to.clone();
-                                        PlayerMoveEvent event = new PlayerMoveEvent(player, from, to);
-                                        this.cserver.getPluginManager().callEvent(event);
-                                        if (event.isCancelled()) {
-                                            this.teleport(from);
-                                            return;
-                                        }
-                                        if (!oldTo.equals(event.getTo()) && !event.isCancelled()) {
-                                            getCraftPlayer().teleport(event.getTo(), PlayerTeleportEvent.TeleportCause.PLUGIN);
-                                            return;
-                                        }
-                                        if (!from.equals(this.getCraftPlayer().getLocation()) && this.justTeleported) {
-                                            this.justTeleported = false;
-                                            return;
-                                        }
+                                    Location oldTo = to.clone();
+                                    PlayerMoveEvent event = new PlayerMoveEvent(player, from, to);
+                                    this.cserver.getPluginManager().callEvent(event);
+                                    if (event.isCancelled()) {
+                                        this.teleport(from);
+                                        return;
+                                    }
+                                    if (!oldTo.equals(event.getTo()) && !event.isCancelled()) {
+                                        getCraftPlayer().teleport(event.getTo(), PlayerTeleportEvent.TeleportCause.PLUGIN);
+                                        return;
+                                    }
+                                    if (!from.equals(this.getCraftPlayer().getLocation()) && this.justTeleported) {
+                                        this.justTeleported = false;
+                                        return;
                                     }
                                 }
 
@@ -1481,7 +1494,7 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
                             ItemStack cursor = this.player.containerMenu.getCarried();
                             action = InventoryAction.NOTHING;
                             // Quick check for if we have any of the item
-                            if (inventory.getTopInventory().contains(CraftMagicNumbers.getMaterial(cursor.getItem())) || inventory.getBottomInventory().contains(CraftMagicNumbers.getMaterial(cursor.getItem()))) {
+                            if (inventory.getTopInventory().contains(CraftItemType.minecraftToBukkit(cursor.getItem())) || inventory.getBottomInventory().contains(CraftItemType.minecraftToBukkit(cursor.getItem()))) {
                                 action = InventoryAction.COLLECT_TO_CURSOR;
                             }
                         }

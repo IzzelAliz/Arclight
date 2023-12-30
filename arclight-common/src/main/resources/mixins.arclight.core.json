@@ -54,6 +54,7 @@
     "server.PlayerAdvancementsMixin",
     "server.ServerFunctionManagerMixin",
     "server.ServerScoreboardMixin",
+    "server.ServerTickRateManagerMixin",
     "server.WorldLoaderMixin",
     "server.commands.EffectCommandMixin",
     "server.commands.GameRuleCommandMixin",
