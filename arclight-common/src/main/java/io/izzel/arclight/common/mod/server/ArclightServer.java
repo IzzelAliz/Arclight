@@ -6,6 +6,7 @@ import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.common.mod.server.api.DefaultArclightServer;
+import io.izzel.arclight.common.mod.util.VelocitySupport;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.dedicated.DedicatedServer;
@@ -16,6 +17,7 @@ import org.bukkit.World;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.command.ColouredConsoleSender;
 import org.jetbrains.annotations.NotNull;
+import org.spigotmc.SpigotConfig;
 
 import java.io.File;
 import java.util.Objects;
@@ -28,7 +30,8 @@ import java.util.function.Supplier;
 
 public class ArclightServer {
 
-    private interface ExecutorWithThread extends Executor, Supplier<Thread> {}
+    private interface ExecutorWithThread extends Executor, Supplier<Thread> {
+    }
 
     private static final ExecutorWithThread mainThreadExecutor = new ExecutorWithThread() {
         @Override
@@ -76,6 +79,9 @@ public class ArclightServer {
                 BukkitRegistry.registerAll(console);
                 org.spigotmc.SpigotConfig.init(new File("./spigot.yml"));
                 org.spigotmc.SpigotConfig.registerCommands();
+                if (VelocitySupport.isEnabled()) {
+                    SpigotConfig.bungee = true;
+                }
             } catch (Throwable t) {
                 ArclightMod.LOGGER.error("registry.error", t);
                 throw t;

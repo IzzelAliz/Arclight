@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.mojang.authlib.properties.Property;
 import com.mojang.util.UndashedUuid;
 import io.izzel.arclight.common.bridge.core.network.NetworkManagerBridge;
+import io.izzel.arclight.common.mod.util.VelocitySupport;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
@@ -15,6 +16,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerHandshakePacketListenerImpl;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
 import net.minecraft.server.network.ServerStatusPacketListenerImpl;
+import net.minecraftforge.network.NetworkContext;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.LogManager;
 import org.bukkit.Bukkit;
@@ -94,26 +96,28 @@ public class ServerHandshakeNetHandlerMixin {
                 }
                 this.connection.setListener(new ServerLoginPacketListenerImpl(this.server, this.connection));
 
-                String[] split = packetIn.hostName().split("\00");
-                if (SpigotConfig.bungee) {
-                    if ((split.length == 3 || split.length == 4) && (HOST_PATTERN.matcher(split[1]).matches())) {
-                        ((NetworkManagerBridge) this.connection).bridge$setHostname(split[0]);
-                        this.connection.address = new InetSocketAddress(split[1], ((InetSocketAddress) this.connection.getRemoteAddress()).getPort());
-                        ((NetworkManagerBridge) this.connection).bridge$setSpoofedUUID(UndashedUuid.fromStringLenient(split[2]));
-                    } else {
-                        var component = Component.literal("If you wish to use IP forwarding, please enable it in your BungeeCord config as well!");
+                if (!VelocitySupport.isEnabled()) {
+                    String[] split = packetIn.hostName().split("\00");
+                    if (SpigotConfig.bungee) {
+                        if ((split.length == 3 || split.length == 4) && (HOST_PATTERN.matcher(split[1]).matches())) {
+                            ((NetworkManagerBridge) this.connection).bridge$setHostname(split[0]);
+                            this.connection.address = new InetSocketAddress(split[1], ((InetSocketAddress) this.connection.getRemoteAddress()).getPort());
+                            ((NetworkManagerBridge) this.connection).bridge$setSpoofedUUID(UndashedUuid.fromStringLenient(split[2]));
+                        } else {
+                            var component = Component.literal("If you wish to use IP forwarding, please enable it in your BungeeCord config as well!");
+                            this.connection.send(new ClientboundLoginDisconnectPacket(component));
+                            this.connection.disconnect(component);
+                            return;
+                        }
+                        if (split.length == 4) {
+                            ((NetworkManagerBridge) this.connection).bridge$setSpoofedProfile(gson.fromJson(split[3], Property[].class));
+                        }
+                    } else if ((split.length == 3 || split.length == 4) && (HOST_PATTERN.matcher(split[1]).matches())) {
+                        Component component = Component.literal("Unknown data in login hostname, did you forget to enable BungeeCord in spigot.yml?");
                         this.connection.send(new ClientboundLoginDisconnectPacket(component));
                         this.connection.disconnect(component);
                         return;
                     }
-                    if (split.length == 4) {
-                        ((NetworkManagerBridge) this.connection).bridge$setSpoofedProfile(gson.fromJson(split[3], Property[].class));
-                    }
-                } else if ((split.length == 3 || split.length == 4) && (HOST_PATTERN.matcher(split[1]).matches())) {
-                    Component component = Component.literal("Unknown data in login hostname, did you forget to enable BungeeCord in spigot.yml?");
-                    this.connection.send(new ClientboundLoginDisconnectPacket(component));
-                    this.connection.disconnect(component);
-                    return;
                 }
 
                 break;
@@ -139,7 +143,11 @@ public class ServerHandshakeNetHandlerMixin {
 
     private boolean arclight$handleSpecialLogin(ClientIntentionPacket packet) {
         String ip = packet.hostName();
-        if (SpigotConfig.bungee) {
+        if (VelocitySupport.isEnabled()) {
+            // as if forge client connects
+            var forgePacket = new ClientIntentionPacket(packet.protocolVersion(), NetworkContext.enhanceHostName(ip), packet.port(), packet.intention());
+            return ServerLifecycleHooks.handleServerLogin(forgePacket, this.connection);
+        } else if (SpigotConfig.bungee) {
             String[] split = ip.split("\0");
             if (split.length == 4) {
                 Property[] properties = GSON.fromJson(split[3], Property[].class);
