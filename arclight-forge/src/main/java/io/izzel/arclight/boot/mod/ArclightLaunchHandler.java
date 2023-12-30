@@ -1,7 +1,5 @@
 package io.izzel.arclight.boot.mod;
 
-import net.minecraftforge.fml.loading.FMLLoader;
-import net.minecraftforge.fml.loading.LibraryFinder;
 import net.minecraftforge.fml.loading.targets.CommonLaunchHandler;
 
 import java.nio.file.Path;
@@ -26,9 +24,7 @@ public class ArclightLaunchHandler extends CommonLaunchHandler {
 
     @Override
     public List<Path> getMinecraftPaths() {
-        var vers = FMLLoader.versionInfo();
-        var mc = LibraryFinder.findPathForMaven(vers.forgeGroup(), "forge", "", this.type.name(), vers.mcAndForgeVersion());
-        return List.of(mc);
+        return List.of(getPathFromResource("net/minecraft/server/MinecraftServer.class"));
     }
 
     @Override
