@@ -16,7 +16,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerHandshakePacketListenerImpl;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
 import net.minecraft.server.network.ServerStatusPacketListenerImpl;
-import net.minecraftforge.network.NetworkContext;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.LogManager;
 import org.bukkit.Bukkit;
@@ -143,11 +142,7 @@ public class ServerHandshakeNetHandlerMixin {
 
     private boolean arclight$handleSpecialLogin(ClientIntentionPacket packet) {
         String ip = packet.hostName();
-        if (VelocitySupport.isEnabled()) {
-            // as if forge client connects
-            var forgePacket = new ClientIntentionPacket(packet.protocolVersion(), NetworkContext.enhanceHostName(ip), packet.port(), packet.intention());
-            return ServerLifecycleHooks.handleServerLogin(forgePacket, this.connection);
-        } else if (SpigotConfig.bungee) {
+        if (!VelocitySupport.isEnabled() && SpigotConfig.bungee) {
             String[] split = ip.split("\0");
             if (split.length == 4) {
                 Property[] properties = GSON.fromJson(split[3], Property[].class);

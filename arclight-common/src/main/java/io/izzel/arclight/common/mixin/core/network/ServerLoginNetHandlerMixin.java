@@ -31,10 +31,6 @@ import net.minecraft.util.Crypt;
 import net.minecraft.util.CryptException;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.fml.util.thread.SidedThreadGroups;
-import net.minecraftforge.network.ConnectionType;
-import net.minecraftforge.network.NetworkContext;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.filters.NetworkFilters;
 import org.apache.commons.lang3.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
@@ -257,8 +253,6 @@ public abstract class ServerLoginNetHandlerMixin {
         thread.start();
     }
 
-    private static final String EXTRA_DATA = "extraData";
-
     @Inject(method = "handleCustomQueryPacket", cancellable = true, at = @At("HEAD"))
     private void arclight$modernForwardReply(ServerboundCustomQueryAnswerPacket packet, CallbackInfo ci) {
         if (VelocitySupport.isEnabled() && packet.transactionId() == this.arclight$velocityLoginId) {
@@ -298,40 +292,6 @@ public abstract class ServerLoginNetHandlerMixin {
             }
             this.connection.address = new java.net.InetSocketAddress(VelocitySupport.readAddress(buf), port);
             this.authenticatedProfile = VelocitySupport.createProfile(buf);
-
-            // late forge setup
-            boolean forwarded = false;
-            for (var property : this.authenticatedProfile.getProperties().values()) {
-                if (Objects.equals(property.name(), EXTRA_DATA)) {
-                    String extraData = property.value().replace("\1", "\0");
-                    var ctx = NetworkContext.get(this.connection);
-                    ctx.processIntention(extraData);
-                    if (ctx.getType() == ConnectionType.MODDED && ctx.getNetVersion() != NetworkContext.NET_VERSION) {
-                        this.disconnect("This modded server is not impl compatible with your modded client. Please verify your Forge version closely matches the server. Got net version " + ctx.getNetVersion() + " this server is net version " + NetworkContext.NET_VERSION);
-                        ci.cancel();
-                        return;
-                    }
-                    if (ctx.getType() == ConnectionType.VANILLA && !NetworkRegistry.acceptsVanillaClientConnections()) {
-                        this.disconnect("This server has mods that require Forge to be installed on the client. Contact your server admin for more details.");
-                        ci.cancel();
-                        return;
-                    }
-                    NetworkFilters.injectIfNecessary(this.connection);
-                    forwarded = true;
-                    break;
-                }
-            }
-            if (!forwarded) {
-                // considered vanilla
-                var ctx = NetworkContext.get(this.connection);
-                ctx.processIntention("");
-                if (ctx.getType() == ConnectionType.VANILLA && !NetworkRegistry.acceptsVanillaClientConnections()) {
-                    this.disconnect("This server has mods that require Forge to be installed on the client. Contact your server admin for more details.");
-                    ci.cancel();
-                    return;
-                }
-                NetworkFilters.injectIfNecessary(this.connection);
-            }
 
             // Proceed with login
             Util.backgroundExecutor().execute(() -> {
