@@ -135,6 +135,7 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
         .add("net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess")
         .add("net.minecraft.network.protocol.game.ClientboundSystemChatPacket")
         .add("net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket")
+        .add("net.minecraft.network.protocol.status.ServerStatus")
         .build();
 
     @Override

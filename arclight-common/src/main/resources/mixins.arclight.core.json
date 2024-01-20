@@ -47,6 +47,7 @@
     "network.protocol.game.CPlayerTryUseItemPacketMixin",
     "network.protocol.game.SWorldBorderPacketMixin",
     "network.protocol.handshake.ClientIntentionPacketMixin",
+    "network.protocol.status.ServerStatusMixin",
     "network.rcon.RConConsoleSourceMixin",
     "server.BootstrapMixin",
     "server.CustomServerBossInfoMixin",
