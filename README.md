@@ -6,9 +6,9 @@ A Bukkit server implementation utilizing Mixin.
 
 |       Release        |  Forge  | Status |                                                                                                     Build                                                                                                      |
 |:--------------------:|:-------:|:------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-|   Whisper (1.20.4)   | 49.0.12 | ACTIVE | [![1.20.4 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Whisper&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3AWhisper) |
-| Trials (1.20-1.20.1) | 47.2.16 |  LTS   |  [![1.20.1 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Trials&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3ATrials)  |
-|  Horn (1.19-1.19.2)  | 43.3.2  |  LTS   |                             [![Horn Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-19?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-19)                             |
+|   Whisper (1.20.4)   | 49.0.22 | ACTIVE | [![1.20.4 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Whisper&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3AWhisper) |
+| Trials (1.20-1.20.1) | 47.2.20 |  LTS   |  [![1.20.1 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Trials&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3ATrials)  |
+|  Horn (1.19-1.19.2)  | 43.3.7  |  LTS   |                             [![Horn Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-19?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-19)                             |
 
 **Legacy versions**:
 
