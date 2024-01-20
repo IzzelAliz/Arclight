@@ -742,9 +742,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                     return false;
                 }
             }
-            // CraftBukkit end
-            // Spigot start
-            org.spigotmc.event.entity.EntityMountEvent event = new org.spigotmc.event.entity.EntityMountEvent(((EntityBridge) entity).bridge$getBukkitEntity(), this.getBukkitEntity());
+            var event = new org.bukkit.event.entity.EntityMountEvent(((EntityBridge) entity).bridge$getBukkitEntity(), this.getBukkitEntity());
             // Suppress during worldgen
             if (this.valid) {
                 Bukkit.getPluginManager().callEvent(event);
@@ -752,7 +750,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             if (event.isCancelled()) {
                 return false;
             }
-            // Spigot end
+            // CraftBukkit end
             if (this.passengers.isEmpty()) {
                 this.passengers = ImmutableList.of(entity);
             } else {
@@ -799,9 +797,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                     return false;
                 }
             }
-            // CraftBukkit end
-            // Spigot start
-            org.spigotmc.event.entity.EntityDismountEvent event = new org.spigotmc.event.entity.EntityDismountEvent(((EntityBridge) entity).bridge$getBukkitEntity(), this.getBukkitEntity());
+            var event = new org.bukkit.event.entity.EntityDismountEvent(((EntityBridge) entity).bridge$getBukkitEntity(), this.getBukkitEntity());
             // Suppress during worldgen
             if (this.valid) {
                 Bukkit.getPluginManager().callEvent(event);
@@ -809,7 +805,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             if (event.isCancelled()) {
                 return false;
             }
-            // Spigot end
+            // CraftBukkit end
             if (this.passengers.size() == 1 && this.passengers.get(0) == entity) {
                 this.passengers = ImmutableList.of();
             } else {
