@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
+import io.izzel.arclight.common.bridge.bukkit.EntityTypeBridge;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
@@ -8,7 +9,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.ThrownEgg;
 import net.minecraft.world.phys.HitResult;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.entity.Ageable;
 import org.bukkit.entity.Egg;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -46,10 +46,14 @@ public abstract class ThrownEggMixin extends ThrowableProjectileMixin {
             }
             if (hatching) {
                 for (int i = 0; i < b0; ++i) {
-                    Entity entity = ((WorldBridge) this.level).bridge$getWorld().createEntity(new Location(((WorldBridge) this.level).bridge$getWorld(), this.getX(), this.getY(), this.getZ(), this.getYRot(), 0.0f), hatchingType.getEntityClass());
+                    // TrickOrTreatMod compat https://github.com/IzzelAliz/Arclight/issues/1178
+                    // https://github.com/MehVahdJukaar/TrickOrTreatMod/blob/020bc478b8f8de6bfec2191a9e667f423f45d7db/common/src/main/java/net/mehvahdjukaar/hauntedharvest/mixins/ThrownEggEntityMixin.java
+                    var entityType = ((EntityTypeBridge) (Object) hatchingType).bridge$getHandle();
+                    var entity = entityType.create(this.level);
                     if (((EntityBridge) entity).bridge$getBukkitEntity() instanceof Ageable) {
                         ((Ageable) ((EntityBridge) entity).bridge$getBukkitEntity()).setBaby();
                     }
+                    entity.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), 0.0F);
                     ((WorldBridge) this.level).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.EGG);
                     this.level.addFreshEntity(entity);
                 }
