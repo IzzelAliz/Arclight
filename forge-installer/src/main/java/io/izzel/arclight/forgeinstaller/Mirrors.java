@@ -9,13 +9,11 @@ public class Mirrors {
 
     private static final String[] MAVEN_REPO = {
         "https://arclight.hypertention.cn/",
-        "https://download.mcbbs.net/maven/",
         "https://repo.spongepowered.org/maven/"
     };
 
     private static final String[] MOJANG_MIRROR = {
-        "https://download.mcbbs.net",
-        "https://bmclapi2.bangbang93.com",
+        "https://mojmirror.hypertention.cn",
         "https://piston-meta.mojang.com"
     };
 
@@ -38,5 +36,9 @@ public class Mirrors {
             .replace("https://launchermeta.mojang.com", mirror)
             .replace("https://piston-meta.mojang.com", mirror)
             .replace("https://piston-data.mojang.com", mirror);
+    }
+
+    public static boolean isMirrorUrl(String url) {
+        return url.startsWith(MOJANG_MIRROR[0]);
     }
 }
