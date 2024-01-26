@@ -322,7 +322,10 @@ public class BukkitRegistry {
             boolean found = false;
             if (location.getNamespace().equals(NamespacedKey.MINECRAFT)) {
                 entityType = EntityType.fromName(location.getPath());
-                if (entityType != null) found = true;
+                if (entityType != null) {
+                    found = true;
+                    ((EntityTypeBridge) (Object) entityType).bridge$setHandle(type);
+                }
                 else ArclightMod.LOGGER.warn("Not found {} in {}", location, EntityType.class);
             }
             if (!found) {

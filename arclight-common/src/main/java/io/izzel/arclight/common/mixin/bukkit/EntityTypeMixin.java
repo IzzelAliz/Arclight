@@ -4,6 +4,8 @@ import io.izzel.arclight.common.bridge.bukkit.EntityTypeBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
 import io.izzel.arclight.i18n.LocalizedException;
 import io.izzel.arclight.i18n.conf.EntityPropertySpec;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.craftbukkit.v.CraftWorld;
@@ -16,8 +18,6 @@ import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.function.Function;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
 
 @Mixin(value = EntityType.class, remap = false)
 public class EntityTypeMixin implements EntityTypeBridge {
@@ -73,6 +73,11 @@ public class EntityTypeMixin implements EntityTypeBridge {
     @Override
     public net.minecraft.world.entity.EntityType<?> bridge$getHandle() {
         return this.handleType;
+    }
+
+    @Override
+    public void bridge$setHandle(net.minecraft.world.entity.EntityType<?> entityType) {
+        this.handleType = entityType;
     }
 
     @Override
