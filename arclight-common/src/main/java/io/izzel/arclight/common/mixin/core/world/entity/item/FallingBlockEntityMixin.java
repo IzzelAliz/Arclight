@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.entity.item;
 
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.EntityMixin;
+import io.izzel.arclight.common.mod.mixins.annotation.TransformAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.item.FallingBlockEntity;
@@ -10,6 +11,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -50,6 +52,7 @@ public abstract class FallingBlockEntityMixin extends EntityMixin {
         }
     }
 
+    @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
     private static FallingBlockEntity fall(Level level, BlockPos pos, BlockState state, CreatureSpawnEvent.SpawnReason spawnReason) {
         ((WorldBridge) level).bridge$pushAddEntityReason(spawnReason);
         return fall(level, pos, state);

@@ -10,11 +10,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(SpellcasterIllager.SpellcasterUseSpellGoal.class)
 public abstract class SpellcastingIllager_UseSpellGoalMixin {
+    @SuppressWarnings("target")
+    @Shadow(aliases = {"this$0", "f_33776_", "field_7386"}, remap = false)
+    private SpellcasterIllager outerThis;
 
-    // @formatter:off
-    @SuppressWarnings("target") @Shadow(aliases = {"this$0", "f_33776_"}, remap = false) private SpellcasterIllager outerThis;
-    @Shadow(aliases = "m_7269_") protected abstract SpellcasterIllager.IllagerSpell getSpell();
-    // @formatter:on
+    @Shadow(aliases = "m_7269_")
+    protected abstract SpellcasterIllager.IllagerSpell getSpell();
 
     @Inject(method = "tick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/SpellcasterIllager$SpellcasterUseSpellGoal;performSpellCasting()V"))
     private void arclight$castSpell(CallbackInfo ci) {

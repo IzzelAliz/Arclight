@@ -1,7 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.player;
 
 import com.mojang.datafixers.util.Either;
-import io.izzel.arclight.common.bridge.core.block.PortalInfoBridge;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.InternalEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
@@ -10,7 +9,10 @@ import io.izzel.arclight.common.bridge.core.network.play.ServerPlayNetHandlerBri
 import io.izzel.arclight.common.bridge.core.util.FoodStatsBridge;
 import io.izzel.arclight.common.bridge.core.world.TeleporterBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.level.block.PortalInfoBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
+import io.izzel.arclight.common.mod.mixins.annotation.RenameInto;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.server.block.ChestBlockDoubleInventoryHacks;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.BlockUtil;
@@ -23,15 +25,10 @@ import net.minecraft.network.PacketSendListener;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.network.protocol.game.ClientboundChangeDifficultyPacket;
 import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
 import net.minecraft.network.protocol.game.ClientboundHorseScreenOpenPacket;
-import net.minecraft.network.protocol.game.ClientboundLevelEventPacket;
-import net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket;
-import net.minecraft.network.protocol.game.ClientboundRespawnPacket;
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
-import net.minecraft.network.protocol.game.ClientboundUpdateMobEffectPacket;
 import net.minecraft.network.protocol.game.CommonPlayerSpawnInfo;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -41,7 +38,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerPlayerGameMode;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
-import net.minecraft.server.players.PlayerList;
 import net.minecraft.stats.Stat;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Mth;
@@ -50,7 +46,6 @@ import net.minecraft.world.Container;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.damagesource.CombatTracker;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
@@ -72,7 +67,6 @@ import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.portal.PortalInfo;
-import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.ScoreAccess;
@@ -80,9 +74,6 @@ import net.minecraft.world.scores.ScoreHolder;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.Team;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
-import net.minecraftforge.common.util.ITeleporter;
-import net.minecraftforge.event.ForgeEventFactory;
-import net.minecraftforge.server.ServerLifecycleHooks;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.WeatherType;
@@ -102,7 +93,6 @@ import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerBedLeaveEvent;
 import org.bukkit.event.player.PlayerChangedMainHandEvent;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerLocaleChangeEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerSpawnChangeEvent;
@@ -164,10 +154,8 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Shadow public abstract boolean isCreative();
     @Shadow protected abstract boolean bedBlocked(BlockPos p_241156_1_, Direction p_241156_2_);
     @Shadow protected abstract boolean bedInRange(BlockPos p_241147_1_, Direction p_241147_2_);
-    @Shadow(remap = false) private boolean hasTabListName;
-    @Shadow(remap = false) private Component tabListDisplayName;
     @Shadow public abstract void resetFallDistance();
-    @Shadow public abstract void shadow$nextContainerCounter();
+    @Shadow public abstract void nextContainerCounter();
     @Shadow public abstract void initMenu(AbstractContainerMenu p_143400_);
     @Shadow public abstract boolean teleportTo(ServerLevel p_265564_, double p_265424_, double p_265680_, double p_265312_, Set<RelativeMovement> p_265192_, float p_265059_, float p_265266_);
     @Shadow @Nullable private BlockPos respawnPosition;
@@ -276,9 +264,9 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     public void spawnIn(Level world) {
         this.setLevel(world);
         if (world == null) {
-            this.revive();
+            this.bridge$revive();
             Vec3 position = null;
-            if (this.respawnDimension != null && (world = ServerLifecycleHooks.getCurrentServer().getLevel(this.respawnDimension)) != null && this.getRespawnPosition() != null) {
+            if (this.respawnDimension != null && (world = ArclightServer.getMinecraftServer().getLevel(this.respawnDimension)) != null && this.getRespawnPosition() != null) {
                 position = Player.findRespawnPositionAndUseSpawnBlock((ServerLevel) world, this.getRespawnPosition(), this.getRespawnAngle(), false, false).orElse(null);
             }
             if (world == null || position == null) {
@@ -320,6 +308,20 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         }
     }
 
+    @Redirect(method = "drop(Lnet/minecraft/world/item/ItemStack;ZZ)Lnet/minecraft/world/entity/item/ItemEntity;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
+    private boolean arclight$capturePlayerDrop(Level instance, Entity entity) {
+        if (this.bridge$common$isCapturingDrops()) {
+            this.bridge$common$captureDrop((ItemEntity) entity);
+            return true;
+        } else {
+            return instance.addFreshEntity(entity);
+        }
+    }
+
+    @Override
+    public void bridge$common$finishCaptureAndFireEvent() {
+    }
+
     /**
      * @author IzzelAliz
      * @reason
@@ -327,8 +329,6 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Overwrite
     public void die(DamageSource damagesource) {
         this.gameEvent(GameEvent.ENTITY_DIE);
-        if (net.minecraftforge.common.ForgeHooks.onLivingDeath((ServerPlayer) (Object) this, damagesource))
-            return;
         boolean flag = this.level().getGameRules().getBoolean(GameRules.RULE_SHOWDEATHMESSAGES);
         if (this.isRemoved()) {
             return;
@@ -346,7 +346,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         Component defaultMessage = this.getCombatTracker().getDeathMessage();
         String deathmessage = defaultMessage.getString();
         List<org.bukkit.inventory.ItemStack> loot = new ArrayList<>();
-        Collection<ItemEntity> drops = this.captureDrops(null);
+        Collection<ItemEntity> drops = this.bridge$common$getCapturedDrops();
         if (drops != null) {
             for (ItemEntity entity : drops) {
                 CraftItemStack craftItemStack = CraftItemStack.asCraftMirror(entity.getItem());
@@ -475,122 +475,6 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         var teleportCause = arclight$cause;
         arclight$cause = null;
         ((ServerPlayNetHandlerBridge) this.connection).bridge$pushTeleportCause(teleportCause);
-    }
-
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite(remap = false)
-    @Nullable
-    public Entity changeDimension(ServerLevel server, ITeleporter teleporter) {
-        if (this.isSleeping()) {
-            return (ServerPlayer) (Object) this;
-        }
-        if (ForgeEventFactory.onTravelToDimension((ServerPlayer) (Object) this, server.dimension())) return null;
-
-        PlayerTeleportEvent.TeleportCause cause = arclight$cause == null ? PlayerTeleportEvent.TeleportCause.UNKNOWN : arclight$cause;
-        arclight$cause = null;
-
-        // this.invulnerableDimensionChange = true;
-        ServerLevel serverworld = this.serverLevel();
-        ResourceKey<LevelStem> registrykey = ((WorldBridge) serverworld).bridge$getTypeKey();
-        if (registrykey == LevelStem.END && ((WorldBridge) server).bridge$getTypeKey() == LevelStem.OVERWORLD && teleporter.isVanilla()) { //Forge: Fix non-vanilla teleporters triggering end credits
-            this.isChangingDimension = true;
-            this.unRide();
-            this.serverLevel().removePlayerImmediately((ServerPlayer) (Object) this, Entity.RemovalReason.CHANGED_DIMENSION);
-            if (!this.wonGame) {
-                this.wonGame = true;
-                this.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.WIN_GAME, this.seenCredits ? 0.0F : 1.0F));
-                this.seenCredits = true;
-            }
-
-            return (ServerPlayer) (Object) this;
-        } else {
-            PortalInfo portalinfo = teleporter.getPortalInfo((ServerPlayer) (Object) this, server, this::findDimensionEntryPoint);
-            if (portalinfo != null) {
-                if (((PortalInfoBridge) portalinfo).bridge$getWorld() != null) {
-                    server = ((PortalInfoBridge) portalinfo).bridge$getWorld();
-                }
-                ServerLevel[] exitWorld = new ServerLevel[]{server};
-                LevelData iworldinfo = server.getLevelData();
-                this.connection.send(new ClientboundRespawnPacket(this.createCommonSpawnInfo(server), (byte) 3));
-                this.connection.send(new ClientboundChangeDifficultyPacket(iworldinfo.getDifficulty(), iworldinfo.isDifficultyLocked()));
-                PlayerList playerlist = this.server.getPlayerList();
-                playerlist.sendPlayerPermissionLevel((ServerPlayer) (Object) this);
-                this.serverLevel().removePlayerImmediately((ServerPlayer) (Object) this, Entity.RemovalReason.CHANGED_DIMENSION);
-                this.revive();
-                Entity e = teleporter.placeEntity((ServerPlayer) (Object) this, serverworld, exitWorld[0], this.getYRot(), spawnPortal -> {//Forge: Start vanilla logic
-                    serverworld.getProfiler().push("moving");
-                    if (exitWorld[0] != null) {
-                        if (registrykey == LevelStem.OVERWORLD && ((WorldBridge) exitWorld[0]).bridge$getTypeKey() == LevelStem.NETHER) {
-                            this.enteredNetherPosition = this.position();
-                        } else if (spawnPortal && ((WorldBridge) exitWorld[0]).bridge$getTypeKey() == LevelStem.END
-                            && (((PortalInfoBridge) portalinfo).bridge$getPortalEventInfo() == null || ((PortalInfoBridge) portalinfo).bridge$getPortalEventInfo().getCanCreatePortal())) {
-                            this.createEndPlatform(exitWorld[0], BlockPos.containing(portalinfo.pos));
-                        }
-                    }
-
-                    Location enter = this.getBukkitEntity().getLocation();
-                    Location exit = (exitWorld[0] == null) ? null : new Location(((WorldBridge) exitWorld[0]).bridge$getWorld(), portalinfo.pos.x, portalinfo.pos.y, portalinfo.pos.z, portalinfo.yRot, portalinfo.xRot);
-                    PlayerTeleportEvent tpEvent = new PlayerTeleportEvent(this.getBukkitEntity(), enter, exit, cause);
-                    Bukkit.getServer().getPluginManager().callEvent(tpEvent);
-                    if (tpEvent.isCancelled() || tpEvent.getTo() == null) {
-                        return null;
-                    }
-                    exit = tpEvent.getTo();
-
-                    serverworld.getProfiler().pop();
-                    serverworld.getProfiler().push("placing");
-
-                    this.isChangingDimension = true;
-                    ServerLevel newWorld = ((CraftWorld) exit.getWorld()).getHandle();
-                    if (newWorld != exitWorld[0]) {
-                        exitWorld[0] = newWorld;
-                        LevelData newWorldInfo = exitWorld[0].getLevelData();
-                        this.connection.send(new ClientboundRespawnPacket(this.createCommonSpawnInfo(newWorld), (byte) 3));
-                        this.connection.send(new ClientboundChangeDifficultyPacket(newWorldInfo.getDifficulty(), newWorldInfo.isDifficultyLocked()));
-                    }
-
-                    this.setServerLevel(exitWorld[0]);
-                    exitWorld[0].addDuringPortalTeleport((ServerPlayer) (Object) this);
-
-                    ((ServerPlayNetHandlerBridge) this.connection).bridge$teleport(exit);
-                    this.connection.resetPosition();
-
-                    serverworld.getProfiler().pop();
-                    this.triggerDimensionChangeTriggers(exitWorld[0]);
-                    return (ServerPlayer) (Object) this;//forge: this is part of the ITeleporter patch
-                });//Forge: End vanilla logic
-                if (e == null) {
-                    serverworld.addDuringPortalTeleport((ServerPlayer) (Object) this);
-                    return (ServerPlayer) (Object) this;
-                } else if (e != (Object) this) {
-                    throw new IllegalArgumentException(String.format("Teleporter %s returned not the player entity but instead %s, expected PlayerEntity %s", teleporter, e, this));
-                }
-
-                this.gameMode.setLevel(exitWorld[0]);
-                this.connection.send(new ClientboundPlayerAbilitiesPacket(this.getAbilities()));
-                playerlist.sendLevelInfo((ServerPlayer) (Object) this, exitWorld[0]);
-                playerlist.sendAllPlayerInfo((ServerPlayer) (Object) this);
-
-                for (MobEffectInstance effectinstance : this.getActiveEffects()) {
-                    this.connection.send(new ClientboundUpdateMobEffectPacket(this.getId(), effectinstance));
-                }
-
-                if (teleporter.playTeleportSound((ServerPlayer) (Object) this, serverworld, exitWorld[0])) {
-                    this.connection.send(new ClientboundLevelEventPacket(1032, BlockPos.ZERO, 0, false));
-                }
-                this.lastSentExp = -1;
-                this.lastSentHealth = -1.0F;
-                this.lastSentFood = -1;
-                ForgeEventFactory.onPlayerChangedDimension((ServerPlayer) (Object) this, serverworld.dimension(), exitWorld[0].dimension());
-                PlayerChangedWorldEvent changeEvent = new PlayerChangedWorldEvent(this.getBukkitEntity(), ((WorldBridge) serverworld).bridge$getWorld());
-                Bukkit.getPluginManager().callEvent(changeEvent);
-            }
-
-            return (ServerPlayer) (Object) this;
-        }
     }
 
     @Override
@@ -727,8 +611,9 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         }
     }
 
-    public int nextContainerCounter() {
-        this.shadow$nextContainerCounter();
+    @RenameInto("nextContainerCounter")
+    public int bukkit$nextContainerCounter() {
+        this.nextContainerCounter();
         return this.containerCounter;
     }
 
@@ -775,7 +660,6 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         this.connection.send(new ClientboundHorseScreenOpenPacket(this.containerCounter, iinventory.getContainerSize(), entityhorseabstract.getId()));
         this.containerMenu = container;
         this.initMenu(this.containerMenu);
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.player.PlayerContainerEvent.Open((ServerPlayer) (Object) this, this.containerMenu));
     }
 
     @Inject(method = "doCloseContainer", at = @At("HEAD"))
@@ -832,28 +716,18 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         this.bridge$pushChangeDimensionCause(PlayerTeleportEvent.TeleportCause.SPECTATE);
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    @Nullable
-    public Component getTabListDisplayName() {
+    @Inject(method = "getTabListDisplayName", cancellable = true, at = @At("HEAD"))
+    private void arclight$bukkitListName(CallbackInfoReturnable<Component> cir) {
         if (this.listName != null) {
-            return this.listName;
+            cir.setReturnValue(this.listName);
         }
-        if (!this.hasTabListName) {
-            this.tabListDisplayName = net.minecraftforge.event.ForgeEventFactory.getPlayerTabListDisplayName((ServerPlayer) (Object) this);
-            this.hasTabListName = true;
-        }
-        return tabListDisplayName;
     }
 
     @Inject(method = "teleportTo(Lnet/minecraft/server/level/ServerLevel;DDDFF)V", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/level/ServerPlayer;stopRiding()V"))
     private void arclight$handleBy(ServerLevel world, double x, double y, double z, float yaw, float pitch, CallbackInfo ci) {
         PlayerTeleportEvent.TeleportCause cause = arclight$cause == null ? PlayerTeleportEvent.TeleportCause.UNKNOWN : arclight$cause;
         arclight$cause = null;
-        this.getBukkitEntity().teleport(new Location(((WorldBridge) world).bridge$getWorld(), x, y, z, yaw, pitch), cause);
+        this.getBukkitEntity().teleport(new Location(world.bridge$getWorld(), x, y, z, yaw, pitch), cause);
         ci.cancel();
     }
 
@@ -978,8 +852,6 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
      */
     @Overwrite
     public void setRespawnPosition(ResourceKey<Level> p_9159_, @Nullable BlockPos p_9160_, float p_9161_, boolean p_9162_, boolean p_9163_) {
-        if (ForgeEventFactory.onPlayerSpawnSet((ServerPlayer) (Object) this, p_9160_ == null ? Level.OVERWORLD : p_9159_, p_9160_, p_9162_))
-            return;
         var cause = arclight$spawnChangeCause == null ? PlayerSpawnChangeEvent.Cause.UNKNOWN : arclight$spawnChangeCause;
         arclight$spawnChangeCause = null;
         var newWorld = this.server.getLevel(p_9159_);

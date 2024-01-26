@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
-import io.izzel.arclight.common.bridge.core.block.SculkSpreaderBridge;
+import io.izzel.arclight.common.bridge.core.world.level.block.SculkSpreaderBridge;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.SculkSpreader;
 import org.bukkit.Bukkit;

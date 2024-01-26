@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.ai.behavior;
 
+import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -7,8 +8,6 @@ import net.minecraft.world.entity.ai.behavior.BehaviorControl;
 import net.minecraft.world.entity.ai.behavior.StartAttacking;
 import net.minecraft.world.entity.ai.behavior.declarative.BehaviorBuilder;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
-import net.minecraftforge.common.ForgeHooks;
-import net.minecraftforge.event.entity.living.LivingChangeTargetEvent;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityTargetEvent;
@@ -42,11 +41,11 @@ public class StartAttackingMixin {
                             if (!p_258774_.canAttack(livingentity)) {
                                 return false;
                             } else {
-                                LivingChangeTargetEvent changeTargetEvent = ForgeHooks.onLivingChangeTarget(p_258774_, livingentity, LivingChangeTargetEvent.LivingTargetType.BEHAVIOR_TARGET);
-                                if (changeTargetEvent.isCanceled())
+                                var newTarget = ((LivingEntityBridge) p_258774_).bridge$forge$onLivingChangeTarget(p_258774_, livingentity, LivingEntityBridge.LivingTargetType.BEHAVIOR_TARGET);
+                                if (newTarget == null)
                                     return false;
                                 // CraftBukkit start
-                                EntityTargetEvent event = CraftEventFactory.callEntityTargetLivingEvent(p_258774_, livingentity, (livingentity instanceof ServerPlayer) ? EntityTargetEvent.TargetReason.CLOSEST_PLAYER : EntityTargetEvent.TargetReason.CLOSEST_ENTITY);
+                                EntityTargetEvent event = CraftEventFactory.callEntityTargetLivingEvent(p_258774_, newTarget, (newTarget instanceof ServerPlayer) ? EntityTargetEvent.TargetReason.CLOSEST_PLAYER : EntityTargetEvent.TargetReason.CLOSEST_ENTITY);
                                 if (event.isCancelled()) {
                                     return false;
                                 }
@@ -56,7 +55,7 @@ public class StartAttackingMixin {
                                 }
                                 livingentity = ((CraftLivingEntity) event.getTarget()).getHandle();
                                 // CraftBukkit end
-                                p_258778_.set(changeTargetEvent.getNewTarget());
+                                p_258778_.set(livingentity);
                                 p_258779_.erase();
                                 return true;
                             }

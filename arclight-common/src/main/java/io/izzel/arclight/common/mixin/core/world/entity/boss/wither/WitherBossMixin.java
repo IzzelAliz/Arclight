@@ -1,5 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.boss.wither;
 
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.level.block.BlockBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.PathfinderMobMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerBossEvent;
@@ -11,7 +13,6 @@ import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
@@ -118,7 +119,7 @@ public abstract class WitherBossMixin extends PathfinderMobMixin {
 
             if (this.destroyBlocksTick > 0) {
                 --this.destroyBlocksTick;
-                if (this.destroyBlocksTick == 0 && ForgeEventFactory.getMobGriefingEvent(this.level(), (WitherBoss) (Object) this)) {
+                if (this.destroyBlocksTick == 0 && ((WorldBridge) this.level()).bridge$forge$mobGriefing((WitherBoss) (Object) this)) {
                     int j1 = Mth.floor(this.getY());
                     int i2 = Mth.floor(this.getX());
                     int j2 = Mth.floor(this.getZ());
@@ -132,7 +133,8 @@ public abstract class WitherBossMixin extends PathfinderMobMixin {
                                 int i1 = j2 + k2;
                                 BlockPos blockpos = new BlockPos(l2, l, i1);
                                 BlockState blockstate = this.level().getBlockState(blockpos);
-                                if (blockstate.canEntityDestroy(this.level(), blockpos, (WitherBoss) (Object) this) && ForgeEventFactory.onEntityDestroyBlock((WitherBoss) (Object) this, blockpos, blockstate)) {
+                                if (((BlockBridge) blockstate.getBlock()).bridge$forge$canEntityDestroy(blockstate, this.level(), blockpos, (WitherBoss) (Object) this)
+                                    && this.bridge$forge$onEntityDestroyBlock((WitherBoss) (Object) this, blockpos, blockstate)) {
                                     if (!CraftEventFactory.callEntityChangeBlockEvent((WitherBoss) (Object) this, blockpos, Blocks.AIR.defaultBlockState())) {
                                         continue;
                                     }

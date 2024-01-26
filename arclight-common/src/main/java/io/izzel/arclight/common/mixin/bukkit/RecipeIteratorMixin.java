@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
-import io.izzel.arclight.common.bridge.core.item.crafting.RecipeHolderBridge;
+import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeHolderBridge;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.RecipeHolder;

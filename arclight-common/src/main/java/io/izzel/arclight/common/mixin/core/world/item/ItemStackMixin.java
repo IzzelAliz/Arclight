@@ -1,16 +1,12 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.item.ItemStackBridge;
-import net.minecraft.nbt.CompoundTag;
+import io.izzel.arclight.common.bridge.core.world.item.ItemStackBridge;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.capabilities.CapabilityProvider;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -18,9 +14,7 @@ import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.objectweb.asm.Opcodes;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -30,31 +24,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.function.Consumer;
 
 @Mixin(ItemStack.class)
-public abstract class ItemStackMixin extends CapabilityProvider<ItemStack> implements ItemStackBridge {
+public abstract class ItemStackMixin implements ItemStackBridge {
 
     // @formatter:off
-    @Shadow @Deprecated private Item item;
     @Shadow private int count;
-    @Shadow(remap = false) private CompoundTag capNBT;
-    @Mutable @Shadow(remap = false) @Final private net.minecraft.core.Holder.Reference<Item> delegate;
     // @formatter:on
-
-    protected ItemStackMixin(Class<ItemStack> baseClass) {
-        super(baseClass);
-    }
-
-    @Override
-    public CompoundTag bridge$getForgeCaps() {
-        return this.serializeCaps();
-    }
-
-    @Override
-    public void bridge$setForgeCaps(CompoundTag caps) {
-        this.capNBT = caps;
-        if (caps != null) {
-            this.deserializeCaps(caps);
-        }
-    }
 
     private static final Logger LOG = LogManager.getLogger("Arclight");
 
@@ -91,11 +65,5 @@ public abstract class ItemStackMixin extends CapabilityProvider<ItemStack> imple
         if (this.count == 1 && entityIn instanceof Player) {
             CraftEventFactory.callPlayerItemBreakEvent(((Player) entityIn), (ItemStack) (Object) this);
         }
-    }
-
-    @Deprecated
-    public void setItem(Item item) {
-        this.item = item;
-        this.delegate = ForgeRegistries.ITEMS.getDelegateOrThrow(item);
     }
 }

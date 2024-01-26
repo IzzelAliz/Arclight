@@ -4,7 +4,7 @@ import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
-import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
@@ -21,8 +21,6 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.ForgeHooks;
-import net.minecraftforge.event.entity.living.LivingChangeTargetEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -124,7 +122,7 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
                 reason = (this.getTarget().isAlive() ? EntityTargetEvent.TargetReason.FORGOT_TARGET : EntityTargetEvent.TargetReason.TARGET_DIED);
             }
             if (reason == EntityTargetEvent.TargetReason.UNKNOWN) {
-                ArclightMod.LOGGER.warn("Unknown target reason setting {} target to {}", this, livingEntity);
+                ArclightServer.LOGGER.warn("Unknown target reason setting {} target to {}", this, livingEntity);
             }
             CraftLivingEntity ctarget = null;
             if (livingEntity != null) {
@@ -141,12 +139,12 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
             } else {
                 livingEntity = null;
             }
-            var changeTargetEvent = ForgeHooks.onLivingChangeTarget((LivingEntity) (Object) this, livingEntity, LivingChangeTargetEvent.LivingTargetType.MOB_TARGET);
-            if (changeTargetEvent.isCanceled()) {
+            var newTarget = this.bridge$forge$onLivingChangeTarget((LivingEntity) (Object) this, livingEntity, LivingTargetType.MOB_TARGET);
+            if (newTarget == null) {
                 arclight$targetSuccess = false;
                 return;
             }
-            livingEntity = changeTargetEvent.getNewTarget();
+            livingEntity = newTarget;
         }
         this.target = livingEntity;
         arclight$targetSuccess = true;
@@ -377,5 +375,10 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
     @Override
     public void bridge$setPersistenceRequired(boolean value) {
         this.setPersistenceRequired(value);
+    }
+
+    @Override
+    public boolean bridge$common$animalTameEvent(Player player) {
+        return !CraftEventFactory.callEntityTameEvent((Mob) (Object) this, player).isCancelled();
     }
 }

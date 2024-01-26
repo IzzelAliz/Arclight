@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(DropperBlock.class)
-public class DropperBlockMixin {
+public abstract class DropperBlockMixin extends BlockMixin {
 
     @Shadow @Final private static DispenseItemBehavior DISPENSE_BEHAVIOUR;
     @Shadow @Final private static Logger LOGGER;
@@ -50,7 +50,7 @@ public class DropperBlockMixin {
                 worldIn.levelEvent(1001, pos, 0);
             } else {
                 ItemStack itemstack = dispensertileentity.getItem(i);
-                if (!itemstack.isEmpty() && net.minecraftforge.items.VanillaInventoryCodeHooks.dropperInsertHook(worldIn, pos, dispensertileentity, i, itemstack)) {
+                if (!itemstack.isEmpty() && this.bridge$forge$dropperInsertHook(worldIn, pos, dispensertileentity, i, itemstack)) {
                     Direction direction = worldIn.getBlockState(pos).getValue(DispenserBlock.FACING);
                     Container iinventory = HopperBlockEntity.getContainerAt(worldIn, pos.relative(direction));
                     ItemStack itemstack1;

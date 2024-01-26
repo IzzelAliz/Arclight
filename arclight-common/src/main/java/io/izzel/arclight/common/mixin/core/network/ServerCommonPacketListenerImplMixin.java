@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.network;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.network.common.ServerCommonPacketListenerBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.Connection;
@@ -20,7 +21,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.network.ServerCommonPacketListenerImpl;
 import net.minecraft.util.StringUtil;
-import net.minecraftforge.server.ServerLifecycleHooks;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.CraftServer;
@@ -48,11 +48,11 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
 
     // @formatter:off
     @Shadow @Final protected Connection connection;
-    @Shadow @Final private static Logger LOGGER;
     @Shadow @Final protected MinecraftServer server;
     @Shadow public abstract void onDisconnect(Component p_300550_);
     @Shadow public abstract void send(Packet<?> p_300558_);
     @Shadow protected abstract boolean isSingleplayerOwner();
+    @Shadow @Final private static Logger LOGGER;
     // @formatter:on
 
     protected ServerPlayer player;
@@ -61,6 +61,21 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
 
     public CraftPlayer getCraftPlayer() {
         return (this.player == null) ? null : ((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity();
+    }
+
+    @Override
+    public CraftServer bridge$getCraftServer() {
+        return cserver;
+    }
+
+    @Override
+    public CraftPlayer bridge$getCraftPlayer() {
+        return getCraftPlayer();
+    }
+
+    @Override
+    public ServerPlayer bridge$getPlayer() {
+        return player;
     }
 
     @Override
@@ -98,10 +113,15 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
      */
     @Overwrite
     public void disconnect(Component textComponent) {
-        this.disconnect(CraftChatMessage.fromComponent(textComponent));
+        this.bridge$disconnect(CraftChatMessage.fromComponent(textComponent));
     }
 
     public void disconnect(String s) {
+        bridge$disconnect(s);
+    }
+
+    @Override
+    public void bridge$disconnect(String s) {
         if (this.processedDisconnect) {
             return;
         }
@@ -109,7 +129,7 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
             Waitable<?> waitable = new Waitable<>() {
                 @Override
                 protected Object evaluate() {
-                    disconnect(s);
+                    bridge$disconnect(s);
                     return null;
                 }
             };
@@ -161,19 +181,24 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
         }
     }
 
+    @Inject(method = "handleResourcePackResponse", at = @At("RETURN"))
+    private void arclight$handleResourcePackStatus(ServerboundResourcePackPacket packetIn, CallbackInfo ci) {
+        this.cserver.getPluginManager().callEvent(new PlayerResourcePackStatusEvent(this.getCraftPlayer(), packetIn.id(), PlayerResourcePackStatusEvent.Status.values()[packetIn.action().ordinal()]));
+    }
 
     private static final ResourceLocation CUSTOM_REGISTER = new ResourceLocation("register");
     private static final ResourceLocation CUSTOM_UNREGISTER = new ResourceLocation("unregister");
 
-    @Inject(method = "handleCustomPayload", at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/common/ForgeHooks;onCustomPayload(Lnet/minecraftforge/network/ICustomPacket;Lnet/minecraft/network/Connection;)Z"))
+    @Inject(method = "handleCustomPayload", at = @At("HEAD"))
     private void arclight$customPayload(ServerboundCustomPayloadPacket packet, CallbackInfo ci) {
-        if (packet.payload() instanceof DiscardedPayload payload && payload.data() != null) {
-            var readerIndex = payload.data().readerIndex();
-            var buf = new byte[payload.data().readableBytes()];
-            payload.data().readBytes(buf);
-            payload.data().readerIndex(readerIndex);
-            ServerLifecycleHooks.getCurrentServer().executeIfPossible(() -> {
-                if (((MinecraftServerBridge) ServerLifecycleHooks.getCurrentServer()).bridge$hasStopped() || bridge$processedDisconnect()) {
+        if (packet.payload() instanceof DiscardedPayload payload && bridge$getDiscardedData(payload) != null) {
+            var data = bridge$getDiscardedData(payload);
+            var readerIndex = data.readerIndex();
+            var buf = new byte[data.readableBytes()];
+            data.readBytes(buf);
+            data.readerIndex(readerIndex);
+            ArclightServer.getMinecraftServer().executeIfPossible(() -> {
+                if (((MinecraftServerBridge) ArclightServer.getMinecraftServer()).bridge$hasStopped() || bridge$processedDisconnect()) {
                     return;
                 }
                 if (this.connection.isConnected()) {
@@ -182,40 +207,35 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
                             String channels = new String(buf, StandardCharsets.UTF_8);
                             for (String channel : channels.split("\0")) {
                                 if (!StringUtil.isNullOrEmpty(channel)) {
-                                    this.getCraftPlayer().addChannel(channel);
+                                    this.bridge$getCraftPlayer().addChannel(channel);
                                 }
                             }
                         } catch (Exception ex) {
                             LOGGER.error("Couldn't register custom payload", ex);
-                            this.disconnect("Invalid payload REGISTER!");
+                            this.bridge$disconnect("Invalid payload REGISTER!");
                         }
                     } else if (payload.id().equals(CUSTOM_UNREGISTER)) {
                         try {
                             final String channels = new String(buf, StandardCharsets.UTF_8);
                             for (String channel : channels.split("\0")) {
                                 if (!StringUtil.isNullOrEmpty(channel)) {
-                                    this.getCraftPlayer().removeChannel(channel);
+                                    this.bridge$getCraftPlayer().removeChannel(channel);
                                 }
                             }
                         } catch (Exception ex) {
                             LOGGER.error("Couldn't unregister custom payload", ex);
-                            this.disconnect("Invalid payload UNREGISTER!");
+                            this.bridge$disconnect("Invalid payload UNREGISTER!");
                         }
                     } else {
                         try {
-                            this.cserver.getMessenger().dispatchIncomingMessage(((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity(), payload.id().toString(), buf);
+                            this.bridge$getCraftServer().getMessenger().dispatchIncomingMessage(((ServerPlayerEntityBridge) this.bridge$getPlayer()).bridge$getBukkitEntity(), payload.id().toString(), buf);
                         } catch (Exception ex) {
                             LOGGER.error("Couldn't dispatch custom payload", ex);
-                            this.disconnect("Invalid custom payload!");
+                            this.bridge$disconnect("Invalid custom payload!");
                         }
                     }
                 }
             });
         }
-    }
-
-    @Inject(method = "handleResourcePackResponse", at = @At("RETURN"))
-    private void arclight$handleResourcePackStatus(ServerboundResourcePackPacket packetIn, CallbackInfo ci) {
-        this.cserver.getPluginManager().callEvent(new PlayerResourcePackStatusEvent(this.getCraftPlayer(), packetIn.id(), PlayerResourcePackStatusEvent.Status.values()[packetIn.action().ordinal()]));
     }
 }

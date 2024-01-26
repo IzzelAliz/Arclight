@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
-import io.izzel.arclight.common.bridge.core.block.PortalInfoBridge;
-import io.izzel.arclight.common.bridge.core.block.PortalSizeBridge;
 import io.izzel.arclight.common.bridge.core.world.IWorldBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.level.block.PortalInfoBridge;
+import io.izzel.arclight.common.bridge.core.world.level.block.PortalSizeBridge;
+import io.izzel.arclight.common.mod.mixins.annotation.RenameInto;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.BlockUtil;
 import net.minecraft.core.BlockPos;
@@ -43,7 +43,7 @@ public abstract class PortalShapeMixin implements PortalSizeBridge {
 
     // @formatter:off
     @Shadow @Final private LevelAccessor level;
-    @Shadow public abstract void shadow$createPortalBlocks();
+    @Shadow public abstract void createPortalBlocks();
     @Shadow @Final private Direction.Axis axis;
     @Shadow @Nullable private BlockPos bottomLeft;
     @Shadow private int height;
@@ -65,7 +65,7 @@ public abstract class PortalShapeMixin implements PortalSizeBridge {
 
     @Inject(method = "createPortalBlocks", cancellable = true, at = @At("HEAD"))
     private void arclight$buildPortal(CallbackInfo ci) {
-        World world = ((WorldBridge) ((IWorldBridge) this.level).bridge$getMinecraftWorld()).bridge$getWorld();
+        World world = ((IWorldBridge) this.level).bridge$getMinecraftWorld().bridge$getWorld();
         net.minecraft.world.level.block.state.BlockState blockState = Blocks.NETHER_PORTAL.defaultBlockState().setValue(NetherPortalBlock.AXIS, this.axis);
         BlockPos.betweenClosed(this.bottomLeft, this.bottomLeft.relative(Direction.UP, this.height - 1).relative(this.rightDir, this.width - 1)).forEach(pos -> {
             CraftBlockState state = CraftBlockStates.getBlockState(((IWorldBridge) this.level).bridge$getMinecraftWorld(), pos, 18);
@@ -82,14 +82,15 @@ public abstract class PortalShapeMixin implements PortalSizeBridge {
 
     private transient boolean arclight$ret;
 
-    public boolean createPortalBlocks() {
-        this.shadow$createPortalBlocks();
+    @RenameInto("createPortalBlocks")
+    public boolean bukkit$createPortalBlocks() {
+        this.createPortalBlocks();
         return arclight$ret;
     }
 
     @Override
     public boolean bridge$createPortal() {
-        return createPortalBlocks();
+        return bukkit$createPortalBlocks();
     }
 
     @SuppressWarnings("ConstantConditions")

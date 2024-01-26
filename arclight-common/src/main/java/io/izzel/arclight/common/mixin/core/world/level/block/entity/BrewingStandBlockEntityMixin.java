@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
 import io.izzel.arclight.common.bridge.core.tileentity.TileEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.item.ItemStackBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.core.BlockPos;
@@ -10,8 +12,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
-import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
@@ -71,13 +71,12 @@ public abstract class BrewingStandBlockEntityMixin extends LockableBlockEntityMi
      */
     @Overwrite
     private static void doBrew(Level level, BlockPos pos, NonNullList<ItemStack> stacks) {
-        if (ForgeEventFactory.onPotionAttemptBrew(stacks)) return;
         ItemStack ing = stacks.get(3);
 
         List<org.bukkit.inventory.ItemStack> brewResults = new ArrayList<>(3);
         for (int i = 0; i < 3; ++i) {
             var input = stacks.get(i);
-            var output = BrewingRecipeRegistry.getOutput(input, ing);
+            var output = ((WorldBridge) level).bridge$forge$potionBrewMix(input, ing);
             brewResults.add(i, CraftItemStack.asCraftMirror(output.isEmpty() ? input : output));
         }
         BrewingStandBlockEntity entity = ArclightCaptures.getTickingBlockEntity();
@@ -99,14 +98,14 @@ public abstract class BrewingStandBlockEntityMixin extends LockableBlockEntityMi
         }
 
         // BrewingRecipeRegistry.brewPotions(stacks, ing, SLOTS_FOR_SIDES);
-        ForgeEventFactory.onPotionBrewed(stacks);
-        if (ing.hasCraftingRemainingItem()) {
-            ItemStack containerItem = ing.getCraftingRemainingItem();
+        ((WorldBridge) level).bridge$forge$onPotionBrewed(stacks);
+        if (((ItemStackBridge) (Object) ing).bridge$forge$hasCraftingRemainingItem()) {
+            ItemStack containerItem = ((ItemStackBridge) (Object) ing).bridge$forge$getCraftingRemainingItem();
             ing.shrink(1);
             if (ing.isEmpty()) {
                 ing = containerItem;
             } else {
-                Containers.dropItemStack(level, (double) pos.getX(), (double) pos.getY(), (double) pos.getZ(), containerItem);
+                Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), containerItem);
             }
         } else ing.shrink(1);
 

@@ -5,6 +5,8 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
+import io.izzel.tools.product.Product;
+import io.izzel.tools.product.Product4;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.commands.TeleportCommand;
@@ -16,16 +18,11 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.event.ForgeEventFactory;
-import net.minecraftforge.event.entity.EntityTeleportEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.*;
 
 import javax.annotation.Nullable;
 import java.util.Set;
@@ -43,11 +40,13 @@ public class TeleportCommandMixin {
      */
     @Overwrite
     private static void performTeleport(CommandSourceStack source, Entity entity, ServerLevel level, double x, double y, double z, Set<RelativeMovement> set, float yaw, float pitch, @Nullable TeleportCommand.LookAt p_139024_) throws CommandSyntaxException {
-        EntityTeleportEvent.TeleportCommand event = ForgeEventFactory.onEntityTeleportCommand(entity, x, y, z);
-        if (event.isCanceled()) return;
-        x = event.getTargetX();
-        y = event.getTargetY();
-        z = event.getTargetZ();
+        var event = ((EntityBridge) entity).bridge$onEntityTeleportCommand(x, y, z);
+        if (event._1) {
+            return;
+        }
+        x = event._2;
+        y = event._3;
+        z = event._4;
         BlockPos blockpos = BlockPos.containing(x, y, z);
         if (!Level.isInSpawnableBounds(blockpos)) {
             throw INVALID_POSITION.create();

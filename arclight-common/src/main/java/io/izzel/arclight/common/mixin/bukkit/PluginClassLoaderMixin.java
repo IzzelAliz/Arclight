@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
+import com.google.common.collect.Iterators;
 import com.google.common.io.ByteStreams;
-import cpw.mods.modlauncher.EnumerationHelper;
 import io.izzel.arclight.common.bridge.bukkit.JavaPluginLoaderBridge;
 import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
 import io.izzel.arclight.common.mod.util.remapper.ClassLoaderRemapper;
@@ -83,7 +83,7 @@ public class PluginClassLoaderMixin extends URLClassLoader implements RemappingC
             tmp[1] = getParent().getResources(name);
         }
         tmp[0] = findResources(name);
-        return EnumerationHelper.merge(tmp[0], tmp[1]);
+        return Iterators.asEnumeration(Iterators.concat(Iterators.forEnumeration(tmp[0]), Iterators.forEnumeration(tmp[1])));
     }
 
     /**

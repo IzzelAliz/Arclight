@@ -2,17 +2,17 @@ package io.izzel.arclight.common.mixin.bukkit;
 
 import com.google.common.collect.ImmutableMap;
 import io.izzel.arclight.common.bridge.bukkit.MaterialBridge;
-import io.izzel.arclight.common.bridge.core.block.FireBlockBridge;
-import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.common.bridge.core.world.level.block.FireBlockBridge;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.i18n.LocalizedException;
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FallingBlock;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.BlockState;
@@ -206,13 +206,6 @@ public abstract class MaterialMixin implements MaterialBridge {
         }
     }
 
-    @Inject(method = "getCraftingRemainingItem", cancellable = true, at = @At("HEAD"))
-    private void arclight$getCraftingRemainingItem(CallbackInfoReturnable<Material> cir) {
-        if (arclight$spec != null && arclight$spec.craftingRemainingItem != null) {
-            cir.setReturnValue(CraftMagicNumbers.getMaterial(ForgeRegistries.ITEMS.getValue(new ResourceLocation(arclight$spec.craftingRemainingItem))));
-        }
-    }
-
     @Inject(method = "getMaxStackSize", cancellable = true, at = @At("HEAD"))
     private void arclight$getMaxStackSize(CallbackInfoReturnable<Integer> cir) {
         if (arclight$spec != null) {
@@ -224,6 +217,13 @@ public abstract class MaterialMixin implements MaterialBridge {
     private void arclight$getMaxDurability(CallbackInfoReturnable<Short> cir) {
         if (arclight$spec != null && arclight$spec.maxDurability != null) {
             cir.setReturnValue(arclight$spec.maxDurability.shortValue());
+        }
+    }
+
+    @Inject(method = "getCraftingRemainingItem", cancellable = true, at = @At("HEAD"))
+    private void arclight$getCraftingRemainingItem(CallbackInfoReturnable<Material> cir) {
+        if (arclight$spec != null && arclight$spec.craftingRemainingItem != null) {
+            cir.setReturnValue(CraftMagicNumbers.getMaterial(BuiltInRegistries.ITEM.get(new ResourceLocation(arclight$spec.craftingRemainingItem))));
         }
     }
 
@@ -302,15 +302,15 @@ public abstract class MaterialMixin implements MaterialBridge {
                     this.ctor = (Constructor<? extends MaterialData>) data.getConstructor(Material.class, byte.class);
                 }
             } catch (Exception e) {
-                ArclightMod.LOGGER.warn("Bad material data class {} for {}", arclight$spec.materialDataClass, this);
-                ArclightMod.LOGGER.warn(e);
+                ArclightServer.LOGGER.warn("Bad material data class {} for {}", arclight$spec.materialDataClass, this);
+                ArclightServer.LOGGER.warn(e);
             }
         }
         if (arclight$spec.maxStack == null) {
-            arclight$spec.maxStack = tryGetMaxStackSize(item);
+            arclight$spec.maxStack = bridge$forge$getMaxStackSize(item);
         }
         if (arclight$spec.maxDurability == null) {
-            arclight$spec.maxDurability = tryGetDurability(item);
+            arclight$spec.maxDurability = bridge$forge$getDurability(item);
         }
         if (arclight$spec.edible == null) {
             arclight$spec.edible = false;
@@ -334,7 +334,7 @@ public abstract class MaterialMixin implements MaterialBridge {
             arclight$spec.burnable = block != null && ((FireBlockBridge) Blocks.FIRE).bridge$canBurn(block);
         }
         if (arclight$spec.fuel == null) {
-            arclight$spec.fuel = item != null && new ItemStack(item).getBurnTime(null) > 0;
+            arclight$spec.fuel = item != null && bridge$forge$getBurnTime(item) > 0;
         }
         if (arclight$spec.occluding == null) {
             arclight$spec.occluding = arclight$spec.solid;
@@ -353,7 +353,7 @@ public abstract class MaterialMixin implements MaterialBridge {
         }
         if (arclight$spec.craftingRemainingItem == null) {
             // noinspection deprecation
-            arclight$spec.craftingRemainingItem = item != null && item.hasCraftingRemainingItem() ? ForgeRegistries.ITEMS.getKey(item.getCraftingRemainingItem()).toString() : null;
+            arclight$spec.craftingRemainingItem = item != null && item.hasCraftingRemainingItem() ? bridge$getCraftRemainingItem(item).toString() : null;
         }
         if (arclight$spec.itemMetaType == null) {
             arclight$spec.itemMetaType = "UNSPECIFIC";
@@ -389,13 +389,13 @@ public abstract class MaterialMixin implements MaterialBridge {
                 }
             } catch (Exception e) {
                 if (e instanceof LocalizedException) {
-                    ArclightMod.LOGGER.warn(((LocalizedException) e).node(), ((LocalizedException) e).args());
+                    ArclightServer.LOGGER.warn(((LocalizedException) e).node(), ((LocalizedException) e).args());
                 } else {
-                    ArclightMod.LOGGER.warn("registry.block-state.error", this, arclight$spec.blockStateClass, e);
+                    ArclightServer.LOGGER.warn("registry.block-state.error", this, arclight$spec.blockStateClass, e);
                 }
             }
             if (this.arclight$stateFunc == null) {
-                ArclightMod.LOGGER.warn("registry.block-state.no-candidate", this, arclight$spec.blockStateClass);
+                ArclightServer.LOGGER.warn("registry.block-state.no-candidate", this, arclight$spec.blockStateClass);
             }
         }
         if (this.arclight$stateFunc == null) {
@@ -460,39 +460,15 @@ public abstract class MaterialMixin implements MaterialBridge {
             }
         } catch (Exception e) {
             if (e instanceof LocalizedException) {
-                ArclightMod.LOGGER.warn(((LocalizedException) e).node(), ((LocalizedException) e).args());
+                ArclightServer.LOGGER.warn(((LocalizedException) e).node(), ((LocalizedException) e).args());
             } else {
-                ArclightMod.LOGGER.warn("registry.meta-type.error", this, type, e);
+                ArclightServer.LOGGER.warn("registry.meta-type.error", this, type, e);
             }
         }
         if (candidate == null) {
-            ArclightMod.LOGGER.warn("registry.meta-type.no-candidate", this, type);
+            ArclightServer.LOGGER.warn("registry.meta-type.no-candidate", this, type);
             candidate = CraftMetaItem::new;
         }
         return candidate;
-    }
-
-    private static int tryGetMaxStackSize(Item item) {
-        try {
-            return item.getMaxStackSize(new ItemStack(item));
-        } catch (Throwable t) {
-            try {
-                return item.getMaxStackSize();
-            } catch (Throwable t1) {
-                return 64;
-            }
-        }
-    }
-
-    private static int tryGetDurability(Item item) {
-        try {
-            return item.getMaxDamage(new ItemStack(item));
-        } catch (Throwable t) {
-            try {
-                return item.getMaxDamage();
-            } catch (Throwable t1) {
-                return 0;
-            }
-        }
     }
 }

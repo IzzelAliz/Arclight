@@ -78,7 +78,7 @@ public abstract class PrimedTntMixin extends EntityMixin {
      * @reason
      */
     @Overwrite
-    protected void explode() {
+    public final void explode() {
         ExplosionPrimeEvent event = new ExplosionPrimeEvent((Explosive) this.getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {

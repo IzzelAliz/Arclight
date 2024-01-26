@@ -5,6 +5,9 @@ import io.izzel.arclight.common.bridge.core.world.border.WorldBorderBridge;
 import io.izzel.arclight.common.bridge.core.world.level.levelgen.ChunkGeneratorBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
+import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
+import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
+import io.izzel.arclight.common.mod.mixins.annotation.TransformAccess;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.server.world.WrappedWorlds;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
@@ -15,6 +18,7 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.FullChunkStatus;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
@@ -22,6 +26,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelWriter;
 import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.border.WorldBorder;
@@ -45,6 +50,7 @@ import org.bukkit.entity.SpawnCategory;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.generator.ChunkGenerator;
+import org.objectweb.asm.Opcodes;
 import org.spigotmc.SpigotWorldConfig;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -61,7 +67,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 @Mixin(Level.class)
-public abstract class LevelMixin implements WorldBridge, LevelWriter {
+public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWriter {
 
     // @formatter:off
     @Shadow @Nullable public BlockEntity getBlockEntity(BlockPos pos) { return null; }
@@ -69,12 +75,11 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
     @Shadow public abstract WorldBorder getWorldBorder();
     @Shadow @Final private WorldBorder worldBorder;
     @Shadow public abstract long getDayTime();
-    @Shadow public abstract MinecraftServer shadow$getServer();
+    @Shadow public abstract MinecraftServer getServer();
     @Shadow public abstract LevelData getLevelData();
     @Shadow public abstract ResourceKey<Level> dimension();
-    @Shadow(remap = false) public abstract void markAndNotifyBlock(BlockPos p_46605_,@org.jetbrains.annotations.Nullable LevelChunk levelchunk, BlockState blockstate, BlockState p_46606_, int p_46607_, int p_46608_);
     @Shadow public abstract DimensionType dimensionType();
-    @Accessor("thread") public abstract Thread arclight$getMainThread();
+    @Shadow public abstract void setBlocksDirty(BlockPos arg, BlockState arg2, BlockState arg3);@Shadow@Final public boolean isClientSide;@Shadow public abstract void sendBlockUpdated(BlockPos arg, BlockState arg2, BlockState arg3, int i);@Shadow public abstract void updateNeighbourForOutputSignal(BlockPos arg, Block arg2);@Shadow public abstract void onBlockStateChange(BlockPos arg, BlockState arg2, BlockState arg3);@Accessor("thread") public abstract Thread arclight$getMainThread();
     // @formatter:on
 
     protected CraftWorld world;
@@ -86,14 +91,16 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
     protected org.bukkit.World.Environment environment;
     protected org.bukkit.generator.BiomeProvider biomeProvider;
     public org.spigotmc.SpigotWorldConfig spigotConfig;
-    @SuppressWarnings("unused") // Access transformed to public by ArclightMixinPlugin
+    @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
     private static BlockPos lastPhysicsProblem; // Spigot
     public boolean preventPoiUpdated = false;
 
+    @ShadowConstructor
     public void arclight$constructor(WritableLevelData worldInfo, ResourceKey<Level> dimension, RegistryAccess registryAccess, final Holder<DimensionType> dimensionType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed, int maxNeighborUpdate) {
         throw new RuntimeException();
     }
 
+    @CreateConstructor
     public void arclight$constructor(WritableLevelData worldInfo, ResourceKey<Level> dimension, RegistryAccess registryAccess, final Holder<DimensionType> dimensionType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed, int maxNeighborUpdate, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider, org.bukkit.World.Environment env) {
         arclight$constructor(worldInfo, dimension, registryAccess, dimensionType, profiler, isRemote, isDebug, seed, maxNeighborUpdate);
         this.generator = gen;
@@ -145,21 +152,19 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
     private boolean processCaptures(BlockPos pos, BlockState newState, int flags) {
         Entity entityChangeBlock = ArclightCaptures.getEntityChangeBlock();
         if (entityChangeBlock != null) {
-            if (!CraftEventFactory.callEntityChangeBlockEvent(entityChangeBlock, pos, newState)) {
-                return false;
-            }
+            return CraftEventFactory.callEntityChangeBlockEvent(entityChangeBlock, pos, newState);
         }
         return true;
     }
 
-    @Inject(method = "markAndNotifyBlock", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;updateNeighbourShapes(Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;II)V"))
-    private void arclight$callBlockPhysics(BlockPos pos, LevelChunk chunk, BlockState blockstate, BlockState state, int flags, int recursionLeft, CallbackInfo ci) {
+    @Inject(method = "setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;II)Z", require = 0, cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;updateNeighbourShapes(Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;II)V"))
+    private void arclight$callBlockPhysics(BlockPos pos, BlockState state, int i, int j, CallbackInfoReturnable<Boolean> cir) {
         try {
             if (this.world != null) {
-                BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at((LevelAccessor) this, pos), CraftBlockData.fromData(state));
+                BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at(this, pos), CraftBlockData.fromData(state));
                 Bukkit.getPluginManager().callEvent(event);
                 if (event.isCancelled()) {
-                    ci.cancel();
+                    cir.setReturnValue(true);
                 }
             }
         } catch (StackOverflowError e) {
@@ -167,15 +172,59 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
         }
     }
 
-    @Inject(method = "markAndNotifyBlock", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;onBlockStateChange(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;)V"))
-    private void arclight$preventPoiUpdate(BlockPos p_46605_, LevelChunk levelchunk, BlockState blockstate, BlockState p_46606_, int p_46607_, int p_46608_, CallbackInfo ci) {
+    @Inject(method = "setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;II)Z", require = 0, cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;onBlockStateChange(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;)V"))
+    private void arclight$preventPoiUpdate(BlockPos blockPos, BlockState blockState, int i, int j, CallbackInfoReturnable<Boolean> cir) {
         if (this.preventPoiUpdated) {
-            ci.cancel();
+            cir.setReturnValue(true);
         }
     }
 
-    public void notifyAndUpdatePhysics(BlockPos blockposition, LevelChunk chunk, BlockState oldBlock, BlockState newBlock, BlockState actualBlock, int i, int j) {
-        this.markAndNotifyBlock(blockposition, chunk, oldBlock, newBlock, i, j);
+    public void notifyAndUpdatePhysics(BlockPos pos, LevelChunk chunk, BlockState oldBlock, BlockState newBlock, BlockState actualBlock, int i, int j) {
+        this.bridge$forge$notifyAndUpdatePhysics(pos, chunk, oldBlock, newBlock, i, j);
+    }
+
+    @Override
+    public void bridge$forge$notifyAndUpdatePhysics(BlockPos pos, @Nullable LevelChunk levelchunk, BlockState oldBlock, BlockState newBlock, int j, int k) {
+        Block block = newBlock.getBlock();
+        BlockState blockstate1 = this.getBlockState(pos);
+        if (blockstate1 == newBlock) {
+            if (oldBlock != blockstate1) {
+                this.setBlocksDirty(pos, oldBlock, blockstate1);
+            }
+
+            if ((j & 2) != 0 && (!this.isClientSide || (j & 4) == 0) && (this.isClientSide || levelchunk.getFullStatus() != null && levelchunk.getFullStatus().isOrAfter(FullChunkStatus.BLOCK_TICKING))) {
+                this.sendBlockUpdated(pos, oldBlock, newBlock, j);
+            }
+
+            if ((j & 1) != 0) {
+                this.blockUpdated(pos, oldBlock.getBlock());
+                if (!this.isClientSide && newBlock.hasAnalogOutputSignal()) {
+                    this.updateNeighbourForOutputSignal(pos, block);
+                }
+            }
+
+            if ((j & 16) == 0 && k > 0) {
+                int i = j & -34;
+                oldBlock.updateIndirectNeighbourShapes(this, pos, i, k - 1);
+                try {
+                    if (this.world != null) {
+                        BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at(this, pos), CraftBlockData.fromData(newBlock));
+                        Bukkit.getPluginManager().callEvent(event);
+                        if (event.isCancelled()) {
+                            return;
+                        }
+                    }
+                } catch (StackOverflowError e) {
+                    lastPhysicsProblem = pos;
+                }
+                newBlock.updateNeighbourShapes(this, pos, i, k - 1);
+                newBlock.updateIndirectNeighbourShapes(this, pos, i, k - 1);
+            }
+
+            if (!this.preventPoiUpdated) {
+                this.onBlockStateChange(pos, oldBlock, blockstate1);
+            }
+        }
     }
 
     public CraftServer getCraftServer() {
@@ -290,5 +339,10 @@ public abstract class LevelMixin implements WorldBridge, LevelWriter {
             return ((WorldBridge) getWorld().getHandle()).bridge$getAddEntityReason();
         }
         return null;
+    }
+
+    @Override
+    public boolean bridge$preventPoiUpdated() {
+        return this.preventPoiUpdated;
     }
 }

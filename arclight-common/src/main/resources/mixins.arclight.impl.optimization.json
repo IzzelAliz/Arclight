@@ -1,0 +1,33 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "io.izzel.arclight.common.mixin.optimization.general",
+  "target": "@env(DEFAULT)",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "ClassInheritanceMultiMapMixin",
+    "EntityDataManagerMixin_Optimize",
+    "EntityMixin_Optimize",
+    "GoalMixin",
+    "MobMixin_Optimization",
+    "VoxelShapesMixin",
+    "activationrange.ActivationRangeMixin",
+    "activationrange.EntityMixin_ActivationRange",
+    "activationrange.ServerWorldMixin_ActivationRange",
+    "activationrange.entity.AbstractArrowEntityMixin_ActivationRange",
+    "activationrange.entity.AgeableEntityMixin_ActivationRange",
+    "activationrange.entity.AreaEffectCloudEntityMixin_ActivationRange",
+    "activationrange.entity.FireworkRocketEntityMixin_ActivationRange",
+    "activationrange.entity.ItemEntityMixin_ActivationRange",
+    "activationrange.entity.LivingEntityMixin_ActivationRange",
+    "activationrange.entity.VillagerEntityMixin_ActivationRange",
+    "chunkload.SleepInBedMixin_Optimize",
+    "network.ChunkMapMixin_Optimize",
+    "network.ChunkMapMixin_Optimize$TrackedEntityMixin",
+    "network.ServerGamePacketListenerImplMixin_Optimize",
+    "network.ServerPlayerMixin_Optimize",
+    "realtime.ItemEntityMixin_Realtime",
+    "realtime.PlayerInteractionManagerMixin_Realtime",
+    "trackingrange.ChunkManagerMixin_TrackingRange"
+  ]
+}

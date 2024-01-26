@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.Cat;
 import net.minecraft.world.level.Level;
@@ -20,7 +19,7 @@ public class Cat_CatRelaxOnOwnerGoalMixin {
 
     @Redirect(method = "giveMorningGift", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private boolean arclight$dropItem(Level instance, Entity entity) {
-        var event = new EntityDropItemEvent(((EntityBridge) this.cat).bridge$getBukkitEntity(), (Item) ((EntityBridge) entity).bridge$getBukkitEntity());
+        var event = new EntityDropItemEvent(this.cat.bridge$getBukkitEntity(), (Item) entity.bridge$getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
             return instance.addFreshEntity(entity);

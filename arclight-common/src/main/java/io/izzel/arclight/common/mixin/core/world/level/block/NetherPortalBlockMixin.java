@@ -1,8 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
-import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.EntityTypeBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -31,8 +29,8 @@ public class NetherPortalBlockMixin {
 
     @Inject(method = "entityInside", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;handleInsidePortal(Lnet/minecraft/core/BlockPos;)V"))
     public void arclight$portalEnter(BlockState state, Level worldIn, BlockPos pos, Entity entityIn, CallbackInfo ci) {
-        EntityPortalEnterEvent event = new EntityPortalEnterEvent(((EntityBridge) entityIn).bridge$getBukkitEntity(),
-            new Location(((WorldBridge) worldIn).bridge$getWorld(), pos.getX(), pos.getY(), pos.getZ()));
+        EntityPortalEnterEvent event = new EntityPortalEnterEvent(entityIn.bridge$getBukkitEntity(),
+            new Location(worldIn.bridge$getWorld(), pos.getX(), pos.getY(), pos.getZ()));
         Bukkit.getPluginManager().callEvent(event);
     }
 }

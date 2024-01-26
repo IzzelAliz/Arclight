@@ -49,7 +49,7 @@ public abstract class CreeperMixin extends PathfinderMobMixin implements Creeper
      * @reason
      */
     @Overwrite
-    public void explodeCreeper() {
+    public final void explodeCreeper() {
         if (!this.level().isClientSide) {
             final float f = this.isPowered() ? 2.0f : 1.0f;
             final ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), this.explosionRadius * f, false);

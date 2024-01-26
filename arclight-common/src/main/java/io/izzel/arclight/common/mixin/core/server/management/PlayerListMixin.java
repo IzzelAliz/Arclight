@@ -57,7 +57,6 @@ import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.level.storage.PlayerDataStorage;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.CraftServer;
@@ -263,14 +262,14 @@ public abstract class PlayerListMixin implements PlayerListBridge {
 
     public ServerPlayer respawn(ServerPlayer playerIn, ServerLevel worldIn, boolean flag, Location location, boolean avoidSuffocation, PlayerRespawnEvent.RespawnReason respawnReason) {
         if (respawnReason == null && location != null) {
-            if (ForgeEventFactory.onTravelToDimension(playerIn, worldIn.dimension())) {
+            if (bridge$platform$onTravelToDimension(playerIn, worldIn.dimension())) {
                 return null;
             }
         }
         playerIn.stopRiding();
         this.players.remove(playerIn);
         playerIn.serverLevel().removePlayerImmediately(playerIn, Entity.RemovalReason.DISCARDED);
-        playerIn.revive();
+        ((EntityBridge) playerIn).bridge$revive();
         BlockPos pos = playerIn.getRespawnPosition();
         float f = playerIn.getRespawnAngle();
         boolean flag2 = playerIn.isRespawnForced();
@@ -360,7 +359,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             this.playersByUUID.put(playerIn.getUUID(), playerIn);
         }
         playerIn.setHealth(playerIn.getHealth());
-        ForgeEventFactory.onPlayerChangedDimension(playerIn, ((CraftWorld) fromWorld).getHandle().dimension, serverWorld.dimension);
+        bridge$platform$onPlayerChangedDimension(playerIn, ((CraftWorld) fromWorld).getHandle().dimension, serverWorld.dimension);
         if (flag3) {
             playerIn.connection.send(new ClientboundSoundPacket(SoundEvents.RESPAWN_ANCHOR_DEPLETE, SoundSource.BLOCKS, pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f, serverWorld.random.nextLong()));
         }
@@ -514,7 +513,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         }
         serverplayerentity.initInventoryMenu();
         serverplayerentity.setHealth(serverplayerentity.getHealth());
-        ForgeEventFactory.firePlayerRespawnEvent(serverplayerentity, conqueredEnd);
+        bridge$platform$onPlayerRespawn(serverplayerentity, conqueredEnd);
         if (flag2) {
             serverplayerentity.connection.send(new ClientboundSoundPacket(SoundEvents.RESPAWN_ANCHOR_DEPLETE, SoundSource.BLOCKS, (double) pos.getX(), (double) pos.getY(), (double) pos.getZ(), 1.0F, 1.0F, serverWorld.random.nextLong()));
         }

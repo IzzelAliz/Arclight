@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.common.bridge.bukkit.EntityTypeBridge;
-import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.i18n.LocalizedException;
 import io.izzel.arclight.i18n.conf.EntityPropertySpec;
 import net.minecraft.resources.ResourceLocation;
@@ -52,9 +52,9 @@ public class EntityTypeMixin implements EntityTypeBridge {
                 this.clazz = (Class<? extends Entity>) cl;
             } catch (Exception e) {
                 if (e instanceof LocalizedException) {
-                    ArclightMod.LOGGER.warn(((LocalizedException) e).node(), ((LocalizedException) e).args());
+                    ArclightServer.LOGGER.warn(((LocalizedException) e).node(), ((LocalizedException) e).args());
                 } else {
-                    ArclightMod.LOGGER.warn("registry.entity.error", this, this.spec.entityClass, e);
+                    ArclightServer.LOGGER.warn("registry.entity.error", this, this.spec.entityClass, e);
                 }
             }
         }

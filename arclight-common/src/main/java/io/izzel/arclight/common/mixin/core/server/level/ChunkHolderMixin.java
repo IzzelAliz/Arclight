@@ -4,7 +4,7 @@ import com.mojang.datafixers.util.Either;
 import io.izzel.arclight.common.bridge.core.world.chunk.ChunkBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ChunkHolderBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ChunkMapBridge;
-import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ChunkHolder;
@@ -86,7 +86,7 @@ public abstract class ChunkHolderMixin implements ChunkHolderBridge {
                 }
             }).exceptionally((throwable) -> {
                 // ensure exceptions are printed, by default this is not the case
-                ArclightMod.LOGGER.fatal("Failed to schedule unload callback for chunk " + this.pos, throwable);
+                ArclightServer.LOGGER.fatal("Failed to schedule unload callback for chunk " + this.pos, throwable);
                 return null;
             });
 
@@ -109,7 +109,7 @@ public abstract class ChunkHolderMixin implements ChunkHolderBridge {
                 }
             }).exceptionally((throwable) -> {
                 // ensure exceptions are printed, by default this is not the case
-                ArclightMod.LOGGER.fatal("Failed to schedule load callback for chunk " + this.pos, throwable);
+                ArclightServer.LOGGER.fatal("Failed to schedule load callback for chunk " + this.pos, throwable);
                 return null;
             });
 

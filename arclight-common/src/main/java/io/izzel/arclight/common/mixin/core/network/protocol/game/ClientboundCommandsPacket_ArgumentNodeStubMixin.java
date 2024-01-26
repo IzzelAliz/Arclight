@@ -1,13 +1,12 @@
 package io.izzel.arclight.common.mixin.core.network.protocol.game;
 
 import com.mojang.brigadier.arguments.ArgumentType;
-import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.util.VelocitySupport;
 import io.netty.buffer.Unpooled;
 import net.minecraft.commands.synchronization.ArgumentTypeInfo;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.spigotmc.SpigotConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -25,16 +24,15 @@ public class ClientboundCommandsPacket_ArgumentNodeStubMixin {
         if (!(SpigotConfig.bungee || VelocitySupport.isEnabled())) {
             return;
         }
-        var key = ForgeRegistries.COMMAND_ARGUMENT_TYPES.getKey(type);
+        var key = BuiltInRegistries.COMMAND_ARGUMENT_TYPE.getKey(type);
         if ((key != null) && (key.getNamespace().equals("minecraft") || key.getNamespace().equals("brigadier"))) {
             return;
         }
         ci.cancel();
         buf.writeVarInt(ARCLIGHT_WRAP_INDEX);
-        //noinspection deprecation
         var id = BuiltInRegistries.COMMAND_ARGUMENT_TYPE.getId(type);
         if (id == -1) {
-            ArclightMod.LOGGER.debug("Command argument type {} is not registered", type);
+            ArclightServer.LOGGER.debug("Command argument type {} is not registered", type);
         }
         buf.writeVarInt(id);
         var payload = new FriendlyByteBuf(Unpooled.buffer());

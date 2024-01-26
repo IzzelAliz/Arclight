@@ -1,6 +1,17 @@
+pluginManagement {
+    repositories {
+        maven { url "https://maven.fabricmc.net/" }
+        maven { url "https://maven.architectury.dev/" }
+        maven { url "https://maven.minecraftforge.net/" }
+        gradlePluginPortal()
+    }
+}
+
 rootProject.name = 'arclight'
-include 'arclight-common'
+
 include 'forge-installer'
-include 'arclight-forge'
 include 'i18n-config'
 
+include 'arclight-common'
+include 'arclight-forge'
+include 'arclight-forge-bootstrap'

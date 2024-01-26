@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mixin.core.world.entity.vehicle;
 
-import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.EntityMixin;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.Player;
@@ -41,7 +40,7 @@ public abstract class VehicleEntityMixin extends EntityMixin {
             return false;
         }
         Vehicle vehicle = (Vehicle) this.getBukkitEntity();
-        org.bukkit.entity.Entity passenger = (source.getEntity() == null) ? null : ((EntityBridge) source.getEntity()).bridge$getBukkitEntity();
+        org.bukkit.entity.Entity passenger = (source.getEntity() == null) ? null : source.getEntity().bridge$getBukkitEntity();
         VehicleDamageEvent event = new VehicleDamageEvent(vehicle, passenger, amount);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {

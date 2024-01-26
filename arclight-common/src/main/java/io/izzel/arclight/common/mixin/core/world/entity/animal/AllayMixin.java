@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.MobMixin;
+import io.izzel.arclight.common.mod.mixins.annotation.RenameInto;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -25,7 +26,7 @@ public abstract class AllayMixin extends MobMixin {
 
     // @formatter:off
     @Shadow @Final private static EntityDataAccessor<Boolean> DATA_CAN_DUPLICATE;
-    @Shadow private void shadow$duplicateAllay() {}
+    @Shadow public abstract void duplicateAllay();
     // @formatter:on
 
     public boolean forceDancing = false;
@@ -67,9 +68,10 @@ public abstract class AllayMixin extends MobMixin {
         return false;
     }
 
-    public Allay duplicateAllay() {
+    @RenameInto("duplicateAllay")
+    public Allay bukkit$duplicateAllay() {
         try {
-            this.shadow$duplicateAllay();
+            this.duplicateAllay();
             return arclight$duplicate;
         } finally {
             arclight$duplicate = null;

@@ -17,4 +17,12 @@ public interface TicketManagerBridge {
     void bridge$tick();
 
     <T> void bridge$removeAllTicketsFor(TicketType<T> ticketType, int ticketLevel, T ticketIdentifier);
+
+    default boolean bridge$platform$isTicketForceTick(Ticket<?> ticket) {
+        return false;
+    }
+
+    default void bridge$forge$addForcedTicket(long chunkPosIn, Ticket<?> ticketIn) {}
+
+    default void bridge$forge$removeForcedTicket(long chunkPosIn, Ticket<?> ticketIn) {}
 }

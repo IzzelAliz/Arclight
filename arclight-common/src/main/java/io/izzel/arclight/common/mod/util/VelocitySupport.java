@@ -10,6 +10,7 @@ import net.minecraft.network.protocol.login.custom.CustomQueryPayload;
 import net.minecraft.network.protocol.login.custom.DiscardedQueryPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.ProfilePublicKey;
+import org.jetbrains.annotations.NotNull;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -35,10 +36,23 @@ public class VelocitySupport {
     public static final byte MAX_SUPPORTED_FORWARDING_VERSION = MODERN_LAZY_SESSION;
     public static final ResourceLocation PLAYER_INFO_CHANNEL = new ResourceLocation("velocity", "player_info");
 
+    private record VelocityForwardQuery(FriendlyByteBuf data) implements CustomQueryPayload {
+
+        @Override
+        public @NotNull ResourceLocation id() {
+            return PLAYER_INFO_CHANNEL;
+        }
+
+        @Override
+        public void write(@NotNull FriendlyByteBuf buf) {
+            buf.writeBytes(this.data.slice());
+        }
+    }
+
     public static CustomQueryPayload createPacket() {
         var buf = new FriendlyByteBuf(Unpooled.buffer());
         buf.writeByte(VelocitySupport.MAX_SUPPORTED_FORWARDING_VERSION);
-        return new DiscardedQueryPayload(PLAYER_INFO_CHANNEL, buf);
+        return new VelocityForwardQuery(buf);
     }
 
     public static boolean checkIntegrity(final FriendlyByteBuf buf) {

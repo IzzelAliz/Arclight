@@ -3,6 +3,8 @@ package io.izzel.arclight.common.mixin.core.world.inventory;
 import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import io.izzel.arclight.common.mixin.core.world.SimpleContainerMixin;
+import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
+import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.PlayerEnderChestContainer;
@@ -24,10 +26,12 @@ public abstract class EnderChestInventoryMixin extends SimpleContainerMixin impl
 
     private Player owner;
 
+    @ShadowConstructor.Super
     public void arclight$constructor$super(int numSlots, InventoryHolder owner) {
         throw new RuntimeException();
     }
 
+    @CreateConstructor
     public void arclight$constructor(Player owner) {
         arclight$constructor$super(27, ((PlayerEntityBridge) owner).bridge$getBukkitEntity());
         this.owner = owner;

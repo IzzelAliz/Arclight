@@ -1,8 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
-import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -26,8 +24,8 @@ public class EndPortalBlockMixin {
     @Redirect(method = "entityInside", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;getLevel(Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/server/level/ServerLevel;"))
     public ServerLevel arclight$enterPortal(MinecraftServer minecraftServer, ResourceKey<Level> dimension, BlockState state, Level worldIn, BlockPos pos, Entity entityIn) {
         ServerLevel world = minecraftServer.getLevel(dimension);
-        EntityPortalEnterEvent event = new EntityPortalEnterEvent(((EntityBridge) entityIn).bridge$getBukkitEntity(),
-            new Location(((WorldBridge) worldIn).bridge$getWorld(), pos.getX(), pos.getY(), pos.getZ()));
+        EntityPortalEnterEvent event = new EntityPortalEnterEvent(entityIn.bridge$getBukkitEntity(),
+            new Location(worldIn.bridge$getWorld(), pos.getX(), pos.getY(), pos.getZ()));
         Bukkit.getPluginManager().callEvent(event);
         if (entityIn instanceof ServerPlayer && world != null) {
             ((ServerPlayerEntityBridge) entityIn).bridge$changeDimension(world, PlayerTeleportEvent.TeleportCause.END_PORTAL);

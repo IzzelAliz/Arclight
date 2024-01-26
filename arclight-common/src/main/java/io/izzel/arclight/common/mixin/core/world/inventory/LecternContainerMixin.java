@@ -2,6 +2,8 @@ package io.izzel.arclight.common.mixin.core.world.inventory;
 
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.inventory.container.LecternContainerBridge;
+import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
+import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -29,19 +31,23 @@ public abstract class LecternContainerMixin extends AbstractContainerMenuMixin i
     private CraftInventoryView bukkitEntity;
     private Inventory playerInventory;
 
+    @ShadowConstructor
     public void arclight$constructor(int i) {
         throw new RuntimeException();
     }
 
+    @ShadowConstructor
     public void arclight$constructor(int i, Container inventory, ContainerData intArray) {
         throw new RuntimeException();
     }
 
+    @CreateConstructor
     public void arclight$constructor(int i, Inventory playerInventory) {
         arclight$constructor(i);
         this.playerInventory = playerInventory;
     }
 
+    @CreateConstructor
     public void arclight$constructor(int i, Container inventory, ContainerData intArray, Inventory playerInventory) {
         arclight$constructor(i, inventory, intArray);
         this.playerInventory = playerInventory;

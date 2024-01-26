@@ -1,0 +1,27 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "io.izzel.arclight.common.mixin.vanilla",
+  "target": "@env(DEFAULT)",
+  "setSourceFile": true,
+  "plugin": "io.izzel.arclight.common.mod.ArclightMixinPlugin",
+  "injectors": {
+    "maxShiftBy": 2,
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "conformVisibility": true,
+    "requireAnnotations": false
+  },
+  "mixinPriority": 500,
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "world.entity.EntityMixin_Vanilla",
+    "world.entity.LivingEntityMixin_Vanilla",
+    "world.entity.animal.MushroomCowMixin_Vanilla",
+    "world.entity.monster.ZombieMixin_Vanilla",
+    "world.entity.player.PlayerMixin_Vanilla",
+    "world.entity.player.ServerPlayerMixin_Vanilla",
+    "world.level.levelgen.structure.templatesystem.StructureTemplateMixin_Vanilla"
+  ]
+}

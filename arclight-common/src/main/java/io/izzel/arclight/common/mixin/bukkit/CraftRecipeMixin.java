@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
-import io.izzel.arclight.common.bridge.core.item.crafting.IngredientBridge;
+import io.izzel.arclight.common.bridge.core.world.item.crafting.IngredientBridge;
 import io.izzel.arclight.common.mod.inventory.ArclightSpecialIngredient;
 import net.minecraft.world.item.crafting.Ingredient;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
@@ -34,7 +34,7 @@ public interface CraftRecipeMixin {
             stack = new Ingredient(((RecipeChoice.ExactChoice) bukkit).getChoices().stream().map((mat) -> {
                 return new Ingredient.ItemValue(CraftItemStack.asNMSCopy(mat));
             }));
-            ((IngredientBridge) stack).bridge$setExact(true);
+            ((IngredientBridge) (Object) stack).bridge$setExact(true);
         } else if (bukkit instanceof ArclightSpecialIngredient) {
             stack = ((ArclightSpecialIngredient) bukkit).getIngredient();
         } else {
@@ -42,7 +42,7 @@ public interface CraftRecipeMixin {
         }
 
         stack.getItems();
-        if (stack.isVanilla() && requireNotEmpty && stack.getItems().length == 0) {
+        if (stack.getClass() == Ingredient.class && requireNotEmpty && stack.getItems().length == 0) {
             throw new IllegalArgumentException("Recipe requires at least one non-air choice!");
         } else {
             return stack;
@@ -56,14 +56,14 @@ public interface CraftRecipeMixin {
     @Overwrite
     static RecipeChoice toBukkit(Ingredient list) {
         list.getItems();
-        if (!list.isVanilla()) {
+        if (list.getClass() != Ingredient.class) {
             return new ArclightSpecialIngredient(list);
         }
         net.minecraft.world.item.ItemStack[] items = list.getItems();
         if (items.length == 0) {
             return null;
         } else {
-            if (((IngredientBridge) list).bridge$isExact()) {
+            if (((IngredientBridge) (Object) list).bridge$isExact()) {
                 List<ItemStack> choices = new ArrayList<>(items.length);
                 for (net.minecraft.world.item.ItemStack i : items) {
                     choices.add(CraftItemStack.asBukkitCopy(i));

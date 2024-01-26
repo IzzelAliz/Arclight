@@ -47,7 +47,7 @@ public class ClassInheritanceMultiMapMixin<T> {
      * @author IzzelAliz
      * @reason
      */
-    @Overwrite
+    @Overwrite(remap = false)
     public boolean add(T p_add_1_) {
         if (byClass != null) {
             boolean flag = false;
@@ -72,7 +72,7 @@ public class ClassInheritanceMultiMapMixin<T> {
      * @author IzzelAliz
      * @reason
      */
-    @Overwrite
+    @Overwrite(remap = false)
     public boolean remove(Object p_remove_1_) {
         if (byClass == null) return false;
         boolean flag = false;
@@ -91,7 +91,7 @@ public class ClassInheritanceMultiMapMixin<T> {
      * @author IzzelAliz
      * @reason
      */
-    @Overwrite
+    @Overwrite(remap = false)
     public boolean contains(Object p_contains_1_) {
         return byClass != null && this.find(p_contains_1_.getClass()).contains(p_contains_1_);
     }

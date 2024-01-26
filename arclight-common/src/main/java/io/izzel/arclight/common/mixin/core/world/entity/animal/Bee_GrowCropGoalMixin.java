@@ -14,8 +14,8 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(targets = "net.minecraft.world.entity.animal.Bee$BeeGrowCropGoal")
 public class Bee_GrowCropGoalMixin {
-
-    @SuppressWarnings("target") @Shadow(aliases = {"this$0", "f_28021_"}, remap = false)
+    @SuppressWarnings("target")
+    @Shadow(aliases = {"this$0", "f_28021_", "field_20373"}, remap = false)
     private Bee outerThis;
 
     @Inject(method = "tick", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;levelEvent(ILnet/minecraft/core/BlockPos;I)V"))

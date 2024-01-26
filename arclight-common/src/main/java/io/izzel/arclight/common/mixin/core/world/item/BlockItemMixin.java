@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.mod.mixins.annotation.TransformAccess;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -22,6 +23,7 @@ import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockCanBuildEvent;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -71,6 +73,7 @@ public abstract class BlockItemMixin {
         this.arclight$state = null;
     }
 
+    @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
     private static BlockState getBlockState(BlockState blockState, CompoundTag nbt) {
         StateDefinition<Block, BlockState> statecontainer = blockState.getBlock().getStateDefinition();
         for (String s : nbt.getAllKeys()) {

@@ -4,7 +4,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import io.izzel.arclight.api.Unsafe;
-import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.util.remapper.generated.ArclightReflectionHandler;
 import io.izzel.arclight.common.util.ArrayUtil;
 import io.izzel.tools.func.Func4;
@@ -123,7 +123,7 @@ public class ArclightRedirectAdapter implements PluginTransformer {
 
     public static void scanMethod(byte[] bytes) {
         ClassReader reader = new ClassReader(bytes);
-        ArclightMod.LOGGER.debug(MARKER, "Scanning {}", reader.getClassName());
+        ArclightServer.LOGGER.debug(MARKER, "Scanning {}", reader.getClassName());
         ClassNode node = new ClassNode();
         reader.accept(node, ClassReader.SKIP_FRAMES | ClassReader.SKIP_DEBUG);
         for (MethodNode method : node.methods) {
@@ -149,7 +149,7 @@ public class ArclightRedirectAdapter implements PluginTransformer {
                             if (target != null) {
                                 Func4<ClassLoaderRemapper, Method, Object, Object[], Object[]> bridge = METHOD_TO_HANDLER.get(methodToString(target));
                                 if (bridge != null) {
-                                    ArclightMod.LOGGER.debug(MARKER, "Creating bridge handler {}/{}{} to {}", node.name, method.name, method.desc, methodToString(target));
+                                    ArclightServer.LOGGER.debug(MARKER, "Creating bridge handler {}/{}{} to {}", node.name, method.name, method.desc, methodToString(target));
                                     METHOD_TO_HANDLER.put(node.name + '/' + method.name + method.desc, new BridgeHandler(bridge, target));
                                 }
                             }

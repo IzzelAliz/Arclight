@@ -1,13 +1,11 @@
 package io.izzel.arclight.common.mixin.core.world.item.crafting;
 
-import io.izzel.arclight.common.bridge.core.item.crafting.RecipeBridge;
-import net.minecraft.resources.ResourceLocation;
+import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeBridge;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.SmithingTrimRecipe;
 import org.bukkit.NamespacedKey;
 import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
 import org.bukkit.craftbukkit.v.inventory.CraftSmithingTrimRecipe;
-import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.inventory.Recipe;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

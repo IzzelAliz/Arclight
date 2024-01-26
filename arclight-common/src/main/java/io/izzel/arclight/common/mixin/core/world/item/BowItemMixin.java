@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
-import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -10,13 +9,12 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ArrowItem;
 import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,16 +22,11 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(BowItem.class)
-public abstract class BowItemMixin extends ProjectileWeaponItem {
-
-    public BowItemMixin(Properties builder) {
-        super(builder);
-    }
+public abstract class BowItemMixin extends ItemMixin {
 
     // @formatter:off
     @Shadow public abstract int getUseDuration(ItemStack stack);
     @Shadow public static float getPowerForTime(int charge) { return 0; }
-    @Shadow(remap = false) public abstract AbstractArrow customArrow(AbstractArrow arrow);
     // @formatter:on
 
     /**
@@ -47,7 +40,7 @@ public abstract class BowItemMixin extends ProjectileWeaponItem {
             ItemStack itemstack = playerentity.getProjectile(stack);
 
             int i = this.getUseDuration(stack) - timeLeft;
-            i = ForgeEventFactory.onArrowLoose(stack, worldIn, playerentity, i, !itemstack.isEmpty() || flag);
+            i = this.bridge$forge$onArrowLoose(stack, worldIn, playerentity, i, !itemstack.isEmpty() || flag);
             if (i < 0) return;
 
             if (!itemstack.isEmpty() || flag) {
@@ -57,11 +50,11 @@ public abstract class BowItemMixin extends ProjectileWeaponItem {
 
                 float f = getPowerForTime(i);
                 if (!((double) f < 0.1D)) {
-                    boolean flag1 = playerentity.getAbilities().instabuild || (itemstack.getItem() instanceof ArrowItem && ((ArrowItem) itemstack.getItem()).isInfinite(itemstack, stack, playerentity));
+                    boolean flag1 = playerentity.getAbilities().instabuild || (itemstack.getItem() instanceof ArrowItem && this.bridge$forge$isInfinite((ArrowItem) itemstack.getItem(), itemstack, stack, playerentity));
                     if (!worldIn.isClientSide) {
                         ArrowItem arrowitem = (ArrowItem) (itemstack.getItem() instanceof ArrowItem ? itemstack.getItem() : Items.ARROW);
                         AbstractArrow abstractarrowentity = arrowitem.createArrow(worldIn, itemstack, playerentity);
-                        abstractarrowentity = customArrow(abstractarrowentity);
+                        abstractarrowentity = this.bridge$forge$customArrow((BowItem) (Object) this, abstractarrowentity);
                         abstractarrowentity.shootFromRotation(playerentity, playerentity.getXRot(), playerentity.getYRot(), 0.0F, f * 3.0F, 1.0F);
                         if (f == 1.0F) {
                             abstractarrowentity.setCritArrow(true);
@@ -95,7 +88,7 @@ public abstract class BowItemMixin extends ProjectileWeaponItem {
                             abstractarrowentity.pickup = AbstractArrow.Pickup.CREATIVE_ONLY;
                         }
 
-                        if (event.getProjectile() == ((EntityBridge) abstractarrowentity).bridge$getBukkitEntity()) {
+                        if (event.getProjectile() == abstractarrowentity.bridge$getBukkitEntity()) {
                             if (!worldIn.addFreshEntity(abstractarrowentity)) {
                                 if (playerentity instanceof ServerPlayerEntityBridge) {
                                     ((ServerPlayerEntityBridge) playerentity).bridge$getBukkitEntity().updateInventory();
@@ -113,7 +106,7 @@ public abstract class BowItemMixin extends ProjectileWeaponItem {
                         }
                     }
 
-                    playerentity.awardStat(Stats.ITEM_USED.get(this));
+                    playerentity.awardStat(Stats.ITEM_USED.get((Item) (Object) this));
                 }
             }
         }

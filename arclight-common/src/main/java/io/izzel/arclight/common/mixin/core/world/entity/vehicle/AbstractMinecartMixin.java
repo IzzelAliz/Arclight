@@ -1,7 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.entity.vehicle;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.vehicle.AbstractMinecartBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.level.block.BlockBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
@@ -35,7 +37,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 @Mixin(AbstractMinecart.class)
-public abstract class AbstractMinecartMixin extends VehicleEntityMixin {
+public abstract class AbstractMinecartMixin extends VehicleEntityMixin implements AbstractMinecartBridge {
 
     // @formatter:off
     @Shadow private int lerpSteps;
@@ -48,7 +50,6 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin {
     @Shadow public abstract void activateMinecart(int x, int y, int z, boolean receivingPower);
     @Shadow private boolean flipped;
     @Shadow public abstract AbstractMinecart.Type getMinecartType();
-    @Shadow(remap = false) public abstract boolean canUseRail();
     @Shadow private boolean onRails;
     // @formatter:on
 
@@ -117,9 +118,9 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin {
             BlockPos blockposition = new BlockPos(i, j, k);
             BlockState blockstate = this.level().getBlockState(blockposition);
             this.onRails = BaseRailBlock.isRail(blockstate);
-            if (this.canUseRail() && this.onRails) {
+            if (this.bridge$forge$canUseRail() && this.onRails) {
                 this.moveAlongTrack(blockposition, blockstate);
-                if (blockstate.getBlock() instanceof PoweredRailBlock && ((PoweredRailBlock) blockstate.getBlock()).isActivatorRail()) {
+                if (((BlockBridge) blockstate.getBlock()).bridge$forge$isActivatorRail(blockstate)) {
                     this.activateMinecart(i, j, k, blockstate.getValue(PoweredRailBlock.POWERED));
                 }
             } else {

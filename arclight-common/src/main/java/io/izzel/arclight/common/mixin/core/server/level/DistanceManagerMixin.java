@@ -32,7 +32,6 @@ public abstract class DistanceManagerMixin implements TicketManagerBridge {
     @Shadow private static int getTicketLevelAt(SortedArraySet<Ticket<?>> p_229844_0_) { return 0; }
     @Shadow @Final public Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> tickets;
     @Shadow abstract TickingTracker tickingTracker();
-    @Shadow(remap = false) @Final private Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> forcedTickets;
     @Invoker("purgeStaleTickets") public abstract void bridge$tick();
     // @formatter:on
 
@@ -107,11 +106,8 @@ public abstract class DistanceManagerMixin implements TicketManagerBridge {
             this.tickets.remove(chunkPosIn);
         }
         this.ticketTracker.update(chunkPosIn, getTicketLevelAt(ticketSet), false);
-        if (ticketIn.isForceTicks()) {
-            SortedArraySet<Ticket<?>> tickets = this.forcedTickets.get(chunkPosIn);
-            if (tickets != null) {
-                tickets.remove(ticketIn);
-            }
+        if (bridge$platform$isTicketForceTick(ticketIn)) {
+            this.bridge$forge$removeForcedTicket(chunkPosIn, ticketIn);
         }
         return removed;
     }
@@ -129,9 +125,8 @@ public abstract class DistanceManagerMixin implements TicketManagerBridge {
         if (ticketIn.getTicketLevel() < level) {
             this.ticketTracker.update(chunkPosIn, ticketIn.getTicketLevel(), true);
         }
-        if (ticketIn.isForceTicks()) {
-            SortedArraySet<Ticket<?>> tickets = this.forcedTickets.computeIfAbsent(chunkPosIn, e -> SortedArraySet.create(4));
-            tickets.addOrGet(ticketIn);
+        if (bridge$platform$isTicketForceTick(ticketIn)) {
+            this.bridge$forge$addForcedTicket(chunkPosIn, ticketIn);
         }
         return ticketIn == ticket;
     }

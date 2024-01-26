@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
-import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.BlockPos;
@@ -37,7 +36,7 @@ public class HangingEntityItemMixin {
         Block blockClicked = CraftBlock.at(world, blockPos);
         BlockFace blockFace = CraftBlock.notchToBlockFace(direction);
 
-        HangingPlaceEvent event = new HangingPlaceEvent((Hanging) ((EntityBridge) hangingEntity).bridge$getBukkitEntity(), who, blockClicked, blockFace, CraftEquipmentSlot.getHand(context.getHand()), CraftItemStack.asBukkitCopy(itemStack));
+        HangingPlaceEvent event = new HangingPlaceEvent((Hanging) hangingEntity.bridge$getBukkitEntity(), who, blockClicked, blockFace, CraftEquipmentSlot.getHand(context.getHand()), CraftItemStack.asBukkitCopy(itemStack));
         Bukkit.getPluginManager().callEvent(event);
 
         if (event.isCancelled()) {

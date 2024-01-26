@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.sniffer.Sniffer;
@@ -16,7 +15,7 @@ public abstract class SnifferMixin extends AnimalMixin {
 
     @Redirect(method = "dropSeed", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private boolean arclight$dropSeed(ServerLevel instance, Entity entity) {
-        var event = new EntityDropItemEvent(this.getBukkitEntity(), (Item) ((EntityBridge) entity).bridge$getBukkitEntity());
+        var event = new EntityDropItemEvent(this.getBukkitEntity(), (Item) entity.bridge$getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             return false;

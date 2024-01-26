@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.npc;
 
-import io.izzel.arclight.common.bridge.core.item.MerchantOfferBridge;
+import io.izzel.arclight.common.bridge.core.world.item.MerchantOfferBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LightningBolt;

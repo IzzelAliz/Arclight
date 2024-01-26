@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mod.util.remapper;
 
 import com.google.common.collect.Maps;
-import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import net.md_5.specialsource.provider.InheritanceProvider;
 import net.md_5.specialsource.repo.ClassRepo;
 import org.objectweb.asm.Opcodes;
@@ -46,7 +46,7 @@ public class ArclightInterfaceInvokerGen implements PluginTransformer {
                     if (!extend) {
                         MethodNode methodNode = generateSynthetic(name, desc, node, remapper);
                         classNode.methods.add(methodNode);
-                        ArclightMod.LOGGER.debug("Generated {} redirecting to {}", classNode.name + "/" + name + " " + desc, node.owner + "/" + node.name + " " + node.desc);
+                        ArclightServer.LOGGER.debug("Generated {} redirecting to {}", classNode.name + "/" + name + " " + desc, node.owner + "/" + node.name + " " + node.desc);
                     }
                 }
             }

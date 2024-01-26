@@ -45,7 +45,7 @@ public abstract class ChorusFlowerBlockMixin extends BlockMixin {
         BlockPos blockpos = pos.above();
         if (worldIn.isEmptyBlock(blockpos) && blockpos.getY() < 256) {
             int i = state.getValue(AGE);
-            if (i < 5 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, blockpos, state, true)) {
+            if (i < 5 && this.bridge$forge$onCropsGrowPre(worldIn, blockpos, state, true)) {
                 boolean flag = false;
                 boolean flag1 = false;
                 BlockState blockstate = worldIn.getBlockState(pos.below());
@@ -110,7 +110,7 @@ public abstract class ChorusFlowerBlockMixin extends BlockMixin {
                         this.placeDeadFlower(worldIn, pos);
                     }
                 }
-                net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state);
+                this.bridge$forge$onCropsGrowPost(worldIn, pos, state);
             }
         }
     }

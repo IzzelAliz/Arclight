@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
-import io.izzel.arclight.common.bridge.core.block.PortalInfoBridge;
+import io.izzel.arclight.common.bridge.core.world.level.block.PortalInfoBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.portal.PortalInfo;
 import org.bukkit.craftbukkit.v.event.CraftPortalEvent;

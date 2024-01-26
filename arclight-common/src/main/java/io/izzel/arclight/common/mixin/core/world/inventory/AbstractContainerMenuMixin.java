@@ -5,6 +5,7 @@ import io.izzel.arclight.common.bridge.core.inventory.container.ContainerBridge;
 import io.izzel.arclight.common.bridge.core.inventory.container.SlotBridge;
 import io.izzel.arclight.common.mod.server.ArclightContainer;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.server.level.ServerPlayer;
@@ -18,7 +19,6 @@ import net.minecraft.world.inventory.ContainerSynchronizer;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v.inventory.CraftInventory;
@@ -68,6 +68,7 @@ public abstract class AbstractContainerMenuMixin implements ContainerBridge {
     @Shadow protected abstract SlotAccess createCarriedSlotAccess();
     @Shadow public abstract void sendAllDataToRemote();
     @Shadow public abstract int incrementStateId();
+    @Shadow protected abstract boolean tryItemClickBehaviourOverride(Player arg, ClickAction arg2, Slot arg3, ItemStack arg4, ItemStack arg5);
     // @formatter:on
 
     public boolean checkReachable = true;
@@ -94,7 +95,7 @@ public abstract class AbstractContainerMenuMixin implements ContainerBridge {
     public Component getTitle() {
         if (this.title == null) {
             if (this.menuType != null) {
-                var key = ForgeRegistries.MENU_TYPES.getKey(this.menuType);
+                var key = BuiltInRegistries.MENU.getKey(this.menuType);
                 return Component.translatable(key.toString());
             } else {
                 return Component.translatable(this.toString());
@@ -245,7 +246,7 @@ public abstract class AbstractContainerMenuMixin implements ContainerBridge {
                 ItemStack itemstack10 = slot7.getItem();
                 ItemStack itemstack11 = this.getCarried();
                 player.updateTutorialInventoryAction(itemstack11, slot7.getItem(), clickaction);
-                if (!itemstack11.overrideStackedOnOther(slot7, clickaction, player) && !itemstack10.overrideOtherStackedOnMe(itemstack11, slot7, clickaction, player, this.createCarriedSlotAccess())) {
+                if (!this.tryItemClickBehaviourOverride(player, clickaction, slot7, itemstack10, itemstack11) && !this.bridge$forge$onItemStackedOn(itemstack10, itemstack11, slot7, clickaction, player, this.createCarriedSlotAccess())) {
                     if (itemstack10.isEmpty()) {
                         if (!itemstack11.isEmpty()) {
                             int l2 = clickaction == ClickAction.PRIMARY ? itemstack11.getCount() : 1;

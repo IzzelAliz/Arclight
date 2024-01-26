@@ -4,6 +4,8 @@ import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.inventory.CraftingInventoryBridge;
 import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.inventory.container.PosContainerBridge;
+import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
+import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
@@ -38,10 +40,12 @@ public abstract class TransientCraftingContainerMixin implements CraftingInvento
     private InventoryHolder bukkitOwner;
     private int maxStack = MAX_STACK;
 
+    @ShadowConstructor
     public void arclight$constructor(AbstractContainerMenu eventHandlerIn, int width, int height) {
         throw new RuntimeException();
     }
 
+    @CreateConstructor
     public void arclight$constructor(AbstractContainerMenu eventHandlerIn, int width, int height, Player owner) {
         arclight$constructor(eventHandlerIn, width, height);
         this.owner = owner;

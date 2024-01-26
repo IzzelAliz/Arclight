@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
-import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.projectile.FishingHookBridge;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -23,8 +23,6 @@ import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.HitResult;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.ItemFishedEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.FishHook;
 import org.bukkit.event.player.PlayerFishEvent;
@@ -41,7 +39,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Mixin(FishingHook.class)
-public abstract class FishingHookMixin extends ProjectileMixin {
+public abstract class FishingHookMixin extends ProjectileMixin implements FishingHookBridge {
 
     // @formatter:off
     @Shadow public Entity hookedIn;
@@ -51,7 +49,7 @@ public abstract class FishingHookMixin extends ProjectileMixin {
     @Shadow private int timeUntilHooked;
     @Shadow private int timeUntilLured;
     @Shadow @Final private int lureSpeed;
-    @Shadow protected abstract void pullEntity(Entity p_150156_);
+    @Shadow public abstract void pullEntity(Entity p_150156_);
     // @formatter:on
 
     public int minWaitTime = 100;
@@ -121,9 +119,9 @@ public abstract class FishingHookMixin extends ProjectileMixin {
         Player playerentity = this.getPlayerOwner();
         if (!this.level().isClientSide && playerentity != null) {
             int i = 0;
-            ItemFishedEvent event = null;
+            Integer rodDamage = null;
             if (this.hookedIn != null) {
-                PlayerFishEvent fishEvent = new PlayerFishEvent(((ServerPlayerEntityBridge) playerentity).bridge$getBukkitEntity(), ((EntityBridge) this.hookedIn).bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.CAUGHT_ENTITY);
+                PlayerFishEvent fishEvent = new PlayerFishEvent(((ServerPlayerEntityBridge) playerentity).bridge$getBukkitEntity(), this.hookedIn.bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.CAUGHT_ENTITY);
                 Bukkit.getPluginManager().callEvent(fishEvent);
                 if (fishEvent.isCancelled()) {
                     return 0;
@@ -136,17 +134,17 @@ public abstract class FishingHookMixin extends ProjectileMixin {
                 LootParams params = (new LootParams.Builder((ServerLevel) this.level())).withParameter(LootContextParams.ORIGIN, this.position()).withParameter(LootContextParams.TOOL, stack).withParameter(LootContextParams.THIS_ENTITY, (FishingHook) (Object) this).withLuck((float) this.luck + playerentity.getLuck()).create(LootContextParamSets.FISHING);
                 LootTable loottable = this.level().getServer().getLootData().getLootTable(BuiltInLootTables.FISHING);
                 List<ItemStack> list = loottable.getRandomItems(params);
-                event = new ItemFishedEvent(list, this.onGround ? 2 : 1, (FishingHook) (Object) this);
-                MinecraftForge.EVENT_BUS.post(event);
-                if (event.isCanceled()) {
+                var event = this.bridge$forge$onItemFished(list, this.onGround ? 2 : 1, (FishingHook) (Object) this);
+                if (event._1) {
                     this.discard();
-                    return event.getRodDamage();
+                    return event._2;
                 }
+                rodDamage = event._2;
                 CriteriaTriggers.FISHING_ROD_HOOKED.trigger((ServerPlayer) playerentity, stack, (FishingHook) (Object) this, list);
 
                 for (ItemStack itemstack : list) {
                     ItemEntity itementity = new ItemEntity(this.level(), this.getX(), this.getY(), this.getZ(), itemstack);
-                    PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerEntityBridge) playerentity).bridge$getBukkitEntity(), ((EntityBridge) itementity).bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.CAUGHT_FISH);
+                    PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerEntityBridge) playerentity).bridge$getBukkitEntity(), itementity.bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.CAUGHT_FISH);
                     playerFishEvent.setExpToDrop(this.random.nextInt(6) + 1);
                     Bukkit.getPluginManager().callEvent(playerFishEvent);
 
@@ -189,7 +187,7 @@ public abstract class FishingHookMixin extends ProjectileMixin {
             }
 
             this.discard();
-            return event == null ? i : event.getRodDamage();
+            return rodDamage == null ? i : rodDamage;
         } else {
             return 0;
         }

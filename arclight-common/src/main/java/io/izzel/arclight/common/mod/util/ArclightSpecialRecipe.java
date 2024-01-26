@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.mod.util;
 
-import io.izzel.arclight.common.bridge.core.item.crafting.RecipeManagerBridge;
+import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeManagerBridge;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraftforge.server.ServerLifecycleHooks;
 import org.bukkit.NamespacedKey;
 import org.bukkit.craftbukkit.v.inventory.CraftComplexRecipe;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
@@ -22,11 +22,11 @@ public class ArclightSpecialRecipe extends CraftComplexRecipe {
 
     @Override
     public @NotNull ItemStack getResult() {
-        return CraftItemStack.asCraftMirror(this.recipe.getResultItem(ServerLifecycleHooks.getCurrentServer().registryAccess()));
+        return CraftItemStack.asCraftMirror(this.recipe.getResultItem(ArclightServer.getMinecraftServer().registryAccess()));
     }
 
     @Override
     public void addToCraftingManager() {
-        ((RecipeManagerBridge) ServerLifecycleHooks.getCurrentServer().getRecipeManager()).bridge$addRecipe(new RecipeHolder<>(CraftNamespacedKey.toMinecraft(this.getKey()), this.recipe));
+        ((RecipeManagerBridge) ArclightServer.getMinecraftServer().getRecipeManager()).bridge$addRecipe(new RecipeHolder<>(CraftNamespacedKey.toMinecraft(this.getKey()), this.recipe));
     }
 }

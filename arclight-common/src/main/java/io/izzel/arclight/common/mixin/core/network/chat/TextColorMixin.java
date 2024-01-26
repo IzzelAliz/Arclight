@@ -1,5 +1,7 @@
 package io.izzel.arclight.common.mixin.core.network.chat;
 
+import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
+import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.TextColor;
 import org.spongepowered.asm.mixin.Final;
@@ -21,10 +23,12 @@ public class TextColorMixin {
 
     public ChatFormatting format;
 
+    @ShadowConstructor
     public void arclight$constructor(int color) {
         throw new RuntimeException();
     }
 
+    @CreateConstructor
     public void arclight$constructor(int color, String name, ChatFormatting textFormatting) {
         arclight$constructor(color);
         this.name = name;

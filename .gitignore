@@ -1,8 +1,7 @@
-/.gradle/
+.gradle/
 /.settings/
 build/
 /bin/
 /.project
-/.settings/
 .idea
 *.log

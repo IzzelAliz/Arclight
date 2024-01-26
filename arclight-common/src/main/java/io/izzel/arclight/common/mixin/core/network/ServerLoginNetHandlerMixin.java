@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.properties.Property;
 import io.izzel.arclight.common.bridge.core.network.NetworkManagerBridge;
+import io.izzel.arclight.common.bridge.core.network.login.ServerLoginNetHandlerBridge;
 import io.izzel.arclight.common.bridge.core.network.common.ServerCommonPacketListenerBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.core.server.management.PlayerListBridge;
@@ -30,7 +31,6 @@ import net.minecraft.server.players.PlayerList;
 import net.minecraft.util.Crypt;
 import net.minecraft.util.CryptException;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.fml.util.thread.SidedThreadGroups;
 import org.apache.commons.lang3.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
@@ -63,7 +63,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Mixin(ServerLoginPacketListenerImpl.class)
-public abstract class ServerLoginNetHandlerMixin {
+public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandlerBridge {
 
     // @formatter:off
     @Shadow private ServerLoginPacketListenerImpl.State state;
@@ -83,10 +83,20 @@ public abstract class ServerLoginNetHandlerMixin {
     private static final java.util.regex.Pattern PROP_PATTERN = java.util.regex.Pattern.compile("\\w{0,16}");
 
     private ServerPlayer player;
-    @Unique private int arclight$velocityLoginId = -1;
+    @Unique protected int arclight$velocityLoginId = -1;
+
+    @Override
+    public int bridge$getVelocityLoginId() {
+        return arclight$velocityLoginId;
+    }
+
+    @Override
+    public void bridge$disconnect(String s) {
+        this.disconnect(Component.literal(s));
+    }
 
     public void disconnect(final String s) {
-        this.disconnect(Component.literal(s));
+        bridge$disconnect(s);
     }
 
     /**
@@ -112,24 +122,17 @@ public abstract class ServerLoginNetHandlerMixin {
                     this.connection.send(packet);
                     return;
                 }
-                class Handler extends Thread {
 
-                    Handler() {
-                        super(SidedThreadGroups.SERVER, "User Authenticator #" + UNIQUE_THREAD_ID.incrementAndGet());
+                var thread = bridge$newHandleThread("User Authenticator #" + UNIQUE_THREAD_ID.incrementAndGet(), () -> {
+                    try {
+                        var gameProfile = arclight$createOfflineProfile(connection, requestedUsername);
+                        bridge$preLogin(gameProfile);
+                    } catch (Exception ex) {
+                        disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
+                        LOGGER.warn("Exception verifying {} ", requestedUsername, ex);
                     }
-
-                    @Override
-                    public void run() {
-                        try {
-                            var gameProfile = arclight$createOfflineProfile(connection, requestedUsername);
-                            arclight$preLogin(gameProfile);
-                        } catch (Exception ex) {
-                            disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
-                            LOGGER.warn("Exception verifying {} ", requestedUsername, ex);
-                        }
-                    }
-                }
-                new Handler().start();
+                });
+                thread.start();
             }
         }
     }
@@ -203,111 +206,46 @@ public abstract class ServerLoginNetHandlerMixin {
             throw new IllegalStateException("Protocol error", cryptexception);
         }
 
-        class Handler extends Thread {
+        var thread = bridge$newHandleThread("User Authenticator #" + UNIQUE_THREAD_ID.incrementAndGet(), () -> {
+            String name = Objects.requireNonNull(requestedUsername, "Player name not initialized");
 
-            Handler(int i) {
-                super(SidedThreadGroups.SERVER, "User Authenticator #" + i);
-            }
-
-            public void run() {
-                String name = Objects.requireNonNull(requestedUsername, "Player name not initialized");
-
-                try {
-                    var profileResult = server.getSessionService().hasJoinedServer(name, s, this.getAddress());
-                    if (profileResult != null) {
-                        var gameProfile = profileResult.profile();
-                        if (!connection.isConnected()) {
-                            return;
-                        }
-                        arclight$preLogin(gameProfile);
-                    } else if (server.isSingleplayer()) {
-                        LOGGER.warn("Failed to verify username but will let them in anyway!");
-                        startClientVerification(arclight$createOfflineProfile(connection, name));
-                    } else {
-                        disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
-                        LOGGER.error("Username '{}' tried to join with an invalid session", name);
-                    }
-                } catch (AuthenticationException e) {
-                    if (server.isSingleplayer()) {
-                        LOGGER.warn("Authentication servers are down but will let them in anyway!");
-                        startClientVerification(arclight$createOfflineProfile(connection, name));
-                    } else {
-                        disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
-                        LOGGER.error("Couldn't verify username because servers are unavailable");
-                    }
-                } catch (Exception e) {
-                    disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
-                    LOGGER.error("Exception verifying " + name, e);
-                }
-
-            }
-
-            @Nullable
-            private InetAddress getAddress() {
+            try {
                 SocketAddress socketaddress = connection.getRemoteAddress();
-                return server.getPreventProxyConnections() && socketaddress instanceof InetSocketAddress ? ((InetSocketAddress) socketaddress).getAddress() : null;
+                var address = server.getPreventProxyConnections() && socketaddress instanceof InetSocketAddress ? ((InetSocketAddress) socketaddress).getAddress() : null;
+
+                var profileResult = server.getSessionService().hasJoinedServer(name, s, address);
+                if (profileResult != null) {
+                    var gameProfile = profileResult.profile();
+                    if (!connection.isConnected()) {
+                        return;
+                    }
+                    bridge$preLogin(gameProfile);
+                } else if (server.isSingleplayer()) {
+                    LOGGER.warn("Failed to verify username but will let them in anyway!");
+                    startClientVerification(arclight$createOfflineProfile(connection, name));
+                } else {
+                    disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
+                    LOGGER.error("Username '{}' tried to join with an invalid session", name);
+                }
+            } catch (AuthenticationException e) {
+                if (server.isSingleplayer()) {
+                    LOGGER.warn("Authentication servers are down but will let them in anyway!");
+                    startClientVerification(arclight$createOfflineProfile(connection, name));
+                } else {
+                    disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
+                    LOGGER.error("Couldn't verify username because servers are unavailable");
+                }
+            } catch (Exception e) {
+                disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
+                LOGGER.error("Exception verifying " + name, e);
             }
-        }
-        Thread thread = new Handler(UNIQUE_THREAD_ID.incrementAndGet());
+        });
         thread.setUncaughtExceptionHandler(new DefaultUncaughtExceptionHandler(LOGGER));
         thread.start();
     }
 
-    @Inject(method = "handleCustomQueryPacket", cancellable = true, at = @At("HEAD"))
-    private void arclight$modernForwardReply(ServerboundCustomQueryAnswerPacket packet, CallbackInfo ci) {
-        if (VelocitySupport.isEnabled() && packet.transactionId() == this.arclight$velocityLoginId) {
-            if (!(packet.payload() instanceof DiscardedQueryAnswerPayload payload && payload.data() != null)) {
-                this.disconnect("This server requires you to connect with Velocity.");
-                ci.cancel();
-                return;
-            }
-            var buf = payload.data().readNullable(r -> {
-                int i = r.readableBytes();
-                if (i >= 0 && i <= 1048576) {
-                    return new FriendlyByteBuf(r.readBytes(i));
-                } else {
-                    throw new IllegalArgumentException("Payload may not be larger than 1048576 bytes");
-                }
-            });
-            if (buf == null) {
-                this.disconnect("This server requires you to connect with Velocity.");
-                ci.cancel();
-                return;
-            }
-
-            if (!VelocitySupport.checkIntegrity(buf)) {
-                this.disconnect("Unable to verify player details");
-                ci.cancel();
-                return;
-            }
-
-            int version = buf.readVarInt();
-            if (version > VelocitySupport.MAX_SUPPORTED_FORWARDING_VERSION) {
-                throw new IllegalStateException("Unsupported forwarding version " + version + ", wanted upto " + VelocitySupport.MAX_SUPPORTED_FORWARDING_VERSION);
-            }
-            java.net.SocketAddress listening = this.connection.getRemoteAddress();
-            int port = 0;
-            if (listening instanceof java.net.InetSocketAddress) {
-                port = ((java.net.InetSocketAddress) listening).getPort();
-            }
-            this.connection.address = new java.net.InetSocketAddress(VelocitySupport.readAddress(buf), port);
-            this.authenticatedProfile = VelocitySupport.createProfile(buf);
-
-            // Proceed with login
-            Util.backgroundExecutor().execute(() -> {
-                try {
-                    this.arclight$preLogin(this.authenticatedProfile);
-                } catch (Exception ex) {
-                    disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
-                    LOGGER.warn("Exception verifying {} ", this.authenticatedProfile.getName(), ex);
-                }
-            });
-            ci.cancel();
-        }
-    }
-
     @Unique
-    void arclight$preLogin(GameProfile gameProfile) throws Exception {
+    public void bridge$preLogin(GameProfile gameProfile) throws Exception {
         if (this.arclight$velocityLoginId == -1 && VelocitySupport.isEnabled()) {
             disconnect("This server requires you to connect with Velocity.");
             return;
@@ -343,5 +281,58 @@ public abstract class ServerLoginNetHandlerMixin {
         }
         LOGGER.info("UUID of player {} is {}", gameProfile.getName(), gameProfile.getId());
         this.startClientVerification(gameProfile);
+    }
+
+    @Inject(method = "handleCustomQueryPacket", cancellable = true, at = @At("HEAD"))
+    private void arclight$modernForwardReply(ServerboundCustomQueryAnswerPacket packet, CallbackInfo ci) {
+        if (VelocitySupport.isEnabled() && packet.transactionId() == this.bridge$getVelocityLoginId()) {
+            if (!(packet.payload() instanceof DiscardedQueryAnswerPayload payload && bridge$getDiscardedQueryAnswerData(payload) != null)) {
+                this.bridge$disconnect("This server requires you to connect with Velocity.");
+                ci.cancel();
+                return;
+            }
+            var buf = bridge$getDiscardedQueryAnswerData(payload).readNullable(r -> {
+                int i = r.readableBytes();
+                if (i >= 0 && i <= 1048576) {
+                    return new FriendlyByteBuf(r.readBytes(i));
+                } else {
+                    throw new IllegalArgumentException("Payload may not be larger than 1048576 bytes");
+                }
+            });
+            if (buf == null) {
+                this.bridge$disconnect("This server requires you to connect with Velocity.");
+                ci.cancel();
+                return;
+            }
+
+            if (!VelocitySupport.checkIntegrity(buf)) {
+                this.bridge$disconnect("Unable to verify player details");
+                ci.cancel();
+                return;
+            }
+
+            int version = buf.readVarInt();
+            if (version > VelocitySupport.MAX_SUPPORTED_FORWARDING_VERSION) {
+                throw new IllegalStateException("Unsupported forwarding version " + version + ", wanted upto " + VelocitySupport.MAX_SUPPORTED_FORWARDING_VERSION);
+            }
+            java.net.SocketAddress listening = this.connection.getRemoteAddress();
+            int port = 0;
+            if (listening instanceof java.net.InetSocketAddress) {
+                port = ((java.net.InetSocketAddress) listening).getPort();
+            }
+            this.connection.address = new java.net.InetSocketAddress(VelocitySupport.readAddress(buf), port);
+            this.authenticatedProfile = VelocitySupport.createProfile(buf);
+
+            // Proceed with login
+            Util.backgroundExecutor().execute(() -> {
+                try {
+                    this.bridge$preLogin(this.authenticatedProfile);
+                } catch (Exception ex) {
+                    disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
+                    LOGGER.warn("Exception verifying {} ", this.authenticatedProfile.getName(), ex);
+                }
+            });
+            ci.cancel();
+        }
     }
 }

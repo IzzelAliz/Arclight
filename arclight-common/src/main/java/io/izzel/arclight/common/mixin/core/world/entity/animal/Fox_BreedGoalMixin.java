@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
+import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.passive.AnimalEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.passive.FoxEntityBridge;
 import net.minecraft.advancements.CriteriaTriggers;
@@ -11,8 +12,6 @@ import net.minecraft.world.entity.ai.goal.BreedGoal;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.animal.Fox;
 import net.minecraft.world.level.GameRules;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.living.BabyEntitySpawnEvent;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityBreedEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,10 +32,8 @@ public abstract class Fox_BreedGoalMixin extends BreedGoal {
     protected void breed() {
         ServerLevel serverworld = (ServerLevel) this.level;
         Fox foxentity = (Fox) this.animal.getBreedOffspring(serverworld, this.partner);
-        final BabyEntitySpawnEvent event = new BabyEntitySpawnEvent(animal, partner, foxentity);
-        final boolean cancelled = MinecraftForge.EVENT_BUS.post(event);
-        foxentity = (Fox) event.getChild();
-        if (cancelled) {
+        foxentity = (Fox) ((MobEntityBridge) animal).bridge$forge$onBabyEntitySpawn(partner, foxentity);
+        if (foxentity == null) {
             //Reset the "inLove" state for the animals
             this.animal.setAge(6000);
             this.partner.setAge(6000);

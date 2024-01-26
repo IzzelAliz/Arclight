@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.item.crafting;
 
-import io.izzel.arclight.common.bridge.core.item.crafting.IngredientBridge;
+import io.izzel.arclight.common.bridge.core.world.item.crafting.IngredientBridge;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import org.spongepowered.asm.mixin.Mixin;

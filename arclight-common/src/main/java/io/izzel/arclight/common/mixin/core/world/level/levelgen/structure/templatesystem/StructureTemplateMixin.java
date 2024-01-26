@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.level.levelgen.structure.templ
 
 import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Pair;
+import io.izzel.arclight.common.bridge.core.world.level.levelgen.structure.templatesystem.StructureTemplateBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderGetter;
@@ -45,15 +46,13 @@ import java.util.Iterator;
 import java.util.List;
 
 @Mixin(StructureTemplate.class)
-public abstract class StructureTemplateMixin {
+public abstract class StructureTemplateMixin implements StructureTemplateBridge {
 
     // @formatter:off
     @Shadow @Final public List<StructureTemplate.Palette> palettes;
     @Shadow @Final public List<StructureTemplate.StructureEntityInfo> entityInfoList;
     @Shadow private Vec3i size;
-    @Shadow public static List<StructureTemplate.StructureBlockInfo> processBlockInfos(ServerLevelAccessor p_278297_, BlockPos p_74519_, BlockPos p_74520_, StructurePlaceSettings p_74521_, List<StructureTemplate.StructureBlockInfo> p_74522_, @Nullable StructureTemplate template) { return null; }
     @Shadow public static void updateShapeAtEdge(LevelAccessor p_74511_, int p_74512_, DiscreteVoxelShape p_74513_, int p_74514_, int p_74515_, int p_74516_) { }
-    @Shadow protected abstract void addEntitiesToWorld(ServerLevelAccessor p_74524_, BlockPos p_74525_, StructurePlaceSettings placementIn);
     // @formatter:on
 
     private static final CraftPersistentDataTypeRegistry DATA_TYPE_REGISTRY = new CraftPersistentDataTypeRegistry();
@@ -79,7 +78,7 @@ public abstract class StructureTemplateMixin {
      * @reason
      */
     @Overwrite
-    public boolean placeInWorld(ServerLevelAccessor p_230329_, BlockPos p_230330_, BlockPos p_230331_, StructurePlaceSettings p_230332_, RandomSource p_230333_, int p_230334_) {
+    public boolean placeInWorld(ServerLevelAccessor p_230329_, BlockPos pos, BlockPos p_230331_, StructurePlaceSettings placeSettings, RandomSource p_230333_, int p_230334_) {
         if (this.palettes.isEmpty()) {
             return false;
         } else {
@@ -96,11 +95,11 @@ public abstract class StructureTemplateMixin {
                 }
             }
             // CraftBukkit end
-            List<StructureTemplate.StructureBlockInfo> list = p_230332_.getRandomPalette(this.palettes, p_230330_).blocks();
-            if ((!list.isEmpty() || !p_230332_.isIgnoreEntities() && !this.entityInfoList.isEmpty()) && this.size.getX() >= 1 && this.size.getY() >= 1 && this.size.getZ() >= 1) {
-                BoundingBox boundingbox = p_230332_.getBoundingBox();
-                List<BlockPos> list1 = Lists.newArrayListWithCapacity(p_230332_.shouldKeepLiquids() ? list.size() : 0);
-                List<BlockPos> list2 = Lists.newArrayListWithCapacity(p_230332_.shouldKeepLiquids() ? list.size() : 0);
+            List<StructureTemplate.StructureBlockInfo> list = placeSettings.getRandomPalette(this.palettes, pos).blocks();
+            if ((!list.isEmpty() || !placeSettings.isIgnoreEntities() && !this.entityInfoList.isEmpty()) && this.size.getX() >= 1 && this.size.getY() >= 1 && this.size.getZ() >= 1) {
+                BoundingBox boundingbox = placeSettings.getBoundingBox();
+                List<BlockPos> list1 = Lists.newArrayListWithCapacity(placeSettings.shouldKeepLiquids() ? list.size() : 0);
+                List<BlockPos> list2 = Lists.newArrayListWithCapacity(placeSettings.shouldKeepLiquids() ? list.size() : 0);
                 List<Pair<BlockPos, CompoundTag>> list3 = Lists.newArrayListWithCapacity(list.size());
                 int i = Integer.MAX_VALUE;
                 int j = Integer.MAX_VALUE;
@@ -109,11 +108,11 @@ public abstract class StructureTemplateMixin {
                 int i1 = Integer.MIN_VALUE;
                 int j1 = Integer.MIN_VALUE;
 
-                for (StructureTemplate.StructureBlockInfo structuretemplate$structureblockinfo : processBlockInfos(p_230329_, p_230330_, p_230331_, p_230332_, list, (StructureTemplate) (Object) this)) {
+                for (StructureTemplate.StructureBlockInfo structuretemplate$structureblockinfo : this.bridge$platform$processBlockInfos(p_230329_, pos, p_230331_, placeSettings, list, (StructureTemplate) (Object) this)) {
                     BlockPos blockpos = structuretemplate$structureblockinfo.pos();
                     if (boundingbox == null || boundingbox.isInside(blockpos)) {
-                        FluidState fluidstate = p_230332_.shouldKeepLiquids() ? p_230329_.getFluidState(blockpos) : null;
-                        BlockState blockstate = structuretemplate$structureblockinfo.state().mirror(p_230332_.getMirror()).rotate(p_230332_.getRotation());
+                        FluidState fluidstate = placeSettings.shouldKeepLiquids() ? p_230329_.getFluidState(blockpos) : null;
+                        BlockState blockstate = structuretemplate$structureblockinfo.state().mirror(placeSettings.getMirror()).rotate(placeSettings.getRotation());
                         if (structuretemplate$structureblockinfo.nbt() != null) {
                             BlockEntity blockentity = p_230329_.getBlockEntity(blockpos);
                             Clearable.tryClear(blockentity);
@@ -199,7 +198,7 @@ public abstract class StructureTemplateMixin {
                 }
 
                 if (i <= l) {
-                    if (!p_230332_.getKnownShape()) {
+                    if (!placeSettings.getKnownShape()) {
                         DiscreteVoxelShape discretevoxelshape = new BitSetDiscreteVoxelShape(l - i + 1, i1 - j + 1, j1 - k + 1);
                         int k1 = i;
                         int l1 = j;
@@ -215,7 +214,7 @@ public abstract class StructureTemplateMixin {
 
                     for (Pair<BlockPos, CompoundTag> pair : list3) {
                         BlockPos blockpos4 = pair.getFirst();
-                        if (!p_230332_.getKnownShape()) {
+                        if (!placeSettings.getKnownShape()) {
                             BlockState blockstate2 = p_230329_.getBlockState(blockpos4);
                             BlockState blockstate3 = Block.updateFromNeighbourShapes(blockstate2, p_230329_, blockpos4);
                             if (blockstate2 != blockstate3) {
@@ -234,8 +233,8 @@ public abstract class StructureTemplateMixin {
                     }
                 }
 
-                if (!p_230332_.isIgnoreEntities()) {
-                    this.addEntitiesToWorld(wrappedAccess, p_230330_, p_230332_);
+                if (!placeSettings.isIgnoreEntities()) {
+                    this.bridge$platform$placeEntities(wrappedAccess, pos, placeSettings.getMirror(), placeSettings.getRotation(), placeSettings.getRotationPivot(), placeSettings.getBoundingBox(), placeSettings.shouldFinalizeEntities(), placeSettings);
                 }
 
                 return true;
@@ -243,5 +242,10 @@ public abstract class StructureTemplateMixin {
                 return false;
             }
         }
+    }
+
+    @Override
+    public List<StructureTemplate.StructureBlockInfo> bridge$platform$processBlockInfos(ServerLevelAccessor arg, BlockPos arg2, BlockPos arg3, StructurePlaceSettings arg4, List<StructureTemplate.StructureBlockInfo> list2, @Nullable StructureTemplate template) {
+        return StructureTemplate.processBlockInfos(arg, arg2, arg3, arg4, list2);
     }
 }

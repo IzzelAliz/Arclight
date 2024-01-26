@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.mojang.authlib.properties.Property;
 import com.mojang.util.UndashedUuid;
 import io.izzel.arclight.common.bridge.core.network.NetworkManagerBridge;
+import io.izzel.arclight.common.bridge.core.network.handshake.ServerHandshakeNetHandlerBridge;
 import io.izzel.arclight.common.mod.util.VelocitySupport;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.Connection;
@@ -16,7 +17,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerHandshakePacketListenerImpl;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
 import net.minecraft.server.network.ServerStatusPacketListenerImpl;
-import net.minecraftforge.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.LogManager;
 import org.bukkit.Bukkit;
 import org.spigotmc.SpigotConfig;
@@ -29,10 +29,9 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.text.MessageFormat;
 import java.util.HashMap;
-import java.util.Objects;
 
 @Mixin(ServerHandshakePacketListenerImpl.class)
-public class ServerHandshakeNetHandlerMixin {
+public abstract class ServerHandshakeNetHandlerMixin implements ServerHandshakeNetHandlerBridge {
 
     private static final Gson gson = new Gson();
     private static final java.util.regex.Pattern HOST_PATTERN = java.util.regex.Pattern.compile("[0-9a-f\\.:]{0,45}");
@@ -51,7 +50,9 @@ public class ServerHandshakeNetHandlerMixin {
      */
     @Overwrite
     public void handleIntention(ClientIntentionPacket packetIn) {
-        if (!arclight$handleSpecialLogin(packetIn)) return;
+        if (!bridge$forge$handleSpecialLogin(packetIn)) {
+            return;
+        }
         ((NetworkManagerBridge) this.connection).bridge$setHostname(packetIn.hostName() + ":" + packetIn.port());
         switch (packetIn.intention()) {
             case LOGIN: {
@@ -135,28 +136,5 @@ public class ServerHandshakeNetHandlerMixin {
                 throw new UnsupportedOperationException("Invalid intention " + packetIn.intention());
             }
         }
-    }
-
-    private static final String EXTRA_DATA = "extraData";
-    private static final Gson GSON = new Gson();
-
-    private boolean arclight$handleSpecialLogin(ClientIntentionPacket packet) {
-        String ip = packet.hostName();
-        if (!VelocitySupport.isEnabled() && SpigotConfig.bungee) {
-            String[] split = ip.split("\0");
-            if (split.length == 4) {
-                Property[] properties = GSON.fromJson(split[3], Property[].class);
-                for (Property property : properties) {
-                    if (Objects.equals(property.name(), EXTRA_DATA)) {
-                        String extraData = property.value().replace("\1", "\0");
-                        // replace the hostname field with embedded data
-                        //noinspection deprecation
-                        var forgePacket = new ClientIntentionPacket(packet.protocolVersion(), extraData, packet.port(), packet.intention());
-                        return ServerLifecycleHooks.handleServerLogin(forgePacket, this.connection);
-                    }
-                }
-            }
-        }
-        return ServerLifecycleHooks.handleServerLogin(packet, this.connection);
     }
 }

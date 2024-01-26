@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.entity.decoration;
 import com.google.common.collect.Lists;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.LivingEntityMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
@@ -110,25 +111,17 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
     }
 
     private void arclight$tryCaptureDrops(Level worldIn, BlockPos pos, ItemStack stack) {
-        if (!worldIn.isClientSide && !stack.isEmpty() && worldIn.getGameRules().getBoolean(GameRules.RULE_DOBLOCKDROPS) && !worldIn.restoringBlockSnapshots) { // do not drop items while restoring blockstates, prevents item dupe
+        if (!worldIn.isClientSide && !stack.isEmpty() && worldIn.getGameRules().getBoolean(GameRules.RULE_DOBLOCKDROPS) && !((WorldBridge) worldIn).bridge$forge$restoringBlockSnapshots()) { // do not drop items while restoring blockstates, prevents item dupe
             ItemEntity itementity = new ItemEntity(worldIn, pos.getX(), pos.getY(), pos.getZ(), stack);
-            arclight$drops().add(itementity);
-        }
-    }
-
-    private Collection<ItemEntity> arclight$drops() {
-        Collection<ItemEntity> drops = this.captureDrops();
-        if (drops == null) {
-            ArrayList<ItemEntity> list = new ArrayList<>();
-            this.captureDrops(list);
-            return list;
-        } else {
-            return drops;
+            if (!this.bridge$common$isCapturingDrops()) {
+                this.bridge$common$startCaptureDrops();
+            }
+            this.bridge$common$captureDrop(itementity);
         }
     }
 
     private void arclight$callEntityDeath() {
-        Collection<ItemEntity> captureDrops = this.captureDrops(null);
+        Collection<ItemEntity> captureDrops = this.bridge$common$getCapturedDrops();
         List<org.bukkit.inventory.ItemStack> drops;
         if (captureDrops == null) {
             drops = new ArrayList<>();
@@ -163,8 +156,10 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
     @Override
     public void setItemSlot(net.minecraft.world.entity.EquipmentSlot slotIn, ItemStack stack, boolean silent) {
         switch (slotIn.getType()) {
-            case HAND -> this.bridge$playEquipSound(slotIn, this.handItems.set(slotIn.getIndex(), stack), stack, silent);
-            case ARMOR -> this.bridge$playEquipSound(slotIn, this.armorItems.set(slotIn.getIndex(), stack), stack, silent);
+            case HAND ->
+                this.bridge$playEquipSound(slotIn, this.handItems.set(slotIn.getIndex(), stack), stack, silent);
+            case ARMOR ->
+                this.bridge$playEquipSound(slotIn, this.armorItems.set(slotIn.getIndex(), stack), stack, silent);
         }
 
     }

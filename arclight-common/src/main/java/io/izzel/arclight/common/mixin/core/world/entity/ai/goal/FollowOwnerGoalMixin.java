@@ -26,7 +26,7 @@ public class FollowOwnerGoalMixin {
 
     @Redirect(method = "maybeTeleportTo", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/TamableAnimal;moveTo(DDDFF)V"))
     public void arclight$teleport(TamableAnimal tameableEntity, double x, double y, double z, float yaw, float pitch) {
-        CraftEntity craftEntity = ((EntityBridge) this.tamable).bridge$getBukkitEntity();
+        CraftEntity craftEntity = this.tamable.bridge$getBukkitEntity();
         Location location = new Location(craftEntity.getWorld(), x, y, z, yaw, pitch);
         EntityTeleportEvent event = new EntityTeleportEvent(craftEntity, craftEntity.getLocation(), location);
         Bukkit.getPluginManager().callEvent(event);

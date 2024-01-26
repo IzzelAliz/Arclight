@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world;
 
 import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
+import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
+import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
@@ -30,10 +32,12 @@ public abstract class SimpleContainerMixin implements Container, IInventoryBridg
     private int maxStack = MAX_STACK;
     protected InventoryHolder bukkitOwner;
 
+    @ShadowConstructor
     public void arclight$constructor(int numSlots) {
         throw new RuntimeException();
     }
 
+    @CreateConstructor
     public void arclight$constructor(int numSlots, InventoryHolder owner) {
         this.arclight$constructor(numSlots);
         this.bukkitOwner = owner;

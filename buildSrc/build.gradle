@@ -1,0 +1,28 @@
+plugins {
+    id 'groovy'
+    id 'maven-publish'
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'Forge Maven'
+        url = 'https://maven.minecraftforge.net/'
+    }
+    maven { url "https://maven.architectury.dev/" }
+    maven { url "https://maven.fabricmc.net/" }
+}
+
+dependencies {
+    implementation gradleApi()
+    implementation localGroovy()
+    implementation('net.md-5:SpecialSource:1.11.0') { transitive false }
+    implementation 'org.ow2.asm:asm-tree:9.5'
+    implementation 'org.ow2.asm:asm-util:9.5'
+    implementation 'org.ow2.asm:asm-commons:9.5'
+    implementation 'org.cadixdev:lorenz-io-proguard:0.5.8'
+    implementation 'org.cadixdev:lorenz:0.5.8'
+    implementation 'org.cadixdev:at:0.1.0-rc1'
+    implementation 'net.fabricmc:lorenz-tiny:4.0.2'
+    implementation "dev.architectury:architectury-loom:1.4-SNAPSHOT"
+}

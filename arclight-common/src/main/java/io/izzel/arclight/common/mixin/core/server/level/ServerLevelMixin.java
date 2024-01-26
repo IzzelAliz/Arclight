@@ -13,7 +13,9 @@ import io.izzel.arclight.common.bridge.core.world.storage.LevelStorageSourceBrid
 import io.izzel.arclight.common.bridge.core.world.storage.MapDataBridge;
 import io.izzel.arclight.common.bridge.core.world.storage.WorldInfoBridge;
 import io.izzel.arclight.common.mixin.core.world.level.LevelMixin;
-import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
+import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.server.world.LevelPersistentData;
 import io.izzel.arclight.common.mod.server.world.WorldSymlink;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
@@ -104,7 +106,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     @Shadow public abstract boolean addWithUUID(Entity entityIn);
     @Shadow public abstract <T extends ParticleOptions> int sendParticles(T type, double posX, double posY, double posZ, int particleCount, double xOffset, double yOffset, double zOffset, double speed);
     @Shadow protected abstract boolean sendParticles(ServerPlayer player, boolean longDistance, double posX, double posY, double posZ, Packet<?> packet);
-    @Shadow @Nonnull public abstract MinecraftServer shadow$getServer();
+    @Shadow @Nonnull public abstract MinecraftServer getServer();
     @Shadow @Final private List<ServerPlayer> players;
     @Shadow public abstract ServerChunkCache getChunkSource();
     @Shadow protected abstract void wakeUpAllPlayers();
@@ -126,10 +128,12 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         return this.typeKey;
     }
 
+    @ShadowConstructor
     public void arclight$constructor(MinecraftServer minecraftServer, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, ServerLevelData worldInfo, ResourceKey<Level> dimension, LevelStem levelStem, ChunkProgressListener statusListener, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking, RandomSequences seq) {
         throw new RuntimeException();
     }
 
+    @CreateConstructor
     public void arclight$constructor(MinecraftServer minecraftServer, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, PrimaryLevelData worldInfo, ResourceKey<Level> dimension, LevelStem levelStem, ChunkProgressListener statusListener, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking, RandomSequences seq, org.bukkit.World.Environment env, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider) {
         arclight$constructor(minecraftServer, backgroundExecutor, levelSave, worldInfo, dimension, levelStem, statusListener, isDebug, seed, specialSpawners, shouldBeTicking, seq);
         this.generator = gen;
@@ -150,12 +154,12 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         if (typeKey != null) {
             this.typeKey = typeKey;
         } else {
-            var dimensions = shadow$getServer().registryAccess().registryOrThrow(Registries.LEVEL_STEM);
+            var dimensions = getServer().registryAccess().registryOrThrow(Registries.LEVEL_STEM);
             var key = dimensions.getResourceKey(levelStem);
             if (key.isPresent()) {
                 this.typeKey = key.get();
             } else {
-                ArclightMod.LOGGER.warn("Assign {} to unknown level stem {}", dimension.location(), levelStem);
+                ArclightServer.LOGGER.warn("Assign {} to unknown level stem {}", dimension.location(), levelStem);
                 this.typeKey = ResourceKey.create(Registries.LEVEL_STEM, dimension.location());
             }
         }
@@ -270,8 +274,8 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     private void arclight$saveLevelDat(ProgressListener progress, boolean flush, boolean skipSave, CallbackInfo ci) {
         if (this.serverLevelData instanceof PrimaryLevelData worldInfo) {
             worldInfo.setWorldBorder(this.getWorldBorder().createSettings());
-            worldInfo.setCustomBossEvents(this.shadow$getServer().getCustomBossEvents().save());
-            this.convertable.saveDataTag(this.shadow$getServer().registryAccess(), worldInfo, this.shadow$getServer().getPlayerList().getSingleplayerData());
+            worldInfo.setCustomBossEvents(this.getServer().getCustomBossEvents().save());
+            this.convertable.saveDataTag(this.getServer().registryAccess(), worldInfo, this.getServer().getPlayerList().getSingleplayerData());
         }
     }
 

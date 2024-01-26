@@ -45,4 +45,9 @@ public abstract class LightningBoltMixin extends EntityMixin {
             return false;
         }
     }
+
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;thunderHit(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LightningBolt;)V"))
+    private void arclight$onLightning(CallbackInfo ci) {
+        ArclightCaptures.captureDamageEventEntity((LightningBolt) (Object) this);
+    }
 }

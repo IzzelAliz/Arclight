@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.item.crafting.RecipeHolderBridge;
+import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeHolderBridge;
 import io.izzel.arclight.common.bridge.core.tileentity.AbstractFurnaceTileEntityBridge;
 import io.izzel.arclight.mixin.Eject;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;

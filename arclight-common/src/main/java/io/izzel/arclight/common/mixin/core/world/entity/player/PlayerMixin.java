@@ -10,6 +10,8 @@ import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.util.DamageSourceBridge;
 import io.izzel.arclight.common.bridge.core.util.FoodStatsBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.item.ItemBridge;
+import io.izzel.arclight.common.bridge.core.world.item.ItemStackBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.LivingEntityMixin;
 import io.izzel.arclight.i18n.ArclightConfig;
@@ -51,11 +53,9 @@ import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.PlayerEnderChestContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Scoreboard;
-import net.minecraftforge.common.ForgeHooks;
-import net.minecraftforge.common.extensions.IForgePlayer;
-import net.minecraftforge.entity.PartEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
@@ -93,7 +93,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Mixin(net.minecraft.world.entity.player.Player.class)
-public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEntityBridge, IForgePlayer {
+public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEntityBridge {
 
     // @formatter:off
     @Shadow public abstract String getScoreboardName();
@@ -135,6 +135,8 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
     @Shadow public abstract Optional<GlobalPos> getLastDeathLocation();
     @Shadow public abstract void setRemainingFireTicks(int p_36353_);
     // @formatter:on
+
+    @Shadow public abstract boolean isCreative();
 
     public boolean fauxSleeping;
     public int oldLevel;
@@ -193,8 +195,6 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
      */
     @Overwrite
     public boolean hurt(DamageSource source, float amount) {
-        if (!ForgeHooks.onPlayerAttack((net.minecraft.world.entity.player.Player) (Object) this, source, amount))
-            return false;
         if (this.isInvulnerableTo(source)) {
             return false;
         } else if (this.abilities.invulnerable && !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
@@ -267,8 +267,6 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
      */
     @Overwrite
     public void attack(final Entity entity) {
-        if (!net.minecraftforge.common.ForgeHooks.onPlayerAttackTarget((net.minecraft.world.entity.player.Player) (Object) this, entity))
-            return;
         if (entity.isAttackable() && !entity.skipAttackInteraction((net.minecraft.world.entity.player.Player) (Object) this)) {
             float f = (float) this.getAttributeValue(Attributes.ATTACK_DAMAGE);
             float f2;
@@ -293,17 +291,17 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                 }
                 boolean flag3 = flag && this.fallDistance > 0.0f && !this.onGround && !this.onClimbable() && !this.isInWater() && !this.hasEffect(MobEffects.BLINDNESS) && !this.isPassenger() && entity instanceof LivingEntity;
                 flag3 = flag3 && !this.isSprinting();
-                net.minecraftforge.event.entity.player.CriticalHitEvent hitResult = net.minecraftforge.common.ForgeHooks.getCriticalHit((net.minecraft.world.entity.player.Player) (Object) this, entity, flag3, flag3 ? 1.5F : 1.0F);
+                var hitResult = this.bridge$forge$getCriticalHit((net.minecraft.world.entity.player.Player) (Object) this, entity, flag3, flag3 ? 1.5F : 1.0F);
                 flag3 = hitResult != null;
                 if (flag3) {
-                    f *= hitResult.getDamageModifier();
+                    f *= hitResult;
                 }
                 f += f2;
                 boolean flag4 = false;
                 final double d0 = this.walkDist - this.walkDistO;
                 if (flag && !flag3 && !flag2 && this.onGround && d0 < this.getSpeed()) {
                     final ItemStack itemstack = this.getItemInHand(InteractionHand.MAIN_HAND);
-                    flag4 = itemstack.canPerformAction(net.minecraftforge.common.ToolActions.SWORD_SWEEP);
+                    flag4 = ((ItemStackBridge) (Object) itemstack).bridge$forge$canPerformAction(ItemStackBridge.ToolAction.SWORD_SWEEP);
                 }
                 float f4 = 0.0f;
                 boolean flag5 = false;
@@ -311,7 +309,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                 if (entity instanceof LivingEntity) {
                     f4 = ((LivingEntity) entity).getHealth();
                     if (j > 0 && !entity.isOnFire()) {
-                        final EntityCombustByEntityEvent combustEvent = new EntityCombustByEntityEvent(this.getBukkitEntity(), ((EntityBridge) entity).bridge$getBukkitEntity(), 1);
+                        final EntityCombustByEntityEvent combustEvent = new EntityCombustByEntityEvent(this.getBukkitEntity(), entity.bridge$getBukkitEntity(), 1);
                         Bukkit.getPluginManager().callEvent(combustEvent);
                         if (!combustEvent.isCancelled()) {
                             flag5 = true;
@@ -333,8 +331,8 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                     }
                     if (flag4) {
                         final float f5 = 1.0f + EnchantmentHelper.getSweepingDamageRatio((net.minecraft.world.entity.player.Player) (Object) this) * f;
-                        final List<LivingEntity> list = this.level().getEntitiesOfClass(LivingEntity.class, this.getItemInHand(InteractionHand.MAIN_HAND).getSweepHitBox((net.minecraft.world.entity.player.Player) (Object) this, entity));
-                        double entityReachSq = Mth.square(this.getEntityReach()); // Use entity reach instead of constant 9.0. Vanilla uses bottom center-to-center checks here, so don't update this to use canReach, since it uses closest-corner checks.
+                        final List<LivingEntity> list = this.level().getEntitiesOfClass(LivingEntity.class, ((ItemStackBridge) (Object) this.getItemInHand(InteractionHand.MAIN_HAND)).bridge$forge$getSweepHitBox((net.minecraft.world.entity.player.Player) (Object) this, entity));
+                        double entityReachSq = Mth.square(this.bridge$forge$getEntityReach()); // Use entity reach instead of constant 9.0. Vanilla uses bottom center-to-center checks here, so don't update this to use canReach, since it uses closest-corner checks.
                         for (final LivingEntity entityliving : list) {
                             if (entityliving != (Object) this && entityliving != entity && !this.isAlliedTo(entityliving) && (!(entityliving instanceof ArmorStand) || !((ArmorStand) entityliving).isMarker()) && this.distanceToSqr(entityliving) < entityReachSq && entityliving.hurt(((DamageSourceBridge) this.damageSources().playerAttack((net.minecraft.world.entity.player.Player) (Object) this)).bridge$sweep(), f5)) {
                                 entityliving.knockback(0.4f, Mth.sin(this.getYRot() * 0.017453292f), -Mth.cos(this.getYRot() * 0.017453292f));
@@ -381,14 +379,14 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                     EnchantmentHelper.doPostDamageEffects((net.minecraft.world.entity.player.Player) (Object) this, entity);
                     final ItemStack itemstack2 = this.getMainHandItem();
                     Entity object = entity;
-                    if (entity instanceof PartEntity) {
-                        object = ((PartEntity<?>) entity).getParent();
+                    if (((EntityBridge) entity).bridge$forge$isPartEntity()) {
+                        object = ((EntityBridge) entity).bridge$forge$getParent();
                     }
                     if (!this.level().isClientSide && !itemstack2.isEmpty() && object instanceof LivingEntity) {
                         ItemStack copy = itemstack2.copy();
                         itemstack2.hurtEnemy((LivingEntity) object, (net.minecraft.world.entity.player.Player) (Object) this);
                         if (itemstack2.isEmpty()) {
-                            net.minecraftforge.event.ForgeEventFactory.onPlayerDestroyItem((net.minecraft.world.entity.player.Player) (Object) this, copy, InteractionHand.MAIN_HAND);
+                            ((ItemBridge) copy.getItem()).bridge$forge$onPlayerDestroyItem((net.minecraft.world.entity.player.Player) (Object) this, copy, InteractionHand.MAIN_HAND);
                             this.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
                         }
                     }
@@ -396,7 +394,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                         final float f6 = f4 - ((LivingEntity) entity).getHealth();
                         this.awardStat(Stats.DAMAGE_DEALT, Math.round(f6 * 10.0f));
                         if (j > 0) {
-                            final EntityCombustByEntityEvent combustEvent2 = new EntityCombustByEntityEvent(this.getBukkitEntity(), ((EntityBridge) entity).bridge$getBukkitEntity(), j * 4);
+                            final EntityCombustByEntityEvent combustEvent2 = new EntityCombustByEntityEvent(this.getBukkitEntity(), entity.bridge$getBukkitEntity(), j * 4);
                             Bukkit.getPluginManager().callEvent(combustEvent2);
                             if (!combustEvent2.isCancelled()) {
                                 ((EntityBridge) entity).bridge$setOnFire(combustEvent2.getDuration(), false);
@@ -571,5 +569,33 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
         if (arclight$validUsernameCheck(name)) {
             cir.setReturnValue(true);
         }
+    }
+
+    @Override
+    public double bridge$platform$getBlockReach() {
+        return isCreative() ? 5 : 4.5;
+    }
+
+    @Override
+    public boolean bridge$platform$isCloseEnough(Entity entity, double dist) {
+        Vec3 eye = getEyePosition();
+        AABB aabb = entity.getBoundingBox().inflate(entity.getPickRadius());
+        return aabb.distanceToSqr(eye) < dist * dist;
+    }
+
+    @Override
+    public boolean bridge$platform$canReach(BlockPos pos, double padding) {
+        double reach = bridge$platform$getBlockReach() + padding;
+        return getEyePosition().distanceToSqr(Vec3.atCenterOf(pos)) < reach * reach;
+    }
+
+    @Override
+    public boolean bridge$platform$canReach(Entity entity, double padding) {
+        return bridge$platform$isCloseEnough(entity, bridge$forge$getEntityReach() + padding);
+    }
+
+    @Override
+    public boolean bridge$platform$canReach(Vec3 entityHitVec, double padding) {
+        return getEyePosition().closerThan(entityHitVec, bridge$forge$getEntityReach() + padding);
     }
 }

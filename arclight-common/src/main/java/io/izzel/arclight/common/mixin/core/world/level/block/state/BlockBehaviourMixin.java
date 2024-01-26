@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.state;
 
 import io.izzel.arclight.common.bridge.core.world.ExplosionBridge;
+import io.izzel.arclight.common.bridge.core.world.level.block.state.BlockBehaviourBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -23,7 +24,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.function.BiConsumer;
 
 @Mixin(BlockBehaviour.class)
-public abstract class BlockBehaviourMixin {
+public abstract class BlockBehaviourMixin implements BlockBehaviourBridge {
 
     // @formatter:off
     @Shadow public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor worldIn, BlockPos currentPos, BlockPos facingPos) { return null; }
@@ -39,21 +40,20 @@ public abstract class BlockBehaviourMixin {
         if (!p_310712_.isAir() && p_312709_.getBlockInteraction() != Explosion.BlockInteraction.TRIGGER_BLOCK) {
             Block block = p_310712_.getBlock();
             boolean flag = p_312709_.getIndirectSourceEntity() instanceof Player;
-            if (p_310712_.canDropFromExplosion(p_311693_, p_311490_, p_312709_) && p_311693_ instanceof ServerLevel) {
+            if (this.bridge$forge$canDropFromExplosion(p_310712_, p_311693_, p_311490_, p_312709_) && p_311693_ instanceof ServerLevel) {
+                ServerLevel serverlevel = (ServerLevel) p_311693_;
+                BlockEntity blockentity = p_310712_.hasBlockEntity() ? p_311693_.getBlockEntity(p_311490_) : null;
+                LootParams.Builder lootparams$builder = (new LootParams.Builder(serverlevel)).withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(p_311490_)).withParameter(LootContextParams.TOOL, ItemStack.EMPTY).withOptionalParameter(LootContextParams.BLOCK_ENTITY, blockentity).withOptionalParameter(LootContextParams.THIS_ENTITY, p_312709_.getDirectSourceEntity());
+                if (((ExplosionBridge) p_312709_).bridge$getYield() < 1.0F) {
+                    lootparams$builder.withParameter(LootContextParams.EXPLOSION_RADIUS, 1.0F / ((ExplosionBridge) p_312709_).bridge$getYield());
+                }
 
-             ServerLevel serverlevel = (ServerLevel) p_311693_;
-             BlockEntity blockentity = p_310712_.hasBlockEntity() ? p_311693_.getBlockEntity(p_311490_) : null;
-             LootParams.Builder lootparams$builder = (new LootParams.Builder(serverlevel)).withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(p_311490_)).withParameter(LootContextParams.TOOL, ItemStack.EMPTY).withOptionalParameter(LootContextParams.BLOCK_ENTITY, blockentity).withOptionalParameter(LootContextParams.THIS_ENTITY, p_312709_.getDirectSourceEntity());
-             if (((ExplosionBridge) p_312709_).bridge$getYield() < 1.0F) {
-                 lootparams$builder.withParameter(LootContextParams.EXPLOSION_RADIUS, 1.0F / ((ExplosionBridge) p_312709_).bridge$getYield());
-             }
-
-             p_310712_.spawnAfterBreak(serverlevel, p_311490_, ItemStack.EMPTY, flag);
-             p_310712_.getDrops(lootparams$builder).forEach((p_309419_) -> {
-                 p_311277_.accept(p_309419_, p_311490_);
-             });
+                p_310712_.spawnAfterBreak(serverlevel, p_311490_, ItemStack.EMPTY, flag);
+                p_310712_.getDrops(lootparams$builder).forEach((p_309419_) -> {
+                    p_311277_.accept(p_309419_, p_311490_);
+                });
             }
-            p_310712_.onBlockExploded(p_311693_, p_311490_, p_312709_);
+            this.bridge$forge$onBlockExploded(p_310712_, p_311693_, p_311490_, p_312709_);
         }
     }
 }

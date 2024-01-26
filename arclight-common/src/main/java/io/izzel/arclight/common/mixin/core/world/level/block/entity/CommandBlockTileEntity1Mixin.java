@@ -10,8 +10,8 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(targets = "net/minecraft/world/level/block/entity/CommandBlockEntity$1")
 public class CommandBlockTileEntity1Mixin implements ICommandSourceBridge {
-
-    @Shadow(aliases = {"this$0", "f_59153_"}, remap = false) private CommandBlockEntity outerThis;
+    @Shadow(aliases = {"this$0", "f_59153_", "field_11921"}, remap = false)
+    private CommandBlockEntity outerThis;
 
     public CommandSender getBukkitSender(CommandSourceStack wrapper) {
         return new CraftBlockCommandSender(wrapper, outerThis);

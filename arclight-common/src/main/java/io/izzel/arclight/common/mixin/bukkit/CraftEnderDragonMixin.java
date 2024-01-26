@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.api.EnumHelper;
-import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
 import org.bukkit.craftbukkit.v.entity.CraftEnderDragon;
 import org.bukkit.entity.EnderDragon;
@@ -34,7 +34,7 @@ public class CraftEnderDragonMixin {
                 var name = "MOD_PHASE_" + id;
                 var newPhase = EnumHelper.makeEnum(EnderDragon.Phase.class, name, id, List.of(), List.of());
                 newTypes.add(newPhase);
-                ArclightMod.LOGGER.debug("Registered {} as ender dragon phase {}", name, newPhase);
+                ArclightServer.LOGGER.debug("Registered {} as ender dragon phase {}", name, newPhase);
             }
             EnumHelper.addEnums(EnderDragon.Phase.class, newTypes);
         }

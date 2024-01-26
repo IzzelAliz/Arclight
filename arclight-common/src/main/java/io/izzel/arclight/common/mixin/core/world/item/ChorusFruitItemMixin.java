@@ -15,7 +15,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -25,11 +24,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 @Mixin(ChorusFruitItem.class)
-public class ChorusFruitItemMixin extends Item {
-
-    public ChorusFruitItemMixin(Properties properties) {
-        super(properties);
-    }
+public class ChorusFruitItemMixin extends ItemMixin {
 
     /**
      * @author IzzelAliz
@@ -61,12 +56,11 @@ public class ChorusFruitItemMixin extends Item {
                     entityLiving.stopRiding();
                 }
                 Vec3 vec3d = entityLiving.position();
-                var event = ForgeEventFactory.onChorusFruitTeleport(entityLiving, d3, d4, d5);
-                if (event.isCanceled()) return itemstack;
+                if (this.bridge$forge$onChorusFruitTeleport(entityLiving, d3, d4, d5)) return itemstack;
                 if (entityLiving.randomTeleport(d3, d4, d5, true)) {
                     worldIn.gameEvent(GameEvent.TELEPORT, vec3d, GameEvent.Context.of(entityLiving));
                     SoundEvent soundevent = entityLiving instanceof Fox ? SoundEvents.FOX_TELEPORT : SoundEvents.CHORUS_FRUIT_TELEPORT;
-                    SoundSource soundSource =entityLiving instanceof Fox ? SoundSource.NEUTRAL : SoundSource.PLAYERS;
+                    SoundSource soundSource = entityLiving instanceof Fox ? SoundSource.NEUTRAL : SoundSource.PLAYERS;
                     worldIn.playSound(null, entityLiving.getX(), entityLiving.getY(), entityLiving.getZ(), soundevent, soundSource);
                     entityLiving.resetFallDistance();
                     break;
@@ -74,7 +68,7 @@ public class ChorusFruitItemMixin extends Item {
             }
 
             if (entityLiving instanceof net.minecraft.world.entity.player.Player) {
-                ((net.minecraft.world.entity.player.Player) entityLiving).getCooldowns().addCooldown(this, 20);
+                ((net.minecraft.world.entity.player.Player) entityLiving).getCooldowns().addCooldown((Item) (Object) this, 20);
             }
         }
 

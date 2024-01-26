@@ -6,7 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.core.item.crafting.RecipeManagerBridge;
+import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeManagerBridge;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -19,8 +19,6 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.crafting.CraftingHelper;
-import net.minecraftforge.common.crafting.conditions.ICondition;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -39,7 +37,6 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
     @Shadow private boolean hasErrors;
     @Shadow @Final private static Logger LOGGER;
     @Shadow private Map<ResourceLocation, RecipeHolder<?>> byName;
-    @Shadow(remap = false) @Final private ICondition.IContext context;
     @Shadow protected static RecipeHolder<?> fromJson(ResourceLocation p_44046_, JsonObject p_44047_) { return null; }
     @Shadow protected abstract <C extends Container, T extends Recipe<C>> Map<ResourceLocation, RecipeHolder<T>> byType(RecipeType<T> p_44055_);
     // @formatter:on
@@ -65,7 +62,7 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
                 continue; //Forge: filter anything beginning with "_" as it's used for metadata.
 
             try {
-                if (entry.getValue().isJsonObject() && !net.minecraftforge.common.ForgeHooks.readAndTestCondition(this.context, entry.getValue().getAsJsonObject())) {
+                if (this.bridge$forge$conditionNotMet(entry.getValue())) {
                     LOGGER.debug("Skipping loading recipe {} as it's conditions were not met", resourcelocation);
                     continue;
                 }

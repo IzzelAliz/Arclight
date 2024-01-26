@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.Shadow;
 public abstract class ServerChunkCache_MainThreadExecutorMixin extends BlockableEventLoop<Runnable> {
 
     // @formatter:off
-    @Shadow(aliases = {"this$0", "f_8491_"}, remap = false) @Final private ServerChunkCache outer;
+    @Shadow(aliases = {"this$0", "f_8491_", "field_18810"}, remap = false) @Final private ServerChunkCache outer;
     // @formatter:on
 
     protected ServerChunkCache_MainThreadExecutorMixin(String nameIn) {

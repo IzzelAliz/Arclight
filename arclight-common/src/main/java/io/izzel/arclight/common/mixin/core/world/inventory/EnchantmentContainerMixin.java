@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.inventory;
 
 import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.inventory.EnchantmentMenuBridge;
 import io.izzel.arclight.common.bridge.core.inventory.container.PosContainerBridge;
 import io.izzel.arclight.common.bridge.core.util.IWorldPosCallableBridge;
 import net.minecraft.advancements.CriteriaTriggers;
@@ -25,8 +26,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.level.block.EnchantmentTableBlock;
-import net.minecraftforge.event.ForgeEventFactory;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryEnchanting;
@@ -52,7 +51,7 @@ import java.util.Map;
 
 // morejs https://github.com/AlmostReliable/morejs/blob/fd738a28a054d780031c7666fc8a01533c86f63b/Common/src/main/java/com/almostreliable/morejs/mixin/enchanting/EnchantmentMenuMixin.java
 @Mixin(value = EnchantmentMenu.class, priority = 39)
-public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMixin implements PosContainerBridge {
+public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMixin implements PosContainerBridge, EnchantmentMenuBridge {
 
     // @formatter:off
     @Shadow @Final private Container enchantSlots;
@@ -89,12 +88,12 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
             if (!itemstack.isEmpty()) {
                 // morejs https://github.com/AlmostReliable/morejs/blob/fd738a28a054d780031c7666fc8a01533c86f63b/Common/src/main/java/com/almostreliable/morejs/mixin/enchanting/EnchantmentMenuMixin.java
                 boolean enchantable = itemstack.isEnchantable();
-                this.access.execute((p_217002_2_, p_217002_3_) -> {
+                this.access.execute((level, pos) -> {
                     float power = 0;
 
                     for (BlockPos blockpos : EnchantmentTableBlock.BOOKSHELF_OFFSETS) {
-                        if (EnchantmentTableBlock.isValidBookShelf(p_217002_2_, p_217002_3_, blockpos)) {
-                            power += p_217002_2_.getBlockState(p_217002_3_.offset(blockpos)).getEnchantPowerBonus(p_217002_2_, p_217002_3_.offset(blockpos));
+                        if (EnchantmentTableBlock.isValidBookShelf(level, pos, blockpos)) {
+                            power += this.bridge$forge$getEnchantPowerBonus(level.getBlockState(pos.offset(blockpos)), level, pos.offset(blockpos));
                         }
                     }
 
@@ -107,7 +106,7 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
                         if (this.costs[i1] < i1 + 1) {
                             this.costs[i1] = 0;
                         }
-                        this.costs[i1] = ForgeEventFactory.onEnchantmentLevelSet(p_217002_2_, p_217002_3_, i1, (int) power, itemstack, costs[i1]);
+                        this.costs[i1] = this.bridge$forge$onEnchantmentLevelSet(level, pos, i1, (int) power, itemstack, costs[i1]);
                     }
 
                     for (int j1 = 0; j1 < 3; ++j1) {
@@ -125,7 +124,7 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
                     CraftItemStack item = CraftItemStack.asCraftMirror(itemstack);
                     org.bukkit.enchantments.EnchantmentOffer[] offers = new EnchantmentOffer[3];
                     for (int j = 0; j < 3; ++j) {
-                        org.bukkit.enchantments.Enchantment enchantment = (this.enchantClue[j] >= 0) ? org.bukkit.enchantments.Enchantment.getByKey(CraftNamespacedKey.fromMinecraft(ForgeRegistries.ENCHANTMENTS.getKey(BuiltInRegistries.ENCHANTMENT.byId(this.enchantClue[j])))) : null;
+                        org.bukkit.enchantments.Enchantment enchantment = (this.enchantClue[j] >= 0) ? org.bukkit.enchantments.Enchantment.getByKey(CraftNamespacedKey.fromMinecraft(BuiltInRegistries.ENCHANTMENT.getKey(BuiltInRegistries.ENCHANTMENT.byId(this.enchantClue[j])))) : null;
                         offers[j] = (enchantment != null) ? new EnchantmentOffer(enchantment, this.levelClue[j], this.costs[j]) : null;
                     }
 
@@ -146,7 +145,7 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
                         EnchantmentOffer offer = event.getOffers()[j];
                         if (offer != null) {
                             this.costs[j] = offer.getCost();
-                            this.enchantClue[j] = BuiltInRegistries.ENCHANTMENT.getId(ForgeRegistries.ENCHANTMENTS.getValue(CraftNamespacedKey.toMinecraft(offer.getEnchantment().getKey())));
+                            this.enchantClue[j] = BuiltInRegistries.ENCHANTMENT.getId(BuiltInRegistries.ENCHANTMENT.get(CraftNamespacedKey.toMinecraft(offer.getEnchantment().getKey())));
                             this.levelClue[j] = offer.getEnchantmentLevel();
                         } else {
                             this.costs[j] = 0;
@@ -190,7 +189,7 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
                     //  playerIn.onEnchant(itemstack, i);
                     Map<Enchantment, Integer> enchants = new java.util.HashMap<>();
                     for (EnchantmentInstance obj : list) {
-                        enchants.put(org.bukkit.enchantments.Enchantment.getByKey(CraftNamespacedKey.fromMinecraft(ForgeRegistries.ENCHANTMENTS.getKey(obj.enchantment))), obj.level);
+                        enchants.put(org.bukkit.enchantments.Enchantment.getByKey(CraftNamespacedKey.fromMinecraft(BuiltInRegistries.ENCHANTMENT.getKey(obj.enchantment))), obj.level);
                     }
                     CraftItemStack item = CraftItemStack.asCraftMirror(itemstack2);
 
@@ -220,7 +219,7 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
                         try {
                             if (flag) {
                                 NamespacedKey enchantId = entry.getKey().getKey();
-                                net.minecraft.world.item.enchantment.Enchantment nms = ForgeRegistries.ENCHANTMENTS.getValue(CraftNamespacedKey.toMinecraft(enchantId));
+                                net.minecraft.world.item.enchantment.Enchantment nms = BuiltInRegistries.ENCHANTMENT.get(CraftNamespacedKey.toMinecraft(enchantId));
                                 if (nms == null) {
                                     continue;
                                 }

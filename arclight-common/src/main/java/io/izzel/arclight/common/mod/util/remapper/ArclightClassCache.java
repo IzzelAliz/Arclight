@@ -2,14 +2,12 @@ package io.izzel.arclight.common.mod.util.remapper;
 
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import cpw.mods.modlauncher.api.LamdbaExceptionUtils;
 import io.izzel.arclight.api.PluginPatcher;
-import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.tools.product.Product;
 import io.izzel.tools.product.Product2;
 import io.izzel.tools.product.Product4;
-import net.minecraftforge.fml.ModList;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
@@ -72,8 +70,7 @@ public abstract class ArclightClassCache implements AutoCloseable {
 
         private static String currentVersionInfo() {
             var builder = new StringBuilder();
-            var arclight = ModList.get().getModContainerById("arclight")
-                .orElseThrow(IllegalStateException::new).getModInfo().getVersion().toString();
+            var arclight = ArclightClassCache.class.getPackage().getImplementationVersion();
             builder.append(arclight);
             for (PluginPatcher patcher : ArclightRemapper.INSTANCE.getPatchers()) {
                 builder.append('\0')
@@ -96,7 +93,7 @@ public abstract class ArclightClassCache implements AutoCloseable {
                 try {
                     this.save();
                 } catch (IOException e) {
-                    ArclightMod.LOGGER.error(MARKER, "Failed to save class cache", e);
+                    ArclightServer.LOGGER.error(MARKER, "Failed to save class cache", e);
                 }
             }, 1, 10, TimeUnit.MINUTES);
             try {
@@ -132,16 +129,16 @@ public abstract class ArclightClassCache implements AutoCloseable {
                 if (obsolete) {
                     Files.deleteIfExists(version);
                     Files.writeString(version, current, StandardOpenOption.CREATE);
-                    ArclightMod.LOGGER.info(MARKER, "Obsolete plugin class cache is cleared");
+                    ArclightServer.LOGGER.info(MARKER, "Obsolete plugin class cache is cleared");
                 }
             } catch (IOException e) {
-                ArclightMod.LOGGER.error(MARKER, "Failed to initialize class cache", e);
+                ArclightServer.LOGGER.error(MARKER, "Failed to initialize class cache", e);
             }
             Thread thread = new Thread(() -> {
                 try {
                     this.close();
                 } catch (Exception e) {
-                    ArclightMod.LOGGER.error(MARKER, "Failed to close class cache", e);
+                    ArclightServer.LOGGER.error(MARKER, "Failed to close class cache", e);
                 }
             }, "arclight class cache cleanup");
             thread.setDaemon(true);
@@ -152,7 +149,13 @@ public abstract class ArclightClassCache implements AutoCloseable {
         public CacheSegment makeSegment(URLConnection connection) throws IOException {
             if (enabled && connection instanceof JarURLConnection) {
                 JarFile file = ((JarURLConnection) connection).getJarFile();
-                return this.map.computeIfAbsent(file.getName(), LamdbaExceptionUtils.rethrowFunction(JarSegment::new));
+                return this.map.computeIfAbsent(file.getName(), k -> {
+                    try {
+                        return new JarSegment(k);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
             } else {
                 return new EmptySegment();
             }

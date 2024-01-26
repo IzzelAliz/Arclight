@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
-import io.izzel.arclight.common.bridge.core.item.MerchantOfferBridge;
+import io.izzel.arclight.common.bridge.core.world.item.MerchantOfferBridge;
+import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
+import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.trading.MerchantOffer;
 import org.bukkit.craftbukkit.v.inventory.CraftMerchantRecipe;
@@ -24,10 +26,12 @@ public class MerchantOfferMixin implements MerchantOfferBridge {
         return (bukkitHandle == null) ? bukkitHandle = new CraftMerchantRecipe((MerchantOffer) (Object) this) : bukkitHandle;
     }
 
+    @ShadowConstructor
     public void arclight$constructor(ItemStack buyingStackFirstIn, ItemStack buyingStackSecondIn, ItemStack sellingStackIn, int usesIn, int maxUsesIn, int givenEXPIn, float priceMultiplierIn, int demand) {
         throw new RuntimeException();
     }
 
+    @CreateConstructor
     public void arclight$constructor(ItemStack buyingStackFirstIn, ItemStack buyingStackSecondIn, ItemStack sellingStackIn, int usesIn, int maxUsesIn, int givenEXPIn, float priceMultiplierIn, int demand, CraftMerchantRecipe bukkit) {
         arclight$constructor(buyingStackFirstIn, buyingStackSecondIn, sellingStackIn, usesIn, maxUsesIn, givenEXPIn, priceMultiplierIn, demand);
         this.bukkitHandle = bukkit;

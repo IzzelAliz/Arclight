@@ -1,11 +1,9 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.api.EnumHelper;
-import io.izzel.arclight.common.mod.ArclightMod;
-import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import net.minecraft.world.entity.monster.SpellcasterIllager;
 import org.bukkit.craftbukkit.v.entity.CraftSpellcaster;
-import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Spellcaster;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -31,7 +29,7 @@ public class CraftSpellcasterMixin {
                 var name = SpellcasterIllager.IllagerSpell.values()[id].name();
                 var newPhase = EnumHelper.makeEnum(Spellcaster.Spell.class, name, id, List.of(), List.of());
                 newTypes.add(newPhase);
-                ArclightMod.LOGGER.debug("Registered {} as illager spell {}", name, newPhase);
+                ArclightServer.LOGGER.debug("Registered {} as illager spell {}", name, newPhase);
             }
             EnumHelper.addEnums(Spellcaster.Spell.class, newTypes);
             return toBukkitSpell(spell);

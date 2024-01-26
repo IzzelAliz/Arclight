@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.item.enchantment;
 
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.enchantment.FrostWalkerEnchantment;
@@ -33,7 +35,7 @@ public class FrostWalkerEnchantmentMixin {
                     BlockState blockstate1 = worldIn.getBlockState(blockpos$mutable);
                     if (blockstate1.isAir()) {
                         BlockState blockstate2 = worldIn.getBlockState(blockpos);
-                        if (blockstate2 == FrostedIceBlock.meltsInto() && blockstate.canSurvive(worldIn, blockpos) && worldIn.isUnobstructed(blockstate, blockpos, CollisionContext.empty()) && !net.minecraftforge.event.ForgeEventFactory.onBlockPlace(living, net.minecraftforge.common.util.BlockSnapshot.create(worldIn.dimension(), worldIn, blockpos), net.minecraft.core.Direction.UP)) {
+                        if (blockstate2 == FrostedIceBlock.meltsInto() && blockstate.canSurvive(worldIn, blockpos) && worldIn.isUnobstructed(blockstate, blockpos, CollisionContext.empty()) && !((WorldBridge) worldIn).bridge$forge$onBlockPlace(blockpos, living, Direction.UP)) {
                             if (CraftEventFactory.handleBlockFormEvent(worldIn, blockpos, blockstate, living)) {
                                 worldIn.scheduleTick(blockpos, Blocks.FROSTED_ICE, Mth.nextInt(living.getRandom(), 60, 120));
                             }

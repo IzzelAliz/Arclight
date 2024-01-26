@@ -1,8 +1,10 @@
 package io.izzel.arclight.common.mixin.core.server.management;
 
+import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.server.management.PlayerInteractionManagerBridge;
-import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.common.bridge.core.world.item.ItemStackBridge;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
@@ -28,10 +30,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.common.ForgeHooks;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
-import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.Event;
@@ -93,12 +93,13 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
         if (!this.level.hasChunkAt(blockPos)) {
             return;
         }
-        net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock forgeEvent = net.minecraftforge.common.ForgeHooks.onLeftClickBlock(player, blockPos, direction, action);
-        if (forgeEvent.isCanceled() || (!this.isCreative() && forgeEvent.getUseItem() == net.minecraftforge.eventbus.api.Event.Result.DENY)) { // Restore block and te data
+
+        var forgeEvent = ((PlayerEntityBridge) player).bridge$platform$onLeftClickBlock(blockPos, direction, action);
+        if (forgeEvent._1 || (!this.isCreative() && forgeEvent._2)) { // Restore block and te data
             level.sendBlockUpdated(blockPos, level.getBlockState(blockPos), level.getBlockState(blockPos), 3);
             return;
         }
-        if (!this.player.canReach(blockPos, 1.5)) { // Vanilla check is eye-to-center distance < 6, so padding is 6 - 4.5 = 1.5
+        if (!((PlayerEntityBridge) this.player).bridge$platform$canReach(blockPos, 1.5)) { // Vanilla check is eye-to-center distance < 6, so padding is 6 - 4.5 = 1.5
             this.debugLogging(blockPos, false, j, "too far");
         } else if (blockPos.getY() >= i) {
             this.player.connection.send(new ClientboundBlockUpdatePacket(blockPos, this.level.getBlockState(blockPos)));
@@ -152,7 +153,7 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
                     this.player.connection.send(new ClientboundBlockUpdatePacket(this.level, blockPos));
                 }
             } else if (!iblockdata.isAir()) {
-                if (forgeEvent.getUseBlock() != net.minecraftforge.eventbus.api.Event.Result.DENY) {
+                if (!forgeEvent._3) {
                     iblockdata.attack(this.level, blockPos, this.player);
                 }
                 f = iblockdata.getDestroyProgress(this.player, this.player.level(), blockPos);
@@ -210,7 +211,7 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
         } else if (action == ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK) {
             this.isDestroyingBlock = false;
             if (!Objects.equals(this.destroyPos, blockPos)) {
-                ArclightMod.LOGGER.debug("Mismatch in destroy block pos: " + this.destroyPos + " " + blockPos);
+                ArclightServer.LOGGER.debug("Mismatch in destroy block pos: " + this.destroyPos + " " + blockPos);
                 this.level.destroyBlockProgress(this.player.getId(), this.destroyPos, -1);
                 this.debugLogging(blockPos, true, j, "aborted mismatched destroying");
             }
@@ -219,27 +220,12 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
         }
     }
 
-    @Inject(method = "destroyBlock", remap = true, at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraftforge/common/ForgeHooks;onBlockBreakEvent(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/GameType;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/core/BlockPos;)I"))
-    public void arclight$beforePrimaryEventFired(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
-        ArclightCaptures.captureNextBlockBreakEventAsPrimaryEvent();
-    }
-
-    @Inject(method = "destroyBlock", remap = true, at = @At(value = "INVOKE_ASSIGN", remap = false, target = "Lnet/minecraftforge/common/ForgeHooks;onBlockBreakEvent(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/GameType;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/core/BlockPos;)I"))
-    public void arclight$handleSecondaryBlockBreakEvents(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
-        ArclightCaptures.BlockBreakEventContext breakEventContext = ArclightCaptures.popSecondaryBlockBreakEvent();
-        while (breakEventContext != null) {
-            Block block = breakEventContext.getEvent().getBlock();
-            handleBlockDrop(breakEventContext, new BlockPos(block.getX(), block.getY(), block.getZ()));
-            breakEventContext = ArclightCaptures.popSecondaryBlockBreakEvent();
-        }
-    }
-
     @Inject(method = "destroyBlock", at = @At("RETURN"))
     public void arclight$resetBlockBreak(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
         ArclightCaptures.BlockBreakEventContext breakEventContext = ArclightCaptures.popPrimaryBlockBreakEvent();
 
         if (breakEventContext != null) {
-            handleBlockDrop(breakEventContext, pos);
+            bridge$handleBlockDrop(breakEventContext, pos);
         }
     }
 
@@ -250,7 +236,8 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
         ArclightCaptures.clearBlockBreakEventContexts();
     }
 
-    private void handleBlockDrop(ArclightCaptures.BlockBreakEventContext breakEventContext, BlockPos pos) {
+    @Override
+    public void bridge$handleBlockDrop(ArclightCaptures.BlockBreakEventContext breakEventContext, BlockPos pos) {
         BlockBreakEvent breakEvent = breakEventContext.getEvent();
         List<ItemEntity> blockDrops = breakEventContext.getBlockDrops();
         org.bukkit.block.BlockState state = breakEventContext.getBlockBreakPlayerState();
@@ -331,26 +318,32 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
                 return InteractionResult.PASS;
             }
         } else {
-            net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock event = ForgeHooks.onRightClickBlock(playerIn, handIn, blockpos, blockRaytraceResultIn);
-            if (event.isCanceled()) return event.getCancellationResult();
+            var event = ((PlayerEntityBridge) player).bridge$platform$onRightClickBlock(handIn, blockpos, blockRaytraceResultIn);
+            if (event._1) {
+                return event._6;
+            }
             UseOnContext itemusecontext = new UseOnContext(playerIn, handIn, blockRaytraceResultIn);
-            if (event.getUseItem() != net.minecraftforge.eventbus.api.Event.Result.DENY) {
-                InteractionResult result = stackIn.onItemUseFirst(itemusecontext);
-                if (result != InteractionResult.PASS) return result;
+            if (!event._3) {
+                InteractionResult result = ((ItemStackBridge) (Object) stackIn).bridge$forge$onItemUseFirst(itemusecontext);
+                if (result != InteractionResult.PASS) {
+                    return result;
+                }
             }
             boolean flag = !playerIn.getMainHandItem().isEmpty() || !playerIn.getOffhandItem().isEmpty();
-            boolean flag1 = (playerIn.isSecondaryUseActive() && flag) && !(playerIn.getMainHandItem().doesSneakBypassUse(worldIn, blockpos, playerIn) && playerIn.getOffhandItem().doesSneakBypassUse(worldIn, blockpos, playerIn));
+            boolean flag1 = (playerIn.isSecondaryUseActive() && flag)
+                    && !(((ItemStackBridge) (Object) playerIn.getMainHandItem()).bridge$forge$doesSneakBypassUse(worldIn, blockpos, playerIn)
+                    && (((ItemStackBridge) (Object) playerIn.getOffhandItem()).bridge$forge$doesSneakBypassUse(worldIn, blockpos, playerIn)));
             ItemStack itemstack = stackIn.copy();
             InteractionResult resultType = InteractionResult.PASS;
-            if (event.getUseBlock() == net.minecraftforge.eventbus.api.Event.Result.ALLOW || (event.getUseBlock() != net.minecraftforge.eventbus.api.Event.Result.DENY && !flag1)) {
+            if (event._4 || (!event._5 && !flag1)) {
                 resultType = blockstate.use(worldIn, playerIn, handIn, blockRaytraceResultIn);
                 if (resultType.consumesAction()) {
                     CriteriaTriggers.ITEM_USED_ON_BLOCK.trigger(playerIn, blockpos, itemstack);
                     return resultType;
                 }
             }
-            if (event.getUseItem() == net.minecraftforge.eventbus.api.Event.Result.ALLOW || (!stackIn.isEmpty() && resultType != InteractionResult.SUCCESS && !bridge$getInteractResult())) {
-                if (event.getUseItem() == net.minecraftforge.eventbus.api.Event.Result.DENY) {
+            if (event._2 || (!stackIn.isEmpty() && resultType != InteractionResult.SUCCESS && !bridge$getInteractResult())) {
+                if (event._3) {
                     return InteractionResult.PASS;
                 }
                 if (this.isCreative()) {

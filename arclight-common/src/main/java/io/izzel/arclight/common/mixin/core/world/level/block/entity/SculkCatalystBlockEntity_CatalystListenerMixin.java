@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
-import io.izzel.arclight.common.bridge.core.block.SculkSpreaderBridge;
+import io.izzel.arclight.common.bridge.core.world.level.block.SculkSpreaderBridge;
 import io.izzel.arclight.common.bridge.core.tileentity.SculkCatalystListenerBridge;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.SculkSpreader;

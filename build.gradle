@@ -12,25 +12,25 @@ allprojects {
     }
 
     ext {
-        agpVersion = '1.23'
         minecraftVersion = '1.20.4'
+        fabricLoaderVersion = '0.15.5'
         forgeVersion = '49.0.22'
-        apiVersion = '1.5.6'
+        apiVersion = '1.6.1'
         toolsVersion = '1.3.0'
         mixinVersion = '0.8.5'
         versionName = 'whisper'
         gitHash = getGitHash()
     }
 
-    task cleanBuild {
+    tasks.register('cleanBuild') {
         doFirst {
             project.file("build/libs").deleteDir()
         }
     }
 }
 
-task collect(type: Copy) {
+tasks.register('collect', Copy) {
     destinationDir = file('build/libs')
-    from project(':arclight-forge').file('build/libs')
-    dependsOn { project(':arclight-forge').tasks.jar }
+    from project(':arclight-forge-bootstrap').file('build/libs')
+    dependsOn { project(':arclight-forge-bootstrap').tasks.jar }
 }

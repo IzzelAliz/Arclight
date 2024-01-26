@@ -1,48 +1,30 @@
-buildscript {
-    repositories {
-        maven { url = 'https://maven.minecraftforge.net' }
-        maven { url = 'https://repo.spongepowered.org/maven' }
-        mavenCentral()
-        maven { url = 'https://maven.izzel.io/releases' }
-        // maven { url = 'https://maven.parchmentmc.org' }
-    }
-    dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: "${forge_gradle_version}", changing: true
-        // classpath 'org.parchmentmc:librarian:1.+'
-        classpath 'org.spongepowered:mixingradle:0.7.2-SNAPSHOT'
-        classpath "io.izzel.arclight:arclight-gradle-plugin:$agpVersion"
-    }
+plugins {
+    id "architectury-plugin" version "3.4-SNAPSHOT"
+    id 'java'
+    id 'idea'
 }
 
-apply plugin: 'net.minecraftforge.gradle'
-// apply plugin: 'org.parchmentmc.librarian.forgegradle'
-apply plugin: 'org.spongepowered.mixin'
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: 'io.izzel.arclight'
+apply plugin: io.izzel.arclight.gradle.ArclightGradlePlugin
+
+architectury {
+    minecraft = minecraftVersion
+    common("forge")
+}
+
+loom {
+    silentMojangMappingsLicense()
+    accessWidenerPath = file("src/main/resources/arclight.accesswidener")
+}
 
 arclight {
     mcVersion = minecraftVersion
     forgeVersion = project.ext.forgeVersion
     bukkitVersion = 'v1_20_R3'
-    wipeVersion = true
-    reobfVersion = true
     accessTransformer = project.file('bukkit.at')
-    // packageName = 'spigot'
-}
-
-configurations {
-    embed
+    extraMapping = project(':arclight-common').file('extra_mapping.tsrg')
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-
-minecraft {
-    //mappings channel: 'parchment', version: "2021.08.22-$minecraftVersion"
-    mappings channel: 'official', version: minecraftVersion
-    // copyIdeResources = true
-    accessTransformer = project.file('src/main/resources/META-INF/accesstransformer.cfg')
-}
 
 repositories {
     maven { url = 'https://repo.spongepowered.org/maven' }
@@ -55,86 +37,31 @@ repositories {
 }
 
 dependencies {
-    minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
+    minecraft "com.mojang:minecraft:$minecraftVersion"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:$fabricLoaderVersion"
+
+    compileOnly "io.izzel.arclight.generated:spigot:${minecraftVersion}:deobf"
+
     implementation "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
     implementation 'org.jetbrains:annotations:23.0.0'
 
-    implementation "org.spongepowered:mixin:$mixinVersion"
-    annotationProcessor 'org.spongepowered:mixin:0.8.3:processor'
-
-    implementation 'com.github.ArclightTeam:mixin-tools:1.0.0'
-    annotationProcessor 'com.github.ArclightTeam:mixin-tools:1.0.0'
+    implementation ('io.izzel.arclight:mixin-tools:1.1.0') { transitive = false }
+    annotationProcessor ('io.izzel.arclight:mixin-tools:1.1.0') { transitive = false }
 
     implementation 'jline:jline:2.12.1'
     implementation 'net.md-5:SpecialSource:1.11.0'
     implementation 'org.apache.logging.log4j:log4j-jul:2.15.0'
-    implementation 'net.md-5:bungeecord-chat:1.16-R0.4'
-    implementation 'mysql:mysql-connector-java:5.1.49'
+    implementation 'net.md-5:bungeecord-chat:1.20-R0.1'
+    implementation 'mysql:mysql-connector-java:8.0.28'
     implementation 'org.yaml:snakeyaml:2.0'
     implementation "io.izzel:tools:$toolsVersion"
     implementation "io.izzel.arclight:arclight-api:$apiVersion"
     implementation project(':i18n-config')
-    embed 'net.md-5:bungeecord-chat:1.16-R0.4@jar'
-    embed "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
 }
 
-jar {
-    manifest.attributes 'MixinConnector': 'io.izzel.arclight.common.mod.ArclightConnector'
-    manifest.attributes 'Implementation-Title': 'Arclight'
-    manifest.attributes 'Implementation-Version': "arclight-$minecraftVersion-${project.version}-$gitHash"
-    manifest.attributes 'Implementation-Vendor': 'Arclight Team'
-    manifest.attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd HH:mm:ss")
-    from { configurations.embed.collect { it.isDirectory() ? it : zipTree(it) } } {
-        exclude "META-INF/MANIFEST.MF"
-        exclude "META-INF/*.SF"
-        exclude "META-INF/*.DSA"
-        exclude "META-INF/*.RSA"
-        exclude "LICENSE.txt"
-        exclude "META-INF/services/**"
-        exclude "org/apache/commons/lang/enum/**"
-    }
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-tasks.register('srgJar', Jar) {
-    from(tasks.jar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) }) {
-        include 'io/izzel/**'
-        exclude 'io/izzel/arclight/common/mixin/**'
-    }
-    archiveClassifier.set('srg')
-}
-
-tasks.register('spigotJar', Jar) {
-    with tasks.srgJar
-    doLast {
-        def task = tasks.create('renameSpigotJar', net.minecraftforge.gradle.userdev.tasks.RenameJarInPlace)
-        task.input.set(archiveFile.get().asFile)
-        task.hasLog = false
-        task.mappings.set(project.file('build/arclight_cache/tmp_srg/bukkit_srg.srg'))
-        task.args.add('--reverse')
-        task.apply()
-    }
-    archiveClassifier.set('spigot')
-}
-
-afterEvaluate {
-    tasks.reobfJar.configure {
-        it.extraMappings.from(project.files('extra_mapping.tsrg'))
-    }
-}
-
-processResources {
-    filesMatching("**/mods.toml") {
-        expand 'version': "$minecraftVersion-${project.version}-$gitHash"
-    }
-}
-
-remapSpigotJar {
-    includes.add('net/minecraft/world/level/block/ChestBlock$DoubleInventory')
-}
-
-mixin {
-    add sourceSets.main, 'mixins.arclight.refmap.json'
+java {
+    withSourcesJar()
 }
 
 compileJava {

@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.item;
 
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.item.ItemEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.PlayerInventoryBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
@@ -14,7 +15,6 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.entity.Item;
@@ -27,19 +27,21 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.UUID;
 
 @Mixin(ItemEntity.class)
-public abstract class ItemEntityMixin extends EntityMixin {
+public abstract class ItemEntityMixin extends EntityMixin implements ItemEntityBridge {
 
     // @formatter:off
     @Shadow @Final private static EntityDataAccessor<ItemStack> DATA_ITEM;
     @Shadow public int pickupDelay;
     @Shadow public abstract ItemStack getItem();
     @Shadow public UUID target;
+    @Shadow public int age;
     // @formatter:on
 
     @Inject(method = "merge(Lnet/minecraft/world/entity/item/ItemEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/item/ItemEntity;Lnet/minecraft/world/item/ItemStack;)V", cancellable = true, at = @At("HEAD"))
@@ -67,7 +69,7 @@ public abstract class ItemEntityMixin extends EntityMixin {
             ItemStack itemstack = this.getItem();
             int i = itemstack.getCount();
 
-            int hook = net.minecraftforge.event.ForgeEventFactory.onItemPickup((ItemEntity) (Object) this, entity);
+            int hook = this.bridge$forge$onItemPickup(entity);
             if (hook < 0) return;
 
             final int canHold = ((PlayerInventoryBridge) entity.getInventory()).bridge$canHold(itemstack);
@@ -101,7 +103,7 @@ public abstract class ItemEntityMixin extends EntityMixin {
             ItemStack copy = itemstack.copy();
             if (this.pickupDelay == 0 && (this.target == null /*|| 6000 - this.age <= 200*/ || this.target.equals(entity.getUUID())) && (hook == 1 || entity.getInventory().add(itemstack))) {
                 copy.setCount(copy.getCount() - itemstack.getCount());
-                ForgeEventFactory.firePlayerItemPickupEvent(entity, (ItemEntity) (Object) this, copy);
+                this.bridge$forge$firePlayerItemPickupEvent(entity, copy);
                 entity.take((ItemEntity) (Object) this, i);
                 if (itemstack.isEmpty()) {
                     this.discard();
@@ -111,6 +113,23 @@ public abstract class ItemEntityMixin extends EntityMixin {
                 entity.onItemPickup((ItemEntity) (Object) this);
             }
         }
+    }
+
+    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V"),
+        slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/item/ItemEntity;age:I")))
+    private void arclight$itemDespawn(ItemEntity instance) {
+        if (this.bridge$common$itemDespawnEvent()) {
+            instance.discard();
+        }
+    }
+
+    @Override
+    public boolean bridge$common$itemDespawnEvent() {
+        if (CraftEventFactory.callItemDespawnEvent((ItemEntity) (Object) this).isCancelled()) {
+            this.age = 0;
+            return false;
+        }
+        return true;
     }
 
     @Inject(method = "setItem", at = @At("RETURN"))

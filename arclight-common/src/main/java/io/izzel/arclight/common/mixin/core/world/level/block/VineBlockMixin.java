@@ -39,7 +39,7 @@ public abstract class VineBlockMixin extends BlockMixin {
         if (!worldIn.getGameRules().getBoolean(GameRules.RULE_DO_VINES_SPREAD)) {
             return;
         }
-        if (worldIn.random.nextInt(4) == 0 && worldIn.isAreaLoaded(pos, 4)) { // Forge: check area to prevent loading unloaded chunks
+        if (worldIn.random.nextInt(4) == 0 && worldIn.isLoaded(pos)) {
             Direction direction = Direction.getRandom(random);
             BlockPos blockpos = pos.above();
             if (direction.getAxis().isHorizontal() && !state.getValue(getPropertyForFace(direction))) {

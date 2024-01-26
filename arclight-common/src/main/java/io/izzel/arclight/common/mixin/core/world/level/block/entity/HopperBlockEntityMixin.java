@@ -4,6 +4,7 @@ import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.tileentity.TileEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.core.BlockPos;
@@ -63,8 +64,12 @@ public abstract class HopperBlockEntityMixin extends LockableBlockEntityMixin {
         return result;
     }
 
-    @Eject(method = "ejectItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/HopperBlockEntity;addItem(Lnet/minecraft/world/Container;Lnet/minecraft/world/Container;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/core/Direction;)Lnet/minecraft/world/item/ItemStack;"))
-    private static ItemStack arclight$moveItem(Container source, Container destination, ItemStack stack, Direction direction, CallbackInfoReturnable<Boolean> cir, Level level, BlockPos p_155564_, BlockState p_155565_, HopperBlockEntity entity) {
+    @Eject(method = "ejectItems", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/HopperBlockEntity;addItem(Lnet/minecraft/world/Container;Lnet/minecraft/world/Container;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/core/Direction;)Lnet/minecraft/world/item/ItemStack;"))
+    private static ItemStack arclight$moveItem(Container source, Container destination, ItemStack stack, Direction direction, CallbackInfoReturnable<Boolean> cir) {
+        var entity = ((HopperBlockEntity) ArclightCaptures.getTickingBlockEntity());
+        if (entity == null) {
+            return HopperBlockEntity.addItem(source, destination, stack, direction);
+        }
         CraftItemStack original = CraftItemStack.asCraftMirror(stack);
 
         Inventory destinationInventory;
@@ -78,7 +83,7 @@ public abstract class HopperBlockEntityMixin extends LockableBlockEntityMixin {
         InventoryMoveItemEvent event = new InventoryMoveItemEvent(((TileEntityBridge) entity).bridge$getOwner().getInventory(), original.clone(), destinationInventory, true);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
-            entity.setCooldown(((WorldBridge) level).bridge$spigotConfig().hopperTransfer); // Delay hopper checks
+            entity.setCooldown(((WorldBridge) entity.getLevel()).bridge$spigotConfig().hopperTransfer); // Delay hopper checks
             cir.setReturnValue(false);
             return null;
         }

@@ -1,11 +1,12 @@
 package io.izzel.arclight.common.mod.server.world;
 
-import io.izzel.arclight.common.mod.ArclightMod;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.function.Function;
+
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 
@@ -21,7 +22,7 @@ public class WrappedWorlds {
             return getOrCreate(cl, key -> {
                 for (Field f : cl.getDeclaredFields()) {
                     if (Level.class.isAssignableFrom(f.getType())) {
-                        ArclightMod.LOGGER.debug("{} delegates to field {}", cl, f.getName());
+                        ArclightServer.LOGGER.debug("{} delegates to field {}", cl, f.getName());
                         f.setAccessible(true);
                         return f;
                     }
@@ -30,7 +31,7 @@ public class WrappedWorlds {
                 if (delegate.isPresent()) {
                     return delegate.get();
                 } else {
-                    ArclightMod.LOGGER.debug("{} delegates to nothing", cl);
+                    ArclightServer.LOGGER.debug("{} delegates to nothing", cl);
                     return null;
                 }
             });

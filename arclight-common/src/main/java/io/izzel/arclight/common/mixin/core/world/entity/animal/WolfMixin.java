@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.animal.Wolf;
@@ -35,5 +36,11 @@ public abstract class WolfMixin extends TameableAnimalMixin {
     @Inject(method = "mobInteract", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/Wolf;setTarget(Lnet/minecraft/world/entity/LivingEntity;)V"))
     private void arclight$attackReason(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
         bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.FORGOT_TARGET, true);
+    }
+
+    @Redirect(method = "mobInteract", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/RandomSource;nextInt(I)I"))
+    private int arclight$tame(RandomSource instance, int i, Player player) {
+        var ret = instance.nextInt(i);
+        return ret == 0 && this.bridge$common$animalTameEvent(player) ? ret : 1;
     }
 }

@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.network;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.datafixers.util.Pair;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.inventory.container.ContainerBridge;
 import io.izzel.arclight.common.bridge.core.network.datasync.SynchedEntityDataBridge;
@@ -11,7 +12,6 @@ import io.izzel.arclight.common.bridge.core.network.play.TimestampedPacket;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.core.server.management.PlayerInteractionManagerBridge;
 import io.izzel.arclight.common.bridge.core.server.management.PlayerListBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
@@ -105,8 +105,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.ForgeHooks;
-import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -443,8 +441,8 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
     }
 
     @Inject(method = "handleSelectTrade", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/MerchantMenu;setSelectionHint(I)V"))
-    private void arclight$tradeSelect(ServerboundSelectTradePacket packetIn, CallbackInfo ci, int i, AbstractContainerMenu container) {
-        var event = CraftEventFactory.callTradeSelectEvent(this.player, i, (MerchantMenu) container);
+    private void arclight$tradeSelect(ServerboundSelectTradePacket serverboundSelectTradePacket, CallbackInfo ci, int i, AbstractContainerMenu merchantMenu) {
+        var event = CraftEventFactory.callTradeSelectEvent(this.player, i, (MerchantMenu) merchantMenu);
         if (event.isCancelled()) {
             ((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity().updateInventory();
             ci.cancel();
@@ -457,7 +455,7 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
             this.lastBookTick = ArclightConstants.currentTick - 20;
         }
         if (this.lastBookTick + 20 > ArclightConstants.currentTick) {
-            this.disconnect("Book edited too quickly!");
+            this.bridge$disconnect("Book edited too quickly!");
             return;
         }
         this.lastBookTick = ArclightConstants.currentTick;
@@ -721,10 +719,12 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
                     // BetterCombat mixin compatibility
                     // https://github.com/ZsoltMolnarrr/BetterCombat/blob/9090f08faf4a3e51256c8a7a13af94a80b6128c0/common/src/main/java/net/bettercombat/mixin/ServerPlayNetworkHandlerMixin.java
                     ItemStack offhandStack = this.player.getItemInHand(InteractionHand.OFF_HAND);
-                    var event = ForgeEventFactory.onLivingSwapHandItems(this.player);
-                    if (event.isCanceled()) return;
-                    ItemStack itemstack = event.getItemSwappedToMainHand();
-                    ItemStack originMainHand = event.getItemSwappedToOffHand();
+                    var result = bridge$platform$canSwapHandItems(this.player);
+                    if (result._1) {
+                        return;
+                    }
+                    ItemStack itemstack = result._2;
+                    ItemStack originMainHand = result._3;
                     CraftItemStack mainHand = CraftItemStack.asCraftMirror(itemstack);
                     CraftItemStack offHand = CraftItemStack.asCraftMirror(originMainHand);
                     PlayerSwapHandItemsEvent swapItemsEvent = new PlayerSwapHandItemsEvent(this.getCraftPlayer(), mainHand.clone(), offHand.clone());
@@ -755,7 +755,7 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
                         ++this.dropCount;
                         if (this.dropCount >= 20) {
                             LOGGER.warn(this.player.getScoreboardName() + " dropped their items too quickly!");
-                            this.disconnect("You dropped your items too quickly (Hacking?)");
+                            this.bridge$disconnect("You dropped your items too quickly (Hacking?)");
                             return;
                         }
                     }
@@ -911,7 +911,7 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
             this.player.resetLastActionTime();
         } else {
             LOGGER.warn("{} tried to set an invalid carried item", this.player.getName().getString());
-            this.disconnect("Invalid hotbar selection (Hacking?)");
+            this.bridge$disconnect("Invalid hotbar selection (Hacking?)");
         }
     }
 
@@ -939,7 +939,7 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
                 }
 
                 CompletableFuture<FilteredText> completablefuture = this.filterTextPacket(playerchatmessage.signedContent()).thenApplyAsync(Function.identity(), ArclightServer.getChatExecutor());
-                var component = ForgeHooks.onServerChatSubmittedEvent(this.player, playerchatmessage.decoratedContent());
+                var component = bridge$platform$onServerChatSubmitted(this.player, playerchatmessage.decoratedContent());
 
                 this.chatMessageChain.append(completablefuture, (text) -> {
                         if (component == null) return;
@@ -1137,9 +1137,9 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
         double d0 = this.player.getX();
         double d2 = this.player.getY() + this.player.getEyeHeight();
         double d3 = this.player.getZ();
-        double d4 = this.player.getBlockReach();
-        var origin = new Location(((WorldBridge) this.player.level()).bridge$getWorld(), d0, d2, d3, f1, f2);
-        var result = ((WorldBridge) this.player.level()).bridge$getWorld().rayTrace(origin, origin.getDirection(), d4, org.bukkit.FluidCollisionMode.NEVER, false, 0.1, entity -> {
+        double d4 = ((PlayerEntityBridge) this.player).bridge$platform$getBlockReach();
+        var origin = new Location(this.player.level().bridge$getWorld(), d0, d2, d3, f1, f2);
+        var result = this.player.level().bridge$getWorld().rayTrace(origin, origin.getDirection(), d4, org.bukkit.FluidCollisionMode.NEVER, false, 0.1, entity -> {
             Entity handle = ((CraftEntity) entity).getHandle();
             return handle != this.player && ((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity().canSee(entity) && !handle.isSpectator() && handle.isPickable() && !handle.isPassengerOfSameVehicle(player);
         });
@@ -1188,7 +1188,7 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
         final ServerLevel world = this.player.serverLevel();
         final Entity entity = packetIn.getTarget(world);
         if (entity == player && !player.isSpectator()) {
-            disconnect("Cannot interact with self!");
+            bridge$disconnect("Cannot interact with self!");
             return;
         }
         this.player.resetLastActionTime();
@@ -1263,8 +1263,10 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
                 @Override
                 public void onInteraction(InteractionHand hand, Vec3 vec) {
                     this.performInteraction(hand, (player, e, h) -> {
-                            var onInteractEntityAtResult = ForgeHooks.onInteractEntityAt(player, entity, vec, hand);
-                            if (onInteractEntityAtResult != null) return onInteractEntityAtResult;
+                            var onInteractEntityAtResult = bridge$platform$onInteractEntityAt(player, entity, vec, hand);
+                            if (onInteractEntityAtResult != null) {
+                                return onInteractEntityAtResult;
+                            }
                             return e.interactAt(player, vec, h);
                         },
                         new PlayerInteractAtEntityEvent(getCraftPlayer(), ((EntityBridge) entity).bridge$getBukkitEntity(),
@@ -1276,7 +1278,7 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
                     if (!(entity instanceof ItemEntity) && !(entity instanceof ExperienceOrb) && !(entity instanceof AbstractArrow) && (entity != player || player.isSpectator())) {
                         ItemStack itemInHand = player.getMainHandItem();
                         if (!itemInHand.isItemEnabled(world.enabledFeatures())) return;
-                        if (player.canReach(entity, 3)) { //Forge: Perform attack range check. Original check was dist < 6, range is 3, so vanilla used padding=3
+                        if (((PlayerEntityBridge) player).bridge$platform$canReach(entity, 3)) { //Forge: Perform attack range check. Original check was dist < 6, range is 3, so vanilla used padding=3
                             player.attack(entity);
                         }
 

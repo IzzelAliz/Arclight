@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
 import io.izzel.arclight.api.ArclightVersion;
+import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -10,7 +11,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.InfestedBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -45,7 +45,7 @@ public abstract class Silverfish_WakeUpFriendsGoalMixin extends Goal {
                             if (!CraftEventFactory.callEntityChangeBlockEvent(this.silverfish, blockpos1, Blocks.AIR.defaultBlockState())) {
                                 continue;
                             }
-                            if (ForgeEventFactory.getMobGriefingEvent(world, this.silverfish)) {
+                            if (((WorldBridge) world).bridge$forge$mobGriefing(this.silverfish)) {
                                 if (ArclightVersion.atLeast(ArclightVersion.v1_15)) {
                                     world.destroyBlock(blockpos1, true, this.silverfish);
                                 } else {

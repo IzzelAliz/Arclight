@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
-import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
@@ -57,7 +56,7 @@ public class LeadItemMixin {
             if (mobentity.getLeashHolder() == player) {
                 if (leashknotentity == null) {
                     leashknotentity = LeashFenceKnotEntity.getOrCreateKnot(worldIn, fence);
-                    HangingPlaceEvent event = new HangingPlaceEvent((Hanging) ((EntityBridge) leashknotentity).bridge$getBukkitEntity(), player != null ? (Player) ((PlayerEntityBridge) player).bridge$getBukkitEntity() : null, CraftBlock.at(worldIn, fence), BlockFace.SELF, CraftEquipmentSlot.getHand(arclight$hand));
+                    HangingPlaceEvent event = new HangingPlaceEvent((Hanging) leashknotentity.bridge$getBukkitEntity(), player != null ? (Player) ((PlayerEntityBridge) player).bridge$getBukkitEntity() : null, CraftBlock.at(worldIn, fence), BlockFace.SELF, CraftEquipmentSlot.getHand(arclight$hand));
                     Bukkit.getPluginManager().callEvent(event);
 
                     if (event.isCancelled()) {

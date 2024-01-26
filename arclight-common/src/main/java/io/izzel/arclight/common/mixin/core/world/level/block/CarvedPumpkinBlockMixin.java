@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -24,7 +25,7 @@ public class CarvedPumpkinBlockMixin {
 
     @Inject(method = "spawnGolemInWorld", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private static void arclight$clearPattern(Level p_249110_, BlockPattern.BlockPatternMatch p_251293_, Entity entity, BlockPos p_251189_, CallbackInfo ci) {
-        if (!entity.isAddedToWorld()) {
+        if (!((EntityBridge) entity).bridge$isValid()) {
             ci.cancel();
         } else {
             CarvedPumpkinBlock.clearPatternBlocks(p_249110_, p_251293_);

@@ -5,6 +5,8 @@ import com.mojang.datafixers.util.Pair;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.ServerEntityBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
+import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
+import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundRotateHeadPacket;
@@ -92,10 +94,12 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
         lastUpdate = lastPosUpdate = lastMapUpdate = -1;
     }
 
+    @ShadowConstructor
     public void arclight$constructor(ServerLevel serverWorld, Entity entity, int updateFrequency, boolean sendVelocityUpdates, Consumer<Packet<?>> packetConsumer) {
         throw new NullPointerException();
     }
 
+    @CreateConstructor
     public void arclight$constructor(ServerLevel serverWorld, Entity entity, int updateFrequency, boolean sendVelocityUpdates, Consumer<Packet<?>> packetConsumer, Set<ServerPlayerConnection> set) {
         arclight$constructor(serverWorld, entity, updateFrequency, sendVelocityUpdates, packetConsumer);
         this.trackedPlayers = set;

@@ -4,9 +4,10 @@ import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.util.FoodStatsBridge;
+import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
+import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 import net.minecraft.world.food.FoodProperties;
@@ -23,8 +24,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import javax.annotation.Nullable;
-
 @Mixin(FoodData.class)
 public abstract class FoodDataMixin implements FoodStatsBridge {
 
@@ -40,32 +39,30 @@ public abstract class FoodDataMixin implements FoodStatsBridge {
     public int unsaturatedRegenRate = 80;
     public int starvationRate = 80;
 
+    @ShadowConstructor
     public void arclight$constructor() {
         throw new RuntimeException();
     }
 
+    @CreateConstructor
     public void arclight$constructor(Player playerEntity) {
         arclight$constructor();
         this.entityhuman = playerEntity;
     }
 
-    @Redirect(method = "eat(Lnet/minecraft/world/item/Item;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;)V", remap = false,
-        at = @At(value = "INVOKE", remap = true, target = "Lnet/minecraft/world/food/FoodData;eat(IF)V"))
-    private void arclight$foodLevelChange(FoodData foodStats, int foodLevelIn, float foodSaturationModifier, Item maybeFood, ItemStack stack, @Nullable LivingEntity entity) {
-        var player = this.entityhuman != null ? this.entityhuman : (entity instanceof Player p ? p : null);
-        if (player == null) {
+    @Redirect(method = "eat(Lnet/minecraft/world/item/Item;Lnet/minecraft/world/item/ItemStack;)V", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/food/FoodData;eat(IF)V"))
+    private void arclight$foodLevelChange(FoodData foodStats, int foodLevelIn, float foodSaturationModifier, Item maybeFood, ItemStack stack) {
+        if (this.entityhuman == null) {
             foodStats.eat(foodLevelIn, foodSaturationModifier);
             return;
-        } else if (this.entityhuman == null) {
-            this.entityhuman = player;
         }
-        FoodProperties food = maybeFood.getFoodProperties(stack, entity);
+        FoodProperties food = this.bridge$forge$getFoodProperties(stack, this.entityhuman);
         int oldFoodLevel = this.foodLevel;
-        FoodLevelChangeEvent event = CraftEventFactory.callFoodLevelChangeEvent(player, food.getNutrition() + oldFoodLevel, stack);
+        FoodLevelChangeEvent event = CraftEventFactory.callFoodLevelChangeEvent(this.entityhuman, food.getNutrition() + oldFoodLevel, stack);
         if (!event.isCancelled()) {
             this.eat(event.getFoodLevel() - oldFoodLevel, food.getSaturationModifier());
         }
-        ((ServerPlayerEntityBridge) player).bridge$getBukkitEntity().sendHealthUpdate();
+        ((ServerPlayerEntityBridge) this.entityhuman).bridge$getBukkitEntity().sendHealthUpdate();
     }
 
     @Inject(method = "tick", at = @At(value = "INVOKE_ASSIGN", remap = false, target = "Ljava/lang/Math;max(II)I"))
@@ -96,5 +93,10 @@ public abstract class FoodDataMixin implements FoodStatsBridge {
     @Override
     public void bridge$setEntityHuman(Player playerEntity) {
         this.entityhuman = playerEntity;
+    }
+
+    @Override
+    public Player bridge$getEntityHuman() {
+        return this.entityhuman;
     }
 }

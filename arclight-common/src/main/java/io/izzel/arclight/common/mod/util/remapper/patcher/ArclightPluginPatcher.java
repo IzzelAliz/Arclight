@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mod.util.remapper.patcher;
 
 import io.izzel.arclight.api.PluginPatcher;
-import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.util.remapper.ClassLoaderRemapper;
 import io.izzel.arclight.common.mod.util.remapper.GlobalClassRepo;
 import io.izzel.arclight.common.mod.util.remapper.PluginTransformer;
@@ -40,7 +40,7 @@ public class ArclightPluginPatcher implements PluginTransformer {
         var list = new ArrayList<PluginPatcher>();
         File pluginFolder = new File("plugins");
         if (pluginFolder.exists()) {
-            ArclightMod.LOGGER.info("patcher.loading");
+            ArclightServer.LOGGER.info("patcher.loading");
             File[] files = pluginFolder.listFiles();
             if (files != null) {
                 for (File file : files) {
@@ -49,7 +49,7 @@ public class ArclightPluginPatcher implements PluginTransformer {
                     }
                 }
                 if (!list.isEmpty()) {
-                    ArclightMod.LOGGER.info("patcher.loaded", list.size());
+                    ArclightServer.LOGGER.info("patcher.loaded", list.size());
                 }
             }
         }
@@ -75,7 +75,7 @@ public class ArclightPluginPatcher implements PluginTransformer {
                 }
             }
         } catch (Throwable e) {
-            ArclightMod.LOGGER.debug("patcher.load-error", e);
+            ArclightServer.LOGGER.debug("patcher.load-error", e);
         }
         return Optional.empty();
     }

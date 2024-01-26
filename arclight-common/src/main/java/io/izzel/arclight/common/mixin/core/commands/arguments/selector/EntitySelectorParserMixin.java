@@ -15,7 +15,7 @@ public abstract class EntitySelectorParserMixin implements EntitySelectorParserB
 
     // @formatter:off
     @Shadow private boolean usesSelectors;
-    @Shadow protected abstract void shadow$parseSelector() throws CommandSyntaxException;
+    @Shadow protected abstract void parseSelector() throws CommandSyntaxException;
     @Shadow public abstract EntitySelector parse() throws CommandSyntaxException;
     // @formatter:on
 
@@ -42,7 +42,7 @@ public abstract class EntitySelectorParserMixin implements EntitySelectorParserB
 
     public void parseSelector(boolean overridePermissions) throws CommandSyntaxException {
         this.usesSelectors = !overridePermissions;
-        this.shadow$parseSelector();
+        this.parseSelector();
     }
 
     @Inject(method = "parseSelector", at = @At("HEAD"))

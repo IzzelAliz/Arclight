@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.entity.item;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.EntityMixin;
+import io.izzel.arclight.common.mod.mixins.annotation.TransformAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -16,6 +17,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Hanging;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -90,6 +92,7 @@ public abstract class HangingEntityMixin extends EntityMixin {
         return i % 32 == 0 ? 0.5D : 0.0D;
     }
 
+    @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
     private static AABB calculateBoundingBox(Entity entity, BlockPos blockPosition, Direction direction, int width, int height) {
         double d0 = blockPosition.getX() + 0.5;
         double d2 = blockPosition.getY() + 0.5;

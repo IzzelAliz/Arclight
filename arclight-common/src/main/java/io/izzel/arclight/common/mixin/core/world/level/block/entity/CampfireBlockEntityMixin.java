@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
-import io.izzel.arclight.common.bridge.core.item.crafting.RecipeHolderBridge;
+import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeHolderBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
 import net.minecraft.world.Containers;

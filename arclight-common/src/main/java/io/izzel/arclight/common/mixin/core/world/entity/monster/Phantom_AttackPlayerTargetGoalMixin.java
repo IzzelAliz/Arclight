@@ -11,12 +11,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(targets = "net.minecraft.world.entity.monster.Phantom$PhantomAttackPlayerTargetGoal")
 public abstract class Phantom_AttackPlayerTargetGoalMixin {
-
-    @SuppressWarnings("target") @Shadow(aliases = {"this$0", "f_33191_"}, remap = false)
+    @SuppressWarnings("target")
+    @Shadow(aliases = {"this$0", "f_33191_", "field_7319"}, remap = false)
     private Phantom outerThis;
 
-    // canUse  setTarget
-    @Inject(method = "m_8036_()Z", remap = false, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/Phantom;m_6710_(Lnet/minecraft/world/entity/LivingEntity;)V"))
+    @Inject(method = "canUse", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/Phantom;setTarget(Lnet/minecraft/world/entity/LivingEntity;)V"))
     private void arclight$reason(CallbackInfoReturnable<Boolean> cir) {
         ((MobEntityBridge) outerThis).bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.CLOSEST_PLAYER, true);
     }

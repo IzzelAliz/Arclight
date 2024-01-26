@@ -23,7 +23,7 @@ import java.util.Collection;
 public abstract class MapItemSavedData_HoldingPlayerMixin {
 
     // @formatter:off
-    @SuppressWarnings("target") @Shadow(aliases = {"this$0", "f_77961_"}, remap = false) private MapItemSavedData outerThis;
+    @SuppressWarnings("target") @Shadow(aliases = {"this$0", "f_77961_", "field_132"}, remap = false) private MapItemSavedData outerThis;
     @Shadow private boolean dirtyData;
     @Shadow private int minDirtyX;
     @Shadow private int minDirtyY;
@@ -42,7 +42,7 @@ public abstract class MapItemSavedData_HoldingPlayerMixin {
     @Overwrite
     @Nullable
     public Packet<?> nextUpdatePacket(int i) {
-        RenderData render = ((MapDataBridge) outerThis).bridge$getMapView().render(((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity()); // CraftBukkit
+        RenderData render = ((MapDataBridge) outerThis).bridge$getMapView().render(((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity());
         MapItemSavedData.MapPatch patch;
         if (this.dirtyData) {
             this.dirtyData = false;
@@ -53,15 +53,13 @@ public abstract class MapItemSavedData_HoldingPlayerMixin {
         } else {
             patch = null;
         }
-
         Collection<MapDecoration> icons;
         if (this.tick++ % 5 == 0) {
             this.dirtyDecorations = false;
             icons = new ArrayList<>();
             for (MapCursor cursor : render.cursors) {
                 if (cursor.isVisible()) {
-                    icons.add(new MapDecoration(MapDecoration.Type.byIcon(cursor.getRawType()),
-                        cursor.getX(), cursor.getY(), cursor.getDirection(), CraftChatMessage.fromStringOrNull(cursor.getCaption())));
+                    icons.add(new MapDecoration(MapDecoration.Type.byIcon(cursor.getRawType()), cursor.getX(), cursor.getY(), cursor.getDirection(), CraftChatMessage.fromStringOrNull(cursor.getCaption())));
                 }
             }
         } else {

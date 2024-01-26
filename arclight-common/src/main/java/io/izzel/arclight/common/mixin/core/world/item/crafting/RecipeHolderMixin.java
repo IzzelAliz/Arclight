@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.item.crafting;
 
-import io.izzel.arclight.common.bridge.core.item.crafting.RecipeBridge;
-import io.izzel.arclight.common.bridge.core.item.crafting.RecipeHolderBridge;
+import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeBridge;
+import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeHolderBridge;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
