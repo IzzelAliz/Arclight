@@ -92,7 +92,9 @@ public class ForgeInstaller {
                     builder.command(file.getCanonicalPath(), "-Djava.net.useSystemProxies=true", "-jar", futures[0].join().toString(), "--installServer", ".", "--debug");
                     builder.inheritIO();
                     Process process = builder.start();
-                    process.waitFor();
+                    if (process.waitFor() > 0) {
+                        throw new Exception("Forge installation failed");
+                    }
                 } catch (IOException e) {
                     try (URLClassLoader loader = new URLClassLoader(
                         new URL[]{new File(String.format("forge-%s-%s-installer.jar", installInfo.installer.minecraft, installInfo.installer.forge)).toURI().toURL()},
