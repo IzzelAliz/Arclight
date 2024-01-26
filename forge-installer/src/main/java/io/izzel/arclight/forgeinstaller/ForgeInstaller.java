@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -43,8 +42,6 @@ import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
 
 public class ForgeInstaller {
-
-    private static final MethodHandles.Lookup IMPL_LOOKUP = Unsafe.lookup();
 
     public static List<Path> modInstall(Consumer<String> logger) throws Throwable {
         InputStream stream = ForgeInstaller.class.getModule().getResourceAsStream("/META-INF/installer.json");
@@ -166,7 +163,7 @@ public class ForgeInstaller {
         });
         var serverFuture = minecraftData.thenCompose(data -> reportSupply(pool, logger).apply(
             new FileDownloader(String.format(data.serverUrl, info.installer.minecraft),
-                String.format("libraries/net/minecraft/server/%1$s/server-%1$s.jar", info.installer.minecraft), data.serverHash)
+                String.format("libraries/net/minecraft/server/%1$s/server-%1$s-bundled.jar", info.installer.minecraft), data.serverHash)
         ));
         return new CompletableFuture[]{installerFuture, serverFuture};
     }
