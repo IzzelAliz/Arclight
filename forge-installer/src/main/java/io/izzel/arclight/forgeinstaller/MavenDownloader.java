@@ -5,14 +5,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringJoiner;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class MavenDownloader implements Supplier<Path> {
-
-    private static final Function<String, String> FORGE_TO_BMCLAPI =
-        s -> s.replace("https://files.minecraftforge.net/maven/", "https://download.mcbbs.net/maven/")
-            .replace("https://maven.minecraftforge.net/", "https://download.mcbbs.net/maven/");
 
     private final LinkedList<String> urls;
     private final String coord;
@@ -33,8 +28,11 @@ public class MavenDownloader implements Supplier<Path> {
     public MavenDownloader(String[] repos, String coord, String target, String hash, String sourceUrl) {
         this(repos, coord, target, hash);
         if (sourceUrl != null && !this.urls.contains(sourceUrl)) {
-            this.urls.addFirst(sourceUrl);
-            this.urls.addFirst(FORGE_TO_BMCLAPI.apply(sourceUrl));
+            if (Mirrors.isMirrorUrl(sourceUrl)) {
+                this.urls.addFirst(sourceUrl);
+            } else {
+                this.urls.addLast(sourceUrl);
+            }
         }
     }
 
