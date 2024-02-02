@@ -18,6 +18,7 @@ import net.minecraft.world.inventory.ContainerSynchronizer;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
@@ -68,6 +69,7 @@ public abstract class AbstractContainerMenuMixin implements ContainerBridge {
     @Shadow protected abstract SlotAccess createCarriedSlotAccess();
     @Shadow public abstract void sendAllDataToRemote();
     @Shadow public abstract int incrementStateId();
+    @Shadow protected abstract boolean tryItemClickBehaviourOverride(Player p_249615_, ClickAction p_250300_, Slot p_249384_, ItemStack p_251073_, ItemStack p_252026_);
     // @formatter:on
 
     public boolean checkReachable = true;
@@ -245,7 +247,7 @@ public abstract class AbstractContainerMenuMixin implements ContainerBridge {
                 ItemStack itemstack10 = slot7.getItem();
                 ItemStack itemstack11 = this.getCarried();
                 player.updateTutorialInventoryAction(itemstack11, slot7.getItem(), clickaction);
-                if (!itemstack11.overrideStackedOnOther(slot7, clickaction, player) && !itemstack10.overrideOtherStackedOnMe(itemstack11, slot7, clickaction, player, this.createCarriedSlotAccess())) {
+                if (!this.tryItemClickBehaviourOverride(player, clickaction, slot7, itemstack10, itemstack11) && !ForgeHooks.onItemStackedOn(itemstack10, itemstack11, slot7, clickaction, player, this.createCarriedSlotAccess())) {
                     if (itemstack10.isEmpty()) {
                         if (!itemstack11.isEmpty()) {
                             int l2 = clickaction == ClickAction.PRIMARY ? itemstack11.getCount() : 1;
