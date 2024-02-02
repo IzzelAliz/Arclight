@@ -18,6 +18,7 @@ import net.minecraft.world.inventory.ContainerSynchronizer;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
@@ -244,33 +245,35 @@ public abstract class AbstractContainerMenuMixin implements ContainerBridge {
                 ItemStack itemstack11 = this.getCarried();
                 player.updateTutorialInventoryAction(itemstack11, slot7.getItem(), clickaction);
                 if (!itemstack11.overrideStackedOnOther(slot7, clickaction, player) && !itemstack10.overrideOtherStackedOnMe(itemstack11, slot7, clickaction, player, this.createCarriedSlotAccess())) {
-                    if (itemstack10.isEmpty()) {
-                        if (!itemstack11.isEmpty()) {
-                            int l2 = clickaction == ClickAction.PRIMARY ? itemstack11.getCount() : 1;
-                            this.setCarried(slot7.safeInsert(itemstack11, l2));
-                        }
-                    } else if (slot7.mayPickup(player)) {
-                        if (itemstack11.isEmpty()) {
-                            int i3 = clickaction == ClickAction.PRIMARY ? itemstack10.getCount() : (itemstack10.getCount() + 1) / 2;
-                            Optional<ItemStack> optional1 = slot7.tryRemove(i3, Integer.MAX_VALUE, player);
-                            optional1.ifPresent((p_150421_) -> {
-                                this.setCarried(p_150421_);
-                                slot7.onTake(player, p_150421_);
-                            });
-                        } else if (slot7.mayPlace(itemstack11)) {
-                            if (ItemStack.isSameItemSameTags(itemstack10, itemstack11)) {
-                                int j3 = clickaction == ClickAction.PRIMARY ? itemstack11.getCount() : 1;
-                                this.setCarried(slot7.safeInsert(itemstack11, j3));
-                            } else if (itemstack11.getCount() <= slot7.getMaxStackSize(itemstack11)) {
-                                this.setCarried(itemstack10);
-                                slot7.set(itemstack11);
+                    if (!ForgeHooks.onItemStackedOn(itemstack10, itemstack11, slot7, clickaction, player, this.createCarriedSlotAccess())) {
+                        if (itemstack10.isEmpty()) {
+                            if (!itemstack11.isEmpty()) {
+                                int l2 = clickaction == ClickAction.PRIMARY ? itemstack11.getCount() : 1;
+                                this.setCarried(slot7.safeInsert(itemstack11, l2));
                             }
-                        } else if (ItemStack.isSameItemSameTags(itemstack10, itemstack11)) {
-                            Optional<ItemStack> optional = slot7.tryRemove(itemstack10.getCount(), itemstack11.getMaxStackSize() - itemstack11.getCount(), player);
-                            optional.ifPresent((p_150428_) -> {
-                                itemstack11.grow(p_150428_.getCount());
-                                slot7.onTake(player, p_150428_);
-                            });
+                        } else if (slot7.mayPickup(player)) {
+                            if (itemstack11.isEmpty()) {
+                                int i3 = clickaction == ClickAction.PRIMARY ? itemstack10.getCount() : (itemstack10.getCount() + 1) / 2;
+                                Optional<ItemStack> optional1 = slot7.tryRemove(i3, Integer.MAX_VALUE, player);
+                                optional1.ifPresent((p_150421_) -> {
+                                    this.setCarried(p_150421_);
+                                    slot7.onTake(player, p_150421_);
+                                });
+                            } else if (slot7.mayPlace(itemstack11)) {
+                                if (ItemStack.isSameItemSameTags(itemstack10, itemstack11)) {
+                                    int j3 = clickaction == ClickAction.PRIMARY ? itemstack11.getCount() : 1;
+                                    this.setCarried(slot7.safeInsert(itemstack11, j3));
+                                } else if (itemstack11.getCount() <= slot7.getMaxStackSize(itemstack11)) {
+                                    this.setCarried(itemstack10);
+                                    slot7.set(itemstack11);
+                                }
+                            } else if (ItemStack.isSameItemSameTags(itemstack10, itemstack11)) {
+                                Optional<ItemStack> optional = slot7.tryRemove(itemstack10.getCount(), itemstack11.getMaxStackSize() - itemstack11.getCount(), player);
+                                optional.ifPresent((p_150428_) -> {
+                                    itemstack11.grow(p_150428_.getCount());
+                                    slot7.onTake(player, p_150428_);
+                                });
+                            }
                         }
                     }
                 }
