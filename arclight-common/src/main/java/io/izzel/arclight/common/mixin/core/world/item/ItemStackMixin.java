@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.item;
 
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.item.ItemStackBridge;
+import io.izzel.arclight.i18n.ArclightConfig;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
@@ -21,12 +22,16 @@ import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import javax.annotation.Nullable;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 @Mixin(ItemStack.class)
@@ -38,6 +43,14 @@ public abstract class ItemStackMixin extends CapabilityProvider<ItemStack> imple
     @Shadow(remap = false) private CompoundTag capNBT;
     @Mutable @Shadow(remap = false) @Final private net.minecraft.core.Holder.Reference<Item> delegate;
     // @formatter:on
+
+    @Shadow
+    public abstract boolean is(Item p_150931_);
+
+    @Shadow
+    public abstract Item getItem();
+
+    @Shadow @Nullable private CompoundTag tag;
 
     protected ItemStackMixin(Class<ItemStack> baseClass) {
         super(baseClass);
@@ -97,5 +110,44 @@ public abstract class ItemStackMixin extends CapabilityProvider<ItemStack> imple
     public void setItem(Item item) {
         this.item = item;
         this.delegate = ForgeRegistries.ITEMS.getDelegateOrThrow(item);
+    }
+
+    @Unique
+    private static boolean arclight$lenientItemMatch(Object a, Object b) {
+        if (ArclightConfig.spec().getCompat().isLenientItemTagMatch()) {
+            var tagA = (CompoundTag) a;
+            var tagB = (CompoundTag) b;
+            if (tagB != null) {
+                var tmp = tagA;
+                tagA = tagB;
+                tagB = tmp;
+            }
+            return tagA == null || (tagA.isEmpty() ? (tagB == null || tagB.isEmpty()) : tagA.equals(tagB));
+        } else {
+            return Objects.equals(a, b);
+        }
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    public static boolean tagMatches(ItemStack itemStack, ItemStack itemStack2) {
+        return arclight$lenientItemMatch(itemStack.getTag(), itemStack2.getTag())
+            && itemStack.areCapsCompatible(itemStack2);
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    private boolean matches(ItemStack other) {
+        if (this.count != other.getCount()) {
+            return false;
+        } else if (!this.is(other.getItem())) {
+            return false;
+        } else return tagMatches((ItemStack) (Object) this, other);
     }
 }
