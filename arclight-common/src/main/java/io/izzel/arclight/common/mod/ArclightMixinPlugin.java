@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mod;
 
 import io.izzel.arclight.api.ArclightPlatform;
 import io.izzel.arclight.common.mod.mixins.CreateConstructorProcessor;
+import io.izzel.arclight.common.mod.mixins.InlineProcessor;
 import io.izzel.arclight.common.mod.mixins.MixinProcessor;
 import io.izzel.arclight.common.mod.mixins.RenameIntoProcessor;
 import io.izzel.arclight.common.mod.mixins.TransformAccessProcessor;
@@ -22,7 +23,8 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin, IEnvironmentToke
     private final List<MixinProcessor> postProcessors = List.of(
         new RenameIntoProcessor(),
         new TransformAccessProcessor(),
-        new CreateConstructorProcessor()
+        new CreateConstructorProcessor(),
+        new InlineProcessor()
     );
 
     @Override

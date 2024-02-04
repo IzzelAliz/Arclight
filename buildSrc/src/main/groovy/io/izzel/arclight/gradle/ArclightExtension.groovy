@@ -10,7 +10,6 @@ class ArclightExtension {
     private String forgeVersion
     private File accessTransformer
     private File extraMapping
-    private List<String> installerInfo = new ArrayList<>()
     private final MappingsConfiguration mappingsConfiguration = new MappingsConfiguration()
 
     ArclightExtension(Project project) {
@@ -39,14 +38,6 @@ class ArclightExtension {
 
     void setAccessTransformer(File accessTransformer) {
         this.accessTransformer = accessTransformer
-    }
-
-    List<String> getInstallerInfo() {
-        return installerInfo
-    }
-
-    void setInstallerInfo(List<String> installerInfo) {
-        this.installerInfo = installerInfo
     }
 
     String getForgeVersion() {

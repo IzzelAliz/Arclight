@@ -32,21 +32,6 @@ class AwWriter {
         })
     }
 
-    private static String getAccessModifier(AccessChange change) {
-        switch (change) {
-            case AccessChange.PUBLIC:
-                return "public"
-            case AccessChange.PROTECTED:
-                return "protected"
-            case AccessChange.PACKAGE_PRIVATE:
-                return "default"
-            case AccessChange.PRIVATE:
-                return "private"
-            default:
-                throw new AssertionError(change)
-        }
-    }
-
     private void writeAccessTransform(String remaining, boolean field, AccessTransform transform) throws IOException {
         if (transform.access == AccessChange.PUBLIC) {
             this.writer.write('accessible ')
