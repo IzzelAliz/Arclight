@@ -23,7 +23,7 @@ public abstract class CraftRegionAccessorMixin {
     // @formatter:on
 
     @Inject(method = "spawnEntity(Lorg/bukkit/Location;Lorg/bukkit/entity/EntityType;)Lorg/bukkit/entity/Entity;", cancellable = true, at = @At("HEAD"))
-    private void arclight$useFactory(Location loc, EntityType entityType, CallbackInfoReturnable<Entity> cir) {
+    private void arclight$useFactory(Location loc, EntityTypeBridge entityType, CallbackInfoReturnable<Entity> cir) {
         Function<Location, ? extends net.minecraft.world.entity.Entity> factory = ((EntityTypeBridge) (Object) entityType).bridge$entityFactory();
         if (factory != null) {
             cir.setReturnValue(this.addEntity(factory.apply(loc), CreatureSpawnEvent.SpawnReason.CUSTOM, null, true));
@@ -31,7 +31,7 @@ public abstract class CraftRegionAccessorMixin {
     }
 
     @Inject(method = "spawnEntity(Lorg/bukkit/Location;Lorg/bukkit/entity/EntityType;Z)Lorg/bukkit/entity/Entity;", cancellable = true, at = @At("HEAD"))
-    private void arclight$useFactory(Location loc, EntityType entityType, boolean randomizeData, CallbackInfoReturnable<Entity> cir) {
+    private void arclight$useFactory(Location loc, EntityTypeBridge entityType, boolean randomizeData, CallbackInfoReturnable<Entity> cir) {
         Function<Location, ? extends net.minecraft.world.entity.Entity> factory = ((EntityTypeBridge) (Object) entityType).bridge$entityFactory();
         if (factory != null) {
             cir.setReturnValue(this.addEntity(factory.apply(loc), CreatureSpawnEvent.SpawnReason.CUSTOM, null, randomizeData));
