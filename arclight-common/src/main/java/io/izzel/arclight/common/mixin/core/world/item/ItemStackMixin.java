@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.item;
 
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.item.ItemStackBridge;
+import io.izzel.arclight.i18n.ArclightConfig;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
@@ -25,8 +26,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Objects;
 import java.util.function.Consumer;
 
 @Mixin(ItemStack.class)
@@ -97,5 +100,21 @@ public abstract class ItemStackMixin extends CapabilityProvider<ItemStack> imple
     public void setItem(Item item) {
         this.item = item;
         this.delegate = ForgeRegistries.ITEMS.getDelegateOrThrow(item);
+    }
+
+    @Redirect(method = "isSameItemSameTags", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Objects;equals(Ljava/lang/Object;Ljava/lang/Object;)Z"))
+    private static boolean arclight$lenientItemMatch(Object a, Object b) {
+        if (ArclightConfig.spec().getCompat().isLenientItemTagMatch()) {
+            var tagA = (CompoundTag) a;
+            var tagB = (CompoundTag) b;
+            if (tagB != null) {
+                var tmp = tagA;
+                tagA = tagB;
+                tagB = tmp;
+            }
+            return tagA == null || (tagA.isEmpty() ? (tagB == null || tagB.isEmpty()) : tagA.equals(tagB));
+        } else {
+            return Objects.equals(a, b);
+        }
     }
 }
