@@ -14,7 +14,7 @@ public abstract class SpellcastingIllager_UseSpellGoalMixin {
     @Shadow(aliases = {"this$0", "f_33776_", "field_7386"}, remap = false)
     private SpellcasterIllager outerThis;
 
-    @Shadow(aliases = "m_7269_")
+    @Shadow
     protected abstract SpellcasterIllager.IllagerSpell getSpell();
 
     @Inject(method = "tick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/SpellcasterIllager$SpellcasterUseSpellGoal;performSpellCasting()V"))

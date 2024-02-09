@@ -4,6 +4,7 @@ import io.izzel.arclight.gradle.tasks.BuildSpigotTask
 import io.izzel.arclight.gradle.tasks.DownloadBuildToolsTask
 import io.izzel.arclight.gradle.tasks.ProcessMappingTask
 import io.izzel.arclight.gradle.tasks.RemapSpigotTask
+import net.fabricmc.loom.bootstrap.LoomGradlePluginBootstrap
 import net.fabricmc.loom.configuration.mods.dependency.LocalMavenHelper
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -12,7 +13,7 @@ class ArclightGradlePlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        project.plugins.apply(net.fabricmc.loom.bootstrap.LoomGradlePluginBootstrap)
+        project.plugins.apply(LoomGradlePluginBootstrap)
         def arclightExt = project.extensions.create('arclight', ArclightExtension, project)
         def arclightRepo = project.rootProject.file("${Project.DEFAULT_BUILD_DIR_NAME}/arclight_repo")
         project.repositories.maven {
@@ -24,9 +25,11 @@ class ArclightGradlePlugin implements Plugin<Project> {
         def forgeMappings = new File(mappingsDir, "bukkit_srg.srg")
         def forgeInheritance = new File(mappingsDir, 'inheritanceMap.txt')
         def reobfMappings = new File(mappingsDir, 'reobf_bukkit.srg')
+        def neoforgeMappings = new File(mappingsDir, 'bukkit_moj.srg')
         arclightExt.mappingsConfiguration.bukkitToForge = forgeMappings
         arclightExt.mappingsConfiguration.reobfBukkitPackage = reobfMappings
         arclightExt.mappingsConfiguration.bukkitToForgeInheritance = forgeInheritance
+        arclightExt.mappingsConfiguration.bukkitToNeoForge = neoforgeMappings
 
         project.afterEvaluate {
             setupSpigot(project, arclightRepo)
@@ -42,15 +45,13 @@ class ArclightGradlePlugin implements Plugin<Project> {
         def forgeMappings = new File(mappingsDir, "bukkit_srg.srg")
         def forgeInheritance = new File(mappingsDir, 'inheritanceMap.txt')
         def reobfMappings = new File(mappingsDir, 'reobf_bukkit.srg')
-        arclightExt.mappingsConfiguration.bukkitToForge = forgeMappings
-        arclightExt.mappingsConfiguration.reobfBukkitPackage = reobfMappings
-        arclightExt.mappingsConfiguration.bukkitToForgeInheritance = forgeInheritance
+        def neoforgeMappings = new File(mappingsDir, 'bukkit_moj.srg')
 
         def spigotDeps = new File(arclightRepo, "io/izzel/arclight/generated/spigot/${arclightExt.mcVersion}")
         def spigotMapped = new File(spigotDeps, "spigot-${arclightExt.mcVersion}-mapped.jar")
         def spigotDeobf = new File(spigotDeps, "spigot-${arclightExt.mcVersion}-deobf.jar")
 
-        if (forgeMappings.exists() && reobfMappings.exists() && forgeInheritance.exists() && spigotDeobf.exists()) {
+        if (forgeMappings.exists() && reobfMappings.exists() && forgeInheritance.exists() && neoforgeMappings.exists() && spigotDeobf.exists()) {
             return
         }
         project.logger.lifecycle(":step1 download build tools")

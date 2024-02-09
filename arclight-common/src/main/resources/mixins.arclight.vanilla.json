@@ -16,9 +16,11 @@
   "mixinPriority": 500,
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "server.level.ServerEntityMixin_Vanilla",
     "world.entity.EntityMixin_Vanilla",
     "world.entity.LivingEntityMixin_Vanilla",
     "world.entity.animal.MushroomCowMixin_Vanilla",
+    "world.entity.animal.frog.TadpoleMixin_Vanilla",
     "world.entity.monster.ZombieMixin_Vanilla",
     "world.entity.player.PlayerMixin_Vanilla",
     "world.entity.player.ServerPlayerMixin_Vanilla",

@@ -8,7 +8,7 @@ apply plugin: io.izzel.arclight.gradle.ArclightGradlePlugin
 
 architectury {
     minecraft = minecraftVersion
-    common("forge")
+    common(project.ext.supportedPlatforms)
 }
 
 loom {
@@ -22,18 +22,6 @@ arclight {
     bukkitVersion = 'v1_20_R3'
     accessTransformer = project.file('bukkit.at')
     extraMapping = project(':arclight-common').file('extra_mapping.tsrg')
-}
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-
-repositories {
-    maven { url = 'https://repo.spongepowered.org/maven' }
-    maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
-    maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
-    maven { url = 'https://files.minecraftforge.net/maven/' }
-    maven { url = 'https://maven.izzel.io/releases' }
-    maven { url = 'https://jitpack.io/' }
-    mavenCentral()
 }
 
 dependencies {

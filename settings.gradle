@@ -9,9 +9,12 @@ pluginManagement {
 
 rootProject.name = 'arclight'
 
-include 'forge-installer'
+include 'installer'
 include 'i18n-config'
 
 include 'arclight-common'
+
 include 'arclight-forge'
-include 'arclight-forge-bootstrap'
+include 'arclight-neoforge'
+
+include 'bootstrap'

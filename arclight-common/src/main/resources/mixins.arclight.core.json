@@ -92,7 +92,6 @@
     "world.effect.HealOrHarmMobEffectMixin",
     "world.effect.HungerMobEffectMixin",
     "world.effect.MobEffectUtilMixin",
-    "world.effect.PoisonMobEffectMixin",
     "world.effect.RegenerationMobEffectMixin",
     "world.effect.SaturationMobEffectMixin",
     "world.entity.AgeableMobMixin",

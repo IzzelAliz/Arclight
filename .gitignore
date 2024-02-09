@@ -1,7 +1,8 @@
 .gradle/
 /.settings/
 build/
-/bin/
+bin/
 /.project
 .idea
 *.log
+run_*/

@@ -41,6 +41,11 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
     @Shadow protected abstract <C extends Container, T extends Recipe<C>> Map<ResourceLocation, RecipeHolder<T>> byType(RecipeType<T> p_44055_);
     // @formatter:on
 
+    @Override
+    public RecipeHolder<?> bridge$platform$loadRecipe(ResourceLocation key, JsonElement element) {
+        return fromJson(key, GsonHelper.convertToJsonObject(element, "top element"));
+    }
+
     /**
      * @author IzzelAluz
      * @reason
@@ -62,13 +67,9 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
                 continue; //Forge: filter anything beginning with "_" as it's used for metadata.
 
             try {
-                if (this.bridge$forge$conditionNotMet(entry.getValue())) {
-                    LOGGER.debug("Skipping loading recipe {} as it's conditions were not met", resourcelocation);
-                    continue;
-                }
-                RecipeHolder<?> irecipe = fromJson(resourcelocation, GsonHelper.convertToJsonObject(entry.getValue(), "top element"));
+                RecipeHolder<?> irecipe = this.bridge$platform$loadRecipe(resourcelocation, entry.getValue());
                 if (irecipe == null) {
-                    LOGGER.info("Skipping loading recipe {} as it's serializer returned null", resourcelocation);
+                    LOGGER.debug("Skipping loading recipe {} as it's conditions were not met", resourcelocation);
                     continue;
                 }
                 map.computeIfAbsent(irecipe.value().getType(), (recipeType) -> new Object2ObjectLinkedOpenHashMap<>())

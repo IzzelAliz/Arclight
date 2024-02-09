@@ -19,7 +19,7 @@ public interface ItemBridge {
         return charge;
     }
 
-    default AbstractArrow bridge$forge$customArrow(BowItem bowItem, AbstractArrow arrow) {
+    default AbstractArrow bridge$forge$customArrow(BowItem bowItem, ItemStack itemStack, AbstractArrow arrow) {
         return arrow;
     }
 

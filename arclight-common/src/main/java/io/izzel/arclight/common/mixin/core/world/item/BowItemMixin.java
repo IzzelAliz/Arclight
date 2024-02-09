@@ -54,7 +54,7 @@ public abstract class BowItemMixin extends ItemMixin {
                     if (!worldIn.isClientSide) {
                         ArrowItem arrowitem = (ArrowItem) (itemstack.getItem() instanceof ArrowItem ? itemstack.getItem() : Items.ARROW);
                         AbstractArrow abstractarrowentity = arrowitem.createArrow(worldIn, itemstack, playerentity);
-                        abstractarrowentity = this.bridge$forge$customArrow((BowItem) (Object) this, abstractarrowentity);
+                        abstractarrowentity = this.bridge$forge$customArrow((BowItem) (Object) this, itemstack, abstractarrowentity);
                         abstractarrowentity.shootFromRotation(playerentity, playerentity.getXRot(), playerentity.getYRot(), 0.0F, f * 3.0F, 1.0F);
                         if (f == 1.0F) {
                             abstractarrowentity.setCritArrow(true);

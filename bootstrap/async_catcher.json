@@ -1,0 +1,31 @@
+{
+  "net/minecraft/server/level/ServerLevel": {
+    "addEntity(Lnet/minecraft/world/entity/Entity;)Z": "entity add",
+    "getEntities()Lnet/minecraft/world/level/entity/LevelEntityGetter;": "chunk entity get"
+  },
+  "net/minecraft/server/level/ServerLevel$EntityCallbacks": {
+    "onTrackingStart(Lnet/minecraft/world/entity/Entity;)V": "entity register",
+    "onTrackingEnd(Lnet/minecraft/world/entity/Entity;)V": "entity unregister"
+  },
+  "net/minecraft/server/level/ChunkMap$TrackedEntity": {
+    "removePlayer(Lnet/minecraft/server/level/ServerPlayer;)V": "player tracker clear",
+    "updatePlayer(Lnet/minecraft/server/level/ServerPlayer;)V": "player tracker update"
+  },
+  "net/minecraft/world/level/block/state/BlockBehaviour": {
+    "onPlace(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Z)V": "block place",
+    "onRemove(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Z)V": "block remove"
+  },
+  "net/minecraft/world/entity/LivingEntity": {
+    "addEffect(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)Z": "effect add"
+  },
+  "net/minecraft/server/level/ChunkMap": {
+    "addEntity(Lnet/minecraft/world/entity/Entity;)V": "entity track",
+    "removeEntity(Lnet/minecraft/world/entity/Entity;)V": "entity untrack"
+  },
+  "net/minecraft/world/level/storage/loot/LootTable": {
+    "fill(Lnet/minecraft/world/Container;Lnet/minecraft/world/level/storage/loot/LootParams;J)V": "loot generate"
+  },
+  "net/minecraftforge/network/NetworkHooks": {
+    "openGui(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/MenuProvider;Ljava/util/function/Consumer;)V": "open gui"
+  }
+}

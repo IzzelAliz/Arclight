@@ -2,6 +2,7 @@ package io.izzel.arclight.gradle.tasks
 
 import io.izzel.arclight.gradle.util.AwWriter
 import net.fabricmc.loom.LoomGradleExtension
+import net.fabricmc.loom.configuration.providers.mappings.MappingConfiguration
 import net.fabricmc.lorenztiny.TinyMappingsReader
 import net.fabricmc.mappingio.MappingReader
 import net.fabricmc.mappingio.tree.MemoryMappingTree
@@ -46,8 +47,12 @@ class ProcessMappingTask implements Runnable {
     void run() {
         def tree = new MemoryMappingTree()
         MappingReader.read(LoomGradleExtension.get(project).mappingConfiguration.tinyMappingsWithSrg, tree)
-        def official = new TinyMappingsReader(tree, "official", "named").read()
         def mcp = new TinyMappingsReader(tree, "named", "srg").read()
+
+        def mojmapTree = new MemoryMappingTree()
+        MappingReader.read(MappingConfiguration.getMojmapSrgFileIfPossible(project), mojmapTree)
+        def official = new TinyMappingsReader(mojmapTree, "official", "named").read()
+        def officialRev = official.reverse()
 
         if (!outDir.isDirectory()) {
             outDir.mkdirs()
@@ -86,6 +91,7 @@ class ProcessMappingTask implements Runnable {
         }
         def srgRev = srg.reverse()
         def finalMap = srgRev.merge(csrg).reverse()
+        def neoforgeMap = officialRev.merge(csrg).reverse()
         new File(outDir, 'inheritanceMap.txt').with {
             it.delete()
             it.createNewFile()
@@ -137,6 +143,35 @@ class ProcessMappingTask implements Runnable {
                     this.writer.println(String.format("    %s %s -> %s", sig, mapping.getDeobfuscatedName(), mapping.getObfuscatedName()))
                 }
             }.write(finalMap)
+        }
+        new File(outDir, 'bukkit_moj.srg').withWriter {
+            new TSrgWriter(it) {
+                @Override
+                void write(final MappingSet mappings) {
+                    mappings.getTopLevelClassMappings().stream()
+                            .sorted(this.getConfig().getClassMappingComparator())
+                            .forEach(this::writeClassMapping)
+                }
+
+                @Override
+                protected void writeClassMapping(ClassMapping<?, ?> mapping) {
+                    if (!mapping.hasMappings()) {
+                        this.writer.println(String.format("%s %s", mapping.getFullObfuscatedName(), mapping.getFullDeobfuscatedName()));
+                    } else if (mapping.fullObfuscatedName.contains('/')) {
+                        super.writeClassMapping(mapping)
+                    }
+                }
+
+                @Override
+                protected void writeFieldMapping(FieldMapping mapping) {
+                    def cl = officialRev.getClassMapping(mapping.parent.fullDeobfuscatedName).get()
+                    def field = cl.getFieldMapping(mapping.deobfuscatedName).get().deobfuscatedName
+                    def nmsCl = official.getClassMapping(cl.fullDeobfuscatedName)
+                            .get().getFieldMapping(field).get().signature.type.get()
+                    def sig = Type.getType(csrg.deobfuscate(nmsCl).toString()).getClassName()
+                    this.writer.println(String.format("    %s %s -> %s", sig, mapping.getDeobfuscatedName(), mapping.getObfuscatedName()))
+                }
+            }.write(neoforgeMap)
         }
         new File(outDir, 'bukkit_at.at').withWriter { w ->
             new File(buildData, "mappings/bukkit-${mcVersion}.at").eachLine { l ->

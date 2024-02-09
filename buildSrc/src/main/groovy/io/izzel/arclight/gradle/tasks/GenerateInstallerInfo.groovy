@@ -1,5 +1,7 @@
 package io.izzel.arclight.gradle.tasks
 
+import groovy.json.JsonOutput
+import io.izzel.arclight.gradle.Utils
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.DependencyArtifact
@@ -12,7 +14,7 @@ import java.security.MessageDigest
 
 class GenerateInstallerInfo extends DefaultTask {
 
-    private String minecraftVersion, forgeVersion
+    private String minecraftVersion, forgeVersion, neoforgeVersion
     private Configuration configuration
 
     @Classpath
@@ -40,6 +42,15 @@ class GenerateInstallerInfo extends DefaultTask {
 
     void setForgeVersion(String forgeVersion) {
         this.forgeVersion = forgeVersion
+    }
+
+    @Input
+    String getNeoforgeVersion() {
+        return neoforgeVersion
+    }
+
+    void setNeoforgeVersion(String neoforgeVersion) {
+        this.neoforgeVersion = neoforgeVersion
     }
 
     @TaskAction
@@ -95,19 +106,20 @@ class GenerateInstallerInfo extends DefaultTask {
         }
         def installerUrl = "https://files.minecraftforge.net/maven/net/minecraftforge/forge/$minecraftVersion-$forgeVersion/forge-$minecraftVersion-$forgeVersion-installer.jar"
         def tmpInstaller = Files.createTempFile("installer", "jar")
-        installerUrl.toURI().toURL().withReader { r ->
-            tmpInstaller.withWriter { w ->
-                r.transferTo(w)
-            }
-        }
+        Utils.download(installerUrl, tmpInstaller.toFile())
+        def neoforgeUrl = "https://maven.neoforged.net/releases/net/neoforged/neoforge/$neoforgeVersion/neoforge-$neoforgeVersion-installer.jar"
+        def tmpNeoforge = Files.createTempFile("neoforge", "jar")
+        Utils.download(neoforgeUrl, tmpNeoforge.toFile())
         def output = [
                 installer: [
-                        minecraft: minecraftVersion,
-                        forge    : forgeVersion,
-                        hash     : sha1(tmpInstaller.toFile())
+                        minecraft   : minecraftVersion,
+                        forge       : forgeVersion,
+                        forgeHash   : sha1(tmpInstaller.toFile()),
+                        neoforge    : neoforgeVersion,
+                        neoforgeHash: sha1(tmpNeoforge.toFile()),
                 ],
                 libraries: artifacts(libs)
         ]
-        outputs.files.singleFile.text = groovy.json.JsonOutput.toJson(output)
+        outputs.files.singleFile.text = JsonOutput.toJson(output)
     }
 }

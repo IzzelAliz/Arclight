@@ -1,0 +1,260 @@
+import io.izzel.arclight.gradle.tasks.GenerateInstallerInfo
+import io.izzel.arclight.gradle.tasks.RenameAsyncCatcherTask
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'maven-publish'
+
+sourceSets {
+    applaunch {}
+    forge {
+        java {
+            compileClasspath += main.output
+            compileClasspath += main.compileClasspath
+            runtimeClasspath += main.output
+            runtimeClasspath += main.runtimeClasspath
+        }
+    }
+    neoforge {
+        java {
+            compileClasspath += main.output
+            compileClasspath += main.compileClasspath
+            runtimeClasspath += main.output
+            runtimeClasspath += main.runtimeClasspath
+        }
+    }
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+configurations {
+    installer
+    embed
+    gson
+    implementation.extendsFrom(embed, gson)
+}
+
+repositories {
+    maven {
+        name = 'sponge-repo'
+        url = 'https://repo.spongepowered.org/maven'
+    }
+    maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
+    maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
+    maven { url = 'https://files.minecraftforge.net/maven/' }
+    maven { url = 'https://maven.neoforged.net/releases/' }
+    maven { url = 'https://maven.izzel.io/releases' }
+    maven { url = 'https://jitpack.io/' }
+    mavenCentral()
+}
+
+def embedLibs = [/*"org.spongepowered:mixin:$mixinVersion", */ 'org.yaml:snakeyaml:2.0',
+                 'org.xerial:sqlite-jdbc:3.42.0.0', 'com.mysql:mysql-connector-j:8.0.33',
+                 /*'commons-lang:commons-lang:2.6',*/ 'com.googlecode.json-simple:json-simple:1.1.1',
+                 'org.apache.logging.log4j:log4j-jul:2.17.2', 'net.md-5:SpecialSource:1.11.0',
+                 'org.jline:jline-terminal-jansi:3.12.1',/* 'org.fusesource.jansi:jansi:1.18',*/
+                 /*'org.jline:jline-terminal:3.12.1', 'org.jline:jline-reader:3.12.1',*/
+                 'jline:jline:2.12.1', 'org.apache.maven:maven-resolver-provider:3.8.1',
+                 'org.apache.maven.resolver:maven-resolver-connector-basic:1.6.2', 'org.apache.maven.resolver:maven-resolver-transport-http:1.6.2',
+                 'org.apache.maven:maven-model:3.8.1', 'org.codehaus.plexus:plexus-utils:3.2.1',
+                 'org.apache.maven:maven-model-builder:3.8.1', 'org.codehaus.plexus:plexus-interpolation:1.25',
+                 'org.eclipse.sisu:org.eclipse.sisu.inject:0.3.4', 'org.apache.maven:maven-builder-support:3.8.1',
+                 'org.apache.maven:maven-repository-metadata:3.8.1', 'org.apache.maven.resolver:maven-resolver-api:1.6.2',
+                 'org.apache.maven.resolver:maven-resolver-spi:1.6.2', 'org.apache.maven.resolver:maven-resolver-util:1.6.2',
+                 'org.apache.maven.resolver:maven-resolver-impl:1.6.2', 'org.apache.httpcomponents:httpclient:4.5.12',
+                 'org.apache.httpcomponents:httpcore:4.4.13', 'commons-codec:commons-codec:1.15',
+                 'org.slf4j:jcl-over-slf4j:1.7.30', /*'org.apache.logging.log4j:log4j-slf4j18-impl:2.14.1',*/
+                 'org.spongepowered:configurate-hocon:3.6.1', 'org.spongepowered:configurate-core:3.6.1',
+                 'com.typesafe:config:1.3.1', 'javax.inject:javax.inject:1']
+
+dependencies {
+    implementation 'com.google.guava:guava:31.1-jre'
+    implementation 'org.ow2.asm:asm:9.5'
+    implementation 'org.ow2.asm:asm-tree:9.5'
+    implementation 'net.minecraftforge:modlauncher:10.1.2'
+    implementation 'org.apache.logging.log4j:log4j-api:2.17.2'
+    implementation 'org.apache.logging.log4j:log4j-core:2.17.2'
+    implementation 'org.jetbrains:annotations:23.0.0'
+    implementation 'org.spongepowered:mixin:0.8.5'
+    implementation 'org.apache.logging.log4j:log4j-jul:2.17.2'
+
+    forgeImplementation "net.minecraftforge:fmlloader:${minecraftVersion}-${forgeVersion}"
+    forgeImplementation 'net.minecraftforge:securemodules:2.2.7'
+    forgeImplementation 'net.minecraftforge:forgespi:7.1.0'
+    forgeImplementation 'net.minecraftforge:bootstrap:2.0.0'
+    forgeImplementation 'net.minecraftforge:bootstrap-api:2.0.0'
+
+    neoforgeImplementation 'net.neoforged.fancymodloader:spi:2.0.7'
+    neoforgeImplementation 'net.neoforged.fancymodloader:loader:2.0.7'
+    neoforgeImplementation 'cpw.mods:securejarhandler:2.1.24'
+
+    for (def lib : embedLibs) {
+        installer lib
+    }
+    gson 'com.google.code.gson:gson:2.9.0'
+    embed "io.izzel:tools:$toolsVersion"
+    embed "io.izzel.arclight:arclight-api:$apiVersion"
+    embed 'commons-lang:commons-lang:2.6@jar'
+    embed('io.izzel.arclight:mixin-tools:1.1.0') { transitive = false }
+    embed(project(':i18n-config')) { transitive = false }
+    embed(project(':installer')) { transitive = false }
+}
+
+jar {
+    archiveBaseName.set 'arclight-forge-' + minecraftVersion
+    manifest.attributes 'Main-Class': 'io.izzel.arclight.server.Launcher'
+    manifest.attributes 'Implementation-Title': 'Arclight'
+    manifest.attributes 'Implementation-Version': "arclight-$minecraftVersion-${project.version}-$gitHash"
+    manifest.attributes 'Implementation-Vendor': 'Arclight Team'
+    manifest.attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd HH:mm:ss")
+    manifest.attributes 'Automatic-Module-Name': 'arclight.boot'
+    manifest.attributes 'Arclight-Target': 'io.izzel.arclight.boot.forge.application.Main_Forge'
+    from(configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }) {
+        exclude "META-INF/MANIFEST.MF"
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+        exclude "LICENSE.txt"
+        exclude "META-INF/services/**"
+        exclude "org/apache/commons/lang/enum/**"
+    }
+    into('/') {
+        it.from(project(':arclight-forge').tasks.reobfJar.outputs.files.collect())
+        it.rename { name -> 'common.jar' }
+    }
+    into('/') {
+        it.from(configurations.gson.collect())
+        it.rename { name -> 'gson.jar' }
+    }
+    from sourceSets.applaunch.output
+    from sourceSets.forge.output
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn(project(':arclight-forge').tasks.reobfJar)
+}
+
+tasks.register('neoforgeJar', Jar) {
+    archiveBaseName.set 'arclight-neoforge-' + minecraftVersion
+    manifest.attributes 'Main-Class': 'io.izzel.arclight.server.Launcher'
+    manifest.attributes 'Implementation-Title': 'Arclight'
+    manifest.attributes 'Implementation-Version': "arclight-$minecraftVersion-${project.version}-$gitHash"
+    manifest.attributes 'Implementation-Vendor': 'Arclight Team'
+    manifest.attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd HH:mm:ss")
+    manifest.attributes 'Automatic-Module-Name': 'arclight.boot'
+    manifest.attributes 'Arclight-Target': 'io.izzel.arclight.boot.neoforge.application.Main_Neoforge'
+    from(configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }) {
+        exclude "META-INF/MANIFEST.MF"
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+        exclude "LICENSE.txt"
+        exclude "META-INF/services/**"
+        exclude "org/apache/commons/lang/enum/**"
+    }
+    into('/') {
+        it.from(project(':arclight-neoforge').tasks.reobfJar.outputs.files.collect())
+        it.rename { name -> 'common.jar' }
+    }
+    into('/') {
+        it.from(configurations.gson.collect())
+        it.rename { name -> 'gson.jar' }
+    }
+    from sourceSets.applaunch.output
+    from sourceSets.main.output
+    from sourceSets.neoforge.output
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn(project(':arclight-neoforge').tasks.reobfJar)
+}
+
+tasks.register('generateInstallerInfo', GenerateInstallerInfo) {
+    forgeVersion = rootProject.ext.forgeVersion
+    neoforgeVersion = rootProject.ext.neoForgeVersion
+    minecraftVersion = rootProject.ext.minecraftVersion
+    def installer = file("build/arclight_installer/META-INF/installer.json")
+    outputs.file(installer)
+    configuration = project.configurations.installer
+}
+
+project.sourceSets.main.output.dir file("build/arclight_installer"), builtBy: tasks.generateInstallerInfo
+
+project.sourceSets.forge.output.dir file("build/forge_async_catcher"), builtBy: tasks.register('forgeAsyncCatcher', RenameAsyncCatcherTask) {
+    inputFile.set project.file("async_catcher.json")
+    mapping.set "srg"
+    outputs.file("build/forge_async_catcher/async_catcher.json")
+}
+
+project.sourceSets.neoforge.output.dir file("build/neoforge_async_catcher"), builtBy: tasks.register('neoforgeAsyncCatcher', RenameAsyncCatcherTask) {
+    inputFile.set project.file("async_catcher.json")
+    mapping.set "named"
+    outputs.file("build/neoforge_async_catcher/async_catcher.json")
+}
+
+compileJava {
+    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
+    options.compilerArgs << '-XDignore.symbol.file' << '-XDenableSunApiLintControl'
+    options.encoding = 'UTF-8'
+}
+
+compileApplaunchJava {
+    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_7
+}
+
+tasks.register('runProdServer', JavaExec) {
+    classpath = files(tasks.jar)
+    // systemProperties 'bsl.debug': 'true'
+    systemProperties 'terminal.ansi': 'true'
+    systemProperties 'mixin.debug.export': 'true'
+    systemProperties 'mixin.dumpTargetOnFailure': 'true'
+    systemProperties 'arclight.alwaysExtract': 'true'
+    systemProperties 'arclight.remapper.dump': './.mixin.out/plugin_classes'
+    workingDir System.env.ARCLIGHT_PROD_DIR ?: file('run_prod/forge')
+    maxHeapSize '4G'
+    args 'nogui'
+    standardInput System.in
+    javaLauncher.convention(javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(17)
+    })
+    dependsOn project.tasks.build
+}
+
+tasks.register('runProdNeoforge', JavaExec) {
+    classpath = files(tasks.neoforgeJar)
+    // systemProperties 'bsl.debug': 'true'
+    systemProperties 'terminal.ansi': 'true'
+    systemProperties 'mixin.debug.export': 'true'
+    systemProperties 'mixin.dumpTargetOnFailure': 'true'
+    systemProperties 'arclight.alwaysExtract': 'true'
+    systemProperties 'arclight.remapper.dump': './.mixin.out/plugin_classes'
+    workingDir System.env.ARCLIGHT_PROD_DIR ?: file('run_prod/neoforge')
+    maxHeapSize '4G'
+    args 'nogui'
+    standardInput System.in
+    javaLauncher.convention(javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(17)
+    })
+    dependsOn project.tasks.build
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "IzzelAliz"
+            url = uri('https://maven.izzel.io/' + (project.version.toString().endsWith('SNAPSHOT') ? 'snapshots' : 'releases'))
+            credentials {
+                username = project.findProperty("mavenUser") ?: System.getenv("ARCLIGHT_USER")
+                password = project.findProperty("mavenToken") ?: System.getenv("ARCLIGHT_TOKEN")
+            }
+        }
+    }
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'arclight-forge-' + versionName
+            artifact project(':arclight-forge').tasks.srgJar
+            artifact project(':arclight-forge').tasks.spigotJar
+            artifact project(':arclight-forge').tasks.sourcesJar
+        }
+    }
+}
+
+if ('true'.equalsIgnoreCase(System.getenv('APPVEYOR_REPO_TAG'))) {
+    tasks.build.dependsOn(tasks.publish)
+}

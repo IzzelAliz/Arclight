@@ -60,21 +60,6 @@ public abstract class FireBlockMixin extends BaseFireBlockMixin implements FireB
         return false;
     }
 
-    @Inject(method = "checkBurnOut", require = 0, cancellable = true, at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/level/Level;getBlockState(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;"))
-    private void arclight$blockBurn(Level worldIn, BlockPos pos, int chance, RandomSource random, int age, CallbackInfo ci) {
-        Block theBlock = CraftBlock.at(worldIn, pos);
-        Block sourceBlock = CraftBlock.at(worldIn, ArclightCaptures.getTickingPosition());
-        BlockBurnEvent event = new BlockBurnEvent(theBlock, sourceBlock);
-        Bukkit.getPluginManager().callEvent(event);
-        if (event.isCancelled()) {
-            ci.cancel();
-            return;
-        }
-        if (worldIn.getBlockState(pos).getBlock() instanceof TntBlock && !CraftEventFactory.callTNTPrimeEvent(worldIn, pos, TNTPrimeEvent.PrimeCause.FIRE, null, ArclightCaptures.getTickingPosition())) {
-            ci.cancel();
-        }
-    }
-
     @Redirect(method = "updateShape", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;defaultBlockState()Lnet/minecraft/world/level/block/state/BlockState;"))
     public BlockState arclight$blockFade(net.minecraft.world.level.block.Block block, BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor worldIn, BlockPos currentPos, BlockPos facingPos) {
         if (!(worldIn instanceof Level)) {

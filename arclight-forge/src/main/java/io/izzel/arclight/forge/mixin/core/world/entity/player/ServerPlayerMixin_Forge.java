@@ -1,9 +1,12 @@
 package io.izzel.arclight.forge.mixin.core.world.entity.player;
 
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.inventory.container.ContainerBridge;
 import io.izzel.arclight.common.bridge.core.network.play.ServerPlayNetHandlerBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.level.block.PortalInfoBridge;
+import io.izzel.arclight.common.mod.server.block.ChestBlockDoubleInventoryHacks;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundChangeDifficultyPacket;
 import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
@@ -20,10 +23,12 @@ import net.minecraft.server.level.ServerPlayerGameMode;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.world.Container;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.portal.PortalInfo;
@@ -36,6 +41,7 @@ import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.CraftWorld;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.spongepowered.asm.mixin.Final;
@@ -44,9 +50,13 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
+import java.util.OptionalInt;
 
 @Mixin(ServerPlayer.class)
 public abstract class ServerPlayerMixin_Forge extends PlayerMixin_Forge implements ServerPlayerEntityBridge {
@@ -209,6 +219,29 @@ public abstract class ServerPlayerMixin_Forge extends PlayerMixin_Forge implemen
             }
 
             return (ServerPlayer) (Object) this;
+        }
+    }
+
+    @Redirect(method = "openMenu", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;closeContainer()V"))
+    private void arclight$skipSwitch(ServerPlayer serverPlayer) {
+    }
+
+    @Inject(method = "openMenu", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/world/MenuProvider;createMenu(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/entity/player/Player;)Lnet/minecraft/world/inventory/AbstractContainerMenu;"))
+    private void arclight$invOpen(MenuProvider iTileInventory, CallbackInfoReturnable<OptionalInt> cir, AbstractContainerMenu container) {
+        if (container != null) {
+            ((ContainerBridge) container).bridge$setTitle(iTileInventory.getDisplayName());
+            boolean cancelled = false;
+            ArclightCaptures.captureContainerOwner((ServerPlayer) (Object) this);
+            container = CraftEventFactory.callInventoryOpenEvent((ServerPlayer) (Object) this, container, cancelled);
+            ArclightCaptures.resetContainerOwner();
+            if (container == null && !cancelled) {
+                if (iTileInventory instanceof Container) {
+                    ((Container) iTileInventory).stopOpen((ServerPlayer) (Object) this);
+                } else if (ChestBlockDoubleInventoryHacks.isInstance(iTileInventory)) {
+                    ChestBlockDoubleInventoryHacks.get(iTileInventory).stopOpen((ServerPlayer) (Object) this);
+                }
+                cir.setReturnValue(OptionalInt.empty());
+            }
         }
     }
 }

@@ -249,67 +249,6 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
         }
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    public void sendPairingData(ServerPlayer player, final Consumer<Packet<?>> consumer) {
-        Mob entityinsentient;
-        if (this.entity.isRemoved()) {
-            return;
-        }
-        Packet<?> packet = this.entity.getAddEntityPacket();
-        this.yHeadRotp = Mth.floor(this.entity.getYHeadRot() * 256.0f / 360.0f);
-        consumer.accept(packet);
-        if (this.trackedDataValues != null) {
-            consumer.accept(new ClientboundSetEntityDataPacket(this.entity.getId(), this.trackedDataValues));
-        }
-        boolean flag = this.trackDelta;
-        if (this.entity instanceof LivingEntity livingEntity) {
-            Collection<AttributeInstance> collection = livingEntity.getAttributes().getSyncableAttributes();
-            if (this.entity.getId() == player.getId()) {
-                ((ServerPlayerEntityBridge) this.entity).bridge$getBukkitEntity().injectScaledMaxHealth(collection, false);
-            }
-            if (!collection.isEmpty()) {
-                consumer.accept(new ClientboundUpdateAttributesPacket(this.entity.getId(), collection));
-            }
-            if (livingEntity.isFallFlying()) {
-                flag = true;
-            }
-        }
-        this.ap = this.entity.getDeltaMovement();
-        if (flag && !(this.entity instanceof LivingEntity)) {
-            consumer.accept(new ClientboundSetEntityMotionPacket(this.entity.getId(), this.ap));
-        }
-        if (this.entity instanceof LivingEntity) {
-            ArrayList<Pair<EquipmentSlot, ItemStack>> list = Lists.newArrayList();
-            for (EquipmentSlot enumitemslot : EquipmentSlot.values()) {
-                ItemStack itemstack = ((LivingEntity) this.entity).getItemBySlot(enumitemslot);
-                if (itemstack.isEmpty()) continue;
-                list.add(Pair.of(enumitemslot, itemstack.copy()));
-            }
-            if (!list.isEmpty()) {
-                consumer.accept(new ClientboundSetEquipmentPacket(this.entity.getId(), list));
-            }
-            ((LivingEntity) this.entity).detectEquipmentUpdates();
-        }
-        // CraftBukkit start - MC-109346: Fix for nonsensical head yaw
-        if (this.entity instanceof ServerPlayer) {
-            consumer.accept(new ClientboundRotateHeadPacket(this.entity, (byte) Mth.floor(this.entity.getYHeadRot() * 256.0F / 360.0F)));
-        }
-        // CraftBukkit end
-        if (!this.entity.getPassengers().isEmpty()) {
-            consumer.accept(new ClientboundSetPassengersPacket(this.entity));
-        }
-        if (this.entity.isPassenger()) {
-            consumer.accept(new ClientboundSetPassengersPacket(this.entity.getVehicle()));
-        }
-        if (this.entity instanceof Mob && (entityinsentient = (Mob) this.entity).isLeashed()) {
-            consumer.accept(new ClientboundSetEntityLinkPacket(entityinsentient, entityinsentient.getLeashHolder()));
-        }
-    }
-
     @Inject(method = "sendDirtyEntityData", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/server/level/ServerEntity;broadcastAndSend(Lnet/minecraft/network/protocol/Packet;)V"))
     private void arclight$sendScaledHealth(CallbackInfo ci, SynchedEntityData entitydatamanager, List<SynchedEntityData.DataValue<?>> list, Set<AttributeInstance> set) {
         if (this.entity instanceof ServerPlayerEntityBridge player) {

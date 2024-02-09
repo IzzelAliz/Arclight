@@ -72,6 +72,16 @@ class ArclightExtension {
             this.bukkitToForge = bukkitToForge
         }
 
+        private File bukkitToNeoForge
+
+        File getBukkitToNeoForge() {
+            return bukkitToNeoForge
+        }
+
+        void setBukkitToNeoForge(File bukkitToNeoForge) {
+            this.bukkitToNeoForge = bukkitToNeoForge
+        }
+
         private File bukkitToForgeInheritance
 
         File getBukkitToForgeInheritance() {

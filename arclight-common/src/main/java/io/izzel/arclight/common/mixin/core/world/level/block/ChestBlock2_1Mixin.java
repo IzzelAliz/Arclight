@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(targets = "net/minecraft/world/level/block/ChestBlock$2$1")
 public class ChestBlock2_1Mixin {
 
-    @Shadow(aliases = {"f_51614_", "val$container"}) private Container container;
+    @Shadow(aliases = {"f_51614_", "val$container", "field_17360"}) private Container container;
 
     public CompoundContainer inventorylargechest = (CompoundContainer) container;
 }

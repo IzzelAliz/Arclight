@@ -1,10 +1,8 @@
 import io.izzel.arclight.gradle.tasks.RenameJarTask
 
 plugins {
-    id "architectury-plugin" version "3.4-SNAPSHOT"
-    id "com.github.johnrengelman.shadow" version "7.1.2"
-    id 'java'
-    id 'idea'
+    id 'architectury-plugin' version "${architect_plugin_version}"
+    id 'com.github.johnrengelman.shadow' version "${shadow_plugin_version}"
 }
 
 apply plugin: io.izzel.arclight.gradle.ArclightGradlePlugin
@@ -40,16 +38,6 @@ configurations {
     compileClasspath.extendsFrom common
     runtimeClasspath.extendsFrom common
     developmentForge.extendsFrom common
-}
-
-repositories {
-    maven { url = 'https://repo.spongepowered.org/maven' }
-    maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
-    maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
-    maven { url = 'https://files.minecraftforge.net/maven/' }
-    maven { url = 'https://maven.izzel.io/releases' }
-    maven { url = 'https://jitpack.io/' }
-    mavenCentral()
 }
 
 dependencies {

@@ -617,29 +617,6 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         return this.containerCounter;
     }
 
-    @Redirect(method = "openMenu", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;closeContainer()V"))
-    private void arclight$skipSwitch(ServerPlayer serverPlayer) {
-    }
-
-    @Inject(method = "openMenu", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/world/MenuProvider;createMenu(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/entity/player/Player;)Lnet/minecraft/world/inventory/AbstractContainerMenu;"))
-    private void arclight$invOpen(MenuProvider itileinventory, CallbackInfoReturnable<OptionalInt> cir, AbstractContainerMenu container) {
-        if (container != null) {
-            ((ContainerBridge) container).bridge$setTitle(itileinventory.getDisplayName());
-            boolean cancelled = false;
-            ArclightCaptures.captureContainerOwner((ServerPlayer) (Object) this);
-            container = CraftEventFactory.callInventoryOpenEvent((ServerPlayer) (Object) this, container, cancelled);
-            ArclightCaptures.resetContainerOwner();
-            if (container == null && !cancelled) {
-                if (itileinventory instanceof Container) {
-                    ((Container) itileinventory).stopOpen((ServerPlayer) (Object) this);
-                } else if (ChestBlockDoubleInventoryHacks.isInstance(itileinventory)) {
-                    ChestBlockDoubleInventoryHacks.get(itileinventory).stopOpen((ServerPlayer) (Object) this);
-                }
-                cir.setReturnValue(OptionalInt.empty());
-            }
-        }
-    }
-
     /**
      * @author IzzelAliz
      * @reason

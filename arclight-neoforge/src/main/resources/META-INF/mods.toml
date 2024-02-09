@@ -1,0 +1,14 @@
+modLoader="javafml"
+loaderVersion="[2,)"
+license="GNU GENERAL PUBLIC LICENSE Version 3"
+
+[[mods]]
+modId="arclight"
+version="${version}"
+displayName="Arclight Mod"
+displayTest="IGNORE_SERVER_VERSION"
+credits="lona,夜幕"
+authors="IzzelAliz"
+description='''
+    Arclight bukkit layer for MinecraftForge
+    '''
