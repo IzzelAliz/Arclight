@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.mojang.datafixers.util.Pair;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.util.DamageSourceBridge;
 import io.izzel.arclight.common.bridge.core.world.ExplosionBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -77,7 +78,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
     @Shadow @Final private RandomSource random;
     @Shadow @Final private ExplosionDamageCalculator damageCalculator;
     @Shadow public abstract boolean interactsWithBlocks();
-    @Shadow @Final private DamageSource damageSource;
+    @Shadow @Final @Mutable private DamageSource damageSource;
     @Shadow @Final private SoundEvent explosionSound;
     @Shadow private static void addOrAppendStack(List<Pair<ItemStack, BlockPos>> p_311090_, ItemStack p_311817_, BlockPos p_309821_) { }
     // @formatter:on
@@ -93,6 +94,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
     public void arclight$adjustSize(Level worldIn, Entity exploderIn, double xIn, double yIn, double zIn, float sizeIn, boolean causesFireIn, Explosion.BlockInteraction modeIn, CallbackInfo ci) {
         this.radius = Math.max(sizeIn, 0F);
         this.yield = this.blockInteraction == Explosion.BlockInteraction.DESTROY_WITH_DECAY ? 1.0F / this.radius : 1.0F;
+        this.damageSource = ((DamageSourceBridge) (this.damageSource == null ? worldIn.damageSources().explosion((Explosion) (Object) this) : this.damageSource)).bridge$customCausingEntity(exploderIn);
     }
 
     /**
@@ -188,7 +190,6 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                                 continue;
                             }
 
-                            CraftEventFactory.entityDamage = this.source;
                             ((EntityBridge) entity).bridge$setLastDamageCancelled(false);
 
                             var parts = ((EntityBridge) entity).bridge$forge$getParts();
@@ -203,7 +204,6 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                                 entity.hurt(this.damageSource, this.damageCalculator.getEntityDamageAmount((Explosion) (Object) this, entity));
                             }
 
-                            CraftEventFactory.entityDamage = null;
                             if (((EntityBridge) entity).bridge$isLastDamageCancelled()) {
                                 continue;
                             }

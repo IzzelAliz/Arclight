@@ -14,7 +14,6 @@ public class ArclightConnector implements IMixinConnector {
 
     @Override
     public void connect() {
-        InjectionInfo.register(EjectorInfo.class);
         Mixins.addConfiguration("mixins.arclight.core.json");
         Mixins.addConfiguration("mixins.arclight.bukkit.json");
         switch (ArclightPlatform.current()) {

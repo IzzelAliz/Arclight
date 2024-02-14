@@ -30,13 +30,21 @@ public abstract class DamageSourcesMixin implements DamageSourcesBridge {
         this.poison = ((DamageSourceBridge) this.source(DamageTypes.MAGIC)).bridge$poison();
     }
 
+    public DamageSource poison() {
+        return poison;
+    }
+
+    public DamageSource melting() {
+        return melting;
+    }
+
     @Override
     public DamageSource bridge$poison() {
-        return poison;
+        return poison();
     }
 
     @Override
     public DamageSource bridge$melting() {
-        return melting;
+        return melting();
     }
 }

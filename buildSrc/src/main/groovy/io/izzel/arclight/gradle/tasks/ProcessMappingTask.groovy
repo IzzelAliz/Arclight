@@ -48,6 +48,7 @@ class ProcessMappingTask implements Runnable {
         def tree = new MemoryMappingTree()
         MappingReader.read(LoomGradleExtension.get(project).mappingConfiguration.tinyMappingsWithSrg, tree)
         def mcp = new TinyMappingsReader(tree, "named", "srg").read()
+        def intermediaryRev = new TinyMappingsReader(tree, "intermediary", "official").read()
 
         def mojmapTree = new MemoryMappingTree()
         MappingReader.read(MappingConfiguration.getMojmapSrgFileIfPossible(project), mojmapTree)
@@ -92,26 +93,34 @@ class ProcessMappingTask implements Runnable {
         def srgRev = srg.reverse()
         def finalMap = srgRev.merge(csrg).reverse()
         def neoforgeMap = officialRev.merge(csrg).reverse()
-        new File(outDir, 'inheritanceMap.txt').with {
-            it.delete()
-            it.createNewFile()
-            def im = new InheritanceMap()
-            def classes = []
-            csrg.topLevelClassMappings.each {
+        def fabricMap = intermediaryRev.merge(csrg).reverse()
+
+        def im = new InheritanceMap()
+        def classes = [] as ArrayList<String>
+        csrg.topLevelClassMappings.each {
+            classes.add(it.fullDeobfuscatedName)
+            it.innerClassMappings.each {
                 classes.add(it.fullDeobfuscatedName)
-                it.innerClassMappings.each {
-                    classes.add(it.fullDeobfuscatedName)
+            }
+        }
+        im.generate(new JarProvider(Jar.init(this.inJar)), classes)
+        new File(outDir, 'inheritanceMap.txt').withWriter { w ->
+            for (def className : classes) {
+                def parents = im.getParents(className).collect { finalMap.getOrCreateClassMapping(it).fullDeobfuscatedName }
+                if (!parents.isEmpty()) {
+                    w.print(finalMap.getOrCreateClassMapping(className).fullDeobfuscatedName)
+                    w.print(' ')
+                    w.println(parents.join(' '))
                 }
             }
-            im.generate(new JarProvider(Jar.init(this.inJar)), classes)
-            it.withPrintWriter {
-                for (def className : classes) {
-                    def parents = im.getParents(className).collect { finalMap.getOrCreateClassMapping(it).fullDeobfuscatedName }
-                    if (!parents.isEmpty()) {
-                        it.print(finalMap.getOrCreateClassMapping(className).fullDeobfuscatedName)
-                        it.print(' ')
-                        it.println(parents.join(' '))
-                    }
+        }
+        new File(outDir, 'inheritanceMap_intermediary.txt').withWriter { w ->
+            for (def className : classes) {
+                def parents = im.getParents(className).collect { fabricMap.getOrCreateClassMapping(it).fullDeobfuscatedName }
+                if (!parents.isEmpty()) {
+                    w.print(fabricMap.getOrCreateClassMapping(className).fullDeobfuscatedName)
+                    w.print(' ')
+                    w.println(parents.join(' '))
                 }
             }
         }
@@ -172,6 +181,35 @@ class ProcessMappingTask implements Runnable {
                     this.writer.println(String.format("    %s %s -> %s", sig, mapping.getDeobfuscatedName(), mapping.getObfuscatedName()))
                 }
             }.write(neoforgeMap)
+        }
+        new File(outDir, 'bukkit_intermediary.srg').withWriter {
+            new TSrgWriter(it) {
+                @Override
+                void write(final MappingSet mappings) {
+                    mappings.getTopLevelClassMappings().stream()
+                            .sorted(this.getConfig().getClassMappingComparator())
+                            .forEach(this::writeClassMapping)
+                }
+
+                @Override
+                protected void writeClassMapping(ClassMapping<?, ?> mapping) {
+                    if (!mapping.hasMappings()) {
+                        this.writer.println(String.format("%s %s", mapping.getFullObfuscatedName(), mapping.getFullDeobfuscatedName()));
+                    } else if (mapping.fullObfuscatedName.contains('/')) {
+                        super.writeClassMapping(mapping)
+                    }
+                }
+
+                @Override
+                protected void writeFieldMapping(FieldMapping mapping) {
+                    def cl = intermediaryRev.getClassMapping(mapping.parent.fullDeobfuscatedName).get()
+                    def field = cl.getFieldMapping(mapping.deobfuscatedName).get().deobfuscatedName
+                    def nmsCl = official.getClassMapping(cl.fullDeobfuscatedName)
+                            .get().getFieldMapping(field).get().signature.type.get()
+                    def sig = Type.getType(csrg.deobfuscate(nmsCl).toString()).getClassName()
+                    this.writer.println(String.format("    %s %s -> %s", sig, mapping.getDeobfuscatedName(), mapping.getObfuscatedName()))
+                }
+            }.write(fabricMap)
         }
         new File(outDir, 'bukkit_at.at').withWriter { w ->
             new File(buildData, "mappings/bukkit-${mcVersion}.at").eachLine { l ->

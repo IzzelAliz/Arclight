@@ -1,7 +1,10 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
 import io.izzel.arclight.common.bridge.core.entity.passive.TurtleEntityBridge;
+import io.izzel.arclight.common.bridge.core.util.DamageSourceBridge;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.animal.Turtle;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -10,6 +13,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Turtle.class)
@@ -32,13 +36,8 @@ public abstract class TurtleMixin extends AnimalMixin implements TurtleEntityBri
         forceDrops = false;
     }
 
-    @Inject(method = "thunderHit", at = @At("HEAD"))
-    private void arclight$lightning(ServerLevel world, LightningBolt lightningBolt, CallbackInfo ci) {
-        CraftEventFactory.entityDamage = lightningBolt;
-    }
-
-    @Inject(method = "thunderHit", at = @At("RETURN"))
-    private void arclight$lightningReset(ServerLevel world, LightningBolt lightningBolt, CallbackInfo ci) {
-        CraftEventFactory.entityDamage = null;
+    @Redirect(method = "thunderHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/damagesource/DamageSources;lightningBolt()Lnet/minecraft/world/damagesource/DamageSource;"))
+    private DamageSource arclight$lightning(DamageSources instance, ServerLevel serverLevel, LightningBolt lightningBolt) {
+        return ((DamageSourceBridge) instance.lightningBolt()).bridge$customCausingEntity(lightningBolt);
     }
 }

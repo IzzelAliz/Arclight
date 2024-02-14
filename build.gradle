@@ -15,7 +15,7 @@ allprojects {
 
     ext {
         minecraftVersion = '1.20.4'
-        supportedPlatforms = ['forge', 'neoforge']
+        supportedPlatforms = ['forge', 'neoforge', 'fabric']
         fabricLoaderVersion = '0.15.5'
         forgeVersion = '49.0.22'
         neoForgeVersion = '20.4.147-beta'
@@ -45,6 +45,8 @@ allprojects {
         }
     }
 }
+
+jar.enabled = false
 
 tasks.register('collect', Copy) {
     destinationDir = file('build/libs')

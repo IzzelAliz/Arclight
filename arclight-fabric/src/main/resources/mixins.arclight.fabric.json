@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "io.izzel.arclight.fabric.mixin",
+  "target": "@env(DEFAULT)",
+  "plugin": "io.izzel.arclight.common.mod.ArclightMixinPlugin",
+  "setSourceFile": true,
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "conformVisibility": true,
+    "requireAnnotations": false
+  },
+  "mixinPriority": 555,
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+  ]
+}

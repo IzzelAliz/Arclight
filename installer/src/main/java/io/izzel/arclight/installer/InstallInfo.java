@@ -6,6 +6,7 @@ public class InstallInfo {
 
     public Installer installer;
     public Map<String, String> libraries;
+    public Map<String, String> fabricExtra;
 
     public static class Installer {
 
@@ -14,5 +15,7 @@ public class InstallInfo {
         public String forgeHash;
         public String neoforge;
         public String neoforgeHash;
+        public String fabricLoader;
+        public String fabricLoaderHash;
     }
 }

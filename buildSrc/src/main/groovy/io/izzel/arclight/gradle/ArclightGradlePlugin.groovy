@@ -26,10 +26,14 @@ class ArclightGradlePlugin implements Plugin<Project> {
         def forgeInheritance = new File(mappingsDir, 'inheritanceMap.txt')
         def reobfMappings = new File(mappingsDir, 'reobf_bukkit.srg')
         def neoforgeMappings = new File(mappingsDir, 'bukkit_moj.srg')
+        def fabricMappings = new File(mappingsDir, 'bukkit_intermediary.srg')
+        def fabricInheritance = new File(mappingsDir, 'inheritanceMap_intermediary.txt')
         arclightExt.mappingsConfiguration.bukkitToForge = forgeMappings
         arclightExt.mappingsConfiguration.reobfBukkitPackage = reobfMappings
         arclightExt.mappingsConfiguration.bukkitToForgeInheritance = forgeInheritance
         arclightExt.mappingsConfiguration.bukkitToNeoForge = neoforgeMappings
+        arclightExt.mappingsConfiguration.bukkitToFabric = fabricMappings
+        arclightExt.mappingsConfiguration.bukkitToFabricInheritance = fabricInheritance
 
         project.afterEvaluate {
             setupSpigot(project, arclightRepo)
@@ -46,12 +50,15 @@ class ArclightGradlePlugin implements Plugin<Project> {
         def forgeInheritance = new File(mappingsDir, 'inheritanceMap.txt')
         def reobfMappings = new File(mappingsDir, 'reobf_bukkit.srg')
         def neoforgeMappings = new File(mappingsDir, 'bukkit_moj.srg')
+        def fabricMappings = new File(mappingsDir, 'bukkit_intermediary.srg')
+        def fabricInheritance = new File(mappingsDir, 'inheritanceMap_intermediary.txt')
 
         def spigotDeps = new File(arclightRepo, "io/izzel/arclight/generated/spigot/${arclightExt.mcVersion}")
         def spigotMapped = new File(spigotDeps, "spigot-${arclightExt.mcVersion}-mapped.jar")
         def spigotDeobf = new File(spigotDeps, "spigot-${arclightExt.mcVersion}-deobf.jar")
 
-        if (forgeMappings.exists() && reobfMappings.exists() && forgeInheritance.exists() && neoforgeMappings.exists() && spigotDeobf.exists()) {
+        if (forgeMappings.exists() && reobfMappings.exists() && forgeInheritance.exists() && neoforgeMappings.exists()
+                && fabricInheritance.exists() && fabricMappings.exists() && spigotDeobf.exists()) {
             return
         }
         project.logger.lifecycle(":step1 download build tools")
