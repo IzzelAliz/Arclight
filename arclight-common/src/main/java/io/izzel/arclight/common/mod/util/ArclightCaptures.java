@@ -66,6 +66,13 @@ public class ArclightCaptures {
         return null;
     }
 
+    public static boolean getBlockBreakDropItems() {
+        if (!blockBreakEventStack.empty()) {
+            return blockBreakEventStack.peek().isDropItems();
+        }
+        return true;
+    }
+
     public static BlockBreakEventContext popPrimaryBlockBreakEvent() {
         if (blockBreakEventStack.size() > 0) {
             BlockBreakEventContext eventContext = blockBreakEventStack.pop();
@@ -78,7 +85,7 @@ public class ArclightCaptures {
                 eventContext = blockBreakEventStack.pop();
             }
 
-            if (unhandledEvents.size() > 0) {
+            if (!unhandledEvents.isEmpty()) {
                 // ArclightMod.LOGGER.warn("Unhandled secondary block break event");
                 eventContext.mergeAllDrops(unhandledEvents);
             }
@@ -351,16 +358,18 @@ public class ArclightCaptures {
 
     public static class BlockBreakEventContext {
 
-        final private BlockBreakEvent blockBreakEvent;
-        final private ArrayList<ItemEntity> blockDrops;
-        final private BlockState blockBreakPlayerState;
-        final private boolean primary;
+        private final BlockBreakEvent blockBreakEvent;
+        private final ArrayList<ItemEntity> blockDrops;
+        private final BlockState blockBreakPlayerState;
+        private final boolean primary;
+        private final boolean dropItems;
 
         public BlockBreakEventContext(BlockBreakEvent event, boolean primary) {
             this.blockBreakEvent = event;
             this.blockDrops = new ArrayList<>();
             this.blockBreakPlayerState = event.getBlock().getState();
             this.primary = primary;
+            this.dropItems = event.isDropItems();
         }
 
         public BlockBreakEvent getEvent() {
@@ -369,6 +378,10 @@ public class ArclightCaptures {
 
         public ArrayList<ItemEntity> getBlockDrops() {
             return blockDrops;
+        }
+
+        public boolean isDropItems() {
+            return dropItems;
         }
 
         public BlockState getBlockBreakPlayerState() {

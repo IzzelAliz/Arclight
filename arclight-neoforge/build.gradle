@@ -45,7 +45,7 @@ dependencies {
     implementation "io.izzel.arclight.generated:spigot:$minecraftVersion:deobf"
     implementation 'net.md-5:bungeecord-chat:1.16-R0.4'
 
-    implementation('io.izzel.arclight:mixin-tools:1.1.0') { transitive = false }
+    implementation("io.izzel.arclight:mixin-tools:$mixinToolsVersion") { transitive = false }
 
     shadowCommon("org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT") { transitive = false }
     shadowCommon "io.izzel.arclight.generated:spigot:$minecraftVersion:deobf"

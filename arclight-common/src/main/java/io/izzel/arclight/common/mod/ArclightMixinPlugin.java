@@ -1,21 +1,20 @@
 package io.izzel.arclight.common.mod;
 
-import io.izzel.arclight.api.ArclightPlatform;
 import io.izzel.arclight.common.mod.mixins.CreateConstructorProcessor;
-import io.izzel.arclight.common.mod.mixins.InlineProcessor;
+import io.izzel.arclight.common.mod.mixins.InlineFieldProcessor;
+import io.izzel.arclight.common.mod.mixins.InlineMethodProcessor;
 import io.izzel.arclight.common.mod.mixins.MixinProcessor;
+import io.izzel.arclight.common.mod.mixins.PlatformMixinProcessor;
 import io.izzel.arclight.common.mod.mixins.RenameIntoProcessor;
 import io.izzel.arclight.common.mod.mixins.TransformAccessProcessor;
 import org.objectweb.asm.tree.ClassNode;
-import org.spongepowered.asm.mixin.MixinEnvironment;
-import org.spongepowered.asm.mixin.extensibility.IEnvironmentTokenProvider;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
 import java.util.List;
 import java.util.Set;
 
-public class ArclightMixinPlugin implements IMixinConfigPlugin, IEnvironmentTokenProvider {
+public class ArclightMixinPlugin implements IMixinConfigPlugin {
 
     private final List<MixinProcessor> preProcessors = List.of(
     );
@@ -24,12 +23,12 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin, IEnvironmentToke
         new RenameIntoProcessor(),
         new TransformAccessProcessor(),
         new CreateConstructorProcessor(),
-        new InlineProcessor()
+        new InlineMethodProcessor(),
+        new InlineFieldProcessor()
     );
 
     @Override
     public void onLoad(String mixinPackage) {
-        MixinEnvironment.getCurrentEnvironment().registerTokenProvider(this);
     }
 
     @Override
@@ -39,7 +38,7 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin, IEnvironmentToke
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        return true;
+        return PlatformMixinProcessor.shouldApply(mixinClassName);
     }
 
     @Override
@@ -64,19 +63,5 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin, IEnvironmentToke
         for (var processor : this.postProcessors) {
             processor.accept(targetClassName, targetClass, mixinInfo);
         }
-    }
-
-    @Override
-    public int getPriority() {
-        return 500;
-    }
-
-    @Override
-    public Integer getToken(String token, MixinEnvironment env) {
-        if (token.startsWith("AP_")) {
-            var platform = token.substring(3);
-            return ArclightPlatform.current().name().equals(platform) ? 1 : 0;
-        }
-        return null;
     }
 }

@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Desc;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -31,7 +32,7 @@ import java.util.Set;
 public class CraftMetaItemMixin implements ItemMetaBridge {
 
     // @formatter:off
-    @Shadow(remap = false) @Final private Map<String, Tag> unhandledTags;
+    @Shadow(remap = false) @Final Map<String, Tag> unhandledTags;
     @Shadow(remap = false) private CompoundTag internalTag;
     // @formatter:on
 
@@ -65,7 +66,8 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
         "instrument"
     );
 
-    @ModifyVariable(method = "<init>(Lnet/minecraft/nbt/CompoundTag;)V", at = @At(value = "INVOKE", target = "Lorg/bukkit/UnsafeValues;getDataVersion()I"))
+    @Desc(id = "compoundInit", value = "<init>", args = CompoundTag.class)
+    @ModifyVariable(method = "@Desc(compoundInit)", at = @At(value = "INVOKE", target = "Lorg/bukkit/UnsafeValues;getDataVersion()I"), argsOnly = true)
     private CompoundTag arclight$provideTag(CompoundTag tag) {
         return tag == null ? new CompoundTag() : tag;
     }
@@ -77,8 +79,7 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
             // force internal tags to be deserialized into item nbt to avoid their vanilla tags being ignored by Bukkit.
             // e.g. apotheosis:potion_charm{"Potion": "<effect id>"} or minecraft:bread{"Potion": "<effect id>"}
             return false;
-        }
-        else {
+        } else {
             // For items that has corresponding ItemMeta representation in Bukkit,
             // keep their behavior unchanged.
             return handledTags.contains((String) key);
@@ -127,7 +128,7 @@ public class CraftMetaItemMixin implements ItemMetaBridge {
         }
     }
 
-    @Inject(method = "clone", locals = LocalCapture.CAPTURE_FAILHARD, at = @At("RETURN"))
+    @Inject(method = "clone*", locals = LocalCapture.CAPTURE_FAILHARD, at = @At("RETURN"))
     private void arclight$cloneTags(CallbackInfoReturnable<CraftMetaItem> cir, CraftMetaItem clone) {
         if (this.unhandledTags != null) {
             ((ItemMetaBridge) clone).bridge$getUnhandledTags().putAll(this.unhandledTags);

@@ -16,7 +16,7 @@ repositories {
 dependencies {
     implementation gradleApi()
     implementation localGroovy()
-    implementation('net.md-5:SpecialSource:1.11.0') { transitive false }
+    implementation('net.md-5:SpecialSource:1.11.3') { transitive false }
     implementation 'org.ow2.asm:asm-tree:9.5'
     implementation 'org.ow2.asm:asm-util:9.5'
     implementation 'org.ow2.asm:asm-commons:9.5'
@@ -24,5 +24,5 @@ dependencies {
     implementation 'org.cadixdev:lorenz:0.5.8'
     implementation 'org.cadixdev:at:0.1.0-rc1'
     implementation 'net.fabricmc:lorenz-tiny:4.0.2'
-    implementation "dev.architectury:architectury-loom:1.4-SNAPSHOT"
+    implementation "dev.architectury:architectury-loom:1.5-SNAPSHOT"
 }

@@ -16,9 +16,12 @@ public interface ItemStackBridge {
 
     void bridge$convertStack(int version);
 
-    CompoundTag bridge$getForgeCaps();
+    default CompoundTag bridge$getForgeCaps() {
+        return null;
+    }
 
-    void bridge$setForgeCaps(CompoundTag caps);
+    default void bridge$setForgeCaps(CompoundTag caps) {
+    }
 
     default boolean bridge$forge$hasCraftingRemainingItem() {
         return ((ItemStack) (Object) this).getItem().hasCraftingRemainingItem();

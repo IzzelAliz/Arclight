@@ -6,7 +6,7 @@ import net.minecraft.world.item.ItemStack;
 public interface ItemEntityBridge {
 
     default int bridge$forge$onItemPickup(Player player) {
-        return 1;
+        return 0;
     }
 
     default void bridge$forge$firePlayerItemPickupEvent(Player player, ItemStack clone) {}

@@ -1,0 +1,30 @@
+{
+  "id": "arclight",
+  "version": "${version}",
+  "schemaVersion": 1,
+  "name": "Arclight Mod",
+  "authors": [
+    "IzzelAliz"
+  ],
+  "description": "Arclight bukkit layer for Fabric",
+  "license": "GNU GENERAL PUBLIC LICENSE Version 3",
+  "environment": "server",
+  "mixins": [
+    "mixins.arclight.fabric.json",
+    "mixins.arclight.core.json",
+    "mixins.arclight.bukkit.json",
+    "mixins.arclight.vanilla.json",
+    "mixins.arclight.impl.optimization.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15"
+  },
+  "entrypoints": {
+    "main": [
+      "io.izzel.arclight.fabric.ArclightModEntrypoint"
+    ],
+    "arclight_boot": [
+      "io.izzel.arclight.fabric.boot.FabricBootstrap"
+    ]
+  }
+}

@@ -17,14 +17,4 @@ public abstract class FireworkRocketEntityMixin extends EntityMixin {
             ci.cancel();
         }
     }
-
-    @Inject(method = "dealExplosionDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
-    private void arclight$damageSource(CallbackInfo ci) {
-        CraftEventFactory.entityDamage = (FireworkRocketEntity) (Object) this;
-    }
-
-    @Inject(method = "dealExplosionDamage", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/LivingEntity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
-    private void arclight$damageSourceReset(CallbackInfo ci) {
-        CraftEventFactory.entityDamage = null;
-    }
 }

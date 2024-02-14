@@ -1,8 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
+import io.izzel.arclight.api.ArclightPlatform;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.network.play.ServerPlayNetHandlerBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.mod.mixins.annotation.OnlyInPlatform;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -22,6 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(TheEndGatewayBlockEntity.class)
+@OnlyInPlatform({ArclightPlatform.FORGE, ArclightPlatform.NEOFORGE})
 public abstract class EndGatewayBlockEntityMixin extends BlockEntityMixin {
 
     // @formatter:off
@@ -32,22 +34,39 @@ public abstract class EndGatewayBlockEntityMixin extends BlockEntityMixin {
     private static void arclight$portal(Level level, BlockPos pos, BlockState state, Entity entityIn, TheEndGatewayBlockEntity entity, CallbackInfo ci,
                                         ServerLevel serverLevel, BlockPos dest) {
         if (entityIn instanceof ServerPlayer) {
-            CraftPlayer player = ((ServerPlayerEntityBridge) entityIn).bridge$getBukkitEntity();
-            Location location = new Location(((WorldBridge) level).bridge$getWorld(), dest.getX() + 0.5D, dest.getY() + 0.5D, dest.getZ() + 0.5D);
-            location.setPitch(player.getLocation().getPitch());
-            location.setYaw(player.getLocation().getYaw());
-
-            PlayerTeleportEvent event = new PlayerTeleportEvent(player, player.getLocation(), location, PlayerTeleportEvent.TeleportCause.END_GATEWAY);
-            Bukkit.getPluginManager().callEvent(event);
-            if (event.isCancelled()) {
-                ci.cancel();
-                return;
-            }
-
-            entityIn.setPortalCooldown();
-            ((ServerPlayNetHandlerBridge) (((ServerPlayer) entityIn)).connection).bridge$teleport(event.getTo());
-            triggerCooldown(level, pos, state, entity);
+            arclight$playerTeleport(level, pos, state, entityIn, entity, dest);
             ci.cancel();
+        }
+    }
+
+    private static void arclight$playerTeleport(Level level, BlockPos pos, BlockState state, Entity entityIn, TheEndGatewayBlockEntity entity, BlockPos dest) {
+        CraftPlayer player = ((ServerPlayerEntityBridge) entityIn).bridge$getBukkitEntity();
+        Location location = new Location(level.bridge$getWorld(), dest.getX() + 0.5D, dest.getY() + 0.5D, dest.getZ() + 0.5D);
+        location.setPitch(player.getLocation().getPitch());
+        location.setYaw(player.getLocation().getYaw());
+
+        PlayerTeleportEvent event = new PlayerTeleportEvent(player, player.getLocation(), location, PlayerTeleportEvent.TeleportCause.END_GATEWAY);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return;
+        }
+
+        entityIn.setPortalCooldown();
+        ((ServerPlayNetHandlerBridge) (((ServerPlayer) entityIn)).connection).bridge$teleport(event.getTo());
+        triggerCooldown(level, pos, state, entity);
+    }
+
+    @Mixin(TheEndGatewayBlockEntity.class)
+    @OnlyInPlatform({ArclightPlatform.FABRIC, ArclightPlatform.VANILLA})
+    public static class VanillaLike {
+
+        @Inject(method = "teleportEntity", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;setPortalCooldown()V"))
+        private static void arclight$portal(Level level, BlockPos pos, BlockState state, Entity entityIn, TheEndGatewayBlockEntity entity, CallbackInfo ci,
+                                            BlockPos dest) {
+            if (entityIn instanceof ServerPlayer) {
+                arclight$playerTeleport(level, pos, state, entityIn, entity, dest);
+                ci.cancel();
+            }
         }
     }
 }

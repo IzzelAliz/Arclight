@@ -1,7 +1,5 @@
 package io.izzel.arclight.installer;
 
-import io.izzel.arclight.api.Unsafe;
-
 import javax.net.ssl.SSLException;
 import java.io.File;
 import java.io.IOException;
@@ -63,7 +61,7 @@ public record FileDownloader(String url, String target, String hash) implements 
         } catch (AccessDeniedException e) {
             throw new RuntimeException("Access denied for file " + e.getFile(), e);
         } catch (Exception e) {
-            Unsafe.throwException(e);
+            Util.throwException(e);
             return null;
         }
     }

@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.METHOD)
-public @interface Inline {
+public @interface InlineMethod {
 
     @Retention(RetentionPolicy.CLASS)
     @Target(ElementType.METHOD)

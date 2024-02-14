@@ -15,13 +15,15 @@ allprojects {
 
     ext {
         minecraftVersion = '1.20.4'
-        supportedPlatforms = ['forge', 'neoforge']
-        fabricLoaderVersion = '0.15.5'
+        supportedPlatforms = ['forge', 'neoforge', 'fabric']
+        fabricLoaderVersion = '0.15.6'
+        fabricApiVersion = '0.96.0+1.20.4'
         forgeVersion = '49.0.22'
         neoForgeVersion = '20.4.147-beta'
-        apiVersion = '1.6.2'
+        apiVersion = '1.6.3'
         toolsVersion = '1.3.0'
         mixinVersion = '0.8.5'
+        mixinToolsVersion = '1.1.1'
         versionName = 'whisper'
         gitHash = getGitHash()
     }
@@ -46,8 +48,11 @@ allprojects {
     }
 }
 
+jar.enabled = false
+
 tasks.register('collect', Copy) {
     destinationDir = file('build/libs')
-    from project(':bootstrap').file('build/libs')
-    dependsOn (project(':bootstrap').tasks.jar, project(':bootstrap').tasks.neoforgeJar)
+    from project(':bootstrap').tasks.forgeJar.outputs
+    from project(':bootstrap').tasks.neoforgeJar.outputs
+    from project(':bootstrap').tasks.fabricJar.outputs
 }

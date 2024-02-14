@@ -194,6 +194,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public static EquipmentSlot getEquipmentSlotForItem(ItemStack p_147234_) { return null; }
     @Shadow protected abstract void actuallyHurt(DamageSource p_21240_, float p_21241_);
     @Shadow public abstract void skipDropExperience();
+    @Shadow public abstract AttributeMap getAttributes();
     // @formatter:on
 
     public int expToDrop;
@@ -502,7 +503,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             return false;
         } else if (this.level().isClientSide) {
             return false;
-        } else if (this.dead || this.isRemoved() || this.getHealth() <= 0.0F) {
+        } else if (this.dead || this.isRemoved() || this.isDeadOrDying()) {
             return false;
         } else if (source.is(DamageTypeTags.IS_FIRE) && this.hasEffect(MobEffects.FIRE_RESISTANCE)) {
             return false;

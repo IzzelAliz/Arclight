@@ -17,7 +17,7 @@ public interface Implementer {
 
     boolean processClass(ClassNode node);
 
-    public static void loadArgs(InsnList list, MethodNode methodNode, Type[] types, int i) {
+    static void loadArgs(InsnList list, MethodNode methodNode, Type[] types, int i) {
         if (!Modifier.isStatic(methodNode.access)) {
             list.add(new VarInsnNode(Opcodes.ALOAD, i));
             i += 1;

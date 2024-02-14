@@ -34,11 +34,11 @@ dependencies {
     implementation "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
     implementation 'org.jetbrains:annotations:23.0.0'
 
-    implementation ('io.izzel.arclight:mixin-tools:1.1.0') { transitive = false }
-    annotationProcessor ('io.izzel.arclight:mixin-tools:1.1.0') { transitive = false }
+    implementation ("io.izzel.arclight:mixin-tools:$mixinToolsVersion") { transitive = false }
+    annotationProcessor ("io.izzel.arclight:mixin-tools:$mixinToolsVersion") { transitive = false }
 
     implementation 'jline:jline:2.12.1'
-    implementation 'net.md-5:SpecialSource:1.11.0'
+    implementation 'net.md-5:SpecialSource:1.11.3'
     implementation 'org.apache.logging.log4j:log4j-jul:2.15.0'
     implementation 'net.md-5:bungeecord-chat:1.20-R0.1'
     implementation 'mysql:mysql-connector-java:8.0.28'

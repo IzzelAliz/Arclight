@@ -14,8 +14,8 @@ import java.security.MessageDigest
 
 class GenerateInstallerInfo extends DefaultTask {
 
-    private String minecraftVersion, forgeVersion, neoforgeVersion
-    private Configuration configuration
+    private String minecraftVersion, forgeVersion, neoforgeVersion, fabricLoaderVersion
+    private Configuration configuration, fabricExtra
 
     @Classpath
     Configuration getConfiguration() {
@@ -24,6 +24,15 @@ class GenerateInstallerInfo extends DefaultTask {
 
     void setConfiguration(Configuration configuration) {
         this.configuration = configuration
+    }
+
+    @Classpath
+    Configuration getFabricExtra() {
+        return fabricExtra
+    }
+
+    void setFabricExtra(Configuration fabricExtra) {
+        this.fabricExtra = fabricExtra
     }
 
     @Input
@@ -53,9 +62,17 @@ class GenerateInstallerInfo extends DefaultTask {
         this.neoforgeVersion = neoforgeVersion
     }
 
-    @TaskAction
-    void run() {
-        def libs = configuration.dependencies.collect { dep ->
+    @Input
+    String getFabricLoaderVersion() {
+        return fabricLoaderVersion
+    }
+
+    void setFabricLoaderVersion(String fabricLoaderVersion) {
+        this.fabricLoaderVersion = fabricLoaderVersion
+    }
+
+    private static List<String> configurationDeps(Configuration conf) {
+        return conf.dependencies.collect { dep ->
             def classifier = null
             if (dep.artifacts) {
                 dep.artifacts.each { DependencyArtifact artifact ->
@@ -69,7 +86,13 @@ class GenerateInstallerInfo extends DefaultTask {
             } else {
                 return "${dep.group}:${dep.name}:${dep.version}"
             }
-        }
+        } as List<String>
+    }
+
+    @TaskAction
+    void run() {
+        def libs = configurationDeps(this.configuration)
+        def fabricLibs = configurationDeps(this.fabricExtra)
         def sha1 = { file ->
             MessageDigest md = MessageDigest.getInstance('SHA-1')
             file.eachByte 4096, { bytes, size ->
@@ -110,15 +133,21 @@ class GenerateInstallerInfo extends DefaultTask {
         def neoforgeUrl = "https://maven.neoforged.net/releases/net/neoforged/neoforge/$neoforgeVersion/neoforge-$neoforgeVersion-installer.jar"
         def tmpNeoforge = Files.createTempFile("neoforge", "jar")
         Utils.download(neoforgeUrl, tmpNeoforge.toFile())
+        def fabricLoaderUrl = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/$fabricLoaderVersion/fabric-loader-${fabricLoaderVersion}.jar"
+        def tmpFabric = Files.createTempFile("fabric", "jar")
+        Utils.download(fabricLoaderUrl, tmpFabric.toFile())
         def output = [
-                installer: [
-                        minecraft   : minecraftVersion,
-                        forge       : forgeVersion,
-                        forgeHash   : sha1(tmpInstaller.toFile()),
-                        neoforge    : neoforgeVersion,
-                        neoforgeHash: sha1(tmpNeoforge.toFile()),
+                installer  : [
+                        minecraft       : minecraftVersion,
+                        forge           : forgeVersion,
+                        forgeHash       : sha1(tmpInstaller.toFile()),
+                        neoforge        : neoforgeVersion,
+                        neoforgeHash    : sha1(tmpNeoforge.toFile()),
+                        fabricLoader    : fabricLoaderVersion,
+                        fabricLoaderHash: sha1(tmpFabric.toFile()),
                 ],
-                libraries: artifacts(libs)
+                libraries  : artifacts(libs),
+                fabricExtra: artifacts(fabricLibs)
         ]
         outputs.files.singleFile.text = JsonOutput.toJson(output)
     }

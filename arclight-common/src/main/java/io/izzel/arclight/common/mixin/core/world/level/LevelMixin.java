@@ -39,6 +39,7 @@ import net.minecraft.world.level.storage.WritableLevelData;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
+import org.bukkit.craftbukkit.v.block.CapturedBlockState;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -63,6 +64,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -94,6 +97,8 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
     @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
     private static BlockPos lastPhysicsProblem; // Spigot
     public boolean preventPoiUpdated = false;
+    public Map<BlockPos, CapturedBlockState> capturedBlockStates = new java.util.LinkedHashMap<>();
+    public Map<BlockPos, BlockEntity> capturedTileEntities = new HashMap<>();
 
     @ShadowConstructor
     public void arclight$constructor(WritableLevelData worldInfo, ResourceKey<Level> dimension, RegistryAccess registryAccess, final Holder<DimensionType> dimensionType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed, int maxNeighborUpdate) {
@@ -117,6 +122,16 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
                 this.ticksPerSpawnCategory.put(spawnCategory, this.getCraftServer().getTicksPerSpawns(spawnCategory));
             }
         }
+    }
+
+    @Override
+    public Map<BlockPos, CapturedBlockState> bridge$getCapturedBlockState() {
+        return this.capturedBlockStates;
+    }
+
+    @Override
+    public Map<BlockPos, BlockEntity> bridge$getCapturedBlockEntity() {
+        return this.capturedTileEntities;
     }
 
     @Override
@@ -192,7 +207,7 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
                 this.setBlocksDirty(pos, oldBlock, blockstate1);
             }
 
-            if ((j & 2) != 0 && (!this.isClientSide || (j & 4) == 0) && (this.isClientSide || levelchunk.getFullStatus() != null && levelchunk.getFullStatus().isOrAfter(FullChunkStatus.BLOCK_TICKING))) {
+            if ((j & 2) != 0 && (!this.isClientSide || (j & 4) == 0) && (this.isClientSide || levelchunk == null || levelchunk.getFullStatus() != null && levelchunk.getFullStatus().isOrAfter(FullChunkStatus.BLOCK_TICKING))) {
                 this.sendBlockUpdated(pos, oldBlock, newBlock, j);
             }
 
@@ -344,5 +359,10 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
     @Override
     public boolean bridge$preventPoiUpdated() {
         return this.preventPoiUpdated;
+    }
+
+    @Override
+    public void bridge$preventPoiUpdated(boolean b) {
+        this.preventPoiUpdated = b;
     }
 }

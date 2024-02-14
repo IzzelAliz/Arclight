@@ -1,8 +1,11 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
+import io.izzel.arclight.common.bridge.core.util.DamageSourceBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.Level;
@@ -35,14 +38,9 @@ public class PointedDripstoneBlockMixin {
         }
     }
 
-    @Inject(method = "fallOn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;causeFallDamage(FFLnet/minecraft/world/damagesource/DamageSource;)Z"))
-    private void arclight$blockDamage(Level level, BlockState p_154048_, BlockPos pos, Entity p_154050_, float p_154051_, CallbackInfo ci) {
-        CraftEventFactory.blockDamage = CraftBlock.at(level, pos);
-    }
-
-    @Inject(method = "fallOn", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/Entity;causeFallDamage(FFLnet/minecraft/world/damagesource/DamageSource;)Z"))
-    private void arclight$blockDamageReset(Level level, BlockState p_154048_, BlockPos pos, Entity p_154050_, float p_154051_, CallbackInfo ci) {
-        CraftEventFactory.blockDamage = CraftBlock.at(level, pos);
+    @Redirect(method = "fallOn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/damagesource/DamageSources;stalagmite()Lnet/minecraft/world/damagesource/DamageSource;"))
+    private DamageSource arclight$blockDamage(DamageSources instance, Level level, BlockState blockState, BlockPos blockPos) {
+        return ((DamageSourceBridge) instance.stalagmite()).bridge$directBlock(CraftBlock.at(level, blockPos));
     }
 
     @Redirect(method = "createMergedTips", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/PointedDripstoneBlock;createDripstone(Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Direction;Lnet/minecraft/world/level/block/state/properties/DripstoneThickness;)V"))

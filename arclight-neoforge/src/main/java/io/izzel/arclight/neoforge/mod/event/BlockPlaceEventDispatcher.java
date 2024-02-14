@@ -22,7 +22,6 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 
-// TODO common impl
 public class BlockPlaceEventDispatcher {
 
     @SubscribeEvent(receiveCanceled = true)

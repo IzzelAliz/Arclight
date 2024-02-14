@@ -66,7 +66,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
     @Shadow public abstract void loadPlugins();
     @Shadow public abstract void enablePlugins(PluginLoadOrder type);
     @Shadow public abstract PluginManager getPluginManager();
-    @Accessor("logger") @Mutable public abstract void setLogger(Logger logger);
+    @Shadow@Final private String serverVersion;@Accessor("logger") @Mutable public abstract void setLogger(Logger logger);
     // @formatter:on
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -81,6 +81,15 @@ public abstract class CraftServerMixin implements CraftServerBridge {
     @Overwrite(remap = false)
     public String getName() {
         return "Arclight";
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    public String getVersion() {
+        return System.getProperty("arclight.version") + " (MC: " + this.console.getServerVersion() + ")";
     }
 
     @Override

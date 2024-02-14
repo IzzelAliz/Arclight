@@ -8,6 +8,7 @@ import io.izzel.arclight.common.bridge.core.entity.InternalEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.network.datasync.SynchedEntityDataBridge;
+import io.izzel.arclight.common.bridge.core.util.DamageSourceBridge;
 import io.izzel.arclight.common.bridge.core.world.TeleporterBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.level.block.PortalInfoBridge;
@@ -459,9 +460,8 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
 
     @Redirect(method = "lavaHurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;setSecondsOnFire(I)V"))
     public void arclight$setOnFireFromLava$bukkitEvent(Entity entity, int seconds) {
-        var damager = (lastLavaContact == null) ? null : CraftBlock.at(level(), lastLavaContact);
-        CraftEventFactory.blockDamage = damager;
         if ((Object) this instanceof LivingEntity && remainingFireTicks <= 0) {
+        var damager = (lastLavaContact == null) ? null : CraftBlock.at(level(), lastLavaContact);
             var damagee = this.getBukkitEntity();
             EntityCombustEvent combustEvent = new EntityCombustByBlockEvent(damager, damagee, 15);
             Bukkit.getPluginManager().callEvent(combustEvent);
@@ -475,9 +475,10 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         }
     }
 
-    @Inject(method = "lavaHurt", at = @At("RETURN"))
-    private void arclight$resetBlockDamage(CallbackInfo ci) {
-        CraftEventFactory.blockDamage = null;
+    @Redirect(method = "lavaHurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/damagesource/DamageSources;lava()Lnet/minecraft/world/damagesource/DamageSource;"))
+    private DamageSource arclight$resetBlockDamage(DamageSources instance) {
+        var damager = (lastLavaContact == null) ? null : CraftBlock.at(level(), lastLavaContact);
+        return ((DamageSourceBridge) instance.lava()).bridge$directBlock(damager);
     }
 
     public void setSecondsOnFire(int seconds, boolean callEvent) {
@@ -889,9 +890,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         if (this.fireImmune()) {
             return false;
         }
-        CraftEventFactory.entityDamage = entity;
-        if (!this.hurt(this.damageSources().lightningBolt(), amount)) {
-            CraftEventFactory.entityDamage = null;
+        if (!this.hurt(((DamageSourceBridge) this.damageSources().lightningBolt()).bridge$customCausingEntity(entity), amount)) {
             return false;
         }
         return true;
@@ -967,7 +966,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                     entity.setDeltaMovement(portalInfo.speed);
                     if (this.bridge$isInWorld()) {
                         world.addDuringTeleport(entity);
-                        if (((WorldBridge) world).bridge$getTypeKey() == LevelStem.END) {
+                        if (((WorldBridge) world).bridge$getTypeKey() == LevelStem.END && Level.END != null /* fabric dimensions v1 */) {
                             ArclightCaptures.captureEndPortalEntity((Entity) (Object) this, true);
                             ServerLevel.makeObsidianPlatform(world);
                         }

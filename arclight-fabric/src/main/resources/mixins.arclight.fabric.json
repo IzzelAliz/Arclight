@@ -1,0 +1,31 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "io.izzel.arclight.fabric.mixin",
+  "target": "@env(DEFAULT)",
+  "plugin": "io.izzel.arclight.fabric.mod.FabricMixinPlugin",
+  "setSourceFile": true,
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "conformVisibility": true,
+    "requireAnnotations": false
+  },
+  "mixinPriority": 555,
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "bukkit.CraftHumanEntityMixin_Fabric",
+    "bukkit.CraftServerMixin_Fabric",
+    "core.network.ServerCommonPacketListenerImplMixin_Fabric",
+    "core.network.ServerLoginNetHandlerMixin_Fabric",
+    "core.server.level.ServerEntityMixin_Fabric",
+    "core.world.entity.EntityMixin_Fabric",
+    "core.world.entity.LivingEntityMixin_Fabric",
+    "core.world.entity.monster.ZombieMixin_Fabric",
+    "core.world.entity.player.PlayerMixin_Fabric",
+    "core.world.entity.player.ServerPlayerMixin_Fabric",
+    "core.world.level.block.FireBlockMixin_Fabric",
+    "core.world.level.block.entity.BrewingStandBlockEntityMixin_Fabric"
+  ]
+}

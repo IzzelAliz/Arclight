@@ -23,13 +23,18 @@ sourceSets {
             runtimeClasspath += main.runtimeClasspath
         }
     }
+    fabric {}
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 configurations {
     installer
+    installerFabric
+    embedCommon
+    embedFabric
     embed
+    embed.extendsFrom(embedCommon, embedFabric)
     gson
     implementation.extendsFrom(embed, gson)
 }
@@ -48,24 +53,34 @@ repositories {
     mavenCentral()
 }
 
-def embedLibs = [/*"org.spongepowered:mixin:$mixinVersion", */ 'org.yaml:snakeyaml:2.0',
-                 'org.xerial:sqlite-jdbc:3.42.0.0', 'com.mysql:mysql-connector-j:8.0.33',
+def installerLibs = [/*"org.spongepowered:mixin:$mixinVersion", */ 'org.yaml:snakeyaml:2.2',
+                 'org.xerial:sqlite-jdbc:3.42.0.1', 'com.mysql:mysql-connector-j:8.1.0',
                  /*'commons-lang:commons-lang:2.6',*/ 'com.googlecode.json-simple:json-simple:1.1.1',
-                 'org.apache.logging.log4j:log4j-jul:2.17.2', 'net.md-5:SpecialSource:1.11.0',
+                 'org.apache.logging.log4j:log4j-jul:2.19.0', 'net.md-5:SpecialSource:1.11.3',
                  'org.jline:jline-terminal-jansi:3.12.1',/* 'org.fusesource.jansi:jansi:1.18',*/
                  /*'org.jline:jline-terminal:3.12.1', 'org.jline:jline-reader:3.12.1',*/
-                 'jline:jline:2.12.1', 'org.apache.maven:maven-resolver-provider:3.8.1',
-                 'org.apache.maven.resolver:maven-resolver-connector-basic:1.6.2', 'org.apache.maven.resolver:maven-resolver-transport-http:1.6.2',
-                 'org.apache.maven:maven-model:3.8.1', 'org.codehaus.plexus:plexus-utils:3.2.1',
-                 'org.apache.maven:maven-model-builder:3.8.1', 'org.codehaus.plexus:plexus-interpolation:1.25',
-                 'org.eclipse.sisu:org.eclipse.sisu.inject:0.3.4', 'org.apache.maven:maven-builder-support:3.8.1',
-                 'org.apache.maven:maven-repository-metadata:3.8.1', 'org.apache.maven.resolver:maven-resolver-api:1.6.2',
-                 'org.apache.maven.resolver:maven-resolver-spi:1.6.2', 'org.apache.maven.resolver:maven-resolver-util:1.6.2',
-                 'org.apache.maven.resolver:maven-resolver-impl:1.6.2', 'org.apache.httpcomponents:httpclient:4.5.12',
-                 'org.apache.httpcomponents:httpcore:4.4.13', 'commons-codec:commons-codec:1.15',
+                 'jline:jline:2.12.1', 'org.apache.maven:maven-resolver-provider:3.8.5',
+                 'org.apache.maven.resolver:maven-resolver-connector-basic:1.7.3', 'org.apache.maven.resolver:maven-resolver-transport-http:1.7.3',
+                 'org.apache.maven:maven-model:3.8.5', 'org.codehaus.plexus:plexus-utils:3.3.0',
+                 'org.apache.maven:maven-model-builder:3.8.5', 'org.codehaus.plexus:plexus-interpolation:1.26',
+                 'org.eclipse.sisu:org.eclipse.sisu.inject:0.3.4', 'org.apache.maven:maven-builder-support:3.8.5',
+                 'org.apache.maven:maven-repository-metadata:3.8.5', 'org.apache.maven.resolver:maven-resolver-api:1.6.3',
+                 'org.apache.maven.resolver:maven-resolver-spi:1.6.3', 'org.apache.maven.resolver:maven-resolver-util:1.6.3',
+                 'org.apache.maven.resolver:maven-resolver-impl:1.6.3', 'org.apache.httpcomponents:httpclient:4.5.13',
+                 'org.apache.httpcomponents:httpcore:4.4.14', 'commons-codec:commons-codec:1.15',
                  'org.slf4j:jcl-over-slf4j:1.7.30', /*'org.apache.logging.log4j:log4j-slf4j18-impl:2.14.1',*/
                  'org.spongepowered:configurate-hocon:3.6.1', 'org.spongepowered:configurate-core:3.6.1',
                  'com.typesafe:config:1.3.1', 'javax.inject:javax.inject:1']
+
+def installerLibsFabric = [
+        'net.minecrell:terminalconsoleappender:1.2.0',
+        'org.jline:jline-terminal:3.12.1',
+        'org.jline:jline-reader:3.12.1',
+        'org.fusesource.jansi:jansi:1.18',
+        'org.apache.maven:maven-artifact:3.8.5',
+        "net.fabricmc:intermediary:$minecraftVersion",
+        "net.fabricmc.fabric-api:fabric-api:$fabricApiVersion"
+]
 
 dependencies {
     implementation 'com.google.guava:guava:31.1-jre'
@@ -88,19 +103,37 @@ dependencies {
     neoforgeImplementation 'net.neoforged.fancymodloader:loader:2.0.7'
     neoforgeImplementation 'cpw.mods:securejarhandler:2.1.24'
 
-    for (def lib : embedLibs) {
+    fabricImplementation "net.fabricmc:fabric-loader:$fabricLoaderVersion"
+
+    for (def lib : installerLibs) {
         installer lib
     }
+    for (def lib : installerLibsFabric) {
+        installerFabric lib
+    }
+
     gson 'com.google.code.gson:gson:2.9.0'
-    embed "io.izzel:tools:$toolsVersion"
-    embed "io.izzel.arclight:arclight-api:$apiVersion"
-    embed 'commons-lang:commons-lang:2.6@jar'
-    embed('io.izzel.arclight:mixin-tools:1.1.0') { transitive = false }
-    embed(project(':i18n-config')) { transitive = false }
-    embed(project(':installer')) { transitive = false }
+    embedCommon "io.izzel:tools:$toolsVersion"
+    embedCommon "io.izzel.arclight:arclight-api:$apiVersion"
+    embedCommon 'commons-lang:commons-lang:2.6@jar'
+    embedCommon(project(':i18n-config')) { transitive = false }
+    embedFabric("io.izzel.arclight:mixin-tools:$mixinToolsVersion") { transitive = false }
+    embedFabric(project(':installer')) { transitive = false }
 }
 
 jar {
+    from(configurations.embedCommon.collect { it.isDirectory() ? it : zipTree(it) }) {
+        exclude "META-INF/MANIFEST.MF"
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+        exclude "LICENSE.txt"
+        exclude "META-INF/services/**"
+        exclude "org/apache/commons/lang/enum/**"
+    }
+}
+
+tasks.register('forgeJar', Jar) {
     archiveBaseName.set 'arclight-forge-' + minecraftVersion
     manifest.attributes 'Main-Class': 'io.izzel.arclight.server.Launcher'
     manifest.attributes 'Implementation-Title': 'Arclight'
@@ -127,6 +160,7 @@ jar {
         it.rename { name -> 'gson.jar' }
     }
     from sourceSets.applaunch.output
+    from sourceSets.main.output
     from sourceSets.forge.output
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     dependsOn(project(':arclight-forge').tasks.reobfJar)
@@ -165,16 +199,43 @@ tasks.register('neoforgeJar', Jar) {
     dependsOn(project(':arclight-neoforge').tasks.reobfJar)
 }
 
-tasks.register('generateInstallerInfo', GenerateInstallerInfo) {
+tasks.register('fabricJar', Jar) {
+    archiveBaseName.set 'arclight-fabric-' + minecraftVersion
+    manifest.attributes 'Main-Class': 'io.izzel.arclight.server.Launcher'
+    manifest.attributes 'Implementation-Title': 'Arclight'
+    manifest.attributes 'Implementation-Version': "arclight-$minecraftVersion-${project.version}-$gitHash"
+    manifest.attributes 'Implementation-Vendor': 'Arclight Team'
+    manifest.attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd HH:mm:ss")
+    manifest.attributes 'Automatic-Module-Name': 'arclight.boot'
+    manifest.attributes 'Arclight-Target': 'io.izzel.arclight.boot.fabric.application.Main_Fabric'
+    from(configurations.embedFabric.collect { it.isDirectory() ? it : zipTree(it) })
+    into('/') {
+        it.from(project(':arclight-fabric').tasks.reobfJar.outputs.files.collect())
+        it.rename { name -> 'common.jar' }
+    }
+    into('/') {
+        it.from(configurations.gson.collect())
+        it.rename { name -> 'gson.jar' }
+    }
+    from sourceSets.applaunch.output
+    from sourceSets.fabric.output
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn(project(':arclight-fabric').tasks.reobfJar)
+}
+
+tasks.register("generateInstallerInfo", GenerateInstallerInfo) {
     forgeVersion = rootProject.ext.forgeVersion
     neoforgeVersion = rootProject.ext.neoForgeVersion
     minecraftVersion = rootProject.ext.minecraftVersion
+    fabricLoaderVersion = rootProject.ext.fabricLoaderVersion
     def installer = file("build/arclight_installer/META-INF/installer.json")
     outputs.file(installer)
     configuration = project.configurations.installer
+    fabricExtra = project.configurations.installerFabric
 }
 
 project.sourceSets.main.output.dir file("build/arclight_installer"), builtBy: tasks.generateInstallerInfo
+project.sourceSets.fabric.output.dir file("build/arclight_installer"), builtBy: tasks.generateInstallerInfo
 
 project.sourceSets.forge.output.dir file("build/forge_async_catcher"), builtBy: tasks.register('forgeAsyncCatcher', RenameAsyncCatcherTask) {
     inputFile.set project.file("async_catcher.json")
@@ -188,6 +249,12 @@ project.sourceSets.neoforge.output.dir file("build/neoforge_async_catcher"), bui
     outputs.file("build/neoforge_async_catcher/async_catcher.json")
 }
 
+project.sourceSets.fabric.output.dir file("build/fabric_async_catcher"), builtBy: tasks.register('fabricAsyncCatcher', RenameAsyncCatcherTask) {
+    inputFile.set project.file("async_catcher.json")
+    mapping.set "intermediary"
+    outputs.file("build/fabric_async_catcher/async_catcher.json")
+}
+
 compileJava {
     sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
     options.compilerArgs << '-XDignore.symbol.file' << '-XDenableSunApiLintControl'
@@ -199,7 +266,7 @@ compileApplaunchJava {
 }
 
 tasks.register('runProdServer', JavaExec) {
-    classpath = files(tasks.jar)
+    classpath = files(tasks.forgeJar)
     // systemProperties 'bsl.debug': 'true'
     systemProperties 'terminal.ansi': 'true'
     systemProperties 'mixin.debug.export': 'true'
@@ -213,7 +280,7 @@ tasks.register('runProdServer', JavaExec) {
     javaLauncher.convention(javaToolchains.launcherFor {
         languageVersion = JavaLanguageVersion.of(17)
     })
-    dependsOn project.tasks.build
+    dependsOn project.tasks.forgeJar
 }
 
 tasks.register('runProdNeoforge', JavaExec) {
@@ -231,7 +298,25 @@ tasks.register('runProdNeoforge', JavaExec) {
     javaLauncher.convention(javaToolchains.launcherFor {
         languageVersion = JavaLanguageVersion.of(17)
     })
-    dependsOn project.tasks.build
+    dependsOn project.tasks.neoforgeJar
+}
+
+tasks.register('runProdFabric', JavaExec) {
+    classpath = files(tasks.fabricJar)
+    // systemProperties 'bsl.debug': 'true'
+    systemProperties 'terminal.ansi': 'true'
+    systemProperties 'mixin.debug.export': 'true'
+    systemProperties 'mixin.dumpTargetOnFailure': 'true'
+    systemProperties 'arclight.alwaysExtract': 'true'
+    systemProperties 'arclight.remapper.dump': './.mixin.out/plugin_classes'
+    workingDir System.env.ARCLIGHT_PROD_DIR ?: file('run_prod/fabric')
+    maxHeapSize '4G'
+    args 'nogui'
+    standardInput System.in
+    javaLauncher.convention(javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(17)
+    })
+    dependsOn project.tasks.fabricJar
 }
 
 publishing {

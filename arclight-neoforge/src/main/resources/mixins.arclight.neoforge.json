@@ -63,6 +63,7 @@
     "core.world.level.block.CropBlockMixin_NeoForge",
     "core.world.level.block.FireBlockMixin_NeoForge",
     "core.world.level.block.TntBlockMixin_NeoForge",
+    "core.world.level.block.entity.AbstractFurnaceBlockEntityMixin_NeoForge",
     "core.world.level.block.entity.BrewingStandBlockEntityMixin_NeoForge",
     "core.world.level.block.state.BlockBehaviourMixin_Forge",
     "core.world.level.levelgen.structure.templatesystem.StructureTemplateMixin_NeoForge",

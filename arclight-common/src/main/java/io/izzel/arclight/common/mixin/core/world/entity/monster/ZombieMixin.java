@@ -43,7 +43,7 @@ public abstract class ZombieMixin extends PathfinderMobMixin {
         ((WorldBridge) this.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.DROWNED);
     }
 
-    @Inject(method = "convertToZombieType", locals = LocalCapture.CAPTURE_FAILHARD, at = @At("RETURN"))
+    @Inject(method = "convertToZombieType", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/Zombie;handleAttributes(F)V"))
     private void arclight$stopConversion(EntityType<? extends net.minecraft.world.entity.monster.Zombie> entityType, CallbackInfo ci, net.minecraft.world.entity.monster.Zombie zombieEntity) {
         if (zombieEntity == null) {
             ((Zombie) this.bridge$getBukkitEntity()).setConversionTime(-1);
@@ -94,4 +94,3 @@ public abstract class ZombieMixin extends PathfinderMobMixin {
         return zombieVillager;
     }
 }
-

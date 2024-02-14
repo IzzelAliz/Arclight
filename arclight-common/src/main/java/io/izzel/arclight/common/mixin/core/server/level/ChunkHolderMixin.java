@@ -12,6 +12,7 @@ import net.minecraft.server.level.ChunkLevel;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.FullChunkStatus;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -23,7 +24,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -36,6 +36,8 @@ public abstract class ChunkHolderMixin implements ChunkHolderBridge {
     @Shadow public abstract CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> getFutureIfPresentUnchecked(ChunkStatus p_219301_1_);
     @Shadow @Final ChunkPos pos;
     @Shadow @Final private ShortSet[] changedBlocksPerSection;
+    @Shadow @Final private LevelHeightAccessor levelHeightAccessor;
+    @Shadow private int ticketLevel;
     @Override @Accessor("oldTicketLevel") public abstract int bridge$getOldTicketLevel();
     // @formatter:on
 
@@ -62,20 +64,20 @@ public abstract class ChunkHolderMixin implements ChunkHolderBridge {
         return this.getFullChunkNowUnchecked();
     }
 
-    @Inject(method = "blockChanged", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
+    @Inject(method = "blockChanged", cancellable = true,
         at = @At(value = "FIELD", ordinal = 0, target = "Lnet/minecraft/server/level/ChunkHolder;changedBlocksPerSection:[Lit/unimi/dsi/fastutil/shorts/ShortSet;"))
-    private void arclight$outOfBound(BlockPos pos, CallbackInfo ci, LevelChunk chunk, int i) {
+    private void arclight$outOfBound(BlockPos pos, CallbackInfo ci) {
+        int i = this.levelHeightAccessor.getSectionIndex(pos.getY());
         if (i < 0 || i >= this.changedBlocksPerSection.length) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "updateFutures", at = @At(value = "JUMP", opcode = Opcodes.IFEQ, ordinal = 0),
-        locals = LocalCapture.CAPTURE_FAILHARD)
-    public void arclight$onChunkUnload(ChunkMap chunkManager, Executor executor, CallbackInfo ci, ChunkStatus chunkStatus,
-                                       ChunkStatus chunkStatus1, boolean flag, boolean flag1,
-                                       FullChunkStatus locationType, FullChunkStatus locationType1) {
-        if (locationType.isOrAfter(FullChunkStatus.FULL) && !locationType1.isOrAfter(FullChunkStatus.FULL)) {
+    @Inject(method = "updateFutures", at = @At(value = "JUMP", opcode = Opcodes.IFEQ, ordinal = 0))
+    private void arclight$onChunkUnload(ChunkMap chunkManager, Executor executor, CallbackInfo ci) {
+        FullChunkStatus fullChunkStatus = ChunkLevel.fullStatus(this.oldTicketLevel);
+        FullChunkStatus fullChunkStatus2 = ChunkLevel.fullStatus(this.ticketLevel);
+        if (fullChunkStatus.isOrAfter(FullChunkStatus.FULL) && !fullChunkStatus2.isOrAfter(FullChunkStatus.FULL)) {
             this.getFutureIfPresentUnchecked(ChunkStatus.FULL).thenAccept((either) -> {
                 LevelChunk chunk = (LevelChunk) either.left().orElse(null);
                 if (chunk != null) {
@@ -95,11 +97,12 @@ public abstract class ChunkHolderMixin implements ChunkHolderBridge {
         }
     }
 
-    @Inject(method = "updateFutures", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
-    public void arclight$onChunkLoad(ChunkMap chunkManager, Executor executor, CallbackInfo ci, ChunkStatus chunkStatus,
-                                     ChunkStatus chunkStatus1, boolean flag, boolean flag1,
-                                     FullChunkStatus locationType, FullChunkStatus locationType1) {
-        if (!locationType.isOrAfter(FullChunkStatus.FULL) && locationType1.isOrAfter(FullChunkStatus.FULL)) {
+    @Inject(method = "updateFutures", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/level/ChunkHolder$LevelChangeListener;onLevelChange(Lnet/minecraft/world/level/ChunkPos;Ljava/util/function/IntSupplier;ILjava/util/function/IntConsumer;)V"))
+    private void arclight$onChunkLoad(ChunkMap chunkManager, Executor executor, CallbackInfo ci) {
+        FullChunkStatus fullChunkStatus = ChunkLevel.fullStatus(this.oldTicketLevel);
+        FullChunkStatus fullChunkStatus2 = ChunkLevel.fullStatus(this.ticketLevel);
+        this.oldTicketLevel = this.ticketLevel;
+        if (!fullChunkStatus.isOrAfter(FullChunkStatus.FULL) && fullChunkStatus2.isOrAfter(FullChunkStatus.FULL)) {
             this.getFutureIfPresentUnchecked(ChunkStatus.FULL).thenAccept((either) -> {
                 LevelChunk chunk = (LevelChunk) either.left().orElse(null);
                 if (chunk != null) {

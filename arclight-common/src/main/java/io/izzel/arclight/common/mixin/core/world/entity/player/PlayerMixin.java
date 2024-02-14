@@ -282,7 +282,10 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
             if (f > 0.0f || f2 > 0.0f) {
                 final boolean flag = f3 > 0.9f;
                 boolean flag2 = false;
-                float i = (float) this.getAttributeValue(Attributes.ATTACK_KNOCKBACK); // Forge: Initialize this value to the attack knockback attribute of the player, which is by default 0
+                float i = 0;
+                if (this.getAttributes().hasAttribute(Attributes.ATTACK_KNOCKBACK)) {
+                    i = (float) this.getAttributeValue(Attributes.ATTACK_KNOCKBACK); // Forge: Initialize this value to the attack knockback attribute of the player, which is by default 0
+                }
                 i += EnchantmentHelper.getKnockbackBonus((net.minecraft.world.entity.player.Player) (Object) this);
                 if (this.isSprinting() && flag) {
                     this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, this.getSoundSource(), 1.0f, 1.0f);

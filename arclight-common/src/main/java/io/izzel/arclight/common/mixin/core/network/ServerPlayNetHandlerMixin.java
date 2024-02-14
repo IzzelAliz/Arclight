@@ -441,8 +441,8 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
     }
 
     @Inject(method = "handleSelectTrade", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/MerchantMenu;setSelectionHint(I)V"))
-    private void arclight$tradeSelect(ServerboundSelectTradePacket serverboundSelectTradePacket, CallbackInfo ci, int i, AbstractContainerMenu merchantMenu) {
-        var event = CraftEventFactory.callTradeSelectEvent(this.player, i, (MerchantMenu) merchantMenu);
+    private void arclight$tradeSelect(ServerboundSelectTradePacket serverboundSelectTradePacket, CallbackInfo ci, int i) {
+        var event = CraftEventFactory.callTradeSelectEvent(this.player, i, (MerchantMenu) this.player.containerMenu);
         if (event.isCancelled()) {
             ((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity().updateInventory();
             ci.cancel();

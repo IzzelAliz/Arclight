@@ -43,4 +43,8 @@ class Util {
         return (SHA_PAD + hash).substring(hash.length());
     }
 
+    @SuppressWarnings("unchecked")
+    public static <E extends Throwable> void throwException(Throwable e) throws E {
+        throw (E) e;
+    }
 }

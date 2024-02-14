@@ -1,7 +1,6 @@
 package io.izzel.arclight.installer;
 
 import com.google.gson.*;
-import io.izzel.arclight.api.Unsafe;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -82,10 +81,10 @@ public class MinecraftProvider {
                 future.join();
             } catch (CompletionException e) {
                 logger.accept(e.getCause().toString());
-                Unsafe.throwException(e.getCause());
+                Util.throwException(e.getCause());
             } catch (Exception e) {
                 e.printStackTrace();
-                Unsafe.throwException(e);
+                throw e;
             }
         }
     }

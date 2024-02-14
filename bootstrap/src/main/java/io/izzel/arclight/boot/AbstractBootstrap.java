@@ -90,16 +90,22 @@ public interface AbstractBootstrap {
     }
 
     default void setupMod(ArclightPlatform platform) throws Exception {
+        setupMod(platform, true);
+    }
+
+    default void setupMod(ArclightPlatform platform, boolean extract) throws Exception {
         ArclightVersion.setVersion(ArclightVersion.WHISPER);
         ArclightPlatform.setPlatform(platform);
-        try (InputStream stream = getClass().getModule().getResourceAsStream("/META-INF/MANIFEST.MF")) {
+        try (InputStream stream = getClass().getResourceAsStream("/META-INF/MANIFEST.MF")) {
             Manifest manifest = new Manifest(stream);
             Attributes attributes = manifest.getMainAttributes();
             String version = attributes.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-            extract(getClass().getModule().getResourceAsStream("/common.jar"), version);
+            if (extract) {
+                extract(getClass().getModule().getResourceAsStream("/common.jar"), version);
+            }
             String buildTime = attributes.getValue("Implementation-Timestamp");
             LogManager.getLogger("Arclight").info(ArclightLocale.getInstance().get("logo"),
-                ArclightLocale.getInstance().get("release-name." + ArclightVersion.current().getReleaseName()), version, buildTime);
+                    ArclightLocale.getInstance().get("release-name." + ArclightVersion.current().getReleaseName()), version, buildTime);
         }
     }
 

@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mod.mixins;
 
-import io.izzel.arclight.common.mod.mixins.annotation.Inline;
+import io.izzel.arclight.common.mod.mixins.annotation.InlineMethod;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -14,19 +14,21 @@ import org.spongepowered.asm.util.Locals;
 
 import java.lang.reflect.Modifier;
 
-public class InlineProcessor implements MixinProcessor {
+public class InlineMethodProcessor implements MixinProcessor {
 
-    private static final String TYPE = Type.getDescriptor(Inline.class);
-    private static final String MERGED = Type.getDescriptor(Inline.Merged.class);
+    private static final String TYPE = Type.getDescriptor(InlineMethod.class);
+    private static final String MERGED = Type.getDescriptor(InlineMethod.Merged.class);
 
     @Override
     public void accept(String className, ClassNode classNode, IMixinInfo mixinInfo) {
-        for (var methodNode : classNode.methods) {
+        for (var iterator = classNode.methods.iterator(); iterator.hasNext(); ) {
+            var methodNode = iterator.next();
             if (methodNode.invisibleAnnotations != null) {
                 for (var ann : methodNode.invisibleAnnotations) {
                     if (ann.desc.equals(TYPE)) {
                         new MethodInliner(methodNode, classNode).accept();
                         ann.desc = MERGED;
+                        iterator.remove();
                     }
                 }
             }

@@ -18,9 +18,12 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.LevelStem;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.CraftWorld;
+import org.bukkit.craftbukkit.v.block.CapturedBlockState;
 import org.bukkit.entity.SpawnCategory;
 import org.bukkit.generator.ChunkGenerator;
 import org.spigotmc.SpigotWorldConfig;
+
+import java.util.Map;
 
 public interface WorldBridge extends IWorldWriterBridge, IWorldBridge, InjectLevelBridge {
 
@@ -50,6 +53,8 @@ public interface WorldBridge extends IWorldWriterBridge, IWorldBridge, InjectLev
 
     boolean bridge$preventPoiUpdated();
 
+    void bridge$preventPoiUpdated(boolean b);
+
     void bridge$forge$notifyAndUpdatePhysics(BlockPos pos, LevelChunk chunk, BlockState oldBlock, BlockState newBlock, int i, int j);
 
     default boolean bridge$forge$onBlockPlace(BlockPos pos, LivingEntity livingEntity, Direction direction) {
@@ -69,4 +74,16 @@ public interface WorldBridge extends IWorldWriterBridge, IWorldBridge, InjectLev
     default boolean bridge$forge$restoringBlockSnapshots() {
         return false;
     }
+
+    Map<BlockPos, CapturedBlockState> bridge$getCapturedBlockState();
+
+    Map<BlockPos, BlockEntity> bridge$getCapturedBlockEntity();
+
+    default void bridge$platform$startCaptureBlockBreak() {}
+
+    default boolean bridge$isCapturingBlockBreak() {
+        return false;
+    }
+
+    default void bridge$platform$endCaptureBlockBreak() {}
 }

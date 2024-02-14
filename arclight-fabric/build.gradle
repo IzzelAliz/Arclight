@@ -1,0 +1,134 @@
+import io.izzel.arclight.gradle.tasks.RenameJarTask
+
+plugins {
+    id 'architectury-plugin' version "${architect_plugin_version}"
+    id 'com.github.johnrengelman.shadow' version "${shadow_plugin_version}"
+}
+
+apply plugin: io.izzel.arclight.gradle.ArclightGradlePlugin
+
+architectury {
+    minecraft = minecraftVersion
+    platformSetupLoomIde()
+    fabric()
+}
+
+loom {
+    silentMojangMappingsLicense()
+    accessWidenerPath = project(":arclight-common").loom.accessWidenerPath
+}
+
+arclight {
+    mcVersion = minecraftVersion
+    bukkitVersion = 'v1_20_R3'
+    accessTransformer = project(':arclight-common').file('bukkit.at')
+    extraMapping = project(':arclight-common').file('extra_mapping.tsrg')
+}
+
+configurations {
+    common
+    shadowCommon
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:$minecraftVersion"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:$fabricLoaderVersion"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:$fabricApiVersion"
+
+    implementation("org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT") { transitive = false }
+    implementation "io.izzel.arclight.generated:spigot:$minecraftVersion:deobf"
+    implementation 'net.md-5:bungeecord-chat:1.16-R0.4'
+
+    implementation("io.izzel.arclight:mixin-tools:$mixinToolsVersion") { transitive = false }
+
+    shadowCommon("org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT") { transitive = false }
+    shadowCommon "io.izzel.arclight.generated:spigot:$minecraftVersion:deobf"
+    shadowCommon('net.md-5:bungeecord-chat:1.20-R0.1') { transitive = false }
+
+    implementation "io.izzel:tools:$toolsVersion"
+    implementation "io.izzel.arclight:arclight-api:$apiVersion"
+    compileOnly("net.minecraftforge:eventbus:4.0.0") { transitive = false }
+    implementation project(':i18n-config')
+
+    common(project(path: ':arclight-common', configuration: 'namedElements')) { transitive = false }
+    shadowCommon(project(path: ':arclight-common', configuration: 'transformProductionFabric')) { transitive = false }
+    common(project(':bootstrap')) { transitive = false }
+    shadowCommon(project(':bootstrap')) { transitive = false }
+}
+
+java {
+    withSourcesJar()
+}
+
+jar {
+    manifest.attributes 'MixinConnector': 'io.izzel.arclight.common.mod.ArclightConnector'
+    manifest.attributes 'Implementation-Title': 'Arclight'
+    manifest.attributes 'Implementation-Version': "arclight-$minecraftVersion-${project.version}-$gitHash"
+    manifest.attributes 'Implementation-Vendor': 'Arclight Team'
+    manifest.attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd HH:mm:ss")
+}
+
+tasks.register('fabricMappings', Copy) {
+    destinationDir = file('build/fabric_mappings')
+    from(arclight.mappingsConfiguration.bukkitToFabric) {
+        rename { name -> 'bukkit_srg.srg' }
+    }
+    from(arclight.mappingsConfiguration.bukkitToFabricInheritance) {
+        rename { name -> 'inheritanceMap.txt' }
+    }
+}
+
+project.sourceSets.main.output.dir file('build/fabric_mappings'), builtBy: tasks.fabricMappings
+
+processResources {
+    def ver = "${project.version}+$gitHash"
+    inputs.property 'version', ver
+
+    filesMatching('fabric.mod.json') {
+        expand 'version': ver
+    }
+}
+
+shadowJar {
+    exclude 'architectury.common.json'
+
+    configurations = [project.configurations.shadowCommon]
+    archiveClassifier = 'dev-shadow'
+}
+
+remapJar {
+    injectAccessWidener.set true
+    inputFile.set shadowJar.archiveFile
+    dependsOn shadowJar
+}
+
+tasks.register('reobfJar', RenameJarTask) {
+    inputJar.set remapJar.archiveFile
+    archiveClassifier.set 'reobf'
+    mappings = arclight.mappingsConfiguration.reobfBukkitPackage
+}
+
+tasks.register('srgJar', Jar) {
+    from(tasks.remapJar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) }) {
+        include 'io/izzel/**'
+        exclude 'io/izzel/arclight/common/mixin/**'
+        exclude 'io/izzel/arclight/forge/mixin/**'
+    }
+    archiveClassifier.set('srg')
+    dependsOn remapJar
+}
+
+sourcesJar {
+    def commonSources = project(':arclight-common').sourcesJar
+    dependsOn commonSources
+    from commonSources.archiveFile.map { zipTree(it) }
+}
+
+components.java {
+    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
+        skip()
+    }
+}

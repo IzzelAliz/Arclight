@@ -1,23 +1,20 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeHolderBridge;
 import io.izzel.arclight.common.bridge.core.tileentity.AbstractFurnaceTileEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeHolderBridge;
 import io.izzel.arclight.mixin.Eject;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -29,13 +26,11 @@ import org.bukkit.craftbukkit.v.inventory.CraftItemType;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.FurnaceBurnEvent;
 import org.bukkit.event.inventory.FurnaceExtractEvent;
-import org.bukkit.event.inventory.FurnaceSmeltEvent;
 import org.bukkit.event.inventory.FurnaceStartSmeltEvent;
 import org.bukkit.inventory.CookingRecipe;
 import org.bukkit.inventory.InventoryHolder;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -44,7 +39,6 @@ import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,15 +51,13 @@ public abstract class AbstractFurnaceBlockEntityMixin extends LockableBlockEntit
     @Shadow protected abstract boolean isLit();
     @Shadow @Final private Object2IntOpenHashMap<ResourceLocation> recipesUsed;
     @Shadow public abstract List<RecipeHolder<?>> getRecipesToAwardAndPopExperience(ServerLevel p_154996_, Vec3 p_154997_);
-    @Shadow protected abstract boolean canBurn(RegistryAccess p_266924_, @org.jetbrains.annotations.Nullable RecipeHolder<?> p_155006_, NonNullList<ItemStack> p_155007_, int p_155008_);
     // @formatter:on
 
     public List<HumanEntity> transaction = new ArrayList<>();
     private int maxStack = MAX_STACK;
 
-    @Eject(method = "serverTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;isLit()Z"),
-        slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;litDuration:I"),
-            to = @At(value = "INVOKE", remap = false, target = "Lnet/minecraft/world/item/ItemStack;hasCraftingRemainingItem()Z")))
+    @Eject(method = "serverTick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;isLit()Z"),
+        slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;litDuration:I")))
     private static boolean arclight$setBurnTime(AbstractFurnaceBlockEntity furnace, CallbackInfo ci) {
         ItemStack itemStack = furnace.getItem(1);
         CraftItemStack fuel = CraftItemStack.asCraftMirror(itemStack);
@@ -89,50 +81,6 @@ public abstract class AbstractFurnaceBlockEntityMixin extends LockableBlockEntit
                 Bukkit.getPluginManager().callEvent(event);
                 furnace.cookingTotalTime = event.getTotalCookTime();
             }
-        }
-    }
-
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    private boolean burn(RegistryAccess registryAccess, @Nullable RecipeHolder<?> recipe, NonNullList<ItemStack> items, int i) {
-        if (recipe != null && this.canBurn(registryAccess, recipe, items, i)) {
-            ItemStack itemstack = items.get(0);
-            ItemStack itemstack1 = recipe.value().getResultItem(registryAccess);
-            ItemStack itemstack2 = items.get(2);
-            CraftItemStack source = CraftItemStack.asCraftMirror(itemstack);
-            org.bukkit.inventory.ItemStack result = CraftItemStack.asBukkitCopy(itemstack1);
-
-            FurnaceSmeltEvent furnaceSmeltEvent = new FurnaceSmeltEvent(CraftBlock.at(level, worldPosition), source, result);
-            Bukkit.getPluginManager().callEvent(furnaceSmeltEvent);
-
-            if (furnaceSmeltEvent.isCancelled()) {
-                return false;
-            }
-
-            result = furnaceSmeltEvent.getResult();
-            itemstack1 = CraftItemStack.asNMSCopy(result);
-
-            if (!itemstack1.isEmpty()) {
-                if (itemstack2.isEmpty()) {
-                    items.set(2, itemstack1.copy());
-                } else if (CraftItemStack.asCraftMirror(itemstack2).isSimilar(result)) {
-                    itemstack2.grow(itemstack1.getCount());
-                } else {
-                    return false;
-                }
-            }
-
-            if (itemstack.is(Blocks.WET_SPONGE.asItem()) && !items.get(1).isEmpty() && items.get(1).is(Items.BUCKET)) {
-                items.set(1, new ItemStack(Items.WATER_BUCKET));
-            }
-
-            itemstack.shrink(1);
-            return true;
-        } else {
-            return false;
         }
     }
 

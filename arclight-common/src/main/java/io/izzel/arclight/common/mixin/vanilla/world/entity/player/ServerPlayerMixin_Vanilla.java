@@ -20,6 +20,7 @@ import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.portal.PortalInfo;
 import net.minecraft.world.phys.Vec3;
@@ -70,7 +71,7 @@ public abstract class ServerPlayerMixin_Vanilla extends PlayerMixin_Vanilla impl
         ServerLevel serverworld = this.serverLevel();
         ResourceKey<LevelStem> resourcekey = ((WorldBridge) serverworld).bridge$getTypeKey();
 
-        if (resourcekey == LevelStem.END && server != null && ((WorldBridge) server).bridge$getTypeKey() == LevelStem.OVERWORLD) {
+        if (resourcekey == LevelStem.END && Level.END != null /* fabric dimensions v1 */ && server != null && ((WorldBridge) server).bridge$getTypeKey() == LevelStem.OVERWORLD) {
             this.isChangingDimension = true;
             this.unRide();
             this.serverLevel().removePlayerImmediately((ServerPlayer) (Object) this, Entity.RemovalReason.CHANGED_DIMENSION);

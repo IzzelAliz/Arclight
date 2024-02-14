@@ -1,7 +1,10 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
+import io.izzel.arclight.common.bridge.core.util.DamageSourceBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.CactusBlock;
@@ -17,14 +20,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(CactusBlock.class)
 public class CactusBlockMixin {
 
-    @Inject(method = "entityInside", at = @At("HEAD"))
-    private void arclight$cactusDamage1(BlockState state, Level worldIn, BlockPos pos, Entity entityIn, CallbackInfo ci) {
-        CraftEventFactory.blockDamage = CraftBlock.at(worldIn, pos);
-    }
-
-    @Inject(method = "entityInside", at = @At("RETURN"))
-    private void arclight$cactusDamage2(BlockState state, Level worldIn, BlockPos pos, Entity entityIn, CallbackInfo ci) {
-        CraftEventFactory.blockDamage = null;
+    @Redirect(method = "entityInside", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/damagesource/DamageSources;cactus()Lnet/minecraft/world/damagesource/DamageSource;"))
+    private DamageSource arclight$cactusDamage1(DamageSources instance, BlockState blockState, Level level, BlockPos blockPos) {
+        return ((DamageSourceBridge) instance.cactus()).bridge$directBlock(CraftBlock.at(level, blockPos));
     }
 
     @Redirect(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
