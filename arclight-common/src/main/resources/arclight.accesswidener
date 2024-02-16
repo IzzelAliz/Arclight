@@ -7,6 +7,7 @@ accessible method net/minecraft/server/players/BanListEntry hasExpired ()Z
 accessible method net/minecraft/world/entity/item/PrimedTnt explode ()V
 extendable class net/minecraft/world/item/crafting/Ingredient
 accessible method net/minecraft/world/damagesource/DamageSource <init> (Lnet/minecraft/core/Holder;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/Vec3;)V
+accessible method net/minecraft/server/level/ServerLevel getEntities ()Lnet/minecraft/world/level/entity/LevelEntityGetter;
 # Older versions
 accessible field net/minecraft/world/level/chunk/storage/ChunkSerializer BLOCK_STATE_CODEC Lcom/mojang/serialization/Codec;
 # TODO field net/minecraft/server/PlayerAdvancements f_135964_
