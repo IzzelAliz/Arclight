@@ -41,8 +41,8 @@ abstract class UploadFilesTask extends DefaultTask {
         }
     }
 
-    private static final String OBJECTS = "https://files.hypertention.cn/v1/objects/%s"
-    private static final String FILES = "https://files.hypertention.cn/v1/files%s"
+    private static final String OBJECTS = "https://files.hypoglycemia.icu/v1/objects/%s"
+    private static final String FILES = "https://files.hypoglycemia.icu/v1/files%s"
 
     private void uploadOne(File file) {
         def sha1 = Utils.sha1(file)
