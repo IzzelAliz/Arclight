@@ -2,6 +2,7 @@ package io.izzel.arclight.gradle
 
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import java.security.MessageDigest
 import java.util.function.Consumer
 
 class Utils {
@@ -28,5 +29,13 @@ class Utils {
         while ((len = i.read(buf)) > 0) {
             o.write(buf, 0, len)
         }
+    }
+
+    static String sha1(File file) {
+        MessageDigest md = MessageDigest.getInstance('SHA-1')
+        file.eachByte 4096, { bytes, size ->
+            md.update(bytes, 0 as byte, size)
+        }
+        return md.digest().collect { String.format "%02x", it }.join()
     }
 }

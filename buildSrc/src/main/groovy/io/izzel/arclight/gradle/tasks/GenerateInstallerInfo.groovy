@@ -10,7 +10,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 
 import java.nio.file.Files
-import java.security.MessageDigest
 
 class GenerateInstallerInfo extends DefaultTask {
 
@@ -93,13 +92,6 @@ class GenerateInstallerInfo extends DefaultTask {
     void run() {
         def libs = configurationDeps(this.configuration)
         def fabricLibs = configurationDeps(this.fabricExtra)
-        def sha1 = { file ->
-            MessageDigest md = MessageDigest.getInstance('SHA-1')
-            file.eachByte 4096, { bytes, size ->
-                md.update(bytes, 0 as byte, size)
-            }
-            return md.digest().collect { String.format "%02x", it }.join()
-        }
         def artifacts = { List<String> arts ->
             def ret = new HashMap<String, String>()
             def cfg = project.configurations.create("art_rev_" + System.currentTimeMillis())
@@ -123,7 +115,7 @@ class GenerateInstallerInfo extends DefaultTask {
                     desc += ":${art.classifier}"
                 if (art.extension != 'jar')
                     desc += "@${art.extension}"
-                ret.put(desc.toString(), sha1(art.file))
+                ret.put(desc.toString(), Utils.sha1(art.file))
             }
             return arts.collectEntries { [(it.toString()): ret.get(it.toString())] }
         }
@@ -140,11 +132,11 @@ class GenerateInstallerInfo extends DefaultTask {
                 installer  : [
                         minecraft       : minecraftVersion,
                         forge           : forgeVersion,
-                        forgeHash       : sha1(tmpInstaller.toFile()),
+                        forgeHash       : Utils.sha1(tmpInstaller.toFile()),
                         neoforge        : neoforgeVersion,
-                        neoforgeHash    : sha1(tmpNeoforge.toFile()),
+                        neoforgeHash    : Utils.sha1(tmpNeoforge.toFile()),
                         fabricLoader    : fabricLoaderVersion,
-                        fabricLoaderHash: sha1(tmpFabric.toFile()),
+                        fabricLoaderHash: Utils.sha1(tmpFabric.toFile()),
                 ],
                 libraries  : artifacts(libs),
                 fabricExtra: artifacts(fabricLibs)
