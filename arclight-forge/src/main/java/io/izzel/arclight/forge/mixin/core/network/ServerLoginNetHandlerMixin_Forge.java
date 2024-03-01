@@ -2,7 +2,7 @@ package io.izzel.arclight.forge.mixin.core.network;
 
 import io.izzel.arclight.common.bridge.core.network.login.ServerLoginNetHandlerBridge;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.protocol.login.custom.DiscardedQueryAnswerPayload;
+import net.minecraft.network.protocol.login.ServerboundCustomQueryAnswerPacket;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
 import net.minecraftforge.fml.util.thread.SidedThreadGroups;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,7 +16,7 @@ public abstract class ServerLoginNetHandlerMixin_Forge implements ServerLoginNet
     }
 
     @Override
-    public FriendlyByteBuf bridge$getDiscardedQueryAnswerData(DiscardedQueryAnswerPayload payload) {
-        return payload.data();
+    public FriendlyByteBuf bridge$getDiscardedQueryAnswerData(ServerboundCustomQueryAnswerPacket payload) {
+        return payload.getInternalData();
     }
 }

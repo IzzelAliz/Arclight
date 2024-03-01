@@ -4,8 +4,8 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.properties.Property;
 import io.izzel.arclight.common.bridge.core.network.NetworkManagerBridge;
-import io.izzel.arclight.common.bridge.core.network.login.ServerLoginNetHandlerBridge;
 import io.izzel.arclight.common.bridge.core.network.common.ServerCommonPacketListenerBridge;
+import io.izzel.arclight.common.bridge.core.network.login.ServerLoginNetHandlerBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.core.server.management.PlayerListBridge;
 import io.izzel.arclight.common.mod.util.VelocitySupport;
@@ -21,7 +21,6 @@ import net.minecraft.network.protocol.login.ServerboundCustomQueryAnswerPacket;
 import net.minecraft.network.protocol.login.ServerboundHelloPacket;
 import net.minecraft.network.protocol.login.ServerboundKeyPacket;
 import net.minecraft.network.protocol.login.ServerboundLoginAcknowledgedPacket;
-import net.minecraft.network.protocol.login.custom.DiscardedQueryAnswerPayload;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
@@ -286,12 +285,13 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
     @Inject(method = "handleCustomQueryPacket", cancellable = true, at = @At("HEAD"))
     private void arclight$modernForwardReply(ServerboundCustomQueryAnswerPacket packet, CallbackInfo ci) {
         if (VelocitySupport.isEnabled() && packet.transactionId() == this.bridge$getVelocityLoginId()) {
-            if (!(packet.payload() instanceof DiscardedQueryAnswerPayload payload && bridge$getDiscardedQueryAnswerData(payload) != null)) {
+            var payload = bridge$getDiscardedQueryAnswerData(packet);
+            if (payload == null) {
                 this.bridge$disconnect("This server requires you to connect with Velocity.");
                 ci.cancel();
                 return;
             }
-            var buf = bridge$getDiscardedQueryAnswerData(payload).readNullable(r -> {
+            var buf = payload.readNullable(r -> {
                 int i = r.readableBytes();
                 if (i >= 0 && i <= 1048576) {
                     return new FriendlyByteBuf(r.readBytes(i));
@@ -332,6 +332,7 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
                     LOGGER.warn("Exception verifying {} ", this.authenticatedProfile.getName(), ex);
                 }
             });
+            this.bridge$platform$onCustomQuery(packet);
             ci.cancel();
         }
     }
