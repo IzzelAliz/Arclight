@@ -73,9 +73,10 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -340,20 +341,29 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         BukkitRegistry.registerEnvironments(this.registryAccess().registryOrThrow(Registries.LEVEL_STEM));
     }
 
-    @Redirect(method = "createLevels", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
-    private Object arclight$worldInit(Map<Object, Object> map, Object key, Object value) {
-        Object ret = map.put(key, value);
-        ServerLevel serverWorld = (ServerLevel) value;
-        if (((CraftServer) Bukkit.getServer()).scoreboardManager == null) {
-            ((CraftServer) Bukkit.getServer()).scoreboardManager = new CraftScoreboardManager((MinecraftServer) (Object) this, serverWorld.getScoreboard());
+    @Unique private transient ServerLevel arclight$capturedLevel;
+
+    @ModifyArg(method = "createLevels", index = 1, at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
+    private Object arclight$worldInitCapture(Object value) {
+        arclight$capturedLevel = (ServerLevel) value;
+        return value;
+    }
+
+    @Inject(method = "createLevels", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
+    private void arclight$worldInit(ChunkProgressListener chunkProgressListener, CallbackInfo ci) {
+        ServerLevel serverWorld = arclight$capturedLevel;
+        arclight$capturedLevel = null;
+        if (serverWorld != null) {
+            if (((CraftServer) Bukkit.getServer()).scoreboardManager == null) {
+                ((CraftServer) Bukkit.getServer()).scoreboardManager = new CraftScoreboardManager((MinecraftServer) (Object) this, serverWorld.getScoreboard());
+            }
+            if (((WorldBridge) serverWorld).bridge$getGenerator() != null) {
+                ((WorldBridge) serverWorld).bridge$getWorld().getPopulators().addAll(
+                    ((WorldBridge) serverWorld).bridge$getGenerator().getDefaultPopulators(
+                        ((WorldBridge) serverWorld).bridge$getWorld()));
+            }
+            Bukkit.getPluginManager().callEvent(new WorldInitEvent(((WorldBridge) serverWorld).bridge$getWorld()));
         }
-        if (((WorldBridge) serverWorld).bridge$getGenerator() != null) {
-            ((WorldBridge) serverWorld).bridge$getWorld().getPopulators().addAll(
-                ((WorldBridge) serverWorld).bridge$getGenerator().getDefaultPopulators(
-                    ((WorldBridge) serverWorld).bridge$getWorld()));
-        }
-        Bukkit.getPluginManager().callEvent(new WorldInitEvent(((WorldBridge) serverWorld).bridge$getWorld()));
-        return ret;
     }
 
     /**

@@ -725,7 +725,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         return this.containerCounter;
     }
 
-    @Redirect(method = "openMenu", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;closeContainer()V"))
+    @Redirect(method = "openMenu", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;closeContainer()V"))
     private void arclight$skipSwitch(ServerPlayer serverPlayer) {
     }
 

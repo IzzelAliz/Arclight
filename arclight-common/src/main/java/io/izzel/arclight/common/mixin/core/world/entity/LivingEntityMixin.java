@@ -517,7 +517,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             return false;
         } else if (this.level().isClientSide) {
             return false;
-        } else if (this.dead || this.isRemoved() || this.getHealth() <= 0.0F) {
+        } else if (this.dead || this.isRemoved() || this.isDeadOrDying()) {
             return false;
         } else if (source.is(DamageTypeTags.IS_FIRE) && this.hasEffect(MobEffects.FIRE_RESISTANCE)) {
             return false;

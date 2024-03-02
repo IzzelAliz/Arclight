@@ -905,7 +905,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                         entity.moveTo(portalinfo.pos.x, portalinfo.pos.y, portalinfo.pos.z, portalinfo.yRot, entity.getXRot());
                         entity.setDeltaMovement(portalinfo.speed);
                         world.addDuringTeleport(entity);
-                        if (((WorldBridge) world).bridge$getTypeKey() == LevelStem.END) {
+                        if (((WorldBridge) world).bridge$getTypeKey() == LevelStem.END && Level.END != null /* fabric dimensions v1 */) {
                             ArclightCaptures.captureEndPortalEntity((Entity) (Object) this, spawnPortal);
                             ServerLevel.makeObsidianPlatform(world);
                         }
