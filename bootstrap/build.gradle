@@ -273,6 +273,8 @@ tasks.register('runProdServer', JavaExec) {
     systemProperties 'mixin.dumpTargetOnFailure': 'true'
     systemProperties 'arclight.alwaysExtract': 'true'
     systemProperties 'arclight.remapper.dump': './.mixin.out/plugin_classes'
+    systemProperties 'sun.stdout.encoding': 'UTF-8'
+    systemProperties 'sun.stderr.encoding': 'UTF-8'
     workingDir System.env.ARCLIGHT_PROD_DIR ?: file('run_prod/forge')
     maxHeapSize '4G'
     args 'nogui'

@@ -33,22 +33,21 @@ A Bukkit server implementation utilizing Mixin.
 
 ## Installing
 
-* Download the jar from [release page](https://github.com/IzzelAliz/Arclight/releases) or build server. (see the table
-  above)
-* Launch with command `java -jar arclight-forge-<mc>-<version>.jar nogui`. The `nogui` argument will disable the server
+* Download the jar from [release page](https://github.com/IzzelAliz/Arclight/releases) or GitHub actions.
+* Launch with command `java -jar arclight.jar nogui`. The `nogui` argument will disable the server
   control panel.
+
+Read the [document](https://wiki.izzel.io/s/arclight-docs) for more information.
 
 ## Support
 
-Read [FAQ](https://github.com/IzzelAliz/Arclight/wiki/FAQ) before reporting issue.
+Read the document at https://wiki.izzel.io/s/arclight-docs.
+
+Report any problems [here](https://github.com/IzzelAliz/Arclight/issues/new/choose).
 
 Discord server https://discord.gg/ZvTY5SC
 
 QQ Group chat 3556966
-
-## Contributing
-
-Please read this [wiki section](https://github.com/IzzelAliz/Arclight/wiki/Contributing).
 
 ## License
 
