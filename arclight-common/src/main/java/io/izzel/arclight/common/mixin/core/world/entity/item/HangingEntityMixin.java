@@ -15,6 +15,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Hanging;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.objectweb.asm.Opcodes;
@@ -52,6 +53,8 @@ public abstract class HangingEntityMixin extends EntityMixin {
         Bukkit.getPluginManager().callEvent(event);
         if (this.isRemoved() || event.isCancelled()) {
             ci.cancel();
+        } else {
+            this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DROP);
         }
     }
 

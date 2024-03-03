@@ -22,6 +22,7 @@ import net.minecraft.world.phys.HitResult;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.LingeringPotionSplashEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -52,6 +53,11 @@ public abstract class ThrownPotionMixin extends ThrowableItemProjectileMixin {
     @Inject(method = "onHit", at = @At("RETURN"))
     private void arclight$resetResult(HitResult p_37543_, CallbackInfo ci) {
         arclight$hitResult = null;
+    }
+
+    @Inject(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/ThrownPotion;discard()V"))
+    private void arclight$hitCause(HitResult hitResult, CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.HIT);
     }
 
     /**

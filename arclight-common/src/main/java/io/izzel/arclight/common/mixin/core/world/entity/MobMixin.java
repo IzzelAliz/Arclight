@@ -26,6 +26,8 @@ import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityCombustByEntityEvent;
+import org.bukkit.event.entity.EntityKnockbackEvent;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
@@ -211,6 +213,11 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
         arclight$item = itemEntity;
     }
 
+    @Inject(method = "pickUpItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V"))
+    private void arclight$pickupCause(ItemEntity itemEntity, CallbackInfo ci) {
+        itemEntity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
+    }
+
     @Override
     public void bridge$captureItemDrop(ItemEntity itemEntity) {
         this.arclight$item = itemEntity;
@@ -336,6 +343,11 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
         this.arclight$transform = null;
     }
 
+    @Inject(method = "convertTo", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;discard()V"))
+    private <T extends Mob> void arclight$transformCause(EntityType<T> entityType, boolean bl, CallbackInfoReturnable<T> cir) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.TRANSFORMATION);
+    }
+
     public <T extends Mob> T convertTo(EntityType<T> entityType, boolean flag, EntityTransformEvent.TransformReason transformReason, CreatureSpawnEvent.SpawnReason spawnReason) {
         ((WorldBridge) this.level()).bridge$pushAddEntityReason(spawnReason);
         bridge$pushTransformReason(transformReason);
@@ -351,11 +363,21 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
 
     @Redirect(method = "doHurtTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;setSecondsOnFire(I)V"))
     public void arclight$attackCombust(Entity entity, int seconds) {
-        EntityCombustByEntityEvent combustEvent = new EntityCombustByEntityEvent(this.getBukkitEntity(), ((EntityBridge) entity).bridge$getBukkitEntity(), seconds);
+        EntityCombustByEntityEvent combustEvent = new EntityCombustByEntityEvent(this.getBukkitEntity(), entity.bridge$getBukkitEntity(), seconds);
         org.bukkit.Bukkit.getPluginManager().callEvent(combustEvent);
         if (!combustEvent.isCancelled()) {
             ((EntityBridge) entity).bridge$setOnFire(combustEvent.getDuration(), false);
         }
+    }
+
+    @Inject(method = "doHurtTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDD)V"))
+    private void arclight$attackKnockback(Entity entity, CallbackInfoReturnable<Boolean> cir) {
+        ((LivingEntityBridge) entity).bridge$pushKnockbackCause((Entity) (Object) this, EntityKnockbackEvent.KnockbackCause.ENTITY_ATTACK);
+    }
+
+    @Inject(method = "checkDespawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;discard()V"))
+    private void arclight$naturalDespawn(CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
     }
 
     @Override

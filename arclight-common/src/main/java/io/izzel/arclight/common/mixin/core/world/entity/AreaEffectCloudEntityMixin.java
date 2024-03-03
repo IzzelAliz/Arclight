@@ -18,6 +18,7 @@ import net.minecraft.world.item.alchemy.PotionUtils;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.AreaEffectCloudApplyEvent;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -107,6 +108,7 @@ public abstract class AreaEffectCloudEntityMixin extends EntityMixin implements 
             }
         } else {
             if (this.tickCount >= this.waitTime + this.duration) {
+                this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
                 this.discard();
                 return;
             }
@@ -123,6 +125,7 @@ public abstract class AreaEffectCloudEntityMixin extends EntityMixin implements 
             if (this.radiusPerTick != 0.0F) {
                 f += this.radiusPerTick;
                 if (f < 0.5F) {
+                    this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
                     this.discard();
                     return;
                 }
@@ -176,6 +179,7 @@ public abstract class AreaEffectCloudEntityMixin extends EntityMixin implements 
                                     if (this.radiusOnUse != 0.0F) {
                                         f += this.radiusOnUse;
                                         if (f < 0.5F) {
+                                            this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
                                             this.discard();
                                             return;
                                         }
@@ -186,6 +190,7 @@ public abstract class AreaEffectCloudEntityMixin extends EntityMixin implements 
                                     if (this.durationOnUse != 0) {
                                         this.duration += this.durationOnUse;
                                         if (this.duration <= 0) {
+                                            this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
                                             this.discard();
                                             return;
                                         }

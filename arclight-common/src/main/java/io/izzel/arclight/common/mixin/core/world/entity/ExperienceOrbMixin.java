@@ -10,6 +10,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.player.PlayerExpCooldownChangeEvent;
@@ -37,6 +38,21 @@ public abstract class ExperienceOrbMixin extends EntityMixin {
     // @formatter:on
 
     private transient Player arclight$lastPlayer;
+
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;discard()V"))
+    private void arclight$tickDespawn(CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
+    }
+
+    @Inject(method = "merge", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;discard()V"))
+    private void arclight$merge(CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.MERGE);
+    }
+
+    @Inject(method = "playerTouch", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;discard()V"))
+    private void arclight$pickup(CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
+    }
 
     @Inject(method = "tick", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/Entity;tick()V"))
     private void arclight$captureLast(CallbackInfo ci) {

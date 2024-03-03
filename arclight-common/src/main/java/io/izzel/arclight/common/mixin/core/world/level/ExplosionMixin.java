@@ -36,11 +36,13 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.TNTPrimeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntityKnockbackEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -222,6 +224,14 @@ public abstract class ExplosionMixin implements ExplosionBridge {
                         d7 *= d11;
                         d9 *= d11;
                         Vec3 vec3d1 = new Vec3(d5, d7, d9);
+
+                        // CraftBukkit start - Call EntityKnockbackEvent
+                        if (entity instanceof LivingEntity) {
+                            var result = entity.getDeltaMovement().add(vec3d1);
+                            var event = CraftEventFactory.callEntityKnockbackEvent((CraftLivingEntity) entity.bridge$getBukkitEntity(), source, EntityKnockbackEvent.KnockbackCause.EXPLOSION, d13, vec3d1, result.x, result.y, result.z);
+                            vec3d1 = (event.isCancelled()) ? Vec3.ZERO : new Vec3(event.getFinalKnockback().getX(), event.getFinalKnockback().getY(), event.getFinalKnockback().getZ());
+                        }
+                        // CraftBukkit end
 
                         entity.setDeltaMovement(entity.getDeltaMovement().add(vec3d1));
                         if (entity instanceof Player playerentity) {

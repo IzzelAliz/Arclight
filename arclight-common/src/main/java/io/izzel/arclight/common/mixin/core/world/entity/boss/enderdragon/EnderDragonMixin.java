@@ -25,11 +25,14 @@ import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -56,6 +59,16 @@ public abstract class EnderDragonMixin extends MobMixin {
         if (!event.isCancelled()) {
             this.setHealth((float) (this.getHealth() + event.getAmount()));
         }
+    }
+
+    @Inject(method = "kill", at = @At("HEAD"))
+    private void arclight$killed(CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DEATH);
+    }
+
+    @Inject(method = "tickDeath", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/boss/enderdragon/EnderDragon;remove(Lnet/minecraft/world/entity/Entity$RemovalReason;)V"))
+    private void arclight$killed2(CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DEATH);
     }
 
     /**

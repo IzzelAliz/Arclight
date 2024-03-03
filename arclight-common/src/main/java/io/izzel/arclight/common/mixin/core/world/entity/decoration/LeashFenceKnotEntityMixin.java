@@ -11,6 +11,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.AABB;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
@@ -56,6 +57,7 @@ public abstract class LeashFenceKnotEntityMixin extends HangingEntityMixin {
                 }
             }
             if (die) {
+                this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DROP);
                 this.discard();
             }
         }

@@ -11,6 +11,7 @@ import net.minecraft.world.entity.boss.EnderDragonPart;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.List;
@@ -68,6 +69,8 @@ public interface EntityBridge extends ICommandSourceBridge, InjectEntityBridge {
     Vec3 bridge$getLastTpPos();
 
     void bridge$revive();
+
+    void bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause cause);
 
     default boolean bridge$forge$isPartEntity() {
         return this instanceof EnderDragonPart;

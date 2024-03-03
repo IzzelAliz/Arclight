@@ -9,8 +9,10 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.ShulkerBullet;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -37,6 +39,21 @@ public abstract class ShulkerBulletMixin extends EntityMixin {
     @Inject(method = "onHitEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)Z"))
     private void arclight$reason(EntityHitResult result, CallbackInfo ci) {
         ((LivingEntityBridge) result.getEntity()).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.ATTACK);
+    }
+
+    @Inject(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/ShulkerBullet;destroy()V"))
+    private void arclight$hitCause(HitResult hitResult, CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.HIT);
+    }
+
+    @Inject(method = "checkDespawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/ShulkerBullet;discard()V"))
+    private void arclight$despawn(CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
+    }
+
+    @Inject(method = "hurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/ShulkerBullet;destroy()V"))
+    private void arclight$dead(DamageSource damageSource, float f, CallbackInfoReturnable<Boolean> cir) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DEATH);
     }
 
     @Inject(method = "hurt", cancellable = true, at = @At("HEAD"))

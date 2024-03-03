@@ -79,6 +79,7 @@ import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityDropItemEvent;
 import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.entity.EntityPoseChangeEvent;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.vehicle.VehicleBlockCollisionEvent;
@@ -326,6 +327,39 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         this.unsetRemoved();
     }
 
+    private transient EntityRemoveEvent.Cause arclight$removeCause;
+
+    @Override
+    public void bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause cause) {
+        this.arclight$removeCause = cause;
+    }
+
+    public void discard(EntityRemoveEvent.Cause cause) {
+        this.arclight$removeCause = cause;
+        this.discard();
+    }
+
+    public void remove(Entity.RemovalReason removalReason, EntityRemoveEvent.Cause cause) {
+        this.arclight$removeCause = cause;
+        this.remove(removalReason);
+    }
+
+    @Inject(method = "kill", at = @At("HEAD"))
+    private void arclight$killed(CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DEATH);
+    }
+
+    @Inject(method = "onBelowWorld", at = @At("HEAD"))
+    private void arclight$outOfWorld(CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.OUT_OF_WORLD);
+    }
+
+    @Inject(method = "setRemoved", at = @At("HEAD"))
+    private void arclight$removeEvent(Entity.RemovalReason removalReason, CallbackInfo ci) {
+        CraftEventFactory.callEntityRemoveEvent((Entity) (Object) this, arclight$removeCause);
+        arclight$removeCause = null;
+    }
+
     @Inject(method = "getMaxAirSupply", cancellable = true, at = @At("RETURN"))
     private void arclight$useBukkitMaxAir(CallbackInfoReturnable<Integer> cir) {
         cir.setReturnValue(this.maxAirTicks);
@@ -461,7 +495,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Redirect(method = "lavaHurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;setSecondsOnFire(I)V"))
     public void arclight$setOnFireFromLava$bukkitEvent(Entity entity, int seconds) {
         if ((Object) this instanceof LivingEntity && remainingFireTicks <= 0) {
-        var damager = (lastLavaContact == null) ? null : CraftBlock.at(level(), lastLavaContact);
+            var damager = (lastLavaContact == null) ? null : CraftBlock.at(level(), lastLavaContact);
             var damagee = this.getBukkitEntity();
             EntityCombustEvent combustEvent = new EntityCombustByBlockEvent(damager, damagee, 15);
             Bukkit.getPluginManager().callEvent(combustEvent);

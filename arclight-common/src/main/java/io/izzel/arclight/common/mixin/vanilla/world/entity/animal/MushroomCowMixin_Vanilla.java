@@ -12,6 +12,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDropItemEvent;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -33,6 +34,7 @@ public abstract class MushroomCowMixin_Vanilla extends EntityMixin_Vanilla {
             ci.cancel();
         } else {
             ((WorldBridge) this.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.SHEARED);
+            this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.TRANSFORMATION);
             this.discard();
         }
     }

@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.level.levelgen.structure;
 
 import io.izzel.arclight.common.bridge.core.world.level.levelgen.StructureStartBridge;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureManager;
@@ -12,6 +13,10 @@ import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructurePiece;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.pieces.PiecesContainer;
+import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSerializationContext;
+import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataContainer;
+import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataTypeRegistry;
+import org.bukkit.craftbukkit.v.persistence.DirtyCraftPersistentDataContainer;
 import org.bukkit.craftbukkit.v.util.CraftStructureTransformer;
 import org.bukkit.craftbukkit.v.util.TransformerGeneratorAccess;
 import org.bukkit.event.world.AsyncStructureGenerateEvent;
@@ -20,6 +25,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
@@ -66,6 +74,35 @@ public class StructureStartMixin implements StructureStartBridge {
             }
 
             this.structure.afterPlace(p_226851_, p_226852_, p_226853_, p_226854_, p_226855_, p_226856_, this.pieceContainer);
+        }
+    }
+
+    private static final CraftPersistentDataTypeRegistry DATA_TYPE_REGISTRY = new CraftPersistentDataTypeRegistry();
+    public DirtyCraftPersistentDataContainer persistentDataContainer = new DirtyCraftPersistentDataContainer(DATA_TYPE_REGISTRY);
+
+    @Override
+    public CraftPersistentDataContainer bridge$getPersistentDataContainer() {
+        return persistentDataContainer;
+    }
+
+    @Inject(method = "createTag", at = @At("RETURN"))
+    private void arclight$writeBukkitContainer(StructurePieceSerializationContext structurePieceSerializationContext, ChunkPos chunkPos, CallbackInfoReturnable<CompoundTag> cir) {
+        var tag = cir.getReturnValue();
+        if (tag != null) {
+            if (!persistentDataContainer.isEmpty()) {
+                tag.put("StructureBukkitValues", persistentDataContainer.toTagCompound());
+            }
+        }
+    }
+
+    @Inject(method = "loadStaticStart", at = @At("RETURN"))
+    private static void arclight$readBukkitContainer(StructurePieceSerializationContext structurePieceSerializationContext, CompoundTag compoundTag, long l, CallbackInfoReturnable<StructureStart> cir) {
+        var structureStart = cir.getReturnValue();
+        if (structureStart != null) {
+            var nbt = compoundTag.get("StructureBukkitValues");
+            if (nbt instanceof CompoundTag tag) {
+                ((StructureStartBridge) (Object) structureStart).bridge$getPersistentDataContainer().putAll(tag);
+            }
         }
     }
 }

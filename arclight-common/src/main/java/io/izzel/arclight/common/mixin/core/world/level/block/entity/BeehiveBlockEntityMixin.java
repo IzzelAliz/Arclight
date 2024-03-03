@@ -18,6 +18,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityEnterBlockEvent;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -80,6 +81,11 @@ public abstract class BeehiveBlockEntityMixin extends BlockEntityMixin {
                 ci.cancel();
             }
         }
+    }
+
+    @Inject(method = "addOccupantWithPresetTicks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;discard()V"))
+    private void arclight$enterBlockCause(Entity entity, boolean bl, int i, CallbackInfo ci) {
+        entity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.ENTER_BLOCK);
     }
 
     private static boolean releaseBee(Level world, BlockPos pos, BlockState state, BeehiveBlockEntity.BeeData beeData, @Nullable List<Entity> list, BeehiveBlockEntity.BeeReleaseStatus status, @Nullable BlockPos pos1, boolean force) {

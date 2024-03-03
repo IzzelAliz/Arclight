@@ -25,7 +25,7 @@ public class StructurePlaceSettingsMixin {
     @Inject(method = "getRandomPalette", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructurePlaceSettings;getRandom(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/util/RandomSource;"))
     private void arclight$forcePalette(List<StructureTemplate.Palette> list, BlockPos p_74389_, CallbackInfoReturnable<StructureTemplate.Palette> cir) {
         var i = list.size();
-        if (this.palette > 0) {
+        if (this.palette >= 0) {
             if (this.palette >= i) {
                 throw new IllegalArgumentException("Palette index out of bounds. Got " + this.palette + " where there are only " + i + " palettes available.");
             }

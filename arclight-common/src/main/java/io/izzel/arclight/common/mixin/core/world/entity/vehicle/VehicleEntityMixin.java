@@ -7,6 +7,7 @@ import net.minecraft.world.entity.vehicle.VehicleEntity;
 import net.minecraft.world.level.gameevent.GameEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Vehicle;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -64,6 +65,7 @@ public abstract class VehicleEntityMixin extends EntityMixin {
                     return true;
                 }
                 // CraftBukkit end
+                this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DEATH);
                 this.discard();
             }
         } else {

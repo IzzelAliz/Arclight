@@ -9,6 +9,7 @@ import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -29,6 +30,7 @@ public abstract class EnderCrystalMixin extends EntityMixin {
 
     @Inject(method = "hurt", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/boss/enderdragon/EndCrystal;remove(Lnet/minecraft/world/entity/Entity$RemovalReason;)V"))
     private void arclight$entityDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DEATH);
         if (CraftEventFactory.handleNonLivingEntityDamageEvent((EndCrystal) (Object) this, source, amount)) {
             cir.setReturnValue(false);
         }

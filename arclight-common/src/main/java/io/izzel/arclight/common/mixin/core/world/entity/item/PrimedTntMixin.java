@@ -9,6 +9,7 @@ import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.level.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Explosive;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -63,6 +64,7 @@ public abstract class PrimedTntMixin extends EntityMixin {
             if (!this.level().isClientSide) {
                 this.explode();
             }
+            this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.EXPLODE);
             this.discard();
         } else {
             this.updateInWaterStateAndDoFluidPushing();

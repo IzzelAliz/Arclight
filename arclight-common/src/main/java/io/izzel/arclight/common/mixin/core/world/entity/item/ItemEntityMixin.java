@@ -19,6 +19,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.entity.Item;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -51,11 +52,21 @@ public abstract class ItemEntityMixin extends EntityMixin implements ItemEntityB
         }
     }
 
+    @Inject(method = "merge(Lnet/minecraft/world/entity/item/ItemEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/item/ItemEntity;Lnet/minecraft/world/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V"))
+    private static void arclight$itemMergeCause(ItemEntity from, ItemStack stack1, ItemEntity to, ItemStack stack2, CallbackInfo ci) {
+        to.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.MERGE);
+    }
+
     @Inject(method = "hurt", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;markHurt()V"))
     private void arclight$damageNonLiving(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (CraftEventFactory.handleNonLivingEntityDamageEvent((ItemEntity) (Object) this, source, amount)) {
             cir.setReturnValue(false);
         }
+    }
+
+    @Inject(method = "hurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V"))
+    private void arclight$dead(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DEATH);
     }
 
     /**
@@ -106,6 +117,7 @@ public abstract class ItemEntityMixin extends EntityMixin implements ItemEntityB
                 this.bridge$forge$firePlayerItemPickupEvent(entity, copy);
                 entity.take((ItemEntity) (Object) this, i);
                 if (itemstack.isEmpty()) {
+                    this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
                     this.discard();
                     itemstack.setCount(i);
                 }

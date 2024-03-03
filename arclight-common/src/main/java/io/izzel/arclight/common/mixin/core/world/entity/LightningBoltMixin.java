@@ -7,6 +7,7 @@ import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -21,6 +22,11 @@ public abstract class LightningBoltMixin extends EntityMixin {
     @Shadow private int life;
 
     public boolean isSilent = false;
+
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LightningBolt;discard()V"))
+    private void arclight$tickDespawn(CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
+    }
 
     @Redirect(method = "tick", at = @At(value = "FIELD", opcode = Opcodes.GETFIELD, ordinal = 0, target = "Lnet/minecraft/world/entity/LightningBolt;life:I"))
     private int arclight$silent(LightningBolt lightningBolt) {

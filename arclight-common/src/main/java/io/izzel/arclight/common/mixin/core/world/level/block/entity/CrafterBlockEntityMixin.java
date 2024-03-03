@@ -18,7 +18,7 @@ public abstract class CrafterBlockEntityMixin extends LockableBlockEntityMixin {
     @Shadow private NonNullList<ItemStack> items;
 
     public List<HumanEntity> transaction = new java.util.ArrayList<>();
-    private int maxStack = 1;
+    private int maxStack = MAX_STACK;
 
     @Override
     public List<ItemStack> getContents() {

@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Either;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.InternalEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
@@ -68,6 +69,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityCombustByEntityEvent;
 import org.bukkit.event.entity.EntityExhaustionEvent;
+import org.bukkit.event.entity.EntityKnockbackEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.player.PlayerBedLeaveEvent;
@@ -136,7 +138,8 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
     @Shadow public abstract void setRemainingFireTicks(int p_36353_);
     // @formatter:on
 
-    @Shadow public abstract boolean isCreative();
+    @Shadow
+    public abstract boolean isCreative();
 
     public boolean fauxSleeping;
     public int oldLevel;
@@ -325,6 +328,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                 if (flag6) {
                     if (i > 0) {
                         if (entity instanceof LivingEntity) {
+                            ((LivingEntityBridge) entity).bridge$pushKnockbackCause((Entity) (Object) this, EntityKnockbackEvent.KnockbackCause.ENTITY_ATTACK);
                             ((LivingEntity) entity).knockback(i * 0.5f, Mth.sin(this.getYRot() * 0.017453292f), -Mth.cos(this.getYRot() * 0.017453292f));
                         } else {
                             entity.push(-Mth.sin(this.getYRot() * 0.017453292f) * i * 0.5f, 0.1, Mth.cos(this.getYRot() * 0.017453292f) * i * 0.5f);
@@ -338,6 +342,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                         double entityReachSq = Mth.square(this.bridge$forge$getEntityReach()); // Use entity reach instead of constant 9.0. Vanilla uses bottom center-to-center checks here, so don't update this to use canReach, since it uses closest-corner checks.
                         for (final LivingEntity entityliving : list) {
                             if (entityliving != (Object) this && entityliving != entity && !this.isAlliedTo(entityliving) && (!(entityliving instanceof ArmorStand) || !((ArmorStand) entityliving).isMarker()) && this.distanceToSqr(entityliving) < entityReachSq && entityliving.hurt(((DamageSourceBridge) this.damageSources().playerAttack((net.minecraft.world.entity.player.Player) (Object) this)).bridge$sweep(), f5)) {
+                                ((LivingEntityBridge) entityliving).bridge$pushKnockbackCause((Entity) (Object) this, EntityKnockbackEvent.KnockbackCause.SWEEP_ATTACK);
                                 entityliving.knockback(0.4f, Mth.sin(this.getYRot() * 0.017453292f), -Mth.cos(this.getYRot() * 0.017453292f));
                             }
                         }

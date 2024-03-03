@@ -16,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
+import org.bukkit.event.entity.EntityKnockbackEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 
@@ -52,6 +53,8 @@ public interface LivingEntityBridge extends EntityBridge {
     boolean bridge$removeAllEffects(EntityPotionEffectEvent.Cause cause);
 
     Optional<EntityPotionEffectEvent.Cause> bridge$getEffectCause();
+
+    void bridge$pushKnockbackCause(Entity attacker, EntityKnockbackEvent.KnockbackCause cause);
 
     @Override
     CraftLivingEntity bridge$getBukkitEntity();

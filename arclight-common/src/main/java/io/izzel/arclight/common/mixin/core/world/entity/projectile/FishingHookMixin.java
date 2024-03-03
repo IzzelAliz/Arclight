@@ -25,6 +25,7 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.HitResult;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.FishHook;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,6 +35,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Collections;
 import java.util.List;
@@ -108,6 +110,16 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
     @Redirect(method = "catchingFish", at = @At(value = "INVOKE", ordinal = 2, target = "Lnet/minecraft/util/Mth;nextInt(Lnet/minecraft/util/RandomSource;II)I"))
     private int arclight$lureTimeParam(RandomSource random, int p_216273_, int p_216274_) {
         return Mth.nextInt(random, this.minLureTime, this.maxLureTime);
+    }
+
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/FishingHook;discard()V"))
+    private void arclight$tickDespawn(CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
+    }
+
+    @Inject(method = "shouldStopFishing", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/FishingHook;discard()V"))
+    private void arclight$fishDespawn(Player player, CallbackInfoReturnable<Boolean> cir) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
     }
 
     /**
@@ -186,6 +198,7 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
                 }
             }
 
+            this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
             this.discard();
             return rodDamage == null ? i : rodDamage;
         } else {

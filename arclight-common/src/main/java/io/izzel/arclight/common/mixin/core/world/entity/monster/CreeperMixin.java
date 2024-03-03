@@ -14,6 +14,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreeperPowerEvent;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -57,6 +58,7 @@ public abstract class CreeperMixin extends PathfinderMobMixin implements Creeper
             if (!event.isCancelled()) {
                 this.dead = true;
                 this.level().explode((Creeper) (Object) this, this.getX(), this.getY(), this.getZ(), event.getRadius(), event.getFire(), Level.ExplosionInteraction.MOB);
+                this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.EXPLODE);
                 this.discard();
                 this.spawnLingeringCloud();
             } else {

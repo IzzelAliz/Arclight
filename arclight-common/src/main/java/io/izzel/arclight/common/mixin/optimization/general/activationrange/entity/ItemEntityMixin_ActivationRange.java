@@ -6,6 +6,7 @@ import io.izzel.arclight.common.mixin.optimization.general.activationrange.Entit
 import io.izzel.arclight.common.mod.ArclightConstants;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
@@ -33,6 +34,7 @@ public abstract class ItemEntityMixin_ActivationRange extends EntityMixin_Activa
     @Override
     public void bridge$forge$optimization$discardItemEntity() {
         if (!this.level().isClientSide && this.age >= ((WorldBridge) this.level()).bridge$spigotConfig().itemDespawnRate) {
+            this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DEATH);
             this.discard();
         }
     }

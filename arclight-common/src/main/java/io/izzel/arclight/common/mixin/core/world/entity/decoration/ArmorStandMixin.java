@@ -19,6 +19,7 @@ import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.spongepowered.asm.mixin.Final;
@@ -121,6 +122,7 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
     }
 
     private void arclight$callEntityDeath() {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DEATH);
         Collection<ItemEntity> captureDrops = this.bridge$common$getCapturedDrops();
         List<org.bukkit.inventory.ItemStack> drops;
         if (captureDrops == null) {

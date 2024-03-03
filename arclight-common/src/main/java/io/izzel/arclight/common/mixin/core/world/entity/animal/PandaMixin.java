@@ -1,11 +1,11 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.mixin.core.world.entity.animal.AnimalMixin;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.animal.Panda;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -30,6 +30,7 @@ public abstract class PandaMixin extends AnimalMixin {
             this.setItemSlot(EquipmentSlot.MAINHAND, itemstack);
             this.handDropChances[EquipmentSlot.MAINHAND.getIndex()] = 2.0F;
             this.take(itemEntity, itemstack.getCount());
+            this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
             itemEntity.discard();
         }
 

@@ -15,6 +15,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.player.PlayerBucketEntityEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -53,6 +54,7 @@ public interface BucketableMixin {
                 CriteriaTriggers.FILLED_BUCKET.trigger((ServerPlayer) player, itemstack1);
             }
 
+            entity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
             entity.discard();
             return Optional.of(InteractionResult.sidedSuccess(level.isClientSide));
         } else {

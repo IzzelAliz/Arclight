@@ -14,6 +14,7 @@ import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftItem;
 import org.bukkit.entity.AbstractArrow;
 import org.bukkit.event.entity.EntityCombustByEntityEvent;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.player.PlayerPickupArrowEvent;
 import org.bukkit.projectiles.ProjectileSource;
 import org.objectweb.asm.Opcodes;
@@ -51,6 +52,16 @@ public abstract class AbstractArrowMixin extends ProjectileMixin {
         }
     }
 
+    @Inject(method = "onHitEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/AbstractArrow;discard()V"))
+    private void arclight$hit(CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.HIT);
+    }
+
+    @Inject(method = "tickDespawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/AbstractArrow;discard()V"))
+    private void arclight$despawn(CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
+    }
+
     /**
      * @author IzzelAliz
      * @reason
@@ -70,6 +81,7 @@ public abstract class AbstractArrowMixin extends ProjectileMixin {
             }
             if ((this.pickup == net.minecraft.world.entity.projectile.AbstractArrow.Pickup.ALLOWED && playerEntity.getInventory().add(itemstack)) || (this.pickup == net.minecraft.world.entity.projectile.AbstractArrow.Pickup.CREATIVE_ONLY && playerEntity.getAbilities().instabuild)) {
                 playerEntity.take((net.minecraft.world.entity.projectile.AbstractArrow) (Object) this, 1);
+                this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
                 this.discard();
             }
         }

@@ -12,12 +12,15 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.PiglinBarterEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,6 +54,7 @@ public abstract class PiglinAiMixin {
         if (itemEntity.getItem().getItem() == Items.GOLD_NUGGET && !CraftEventFactory.callEntityPickupItemEvent(piglinEntity, itemEntity, 0, false).isCancelled()) {
             piglinEntity.take(itemEntity, itemEntity.getItem().getCount());
             itemstack = itemEntity.getItem();
+            itemEntity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
             itemEntity.discard();
         } else if (!CraftEventFactory.callEntityPickupItemEvent(piglinEntity, itemEntity, itemEntity.getItem().getCount() - 1, false).isCancelled()) {
             piglinEntity.take(itemEntity, 1);
@@ -115,5 +119,10 @@ public abstract class PiglinAiMixin {
     @Redirect(method = "isNotHoldingLovedItemInOffHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/piglin/PiglinAi;isLovedItem(Lnet/minecraft/world/item/ItemStack;)Z"))
     private static boolean arclight$customLove2(ItemStack stack, Piglin piglin) {
         return isLovedByPiglin(stack, piglin);
+    }
+
+    @Inject(method = "removeOneItemFromItemEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V"))
+    private static void arclight$pickup(ItemEntity itemEntity, CallbackInfoReturnable<ItemStack> cir) {
+        itemEntity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
     }
 }

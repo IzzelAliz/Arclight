@@ -14,6 +14,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Ageable;
 import org.bukkit.entity.Egg;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.player.PlayerEggThrowEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -68,6 +69,7 @@ public abstract class ThrownEggMixin extends ThrowableProjectileMixin {
                 }
             }
             this.level().broadcastEntityEvent((ThrownEgg) (Object) this, (byte) 3);
+            this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.HIT);
             this.discard();
         }
     }

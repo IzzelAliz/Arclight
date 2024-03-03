@@ -11,6 +11,7 @@ import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
 import org.bukkit.event.entity.VillagerReplenishTradeEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -52,6 +53,7 @@ public abstract class VillagerMixin extends AbstractVillagerMixin {
             ci.cancel();
         } else {
             ((WorldBridge) serverWorld).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.LIGHTNING);
+            this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.TRANSFORMATION);
         }
     }
 

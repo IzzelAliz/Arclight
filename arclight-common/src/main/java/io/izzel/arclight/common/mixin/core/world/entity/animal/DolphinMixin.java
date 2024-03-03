@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -18,6 +19,11 @@ public abstract class DolphinMixin extends PathfinderMobMixin {
         if (CraftEventFactory.callEntityPickupItemEvent((Dolphin) (Object) this, itemEntity, 0, false).isCancelled()) {
             ci.cancel();
         }
+    }
+
+    @Inject(method = "pickUpItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V"))
+    private void arclight$pickCause(ItemEntity itemEntity, CallbackInfo ci) {
+        itemEntity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
     }
 
     @Inject(method = "getMaxAirSupply", cancellable = true, at = @At("RETURN"))

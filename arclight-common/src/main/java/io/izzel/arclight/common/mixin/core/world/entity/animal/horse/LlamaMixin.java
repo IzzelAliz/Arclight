@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(Llama.class)
-public abstract class LlamaMixin {
+public abstract class LlamaMixin extends AbstractHorseMixin {
 
     // @formatter:off
     @Shadow private void setStrength(int p_30841_) {}

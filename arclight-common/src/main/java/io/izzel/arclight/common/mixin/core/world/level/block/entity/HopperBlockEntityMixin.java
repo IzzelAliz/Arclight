@@ -26,6 +26,7 @@ import org.bukkit.craftbukkit.v.inventory.CraftInventoryDoubleChest;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.inventory.HopperInventorySearchEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
@@ -123,6 +124,11 @@ public abstract class HopperBlockEntityMixin extends LockableBlockEntityMixin {
         if (event.isCancelled()) {
             cir.setReturnValue(false);
         }
+    }
+
+    @Inject(method = "addItem(Lnet/minecraft/world/Container;Lnet/minecraft/world/entity/item/ItemEntity;)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V"))
+    private static void arclight$pickupCause(Container container, ItemEntity itemEntity, CallbackInfoReturnable<Boolean> cir) {
+        itemEntity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
     }
 
     private static Container runHopperInventorySearchEvent(Container inventory, CraftBlock hopper, CraftBlock searchLocation, HopperInventorySearchEvent.ContainerType containerType) {

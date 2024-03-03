@@ -8,7 +8,9 @@ import net.minecraft.world.entity.projectile.LargeFireball;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.HitResult;
 import org.bukkit.Bukkit;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -27,6 +29,11 @@ public abstract class LargeFireballMixin extends AbstractHurtingProjectileMixin 
     @Inject(method = "<init>(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/LivingEntity;DDDI)V", at = @At("RETURN"))
     private void arclight$init(Level level, LivingEntity p_181152_, double p_181153_, double p_181154_, double p_181155_, int p_181156_, CallbackInfo ci) {
         this.isIncendiary = level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
+    }
+
+    @Inject(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/LargeFireball;discard()V"))
+    private void arclight$explode(HitResult hitResult, CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.HIT);
     }
 
     @Redirect(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;)Lnet/minecraft/world/level/Explosion;"))

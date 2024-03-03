@@ -64,6 +64,7 @@ import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.util.CraftChatMessage;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
@@ -593,5 +594,11 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             serverstatisticmanager = new ServerStatsCounter(this.server, file1);
         }
         return serverstatisticmanager;
+    }
+
+    @Inject(method = "remove", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;stopRiding()V"))
+    private void arclight$removeMount(ServerPlayer serverPlayer, CallbackInfo ci) {
+        serverPlayer.getRootVehicle().getPassengersAndSelf().forEach(entity ->
+            ((EntityBridge) entity).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PLAYER_QUIT));
     }
 }

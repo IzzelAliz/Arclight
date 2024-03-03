@@ -7,6 +7,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.npc.InventoryCarrier;
 import net.minecraft.world.item.ItemStack;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -41,6 +42,7 @@ public interface InventoryCarrierMixin {
             ItemStack itemstack1 = simplecontainer.addItem(itemstack);
             mob.take(itemEntity, i - itemstack1.getCount());
             if (itemstack1.isEmpty()) {
+                itemEntity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
                 itemEntity.discard();
             } else {
                 itemstack.setCount(itemstack1.getCount());

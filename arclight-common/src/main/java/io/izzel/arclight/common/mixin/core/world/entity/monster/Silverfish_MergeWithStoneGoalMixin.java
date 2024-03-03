@@ -7,6 +7,7 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.InfestedBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -25,5 +26,10 @@ public abstract class Silverfish_MergeWithStoneGoalMixin extends RandomStrollGoa
         if (!CraftEventFactory.callEntityChangeBlockEvent(this.mob, blockPos, InfestedBlock.infestedStateByHost(blockState))) {
             ci.cancel();
         }
+    }
+
+    @Inject(method = "start", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/PathfinderMob;discard()V"))
+    private void arclight$enterBlock(CallbackInfo ci) {
+        this.mob.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.ENTER_BLOCK);
     }
 }

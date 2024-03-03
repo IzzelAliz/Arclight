@@ -53,6 +53,7 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.CraftEquipmentSlot;
@@ -64,8 +65,10 @@ import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExhaustionEvent;
+import org.bukkit.event.entity.EntityKnockbackEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.EntityResurrectEvent;
 import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
@@ -493,6 +496,38 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         }
     }
 
+    @Inject(method = "blockedByShield", at = @At("HEAD"))
+    private void arclight$shieldKnockback(LivingEntity livingEntity, CallbackInfo ci) {
+        this.bridge$pushKnockbackCause(null, EntityKnockbackEvent.KnockbackCause.SHIELD_BLOCK);
+    }
+
+    private transient Entity arclight$knockbackAttacker;
+    private transient EntityKnockbackEvent.KnockbackCause arclight$knockbackCause;
+
+    @Override
+    public void bridge$pushKnockbackCause(Entity attacker, EntityKnockbackEvent.KnockbackCause cause) {
+        this.arclight$knockbackAttacker = attacker;
+        this.arclight$knockbackCause = cause;
+    }
+
+    public void knockback(double d, double e, double f, Entity attacker, EntityKnockbackEvent.KnockbackCause cause) {
+        this.bridge$pushKnockbackCause(attacker, cause);
+        this.knockback(d, e, f);
+    }
+
+    @Redirect(method = "knockback", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;setDeltaMovement(DDD)V"))
+    private void arclight$knockbackEvent(LivingEntity instance, double x, double y, double z, double d, double e, double f) {
+        var attacker = arclight$knockbackAttacker;
+        var cause = arclight$knockbackCause == null ? EntityKnockbackEvent.KnockbackCause.UNKNOWN : arclight$knockbackCause;
+        arclight$knockbackAttacker = null;
+        arclight$knockbackCause = null;
+        var raw = (new Vec3(e, 0.0, f)).normalize().scale(d);
+        var event = CraftEventFactory.callEntityKnockbackEvent(this.getBukkitEntity(), attacker, cause, d, raw, x, y, z);
+        if (!event.isCancelled()) {
+            instance.setDeltaMovement(event.getFinalKnockback().getX(), event.getFinalKnockback().getY(), event.getFinalKnockback().getZ());
+        }
+    }
+
     /**
      * @author IzzelAliz
      * @reason
@@ -608,6 +643,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                         d1 = (Math.random() - Math.random()) * 0.01D;
                     }
 
+                    this.bridge$pushKnockbackCause(entity1, entity1 == null ? EntityKnockbackEvent.KnockbackCause.DAMAGE : EntityKnockbackEvent.KnockbackCause.ENTITY_ATTACK);
                     this.knockback(0.4F, d1, d0);
                     if (!flag) {
                         this.indicateDamage(d1, d0);
@@ -1175,5 +1211,10 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Override
     public void bridge$playEquipSound(EquipmentSlot slot, ItemStack oldItem, ItemStack newItem, boolean silent) {
         this.equipEventAndSound(slot, oldItem, newItem, silent);
+    }
+
+    @Inject(method = "tickDeath", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;remove(Lnet/minecraft/world/entity/Entity$RemovalReason;)V"))
+    private void arclight$killedCause(CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DEATH);
     }
 }
