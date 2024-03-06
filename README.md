@@ -55,6 +55,10 @@ This project is licensed under [GPL v3](LICENSE).
 
 ## Sponsor
 
+[![](.github/bisecthosting.webp)](https://bisecthosting.com/arclight)
+
+Get 25% off hosting server with promocode **arclight** at [BisectHosting](https://bisecthosting.com/arclight).
+
 [![](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com)
 
 YourKit supports open source projects with innovative and intelligent tools for monitoring and profiling Java and .NET
