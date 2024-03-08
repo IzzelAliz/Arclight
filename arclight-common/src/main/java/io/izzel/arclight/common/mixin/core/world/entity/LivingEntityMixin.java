@@ -200,6 +200,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public abstract AttributeMap getAttributes();
     // @formatter:on
 
+    @Shadow protected abstract void updateGlowingStatus();
+
     public int expToDrop;
     public boolean forceDrops;
     public CraftAttributeMap craftAttributes;
@@ -304,6 +306,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         if (this.effectsDirty) {
             if (!this.level().isClientSide) {
                 this.updateInvisibilityStatus();
+                this.updateGlowingStatus();
             }
 
             this.effectsDirty = false;
