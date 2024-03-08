@@ -198,9 +198,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow protected abstract void actuallyHurt(DamageSource p_21240_, float p_21241_);
     @Shadow public abstract void skipDropExperience();
     @Shadow public abstract AttributeMap getAttributes();
-    // @formatter:on
-
     @Shadow protected abstract void updateGlowingStatus();
+    // @formatter:on
 
     public int expToDrop;
     public boolean forceDrops;

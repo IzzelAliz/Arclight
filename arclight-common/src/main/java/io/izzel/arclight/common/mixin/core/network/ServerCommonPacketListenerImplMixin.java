@@ -13,7 +13,6 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket;
 import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket;
-import net.minecraft.network.protocol.common.custom.DiscardedPayload;
 import net.minecraft.network.protocol.game.ClientboundSetDefaultSpawnPositionPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -191,8 +190,8 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
 
     @Inject(method = "handleCustomPayload", at = @At("HEAD"))
     private void arclight$customPayload(ServerboundCustomPayloadPacket packet, CallbackInfo ci) {
-        if (packet.payload() instanceof DiscardedPayload payload && bridge$getDiscardedData(payload) != null) {
-            var data = bridge$getDiscardedData(payload);
+        var data = bridge$getDiscardedData(packet);
+        if (data != null) {
             var readerIndex = data.readerIndex();
             var buf = new byte[data.readableBytes()];
             data.readBytes(buf);
@@ -202,7 +201,7 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
                     return;
                 }
                 if (this.connection.isConnected()) {
-                    if (payload.id().equals(CUSTOM_REGISTER)) {
+                    if (packet.payload().id().equals(CUSTOM_REGISTER)) {
                         try {
                             String channels = new String(buf, StandardCharsets.UTF_8);
                             for (String channel : channels.split("\0")) {
@@ -214,7 +213,7 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
                             LOGGER.error("Couldn't register custom payload", ex);
                             this.bridge$disconnect("Invalid payload REGISTER!");
                         }
-                    } else if (payload.id().equals(CUSTOM_UNREGISTER)) {
+                    } else if (packet.payload().id().equals(CUSTOM_UNREGISTER)) {
                         try {
                             final String channels = new String(buf, StandardCharsets.UTF_8);
                             for (String channel : channels.split("\0")) {
@@ -228,7 +227,7 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
                         }
                     } else {
                         try {
-                            this.bridge$getCraftServer().getMessenger().dispatchIncomingMessage(((ServerPlayerEntityBridge) this.bridge$getPlayer()).bridge$getBukkitEntity(), payload.id().toString(), buf);
+                            this.bridge$getCraftServer().getMessenger().dispatchIncomingMessage(((ServerPlayerEntityBridge) this.bridge$getPlayer()).bridge$getBukkitEntity(), packet.payload().id().toString(), buf);
                         } catch (Exception ex) {
                             LOGGER.error("Couldn't dispatch custom payload", ex);
                             this.bridge$disconnect("Invalid custom payload!");
