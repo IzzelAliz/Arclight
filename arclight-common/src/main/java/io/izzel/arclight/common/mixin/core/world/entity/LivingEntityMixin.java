@@ -196,6 +196,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public abstract void indicateDamage(double p_270514_, double p_270826_);
     @Shadow public static EquipmentSlot getEquipmentSlotForItem(ItemStack p_147234_) { return null; }
     @Shadow protected abstract void actuallyHurt(DamageSource p_21240_, float p_21241_);
+    @Shadow protected abstract void updateGlowingStatus();
     // @formatter:on
 
     public int expToDrop;
@@ -312,6 +313,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         if (this.effectsDirty) {
             if (!this.level().isClientSide) {
                 this.updateInvisibilityStatus();
+                this.updateGlowingStatus();
             }
 
             this.effectsDirty = false;
