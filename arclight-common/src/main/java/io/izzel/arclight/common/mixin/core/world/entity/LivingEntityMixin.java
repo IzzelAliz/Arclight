@@ -191,6 +191,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow protected abstract SoundEvent getDrinkingSound(ItemStack p_21174_);
     @Shadow public abstract SoundEvent getEatingSound(ItemStack p_21202_);
     @Shadow public abstract InteractionHand getUsedItemHand();
+    @Shadow protected abstract void updateGlowingStatus();
     // @formatter:on
 
     public int expToDrop;
@@ -307,6 +308,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         if (this.effectsDirty) {
             if (!this.level.isClientSide) {
                 this.updateInvisibilityStatus();
+                this.updateGlowingStatus();
             }
 
             this.effectsDirty = false;
