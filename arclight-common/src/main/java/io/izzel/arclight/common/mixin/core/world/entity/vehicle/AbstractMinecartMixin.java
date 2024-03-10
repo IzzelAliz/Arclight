@@ -2,7 +2,6 @@ package io.izzel.arclight.common.mixin.core.world.entity.vehicle;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.vehicle.AbstractMinecartBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.level.block.BlockBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
@@ -74,17 +73,15 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin implement
         maxSpeed = 0.4D;
     }
 
+    private transient Location arclight$prevLocation;
+
     /**
      * @author IzzelAliz
      * @reason
      */
     @Overwrite
     public void tick() {
-        double prevX = this.getX();
-        double prevY = this.getY();
-        double prevZ = this.getZ();
-        float prevYaw = this.getYRot();
-        float prevPitch = this.getXRot();
+        this.arclight$prevLocation = new Location(null, this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
         if (this.getHurtTime() > 0) {
             this.setHurtTime(this.getHurtTime() - 1);
         }
@@ -142,8 +139,10 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin implement
                 this.flipped = !this.flipped;
             }
             this.setRot(this.getYRot(), this.getXRot());
-            org.bukkit.World bworld = ((WorldBridge) this.level()).bridge$getWorld();
-            Location from = new Location(bworld, prevX, prevY, prevZ, prevYaw, prevPitch);
+            org.bukkit.World bworld = this.level().bridge$getWorld();
+            Location from = this.arclight$prevLocation;
+            this.arclight$prevLocation = null;
+            from.setWorld(bworld);
             Location to = new Location(bworld, this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
             Vehicle vehicle = (Vehicle) this.getBukkitEntity();
             Bukkit.getPluginManager().callEvent(new VehicleUpdateEvent(vehicle));
