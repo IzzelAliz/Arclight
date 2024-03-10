@@ -202,6 +202,7 @@ task runProdServer(type: JavaExec) {
     classpath = files(tasks.jar)
     systemProperties 'terminal.ansi': 'true'
     systemProperties 'mixin.debug.export': 'true'
+    systemProperties 'mixin.dumpTargetOnFailure': 'true'
     systemProperties 'arclight.alwaysExtract': 'true'
     systemProperties 'arclight.remapper.dump': './.mixin.out/plugin_classes'
     workingDir System.env.ARCLIGHT_PROD_DIR ?: file('run_prod')
