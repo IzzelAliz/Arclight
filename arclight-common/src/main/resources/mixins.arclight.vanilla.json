@@ -16,6 +16,7 @@
   "mixinPriority": 500,
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "server.Main_ServerShutdownThreadMixin_Vanilla",
     "server.level.ServerEntityMixin_Vanilla",
     "server.level.ServerPlayerGameMode_Vanilla",
     "world.entity.EntityMixin_Vanilla",
