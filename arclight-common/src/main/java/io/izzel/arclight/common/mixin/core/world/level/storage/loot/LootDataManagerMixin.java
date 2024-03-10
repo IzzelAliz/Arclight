@@ -26,6 +26,6 @@ public class LootDataManagerMixin {
     private void arclight$buildRev(Map<LootDataType<?>, Map<ResourceLocation, ?>> p_279426_, CallbackInfo ci) {
         ImmutableMap.Builder<Object, ResourceLocation> lootTableToKeyBuilder = ImmutableMap.builder();
         this.elements.forEach((key, lootTable) -> lootTableToKeyBuilder.put(lootTable, key.location()));
-        this.lootTableToKey = lootTableToKeyBuilder.build();
+        this.lootTableToKey = lootTableToKeyBuilder.buildKeepingLast();
     }
 }

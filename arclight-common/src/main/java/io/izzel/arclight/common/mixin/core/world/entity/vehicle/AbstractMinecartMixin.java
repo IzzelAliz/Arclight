@@ -61,9 +61,9 @@ public abstract class AbstractMinecartMixin extends EntityMixin {
     @Shadow private boolean flipped;
     @Shadow public abstract AbstractMinecart.Type getMinecartType();
     @Shadow(remap = false) public abstract boolean canUseRail();
+    @Shadow private boolean onRails;
     // @formatter:on
 
-    @Shadow private boolean onRails;
     public boolean slowWhenEmpty = true;
     private double derailedX = 0.5;
     private double derailedY = 0.5;
@@ -128,17 +128,15 @@ public abstract class AbstractMinecartMixin extends EntityMixin {
         return true;
     }
 
+    private transient Location arclight$prevLocation;
+
     /**
      * @author IzzelAliz
      * @reason
      */
     @Overwrite
     public void tick() {
-        double prevX = this.getX();
-        double prevY = this.getY();
-        double prevZ = this.getZ();
-        float prevYaw = this.getYRot();
-        float prevPitch = this.getXRot();
+        this.arclight$prevLocation = new Location(null, this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
         if (this.getHurtTime() > 0) {
             this.setHurtTime(this.getHurtTime() - 1);
         }
@@ -204,7 +202,9 @@ public abstract class AbstractMinecartMixin extends EntityMixin {
             }
             this.setRot(this.getYRot(), this.getXRot());
             org.bukkit.World bworld = ((WorldBridge) this.level()).bridge$getWorld();
-            Location from = new Location(bworld, prevX, prevY, prevZ, prevYaw, prevPitch);
+            Location from = this.arclight$prevLocation;
+            this.arclight$prevLocation = null;
+            from.setWorld(bworld);
             Location to = new Location(bworld, this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
             Vehicle vehicle = (Vehicle) this.getBukkitEntity();
             Bukkit.getPluginManager().callEvent(new VehicleUpdateEvent(vehicle));
