@@ -4,11 +4,11 @@ A Bukkit server implementation utilizing Mixin.
 
 ![Downloads](https://img.shields.io/github/downloads/IzzelAliz/Arclight/total?style=flat-square)  ![GitHub](https://img.shields.io/github/license/IzzelAliz/Arclight?style=flat-square)
 
-| Release              | Forge   | NeoForge      | Fabric | Status |                                                                                                   Downloads                                                                                                    |
-|:---------------------|:--------|:--------------|:-------|:------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| Whisper (1.20.4)     | 49.0.22 | 20.4.147-beta | 0.96.0 | ACTIVE | [![1.20.4 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Whisper&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3AWhisper) |
-| Trials (1.20-1.20.1) | 47.2.20 | -             | -      |  LTS   |  [![1.20.1 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Trials&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3ATrials)  |
-| Horn (1.19-1.19.2)   | 43.3.7  | -             | -      |  LTS   |                             [![Horn Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-19?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-19)                             |
+| Release              | Forge   | NeoForge | Fabric | Status |                                                                                                   Downloads                                                                                                    |
+|:---------------------|:--------|:---------|:-------|:------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| Whisper (1.20.4)     | 49.0.31 | 20.4.196 | 0.96.4 | ACTIVE | [![1.20.4 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Whisper&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3AWhisper) |
+| Trials (1.20-1.20.1) | 47.2.20 | -        | -      |  LTS   |  [![1.20.1 Status](https://img.shields.io/github/actions/workflow/status/IzzelAliz/Arclight/gradle.yml?branch=Trials&style=flat-square)](https://github.com/IzzelAliz/Arclight/actions?query=branch%3ATrials)  |
+| Horn (1.19-1.19.2)   | 43.3.7  | -        | -      |  LTS   |                             [![Horn Status](https://img.shields.io/appveyor/build/IzzelAliz/arclight-19?style=flat-square)](https://ci.appveyor.com/project/IzzelAliz/arclight-19)                             |
 
 **Legacy versions**:
 

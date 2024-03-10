@@ -19,9 +19,9 @@ allprojects {
         minecraftVersion = '1.20.4'
         supportedPlatforms = ['forge', 'neoforge', 'fabric']
         fabricLoaderVersion = '0.15.6'
-        fabricApiVersion = '0.96.0+1.20.4'
-        forgeVersion = '49.0.22'
-        neoForgeVersion = '20.4.147-beta'
+        fabricApiVersion = '0.96.4+1.20.4'
+        forgeVersion = '49.0.31'
+        neoForgeVersion = '20.4.196'
         apiVersion = '1.6.3'
         toolsVersion = '1.3.0'
         mixinVersion = '0.8.5'

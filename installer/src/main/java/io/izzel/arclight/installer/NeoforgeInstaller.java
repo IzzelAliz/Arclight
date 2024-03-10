@@ -60,8 +60,8 @@ public class NeoforgeInstaller {
                     }
                 } catch (IOException e) {
                     try (URLClassLoader loader = new URLClassLoader(
-                            new URL[]{futures[0].join().toUri().toURL()},
-                            ForgeInstaller.class.getClassLoader().getParent())) {
+                        new URL[]{futures[0].join().toUri().toURL()},
+                        ForgeInstaller.class.getClassLoader().getParent())) {
                         Method method = loader.loadClass("net.minecraftforge.installer.SimpleInstaller").getMethod("main", String[].class);
                         method.invoke(null, (Object) new String[]{"--installServer", ".", "--debug"});
                     }
@@ -80,8 +80,8 @@ public class NeoforgeInstaller {
         String dist = String.format("neoforge-%s-installer.jar", info.installer.neoforge);
         var installerFuture = ForgeLikeProvider.downloadInstaller(coord, dist, info.installer.neoforgeHash, minecraftData, info, pool, logger);
         var serverFuture = minecraftData.thenCompose(data -> MinecraftProvider.reportSupply(pool, logger).apply(
-                new FileDownloader(String.format(data.serverUrl(), info.installer.minecraft),
-                        String.format("libraries/net/minecraft/server/%1$s/server-%1$s.jar", info.installer.minecraft), data.serverHash())
+            new FileDownloader(String.format(data.serverUrl(), info.installer.minecraft),
+                String.format("libraries/net/minecraft/server/%1$s/server-%1$s.jar", info.installer.minecraft), data.serverHash())
         ));
         return new CompletableFuture[]{installerFuture, serverFuture};
     }
@@ -125,28 +125,28 @@ public class NeoforgeInstaller {
                     var split = arg.substring(2).split("=", 2);
                     if (split[0].equals("legacyClassPath")) {
                         split[1] =
-                                Stream.concat(
-                                        Stream.concat(Stream.concat(Stream.of(self.toString()), Arrays.stream(split[1].split(File.pathSeparator))), installInfo.libraries.keySet().stream()
-                                                .map(it -> Paths.get("libraries", Util.mavenToPath(it)))
-                                                .peek(it -> {
-                                                    var name = it.getFileName().toString();
-                                                    if (name.contains("maven-model")) {
-                                                        merges.add(name);
-                                                    }
-                                                })
-                                                .map(Path::toString)),
-                                        Stream.empty()
-                                        //Stream.of(self)
-                                ).sorted((a, b) -> {
-                                    // damn stupid jpms
-                                    if (a.contains("maven-repository-metadata")) {
-                                        return -1;
-                                    } else if (b.contains("maven-repository-metadata")) {
-                                        return 1;
-                                    } else {
-                                        return 0;
-                                    }
-                                }).collect(Collectors.joining(File.pathSeparator));
+                            Stream.concat(
+                                Stream.concat(Stream.concat(Stream.of(self.toString()), Arrays.stream(split[1].split(File.pathSeparator))), installInfo.libraries.keySet().stream()
+                                    .peek(it -> {
+                                        var lib = Paths.get("libraries", Util.mavenToPath(it));
+                                        var name = lib.getFileName().toString();
+                                        if (name.contains("maven-model")) {
+                                            merges.add(name);
+                                        }
+                                    })
+                                    .map(it -> "libraries/" + Util.mavenToPath(it))),
+                                Stream.empty()
+                                //Stream.of(self)
+                            ).sorted((a, b) -> {
+                                // damn stupid jpms
+                                if (a.contains("maven-repository-metadata")) {
+                                    return -1;
+                                } else if (b.contains("maven-repository-metadata")) {
+                                    return 1;
+                                } else {
+                                    return 0;
+                                }
+                            }).distinct().collect(Collectors.joining(File.pathSeparator));
                     } else if (split[0].equals("ignoreList")) {
                         ignores.addAll(Arrays.asList(split[1].split(",")));
                     }
