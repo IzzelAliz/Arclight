@@ -2,6 +2,7 @@ package io.izzel.arclight.fabric.mod;
 
 import io.izzel.arclight.api.ArclightPlatform;
 import io.izzel.arclight.boot.AbstractBootstrap;
+import io.izzel.arclight.common.mod.ArclightCommon;
 import io.izzel.arclight.common.mod.ArclightMixinPlugin;
 import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.arclight.i18n.ArclightLocale;
@@ -12,6 +13,7 @@ public class FabricMixinPlugin extends ArclightMixinPlugin implements AbstractBo
 
     @Override
     public void onLoad(String mixinPackage) {
+        ArclightCommon.setInstance(new FabricCommonImpl());
         super.onLoad(mixinPackage);
         MixinTools.setup();
         LoggerFactory.getLogger("Arclight").info(

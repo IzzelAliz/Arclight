@@ -5,6 +5,8 @@ public class ArclightCommon {
     public interface Api {
 
         byte[] platformRemapClass(byte[] cl);
+
+        boolean isModLoaded(String modid);
     }
 
     private static Api instance;

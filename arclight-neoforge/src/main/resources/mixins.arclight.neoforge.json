@@ -3,7 +3,7 @@
   "minVersion": "0.8",
   "package": "io.izzel.arclight.neoforge.mixin",
   "target": "@env(DEFAULT)",
-  "plugin": "io.izzel.arclight.common.mod.ArclightMixinPlugin",
+  "plugin": "io.izzel.arclight.neoforge.mod.NeoForgeMixinPlugin",
   "setSourceFile": true,
   "injectors": {
     "defaultRequire": 1

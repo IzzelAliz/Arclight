@@ -11,6 +11,5 @@ public class ArclightModEntrypoint implements ModInitializer {
     @Override
     public void onInitialize() {
         Arclight.setServer(new FabricArclightServer());
-        ArclightCommon.setInstance(new FabricCommonImpl());
     }
 }

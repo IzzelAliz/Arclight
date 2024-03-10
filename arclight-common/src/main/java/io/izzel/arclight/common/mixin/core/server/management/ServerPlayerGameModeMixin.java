@@ -30,6 +30,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
@@ -99,7 +100,8 @@ public abstract class ServerPlayerGameModeMixin implements PlayerInteractionMana
             level.sendBlockUpdated(blockPos, level.getBlockState(blockPos), level.getBlockState(blockPos), 3);
             return;
         }
-        if (!((PlayerEntityBridge) this.player).bridge$platform$canReach(blockPos, 1.5)) { // Vanilla check is eye-to-center distance < 6, so padding is 6 - 4.5 = 1.5
+        if (this.player.getEyePosition().distanceToSqr(Vec3.atCenterOf(blockPos)) != 0 // mixin compat with immptl: https://github.com/iPortalTeam/ImmersivePortalsMod/blob/f419883d285995f2269da11bc1c761e76dafd0e9/src/main/java/qouteall/imm_ptl/core/mixin/common/interaction/MixinServerPlayerGameMode.java
+            && !((PlayerEntityBridge) this.player).bridge$platform$canReach(blockPos, 1.5)) { // Vanilla check is eye-to-center distance < 6, so padding is 6 - 4.5 = 1.5
             this.debugLogging(blockPos, false, j, "too far");
         } else if (blockPos.getY() >= i) {
             this.player.connection.send(new ClientboundBlockUpdatePacket(blockPos, this.level.getBlockState(blockPos)));

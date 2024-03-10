@@ -1,6 +1,5 @@
 package io.izzel.arclight.fabric.mod;
 
-import io.izzel.arclight.api.ArclightPlatform;
 import io.izzel.arclight.api.ArclightServer;
 import io.izzel.arclight.api.TickingTracker;
 import io.izzel.arclight.common.mod.server.api.DefaultTickingTracker;

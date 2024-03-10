@@ -4,6 +4,8 @@ import cpw.mods.modlauncher.ClassTransformer;
 import cpw.mods.modlauncher.TransformingClassLoader;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.ArclightCommon;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLLoader;
 import org.objectweb.asm.ClassReader;
 
 import java.lang.invoke.MethodHandle;
@@ -35,5 +37,10 @@ public class ForgeCommonImpl implements ArclightCommon.Api {
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public boolean isModLoaded(String modid) {
+        return ModList.get() != null ? ModList.get().isLoaded(modid) : FMLLoader.getLoadingModList().getModFileById(modid) != null;
     }
 }

@@ -3,6 +3,7 @@
   "minVersion": "0.8",
   "package": "io.izzel.arclight.common.mixin.optimization.general",
   "target": "@env(DEFAULT)",
+  "plugin": "io.izzel.arclight.common.mod.ArclightMixinPlugin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "ClassInheritanceMultiMapMixin",

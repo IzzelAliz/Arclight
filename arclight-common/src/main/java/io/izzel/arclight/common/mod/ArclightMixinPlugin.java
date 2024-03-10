@@ -4,8 +4,8 @@ import io.izzel.arclight.common.mod.mixins.CreateConstructorProcessor;
 import io.izzel.arclight.common.mod.mixins.InlineFieldProcessor;
 import io.izzel.arclight.common.mod.mixins.InlineMethodProcessor;
 import io.izzel.arclight.common.mod.mixins.MixinProcessor;
-import io.izzel.arclight.common.mod.mixins.PlatformMixinProcessor;
 import io.izzel.arclight.common.mod.mixins.RenameIntoProcessor;
+import io.izzel.arclight.common.mod.mixins.ShouldApplyProcessor;
 import io.izzel.arclight.common.mod.mixins.TransformAccessProcessor;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
@@ -38,7 +38,7 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        return PlatformMixinProcessor.shouldApply(mixinClassName);
+        return ShouldApplyProcessor.shouldApply(mixinClassName);
     }
 
     @Override
