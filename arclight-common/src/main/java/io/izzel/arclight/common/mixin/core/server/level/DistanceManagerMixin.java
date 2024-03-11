@@ -42,7 +42,7 @@ public abstract class DistanceManagerMixin implements TicketManagerBridge {
         }
     }
 
-    @Redirect(method = "runAllUpdates", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Set;forEach(Ljava/util/function/Consumer;)V"))
+    @Redirect(method = "runAllUpdates", require = 0, at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Set;forEach(Ljava/util/function/Consumer;)V"))
     private void arclight$safeIter(Set<ChunkHolder> instance, Consumer<ChunkHolder> consumer) {
         // Iterate pending chunk updates with protection against concurrent modification exceptions
         var iter = instance.iterator();
