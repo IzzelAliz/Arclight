@@ -19,7 +19,6 @@
     "bukkit.CraftServerMixin_Fabric",
     "core.network.ServerCommonPacketListenerImplMixin_Fabric",
     "core.network.ServerLoginNetHandlerMixin_Fabric",
-    "core.server.level.ServerEntityMixin_Fabric",
     "core.world.entity.EntityMixin_Fabric",
     "core.world.entity.LivingEntityMixin_Fabric",
     "core.world.entity.monster.ZombieMixin_Fabric",

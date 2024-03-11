@@ -30,7 +30,6 @@
     "core.server.MinecraftServerMixin_Forge",
     "core.server.dedicated.DedicatedServerMixin_Forge",
     "core.server.level.DistanceManagerMixin_Forge",
-    "core.server.level.ServerEntityMixin_Forge",
     "core.server.management.ServerPlayerGameModeMixin_Forge",
     "core.world.entity.EntityMixin_Forge",
     "core.world.entity.LivingEntityMixin_Forge",

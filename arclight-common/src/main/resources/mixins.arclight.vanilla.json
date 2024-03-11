@@ -19,7 +19,6 @@
     "server.Main_ServerShutdownThreadMixin_Vanilla",
     "server.dedicated.DedicatedServer_ServerInputThreadMixin_Vanilla",
     "server.dedicated.DedicatedServerMixin_Vanilla",
-    "server.level.ServerEntityMixin_Vanilla",
     "server.level.ServerPlayerGameMode_Vanilla",
     "world.entity.EntityMixin_Vanilla",
     "world.entity.LivingEntityMixin_Vanilla",

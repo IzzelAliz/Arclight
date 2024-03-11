@@ -119,6 +119,7 @@
     "world.entity.ai.behavior.ResetProfessionMixin",
     "world.entity.ai.behavior.StartAttackingMixin",
     "world.entity.ai.behavior.StopAttackingIfTargetInvalidMixin",
+    "world.entity.ai.behavior.TryLaySpawnOnWaterNearLandMixin",
     "world.entity.ai.behavior.VillagerMakeLoveMixin",
     "world.entity.ai.behavior.warden.DiggingMixin",
     "world.entity.ai.brain.BrainUtilMixin",

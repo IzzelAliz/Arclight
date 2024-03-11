@@ -7,16 +7,14 @@ import io.izzel.arclight.mixin.Eject;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
-import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
-import org.bukkit.event.player.PlayerRiptideEvent;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -46,10 +44,10 @@ public class TridentItemMixin {
         return true;
     }
 
-    @Inject(method = "releaseUsing", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/entity/player/Player;getYRot()F"))
-    public void arclight$riptide(ItemStack stack, Level worldIn, LivingEntity entityLiving, int timeLeft, CallbackInfo ci) {
+    @Redirect(method = "releaseUsing", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;push(DDD)V"))
+    private void arclight$riptide(Player instance, double x, double y, double z, ItemStack stack, Level worldIn, LivingEntity entityLiving, int timeLeft) {
         if (!DistValidate.isValid(worldIn)) return;
-        PlayerRiptideEvent event = new PlayerRiptideEvent(((ServerPlayerEntityBridge) entityLiving).bridge$getBukkitEntity(), CraftItemStack.asCraftMirror(stack));
-        Bukkit.getPluginManager().callEvent(event);
+        CraftEventFactory.callPlayerRiptideEvent(instance, stack, (float) x, (float) y, (float) z);
+        instance.push(x, y, z);
     }
 }

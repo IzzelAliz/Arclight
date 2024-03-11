@@ -1,7 +1,6 @@
 package io.izzel.arclight.common.mixin.core.network.protocol;
 
 import io.izzel.arclight.common.bridge.core.network.common.ServerCommonPacketListenerBridge;
-import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
 import net.minecraft.network.PacketListener;
@@ -9,8 +8,6 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketUtils;
 import net.minecraft.server.RunningOnDifferentThreadException;
 import net.minecraft.util.thread.BlockableEventLoop;
-import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.CraftServer;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,7 +27,7 @@ public class PacketThreadUtilMixin {
     public static <T extends PacketListener> void ensureRunningOnSameThread(Packet<T> packetIn, T processor, BlockableEventLoop<?> executor) throws RunningOnDifferentThreadException {
         if (!executor.isSameThread()) {
             executor.executeIfPossible(() -> {
-                if (((MinecraftServerBridge) ((CraftServer) Bukkit.getServer()).getServer()).bridge$hasStopped() || (processor instanceof ServerCommonPacketListenerBridge && ((ServerCommonPacketListenerBridge) processor).bridge$processedDisconnect())) {
+                if (processor instanceof ServerCommonPacketListenerBridge && ((ServerCommonPacketListenerBridge) processor).bridge$processedDisconnect()) {
                     return;
                 }
                 if (processor.isAcceptingMessages()) {
@@ -59,8 +56,6 @@ public class PacketThreadUtilMixin {
                 }
 
             });
-            throw RunningOnDifferentThreadException.RUNNING_ON_DIFFERENT_THREAD;
-        } else if (((MinecraftServerBridge) ((CraftServer) Bukkit.getServer()).getServer()).bridge$hasStopped() || (processor instanceof ServerCommonPacketListenerBridge && ((ServerCommonPacketListenerBridge) processor).bridge$processedDisconnect())) {
             throw RunningOnDifferentThreadException.RUNNING_ON_DIFFERENT_THREAD;
         }
     }
