@@ -31,7 +31,7 @@ public abstract class TntBlockMixin extends BlockMixin {
     @Shadow private static void explode(Level arg, BlockPos arg2, @Nullable LivingEntity arg3) {}
     // @formatter:on
 
-    @Redirect(method = "onPlace", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;hasNeighborSignal(Lnet/minecraft/core/BlockPos;)Z"))
+    @Redirect(method = "onPlace", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;hasNeighborSignal(Lnet/minecraft/core/BlockPos;)Z"))
     private boolean arclight$redstone1(Level instance, BlockPos pos) {
         return instance.hasNeighborSignal(pos) && CraftEventFactory.callTNTPrimeEvent(instance, pos, TNTPrimeEvent.PrimeCause.REDSTONE, null, null);
     }
