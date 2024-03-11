@@ -1,5 +1,7 @@
 package io.izzel.arclight.common.mixin.optimization.general;
 
+import io.izzel.arclight.common.mod.compat.ModIds;
+import io.izzel.arclight.common.mod.mixins.annotation.LoadIfMod;
 import net.minecraft.util.ClassInstanceMultiMap;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 @Mixin(ClassInstanceMultiMap.class)
+@LoadIfMod(modid = {ModIds.LITHIUM, ModIds.CANARY, ModIds.RADIUM}, condition = LoadIfMod.ModCondition.ABSENT)
 public class ClassInheritanceMultiMapMixin<T> {
 
     // @formatter:off

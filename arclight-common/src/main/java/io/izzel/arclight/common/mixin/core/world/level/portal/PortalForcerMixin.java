@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Mixin(PortalForcer.class)
+@Mixin(value = PortalForcer.class, priority = 1500)
 public abstract class PortalForcerMixin implements TeleporterBridge {
 
     // @formatter:off
@@ -38,7 +38,7 @@ public abstract class PortalForcerMixin implements TeleporterBridge {
     @Shadow public abstract Optional<BlockUtil.FoundRectangle> findPortalAround(BlockPos p_192986_, boolean p_192987_, WorldBorder p_192988_);
     // @formatter:on
 
-    @ModifyVariable(method = "findPortalAround", index = 5, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ai/village/poi/PoiManager;ensureLoadedAndValid(Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/core/BlockPos;I)V"))
+    @ModifyVariable(method = "findPortalAround", ordinal = 0, at = @At(value = "STORE", ordinal = 0))
     private int arclight$useSearchRadius(int i) {
         return this.arclight$searchRadius == -1 ? i : this.arclight$searchRadius;
     }

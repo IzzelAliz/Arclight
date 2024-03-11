@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.CLASS)
 public @interface LoadIfMod {
 
-    String modid();
+    String[] modid();
 
     ModCondition condition();
 
