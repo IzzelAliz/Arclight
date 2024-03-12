@@ -13,7 +13,7 @@
     "conformVisibility": true,
     "requireAnnotations": false
   },
-  "mixinPriority": 500,
+  "mixinPriority": 555,
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "server.Main_ServerShutdownThreadMixin_Vanilla",
