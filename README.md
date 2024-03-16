@@ -67,7 +67,3 @@ applications. YourKit is the creator of <a href="https://www.yourkit.com/java/pr
 and <a href="https://www.yourkit.com/youmonitor/">YourKit YouMonitor</a>.
 
 [![](.github/jetbrains.png)](https://www.jetbrains.com/?from=Arclight)
-
-[![](.github/nexusnode.gif)](https://nexusnode.com/minecraft.php)
-
-Get 10% off hosting server with promocode **ARCLIGHT** at [NEXUSNODE](https://nexusnode.com/minecraft.php)
