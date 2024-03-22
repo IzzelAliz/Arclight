@@ -69,10 +69,14 @@ abstract class UploadFilesTask extends DefaultTask {
             }
         }
         link("/arclight/branches/${branch.get()}/versions-snapshot/${version.get()}/${modloader}", [type: 'object', value: sha1])
+        link("/arclight/branches/${branch.get()}/loaders/${modloader}/versions-snapshot/${version.get()}", [type: 'object', value: sha1])
         link("/arclight/branches/${branch.get()}/latest-snapshot", [type: 'link', value: "/arclight/branches/${branch.get()}/versions-snapshot/${version.get()}", cache_seconds: 3600])
+        link("/arclight/branches/${branch.get()}/loaders/${modloader}/latest-snapshot", [type: 'link', value: "/arclight/branches/${branch.get()}/loaders/${modloader}/versions-snapshot/${version.get()}", cache_seconds: 3600])
         if (!snapshot.get()) {
             link("/arclight/branches/${branch.get()}/versions-stable/${version.get()}/${modloader}", [type: 'object', value: sha1])
+            link("/arclight/branches/${branch.get()}/loaders/${modloader}/versions-stable/${version.get()}", [type: 'object', value: sha1])
             link("/arclight/branches/${branch.get()}/latest-stable", [type: 'link', value: "/arclight/branches/${branch.get()}/versions-stable/${version.get()}", cache_seconds: 86400])
+            link("/arclight/branches/${branch.get()}/loaders/${modloader}/latest-stable", [type: 'link', value: "/arclight/branches/${branch.get()}/loaders/${modloader}/versions-stable/${version.get()}", cache_seconds: 86400])
         }
     }
 

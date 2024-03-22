@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.level.storage.loot;
 
+import io.izzel.arclight.common.bridge.core.world.storage.loot.LootDataManagerBridge;
 import io.izzel.arclight.common.bridge.core.world.storage.loot.LootTableBridge;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.mixin.Eject;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.resources.ResourceLocation;
@@ -41,6 +43,9 @@ public abstract class LootTableMixin implements LootTableBridge {
         if (!context.hasParam(LootContextParams.ORIGIN) && !context.hasParam(LootContextParams.THIS_ENTITY)) {
             return list;
         }
+        if (!((LootDataManagerBridge) ArclightServer.getMinecraftServer().getLootData()).bridge$isRegistered((LootTable) (Object) this)) {
+            return list;
+        }
         LootGenerateEvent event = CraftEventFactory.callLootGenerateEvent(inv, (LootTable) (Object) this, context, list, false);
         if (event.isCancelled()) {
             ci.cancel();
@@ -54,11 +59,14 @@ public abstract class LootTableMixin implements LootTableBridge {
         LootContext context = (new LootContext.Builder(lootparams)).withOptionalRandomSeed(i).create(this.randomSequence);
         ObjectArrayList<ItemStack> objectarraylist = this.getRandomItems(context);
         RandomSource randomsource = context.getRandom();
-        LootGenerateEvent event = CraftEventFactory.callLootGenerateEvent(inv, (LootTable) (Object) this, context, objectarraylist, plugin);
-        if (event.isCancelled()) {
-            return;
+
+        if (((LootDataManagerBridge) ArclightServer.getMinecraftServer().getLootData()).bridge$isRegistered((LootTable) (Object) this)) {
+            LootGenerateEvent event = CraftEventFactory.callLootGenerateEvent(inv, (LootTable) (Object) this, context, objectarraylist, plugin);
+            if (event.isCancelled()) {
+                return;
+            }
+            objectarraylist = event.getLoot().stream().map(CraftItemStack::asNMSCopy).collect(ObjectArrayList.toList());
         }
-        objectarraylist = event.getLoot().stream().map(CraftItemStack::asNMSCopy).collect(ObjectArrayList.toList());
 
         List<Integer> list = this.getAvailableSlots(inv, randomsource);
         this.shuffleAndSplitItems(objectarraylist, list.size(), randomsource);
