@@ -4,9 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.serialization.DynamicOps;
-import com.mojang.serialization.JsonOps;
 import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeManagerBridge;
-import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.GsonHelper;
@@ -31,6 +29,7 @@ public abstract class RecipeManagerMixin_NeoForge extends SimpleJsonResourceRelo
 
     @Override
     public RecipeHolder<?> bridge$platform$loadRecipe(ResourceLocation key, JsonElement element) {
-        return fromJson(key, GsonHelper.convertToJsonObject(element, "top element"), ConditionalOps.create(RegistryOps.create(JsonOps.INSTANCE, this.registryAccess), this.conditionContext)).orElse(null);
+        ConditionalOps<JsonElement> ops = this.makeConditionalOps();
+        return fromJson(key, GsonHelper.convertToJsonObject(element, "top element"), ops).orElse(null);
     }
 }

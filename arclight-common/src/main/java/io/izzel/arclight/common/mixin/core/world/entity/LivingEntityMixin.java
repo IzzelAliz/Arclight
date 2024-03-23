@@ -1,7 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Either;
@@ -95,6 +94,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @SuppressWarnings({"ConstantConditions", "Guava"})
 @Mixin(LivingEntity.class)
@@ -456,16 +456,16 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         }
     }
 
-    @Redirect(method = "removeAllEffects", at = @At(value = "INVOKE", target = "Ljava/util/Collection;iterator()Ljava/util/Iterator;"))
-    private Iterator<MobEffectInstance> arclight$clearReason(Collection<MobEffectInstance> instance) {
+    @Redirect(method = "removeAllEffects", at = @At(value = "INVOKE", target = "Ljava/util/Map;values()Ljava/util/Collection;"))
+    private Collection<MobEffectInstance> arclight$clearReason(Map<MobEffect, MobEffectInstance> instance) {
         var cause = bridge$getEffectCause().orElse(EntityPotionEffectEvent.Cause.UNKNOWN);
-        return Iterators.filter(instance.iterator(), effect -> {
+        return instance.values().stream().filter(effect -> {
             EntityPotionEffectEvent event = CraftEventFactory.callEntityPotionEffectChangeEvent((LivingEntity) (Object) this, effect, null, cause, EntityPotionEffectEvent.Action.CLEARED);
             if (event.isCancelled()) {
                 return false;
             }
             return true;
-        });
+        }).collect(Collectors.toList());
     }
 
     /**

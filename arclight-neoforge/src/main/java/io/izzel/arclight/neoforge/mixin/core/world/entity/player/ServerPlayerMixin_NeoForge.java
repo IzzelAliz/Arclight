@@ -99,16 +99,6 @@ public abstract class ServerPlayerMixin_NeoForge extends PlayerMixin_NeoForge im
      * @author IzzelAliz
      * @reason
      */
-    @Override
-    @Nullable
-    public Entity changeDimension(ServerLevel arg) {
-        return this.changeDimension(arg, arg.getPortalForcer());
-    }
-
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
     @Overwrite(remap = false)
     @Nullable
     public Entity changeDimension(ServerLevel server, ITeleporter teleporter) {
