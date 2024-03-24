@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mod.server.entity;
 
-import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.bridge.bukkit.EntityTypeBridge;
 import io.izzel.arclight.common.bridge.core.entity.projectile.DamagingProjectileEntityBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
@@ -66,6 +65,7 @@ import net.minecraft.world.entity.animal.horse.SkeletonHorse;
 import net.minecraft.world.entity.animal.horse.TraderLlama;
 import net.minecraft.world.entity.animal.horse.ZombieHorse;
 import net.minecraft.world.entity.animal.sniffer.Sniffer;
+import net.minecraft.world.entity.boss.EnderDragonPart;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
@@ -219,14 +219,10 @@ public class EntityClassLookup {
     }
 
     public static void init() {
-        Unsafe.ensureClassInitialized(CraftEntityTypes.class);
-        Map<org.bukkit.entity.EntityType, CraftEntityTypes.EntityTypeData<?, ?>> entityTypeData = Unsafe.getStatic(CraftEntityTypes.class, "ENTITY_TYPE_DATA");
-
         var allEntityClasses = new HashSet<Class<?>>();
-        for (var entry : entityTypeData.entrySet()) {
-            var bukkitType = entry.getKey();
+        for (var bukkitType : org.bukkit.entity.EntityType.values()) {
             Class<? extends org.bukkit.entity.Entity> entityClass = bukkitType.getEntityClass();
-            if (!allEntityClasses.contains(entityClass)) {
+            if (entityClass != null && !allEntityClasses.contains(entityClass)) {
                 var next = new LinkedList<Class<?>>();
                 next.add(entityClass);
                 while (!next.isEmpty()) {
@@ -367,6 +363,7 @@ public class EntityClassLookup {
         add(AbstractGolem.class, new EntityClass<>(org.bukkit.entity.Golem.class, org.bukkit.craftbukkit.v.entity.CraftGolem.class, org.bukkit.craftbukkit.v.entity.CraftGolem::new));
         add(Player.class, new EntityClass<>(org.bukkit.entity.HumanEntity.class, org.bukkit.craftbukkit.v.entity.CraftHumanEntity.class, org.bukkit.craftbukkit.v.entity.CraftHumanEntity::new));
         add(AbstractFish.class, new EntityClass<>(org.bukkit.entity.Fish.class, org.bukkit.craftbukkit.v.entity.CraftFish.class, org.bukkit.craftbukkit.v.entity.CraftFish::new));
+        add(EnderDragonPart.class, new EntityClass<>(org.bukkit.entity.EnderDragonPart.class, org.bukkit.craftbukkit.v.entity.CraftEnderDragonPart.class, org.bukkit.craftbukkit.v.entity.CraftEnderDragonPart::new));
 
         // vanilla mob types
         add(ElderGuardian.class, new EntityClass<>(org.bukkit.entity.ElderGuardian.class, org.bukkit.craftbukkit.v.entity.CraftElderGuardian.class, org.bukkit.craftbukkit.v.entity.CraftElderGuardian::new));

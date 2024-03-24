@@ -121,7 +121,7 @@ public abstract class BaseSpawnerMixin implements BaseSpawnerBridge {
 
                         entity.moveTo(entity.getX(), entity.getY(), entity.getZ(), level.random.nextFloat() * 360.0F, 0.0F);
                         if (entity instanceof Mob mob) {
-                            if (this.bridge$forge$checkSpawnRules(mob, level, MobSpawnType.SPAWNER, spawnData)) {
+                            if (this.bridge$forge$checkSpawnRules(mob, level, MobSpawnType.SPAWNER, spawnData, spawnData.getCustomSpawnRules().isEmpty() && !mob.checkSpawnRules(level, MobSpawnType.SPAWNER) || !mob.checkSpawnObstruction(level))) {
                                 continue;
                             }
 
@@ -169,8 +169,8 @@ public abstract class BaseSpawnerMixin implements BaseSpawnerBridge {
     }
 
     @Override
-    public boolean bridge$forge$checkSpawnRules(Mob mob, ServerLevelAccessor level, MobSpawnType spawnType, SpawnData spawnData) {
-        return spawnData.getCustomSpawnRules().isEmpty() && !mob.checkSpawnRules(level, MobSpawnType.SPAWNER) || !mob.checkSpawnObstruction(level);
+    public boolean bridge$forge$checkSpawnRules(Mob mob, ServerLevelAccessor level, MobSpawnType spawnType, SpawnData spawnData, boolean result) {
+        return result;
     }
 
     @Override

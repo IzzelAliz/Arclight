@@ -9,7 +9,10 @@ import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.level.BaseSpawner;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.SpawnData;
+import net.neoforged.bus.api.Event;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.EventHooks;
+import net.neoforged.neoforge.event.entity.living.MobSpawnEvent;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 
@@ -17,8 +20,13 @@ import org.spongepowered.asm.mixin.Mixin;
 public abstract class BaseSpawnerMixin_NeoForge implements BaseSpawnerBridge {
 
     @Override
-    public boolean bridge$forge$checkSpawnRules(Mob mob, ServerLevelAccessor level, MobSpawnType spawnType, SpawnData spawnData) {
-        return !EventHooks.checkSpawnPositionSpawner(mob, level, MobSpawnType.SPAWNER, spawnData, (BaseSpawner) (Object) this);
+    public boolean bridge$forge$checkSpawnRules(Mob mob, ServerLevelAccessor level, MobSpawnType spawnType, SpawnData spawnData, boolean original) {
+        var event = new MobSpawnEvent.PositionCheck(mob, level, spawnType, null);
+        NeoForge.EVENT_BUS.post(event);
+        if (event.getResult() == Event.Result.DEFAULT) {
+            return original;
+        }
+        return event.getResult() == Event.Result.ALLOW;
     }
 
     @Override
