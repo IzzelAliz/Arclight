@@ -31,6 +31,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -122,6 +123,8 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
     }
 
+    @Unique private transient Integer arclight$rodDamage;
+
     /**
      * @author IzzelAliz
      * @reason
@@ -131,7 +134,7 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
         Player playerentity = this.getPlayerOwner();
         if (!this.level().isClientSide && playerentity != null) {
             int i = 0;
-            Integer rodDamage = null;
+            arclight$rodDamage = null;
             if (this.hookedIn != null) {
                 PlayerFishEvent fishEvent = new PlayerFishEvent(((ServerPlayerEntityBridge) playerentity).bridge$getBukkitEntity(), this.hookedIn.bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.CAUGHT_ENTITY);
                 Bukkit.getPluginManager().callEvent(fishEvent);
@@ -146,22 +149,29 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
                 LootParams params = (new LootParams.Builder((ServerLevel) this.level())).withParameter(LootContextParams.ORIGIN, this.position()).withParameter(LootContextParams.TOOL, stack).withParameter(LootContextParams.THIS_ENTITY, (FishingHook) (Object) this).withLuck((float) this.luck + playerentity.getLuck()).create(LootContextParamSets.FISHING);
                 LootTable loottable = this.level().getServer().getLootData().getLootTable(BuiltInLootTables.FISHING);
                 List<ItemStack> list = loottable.getRandomItems(params);
-                var event = this.bridge$forge$onItemFished(list, this.onGround ? 2 : 1, (FishingHook) (Object) this);
-                if (event._1) {
-                    this.discard();
-                    return event._2;
+                {
+                    var event = this.bridge$forge$onItemFished(list, this.onGround ? 2 : 1, (FishingHook) (Object) this);
+                    if (event._1) {
+                        this.discard();
+                        return event._2;
+                    }
+                    arclight$rodDamage = event._2;
                 }
-                rodDamage = event._2;
                 CriteriaTriggers.FISHING_ROD_HOOKED.trigger((ServerPlayer) playerentity, stack, (FishingHook) (Object) this, list);
 
                 for (ItemStack itemstack : list) {
                     ItemEntity itementity = new ItemEntity(this.level(), this.getX(), this.getY(), this.getZ(), itemstack);
-                    PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerEntityBridge) playerentity).bridge$getBukkitEntity(), itementity.bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.CAUGHT_FISH);
-                    playerFishEvent.setExpToDrop(this.random.nextInt(6) + 1);
-                    Bukkit.getPluginManager().callEvent(playerFishEvent);
+                    { // mixin conflict with Rapscallions and Rockhoppers https://github.com/GreenhouseTeam/rapscallions-and-rockhoppers/blob/0a5f77c60d454363b34ad7ac3ee84e8f97ae3ea1/common/src/main/java/dev/greenhouseteam/rapscallionsandrockhoppers/mixin/FishingHookMixin.java
+                        PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerEntityBridge) playerentity).bridge$getBukkitEntity(), itementity.bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.CAUGHT_FISH);
+                        playerFishEvent.setExpToDrop(this.random.nextInt(6) + 1);
+                        Bukkit.getPluginManager().callEvent(playerFishEvent);
 
-                    if (playerFishEvent.isCancelled()) {
-                        return 0;
+                        if (playerFishEvent.isCancelled()) {
+                            return 0;
+                        }
+                        if (playerFishEvent.getExpToDrop() > 0) {
+                            playerentity.level().addFreshEntity(new ExperienceOrb(playerentity.level(), playerentity.getX(), playerentity.getY() + 0.5D, playerentity.getZ() + 0.5D, playerFishEvent.getExpToDrop()));
+                        }
                     }
                     double d0 = playerentity.getX() - this.getX();
                     double d1 = playerentity.getY() - this.getY();
@@ -169,9 +179,6 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
                     double d3 = 0.1D;
                     itementity.setDeltaMovement(d0 * 0.1D, d1 * 0.1D + Math.sqrt(Math.sqrt(d0 * d0 + d1 * d1 + d2 * d2)) * 0.08D, d2 * 0.1D);
                     this.level().addFreshEntity(itementity);
-                    if (playerFishEvent.getExpToDrop() > 0) {
-                        playerentity.level().addFreshEntity(new ExperienceOrb(playerentity.level(), playerentity.getX(), playerentity.getY() + 0.5D, playerentity.getZ() + 0.5D, playerFishEvent.getExpToDrop()));
-                    }
                     if (itemstack.is(ItemTags.FISHES)) {
                         playerentity.awardStat(Stats.FISH_CAUGHT, 1);
                     }
@@ -200,7 +207,7 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
 
             this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
             this.discard();
-            return rodDamage == null ? i : rodDamage;
+            return arclight$rodDamage == null ? i : arclight$rodDamage;
         } else {
             return 0;
         }
