@@ -42,6 +42,11 @@ public abstract class AbstractHurtingProjectileMixin extends ProjectileMixin imp
         this.zPower = d2 / d3 * 0.1D;
     }
 
+    @Override
+    public void bridge$setDirection(double d0, double d1, double d2) {
+        this.setDirection(d0, d1, d2);
+    }
+
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/AbstractHurtingProjectile;discard()V"))
     private void arclight$despawn(CallbackInfo ci) {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
