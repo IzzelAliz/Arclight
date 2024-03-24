@@ -12,6 +12,7 @@ import io.izzel.arclight.common.bridge.bukkit.EntityTypeBridge;
 import io.izzel.arclight.common.bridge.bukkit.MaterialBridge;
 import io.izzel.arclight.common.bridge.bukkit.SimpleRegistryBridge;
 import io.izzel.arclight.common.mod.ArclightMod;
+import io.izzel.arclight.common.mod.server.entity.EntityClassLookup;
 import io.izzel.arclight.common.mod.util.ResourceLocationUtil;
 import io.izzel.arclight.common.mod.util.types.ArclightEnchantment;
 import io.izzel.arclight.common.mod.util.types.ArclightPotionEffect;
@@ -354,6 +355,7 @@ public class BukkitRegistry {
             ENTITY_NAME_MAP.put(location.toString(), entityType);
         }
         EnumHelper.addEnums(EntityType.class, newTypes);
+        EntityClassLookup.init();
         ArclightMod.LOGGER.info("registry.entity-type", newTypes.size());
     }
 
