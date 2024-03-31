@@ -75,4 +75,9 @@ public abstract class PlayerMixin_NeoForge extends LivingEntityMixin_NeoForge im
                 event.getUseBlock() == Event.Result.ALLOW, event.getUseBlock() == Event.Result.DENY,
                 event.getCancellationResult());
     }
+
+    @Override
+    public boolean bridge$platform$mayfly() {
+        return this.mayFly();
+    }
 }

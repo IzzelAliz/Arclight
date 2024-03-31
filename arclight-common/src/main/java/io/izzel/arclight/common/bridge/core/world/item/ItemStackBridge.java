@@ -53,4 +53,6 @@ public interface ItemStackBridge {
     default boolean bridge$forge$doesSneakBypassUse(LevelReader level, BlockPos pos, Player player) {
         return false;
     }
+
+    default void bridge$platform$copyAdditionalFrom(ItemStack from) {}
 }

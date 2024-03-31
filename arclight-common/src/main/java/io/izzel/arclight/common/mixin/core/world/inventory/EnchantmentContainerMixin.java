@@ -5,6 +5,7 @@ import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBrid
 import io.izzel.arclight.common.bridge.core.inventory.EnchantmentMenuBridge;
 import io.izzel.arclight.common.bridge.core.inventory.container.PosContainerBridge;
 import io.izzel.arclight.common.bridge.core.util.IWorldPosCallableBridge;
+import io.izzel.arclight.common.bridge.core.world.item.ItemStackBridge;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -207,10 +208,11 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
                     if (flag) {
                         itemstack2 = new ItemStack(Items.ENCHANTED_BOOK);
 
-                        CompoundTag tag = itemstack2.getTag();
+                        CompoundTag tag = itemstack.getTag();
                         if (tag != null) {
                             itemstack2.setTag(tag.copy());
                         }
+                        ((ItemStackBridge) (Object) itemstack2).bridge$platform$copyAdditionalFrom(itemstack);
 
                         this.enchantSlots.setItem(0, itemstack2);
                     }

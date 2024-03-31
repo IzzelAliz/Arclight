@@ -96,8 +96,8 @@ dependencies {
     forgeImplementation "net.minecraftforge:fmlloader:${minecraftVersion}-${forgeVersion}"
     forgeImplementation 'net.minecraftforge:securemodules:2.2.7'
     forgeImplementation 'net.minecraftforge:forgespi:7.1.0'
-    forgeImplementation 'net.minecraftforge:bootstrap:2.0.0'
-    forgeImplementation 'net.minecraftforge:bootstrap-api:2.0.0'
+    forgeImplementation 'net.minecraftforge:bootstrap:2.1.0'
+    forgeImplementation 'net.minecraftforge:bootstrap-api:2.1.0'
 
     neoforgeImplementation 'net.neoforged.fancymodloader:spi:2.0.7'
     neoforgeImplementation 'net.neoforged.fancymodloader:loader:2.0.7'

@@ -12,6 +12,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.attachment.AttachmentHolder;
+import net.neoforged.neoforge.attachment.AttachmentUtils;
 import net.neoforged.neoforge.common.extensions.IItemStackExtension;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
@@ -75,5 +76,10 @@ public abstract class ItemStackMixin_NeoForge extends AttachmentHolder implement
     @Override
     public boolean bridge$forge$doesSneakBypassUse(LevelReader level, BlockPos pos, Player player) {
         return doesSneakBypassUse(level, pos, player);
+    }
+
+    @Override
+    public void bridge$platform$copyAdditionalFrom(ItemStack from) {
+        AttachmentUtils.copyStackAttachments(from, (ItemStack) (Object) this);
     }
 }

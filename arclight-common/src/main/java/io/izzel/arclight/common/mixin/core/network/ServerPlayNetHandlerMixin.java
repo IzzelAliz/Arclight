@@ -12,6 +12,7 @@ import io.izzel.arclight.common.bridge.core.network.play.TimestampedPacket;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.core.server.management.PlayerInteractionManagerBridge;
 import io.izzel.arclight.common.bridge.core.server.management.PlayerListBridge;
+import io.izzel.arclight.common.bridge.core.world.item.ItemStackBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
@@ -490,6 +491,7 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
             }
 
             itemStack.addTagElement("author", StringTag.valueOf(this.player.getName().getString()));
+            ((ItemStackBridge) (Object) itemStack).bridge$platform$copyAdditionalFrom(old);
             if (this.player.isTextFilteringEnabled()) {
                 itemStack.addTagElement("title", StringTag.valueOf(text.filteredOrEmpty()));
             } else {
@@ -679,7 +681,14 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
                                 }
 
                                 this.player.absMoveTo(d0, d1, d2, f, f1); // Copied from above
-                                this.clientIsFloating = d12 >= -0.03125D && this.player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR && !this.server.isFlightAllowed() && !this.player.getAbilities().mayfly && !this.player.hasEffect(MobEffects.LEVITATION) && !this.player.isFallFlying() && this.noBlocksAround((Entity) this.player) && !this.player.isAutoSpinAttack();
+                                this.clientIsFloating = d12 >= -0.03125D
+                                    && this.player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR
+                                    && !this.server.isFlightAllowed()
+                                    && !(this.player.getAbilities().mayfly || ((ServerPlayerEntityBridge) this.player).bridge$platform$mayfly())
+                                    && !this.player.hasEffect(MobEffects.LEVITATION)
+                                    && !this.player.isFallFlying()
+                                    && this.noBlocksAround(this.player)
+                                    && !this.player.isAutoSpinAttack();
                                 // CraftBukkit end
                                 this.player.serverLevel().getChunkSource().move(this.player);
                                 this.player.doCheckFallDamage(this.player.getX() - d3, this.player.getY() - d4, this.player.getZ() - d5, packetplayinflying.isOnGround());
@@ -1724,7 +1733,7 @@ public abstract class ServerPlayNetHandlerMixin extends ServerCommonPacketListen
     @Overwrite
     public void handlePlayerAbilities(ServerboundPlayerAbilitiesPacket packet) {
         PacketUtils.ensureRunningOnSameThread(packet, (ServerGamePacketListenerImpl) (Object) this, this.player.serverLevel());
-        if (this.player.getAbilities().mayfly && this.player.getAbilities().flying != packet.isFlying()) {
+        if ((this.player.getAbilities().mayfly || ((ServerPlayerEntityBridge) this.player).bridge$platform$mayfly()) && this.player.getAbilities().flying != packet.isFlying()) {
             PlayerToggleFlightEvent event = new PlayerToggleFlightEvent(getCraftPlayer(), packet.isFlying());
             this.cserver.getPluginManager().callEvent(event);
             if (!event.isCancelled()) {

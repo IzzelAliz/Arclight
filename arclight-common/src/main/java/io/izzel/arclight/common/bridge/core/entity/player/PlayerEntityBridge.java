@@ -4,7 +4,6 @@ import com.mojang.datafixers.util.Either;
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.tools.product.Product;
 import io.izzel.tools.product.Product3;
-import io.izzel.tools.product.Product5;
 import io.izzel.tools.product.Product6;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -59,5 +58,9 @@ public interface PlayerEntityBridge extends LivingEntityBridge {
             InteractionResult /* CancellationResult */>
     bridge$platform$onRightClickBlock(InteractionHand hand, BlockPos pos, BlockHitResult hitResult) {
         return Product.of(false, false, false, false, false, InteractionResult.PASS);
+    }
+
+    default boolean bridge$platform$mayfly() {
+        return ((Player) this).getAbilities().mayfly;
     }
 }
