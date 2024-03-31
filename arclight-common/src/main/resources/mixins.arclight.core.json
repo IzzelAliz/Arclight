@@ -490,6 +490,7 @@
     "world.level.block.entity.DecoratedPotBlockEntityMixin",
     "world.level.block.entity.DispenserBlockEntityMixin",
     "world.level.block.entity.EndGatewayBlockEntityMixin",
+    "world.level.block.entity.EndGatewayBlockEntityMixin$ForgeLike",
     "world.level.block.entity.EndGatewayBlockEntityMixin$VanillaLike",
     "world.level.block.entity.HopperBlockEntityMixin",
     "world.level.block.entity.JukeboxBlockEntityMixin",
