@@ -99,7 +99,7 @@ public abstract class EntityMixin_NeoForge implements EntityBridge, IEntityExten
     @Overwrite(remap = false)
     @Nullable
     public Entity changeDimension(ServerLevel server, ITeleporter teleporter) {
-        if (CommonHooks.onTravelToDimension((Entity) (Object) this, server.dimension()))
+        if (!CommonHooks.onTravelToDimension((Entity) (Object) this, server.dimension()))
             return null;
         if (this.level() instanceof ServerLevel && !this.isRemoved()) {
             this.level().getProfiler().push("changeDimension");

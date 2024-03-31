@@ -106,7 +106,7 @@ public abstract class ServerPlayerMixin_NeoForge extends PlayerMixin_NeoForge im
         if (this.isSleeping()) {
             return (ServerPlayer) (Object) this;
         }
-        if (CommonHooks.onTravelToDimension((ServerPlayer) (Object) this, server.dimension())) return null;
+        if (!CommonHooks.onTravelToDimension((ServerPlayer) (Object) this, server.dimension())) return null;
 
         // this.invulnerableDimensionChange = true;
         ServerLevel serverworld = this.serverLevel();
