@@ -18,11 +18,12 @@ public interface IWorldPosCallableBridge {
     }
 
     default Location bridge$getLocation() {
-        CraftWorld world = ((WorldBridge) bridge$getWorld()).bridge$getWorld();
         BlockPos blockPos = bridge$getPosition();
         if (blockPos == null) {
             return null;
         } else {
+            Level level = bridge$getWorld();
+            CraftWorld world = level == null ? null : ((WorldBridge) level).bridge$getWorld();
             return new Location(world, blockPos.getX(), blockPos.getY(), blockPos.getZ());
         }
     }
