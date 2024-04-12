@@ -317,7 +317,9 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             return;
         }
         EntityPoseChangeEvent event = new EntityPoseChangeEvent(this.internal$getBukkitEntity(), BukkitRegistry.toBukkitPose(poseIn));
-        Bukkit.getPluginManager().callEvent(event);
+        if (this.valid) {
+            Bukkit.getPluginManager().callEvent(event);
+        }
     }
 
     @Inject(method = "setRot", cancellable = true, at = @At(value = "HEAD"))
