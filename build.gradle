@@ -1,13 +1,25 @@
+import io.izzel.arclight.gradle.tasks.UploadFilesTask
+
 allprojects {
     group 'io.izzel.arclight'
-    version '1.0.25'
+    version '1.0.26-SNAPSHOT'
+
+    def getGitHash = { ->
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-parse', '--short', 'HEAD'
+            standardOutput = stdout
+        }
+        return stdout.toString().trim()
+    }
 
     ext {
         agpVersion = '1.17'
         minecraftVersion = '1.16.5'
-        forgeVersion = '36.2.39'
+        forgeVersion = '36.2.42'
         apiVersion = '1.4.0'
         toolsVersion = '1.3.+'
+        gitHash = getGitHash()
     }
 
     task cleanBuild {
@@ -19,7 +31,24 @@ allprojects {
 
 task collect(type: Copy) {
     destinationDir = file('build/libs')
-    subprojects.each { p ->
-        from p.file('build/libs')
+    from { project(':arclight-forge').tasks.jar.outputs }
+}
+
+def gitBranch() {
+    def stdout = new ByteArrayOutputStream()
+    exec {
+        commandLine 'git', 'rev-parse', '--abbrev-ref', 'HEAD'
+        standardOutput = stdout
     }
+    return stdout.toString().trim()
+}
+
+tasks.register('uploadFiles', UploadFilesTask) {
+    mcVersion.set project.ext.minecraftVersion
+    version.set "${project.version}-${project.ext.gitHash}"
+    snapshot.set project.version.toString().endsWith("-SNAPSHOT")
+    gitHash.set project.ext.gitHash
+    branch.set gitBranch()
+    inputs.files tasks.collect.outputs.files
+    dependsOn(tasks.collect)
 }

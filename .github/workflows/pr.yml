@@ -1,10 +1,10 @@
 # This workflow will build a Java project with Gradle
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
 
-name: Build
+name: Pull Request Check
 
 on:
-  push:
+  pull_request:
     branches:
       - '**'
 
@@ -32,11 +32,9 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build
-      env:
-        ARCLIGHT_FILES_TOKEN: ${{ secrets.ARCLIGHT_FILES_TOKEN }}
       run: |
         ./gradlew cleanBuild remapSpigotJar idea --no-daemon -i --stacktrace --refresh-dependencies
-        ./gradlew build collect uploadFiles --no-daemon -i --stacktrace
+        ./gradlew build collect --no-daemon -i --stacktrace
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
