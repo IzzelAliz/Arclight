@@ -36,16 +36,14 @@ public class BrewingStandBlockEntityMixin_Fabric {
             return;
         }
 
+        itemStack.shrink(1);
         if (itemStack.getItem().hasCraftingRemainingItem()) {
             ItemStack itemStack2 = new ItemStack(itemStack.getItem().getCraftingRemainingItem());
-            itemStack.shrink(1);
             if (itemStack.isEmpty()) {
                 itemStack = itemStack2;
             } else {
                 Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), itemStack2);
             }
-        } else {
-            itemStack.shrink(1);
         }
 
         stacks.set(3, itemStack);
