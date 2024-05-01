@@ -12,5 +12,5 @@ import java.util.List;
 public class Level_ExplosionInteractionMixin {
 
     @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL)
-    private static final Level.ExplosionInteraction STANDARD = EnumHelper.addEnum(Level.ExplosionInteraction.class, "STANDARD", List.of(), List.of());
+    private static final Level.ExplosionInteraction STANDARD = EnumHelper.makeEnum(Level.ExplosionInteraction.class, "STANDARD", Level.ExplosionInteraction.values().length, List.of(), List.of());
 }
