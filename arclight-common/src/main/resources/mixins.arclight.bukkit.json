@@ -42,6 +42,7 @@
     "PluginClassLoaderMixin",
     "PotionEffectTypeMixin",
     "RecipeIteratorMixin",
+    "StandardMessengerMixin",
     "WatchdogThreadMixin"
   ]
 }
