@@ -88,6 +88,11 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
 
     @Override
     public DamageSource bridge$customCausingEntity(Entity entity) {
+        // This method is not intended for change the causing entity if is already set
+        // also is only necessary if the entity passed is not the direct entity or different from the current causingEntity
+        if (this.customCausingEntity != null || this.directEntity == entity || this.causingEntity == entity) {
+            return (DamageSource) (Object) this;
+        }
         var src = cloneInstance();
         return ((DamageSourceBridge) src).bridge$setCustomCausingEntity(entity);
     }

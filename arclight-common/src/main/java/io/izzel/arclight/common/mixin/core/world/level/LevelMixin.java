@@ -5,6 +5,7 @@ import io.izzel.arclight.common.bridge.core.world.border.WorldBorderBridge;
 import io.izzel.arclight.common.bridge.core.world.level.levelgen.ChunkGeneratorBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
+import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
 import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
 import io.izzel.arclight.common.mod.mixins.annotation.TransformAccess;
@@ -22,6 +23,7 @@ import net.minecraft.server.level.FullChunkStatus;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelWriter;
@@ -59,6 +61,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -364,5 +368,31 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
     @Override
     public void bridge$preventPoiUpdated(boolean b) {
         this.preventPoiUpdated = b;
+    }
+
+    private transient Explosion.BlockInteraction arclight$blockInteractionOverride;
+
+    @ModifyVariable(method = "explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;ZLnet/minecraft/core/particles/ParticleOptions;Lnet/minecraft/core/particles/ParticleOptions;Lnet/minecraft/sounds/SoundEvent;)Lnet/minecraft/world/level/Explosion;",
+        ordinal = 0, at = @At("HEAD"), argsOnly = true)
+    private Level.ExplosionInteraction arclight$standardExplodePre(Level.ExplosionInteraction interaction) {
+        if (interaction == ArclightConstants.STANDARD) {
+            arclight$blockInteractionOverride = Explosion.BlockInteraction.DESTROY;
+            return Level.ExplosionInteraction.BLOCK;
+        }
+        return interaction;
+    }
+
+    @ModifyArg(method = "explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;ZLnet/minecraft/core/particles/ParticleOptions;Lnet/minecraft/core/particles/ParticleOptions;Lnet/minecraft/sounds/SoundEvent;)Lnet/minecraft/world/level/Explosion;",
+        at = @At(value = "NEW", target = "(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;DDDFZLnet/minecraft/world/level/Explosion$BlockInteraction;Lnet/minecraft/core/particles/ParticleOptions;Lnet/minecraft/core/particles/ParticleOptions;Lnet/minecraft/sounds/SoundEvent;)Lnet/minecraft/world/level/Explosion;"))
+    private Explosion.BlockInteraction arclight$standardExplodePost(Explosion.BlockInteraction interaction) {
+        try {
+            if (arclight$blockInteractionOverride != null) {
+                return arclight$blockInteractionOverride;
+            } else {
+                return interaction;
+            }
+        } finally {
+            arclight$blockInteractionOverride = null;
+        }
     }
 }

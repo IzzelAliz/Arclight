@@ -10,6 +10,10 @@ accessible method net/minecraft/world/damagesource/DamageSource <init> (Lnet/min
 accessible method net/minecraft/server/level/ServerLevel getEntities ()Lnet/minecraft/world/level/entity/LevelEntityGetter;
 accessible field net/minecraft/world/entity/animal/MushroomCow stewEffects Ljava/util/List;
 accessible field net/minecraft/world/entity/LivingEntity useItemRemaining I
+accessible method net/minecraft/world/level/block/entity/ConduitBlockEntity getDestroyRangeAABB (Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/AABB;
+accessible field net/minecraft/world/level/block/entity/ConduitBlockEntity effectBlocks Ljava/util/List;
+accessible field net/minecraft/world/level/block/entity/ConduitBlockEntity destroyTarget Lnet/minecraft/world/entity/LivingEntity;
+accessible field net/minecraft/world/level/block/entity/ConduitBlockEntity destroyTargetUUID Ljava/util/UUID;
 # Older versions
 accessible field net/minecraft/world/level/chunk/storage/ChunkSerializer BLOCK_STATE_CODEC Lcom/mojang/serialization/Codec;
 # TODO field net/minecraft/server/PlayerAdvancements f_135964_
