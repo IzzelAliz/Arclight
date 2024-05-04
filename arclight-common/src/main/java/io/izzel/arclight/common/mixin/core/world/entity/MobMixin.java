@@ -5,7 +5,6 @@ import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
-import io.izzel.arclight.mixin.Eject;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
 import net.minecraft.resources.ResourceLocation;
@@ -325,16 +324,26 @@ public abstract class MobMixin extends LivingEntityMixin implements MobEntityBri
         Bukkit.getPluginManager().callEvent(new EntityUnleashEvent(this.getBukkitEntity(), EntityUnleashEvent.UnleashReason.UNKNOWN));
     }
 
-    @Eject(method = "convertTo", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
-    private boolean arclight$copySpawn(net.minecraft.world.level.Level world, Entity entityIn, CallbackInfoReturnable<Mob> cir) {
+    private transient boolean arclight$cancelSpawn;
+
+    @Redirect(method = "convertTo", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
+    private boolean arclight$copySpawn(net.minecraft.world.level.Level world, Entity entityIn) {
         EntityTransformEvent.TransformReason transformReason = arclight$transform == null ? EntityTransformEvent.TransformReason.UNKNOWN : arclight$transform;
         arclight$transform = null;
         if (CraftEventFactory.callEntityTransformEvent((Mob) (Object) this, (LivingEntity) entityIn, transformReason).isCancelled()) {
-            cir.setReturnValue(null);
+            arclight$cancelSpawn = true;
             return false;
         } else {
             return world.addFreshEntity(entityIn);
         }
+    }
+
+    @Inject(method = "convertTo", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
+    private <T extends Mob> void arclight$cancelSpawn(EntityType<T> entityType, boolean bl, CallbackInfoReturnable<T> cir) {
+        if (arclight$cancelSpawn) {
+            cir.setReturnValue(null);
+        }
+        arclight$cancelSpawn = false;
     }
 
     @Inject(method = "convertTo", at = @At("RETURN"))

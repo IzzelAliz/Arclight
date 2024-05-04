@@ -360,6 +360,7 @@
     "world.item.enchantment.FrostWalkerEnchantmentMixin",
     "world.level.ExplosionMixin",
     "world.level.GameRules_ValueMixin",
+    "world.level.Level_ExplosionInteractionMixin",
     "world.level.LevelMixin",
     "world.level.block.BambooSaplingBlockMixin",
     "world.level.block.BambooStalkBlockMixin",
