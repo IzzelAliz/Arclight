@@ -1,25 +1,23 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.stats.Stats;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import io.izzel.arclight.mixin.Local;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
-import net.minecraft.world.item.ArrowItem;
 import net.minecraft.world.item.BowItem;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
+import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+
+import java.util.function.Consumer;
 
 @Mixin(BowItem.class)
 public abstract class BowItemMixin extends ItemMixin {
@@ -29,86 +27,39 @@ public abstract class BowItemMixin extends ItemMixin {
     @Shadow public static float getPowerForTime(int charge) { return 0; }
     // @formatter:on
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    public void releaseUsing(ItemStack stack, Level worldIn, LivingEntity entityLiving, int timeLeft) {
-        if (entityLiving instanceof Player playerentity) {
-            boolean flag = playerentity.getAbilities().instabuild || EnchantmentHelper.getItemEnchantmentLevel(Enchantments.INFINITY_ARROWS, stack) > 0;
-            ItemStack itemstack = playerentity.getProjectile(stack);
+    @Decorate(method = "releaseUsing", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;hurtAndBreak(ILnet/minecraft/world/entity/LivingEntity;Ljava/util/function/Consumer;)V"))
+    private <T extends LivingEntity> void arclight$entityShootBow(
+        ItemStack instance, int i, T livingEntity, Consumer<T> consumer,
+        ItemStack stack, Level worldIn, LivingEntity entityLiving, int timeLeft,
+        @Local(ordinal = -1) ItemStack projectile, @Local(ordinal = -1) AbstractArrow abstractArrow,
+        @Local(ordinal = -1) float power, @Local(ordinal = -1) boolean consumeItem,
+        @Local(allocate = "projectileEntity") Entity projectileEntity
+    ) throws Throwable {
+        EntityShootBowEvent event = CraftEventFactory.callEntityShootBowEvent(entityLiving, stack, projectile, abstractArrow, entityLiving.getUsedItemHand(), power, !consumeItem);
+        if (event.isCancelled()) {
+            event.getProjectile().remove();
+            DecorationOps.cancel().invoke();
+            return;
+        }
+        consumeItem = !event.shouldConsumeItem();
+        projectileEntity = ((CraftEntity) event.getProjectile()).getHandle();
+        DecorationOps.blackhole().invoke(consumeItem, projectileEntity);
+        DecorationOps.callsite().invoke(instance, i, livingEntity, consumer);
+    }
 
-            int i = this.getUseDuration(stack) - timeLeft;
-            i = this.bridge$forge$onArrowLoose(stack, worldIn, playerentity, i, !itemstack.isEmpty() || flag);
-            if (i < 0) return;
-
-            if (!itemstack.isEmpty() || flag) {
-                if (itemstack.isEmpty()) {
-                    itemstack = new ItemStack(Items.ARROW);
+    @Decorate(method = "releaseUsing", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
+    private boolean arclight$addProjectile(Level instance, Entity entity, ItemStack itemStack, Level level, LivingEntity livingEntity, int i,
+                                           @Local(allocate = "projectileEntity") Entity projectileEntity) throws Throwable {
+        if (entity == projectileEntity) {
+            if (!(boolean) DecorationOps.callsite().invoke(instance, entity)) {
+                if (livingEntity instanceof ServerPlayerEntityBridge) {
+                    ((ServerPlayerEntityBridge) livingEntity).bridge$getBukkitEntity().updateInventory();
                 }
-
-                float f = getPowerForTime(i);
-                if (!((double) f < 0.1D)) {
-                    boolean flag1 = playerentity.getAbilities().instabuild || (itemstack.getItem() instanceof ArrowItem && this.bridge$forge$isInfinite((ArrowItem) itemstack.getItem(), itemstack, stack, playerentity));
-                    if (!worldIn.isClientSide) {
-                        ArrowItem arrowitem = (ArrowItem) (itemstack.getItem() instanceof ArrowItem ? itemstack.getItem() : Items.ARROW);
-                        AbstractArrow abstractarrowentity = arrowitem.createArrow(worldIn, itemstack, playerentity);
-                        abstractarrowentity = this.bridge$forge$customArrow((BowItem) (Object) this, itemstack, abstractarrowentity);
-                        abstractarrowentity.shootFromRotation(playerentity, playerentity.getXRot(), playerentity.getYRot(), 0.0F, f * 3.0F, 1.0F);
-                        if (f == 1.0F) {
-                            abstractarrowentity.setCritArrow(true);
-                        }
-
-                        int j = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.POWER_ARROWS, stack);
-                        if (j > 0) {
-                            abstractarrowentity.setBaseDamage(abstractarrowentity.getBaseDamage() + (double) j * 0.5D + 0.5D);
-                        }
-
-                        int k = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.PUNCH_ARROWS, stack);
-                        if (k > 0) {
-                            abstractarrowentity.setKnockback(k);
-                        }
-
-                        if (EnchantmentHelper.getItemEnchantmentLevel(Enchantments.FLAMING_ARROWS, stack) > 0) {
-                            abstractarrowentity.setSecondsOnFire(100);
-                        }
-
-                        EntityShootBowEvent event = CraftEventFactory.callEntityShootBowEvent(playerentity, stack, itemstack, abstractarrowentity, playerentity.getUsedItemHand(), f, !flag1);
-                        if (event.isCancelled()) {
-                            event.getProjectile().remove();
-                            return;
-                        }
-                        flag1 = !event.shouldConsumeItem();
-
-                        stack.hurtAndBreak(1, playerentity, (player) -> {
-                            player.broadcastBreakEvent(playerentity.getUsedItemHand());
-                        });
-                        if (flag1 || playerentity.getAbilities().instabuild && (itemstack.getItem() == Items.SPECTRAL_ARROW || itemstack.getItem() == Items.TIPPED_ARROW)) {
-                            abstractarrowentity.pickup = AbstractArrow.Pickup.CREATIVE_ONLY;
-                        }
-
-                        if (event.getProjectile() == abstractarrowentity.bridge$getBukkitEntity()) {
-                            if (!worldIn.addFreshEntity(abstractarrowentity)) {
-                                if (playerentity instanceof ServerPlayerEntityBridge) {
-                                    ((ServerPlayerEntityBridge) playerentity).bridge$getBukkitEntity().updateInventory();
-                                }
-                                return;
-                            }
-                        }
-                    }
-
-                    worldIn.playSound(null, playerentity.getX(), playerentity.getY(), playerentity.getZ(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0F, 1.0F / (worldIn.getRandom().nextFloat() * 0.4F + 1.2F) + f * 0.5F);
-                    if (!flag1 && !playerentity.getAbilities().instabuild) {
-                        itemstack.shrink(1);
-                        if (itemstack.isEmpty()) {
-                            playerentity.getInventory().removeItem(itemstack);
-                        }
-                    }
-
-                    playerentity.awardStat(Stats.ITEM_USED.get((Item) (Object) this));
-                }
+                return false;
             }
+            return true;
+        } else {
+            return false;
         }
     }
 }
