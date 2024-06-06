@@ -4,7 +4,7 @@ import java.io.InputStream;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.util.jar.Manifest;
+import java.util.Properties;
 
 public class Launcher {
 
@@ -30,9 +30,11 @@ public class Launcher {
             Thread.sleep(3000);
         }
 
-        try (InputStream input = Launcher.class.getResourceAsStream("/META-INF/MANIFEST.MF")) {
-            Manifest manifest = new Manifest(input);
-            String target = manifest.getMainAttributes().getValue("Arclight-Target");
+        try (InputStream input = Launcher.class.getResourceAsStream("/arclight-server-launch.properties")) {
+            Properties properties = new Properties();
+            properties.load(input);
+
+            String target = properties.getProperty("launch.mainClass");
             MethodHandle main = MethodHandles.lookup().findStatic(Class.forName(target), "main", MethodType.methodType(void.class, String[].class));
             main.invoke((Object) args);
         }

@@ -141,7 +141,6 @@ tasks.register('forgeJar', Jar) {
     manifest.attributes 'Implementation-Vendor': 'Arclight Team'
     manifest.attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd HH:mm:ss")
     manifest.attributes 'Automatic-Module-Name': 'arclight.boot'
-    manifest.attributes 'Arclight-Target': 'io.izzel.arclight.boot.forge.application.Main_Forge'
     from(configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }) {
         exclude "META-INF/MANIFEST.MF"
         exclude "META-INF/*.SF"
@@ -174,7 +173,6 @@ tasks.register('neoforgeJar', Jar) {
     manifest.attributes 'Implementation-Vendor': 'Arclight Team'
     manifest.attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd HH:mm:ss")
     manifest.attributes 'Automatic-Module-Name': 'arclight.boot'
-    manifest.attributes 'Arclight-Target': 'io.izzel.arclight.boot.neoforge.application.Main_Neoforge'
     from(configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }) {
         exclude "META-INF/MANIFEST.MF"
         exclude "META-INF/*.SF"
@@ -207,7 +205,6 @@ tasks.register('fabricJar', Jar) {
     manifest.attributes 'Implementation-Vendor': 'Arclight Team'
     manifest.attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd HH:mm:ss")
     manifest.attributes 'Automatic-Module-Name': 'arclight.boot'
-    manifest.attributes 'Arclight-Target': 'io.izzel.arclight.boot.fabric.application.Main_Fabric'
     from(configurations.embedFabric.collect { it.isDirectory() ? it : zipTree(it) })
     into('/') {
         it.from(project(':arclight-fabric').tasks.reobfJar.outputs.files.collect())
