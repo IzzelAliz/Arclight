@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.util;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 
 public class IteratorUtil {
@@ -14,30 +15,40 @@ public class IteratorUtil {
         private final Iterator<T> iterator;
         private final Predicate<T> predicate;
 
+        private boolean nextComputed = false;
         private boolean hasNext = false;
         private T next;
 
         private FilterIterator(Iterator<T> iterator, Predicate<T> predicate) {
             this.iterator = iterator;
             this.predicate = predicate;
-            this.computeNext();
         }
 
         @Override
         public boolean hasNext() {
+            if (!nextComputed) {
+                this.computeNext();
+            }
             return hasNext;
         }
 
         @Override
         public T next() {
+            if (!nextComputed) {
+                this.computeNext();
+            }
+            if (!hasNext) {
+                throw new NoSuchElementException();
+            }
             try {
                 return this.next;
             } finally {
-                computeNext();
+                nextComputed = false;
             }
         }
 
         private void computeNext() {
+            nextComputed = true;
             while (iterator.hasNext()) {
                 T next = iterator.next();
                 if (predicate.test(next)) {
