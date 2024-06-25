@@ -9,37 +9,37 @@ import java.security.MessageDigest;
 class Util {
 
     public static String mavenToPath(String maven) {
-        String type;
+        String fileType;
         if (maven.matches(".*@\\w+$")) {
             int i = maven.lastIndexOf('@');
-            type = maven.substring(i + 1);
+            fileType = maven.substring(i + 1);
             maven = maven.substring(0, i);
         } else {
-            type = "jar";
+            fileType = "jar";
         }
-        String[] arr = maven.split(":");
-        if (arr.length == 3) {
-            String pkg = arr[0].replace('.', '/');
-            return String.format("%s/%s/%s/%s-%s.%s", pkg, arr[1], arr[2], arr[1], arr[2], type);
-        } else if (arr.length == 4) {
-            String pkg = arr[0].replace('.', '/');
-            return String.format("%s/%s/%s/%s-%s-%s.%s", pkg, arr[1], arr[2], arr[1], arr[2], arr[3], type);
+        String[] coordinateParts = maven.split(":");
+        if (coordinateParts.length == 3) {
+            String packagePath = coordinateParts[0].replace('.', '/');
+            return String.format("%s/%s/%s/%s-%s.%s", packagePath, coordinateParts[1], coordinateParts[2], coordinateParts[1], coordinateParts[2], fileType);
+        } else if (coordinateParts.length == 4) {
+            String packagePath = coordinateParts[0].replace('.', '/');
+            return String.format("%s/%s/%s/%s-%s-%s.%s", packagePath, coordinateParts[1], coordinateParts[2], coordinateParts[1], coordinateParts[2], coordinateParts[3], fileType);
         } else throw new RuntimeException("Wrong maven coordinate " + maven);
     }
 
     private static final String SHA_PAD = String.format("%040d", 0);
 
-    public static String hash(String path) throws Exception {
-        return hash(new File(path).toPath());
+    public static String hash(String filePath) throws Exception {
+        return hash(new File(filePath).toPath());
     }
 
-    public static String hash(File path) throws Exception {
-        return hash(path.toPath());
+    public static String hash(File filePath) throws Exception {
+        return hash(filePath.toPath());
     }
 
-    public static String hash(Path path) throws Exception {
-        MessageDigest digest = MessageDigest.getInstance("SHA-1");
-        String hash = new BigInteger(1, digest.digest(Files.readAllBytes(path))).toString(16);
+    public static String hash(Path filePath) throws Exception {
+        MessageDigest messageDigest = MessageDigest.getInstance("SHA-1");
+        String hash = new BigInteger(1, messageDigest.digest(Files.readAllBytes(filePath))).toString(16);
         return (SHA_PAD + hash).substring(hash.length());
     }
 
