@@ -25,12 +25,12 @@ public class ArclightImplementer extends GameTransformer {
 
     public ArclightImplementer(GameTransformer delegate, FabricLauncher launcher) throws Exception {
         this.delegate = delegate;
-        Field field = launcher.getClass().getDeclaredField("classLoader");
-        field.setAccessible(true);
-        Object knotCl = field.get(launcher);
-        Method method = knotCl.getClass().getDeclaredMethod("getRawClassByteArray", String.class, boolean.class);
-        method.setAccessible(true);
-        this.getRawClassByteArray = MethodHandles.lookup().unreflect(method).bindTo(knotCl);
+        Field classLoaderField = launcher.getClass().getDeclaredField("classLoader");
+        classLoaderField.setAccessible(true);
+        Object knotClassLoader = classLoaderField.get(launcher);
+        Method getRawClassByteArrayMethod = knotClassLoader.getClass().getDeclaredMethod("getRawClassByteArray", String.class, boolean.class);
+        getRawClassByteArrayMethod.setAccessible(true);
+        this.getRawClassByteArray = MethodHandles.lookup().unreflect(getRawClassByteArrayMethod).bindTo(knotClassLoader);
         this.implementers.put("inventory", new InventoryImplementer());
         this.implementers.put("switch", SwitchTableFixer.INSTANCE);
         this.implementers.put("async", AsyncCatcher.INSTANCE);
@@ -48,27 +48,27 @@ public class ArclightImplementer extends GameTransformer {
 
     @Override
     public byte[] transform(String className) {
-        byte[] bytes = delegate.transform(className);
-        if (bytes == null) {
+        byte[] classBytes = delegate.transform(className);
+        if (classBytes == null) {
             try {
-                bytes = (byte[]) this.getRawClassByteArray.invokeExact(className, false);
+                classBytes = (byte[]) this.getRawClassByteArray.invokeExact(className, false);
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
         }
-        if (bytes != null) {
-            var reader = new ClassReader(bytes);
+        if (classBytes != null) {
+            var reader = new ClassReader(classBytes);
             var node = new ClassNode();
             reader.accept(node, 0);
-            for (var entry : implementers.entrySet()) {
-                var implementer = entry.getValue();
+            for (var implementerEntry : implementers.entrySet()) {
+                var implementer = implementerEntry.getValue();
                 implementer.processClass(node);
             }
-            var cw = new ClassWriter(0);
-            node.accept(cw);
-            bytes = cw.toByteArray();
+            var classWriter = new ClassWriter(0);
+            node.accept(classWriter);
+            classBytes = classWriter.toByteArray();
         }
-        return bytes;
+        return classBytes;
     }
 
     private static boolean detectTransformLogger() {
