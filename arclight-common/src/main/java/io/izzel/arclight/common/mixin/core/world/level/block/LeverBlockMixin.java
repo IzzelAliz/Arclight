@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.LeverBlock;
@@ -26,8 +26,8 @@ public class LeverBlockMixin {
     @Shadow @Final public static BooleanProperty POWERED;
     // @formatter:on
 
-    @Inject(method = "use", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/LeverBlock;pull(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;"))
-    public void arclight$blockRedstone(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "useWithoutItem", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/LeverBlock;pull(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/player/Player;)V"))
+    public void arclight$blockRedstone(BlockState state, Level worldIn, BlockPos pos, Player player, BlockHitResult hit, CallbackInfoReturnable<InteractionResult> cir) {
         boolean flag = state.getValue(POWERED);
         Block block = CraftBlock.at(worldIn, pos);
         int old = (flag) ? 15 : 0;
@@ -37,7 +37,7 @@ public class LeverBlockMixin {
         Bukkit.getPluginManager().callEvent(eventRedstone);
 
         if ((eventRedstone.getNewCurrent() > 0) == flag) {
-            cir.setReturnValue(true);
+            cir.setReturnValue(InteractionResult.SUCCESS);
         }
     }
 }

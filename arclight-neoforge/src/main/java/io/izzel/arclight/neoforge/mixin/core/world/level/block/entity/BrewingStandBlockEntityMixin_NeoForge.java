@@ -14,10 +14,4 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(BrewingStandBlockEntity.class)
 public class BrewingStandBlockEntityMixin_NeoForge {
 
-    @Inject(method = "doBrew", cancellable = true, at = @At("HEAD"))
-    private static void arclight$forgeBrew(Level arg, BlockPos arg2, NonNullList<ItemStack> stacks, CallbackInfo ci) {
-        if (EventHooks.onPotionAttemptBrew(stacks)) {
-            ci.cancel();
-        }
-    }
 }

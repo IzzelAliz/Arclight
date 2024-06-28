@@ -6,7 +6,9 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundMapItemDataPacket;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.saveddata.maps.MapDecoration;
+import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
+import org.bukkit.craftbukkit.v.map.CraftMapCursor;
 import org.bukkit.craftbukkit.v.map.RenderData;
 import org.bukkit.craftbukkit.v.util.CraftChatMessage;
 import org.bukkit.map.MapCursor;
@@ -41,7 +43,7 @@ public abstract class MapItemSavedData_HoldingPlayerMixin {
      */
     @Overwrite
     @Nullable
-    public Packet<?> nextUpdatePacket(int i) {
+    public Packet<?> nextUpdatePacket(MapId id) {
         RenderData render = ((MapDataBridge) outerThis).bridge$getMapView().render(((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity());
         MapItemSavedData.MapPatch patch;
         if (this.dirtyData) {
@@ -59,12 +61,12 @@ public abstract class MapItemSavedData_HoldingPlayerMixin {
             icons = new ArrayList<>();
             for (MapCursor cursor : render.cursors) {
                 if (cursor.isVisible()) {
-                    icons.add(new MapDecoration(MapDecoration.Type.byIcon(cursor.getRawType()), cursor.getX(), cursor.getY(), cursor.getDirection(), CraftChatMessage.fromStringOrNull(cursor.getCaption())));
+                    icons.add(new MapDecoration(CraftMapCursor.CraftType.bukkitToMinecraftHolder(cursor.getType()), cursor.getX(), cursor.getY(), cursor.getDirection(), CraftChatMessage.fromStringOrOptional(cursor.getCaption())));
                 }
             }
         } else {
             icons = null;
         }
-        return icons == null && patch == null ? null : new ClientboundMapItemDataPacket(i, outerThis.scale, outerThis.locked, icons, patch);
+        return icons == null && patch == null ? null : new ClientboundMapItemDataPacket(id, outerThis.scale, outerThis.locked, icons, patch);
     }
 }

@@ -7,6 +7,7 @@ import io.izzel.arclight.common.mod.mixins.MixinProcessor;
 import io.izzel.arclight.common.mod.mixins.RenameIntoProcessor;
 import io.izzel.arclight.common.mod.mixins.ShouldApplyProcessor;
 import io.izzel.arclight.common.mod.mixins.TransformAccessProcessor;
+import io.izzel.arclight.mixin.MixinTools;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -63,5 +64,6 @@ public class ArclightMixinPlugin implements IMixinConfigPlugin {
         for (var processor : this.postProcessors) {
             processor.accept(targetClassName, targetClass, mixinInfo);
         }
+        MixinTools.onPostMixin(targetClass);
     }
 }

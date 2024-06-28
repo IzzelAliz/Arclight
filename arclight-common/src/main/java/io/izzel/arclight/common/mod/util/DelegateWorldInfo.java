@@ -3,11 +3,13 @@ package io.izzel.arclight.common.mod.util;
 import com.mojang.serialization.Lifecycle;
 import io.izzel.arclight.common.bridge.core.world.storage.DerivedWorldInfoBridge;
 import io.izzel.arclight.common.bridge.core.world.storage.WorldInfoBridge;
+import net.minecraft.CrashReportCategory;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.levelgen.WorldOptions;
@@ -15,6 +17,7 @@ import net.minecraft.world.level.storage.DerivedLevelData;
 import net.minecraft.world.level.storage.PrimaryLevelData;
 import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.level.timers.TimerQueue;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -26,21 +29,6 @@ public class DelegateWorldInfo extends PrimaryLevelData {
     public DelegateWorldInfo(LevelSettings p_251081_, WorldOptions p_251666_, SpecialWorldProperty p_252268_, Lifecycle p_251714_, DerivedLevelData derivedLevelData) {
         super(p_251081_, p_251666_, p_252268_, p_251714_);
         this.derivedWorldInfo = derivedLevelData;
-    }
-
-    @Override
-    public int getXSpawn() {
-        return derivedWorldInfo.getXSpawn();
-    }
-
-    @Override
-    public int getYSpawn() {
-        return derivedWorldInfo.getYSpawn();
-    }
-
-    @Override
-    public int getZSpawn() {
-        return derivedWorldInfo.getZSpawn();
     }
 
     @Override
@@ -99,26 +87,6 @@ public class DelegateWorldInfo extends PrimaryLevelData {
     }
 
     @Override
-    public void setXSpawn(int x) {
-        derivedWorldInfo.setXSpawn(x);
-    }
-
-    @Override
-    public void setYSpawn(int y) {
-        derivedWorldInfo.setYSpawn(y);
-    }
-
-    @Override
-    public void setZSpawn(int z) {
-        derivedWorldInfo.setZSpawn(z);
-    }
-
-    @Override
-    public void setSpawnAngle(float angle) {
-        derivedWorldInfo.setSpawnAngle(angle);
-    }
-
-    @Override
     public void setGameTime(long time) {
         derivedWorldInfo.setGameTime(time);
     }
@@ -164,8 +132,8 @@ public class DelegateWorldInfo extends PrimaryLevelData {
     }
 
     @Override
-    public boolean getAllowCommands() {
-        return derivedWorldInfo.getAllowCommands();
+    public boolean isAllowCommands() {
+        return derivedWorldInfo.isAllowCommands();
     }
 
     @Override
@@ -228,9 +196,25 @@ public class DelegateWorldInfo extends PrimaryLevelData {
         derivedWorldInfo.setWanderingTraderSpawnChance(chance);
     }
 
+    @Nullable
+    @Override
+    public UUID getWanderingTraderId() {
+        return derivedWorldInfo.getWanderingTraderId();
+    }
+
     @Override
     public void setWanderingTraderId(UUID id) {
         derivedWorldInfo.setWanderingTraderId(id);
+    }
+
+    @Override
+    public void fillCrashReportCategory(CrashReportCategory crashReportCategory, LevelHeightAccessor levelHeightAccessor) {
+        derivedWorldInfo.fillCrashReportCategory(crashReportCategory, levelHeightAccessor);
+    }
+
+    @Override
+    public BlockPos getSpawnPos() {
+        return derivedWorldInfo.getSpawnPos();
     }
 
     public static DelegateWorldInfo wrap(DerivedLevelData worldInfo) {

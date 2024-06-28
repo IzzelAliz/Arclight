@@ -12,7 +12,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FallingBlock;
-import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.BlockState;
@@ -223,7 +222,7 @@ public abstract class MaterialMixin implements MaterialBridge {
     @Inject(method = "getCraftingRemainingItem", cancellable = true, at = @At("HEAD"))
     private void arclight$getCraftingRemainingItem(CallbackInfoReturnable<Material> cir) {
         if (arclight$spec != null && arclight$spec.craftingRemainingItem != null) {
-            cir.setReturnValue(CraftMagicNumbers.getMaterial(BuiltInRegistries.ITEM.get(new ResourceLocation(arclight$spec.craftingRemainingItem))));
+            cir.setReturnValue(CraftMagicNumbers.getMaterial(BuiltInRegistries.ITEM.get(ResourceLocation.parse(arclight$spec.craftingRemainingItem))));
         }
     }
 

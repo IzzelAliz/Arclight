@@ -10,8 +10,4 @@ import org.spongepowered.asm.mixin.Mixin;
 @Mixin(ServerCommonPacketListenerImpl.class)
 public abstract class ServerCommonPacketListenerImplMixin_Forge implements ServerCommonPacketListenerBridge {
 
-    @Override
-    public FriendlyByteBuf bridge$getDiscardedData(ServerboundCustomPayloadPacket packet) {
-        return packet.getInternalData();
-    }
 }

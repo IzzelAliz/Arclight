@@ -10,6 +10,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.AreaEffectCloud;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.player.Player;
@@ -45,7 +46,7 @@ public abstract class CreeperMixin extends PathfinderMobMixin implements Creeper
     @Shadow public abstract boolean isPowered();
     // @formatter:on
 
-    @Unique private Player entityIgniter; // CraftBukkit
+    @Unique public Player entityIgniter; // CraftBukkit
 
     @Inject(method = "mobInteract", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/Creeper;ignite()V"))
     private void arclight$catchIgniter(Player player, InteractionHand interactionHand, CallbackInfoReturnable<InteractionResult> cir) {
@@ -72,11 +73,12 @@ public abstract class CreeperMixin extends PathfinderMobMixin implements Creeper
             if (!event.isCancelled()) {
                 this.dead = true;
                 this.level().explode((Creeper) (Object) this,
-                    ((DamageSourceBridge) Explosion.getDefaultDamageSource(level(), (Creeper) (Object) this)).bridge$customCausingEntity(entityIgniter), null,
+                    ((DamageSourceBridge) Explosion.getDefaultDamageSource(level(), (Creeper) (Object) this)).bridge$customCausingEntityDamager(entityIgniter), null,
                     this.getX(), this.getY(), this.getZ(), event.getRadius(), event.getFire(), Level.ExplosionInteraction.MOB);
+                this.spawnLingeringCloud();
+                this.triggerOnDeathMobEffects(Entity.RemovalReason.KILLED);
                 this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.EXPLODE);
                 this.discard();
-                this.spawnLingeringCloud();
             } else {
                 this.swell = 0;
             }

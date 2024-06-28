@@ -34,9 +34,4 @@ public abstract class SculkCatalystBlockEntityMixin extends BlockEntityMixin {
     private static void arclight$resetSource(Level p_222780_, BlockPos p_222781_, BlockState p_222782_, SculkCatalystBlockEntity blockEntity, CallbackInfo ci) {
         CraftEventFactory.sourceBlockOverride = null;
     }
-
-    @Inject(method = "load", at = @At("HEAD"))
-    private void arclight$load(CompoundTag p_277597_, CallbackInfo ci) {
-        super.load(p_277597_);
-    }
 }

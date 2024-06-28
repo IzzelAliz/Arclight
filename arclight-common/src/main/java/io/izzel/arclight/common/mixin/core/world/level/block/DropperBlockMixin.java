@@ -1,88 +1,43 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
-import net.minecraft.core.BlockPos;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.Direction;
-import net.minecraft.core.dispenser.BlockSource;
-import net.minecraft.core.dispenser.DispenseItemBehavior;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.CompoundContainer;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.DispenserBlock;
 import net.minecraft.world.level.block.DropperBlock;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.entity.DispenserBlockEntity;
-import net.minecraft.world.level.block.entity.HopperBlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryDoubleChest;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.inventory.Inventory;
-import org.slf4j.Logger;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(DropperBlock.class)
 public abstract class DropperBlockMixin extends BlockMixin {
 
-    @Shadow @Final private static DispenseItemBehavior DISPENSE_BEHAVIOUR;
-    @Shadow @Final private static Logger LOGGER;
-
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    public void dispenseFrom(ServerLevel worldIn, BlockState state, BlockPos pos) {
-        DispenserBlockEntity dispensertileentity = worldIn.getBlockEntity(pos, BlockEntityType.DROPPER).orElse(null);
-
-        if (dispensertileentity == null) {
-            LOGGER.warn("Ignoring dispensing attempt for Dropper without matching block entity at {}", pos);
+    @Decorate(method = "dispenseFrom", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/HopperBlockEntity;addItem(Lnet/minecraft/world/Container;Lnet/minecraft/world/Container;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/core/Direction;)Lnet/minecraft/world/item/ItemStack;"))
+    private ItemStack arclight$moveItemEvent(Container from, Container to, ItemStack stack, Direction direction) throws Throwable {
+        CraftItemStack craftItemStack = CraftItemStack.asCraftMirror(stack);
+        Inventory destinationInventory;
+        // Have to special case large chests as they work oddly
+        if (to instanceof CompoundContainer) {
+            destinationInventory = new CraftInventoryDoubleChest((CompoundContainer) to);
         } else {
-            BlockSource blocksource = new BlockSource(worldIn, pos, state, dispensertileentity);
-
-            int i = dispensertileentity.getRandomSlot(worldIn.getRandom());
-            if (i < 0) {
-                worldIn.levelEvent(1001, pos, 0);
-            } else {
-                ItemStack itemstack = dispensertileentity.getItem(i);
-                if (!itemstack.isEmpty() && this.bridge$forge$dropperInsertHook(worldIn, pos, dispensertileentity, i, itemstack)) {
-                    Direction direction = worldIn.getBlockState(pos).getValue(DispenserBlock.FACING);
-                    Container iinventory = HopperBlockEntity.getContainerAt(worldIn, pos.relative(direction));
-                    ItemStack itemstack1;
-                    if (iinventory == null) {
-                        itemstack1 = DISPENSE_BEHAVIOUR.dispense(blocksource, itemstack);
-                    } else {
-                        ItemStack split = itemstack.copy().split(1);
-                        CraftItemStack craftItemStack = CraftItemStack.asCraftMirror(split);
-                        Inventory destinationInventory;
-                        // Have to special case large chests as they work oddly
-                        if (iinventory instanceof CompoundContainer) {
-                            destinationInventory = new CraftInventoryDoubleChest((CompoundContainer) iinventory);
-                        } else {
-                            destinationInventory = ((IInventoryBridge) iinventory).getOwnerInventory();
-                        }
-                        InventoryMoveItemEvent event = new InventoryMoveItemEvent(((IInventoryBridge) dispensertileentity).getOwner().getInventory(), craftItemStack, destinationInventory, true);
-                        Bukkit.getPluginManager().callEvent(event);
-                        if (event.isCancelled()) {
-                            return;
-                        }
-                        itemstack1 = HopperBlockEntity.addItem(dispensertileentity, iinventory, CraftItemStack.asNMSCopy(event.getItem()), direction.getOpposite());
-                        if (event.getItem().equals(craftItemStack) && itemstack1.isEmpty()) {
-                            itemstack1 = itemstack.copy();
-                            itemstack1.shrink(1);
-                        } else {
-                            itemstack1 = itemstack.copy();
-                        }
-                    }
-
-                    dispensertileentity.setItem(i, itemstack1);
-                }
-            }
+            destinationInventory = ((IInventoryBridge) to).getOwnerInventory();
         }
+        InventoryMoveItemEvent event = new InventoryMoveItemEvent(((IInventoryBridge) from).getOwner().getInventory(), craftItemStack, destinationInventory, true);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return (ItemStack) DecorationOps.cancel().invoke();
+        }
+        var result = (ItemStack) DecorationOps.callsite().invoke(from, to, CraftItemStack.asNMSCopy(event.getItem()), direction);
+        if (result.isEmpty() && !event.getItem().equals(craftItemStack)) {
+            result = stack.copyWithCount(1);
+        }
+        return result;
     }
 }

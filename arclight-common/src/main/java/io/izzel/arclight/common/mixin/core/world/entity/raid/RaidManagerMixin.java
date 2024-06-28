@@ -26,9 +26,9 @@ public class RaidManagerMixin {
     @Shadow @Final public Map<Integer, Raid> raidMap;
     // @formatter:on
 
-    @Inject(method = "createOrExtendRaid", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/raid/Raid;absorbBadOmen(Lnet/minecraft/world/entity/player/Player;)V"))
-    public void arclight$raidTrigger(ServerPlayer playerEntity, CallbackInfoReturnable<Raid> cir,
-                                     DimensionType dimensionType, BlockPos pos, BlockPos pos1, List<?> list, int i, Vec3 vec, Raid raid) {
+    @Inject(method = "createOrExtendRaid", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/raid/Raid;absorbRaidOmen(Lnet/minecraft/server/level/ServerPlayer;)Z"))
+    public void arclight$raidTrigger(ServerPlayer playerEntity, BlockPos pos, CallbackInfoReturnable<Raid> cir,
+                                     DimensionType dimensionType, List<?> list, int i, Vec3 vec, BlockPos pos1, Raid raid) {
         if (!CraftEventFactory.callRaidTriggerEvent(raid, playerEntity)) {
             playerEntity.removeEffect(MobEffects.BAD_OMEN);
             this.raidMap.remove(raid.getId(), raid);

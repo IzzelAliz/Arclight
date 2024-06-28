@@ -15,13 +15,25 @@ public interface DamageSourceBridge {
 
     Entity bridge$getCausingEntity();
 
+    Entity bridge$getCausingEntityDamager();
+
     DamageSource bridge$customCausingEntity(Entity entity);
 
     DamageSource bridge$setCustomCausingEntity(Entity entity);
+
+    DamageSource bridge$customCausingEntityDamager(Entity entity);
+
+    DamageSource bridge$setCustomCausingEntityDamager(Entity entity);
 
     org.bukkit.block.Block bridge$directBlock();
 
     DamageSource bridge$directBlock(org.bukkit.block.Block block);
 
     DamageSource bridge$setDirectBlock(org.bukkit.block.Block block);
+
+    org.bukkit.block.BlockState bridge$directBlockState();
+
+    DamageSource bridge$directBlockState(org.bukkit.block.BlockState block);
+
+    DamageSource bridge$setDirectBlockState(org.bukkit.block.BlockState block);
 }

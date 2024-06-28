@@ -9,7 +9,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.alchemy.PotionBrewing;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -32,8 +31,6 @@ public interface WorldBridge extends IWorldWriterBridge, IWorldBridge, InjectLev
     CraftWorld bridge$getWorld();
 
     boolean bridge$isPvpMode();
-
-    boolean bridge$isKeepSpawnInMemory();
 
     boolean bridge$isPopulating();
 
@@ -63,10 +60,6 @@ public interface WorldBridge extends IWorldWriterBridge, IWorldBridge, InjectLev
 
     default boolean bridge$forge$mobGriefing(Entity entity) {
         return ((Level) this).getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
-    }
-
-    default ItemStack bridge$forge$potionBrewMix(ItemStack a, ItemStack b) {
-        return PotionBrewing.mix(a, b);
     }
 
     default void bridge$forge$onPotionBrewed(NonNullList<ItemStack> stacks) {}

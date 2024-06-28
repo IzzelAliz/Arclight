@@ -51,7 +51,7 @@ public abstract class NaturalSpawnerMixin {
             SpawnCategory spawnCategory = CraftSpawnCategory.toBukkit(classification);
             if (CraftSpawnCategory.isValidForLimits(spawnCategory)) {
                 spawnThisTick = ((WorldBridge) world).bridge$ticksPerSpawnCategory().getLong(spawnCategory) != 0 && worldInfo.getGameTime() % ((WorldBridge) world).bridge$ticksPerSpawnCategory().getLong(spawnCategory) == 0;
-                limit = ((WorldBridge) world).bridge$getWorld().getSpawnLimit(spawnCategory);
+                limit = world.bridge$getWorld().getSpawnLimit(spawnCategory);
             }
             if (spawnThisTick) {
                 if (limit != 0) {

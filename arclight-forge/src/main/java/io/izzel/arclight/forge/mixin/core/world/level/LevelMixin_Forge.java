@@ -12,7 +12,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
 import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.event.ForgeEventFactory;
 import org.bukkit.Bukkit;
@@ -70,11 +69,6 @@ public abstract class LevelMixin_Forge implements WorldBridge {
     @Override
     public boolean bridge$forge$mobGriefing(Entity entity) {
         return ForgeEventFactory.getMobGriefingEvent((Level) (Object) this, entity);
-    }
-
-    @Override
-    public ItemStack bridge$forge$potionBrewMix(ItemStack a, ItemStack b) {
-        return BrewingRecipeRegistry.getOutput(a, b);
     }
 
     @Override

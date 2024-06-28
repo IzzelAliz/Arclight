@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -12,10 +14,8 @@ import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.block.BlockRedstoneEvent;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(SculkSensorBlock.class)
@@ -46,20 +46,15 @@ public class SculkSensorBlockMixin {
         }
     }
 
-    @Unique private int newCurrent;
-
-    @Inject(method = "activate", cancellable = true, at = @At("HEAD"))
-    private void arclight$activate(Entity p_222126_, Level level, BlockPos pos, BlockState state, int i, int j, CallbackInfo ci) {
+    @Decorate(method = "activate", inject = true, at = @At("HEAD"))
+    private void arclight$activate(Entity p_222126_, Level level, BlockPos pos, BlockState state, int i, int j) throws Throwable {
         BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(CraftBlock.at(level, pos), state.getValue(SculkSensorBlock.POWER), i);
         Bukkit.getPluginManager().callEvent(eventRedstone);
         if (eventRedstone.getNewCurrent() <= 0) {
-            ci.cancel();
+            DecorationOps.cancel().invoke();
+            return;
         }
-        newCurrent = eventRedstone.getNewCurrent();
-    }
-
-    @ModifyVariable(method = "activate", ordinal = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"), argsOnly = true)
-    private int arclight$updateCurrent(int old) {
-        return newCurrent;
+        i = eventRedstone.getNewCurrent();
+        DecorationOps.blackhole().invoke(i);
     }
 }

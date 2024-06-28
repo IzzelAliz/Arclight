@@ -21,9 +21,9 @@ public abstract class WolfMixin extends TameableAnimalMixin {
     private void arclight$handledBy(Wolf wolfEntity, boolean p_233687_1_) {
     }
 
-    @Inject(method = "setTame", at = @At("RETURN"))
-    private void arclight$healToMax(boolean tamed, CallbackInfo ci) {
-        if (tamed) {
+    @Inject(method = "applyTamingSideEffects", at = @At("RETURN"))
+    private void arclight$healToMax(CallbackInfo ci) {
+        if (this.isTame()) {
             this.setHealth(this.getMaxHealth());
         }
     }
@@ -38,7 +38,7 @@ public abstract class WolfMixin extends TameableAnimalMixin {
         bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.FORGOT_TARGET, true);
     }
 
-    @Redirect(method = "mobInteract", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/RandomSource;nextInt(I)I"))
+    @Redirect(method = "tryToTame", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/RandomSource;nextInt(I)I"))
     private int arclight$tame(RandomSource instance, int i, Player player) {
         var ret = instance.nextInt(i);
         return ret == 0 && this.bridge$common$animalTameEvent(player) ? ret : 1;

@@ -18,6 +18,7 @@
     "bukkit.CraftHumanEntityMixin_Fabric",
     "bukkit.CraftServerMixin_Fabric",
     "core.network.ServerCommonPacketListenerImplMixin_Fabric",
+    "core.network.ServerConfigurationPacketListenerImplMixin_Fabric",
     "core.network.ServerLoginNetHandlerMixin_Fabric",
     "core.world.entity.EntityMixin_Fabric",
     "core.world.entity.LivingEntityMixin_Fabric",

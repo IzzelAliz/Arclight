@@ -6,28 +6,23 @@ import com.mojang.util.UndashedUuid;
 import io.izzel.arclight.common.bridge.core.network.NetworkManagerBridge;
 import io.izzel.arclight.common.bridge.core.network.handshake.ServerHandshakeNetHandlerBridge;
 import io.izzel.arclight.common.mod.util.VelocitySupport;
-import net.minecraft.SharedConstants;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.handshake.ClientIntent;
 import net.minecraft.network.protocol.handshake.ClientIntentionPacket;
 import net.minecraft.network.protocol.login.ClientboundLoginDisconnectPacket;
-import net.minecraft.network.protocol.status.ServerStatus;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerHandshakePacketListenerImpl;
-import net.minecraft.server.network.ServerLoginPacketListenerImpl;
-import net.minecraft.server.network.ServerStatusPacketListenerImpl;
 import org.apache.logging.log4j.LogManager;
 import org.bukkit.Bukkit;
 import org.spigotmc.SpigotConfig;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.text.MessageFormat;
 import java.util.HashMap;
 
 @Mixin(ServerHandshakePacketListenerImpl.class)
@@ -40,100 +35,68 @@ public abstract class ServerHandshakeNetHandlerMixin implements ServerHandshakeN
 
     // @formatter:off
     @Shadow @Final private Connection connection;
-    @Shadow @Final private MinecraftServer server;
-    @Shadow @Final private static Component IGNORE_STATUS_REASON;
     // @formatter:on
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    public void handleIntention(ClientIntentionPacket packetIn) {
-        if (!bridge$forge$handleSpecialLogin(packetIn)) {
+    @Inject(method = "handleIntention", at = @At("HEAD"))
+    private void arclight$setHostName(ClientIntentionPacket packet, CallbackInfo ci) {
+        // TODO
+        if (!bridge$forge$handleSpecialLogin(packet)) {
             return;
         }
-        ((NetworkManagerBridge) this.connection).bridge$setHostname(packetIn.hostName() + ":" + packetIn.port());
-        switch (packetIn.intention()) {
-            case LOGIN: {
-                this.connection.setClientboundProtocolAfterHandshake(ClientIntent.LOGIN);
+        ((NetworkManagerBridge) this.connection).bridge$setHostname(packet.hostName() + ":" + packet.port());
+    }
 
-                try {
-                    long currentTime = System.currentTimeMillis();
-                    long connectionThrottle = Bukkit.getServer().getConnectionThrottle();
-                    InetAddress address = ((InetSocketAddress) this.connection.getRemoteAddress()).getAddress();
-                    synchronized (throttleTracker) {
-                        if (throttleTracker.containsKey(address) && !"127.0.0.1".equals(address.getHostAddress()) && currentTime - throttleTracker.get(address) < connectionThrottle) {
-                            throttleTracker.put(address, currentTime);
-                            var component = Component.literal("Connection throttled! Please wait before reconnecting.");
-                            this.connection.send(new ClientboundLoginDisconnectPacket(component));
-                            this.connection.disconnect(component);
-                            return;
-                        }
-                        throttleTracker.put(address, currentTime);
-                        ++throttleCounter;
-                        if (throttleCounter > 200) {
-                            throttleCounter = 0;
-                            throttleTracker.entrySet().removeIf(entry -> entry.getValue() > connectionThrottle);
-                        }
-                    }
-                } catch (Throwable t) {
-                    LogManager.getLogger().debug("Failed to check connection throttle", t);
-                }
-
-
-                if (packetIn.protocolVersion() > SharedConstants.getCurrentVersion().getProtocolVersion()) {
-                    var component = Component.translatable(MessageFormat.format(SpigotConfig.outdatedServerMessage.replaceAll("'", "''"), SharedConstants.getCurrentVersion().getName()));
+    @Inject(method = "beginLogin", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/network/Connection;setupOutboundProtocol(Lnet/minecraft/network/ProtocolInfo;)V"))
+    private void arclight$throttler(ClientIntentionPacket packet, boolean bl, CallbackInfo ci) {
+        try {
+            long currentTime = System.currentTimeMillis();
+            long connectionThrottle = Bukkit.getServer().getConnectionThrottle();
+            InetAddress address = ((InetSocketAddress) this.connection.getRemoteAddress()).getAddress();
+            synchronized (throttleTracker) {
+                if (throttleTracker.containsKey(address) && !"127.0.0.1".equals(address.getHostAddress()) && currentTime - throttleTracker.get(address) < connectionThrottle) {
+                    throttleTracker.put(address, currentTime);
+                    var component = Component.literal("Connection throttled! Please wait before reconnecting.");
                     this.connection.send(new ClientboundLoginDisconnectPacket(component));
                     this.connection.disconnect(component);
-                    break;
+                    ci.cancel();
+                    return;
                 }
-                if (packetIn.protocolVersion() < SharedConstants.getCurrentVersion().getProtocolVersion()) {
-                    var component = Component.translatable(MessageFormat.format(SpigotConfig.outdatedClientMessage.replaceAll("'", "''"), SharedConstants.getCurrentVersion().getName()));
-                    this.connection.send(new ClientboundLoginDisconnectPacket(component));
-                    this.connection.disconnect(component);
-                    break;
+                throttleTracker.put(address, currentTime);
+                ++throttleCounter;
+                if (throttleCounter > 200) {
+                    throttleCounter = 0;
+                    throttleTracker.entrySet().removeIf(entry -> entry.getValue() > connectionThrottle);
                 }
-                this.connection.setListener(new ServerLoginPacketListenerImpl(this.server, this.connection));
-
-                if (!VelocitySupport.isEnabled()) {
-                    String[] split = packetIn.hostName().split("\00");
-                    if (SpigotConfig.bungee) {
-                        if ((split.length == 3 || split.length == 4) && (HOST_PATTERN.matcher(split[1]).matches())) {
-                            ((NetworkManagerBridge) this.connection).bridge$setHostname(split[0]);
-                            this.connection.address = new InetSocketAddress(split[1], ((InetSocketAddress) this.connection.getRemoteAddress()).getPort());
-                            ((NetworkManagerBridge) this.connection).bridge$setSpoofedUUID(UndashedUuid.fromStringLenient(split[2]));
-                        } else {
-                            var component = Component.literal("If you wish to use IP forwarding, please enable it in your BungeeCord config as well!");
-                            this.connection.send(new ClientboundLoginDisconnectPacket(component));
-                            this.connection.disconnect(component);
-                            return;
-                        }
-                        if (split.length == 4) {
-                            ((NetworkManagerBridge) this.connection).bridge$setSpoofedProfile(gson.fromJson(split[3], Property[].class));
-                        }
-                    } else if ((split.length == 3 || split.length == 4) && (HOST_PATTERN.matcher(split[1]).matches())) {
-                        Component component = Component.literal("Unknown data in login hostname, did you forget to enable BungeeCord in spigot.yml?");
-                        this.connection.send(new ClientboundLoginDisconnectPacket(component));
-                        this.connection.disconnect(component);
-                        return;
-                    }
-                }
-
-                break;
             }
-            case STATUS: {
-                ServerStatus serverstatus = this.server.getStatus();
-                if (this.server.repliesToStatus() && serverstatus != null) {
-                    this.connection.setClientboundProtocolAfterHandshake(ClientIntent.STATUS);
-                    this.connection.setListener(new ServerStatusPacketListenerImpl(serverstatus, this.connection));
+        } catch (Throwable t) {
+            LogManager.getLogger().debug("Failed to check connection throttle", t);
+        }
+    }
+
+    @Inject(method = "beginLogin", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/network/Connection;setupInboundProtocol(Lnet/minecraft/network/ProtocolInfo;Lnet/minecraft/network/PacketListener;)V"))
+    private void arclight$proxySupport(ClientIntentionPacket packet, boolean bl, CallbackInfo ci) {
+        if (!VelocitySupport.isEnabled()) {
+            String[] split = packet.hostName().split("\00");
+            if (SpigotConfig.bungee) {
+                if ((split.length == 3 || split.length == 4) && (HOST_PATTERN.matcher(split[1]).matches())) {
+                    ((NetworkManagerBridge) this.connection).bridge$setHostname(split[0]);
+                    this.connection.address = new InetSocketAddress(split[1], ((InetSocketAddress) this.connection.getRemoteAddress()).getPort());
+                    ((NetworkManagerBridge) this.connection).bridge$setSpoofedUUID(UndashedUuid.fromStringLenient(split[2]));
                 } else {
-                    this.connection.disconnect(IGNORE_STATUS_REASON);
+                    var component = Component.literal("If you wish to use IP forwarding, please enable it in your BungeeCord config as well!");
+                    this.connection.send(new ClientboundLoginDisconnectPacket(component));
+                    this.connection.disconnect(component);
+                    ci.cancel();
+                    return;
                 }
-                break;
-            }
-            default: {
-                throw new UnsupportedOperationException("Invalid intention " + packetIn.intention());
+                if (split.length == 4) {
+                    ((NetworkManagerBridge) this.connection).bridge$setSpoofedProfile(gson.fromJson(split[3], Property[].class));
+                }
+            } else if ((split.length == 3 || split.length == 4) && (HOST_PATTERN.matcher(split[1]).matches())) {
+                Component component = Component.literal("Unknown data in login hostname, did you forget to enable BungeeCord in spigot.yml?");
+                this.connection.send(new ClientboundLoginDisconnectPacket(component));
+                this.connection.disconnect(component);
+                ci.cancel();
             }
         }
     }

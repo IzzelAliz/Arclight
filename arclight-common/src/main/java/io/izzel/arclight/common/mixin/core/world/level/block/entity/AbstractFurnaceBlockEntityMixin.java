@@ -3,7 +3,10 @@ package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.tileentity.AbstractFurnaceTileEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeHolderBridge;
-import io.izzel.arclight.mixin.Eject;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import io.izzel.arclight.mixin.Local;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
@@ -26,6 +29,7 @@ import org.bukkit.craftbukkit.v.inventory.CraftItemType;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.FurnaceBurnEvent;
 import org.bukkit.event.inventory.FurnaceExtractEvent;
+import org.bukkit.event.inventory.FurnaceSmeltEvent;
 import org.bukkit.event.inventory.FurnaceStartSmeltEvent;
 import org.bukkit.inventory.CookingRecipe;
 import org.bukkit.inventory.InventoryHolder;
@@ -33,11 +37,8 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,24 +57,48 @@ public abstract class AbstractFurnaceBlockEntityMixin extends LockableBlockEntit
     public List<HumanEntity> transaction = new ArrayList<>();
     private int maxStack = MAX_STACK;
 
-    @Eject(method = "serverTick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;isLit()Z"),
-        slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;litDuration:I")))
-    private static boolean arclight$setBurnTime(AbstractFurnaceBlockEntity furnace, CallbackInfo ci) {
-        ItemStack itemStack = furnace.getItem(1);
-        CraftItemStack fuel = CraftItemStack.asCraftMirror(itemStack);
-        FurnaceBurnEvent furnaceBurnEvent = new FurnaceBurnEvent(CraftBlock.at(furnace.level, furnace.getBlockPos()), fuel, ((AbstractFurnaceTileEntityBridge) furnace).bridge$getBurnDuration(itemStack));
-        Bukkit.getPluginManager().callEvent(furnaceBurnEvent);
+    @SuppressWarnings("unchecked")
+    @Decorate(method = "burn", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/core/NonNullList;get(I)Ljava/lang/Object;"))
+    private static <E> E arclight$furnaceSmelt(NonNullList<E> instance, int i, @Local(ordinal = -1) ItemStack itemStack2, @Local(ordinal = -2) ItemStack itemStack1) throws Throwable {
+        var blockEntity = ArclightCaptures.getTickingBlockEntity();
+        if (blockEntity != null) {
+            CraftItemStack source = CraftItemStack.asCraftMirror(itemStack1);
+            org.bukkit.inventory.ItemStack result = CraftItemStack.asBukkitCopy(itemStack2);
 
-        if (furnaceBurnEvent.isCancelled()) {
-            ci.cancel();
-            return false;
+            FurnaceSmeltEvent furnaceSmeltEvent = new FurnaceSmeltEvent(CraftBlock.at(blockEntity.getLevel(), blockEntity.getBlockPos()), source, result);
+            Bukkit.getPluginManager().callEvent(furnaceSmeltEvent);
+
+            if (furnaceSmeltEvent.isCancelled()) {
+                return (E) DecorationOps.cancel().invoke(false);
+            }
+
+            result = furnaceSmeltEvent.getResult();
+            itemStack2 = CraftItemStack.asNMSCopy(result);
+            if (itemStack2.isEmpty()) {
+                itemStack1.shrink(1);
+                return (E) DecorationOps.cancel().invoke(true);
+            }
         }
-        return ((AbstractFurnaceTileEntityBridge) furnace).bridge$isLit() && furnaceBurnEvent.isBurning();
+        return (E) DecorationOps.callsite().invoke(instance, i);
     }
 
-    @Inject(method = "serverTick", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "FIELD", ordinal = 0, target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;cookingProgress:I"))
-    private static void arclight$startSmelt(Level level, BlockPos pos, BlockState state, AbstractFurnaceBlockEntity furnace, CallbackInfo ci,
-                                            boolean flag, boolean flag1, ItemStack stack, boolean flag2, boolean flag3, RecipeHolder<?> recipe) {
+    @Decorate(method = "serverTick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;isLit()Z"),
+        slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;litDuration:I")))
+    private static boolean arclight$setBurnTime(AbstractFurnaceBlockEntity furnace) throws Throwable {
+        ItemStack itemStack = furnace.getItem(1);
+        CraftItemStack fuel = CraftItemStack.asCraftMirror(itemStack);
+        FurnaceBurnEvent furnaceBurnEvent = new FurnaceBurnEvent(CraftBlock.at(furnace.level, furnace.getBlockPos()), fuel, furnace.litTime);
+        Bukkit.getPluginManager().callEvent(furnaceBurnEvent);
+        if (furnaceBurnEvent.isCancelled()) {
+            return (boolean) DecorationOps.cancel().invoke();
+        }
+        furnace.litTime = furnaceBurnEvent.getBurnTime();
+        return (boolean) DecorationOps.callsite().invoke(furnace) && furnaceBurnEvent.isBurning();
+    }
+
+    @Decorate(method = "serverTick", inject = true, at = @At(value = "FIELD", ordinal = 0, target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;cookingProgress:I"))
+    private static void arclight$startSmelt(Level level, BlockPos pos, BlockState state, AbstractFurnaceBlockEntity furnace,
+                                            @Local(ordinal = -1) RecipeHolder<?> recipe) {
         if (recipe != null && furnace.cookingProgress == 0) {
             CraftItemStack source = CraftItemStack.asCraftMirror(furnace.getItem(0));
             if (((RecipeHolderBridge) (Object) recipe).bridge$toBukkitRecipe() instanceof CookingRecipe<?> cookingRecipe) {

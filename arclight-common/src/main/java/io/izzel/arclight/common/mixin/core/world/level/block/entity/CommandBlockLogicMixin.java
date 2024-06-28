@@ -4,24 +4,16 @@ import com.google.common.base.Joiner;
 import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.BaseCommandBlock;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.event.server.ServerCommandEvent;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BaseCommandBlock.class)
 public class CommandBlockLogicMixin {
-
-    // @formatter:off
-    @Shadow private Component name;
-    // @formatter:on
 
     @Redirect(method = "performCommand", at = @At(value = "INVOKE", target = "Lnet/minecraft/commands/Commands;performPrefixedCommand(Lnet/minecraft/commands/CommandSourceStack;Ljava/lang/String;)V"))
     private void arclight$serverCommand(Commands commands, CommandSourceStack sender, String command) {
@@ -54,12 +46,5 @@ public class CommandBlockLogicMixin {
         }
 
         commands.performPrefixedCommand(sender, joiner.join(args));
-    }
-
-    @Inject(method = "setName", at = @At("RETURN"))
-    public void arclight$setName(Component nameIn, CallbackInfo ci) {
-        if (this.name == null) {
-            this.name = Component.literal("@");
-        }
     }
 }

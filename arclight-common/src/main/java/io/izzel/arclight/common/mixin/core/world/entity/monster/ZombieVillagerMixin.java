@@ -19,7 +19,7 @@ import java.util.UUID;
 @Mixin(net.minecraft.world.entity.monster.ZombieVillager.class)
 public abstract class ZombieVillagerMixin extends ZombieMixin {
 
-    @Inject(method = "startConverting", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/ZombieVillager;removeEffect(Lnet/minecraft/world/effect/MobEffect;)Z"))
+    @Inject(method = "startConverting", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/ZombieVillager;removeEffect(Lnet/minecraft/core/Holder;)Z"))
     private void arclight$convert1(UUID conversionStarterIn, int conversionTimeIn, CallbackInfo ci) {
         this.persist = true;
         bridge$pushEffectCause(EntityPotionEffectEvent.Cause.CONVERSION);
@@ -42,12 +42,12 @@ public abstract class ZombieVillagerMixin extends ZombieMixin {
         return t;
     }
 
-    @Inject(method = "finishConversion", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/ZombieVillager;spawnAtLocation(Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/entity/item/ItemEntity;"))
+    @Inject(method = "finishConversion", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/ZombieVillager;dropPreservedEquipment(Ljava/util/function/Predicate;)Ljava/util/Set;"))
     private void arclight$dropPre(ServerLevel world, CallbackInfo ci) {
         this.forceDrops = true;
     }
 
-    @Inject(method = "finishConversion", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/monster/ZombieVillager;spawnAtLocation(Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/entity/item/ItemEntity;"))
+    @Inject(method = "finishConversion", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/monster/ZombieVillager;dropPreservedEquipment(Ljava/util/function/Predicate;)Ljava/util/Set;"))
     private void arclight$dropPost(ServerLevel world, CallbackInfo ci) {
         this.forceDrops = false;
     }

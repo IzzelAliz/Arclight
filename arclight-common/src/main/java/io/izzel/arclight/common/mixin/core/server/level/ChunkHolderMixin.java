@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
-import com.mojang.datafixers.util.Either;
 import io.izzel.arclight.common.bridge.core.world.chunk.ChunkBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ChunkHolderBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ChunkMapBridge;
@@ -10,12 +9,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ChunkLevel;
 import net.minecraft.server.level.ChunkMap;
+import net.minecraft.server.level.ChunkResult;
 import net.minecraft.server.level.FullChunkStatus;
+import net.minecraft.server.level.GenerationChunkHolder;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,29 +29,27 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 @Mixin(ChunkHolder.class)
-public abstract class ChunkHolderMixin implements ChunkHolderBridge {
+public abstract class ChunkHolderMixin extends GenerationChunkHolder implements ChunkHolderBridge {
 
     // @formatter:off
     @Shadow public int oldTicketLevel;
-    @Shadow public abstract CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> getFutureIfPresentUnchecked(ChunkStatus p_219301_1_);
-    @Shadow @Final ChunkPos pos;
     @Shadow @Final private ShortSet[] changedBlocksPerSection;
     @Shadow @Final private LevelHeightAccessor levelHeightAccessor;
     @Shadow private int ticketLevel;
-    @Override @Accessor("oldTicketLevel") public abstract int bridge$getOldTicketLevel();
+    @Shadow public abstract CompletableFuture<ChunkResult<LevelChunk>> getFullChunkFuture();@Override @Accessor("oldTicketLevel") public abstract int bridge$getOldTicketLevel();
     // @formatter:on
 
+    public ChunkHolderMixin(ChunkPos chunkPos) {
+        super(chunkPos);
+    }
+
     public LevelChunk getFullChunkNow() {
-        if (!ChunkLevel.fullStatus(this.oldTicketLevel).isOrAfter(FullChunkStatus.FULL)) {
-            return null; // note: using oldTicketLevel for isLoaded checks
-        }
+        if (!ChunkLevel.fullStatus(this.oldTicketLevel).isOrAfter(FullChunkStatus.FULL)) return null;
         return this.getFullChunkNowUnchecked();
     }
 
     public LevelChunk getFullChunkNowUnchecked() {
-        CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> statusFuture = this.getFutureIfPresentUnchecked(ChunkStatus.FULL);
-        Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure> either = statusFuture.getNow(null);
-        return (either == null) ? null : (LevelChunk) either.left().orElse(null);
+        return (LevelChunk) this.getChunkIfPresentUnchecked(ChunkStatus.FULL);
     }
 
     @Override
@@ -78,8 +76,8 @@ public abstract class ChunkHolderMixin implements ChunkHolderBridge {
         FullChunkStatus fullChunkStatus = ChunkLevel.fullStatus(this.oldTicketLevel);
         FullChunkStatus fullChunkStatus2 = ChunkLevel.fullStatus(this.ticketLevel);
         if (fullChunkStatus.isOrAfter(FullChunkStatus.FULL) && !fullChunkStatus2.isOrAfter(FullChunkStatus.FULL)) {
-            this.getFutureIfPresentUnchecked(ChunkStatus.FULL).thenAccept((either) -> {
-                LevelChunk chunk = (LevelChunk) either.left().orElse(null);
+            this.getFullChunkFuture().thenAccept((either) -> {
+                LevelChunk chunk = either.orElse(null);
                 if (chunk != null) {
                     ((ChunkMapBridge) chunkManager).bridge$getCallbackExecutor().execute(() -> {
                         chunk.setUnsaved(true);
@@ -103,8 +101,8 @@ public abstract class ChunkHolderMixin implements ChunkHolderBridge {
         FullChunkStatus fullChunkStatus2 = ChunkLevel.fullStatus(this.ticketLevel);
         this.oldTicketLevel = this.ticketLevel;
         if (!fullChunkStatus.isOrAfter(FullChunkStatus.FULL) && fullChunkStatus2.isOrAfter(FullChunkStatus.FULL)) {
-            this.getFutureIfPresentUnchecked(ChunkStatus.FULL).thenAccept((either) -> {
-                LevelChunk chunk = (LevelChunk) either.left().orElse(null);
+            this.getFullChunkFuture().thenAccept((either) -> {
+                LevelChunk chunk = either.orElse(null);
                 if (chunk != null) {
                     ((ChunkMapBridge) chunkManager).bridge$getCallbackExecutor().execute(
                         ((ChunkBridge) chunk)::bridge$loadCallback

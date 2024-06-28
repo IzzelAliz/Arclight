@@ -19,21 +19,4 @@ import org.spongepowered.asm.mixin.Mixin;
 @Mixin(BaseSpawner.class)
 public abstract class BaseSpawnerMixin_NeoForge implements BaseSpawnerBridge {
 
-    @Override
-    public boolean bridge$forge$checkSpawnRules(Mob mob, ServerLevelAccessor level, MobSpawnType spawnType, SpawnData spawnData, boolean original) {
-        var event = new MobSpawnEvent.PositionCheck(mob, level, spawnType, null);
-        NeoForge.EVENT_BUS.post(event);
-        if (event.getResult() == Event.Result.DEFAULT) {
-            return original;
-        }
-        return event.getResult() == Event.Result.ALLOW;
-    }
-
-    @Override
-    public void bridge$forge$finalizeSpawnerSpawn(Mob mob, ServerLevelAccessor level, DifficultyInstance difficulty, @Nullable SpawnGroupData spawnData, @Nullable CompoundTag spawnTag) {
-        var event = EventHooks.onFinalizeSpawnSpawner(mob, level, difficulty, spawnData, spawnTag, (BaseSpawner) (Object) this);
-        if (event != null) {
-            mob.finalizeSpawn(level, event.getDifficulty(), event.getSpawnType(), event.getSpawnData(), event.getSpawnTag());
-        }
-    }
 }

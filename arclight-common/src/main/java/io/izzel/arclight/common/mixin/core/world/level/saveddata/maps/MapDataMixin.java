@@ -1,9 +1,11 @@
 package io.izzel.arclight.common.mixin.core.world.level.saveddata.maps;
 
 import io.izzel.arclight.common.bridge.core.world.storage.MapDataBridge;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
@@ -34,7 +36,7 @@ public abstract class MapDataMixin implements MapDataBridge {
     public CraftMapView mapView;
     private CraftServer server;
     public UUID uniqueId;
-    public String id;
+    public MapId id;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void arclight$init(int p_164768_, int p_164769_, byte p_164770_, boolean p_164771_, boolean p_164772_, boolean p_164773_, ResourceKey<Level> p_164774_, CallbackInfo ci) {
@@ -60,7 +62,7 @@ public abstract class MapDataMixin implements MapDataBridge {
     }
 
     @Inject(method = "save", at = @At("HEAD"))
-    public void arclight$storeDimension(CompoundTag compound, CallbackInfoReturnable<CompoundTag> cir) {
+    public void arclight$storeDimension(CompoundTag compound, HolderLookup.Provider provider, CallbackInfoReturnable<CompoundTag> cir) {
         if (this.uniqueId == null) {
             for (org.bukkit.World world : this.server.getWorlds()) {
                 CraftWorld cWorld = (CraftWorld) world;
@@ -76,7 +78,7 @@ public abstract class MapDataMixin implements MapDataBridge {
     }
 
     @Override
-    public void bridge$setId(String id) {
+    public void bridge$setId(MapId id) {
         this.id = id;
     }
 

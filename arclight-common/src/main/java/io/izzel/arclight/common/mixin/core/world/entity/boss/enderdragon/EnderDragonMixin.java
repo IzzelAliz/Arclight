@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.enderdragon.phases.DragonPhaseInstance;
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
@@ -146,7 +147,7 @@ public abstract class EnderDragonMixin extends MobMixin {
 
     // TODO FIXME: exp patch for end dragon
     @Override
-    public int getExpReward() {
+    public int getExpReward(Entity entity) {
         // CraftBukkit - Moved from #tickDeath method
         boolean flag = this.level().getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT);
         short short0 = 500;

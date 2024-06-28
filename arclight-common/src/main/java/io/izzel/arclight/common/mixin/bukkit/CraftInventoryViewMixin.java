@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = CraftInventoryView.class, remap = false)
-public abstract class CraftInventoryViewMixin extends InventoryView {
+public abstract class CraftInventoryViewMixin implements InventoryView {
 
     @Shadow @Final @Mutable private CraftInventory viewing;
 

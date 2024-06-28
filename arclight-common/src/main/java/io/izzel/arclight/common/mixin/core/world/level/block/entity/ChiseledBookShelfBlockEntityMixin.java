@@ -4,7 +4,6 @@ import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.NonNullList;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
@@ -75,10 +74,5 @@ public abstract class ChiseledBookShelfBlockEntityMixin extends BlockEntityMixin
         if (level == null) {
             ci.cancel();
         }
-    }
-
-    @Inject(method = "load", at = @At("HEAD"))
-    private void arclight$load(CompoundTag p_277597_, CallbackInfo ci) {
-        super.load(p_277597_);
     }
 }

@@ -1,13 +1,15 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import io.izzel.arclight.mixin.Local;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityRemoveEvent;
@@ -16,7 +18,6 @@ import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.player.PlayerExpCooldownChangeEvent;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Map;
+import java.util.Optional;
 
 @Mixin(ExperienceOrb.class)
 public abstract class ExperienceOrbMixin extends EntityMixin {
@@ -33,8 +34,6 @@ public abstract class ExperienceOrbMixin extends EntityMixin {
     @Shadow private Player followingPlayer;
     @Shadow public abstract boolean hurt(DamageSource source, float amount);
     @Shadow public int value;
-    @Shadow protected abstract int durabilityToXp(int durability);
-    @Shadow protected abstract int xpToDurability(int p_20799_);
     // @formatter:on
 
     private transient Player arclight$lastPlayer;
@@ -80,45 +79,33 @@ public abstract class ExperienceOrbMixin extends EntityMixin {
         return this.followingPlayer;
     }
 
-    @Redirect(method = "playerTouch", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;giveExperiencePoints(I)V"))
-    private void arclight$expChange(Player player, int amount) {
-        player.giveExperiencePoints(CraftEventFactory.callPlayerExpChangeEvent(player, amount).getAmount());
+    @Decorate(method = "playerTouch", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;giveExperiencePoints(I)V"))
+    private void arclight$expChange(Player player, int amount) throws Throwable {
+        DecorationOps.callsite().invoke(player, CraftEventFactory.callPlayerExpChangeEvent(player, amount).getAmount());
     }
 
-    @Redirect(method = "playerTouch", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/entity/player/Player;takeXpDelay:I"))
-    private void arclight$cooldown(Player instance, int value) {
-        instance.takeXpDelay = CraftEventFactory.callPlayerXpCooldownEvent(instance, value, PlayerExpCooldownChangeEvent.ChangeReason.PICKUP_ORB).getNewCooldown();
+    @Decorate(method = "playerTouch", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/entity/player/Player;takeXpDelay:I"))
+    private void arclight$cooldown(Player instance, int value) throws Throwable {
+        DecorationOps.callsite().invoke(instance, CraftEventFactory.callPlayerXpCooldownEvent(instance, value, PlayerExpCooldownChangeEvent.ChangeReason.PICKUP_ORB).getNewCooldown());
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    private int repairPlayerItems(Player player, int i) {
-        Map.Entry<EquipmentSlot, ItemStack> entry = EnchantmentHelper.getRandomItemWith(Enchantments.MENDING, player, ItemStack::isDamaged);
-
-        if (entry != null) {
-            ItemStack itemstack = entry.getValue();
-            int j = Math.min(this.xpToDurability(i), itemstack.getDamageValue());
-            // CraftBukkit start
-            org.bukkit.event.player.PlayerItemMendEvent event = CraftEventFactory.callPlayerItemMendEvent(player, (ExperienceOrb) (Object) this, itemstack, entry.getKey(), j);
-            j = event.getRepairAmount();
-            if (event.isCancelled()) {
-                return i;
-            }
-            // CraftBukkit end
-
-            itemstack.setDamageValue(itemstack.getDamageValue() - j);
-            int k = i - this.durabilityToXp(j);
-            this.value = k;
-
-            return k > 0 ? this.repairPlayerItems(player, k) : 0;
-        } else {
-            return i;
+    @Decorate(method = "repairPlayerItems", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;setDamageValue(I)V"))
+    private void arclight$itemMend(ServerPlayer serverPlayer, int i, @Local(ordinal = -1) ItemStack itemstack,
+                                   @Local(ordinal = -1) Optional<EnchantedItemInUse> optional, @Local(ordinal = -1) int k) throws Throwable {
+        org.bukkit.event.player.PlayerItemMendEvent event = CraftEventFactory.callPlayerItemMendEvent(serverPlayer, (ExperienceOrb) (Object) this, itemstack, optional.get().inSlot(), k);
+        k = event.getRepairAmount();
+        if (event.isCancelled()) {
+            DecorationOps.cancel().invoke(i);
+            return;
         }
+        DecorationOps.blackhole().invoke(k);
     }
 
+    @Decorate(method = "repairPlayerItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;repairPlayerItems(Lnet/minecraft/server/level/ServerPlayer;I)I"))
+    private int arclight$updateXp(ExperienceOrb instance, ServerPlayer serverPlayer, int i) throws Throwable {
+        this.value = i;
+        return (int) DecorationOps.callsite().invoke(instance, serverPlayer, i);
+    }
 
     @Inject(method = "getExperienceValue", cancellable = true, at = @At("HEAD"))
     private static void arclight$higherLevelSplit(int expValue, CallbackInfoReturnable<Integer> cir) {

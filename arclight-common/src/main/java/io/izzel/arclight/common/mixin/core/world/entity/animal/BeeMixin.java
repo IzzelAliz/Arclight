@@ -24,8 +24,8 @@ public abstract class BeeMixin extends AnimalMixin {
     @Inject(method = "addAdditionalSaveData", at = @At("RETURN"))
     private void arclight$removePos(CompoundTag tag, CallbackInfo ci) {
         if (this.arclight$saveNotIncludeAll) {
-            tag.remove("HivePos");
-            tag.remove("FlowerPos");
+            tag.remove("hive_pos");
+            tag.remove("flower_pos");
         }
     }
 

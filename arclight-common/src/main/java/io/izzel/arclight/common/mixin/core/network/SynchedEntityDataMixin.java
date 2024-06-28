@@ -4,6 +4,7 @@ import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBrid
 import io.izzel.arclight.common.bridge.core.network.datasync.SynchedEntityDataBridge;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.SyncedDataHolder;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -25,9 +26,8 @@ public abstract class SynchedEntityDataMixin implements SynchedEntityDataBridge 
     // @formatter:off
     @Shadow protected abstract <T> SynchedEntityData.DataItem<T> getItem(EntityDataAccessor<T> key);
     @Shadow private boolean isDirty;
-    @Shadow @Final private Entity entity;
+    @Shadow @Final private SyncedDataHolder entity;
     @Shadow @Nullable public abstract List<SynchedEntityData.DataValue<?>> getNonDefaultValues();
-    @Shadow public abstract boolean isEmpty();
     // @formatter:on
 
     @Inject(method = "set(Lnet/minecraft/network/syncher/EntityDataAccessor;Ljava/lang/Object;Z)V", at = @At("HEAD"))
@@ -51,11 +51,9 @@ public abstract class SynchedEntityDataMixin implements SynchedEntityDataBridge 
     }
 
     public void refresh(ServerPlayer player) {
-        if (!this.isEmpty()) {
-            var list = this.getNonDefaultValues();
-            if (list != null) {
-                player.connection.send(new ClientboundSetEntityDataPacket(this.entity.getId(), list));
-            }
+        var list = this.getNonDefaultValues();
+        if (list != null && this.entity instanceof Entity entity) {
+            player.connection.send(new ClientboundSetEntityDataPacket(entity.getId(), list));
         }
     }
 

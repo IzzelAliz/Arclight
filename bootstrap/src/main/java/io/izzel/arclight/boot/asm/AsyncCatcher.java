@@ -13,6 +13,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.FrameNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.InvokeDynamicInsnNode;
@@ -62,7 +63,8 @@ public class AsyncCatcher implements Implementer {
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         this.reasons = gson.fromJson(
             new InputStreamReader(AsyncCatcher.class.getResourceAsStream("/async_catcher.json")),
-            new TypeToken<Map<String, Map<String, String>>>() {}.getType()
+            new TypeToken<Map<String, Map<String, String>>>() {
+            }.getType()
         );
         this.defaultOp = ArclightConfig.spec().getAsyncCatcher().getDefaultOp();
         this.dump = ArclightConfig.spec().getAsyncCatcher().isDump();
@@ -121,6 +123,7 @@ public class AsyncCatcher implements Implementer {
         insnList.add(labelNode1);
         insnList.add(new InsnNode(Opcodes.POP));
         insnList.add(labelNode);
+        insnList.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
         methodNode.instructions.insert(insnList);
     }
 

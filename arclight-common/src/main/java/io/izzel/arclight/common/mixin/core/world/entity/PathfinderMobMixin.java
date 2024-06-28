@@ -11,8 +11,4 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(PathfinderMob.class)
 public abstract class PathfinderMobMixin extends MobMixin {
 
-    @Inject(method = "tickLeash", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/PathfinderMob;dropLeash(ZZ)V"))
-    private void arclight$unleashDistance(CallbackInfo ci) {
-        Bukkit.getPluginManager().callEvent(new EntityUnleashEvent(this.getBukkitEntity(), EntityUnleashEvent.UnleashReason.DISTANCE));
-    }
 }

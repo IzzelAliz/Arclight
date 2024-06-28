@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -13,14 +14,12 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.ComposterBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
-import net.minecraft.world.level.gameevent.GameEvent;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftBlockInventoryHolder;
 import org.bukkit.craftbukkit.v.util.DummyGeneratorAccess;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -36,7 +35,6 @@ public abstract class ComposterBlockMixin {
     @Shadow static BlockState empty(@Nullable Entity p_270236_, BlockState p_270873_, LevelAccessor p_270963_, BlockPos p_270211_) { return null; }
     // @formatter:on
 
-    @SuppressWarnings({"InvalidMemberReference", "UnresolvedMixinReference", "MixinAnnotationTarget", "InvalidInjectorMethodSignature"})
     @Redirect(method = "getContainer", at = @At(value = "NEW", target = "()Lnet/minecraft/world/level/block/ComposterBlock$EmptyContainer;"))
     public ComposterBlock.EmptyContainer arclight$newEmpty(BlockState blockState, LevelAccessor world, BlockPos blockPos) {
         ComposterBlock.EmptyContainer inventory = new ComposterBlock.EmptyContainer();
@@ -44,26 +42,10 @@ public abstract class ComposterBlockMixin {
         return inventory;
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    public static BlockState insertItem(Entity entity, BlockState state, ServerLevel world, ItemStack stack, BlockPos pos) {
-        int i = state.getValue(LEVEL);
-        if (i < 7 && COMPOSTABLES.containsKey(stack.getItem())) {
-            double rand = world.random.nextDouble();
-            BlockState state1 = addItem(entity, state, DummyGeneratorAccess.INSTANCE, pos, stack, rand);
-
-            if (state == state1 || !CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state1)) {
-                return state;
-            }
-
-            state1 = addItem(entity, state, world, pos, stack, rand);
-            stack.shrink(1);
-            return state1;
-        } else {
-            return state;
+    @Inject(method = "insertItem", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/level/block/ComposterBlock;addItem(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/level/block/state/BlockState;"))
+    private static void arclight$changeBlockEvent(Entity entity, BlockState blockState, ServerLevel serverLevel, ItemStack itemStack, BlockPos blockPos, CallbackInfoReturnable<BlockState> cir) {
+        if (!ArclightCaptures.getLastEntityChangeBlockResult()) {
+            cir.setReturnValue(blockState);
         }
     }
 
@@ -74,23 +56,6 @@ public abstract class ComposterBlockMixin {
             if (!CraftEventFactory.callEntityChangeBlockEvent(entity, pos, blockState)) {
                 cir.setReturnValue(state);
             }
-        }
-    }
-
-    private static BlockState addItem(Entity entity, BlockState state, LevelAccessor world, BlockPos pos, ItemStack stack, double rand) {
-        int i = state.getValue(LEVEL);
-        float f = COMPOSTABLES.getFloat(stack.getItem());
-        if ((i != 0 || !(f > 0.0F)) && !(rand < (double) f)) {
-            return state;
-        } else {
-            int j = i + 1;
-            BlockState blockstate = state.setValue(LEVEL, j);
-            world.setBlock(pos, blockstate, 3);
-            world.gameEvent(GameEvent.BLOCK_CHANGE, pos, GameEvent.Context.of(entity, blockstate));
-            if (j == 7) {
-                world.scheduleTick(pos, state.getBlock(), 20);
-            }
-            return blockstate;
         }
     }
 }

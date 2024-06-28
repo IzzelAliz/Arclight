@@ -26,6 +26,7 @@
     "core.network.ServerLoginNetHandlerMixin_Forge",
     "core.network.ServerPlayNetHandlerMixin_Forge",
     "core.network.ServerStatusNetHandlerMixin_Forge",
+    "core.network.protocol.login.ServerboundCustomQueryAnswerPacketMixin_Forge",
     "core.network.protocol.status.ServerStatusMixin",
     "core.server.MinecraftServerMixin_Forge",
     "core.server.dedicated.DedicatedServerMixin_Forge",

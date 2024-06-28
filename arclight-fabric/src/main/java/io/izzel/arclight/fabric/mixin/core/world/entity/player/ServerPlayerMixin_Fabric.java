@@ -1,7 +1,6 @@
 package io.izzel.arclight.fabric.mixin.core.world.entity.player;
 
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.CommonPlayerSpawnInfo;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -27,7 +26,6 @@ public abstract class ServerPlayerMixin_Fabric extends PlayerMixin_Fabric implem
     @Shadow public abstract CommonPlayerSpawnInfo createCommonSpawnInfo(ServerLevel arg);
     @Shadow @Final public MinecraftServer server;
     @Shadow @Nullable private Vec3 enteredNetherPosition;
-    @Shadow protected abstract void createEndPlatform(ServerLevel arg, BlockPos arg2);
     @Shadow public abstract void setServerLevel(ServerLevel arg);
     @Shadow public abstract void triggerDimensionChangeTriggers(ServerLevel arg);
     @Shadow @Final public ServerPlayerGameMode gameMode;

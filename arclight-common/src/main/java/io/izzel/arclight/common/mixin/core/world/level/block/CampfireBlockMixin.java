@@ -27,8 +27,8 @@ public class CampfireBlockMixin {
         }
     }
 
-    @Redirect(method = "entityInside", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/damagesource/DamageSources;inFire()Lnet/minecraft/world/damagesource/DamageSource;"))
+    @Redirect(method = "entityInside", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/damagesource/DamageSources;campfire()Lnet/minecraft/world/damagesource/DamageSource;"))
     private DamageSource arclight$fireDamage(DamageSources instance, BlockState blockState, Level level, BlockPos blockPos) {
-        return ((DamageSourceBridge) instance.inFire()).bridge$directBlock(CraftBlock.at(level, blockPos));
+        return ((DamageSourceBridge) instance.campfire()).bridge$directBlock(CraftBlock.at(level, blockPos));
     }
 }

@@ -38,7 +38,7 @@ public abstract class GrindstoneContainerMixin extends AbstractContainerMenuMixi
         CraftEventFactory.callPrepareGrindstoneEvent(getBukkitView(), itemStack);
     }
 
-    @Inject(method = "createResult", at = @At(value = "INVOKE", ordinal = 3, target = "Lnet/minecraft/world/inventory/GrindstoneMenu;broadcastChanges()V"))
+    @Inject(method = "createResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/GrindstoneMenu;broadcastChanges()V"))
     private void arclight$sync(CallbackInfo ci) {
         sendAllDataToRemote();
     }

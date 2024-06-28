@@ -1,7 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.level.storage.loot;
 
 import io.izzel.arclight.common.bridge.core.world.storage.loot.LootTableBridge;
-import io.izzel.arclight.mixin.Eject;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
@@ -21,7 +22,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -50,9 +50,10 @@ public abstract class LootTableMixin implements LootTableBridge {
         return this.craftLootTable;
     }
 
-    @Eject(method = "fill", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/loot/LootTable;getRandomItems(Lnet/minecraft/world/level/storage/loot/LootContext;)Lit/unimi/dsi/fastutil/objects/ObjectArrayList;"))
-    private ObjectArrayList<ItemStack> arclight$nonPluginEvent(LootTable lootTable, LootContext context, CallbackInfo ci, Container inv) {
-        ObjectArrayList<ItemStack> list = this.getRandomItems(context);
+    @SuppressWarnings("unchecked")
+    @Decorate(method = "fill", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/loot/LootTable;getRandomItems(Lnet/minecraft/world/level/storage/loot/LootContext;)Lit/unimi/dsi/fastutil/objects/ObjectArrayList;"))
+    private ObjectArrayList<ItemStack> arclight$nonPluginEvent(LootTable lootTable, LootContext context, Container inv) throws Throwable {
+        ObjectArrayList<ItemStack> list = (ObjectArrayList<ItemStack>) DecorationOps.callsite().invoke(lootTable, context);
         if (!context.hasParam(LootContextParams.ORIGIN) && !context.hasParam(LootContextParams.THIS_ENTITY)) {
             return list;
         }
@@ -61,8 +62,7 @@ public abstract class LootTableMixin implements LootTableBridge {
         }
         LootGenerateEvent event = CraftEventFactory.callLootGenerateEvent(inv, (LootTable) (Object) this, context, list, false);
         if (event.isCancelled()) {
-            ci.cancel();
-            return null;
+            return (ObjectArrayList<ItemStack>) DecorationOps.cancel().invoke();
         } else {
             return event.getLoot().stream().map(CraftItemStack::asNMSCopy).collect(ObjectArrayList.toList());
         }

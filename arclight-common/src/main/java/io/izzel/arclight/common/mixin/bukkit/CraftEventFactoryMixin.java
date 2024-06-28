@@ -20,7 +20,6 @@ import org.bukkit.craftbukkit.v.block.CraftBlockStates;
 import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
 import org.bukkit.craftbukkit.v.damage.CraftDamageSource;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
 import org.bukkit.entity.Item;
 import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockFormEvent;
@@ -159,7 +158,7 @@ public abstract class CraftEventFactoryMixin {
     public static BlockFadeEvent callBlockFadeEvent(LevelAccessor world, BlockPos pos, net.minecraft.world.level.block.state.BlockState newBlock) {
         // Suppress during worldgen
         if (!(world instanceof Level) || !DistValidate.isValid(world)) {
-            return new BlockFadeEvent(CraftBlock.at(world, pos), CraftBlockStates.getBlockState(CraftMagicNumbers.getMaterial(newBlock.getBlock()), null));
+            return new BlockFadeEvent(CraftBlock.at(world, pos), null);
         }
         CraftBlockState state = CraftBlockStates.getBlockState(world, pos);
         state.setData(newBlock);

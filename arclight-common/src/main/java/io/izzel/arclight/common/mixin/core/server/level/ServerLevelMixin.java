@@ -5,7 +5,6 @@ import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.world.ExplosionBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
 import io.izzel.arclight.common.bridge.core.world.storage.DerivedWorldInfoBridge;
@@ -22,7 +21,11 @@ import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.DelegateWorldInfo;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import io.izzel.arclight.i18n.ArclightConfig;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import io.izzel.arclight.mixin.Local;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -34,26 +37,23 @@ import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.progress.ChunkProgressListener;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.ProgressListener;
 import net.minecraft.world.Container;
 import net.minecraft.world.RandomSequences;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.Explosion;
-import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.entity.PersistentEntitySectionManager;
 import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.level.storage.DerivedLevelData;
 import net.minecraft.world.level.storage.DimensionDataStorage;
@@ -63,11 +63,9 @@ import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.generator.CustomChunkGenerator;
-import org.bukkit.craftbukkit.v.util.BlockStateListPopulator;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.craftbukkit.v.util.WorldUUID;
 import org.bukkit.entity.HumanEntity;
@@ -76,14 +74,12 @@ import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.server.MapInitializeEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.world.GenericGameEvent;
-import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.event.world.TimeSkipEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.objectweb.asm.Opcodes;
 import org.spigotmc.SpigotWorldConfig;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -91,7 +87,6 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -115,6 +110,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     @Shadow @Final public ServerLevelData serverLevelData;
     @Shadow @Final private PersistentEntitySectionManager<Entity> entityManager;
     @Shadow public abstract DimensionDataStorage getDataStorage();
+    @Shadow protected abstract void addPlayer(ServerPlayer serverPlayer);
     // @formatter:on
 
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
@@ -188,10 +184,10 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     }
 
     @Inject(method = "gameEvent", cancellable = true, at = @At("HEAD"))
-    private void arclight$gameEventEvent(GameEvent gameEvent, Vec3 pos, GameEvent.Context context, CallbackInfo ci) {
+    private void arclight$gameEventEvent(Holder<GameEvent> holder, Vec3 pos, GameEvent.Context context, CallbackInfo ci) {
         var entity = context.sourceEntity();
-        var i = gameEvent.getNotificationRadius();
-        GenericGameEvent event = new GenericGameEvent(org.bukkit.GameEvent.getByKey(CraftNamespacedKey.fromMinecraft(BuiltInRegistries.GAME_EVENT.getKey(gameEvent))), new Location(this.getWorld(), pos.x(), pos.y(), pos.z()), (entity == null) ? null : ((EntityBridge) entity).bridge$getBukkitEntity(), i, !Bukkit.isPrimaryThread());
+        var i = holder.value().notificationRadius();
+        GenericGameEvent event = new GenericGameEvent(org.bukkit.GameEvent.getByKey(CraftNamespacedKey.fromMinecraft(BuiltInRegistries.GAME_EVENT.getKey(holder.value()))), new Location(this.getWorld(), pos.x(), pos.y(), pos.z()), (entity == null) ? null : entity.bridge$getBukkitEntity(), i, !Bukkit.isPrimaryThread());
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             ci.cancel();
@@ -274,7 +270,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     private void arclight$saveLevelDat(ProgressListener progress, boolean flush, boolean skipSave, CallbackInfo ci) {
         if (this.serverLevelData instanceof PrimaryLevelData worldInfo) {
             worldInfo.setWorldBorder(this.getWorldBorder().createSettings());
-            worldInfo.setCustomBossEvents(this.getServer().getCustomBossEvents().save());
+            worldInfo.setCustomBossEvents(this.getServer().getCustomBossEvents().save(this.registryAccess()));
             this.convertable.saveDataTag(this.getServer().registryAccess(), worldInfo, this.getServer().getPlayerList().getSingleplayerData());
         }
     }
@@ -363,7 +359,11 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     }
 
     public void addDuringTeleport(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
-        addFreshEntity(entity, reason);
+        if (entity instanceof ServerPlayer player) {
+            this.addPlayer(player);
+        } else {
+            this.addFreshEntity(entity, reason);
+        }
     }
 
     @Override
@@ -383,17 +383,17 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         return tryAddFreshEntityWithPassengers(entity, reason);
     }
 
-    @Inject(method = "explode", cancellable = true, at = @At(value = "INVOKE",
-        target = "Lnet/minecraft/world/level/Explosion;interactsWithBlocks()Z"), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void arclight$doExplosion(Entity p_256039_, DamageSource p_255778_, ExplosionDamageCalculator p_256002_, double p_256067_, double p_256370_, double p_256153_, float p_256045_, boolean p_255686_, Level.ExplosionInteraction p_255827_, ParticleOptions p_310962_, ParticleOptions p_310322_, SoundEvent p_309795_,
-                                      CallbackInfoReturnable<Explosion> cir, Explosion explosion) {
+    @Decorate(method = "explode", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Explosion;interactsWithBlocks()Z"))
+    private void arclight$doExplosion(@Local(ordinal = -1) Explosion explosion) throws Throwable {
         if (((ExplosionBridge) explosion).bridge$wasCancelled()) {
-            cir.setReturnValue(explosion);
+            DecorationOps.cancel().invoke(explosion);
+            return;
         }
+        DecorationOps.blackhole().invoke();
     }
 
     @Inject(method = "getMapData", at = @At("RETURN"))
-    private void arclight$mapSetId(String id, CallbackInfoReturnable<MapItemSavedData> cir) {
+    private void arclight$mapSetId(MapId id, CallbackInfoReturnable<MapItemSavedData> cir) {
         var data = cir.getReturnValue();
         if (data != null) {
             ((MapDataBridge) data).bridge$setId(id);
@@ -401,7 +401,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     }
 
     @Inject(method = "setMapData", at = @At("HEAD"))
-    private void arclight$mapSetId(String id, MapItemSavedData data, CallbackInfo ci) {
+    private void arclight$mapSetId(MapId id, MapItemSavedData data, CallbackInfo ci) {
         ((MapDataBridge) data).bridge$setId(id);
         MapInitializeEvent event = new MapInitializeEvent(((MapDataBridge) data).bridge$getMapView());
         Bukkit.getServer().getPluginManager().callEvent(event);
@@ -442,40 +442,6 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     @Override
     public ServerLevel bridge$getMinecraftWorld() {
         return (ServerLevel) (Object) this;
-    }
-
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    @Overwrite
-    public static void makeObsidianPlatform(ServerLevel world) {
-        BlockPos blockpos = END_SPAWN_POINT;
-        int i = blockpos.getX();
-        int j = blockpos.getY() - 2;
-        int k = blockpos.getZ();
-        BlockStateListPopulator blockList = new BlockStateListPopulator(world);
-        BlockPos.betweenClosed(i - 2, j + 1, k - 2, i + 2, j + 3, k + 2).forEach((pos) -> {
-            blockList.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
-        });
-        BlockPos.betweenClosed(i - 2, j, k - 2, i + 2, j, k + 2).forEach((pos) -> {
-            blockList.setBlock(pos, Blocks.OBSIDIAN.defaultBlockState(), 3);
-        });
-        if (!DistValidate.isValid(world)) {
-            blockList.updateList();
-            ArclightCaptures.getEndPortalEntity();
-            return;
-        }
-        CraftWorld bworld = ((WorldBridge) world).bridge$getWorld();
-        boolean spawnPortal = ArclightCaptures.getEndPortalSpawn();
-        Entity entity = ArclightCaptures.getEndPortalEntity();
-        PortalCreateEvent portalEvent = new PortalCreateEvent((List) blockList.getList(), bworld, entity == null ? null : ((EntityBridge) entity).bridge$getBukkitEntity(), PortalCreateEvent.CreateReason.END_PLATFORM);
-        portalEvent.setCancelled(!spawnPortal);
-        Bukkit.getPluginManager().callEvent(portalEvent);
-        if (!portalEvent.isCancelled()) {
-            blockList.updateList();
-        }
     }
 
     @ModifyVariable(method = "tickBlock", ordinal = 0, argsOnly = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;tick(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/util/RandomSource;)V"))

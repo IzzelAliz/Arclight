@@ -11,6 +11,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 
 public class BlockBreakEventDispatcher {
 
+    // todo
     @SubscribeEvent(receiveCanceled = true)
     public void onBreakBlock(BlockEvent.BreakEvent event) {
         if (DistValidate.isValid(event.getLevel())) {
@@ -18,10 +19,10 @@ public class BlockBreakEventDispatcher {
             BlockBreakEvent breakEvent = new BlockBreakEvent(craftBlock, ((ServerPlayerEntityBridge) event.getPlayer()).bridge$getBukkitEntity());
             ArclightCaptures.captureBlockBreakPlayer(breakEvent);
             breakEvent.setCancelled(event.isCanceled());
-            breakEvent.setExpToDrop(event.getExpToDrop());
+            //breakEvent.setExpToDrop(event.getExpToDrop());
             Bukkit.getPluginManager().callEvent(breakEvent);
             event.setCanceled(breakEvent.isCancelled());
-            event.setExpToDrop(breakEvent.getExpToDrop());
+            //event.setExpToDrop(breakEvent.getExpToDrop());
         }
     }
 }

@@ -18,7 +18,7 @@ public class BellBlockEntityMixin {
 
     @Redirect(method = "makeRaidersGlow", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/stream/Stream;forEach(Ljava/util/function/Consumer;)V"))
     private static void arclight$bellResonate(Stream<LivingEntity> instance, Consumer<? super LivingEntity> consumer, Level level, BlockPos pos) {
-        var list = instance.map(it -> (org.bukkit.entity.LivingEntity) ((EntityBridge) it).bridge$getBukkitEntity()).toList();
+        var list = instance.map(it -> (org.bukkit.entity.LivingEntity) it.bridge$getBukkitEntity()).toList();
         CraftEventFactory.handleBellResonateEvent(level, pos, list).forEach(consumer);
     }
 }

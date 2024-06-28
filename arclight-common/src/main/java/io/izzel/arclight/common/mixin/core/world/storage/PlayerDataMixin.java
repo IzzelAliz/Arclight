@@ -19,6 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.Optional;
 
 @Mixin(PlayerDataStorage.class)
 public class PlayerDataMixin implements PlayerDataBridge {
@@ -28,16 +29,18 @@ public class PlayerDataMixin implements PlayerDataBridge {
     @Shadow @Final private static Logger LOGGER;
     // @formatter:on
 
-    @Inject(method = "load", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/NbtUtils;getDataVersion(Lnet/minecraft/nbt/CompoundTag;I)I"))
-    private void arclight$lastSeenTime(Player player, CallbackInfoReturnable<CompoundTag> cir) {
-        if (player instanceof ServerPlayer) {
-            CraftPlayer craftPlayer = ((ServerPlayerEntityBridge) player).bridge$getBukkitEntity();
-            // Only update first played if it is older than the one we have
-            long modified = new File(this.playerDir, player.getUUID() + ".dat").lastModified();
-            if (modified < craftPlayer.getFirstPlayed()) {
-                craftPlayer.setFirstPlayed(modified);
+    @Inject(method = "load(Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;)Ljava/util/Optional;", at = @At("RETURN"))
+    private void arclight$lastSeenTime(Player player, String string, CallbackInfoReturnable<Optional<CompoundTag>> cir) {
+        cir.getReturnValue().ifPresent((tag) -> {
+            if (player instanceof ServerPlayer) {
+                CraftPlayer craftPlayer = ((ServerPlayerEntityBridge) player).bridge$getBukkitEntity();
+                // Only update first played if it is older than the one we have
+                long modified = new File(this.playerDir, player.getUUID() + ".dat").lastModified();
+                if (modified < craftPlayer.getFirstPlayed()) {
+                    craftPlayer.setFirstPlayed(modified);
+                }
             }
-        }
+        });
     }
 
     public File getPlayerDir() {

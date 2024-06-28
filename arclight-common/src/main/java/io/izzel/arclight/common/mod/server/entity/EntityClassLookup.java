@@ -1,7 +1,6 @@
 package io.izzel.arclight.common.mod.server.entity;
 
 import io.izzel.arclight.common.bridge.bukkit.EntityTypeBridge;
-import io.izzel.arclight.common.bridge.core.entity.projectile.DamagingProjectileEntityBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerPlayer;
@@ -18,6 +17,7 @@ import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Marker;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.OminousItemSpawner;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ambient.AmbientCreature;
@@ -50,6 +50,7 @@ import net.minecraft.world.entity.animal.Turtle;
 import net.minecraft.world.entity.animal.WaterAnimal;
 import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.entity.animal.allay.Allay;
+import net.minecraft.world.entity.animal.armadillo.Armadillo;
 import net.minecraft.world.entity.animal.axolotl.Axolotl;
 import net.minecraft.world.entity.animal.camel.Camel;
 import net.minecraft.world.entity.animal.frog.Frog;
@@ -81,6 +82,7 @@ import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.monster.AbstractIllager;
 import net.minecraft.world.entity.monster.AbstractSkeleton;
 import net.minecraft.world.entity.monster.Blaze;
+import net.minecraft.world.entity.monster.Bogged;
 import net.minecraft.world.entity.monster.CaveSpider;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.Drowned;
@@ -146,8 +148,10 @@ import net.minecraft.world.entity.projectile.ThrownEnderpearl;
 import net.minecraft.world.entity.projectile.ThrownExperienceBottle;
 import net.minecraft.world.entity.projectile.ThrownPotion;
 import net.minecraft.world.entity.projectile.ThrownTrident;
-import net.minecraft.world.entity.projectile.WindCharge;
 import net.minecraft.world.entity.projectile.WitherSkull;
+import net.minecraft.world.entity.projectile.windcharge.AbstractWindCharge;
+import net.minecraft.world.entity.projectile.windcharge.BreezeWindCharge;
+import net.minecraft.world.entity.projectile.windcharge.WindCharge;
 import net.minecraft.world.entity.raid.Raider;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.entity.vehicle.AbstractMinecartContainer;
@@ -161,10 +165,12 @@ import net.minecraft.world.entity.vehicle.MinecartHopper;
 import net.minecraft.world.entity.vehicle.MinecartSpawner;
 import net.minecraft.world.entity.vehicle.MinecartTNT;
 import net.minecraft.world.entity.vehicle.VehicleEntity;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.craftbukkit.v.entity.CraftEntityType;
 import org.bukkit.craftbukkit.v.entity.CraftEntityTypes;
+import org.bukkit.util.Vector;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -291,8 +297,8 @@ public class EntityClassLookup {
             return null;
         }
         if (entity instanceof AbstractHurtingProjectile) {
-            var direction = spawnData.location().getDirection().multiply(10);
-            ((DamagingProjectileEntityBridge) entity).bridge$setDirection(direction.getX(), direction.getY(), direction.getZ());
+            Vector direction = spawnData.location().getDirection();
+            ((AbstractHurtingProjectile) entity).assignDirectionalMovement(new Vec3(direction.getX(), direction.getY(), direction.getZ()), 1.0);
         }
         if (entity instanceof HangingEntity) {
             createHanging((Class<org.bukkit.entity.Entity>) entityClass.bukkitClass, (a, direction) -> {
@@ -341,12 +347,13 @@ public class EntityClassLookup {
         add(Projectile.class, new EntityClass<>(org.bukkit.entity.Projectile.class, ArclightModProjectile.class, ArclightModProjectile::new));
         add(Raider.class, new EntityClass<>(org.bukkit.entity.Raider.class, ArclightModRaider.class, ArclightModRaider::new));
         add(VehicleEntity.class, new EntityClass<>(org.bukkit.entity.Vehicle.class, ArclightModVehicle.class, ArclightModVehicle::new));
+        add(AbstractWindCharge.class, new EntityClass<>(org.bukkit.entity.AbstractWindCharge.class, ArclightModWindCharge.class, ArclightModWindCharge::new));
         add(LivingEntity.class, new EntityClass<>(org.bukkit.entity.LivingEntity.class, org.bukkit.craftbukkit.v.entity.CraftLivingEntity.class, org.bukkit.craftbukkit.v.entity.CraftLivingEntity::new));
         add(Monster.class, new EntityClass<>(org.bukkit.entity.Monster.class, org.bukkit.craftbukkit.v.entity.CraftMonster.class, org.bukkit.craftbukkit.v.entity.CraftMonster::new));
         add(PathfinderMob.class, new EntityClass<>(org.bukkit.entity.Creature.class, org.bukkit.craftbukkit.v.entity.CraftCreature.class, org.bukkit.craftbukkit.v.entity.CraftCreature::new));
         add(AgeableMob.class, new EntityClass<>(org.bukkit.entity.Ageable.class, org.bukkit.craftbukkit.v.entity.CraftAgeable.class, org.bukkit.craftbukkit.v.entity.CraftAgeable::new));
         add(AbstractVillager.class, new EntityClass<>(org.bukkit.entity.AbstractVillager.class, org.bukkit.craftbukkit.v.entity.CraftAbstractVillager.class, org.bukkit.craftbukkit.v.entity.CraftAbstractVillager::new));
-        add(AbstractArrow.class, new EntityClass<>(org.bukkit.entity.AbstractArrow.class, org.bukkit.craftbukkit.v.entity.CraftArrow.class, org.bukkit.craftbukkit.v.entity.CraftArrow::new));
+        add(AbstractArrow.class, new EntityClass<>(org.bukkit.entity.AbstractArrow.class, org.bukkit.craftbukkit.v.entity.CraftAbstractArrow.class, org.bukkit.craftbukkit.v.entity.CraftAbstractArrow::new));
         add(Animal.class, new EntityClass<>(org.bukkit.entity.Animals.class, org.bukkit.craftbukkit.v.entity.CraftAnimals.class, org.bukkit.craftbukkit.v.entity.CraftAnimals::new));
         add(Fireball.class, new EntityClass<>(org.bukkit.entity.SizedFireball.class, org.bukkit.craftbukkit.v.entity.CraftSizedFireball.class, org.bukkit.craftbukkit.v.entity.CraftSizedFireball::new));
         add(AbstractHurtingProjectile.class, new EntityClass<>(org.bukkit.entity.Fireball.class, org.bukkit.craftbukkit.v.entity.CraftFireball.class, org.bukkit.craftbukkit.v.entity.CraftFireball::new));
@@ -455,7 +462,7 @@ public class EntityClassLookup {
         add(Painting.class, new EntityClass<>(org.bukkit.entity.Painting.class, org.bukkit.craftbukkit.v.entity.CraftPainting.class, org.bukkit.craftbukkit.v.entity.CraftPainting::new));
         add(ItemFrame.class, new EntityClass<>(org.bukkit.entity.ItemFrame.class, org.bukkit.craftbukkit.v.entity.CraftItemFrame.class, org.bukkit.craftbukkit.v.entity.CraftItemFrame::new));
         add(GlowItemFrame.class, new EntityClass<>(org.bukkit.entity.GlowItemFrame.class, org.bukkit.craftbukkit.v.entity.CraftGlowItemFrame.class, org.bukkit.craftbukkit.v.entity.CraftGlowItemFrame::new));
-        add(Arrow.class, new EntityClass<>(org.bukkit.entity.Arrow.class, org.bukkit.craftbukkit.v.entity.CraftTippedArrow.class, org.bukkit.craftbukkit.v.entity.CraftTippedArrow::new));
+        add(Arrow.class, new EntityClass<>(org.bukkit.entity.Arrow.class, org.bukkit.craftbukkit.v.entity.CraftArrow.class, org.bukkit.craftbukkit.v.entity.CraftArrow::new));
         add(ThrownEnderpearl.class, new EntityClass<>(org.bukkit.entity.EnderPearl.class, org.bukkit.craftbukkit.v.entity.CraftEnderPearl.class, org.bukkit.craftbukkit.v.entity.CraftEnderPearl::new));
         add(ThrownExperienceBottle.class, new EntityClass<>(org.bukkit.entity.ThrownExpBottle.class, org.bukkit.craftbukkit.v.entity.CraftThrownExpBottle.class, org.bukkit.craftbukkit.v.entity.CraftThrownExpBottle::new));
         add(SpectralArrow.class, new EntityClass<>(org.bukkit.entity.SpectralArrow.class, org.bukkit.craftbukkit.v.entity.CraftSpectralArrow.class, org.bukkit.craftbukkit.v.entity.CraftSpectralArrow::new));
@@ -492,5 +499,9 @@ public class EntityClassLookup {
         add(MinecartSpawner.class, new EntityClass<>(org.bukkit.entity.minecart.SpawnerMinecart.class, forName("CraftMinecartMobSpawner"), CraftEntityTypes.getEntityTypeData(org.bukkit.entity.minecart.SpawnerMinecart.class).convertFunction()::apply));
         add(FishingHook.class, new EntityClass<>(org.bukkit.entity.FishHook.class, org.bukkit.craftbukkit.v.entity.CraftFishHook.class, org.bukkit.craftbukkit.v.entity.CraftFishHook::new));
         add(ServerPlayer.class, new EntityClass<>(org.bukkit.entity.Player.class, org.bukkit.craftbukkit.v.entity.CraftPlayer.class, org.bukkit.craftbukkit.v.entity.CraftPlayer::new));
+        add(Bogged.class, new EntityClass<>(org.bukkit.entity.Bogged.class, org.bukkit.craftbukkit.v.entity.CraftBogged.class, org.bukkit.craftbukkit.v.entity.CraftBogged::new));
+        add(OminousItemSpawner.class, new EntityClass<>(org.bukkit.entity.OminousItemSpawner.class, org.bukkit.craftbukkit.v.entity.CraftOminousItemSpawner.class, org.bukkit.craftbukkit.v.entity.CraftOminousItemSpawner::new));
+        add(Armadillo.class, new EntityClass<>(org.bukkit.entity.Armadillo.class, org.bukkit.craftbukkit.v.entity.CraftArmadillo.class, org.bukkit.craftbukkit.v.entity.CraftArmadillo::new));
+        add(BreezeWindCharge.class, new EntityClass<>(org.bukkit.entity.BreezeWindCharge.class, org.bukkit.craftbukkit.v.entity.CraftBreezeWindCharge.class, org.bukkit.craftbukkit.v.entity.CraftBreezeWindCharge::new));
     }
 }

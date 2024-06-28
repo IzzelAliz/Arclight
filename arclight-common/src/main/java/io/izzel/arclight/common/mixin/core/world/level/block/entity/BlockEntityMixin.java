@@ -2,6 +2,11 @@ package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
 import io.izzel.arclight.common.bridge.core.tileentity.TileEntityBridge;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponentPatch;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -18,8 +23,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
+import java.util.Set;
 
 @Mixin(BlockEntity.class)
 public abstract class BlockEntityMixin implements TileEntityBridge {
@@ -31,17 +38,17 @@ public abstract class BlockEntityMixin implements TileEntityBridge {
     @Shadow @Nullable public Level level;
     @Shadow @Final protected BlockPos worldPosition;
     @Shadow public abstract BlockState getBlockState();
-    @Shadow public abstract void setChanged();
     @Shadow public BlockPos getBlockPos() { return null; }
-    @Shadow public abstract boolean onlyOpCanSetNbt();
     @Shadow protected static void setChanged(Level p_155233_, BlockPos p_155234_, BlockState p_155235_) { }
     @Shadow public abstract BlockEntityType<?> getType();
-    @Shadow public void load(CompoundTag p_155245_) {}
     @Shadow public void setLevel(Level p_155231_) {}
     // @formatter:on
 
-    @Inject(method = "load", at = @At("RETURN"))
-    public void arclight$loadPersistent(CompoundTag compound, CallbackInfo ci) {
+    @Shadow
+    public abstract void applyComponents(DataComponentMap dataComponentMap, DataComponentPatch dataComponentPatch);
+
+    @Inject(method = "loadAdditional", at = @At("RETURN"))
+    public void arclight$loadPersistent(CompoundTag compound, HolderLookup.Provider provider, CallbackInfo ci) {
         this.persistentDataContainer = new CraftPersistentDataContainer(DATA_TYPE_REGISTRY);
 
         CompoundTag persistentDataTag = compound.getCompound("PublicBukkitValues");
@@ -55,6 +62,23 @@ public abstract class BlockEntityMixin implements TileEntityBridge {
         if (this.persistentDataContainer != null && !this.persistentDataContainer.isEmpty()) {
             cir.getReturnValue().put("PublicBukkitValues", this.persistentDataContainer.toTagCompound());
         }
+    }
+
+    private transient Set<DataComponentType<?>> arclight$appliedSet;
+
+    public final Set<DataComponentType<?>> applyComponentsSet(DataComponentMap datacomponentmap, DataComponentPatch datacomponentpatch) {
+        try {
+            this.applyComponents(datacomponentmap, datacomponentpatch);
+            return arclight$appliedSet;
+        } finally {
+            arclight$appliedSet = null;
+        }
+    }
+
+    @Inject(method = "applyComponents", locals = LocalCapture.CAPTURE_FAILHARD, at = @At("RETURN"))
+    private void arclight$captureSet(DataComponentMap dataComponentMap, DataComponentPatch dataComponentPatch, CallbackInfo ci, Set<DataComponentType<?>> set) {
+        set.remove(DataComponents.ENTITY_DATA);
+        arclight$appliedSet = set;
     }
 
     public InventoryHolder getOwner() {

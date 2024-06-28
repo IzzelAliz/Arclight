@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.level.entity;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.Local;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
@@ -18,7 +20,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -58,9 +59,9 @@ public abstract class PersistentEntitySectionManagerMixin<T extends EntityAccess
 
     @Unique private boolean arclight$fireEvent = false;
 
-    @Inject(method = "storeChunkSections", locals = LocalCapture.CAPTURE_FAILHARD,
+    @Decorate(method = "storeChunkSections", inject = true,
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/entity/EntityPersistentStorage;storeEntities(Lnet/minecraft/world/level/entity/ChunkEntities;)V"))
-    private void arclight$fireUnload(long pos, Consumer<T> consumer, CallbackInfoReturnable<Boolean> cir, @Coerce Object status, List<T> list) {
+    private void arclight$fireUnload(long pos, @Local(ordinal = -1) List<T> list) {
         if (arclight$fireEvent) {
             CraftEventFactory.callEntitiesUnloadEvent(((EntityStorage) permanentStorage).level, new ChunkPos(pos),
                 list.stream().map(entity -> (Entity) entity).collect(Collectors.toList()));

@@ -1,7 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
-import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
@@ -23,13 +24,13 @@ public class BaseFireBlockMixin {
 
     // fireExtinguished implemented per class
 
-    @Redirect(method = "entityInside", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;setSecondsOnFire(I)V"))
-    private void arclight$onFire(Entity instance, int seconds, BlockState state, Level level, BlockPos pos) {
-        var event = new EntityCombustByBlockEvent(CraftBlock.at(level, pos), ((EntityBridge) instance).bridge$getBukkitEntity(), seconds);
+    @Decorate(method = "entityInside", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;igniteForSeconds(F)V"))
+    private void arclight$onFire(Entity instance, float f, BlockState blockState, Level level, BlockPos blockPos) throws Throwable {
+        var event = new EntityCombustByBlockEvent(CraftBlock.at(level, blockPos), instance.bridge$getBukkitEntity(), f);
         Bukkit.getPluginManager().callEvent(event);
 
         if (!event.isCancelled()) {
-            ((EntityBridge) instance).bridge$setOnFire(event.getDuration(), false);
+            DecorationOps.callsite().invoke(instance, event.getDuration());
         }
     }
 

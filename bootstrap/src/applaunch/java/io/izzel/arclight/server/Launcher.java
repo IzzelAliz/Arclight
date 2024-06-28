@@ -8,8 +8,8 @@ import java.util.Properties;
 
 public class Launcher {
 
-    private static final int MIN_CLASS_VERSION = 61;
-    private static final int MIN_JAVA_VERSION = 17;
+    private static final int MIN_CLASS_VERSION = 65;
+    private static final int MIN_JAVA_VERSION = 21;
 
     private static final int MAX_CLASS_VERSION = 66;
     private static final int MAX_JAVA_VERSION = 22;

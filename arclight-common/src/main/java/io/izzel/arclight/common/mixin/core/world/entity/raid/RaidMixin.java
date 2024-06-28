@@ -3,6 +3,8 @@ package io.izzel.arclight.common.mixin.core.world.entity.raid;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.raid.RaidBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.advancements.critereon.PlayerTrigger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -103,15 +105,15 @@ public class RaidMixin implements RaidBridge {
     private transient Raider arclight$leader;
     private transient List<Raider> arclight$raiders;
 
-    @Redirect(method = "spawnGroup", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/raid/Raid;setLeader(ILnet/minecraft/world/entity/raid/Raider;)V"))
-    public void arclight$captureLeader(Raid raid, int raidId, Raider entity) {
-        raid.setLeader(raidId, entity);
+    @Decorate(method = "spawnGroup", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/raid/Raid;setLeader(ILnet/minecraft/world/entity/raid/Raider;)V"))
+    public void arclight$captureLeader(Raid raid, int raidId, Raider entity) throws Throwable {
+        DecorationOps.callsite().invoke(raid, raidId, entity);
         arclight$leader = entity;
     }
 
-    @Redirect(method = "spawnGroup", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/raid/Raid;joinRaid(ILnet/minecraft/world/entity/raid/Raider;Lnet/minecraft/core/BlockPos;Z)V"))
-    public void arclight$captureRaider(Raid raid, int wave, Raider entity, BlockPos pos, boolean flag) {
-        raid.joinRaid(wave, entity, pos, flag);
+    @Decorate(method = "spawnGroup", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/raid/Raid;joinRaid(ILnet/minecraft/world/entity/raid/Raider;Lnet/minecraft/core/BlockPos;Z)V"))
+    public void arclight$captureRaider(Raid raid, int wave, Raider entity, BlockPos pos, boolean flag) throws Throwable {
+        DecorationOps.callsite().invoke(raid, wave, entity, pos, flag);
         if (arclight$raiders == null) {
             arclight$raiders = new ArrayList<>();
         }

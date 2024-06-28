@@ -1,6 +1,10 @@
 package io.izzel.arclight.common.bridge.bukkit;
 
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
@@ -8,9 +12,6 @@ import org.bukkit.craftbukkit.v.inventory.CraftMetaItem;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import javax.annotation.Nullable;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.Block;
 import java.util.function.Function;
 
 public interface MaterialBridge {
@@ -40,19 +41,19 @@ public interface MaterialBridge {
 
     boolean bridge$shouldApplyStateFactory();
 
-    default Item bridge$getCraftRemainingItem(Item item)  {
+    default Item bridge$getCraftRemainingItem(Item item) {
         return item.getCraftingRemainingItem();
     }
 
     default int bridge$forge$getMaxStackSize(Item item) {
-        return item.getMaxStackSize();
+        return item.getDefaultMaxStackSize();
     }
 
     default int bridge$forge$getDurability(Item item) {
-        return item.getMaxDamage();
+        return item.components().getOrDefault(DataComponents.MAX_DAMAGE, 0);
     }
 
-    default int bridge$forge$getBurnTime(Item item)  {
+    default int bridge$forge$getBurnTime(Item item) {
         var result = AbstractFurnaceBlockEntity.getFuel().get(item);
         return result != null ? result : 0;
     }

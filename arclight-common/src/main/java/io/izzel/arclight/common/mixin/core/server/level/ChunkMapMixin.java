@@ -43,7 +43,6 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
     @Shadow @Nullable protected abstract ChunkHolder getUpdatingChunkIfPresent(long chunkPosIn);
     @Shadow protected abstract Iterable<ChunkHolder> getChunks();
     @Shadow protected abstract void tick();
-    @Shadow @Mutable public ChunkGenerator generator;
     @Shadow @Final public ServerLevel level;
     @Shadow @Final @Mutable private RandomState randomState;
     @Invoker("tick") public abstract void bridge$tick(BooleanSupplier hasMoreTime);
@@ -51,8 +50,8 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
     // @formatter:on
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void arclight$updateRandom(ServerLevel p_214836_, LevelStorageSource.LevelStorageAccess p_214837_, DataFixer p_214838_, StructureTemplateManager p_214839_, Executor p_214840_, BlockableEventLoop p_214841_, LightChunkGetter p_214842_, ChunkGenerator p_214843_, ChunkProgressListener p_214844_, ChunkStatusUpdateListener p_214845_, Supplier p_214846_, int p_214847_, boolean p_214848_, CallbackInfo ci) {
-        this.bridge$setChunkGenerator(this.generator);
+    private void arclight$updateRandom(ServerLevel p_214836_, LevelStorageSource.LevelStorageAccess p_214837_, DataFixer p_214838_, StructureTemplateManager p_214839_, Executor p_214840_, BlockableEventLoop p_214841_, LightChunkGetter p_214842_, ChunkGenerator chunkGenerator, ChunkProgressListener p_214844_, ChunkStatusUpdateListener p_214845_, Supplier p_214846_, int p_214847_, boolean p_214848_, CallbackInfo ci) {
+        this.bridge$setChunkGenerator(chunkGenerator);
     }
 
     @Redirect(method = "upgradeChunkTag", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;dimension()Lnet/minecraft/resources/ResourceKey;"))
@@ -84,7 +83,6 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
 
     @Override
     public void bridge$setChunkGenerator(ChunkGenerator generator) {
-        this.generator = generator;
         if (generator instanceof CustomChunkGenerator custom) {
             generator = custom.getDelegate();
         }

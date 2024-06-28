@@ -24,7 +24,7 @@ public final class ArclightPermissionHandler implements IPermissionHandler {
 
     @Override
     public ResourceLocation getIdentifier() {
-        return new ResourceLocation("arclight", "permission");
+        return ResourceLocation.parse("arclight:permission");
     }
 
     @Override

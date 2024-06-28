@@ -2,7 +2,6 @@ package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
 import io.izzel.arclight.common.bridge.core.network.datasync.SynchedEntityDataBridge;
 import net.minecraft.advancements.CriteriaTriggers;
-import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -42,7 +41,7 @@ public interface BucketableMixin {
             itemstack1 = CraftItemStack.asNMSCopy(event.getEntityBucket());
             if (event.isCancelled()) {
                 player.containerMenu.sendAllDataToRemote(); // We need to update inventory to resync client's bucket
-                ((ServerPlayer) player).connection.send(new ClientboundAddEntityPacket(entity)); // We need to play out these packets as the client assumes the fish is gone
+                entity.bridge$getBukkitEntity().update((ServerPlayer) player); // We need to play out these packets as the client assumes the fish is gone
                 ((SynchedEntityDataBridge) livingEntity.getEntityData()).bridge$refresh((ServerPlayer) player); // Need to send data such as the display name to client
                 return Optional.of(InteractionResult.FAIL);
             }

@@ -2,20 +2,15 @@ package io.izzel.arclight.common.mixin.core.world.entity.vehicle;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.vehicle.AbstractMinecartBridge;
-import io.izzel.arclight.common.bridge.core.world.level.block.BlockBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.BlockPos;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MoverType;
-import net.minecraft.world.entity.animal.IronGolem;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BaseRailBlock;
-import net.minecraft.world.level.block.PoweredRailBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
@@ -32,8 +27,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.List;
 
 @Mixin(AbstractMinecart.class)
 public abstract class AbstractMinecartMixin extends VehicleEntityMixin implements AbstractMinecartBridge {
@@ -75,121 +68,55 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin implement
 
     private transient Location arclight$prevLocation;
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    public void tick() {
+    @Decorate(method = "tick", inject = true, at = @At("HEAD"))
+    private void arclight$storePreviousLocation() {
         this.arclight$prevLocation = new Location(null, this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
-        if (this.getHurtTime() > 0) {
-            this.setHurtTime(this.getHurtTime() - 1);
+    }
+
+    @Inject(method = "tick", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/vehicle/AbstractMinecart;setRot(FF)V"))
+    private void arclight$vehicleUpdateEvent(CallbackInfo ci) {
+        org.bukkit.World bworld = this.level().bridge$getWorld();
+        Location from = this.arclight$prevLocation;
+        this.arclight$prevLocation = null;
+        from.setWorld(bworld);
+        Location to = new Location(bworld, this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
+        Vehicle vehicle = (Vehicle) this.getBukkitEntity();
+        Bukkit.getPluginManager().callEvent(new VehicleUpdateEvent(vehicle));
+        if (!from.equals(to)) {
+            Bukkit.getPluginManager().callEvent(new VehicleMoveEvent(vehicle, from, to));
         }
-        if (this.getDamage() > 0.0f) {
-            this.setDamage(this.getDamage() - 1.0f);
+    }
+
+    @Decorate(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;startRiding(Lnet/minecraft/world/entity/Entity;)Z"))
+    private boolean arclight$ridingCollide(Entity instance, Entity entity) throws Throwable {
+        VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), instance.bridge$getBukkitEntity());
+        Bukkit.getPluginManager().callEvent(collisionEvent);
+        if (collisionEvent.isCancelled()) {
+            return false;
         }
-        this.checkBelowWorld();
-        if (this.level().isClientSide) {
-            if (this.lerpSteps > 0) {
-                this.lerpPositionAndRotationStep(this.lerpSteps, this.lerpX, this.lerpY, this.lerpZ, this.lerpYRot, this.lerpXRot);
-                --this.lerpSteps;
-            } else {
-                this.reapplyPosition();
-                this.setRot(this.getYRot(), this.getXRot());
+        return (boolean) DecorationOps.callsite().invoke(instance, entity);
+    }
+
+    @Decorate(method = "tick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/Entity;push(Lnet/minecraft/world/entity/Entity;)V"))
+    private void arclight$pushCollide(Entity instance, Entity entity) throws Throwable {
+        if (!this.isPassengerOfSameVehicle(instance)) {
+            VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), instance.bridge$getBukkitEntity());
+            Bukkit.getPluginManager().callEvent(collisionEvent);
+            if (collisionEvent.isCancelled()) {
+                return;
             }
-        } else {
-            /*
-            this.prevPosX = this.getPosX();
-            this.prevPosY = this.getPosY();
-            this.prevPosZ = this.getPosZ();
-             */
-            if (!this.isNoGravity()) {
-                this.setDeltaMovement(this.getDeltaMovement().add(0.0, -0.04, 0.0));
-            }
-            int i = Mth.floor(this.getX());
-            int j = Mth.floor(this.getY());
-            int k = Mth.floor(this.getZ());
-            if (this.level().getBlockState(new BlockPos(i, j - 1, k)).is(BlockTags.RAILS)) {
-                --j;
-            }
-            BlockPos blockposition = new BlockPos(i, j, k);
-            BlockState blockstate = this.level().getBlockState(blockposition);
-            this.onRails = BaseRailBlock.isRail(blockstate);
-            if (this.bridge$forge$canUseRail() && this.onRails) {
-                this.moveAlongTrack(blockposition, blockstate);
-                if (((BlockBridge) blockstate.getBlock()).bridge$forge$isActivatorRail(blockstate)) {
-                    this.activateMinecart(i, j, k, blockstate.getValue(PoweredRailBlock.POWERED));
-                }
-            } else {
-                this.comeOffTrack();
-            }
-            this.checkInsideBlocks();
-            this.setXRot(0.f);
-            double d5 = this.xo - this.getX();
-            double d6 = this.zo - this.getZ();
-            if (d5 * d5 + d6 * d6 > 0.001) {
-                this.setYRot((float) (Mth.atan2(d6, d5) * 180.0 / 3.141592653589793));
-                if (this.flipped) {
-                    this.setYRot(this.getYRot() + 180.0f);
-                }
-            }
-            double d7 = Mth.wrapDegrees(this.getYRot() - this.yRotO);
-            if (d7 < -170.0 || d7 >= 170.0) {
-                this.setYRot(this.getYRot() + 180.0f);
-                this.flipped = !this.flipped;
-            }
-            this.setRot(this.getYRot(), this.getXRot());
-            org.bukkit.World bworld = this.level().bridge$getWorld();
-            Location from = this.arclight$prevLocation;
-            this.arclight$prevLocation = null;
-            from.setWorld(bworld);
-            Location to = new Location(bworld, this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
-            Vehicle vehicle = (Vehicle) this.getBukkitEntity();
-            Bukkit.getPluginManager().callEvent(new VehicleUpdateEvent(vehicle));
-            if (!from.equals(to)) {
-                Bukkit.getPluginManager().callEvent(new VehicleMoveEvent(vehicle, from, to));
-            }
-            if (this.getMinecartType() == AbstractMinecart.Type.RIDEABLE && this.getDeltaMovement().horizontalDistanceSqr() > 0.01) {
-                List<Entity> list = this.level().getEntities((AbstractMinecart) (Object) this, this.getBoundingBox().inflate(0.20000000298023224, 0.0, 0.20000000298023224), EntitySelector.pushableBy((AbstractMinecart) (Object) this));
-                if (!list.isEmpty()) {
-                    for (Entity entity : list) {
-                        if (!(entity instanceof Player) && !(entity instanceof IronGolem) && !(entity instanceof AbstractMinecart) && !this.isVehicle() && !entity.isPassenger()) {
-                            VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent(vehicle, ((EntityBridge) entity).bridge$getBukkitEntity());
-                            Bukkit.getPluginManager().callEvent(collisionEvent);
-                            if (!collisionEvent.isCancelled()) {
-                                entity.startRiding((AbstractMinecart) (Object) this);
-                            }
-                        } else {
-                            if (!isPassengerOfSameVehicle(entity)) {
-                                VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent(vehicle, ((EntityBridge) entity).bridge$getBukkitEntity());
-                                Bukkit.getPluginManager().callEvent(collisionEvent);
-                                if (collisionEvent.isCancelled()) {
-                                    continue;
-                                }
-                            }
-                            entity.push((AbstractMinecart) (Object) this);
-                        }
-                    }
-                }
-            } else {
-                for (Entity entity2 : this.level().getEntities((AbstractMinecart) (Object) this, this.getBoundingBox().inflate(0.20000000298023224, 0.0, 0.20000000298023224))) {
-                    if (!this.hasPassenger(entity2) && entity2.isPushable() && entity2 instanceof AbstractMinecart) {
-                        VehicleEntityCollisionEvent collisionEvent2 = new VehicleEntityCollisionEvent(vehicle, ((EntityBridge) entity2).bridge$getBukkitEntity());
-                        Bukkit.getPluginManager().callEvent(collisionEvent2);
-                        if (collisionEvent2.isCancelled()) {
-                            continue;
-                        }
-                        entity2.push((AbstractMinecart) (Object) this);
-                    }
-                }
-            }
-            this.updateInWaterStateAndDoFluidPushing();
-            if (this.isInLava()) {
-                this.lavaHurt();
-                this.fallDistance *= 0.5F;
-            }
-            this.firstTick = false;
         }
+        DecorationOps.callsite().invoke(instance, entity);
+    }
+
+    @Decorate(method = "tick", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/entity/Entity;push(Lnet/minecraft/world/entity/Entity;)V"))
+    private void arclight$pushCollide2(Entity instance, Entity entity) throws Throwable {
+        VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), instance.bridge$getBukkitEntity());
+        Bukkit.getPluginManager().callEvent(collisionEvent);
+        if (collisionEvent.isCancelled()) {
+            return;
+        }
+        DecorationOps.callsite().invoke(instance, entity);
     }
 
     /**
@@ -198,7 +125,7 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin implement
      */
     @Overwrite
     protected double getMaxSpeed() {
-        return maxSpeed;
+        return (this.isInWater() ? this.maxSpeed / 2.0D : this.maxSpeed);
     }
 
     /**

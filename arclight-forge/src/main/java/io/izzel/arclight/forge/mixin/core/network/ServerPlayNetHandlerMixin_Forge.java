@@ -35,6 +35,6 @@ public abstract class ServerPlayNetHandlerMixin_Forge extends ServerCommonPacket
 
     @Override
     public InteractionResult bridge$platform$onInteractEntityAt(ServerPlayer player, Entity entity, Vec3 vec, InteractionHand interactionHand) {
-        return ForgeHooks.onInteractEntityAt(player, entity, vec, interactionHand);
+        return ForgeHooks.onInteractEntityAt(entity, player, vec, interactionHand);
     }
 }

@@ -8,6 +8,7 @@ import net.minecraft.server.network.ServerLoginPacketListenerImpl;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.bukkit.craftbukkit.v.CraftServer;
+import org.bukkit.event.player.PlayerRespawnEvent;
 
 import java.net.SocketAddress;
 import java.util.List;
@@ -23,6 +24,8 @@ public interface PlayerListBridge {
     ServerPlayer bridge$canPlayerLogin(SocketAddress socketAddress, GameProfile gameProfile, ServerLoginPacketListenerImpl handler);
 
     void bridge$sendMessage(Component[] components);
+
+    void bridge$pushRespawnCause(PlayerRespawnEvent.RespawnReason respawnReason);
 
     default boolean bridge$platform$onTravelToDimension(Player player, ResourceKey<Level> dimension) {
         return false;

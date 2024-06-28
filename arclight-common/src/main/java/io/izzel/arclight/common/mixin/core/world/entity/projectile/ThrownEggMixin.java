@@ -7,6 +7,7 @@ import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mod.util.Blackhole;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.animal.Chicken;
 import net.minecraft.world.entity.projectile.ThrownEgg;
 import net.minecraft.world.phys.HitResult;
@@ -16,11 +17,15 @@ import org.bukkit.entity.Egg;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.player.PlayerEggThrowEvent;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(ThrownEgg.class)
 public abstract class ThrownEggMixin extends ThrowableProjectileMixin {
+
+    @Shadow @Final private static EntityDimensions ZERO_SIZED_DIMENSIONS;
 
     /**
      * @author IzzelAliz
@@ -63,6 +68,9 @@ public abstract class ThrownEggMixin extends ThrowableProjectileMixin {
                             ((Ageable) ((EntityBridge) entity).bridge$getBukkitEntity()).setBaby();
                         }
                         entity.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), 0.0F);
+                        if (!entity.fudgePositionAfterSizeChange(ZERO_SIZED_DIMENSIONS)) {
+                            break;
+                        }
                         ((WorldBridge) this.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.EGG);
                         this.level().addFreshEntity(entity);
                     }

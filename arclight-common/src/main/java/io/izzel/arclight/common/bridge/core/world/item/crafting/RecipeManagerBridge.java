@@ -9,6 +9,4 @@ public interface RecipeManagerBridge {
     void bridge$addRecipe(RecipeHolder<?> recipe);
 
     void bridge$clearRecipes();
-
-    RecipeHolder<?> bridge$platform$loadRecipe(ResourceLocation key, JsonElement element);
 }

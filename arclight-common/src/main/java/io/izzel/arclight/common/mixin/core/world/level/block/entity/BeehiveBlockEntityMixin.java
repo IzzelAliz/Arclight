@@ -1,14 +1,11 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
 import com.google.common.collect.Lists;
-import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Bee;
 import net.minecraft.world.level.Level;
@@ -16,7 +13,6 @@ import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityEnterBlockEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
@@ -38,7 +34,7 @@ public abstract class BeehiveBlockEntityMixin extends BlockEntityMixin {
     // @formatter:off
     @Shadow @Final private List<BeehiveBlockEntity.BeeData> stored;
     @Shadow @Nullable public BlockPos savedFlowerPos;
-    @Shadow private static boolean releaseOccupant(Level p_155137_, BlockPos p_155138_, BlockState p_155139_, BeehiveBlockEntity.BeeData p_155140_, @org.jetbrains.annotations.Nullable List<Entity> p_155141_, BeehiveBlockEntity.BeeReleaseStatus p_155142_, @org.jetbrains.annotations.Nullable BlockPos p_155143_) { return false; }
+    @Shadow protected static boolean releaseOccupant(Level arg, BlockPos arg2, BlockState arg3, BeehiveBlockEntity.Occupant arg4, @org.jetbrains.annotations.Nullable List<Entity> list, BeehiveBlockEntity.BeeReleaseStatus arg5, @org.jetbrains.annotations.Nullable BlockPos arg6) { return false; }
     // @formatter:on
 
     public int maxBees = 3;
@@ -64,15 +60,15 @@ public abstract class BeehiveBlockEntityMixin extends BlockEntityMixin {
         return list;
     }
 
-    @Redirect(method = "addOccupantWithPresetTicks", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/List;size()I"))
+    @Redirect(method = "addOccupant", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/List;size()I"))
     private int arclight$maxBee(List<?> list) {
         return list.size() < this.maxBees ? 1 : 3;
     }
 
-    @Inject(method = "addOccupantWithPresetTicks(Lnet/minecraft/world/entity/Entity;ZI)V", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;stopRiding()V"))
-    private void arclight$beeEnterBlock(Entity entity, boolean p_226962_2_, int p_226962_3_, CallbackInfo ci) {
+    @Inject(method = "addOccupant", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;stopRiding()V"))
+    private void arclight$beeEnterBlock(Entity entity, CallbackInfo ci) {
         if (this.level != null) {
-            EntityEnterBlockEvent event = new EntityEnterBlockEvent(((EntityBridge) entity).bridge$getBukkitEntity(), CraftBlock.at(this.level, this.worldPosition));
+            EntityEnterBlockEvent event = new EntityEnterBlockEvent(entity.bridge$getBukkitEntity(), CraftBlock.at(this.level, this.worldPosition));
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
                 if (entity instanceof Bee) {
@@ -83,15 +79,15 @@ public abstract class BeehiveBlockEntityMixin extends BlockEntityMixin {
         }
     }
 
-    @Inject(method = "addOccupantWithPresetTicks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;discard()V"))
-    private void arclight$enterBlockCause(Entity entity, boolean bl, int i, CallbackInfo ci) {
+    @Inject(method = "addOccupant", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;discard()V"))
+    private void arclight$enterBlockCause(Entity entity, CallbackInfo ci) {
         entity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.ENTER_BLOCK);
     }
 
     private static boolean releaseBee(Level world, BlockPos pos, BlockState state, BeehiveBlockEntity.BeeData beeData, @Nullable List<Entity> list, BeehiveBlockEntity.BeeReleaseStatus status, @Nullable BlockPos pos1, boolean force) {
         arclight$force = force;
         try {
-            return releaseOccupant(world, pos, state, beeData, list, status, pos1);
+            return releaseOccupant(world, pos, state, beeData.toOccupant(), list, status, pos1);
         } finally {
             arclight$force = false;
         }
@@ -104,34 +100,15 @@ public abstract class BeehiveBlockEntityMixin extends BlockEntityMixin {
         return !arclight$force && world.isNight();
     }
 
-    @Redirect(method = "releaseOccupant", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getType()Lnet/minecraft/world/entity/EntityType;"))
-    private static EntityType<?> arclight$spawnFirst(Entity entity, Level level) {
-        EntityType<?> type = entity.getType();
-        if (type.is(EntityTypeTags.BEEHIVE_INHABITORS)) {
-            ((WorldBridge) level).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.BEEHIVE);
-            if (!level.addFreshEntity(entity)) {
-                return EntityType.ITEM_FRAME;
-            } else {
-                return type;
-            }
-        }
-        return type;
-    }
-
-    @Redirect(method = "releaseOccupant", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
-    private static boolean arclight$addedBefore(Level world, Entity entityIn) {
-        return true;
-    }
-
-    @Inject(method = "load", at = @At("RETURN"))
-    private void arclight$readMax(CompoundTag compound, CallbackInfo ci) {
+    @Inject(method = "loadAdditional", at = @At("RETURN"))
+    private void arclight$readMax(CompoundTag compound, HolderLookup.Provider provider, CallbackInfo ci) {
         if (compound.contains("Bukkit.MaxEntities")) {
             this.maxBees = compound.getInt("Bukkit.MaxEntities");
         }
     }
 
     @Inject(method = "saveAdditional", at = @At("RETURN"))
-    private void arclight$writeMax(CompoundTag compound, CallbackInfo ci) {
+    private void arclight$writeMax(CompoundTag compound, HolderLookup.Provider provider, CallbackInfo ci) {
         compound.putInt("Bukkit.MaxEntities", this.maxBees);
     }
 }

@@ -42,7 +42,7 @@ public class BigDripleafBlockMixin {
         if (entity instanceof Player) {
             cancellable = CraftEventFactory.callPlayerInteractEvent((Player) entity, org.bukkit.event.block.Action.PHYSICAL, pos, null, null, null);
         } else {
-            cancellable = new EntityInteractEvent(((EntityBridge) entity).bridge$getBukkitEntity(), CraftBlock.at(level, pos));
+            cancellable = new EntityInteractEvent(entity.bridge$getBukkitEntity(), CraftBlock.at(level, pos));
             Bukkit.getPluginManager().callEvent((EntityInteractEvent) cancellable);
         }
 

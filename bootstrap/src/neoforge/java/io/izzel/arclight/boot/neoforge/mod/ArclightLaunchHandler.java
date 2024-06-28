@@ -1,8 +1,8 @@
 package io.izzel.arclight.boot.neoforge.mod;
 
-import net.neoforged.fml.loading.targets.ForgeServerLaunchHandler;
+import net.neoforged.fml.loading.targets.NeoForgeServerLaunchHandler;
 
-public class ArclightLaunchHandler extends ForgeServerLaunchHandler {
+public class ArclightLaunchHandler extends NeoForgeServerLaunchHandler {
 
     @Override
     public String name() {

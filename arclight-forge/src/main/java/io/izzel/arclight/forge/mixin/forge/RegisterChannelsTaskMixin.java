@@ -16,6 +16,6 @@ public class RegisterChannelsTaskMixin {
 
     @Inject(method = "start(Lnet/minecraftforge/network/config/ConfigurationTaskContext;)V", at = @At("HEAD"))
     private void arclight$registerBukkitChannels(ConfigurationTaskContext ctx, CallbackInfo ci) {
-        ChannelListManager.addChannels(ctx.getConnection(), Bukkit.getMessenger().getIncomingChannels().stream().map(ResourceLocation::new).collect(Collectors.toList()));
+        ChannelListManager.addChannels(ctx.getConnection(), Bukkit.getMessenger().getIncomingChannels().stream().map(ResourceLocation::parse).collect(Collectors.toList()));
     }
 }

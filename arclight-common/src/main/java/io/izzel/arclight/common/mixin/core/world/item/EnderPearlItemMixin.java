@@ -47,9 +47,7 @@ public class EnderPearlItemMixin extends Item {
         playerIn.getCooldowns().addCooldown(this, 20);
 
         playerIn.awardStat(Stats.ITEM_USED.get(this));
-        if (!playerIn.getAbilities().instabuild) {
-            itemstack.shrink(1);
-        }
+        itemstack.consume(1, playerIn);
 
         return InteractionResultHolder.sidedSuccess(itemstack, worldIn.isClientSide());
     }

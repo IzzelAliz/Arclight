@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.item;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.FlintAndSteelItem;
 import net.minecraft.world.item.context.UseOnContext;
@@ -25,9 +26,7 @@ public class FlintAndSteelItemMixin {
         BlockPos blockpos = context.getClickedPos();
         BlockPos blockpos1 = blockpos.relative(context.getClickedFace());
         if (CraftEventFactory.callBlockIgniteEvent(world, blockpos1, BlockIgniteEvent.IgniteCause.FLINT_AND_STEEL, playerentity).isCancelled()) {
-            context.getItemInHand().hurtAndBreak(1, playerentity, (entity) -> {
-                entity.broadcastBreakEvent(context.getHand());
-            });
+            context.getItemInHand().hurtAndBreak(1, playerentity, LivingEntity.getSlotForHand(context.getHand()));
             cir.setReturnValue(InteractionResult.PASS);
         }
     }

@@ -1,13 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.bridge.core.inventory.CraftingInventoryBridge;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.CraftingContainer;
-import net.minecraft.world.inventory.ResultContainer;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -40,11 +36,6 @@ public abstract class SheepMixin extends AnimalMixin {
         if (event.isCancelled()) {
             ci.cancel();
         }
-    }
-
-    @Inject(method = "makeContainer", locals = LocalCapture.CAPTURE_FAILHARD, at = @At("RETURN"))
-    private static void arclight$resultInv(DyeColor color, DyeColor color1, CallbackInfoReturnable<CraftingContainer> cir, CraftingContainer craftingInventory) {
-        ((CraftingInventoryBridge) craftingInventory).bridge$setResultInventory(new ResultContainer());
     }
 
     // Forge: ShearsItem#interactLivingEntity

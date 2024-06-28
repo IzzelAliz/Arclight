@@ -29,6 +29,9 @@ public class CompatSpec {
     @Setting("valid-username-regex")
     private String validUsernameRegex;
 
+    @Setting("exact-plugin-entity-damage-control")
+    private boolean exactPluginEntityDamageControl;
+
     public Map<String, MaterialPropertySpec> getMaterials() {
         return materials;
     }
@@ -63,5 +66,9 @@ public class CompatSpec {
 
     public String getValidUsernameRegex() {
         return validUsernameRegex;
+    }
+
+    public boolean isExactPluginEntityDamageControl() {
+        return exactPluginEntityDamageControl;
     }
 }

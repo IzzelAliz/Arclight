@@ -138,16 +138,16 @@ public abstract class HopperBlockEntityMixin extends LockableBlockEntityMixin {
         return (craftInventory != null) ? craftInventory.getInventory() : null;
     }
 
-    @Inject(method = "getAttachedContainer", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At("RETURN"))
-    private static void arclight$searchTo(Level level, BlockPos pos, BlockState p_155595_, CallbackInfoReturnable<Container> cir, Direction direction) {
+    @Inject(method = "getAttachedContainer", cancellable = true, at = @At("RETURN"))
+    private static void arclight$searchTo(Level level, BlockPos pos, HopperBlockEntity hopperBlockEntity, CallbackInfoReturnable<Container> cir) {
         var container = cir.getReturnValue();
         var hopper = CraftBlock.at(level, pos);
-        var searchBlock = CraftBlock.at(level, pos.relative(direction));
+        var searchBlock = CraftBlock.at(level, pos.relative(hopperBlockEntity.facing));
         cir.setReturnValue(runHopperInventorySearchEvent(container, hopper, searchBlock, HopperInventorySearchEvent.ContainerType.DESTINATION));
     }
 
-    @Inject(method = "getSourceContainer", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At("RETURN"))
-    private static void arclight$searchFrom(Level level, Hopper hopper, CallbackInfoReturnable<Container> cir) {
+    @Inject(method = "getSourceContainer", cancellable = true, at = @At("RETURN"))
+    private static void arclight$searchFrom(Level level, Hopper hopper, BlockPos blockposition, BlockState iblockdata, CallbackInfoReturnable<Container> cir) {
         var container = cir.getReturnValue();
         var blockPos = BlockPos.containing(hopper.getLevelX(), hopper.getLevelY(), hopper.getLevelZ());
         var hopperBlock = CraftBlock.at(level, blockPos);

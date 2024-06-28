@@ -2,16 +2,17 @@ package io.izzel.arclight.common.mod.server.event;
 
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.item.ItemStackBridge;
 import io.izzel.arclight.common.bridge.core.world.level.block.BlockBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerPlayerGameMode;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.BedItem;
@@ -22,16 +23,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.block.CraftBlockState;
+import org.bukkit.craftbukkit.v.damage.CraftDamageSource;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityDropItemEvent;
-import org.bukkit.event.entity.EntityRegainHealthEvent;
-import org.bukkit.event.entity.EntityResurrectEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -43,29 +42,12 @@ public abstract class ArclightEventFactory {
         Bukkit.getPluginManager().callEvent(event);
     }
 
-    public static EntityRegainHealthEvent callEntityRegainHealthEvent(Entity entity, float amount, EntityRegainHealthEvent.RegainReason regainReason) {
-        EntityRegainHealthEvent event = new EntityRegainHealthEvent(entity, amount, regainReason);
-        callEvent(event);
-        return event;
-    }
-
-    public static EntityResurrectEvent callEntityResurrectEvent(org.bukkit.entity.LivingEntity livingEntity) {
-        EntityResurrectEvent event = new EntityResurrectEvent(livingEntity);
-        callEvent(event);
-        return event;
-    }
-
-    public static void callEntityDeathEvent(LivingEntity entity, List<ItemStack> drops) {
+    public static void callEntityDeathEvent(LivingEntity entity, List<ItemStack> drops, DamageSource damageSource) {
+        CraftDamageSource bukkitDamageSource = new CraftDamageSource(damageSource);
         CraftLivingEntity craftLivingEntity = ((LivingEntityBridge) entity).bridge$getBukkitEntity();
-        EntityDeathEvent event = new EntityDeathEvent(craftLivingEntity, drops, ((LivingEntityBridge) entity).bridge$getExpReward());
+        EntityDeathEvent event = new EntityDeathEvent(craftLivingEntity, bukkitDamageSource, drops, ((LivingEntityBridge) entity).bridge$getExpReward(entity));
         callEvent(event);
         ((LivingEntityBridge) entity).bridge$setExpToDrop(event.getDroppedExp());
-    }
-
-    public static EntityDeathEvent callEntityDeathEvent(org.bukkit.entity.LivingEntity entity, List<ItemStack> drops, int droppedExp) {
-        EntityDeathEvent event = new EntityDeathEvent(entity, drops, droppedExp);
-        callEvent(event);
-        return event;
     }
 
     public static EntityDropItemEvent callEntityDropItemEvent(org.bukkit.entity.Entity entity, org.bukkit.entity.Item drop) {
@@ -139,19 +121,13 @@ public abstract class ArclightEventFactory {
 
         // save new item data
         int newSize = currentStack.getCount();
-        CompoundTag newNBT = null;
-        if (currentStack.getTag() != null) {
-            newNBT = currentStack.getTag().copy();
-        }
+        var newPatch = currentStack.getComponentsPatch();
 
         int size = oldStack.getCount();
-        CompoundTag nbt = null;
-        if (oldStack.getTag() != null) {
-            nbt = oldStack.getTag().copy();
-        }
+        var oldPatch = oldStack.getComponentsPatch();
 
         currentStack.setCount(size);
-        currentStack.setTag(nbt);
+        ((ItemStackBridge) (Object) currentStack).bridge$restorePatch(oldPatch);
 
         if (blocks.size() > 1) {
             placeEvent = CraftEventFactory.callBlockMultiPlaceEvent(world, player, enumhand, blocks, blockposition.getX(), blockposition.getY(), blockposition.getZ());
@@ -178,8 +154,8 @@ public abstract class ArclightEventFactory {
             // ItemSign.openSign = null; // SPIGOT-6758 - Reset on early return
         } else {
             // Change the stack to its new contents if it hasn't been tampered with.
-            if (currentStack.getCount() == size && Objects.equals(currentStack.getTag(), nbt)) {
-                currentStack.setTag(newNBT);
+            if (currentStack.getCount() == size && Objects.equals(currentStack.getComponentsPatch(), oldPatch)) {
+                ((ItemStackBridge) (Object) currentStack).bridge$restorePatch(newPatch);
                 currentStack.setCount(newSize);
             }
 
@@ -192,7 +168,7 @@ public abstract class ArclightEventFactory {
                 var oldBlock = ((CraftBlockState) blockstate).getHandle();
                 var newblockposition = ((CraftBlockState) blockstate).getPosition();
                 var block = world.getBlockState(newblockposition);
-                block.getBlock().onPlace(block, world, newblockposition, oldBlock, true);
+                block.onPlace(world, newblockposition, oldBlock, true);
 
                 ((WorldBridge) world).bridge$forge$notifyAndUpdatePhysics(newblockposition, null, oldBlock, block, updateFlag, 512); // send null chunk as chunk.k() returns false by this point
             }

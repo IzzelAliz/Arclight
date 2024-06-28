@@ -37,9 +37,7 @@ public class SnowballItemMixin extends Item {
             snowballentity.setItem(itemstack);
             snowballentity.shootFromRotation(playerIn, playerIn.getXRot(), playerIn.getYRot(), 0.0F, 1.5F, 1.0F);
             if (worldIn.addFreshEntity(snowballentity)) {
-                if (!playerIn.getAbilities().instabuild) {
-                    itemstack.shrink(1);
-                }
+                itemstack.consume(1, playerIn);
                 worldIn.playSound(null, playerIn.getX(), playerIn.getY(), playerIn.getZ(), SoundEvents.SNOWBALL_THROW, SoundSource.NEUTRAL, 0.5F, 0.4F / (worldIn.getRandom().nextFloat() * 0.4F + 0.8F));
             } else if (playerIn instanceof ServerPlayer) {
                 ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().updateInventory();

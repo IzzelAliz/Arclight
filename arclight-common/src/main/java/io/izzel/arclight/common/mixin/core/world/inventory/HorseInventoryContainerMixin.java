@@ -26,8 +26,8 @@ public abstract class HorseInventoryContainerMixin extends AbstractContainerMenu
     Inventory playerInventory;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    public void arclight$init(int id, Inventory playerInventory, Container horseInventory, AbstractHorse horse, CallbackInfo ci) {
-        this.playerInventory = playerInventory;
+    public void arclight$init(int i, Inventory inventory, Container container, AbstractHorse abstractHorse, int j, CallbackInfo ci) {
+        this.playerInventory = inventory;
     }
 
     @Override

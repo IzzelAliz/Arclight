@@ -23,7 +23,10 @@ public interface ServerCommonPacketListenerBridge {
     void bridge$setPlayer(ServerPlayer player);
 
     default FriendlyByteBuf bridge$getDiscardedData(ServerboundCustomPayloadPacket packet) {
-        // Todo: use Mixin to save vanilla payload data.
+        var customPacketPayload = packet.payload();
+        if (customPacketPayload instanceof DiscardedPayloadBridge b && b.bridge$getData() != null) {
+            return new FriendlyByteBuf(b.bridge$getData());
+        }
         return null;
     }
 }

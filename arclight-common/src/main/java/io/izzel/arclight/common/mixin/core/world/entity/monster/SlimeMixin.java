@@ -40,7 +40,8 @@ public abstract class SlimeMixin extends MobMixin {
         if (!this.level().isClientSide && i > 1 && this.isDeadOrDying()) {
             Component itextcomponent = this.getCustomName();
             boolean flag = this.isNoAi();
-            float f = (float) i / 4.0F;
+            float f = this.getDimensions(this.getPose()).width();
+            float f1 = f / 2.0F;
             int j = i / 2;
             int k = 2 + this.random.nextInt(3);
 
@@ -56,8 +57,8 @@ public abstract class SlimeMixin extends MobMixin {
             arclight$slimes = new ArrayList<>(k);
 
             for (int l = 0; l < k; ++l) {
-                float f1 = ((float) (l % 2) - 0.5F) * f;
-                float f2 = ((float) (l / 2) - 0.5F) * f;
+                float f2 = ((float) (l % 2) - 0.5F) * f1;
+                float f3 = ((float) (l / 2) - 0.5F) * f1;
                 net.minecraft.world.entity.monster.Slime slimeentity = this.getType().create(this.level());
                 if (slimeentity == null) continue;
                 if (this.isPersistenceRequired()) {
@@ -68,7 +69,7 @@ public abstract class SlimeMixin extends MobMixin {
                 slimeentity.setNoAi(flag);
                 slimeentity.setInvulnerable(this.isInvulnerable());
                 slimeentity.setSize(j, true);
-                slimeentity.moveTo(this.getX() + (double) f1, this.getY() + 0.5D, this.getZ() + (double) f2, this.random.nextFloat() * 360.0F, 0.0F);
+                slimeentity.moveTo(this.getX() + (double) f2, this.getY() + 0.5D, this.getZ() + (double) f3, this.random.nextFloat() * 360.0F, 0.0F);
                 arclight$slimes.add(slimeentity);
             }
             if (CraftEventFactory.callEntityTransformEvent((net.minecraft.world.entity.monster.Slime) (Object) this, arclight$slimes, EntityTransformEvent.TransformReason.SPLIT).isCancelled()) {
@@ -78,8 +79,8 @@ public abstract class SlimeMixin extends MobMixin {
             }
             for (int l = 0; l < arclight$slimes.size(); l++) {
                 // Apotheosis compat, see https://github.com/IzzelAliz/Arclight/issues/1078
-                float f1 = ((float) (l % 2) - 0.5F) * f;
-                float f2 = ((float) (l / 2) - 0.5F) * f;
+                float f2 = ((float) (l % 2) - 0.5F) * f;
+                float f3 = ((float) (l / 2) - 0.5F) * f;
                 net.minecraft.world.entity.monster.Slime living = (net.minecraft.world.entity.monster.Slime) arclight$slimes.get(l);
                 ((WorldBridge) this.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.SLIME_SPLIT);
                 this.level().addFreshEntity(living);

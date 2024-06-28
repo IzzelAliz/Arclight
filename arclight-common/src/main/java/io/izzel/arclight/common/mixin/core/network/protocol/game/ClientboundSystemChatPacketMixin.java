@@ -6,6 +6,7 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
+import org.bukkit.craftbukkit.v.util.CraftChatMessage;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(ClientboundSystemChatPacket.class)
@@ -18,6 +19,6 @@ public class ClientboundSystemChatPacketMixin {
 
     @CreateConstructor
     public void arclight$constructor(BaseComponent[] content, boolean overlay) {
-        arclight$constructor(Component.Serializer.fromJson(ComponentSerializer.toString(content)), overlay);
+        arclight$constructor(CraftChatMessage.fromJSON(ComponentSerializer.toString(content)), overlay);
     }
 }

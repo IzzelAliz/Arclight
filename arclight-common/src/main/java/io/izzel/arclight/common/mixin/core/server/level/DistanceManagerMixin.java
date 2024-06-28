@@ -42,26 +42,6 @@ public abstract class DistanceManagerMixin implements TicketManagerBridge {
         }
     }
 
-    @Redirect(method = "runAllUpdates", require = 0, at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Set;forEach(Ljava/util/function/Consumer;)V"))
-    private void arclight$safeIter(Set<ChunkHolder> instance, Consumer<ChunkHolder> consumer) {
-        // Iterate pending chunk updates with protection against concurrent modification exceptions
-        var iter = instance.iterator();
-        var expectedSize = instance.size();
-        do {
-            var chunkHolder = iter.next();
-            iter.remove();
-            expectedSize--;
-
-            consumer.accept(chunkHolder);
-
-            // Reset iterator if set was modified using add()
-            if (instance.size() != expectedSize) {
-                expectedSize = instance.size();
-                iter = instance.iterator();
-            }
-        } while (iter.hasNext());
-    }
-
     public <T> boolean addRegionTicketAtDistance(TicketType<T> type, ChunkPos pos, int level, T value) {
         var ticket = new Ticket<>(type, 33 - level, value);
         var ret = this.addTicket(pos.toLong(), ticket);

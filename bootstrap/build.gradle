@@ -26,8 +26,6 @@ sourceSets {
     fabric {}
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-
 configurations {
     installer
     installerFabric
@@ -46,7 +44,7 @@ repositories {
     }
     maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
     maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
-    maven { url = 'https://files.minecraftforge.net/maven/' }
+    maven { url = 'https://maven.minecraftforge.net/' }
     maven { url = 'https://maven.neoforged.net/releases/' }
     maven { url = 'https://maven.izzel.io/releases' }
     maven { url = 'https://jitpack.io/' }
@@ -99,8 +97,7 @@ dependencies {
     forgeImplementation 'net.minecraftforge:bootstrap:2.1.0'
     forgeImplementation 'net.minecraftforge:bootstrap-api:2.1.0'
 
-    neoforgeImplementation 'net.neoforged.fancymodloader:spi:2.0.7'
-    neoforgeImplementation 'net.neoforged.fancymodloader:loader:2.0.7'
+    neoforgeImplementation 'net.neoforged.fancymodloader:loader:4.0.1'
     neoforgeImplementation 'cpw.mods:securejarhandler:2.1.24'
 
     fabricImplementation "net.fabricmc:fabric-loader:$fabricLoaderVersion"
@@ -162,7 +159,7 @@ tasks.register('forgeJar', Jar) {
     from sourceSets.main.output
     from sourceSets.forge.output
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    dependsOn(project(':arclight-forge').tasks.reobfJar)
+    dependsOn(project(':arclight-forge').tasks.shadowJar)
 }
 
 tasks.register('neoforgeJar', Jar) {
@@ -253,13 +250,13 @@ project.sourceSets.fabric.output.dir file("build/fabric_async_catcher"), builtBy
 }
 
 compileJava {
-    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_21
     options.compilerArgs << '-XDignore.symbol.file' << '-XDenableSunApiLintControl'
     options.encoding = 'UTF-8'
 }
 
 compileApplaunchJava {
-    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_7
+    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 tasks.register('runProdServer', JavaExec) {
@@ -277,7 +274,7 @@ tasks.register('runProdServer', JavaExec) {
     args 'nogui'
     standardInput System.in
     javaLauncher.convention(javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     })
     dependsOn project.tasks.forgeJar
 }
@@ -290,12 +287,14 @@ tasks.register('runProdNeoforge', JavaExec) {
     systemProperties 'mixin.dumpTargetOnFailure': 'true'
     systemProperties 'arclight.alwaysExtract': 'true'
     systemProperties 'arclight.remapper.dump': './.mixin.out/plugin_classes'
+    systemProperties 'sun.stdout.encoding': 'UTF-8'
+    systemProperties 'sun.stderr.encoding': 'UTF-8'
     workingDir System.env.ARCLIGHT_PROD_DIR ?: file('run_prod/neoforge')
     maxHeapSize '4G'
     args 'nogui'
     standardInput System.in
     javaLauncher.convention(javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     })
     dependsOn project.tasks.neoforgeJar
 }
@@ -308,12 +307,14 @@ tasks.register('runProdFabric', JavaExec) {
     systemProperties 'mixin.dumpTargetOnFailure': 'true'
     systemProperties 'arclight.alwaysExtract': 'true'
     systemProperties 'arclight.remapper.dump': './.mixin.out/plugin_classes'
+    systemProperties 'sun.stdout.encoding': 'UTF-8'
+    systemProperties 'sun.stderr.encoding': 'UTF-8'
     workingDir System.env.ARCLIGHT_PROD_DIR ?: file('run_prod/fabric')
     maxHeapSize '4G'
     args 'nogui'
     standardInput System.in
     javaLauncher.convention(javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     })
     dependsOn project.tasks.fabricJar
 }

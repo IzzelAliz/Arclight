@@ -38,6 +38,16 @@ public class ArclightCaptures {
         }
     }
 
+    private static boolean lastEntityChangeBlockResult;
+
+    public static boolean getLastEntityChangeBlockResult() {
+        return lastEntityChangeBlockResult;
+    }
+
+    public static boolean setLastEntityChangeBlockResult(boolean b) {
+        return lastEntityChangeBlockResult = b;
+    }
+
     /**
      * Indicates that next BlockBreakEvent is fired directly by ServerPlayerGameMode#destroyBlock
      * and need to be captured as primary event.

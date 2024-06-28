@@ -3,7 +3,6 @@ package io.izzel.arclight.common.mixin.core.world.entity;
 import io.izzel.arclight.common.bridge.core.entity.EntityTypeBridge;
 import io.izzel.arclight.common.bridge.core.world.IWorldWriterBridge;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -26,7 +25,7 @@ import java.util.function.Consumer;
 public abstract class EntityTypeMixin<T extends Entity> implements EntityTypeBridge<T> {
 
     // @formatter:off
-    @Shadow @Nullable public abstract T create(ServerLevel p_262637_, @org.jetbrains.annotations.Nullable CompoundTag p_262687_, @org.jetbrains.annotations.Nullable Consumer<T> p_262629_, BlockPos p_262595_, MobSpawnType p_262666_, boolean p_262685_, boolean p_262588_);
+    @Shadow @Nullable public abstract T create(ServerLevel p_262637_, @org.jetbrains.annotations.Nullable Consumer<T> p_262629_, BlockPos p_262595_, MobSpawnType p_262666_, boolean p_262685_, boolean p_262588_);
     // @formatter:on
 
     @Inject(method = "spawn(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/MobSpawnType;ZZ)Lnet/minecraft/world/entity/Entity;",
@@ -38,21 +37,21 @@ public abstract class EntityTypeMixin<T extends Entity> implements EntityTypeBri
         }
     }
 
-    @Inject(method = "spawn(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/nbt/CompoundTag;Ljava/util/function/Consumer;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/MobSpawnType;ZZ)Lnet/minecraft/world/entity/Entity;",
+    @Inject(method = "spawn(Lnet/minecraft/server/level/ServerLevel;Ljava/util/function/Consumer;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/MobSpawnType;ZZ)Lnet/minecraft/world/entity/Entity;",
         cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At("RETURN"),
         slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V")))
-    private void arclight$returnIfSuccess(ServerLevel p_262704_, CompoundTag p_262603_, Consumer<T> p_262621_, BlockPos p_262672_, MobSpawnType p_262644_, boolean p_262690_, boolean p_262590_, CallbackInfoReturnable<T> cir, T t) {
+    private void arclight$returnIfSuccess(ServerLevel serverLevel, Consumer<T> consumer, BlockPos blockPos, MobSpawnType mobSpawnType, boolean bl, boolean bl2, CallbackInfoReturnable<T> cir, T t) {
         if (t != null) {
             cir.setReturnValue(t.isRemoved() ? null : t);
         }
     }
 
     public T spawn(ServerLevel p_262634_, BlockPos p_262707_, MobSpawnType p_262597_, CreatureSpawnEvent.SpawnReason spawnReason) {
-        return this.spawn(p_262634_, null, null, p_262707_, p_262597_, false, false, spawnReason);
+        return this.spawn(p_262634_, null, p_262707_, p_262597_, false, false, spawnReason);
     }
 
-    public T spawn(ServerLevel p_262704_, @Nullable CompoundTag p_262603_, @Nullable Consumer<T> p_262621_, BlockPos p_262672_, MobSpawnType p_262644_, boolean p_262690_, boolean p_262590_, CreatureSpawnEvent.SpawnReason spawnReason) {
-        T t = this.create(p_262704_, p_262603_, p_262621_, p_262672_, p_262644_, p_262690_, p_262590_);
+    public T spawn(ServerLevel p_262704_, @Nullable Consumer<T> p_262621_, BlockPos p_262672_, MobSpawnType p_262644_, boolean p_262690_, boolean p_262590_, CreatureSpawnEvent.SpawnReason spawnReason) {
+        T t = this.create(p_262704_, p_262621_, p_262672_, p_262644_, p_262690_, p_262590_);
         if (t != null) {
             ((IWorldWriterBridge) p_262704_).bridge$pushAddEntityReason(spawnReason);
             p_262704_.addFreshEntityWithPassengers(t);

@@ -8,11 +8,15 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import javax.annotation.Nullable;
 
 @Mixin(DamageSources.class)
 public abstract class DamageSourcesMixin implements DamageSourcesBridge {
@@ -20,6 +24,12 @@ public abstract class DamageSourcesMixin implements DamageSourcesBridge {
     // @formatter:off
     @Shadow protected abstract DamageSource source(ResourceKey<DamageType> p_270957_);
     // @formatter:on
+
+    @Shadow
+    public abstract DamageSource badRespawnPointExplosion(Vec3 vec3);
+
+    @Shadow
+    public abstract DamageSource source(ResourceKey<DamageType> resourceKey, @org.jetbrains.annotations.Nullable Entity entity, @org.jetbrains.annotations.Nullable Entity entity2);
 
     public DamageSource melting;
     public DamageSource poison;
@@ -46,5 +56,13 @@ public abstract class DamageSourcesMixin implements DamageSourcesBridge {
     @Override
     public DamageSource bridge$melting() {
         return melting();
+    }
+
+    public DamageSource explosion(@Nullable Entity entity, @Nullable Entity entity1, ResourceKey<DamageType> resourceKey) {
+        return this.source(resourceKey, entity, entity1);
+    }
+
+    public DamageSource badRespawnPointExplosion(Vec3 vec3d, org.bukkit.block.BlockState blockState) {
+        return ((DamageSourceBridge) this.badRespawnPointExplosion(vec3d)).bridge$directBlockState(blockState);
     }
 }

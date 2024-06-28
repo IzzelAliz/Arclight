@@ -1,32 +1,33 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
 import io.izzel.arclight.common.bridge.core.tileentity.BeaconTileEntityBridge;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import org.bukkit.craftbukkit.v.potion.CraftPotionUtil;
 import org.bukkit.potion.PotionEffect;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import javax.annotation.Nullable;
-
 @Mixin(BeaconBlockEntity.class)
 public abstract class BeaconTileEntityMixin implements BeaconTileEntityBridge {
 
     // @formatter:off
-    @Shadow @Nullable public MobEffect primaryPower;
     @Shadow public int levels;
-    @Shadow @Nullable public MobEffect secondaryPower;
+    @Shadow @Nullable public Holder<MobEffect> primaryPower;
+    @Shadow @Nullable public Holder<MobEffect> secondaryPower;
     // @formatter:on
 
-    @Inject(method = "load", at = @At("RETURN"))
-    public void arclight$level(CompoundTag compound, CallbackInfo ci) {
-        this.levels = compound.getInt("Levels");
+    @Inject(method = "loadAdditional", at = @At("RETURN"))
+    public void arclight$level(CompoundTag compoundTag, HolderLookup.Provider provider, CallbackInfo ci) {
+        this.levels = compoundTag.getInt("Levels");
     }
 
     public PotionEffect getPrimaryEffect() {

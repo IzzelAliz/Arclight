@@ -1,7 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import io.izzel.arclight.common.bridge.core.world.level.block.FireBlockBridge;
-import io.izzel.arclight.common.mod.mixins.annotation.InlineMethod;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -31,7 +30,6 @@ public abstract class FireBlockMixin extends BaseFireBlockMixin implements FireB
     @Shadow @Final private Object2IntMap<net.minecraft.world.level.block.Block> burnOdds;
     // @formatter:on
 
-    @InlineMethod
     @Redirect(method = "tick", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     public boolean arclight$fireSpread(ServerLevel world, BlockPos mutablePos, BlockState newState, int flags,
                                        BlockState state, ServerLevel worldIn, BlockPos pos) {

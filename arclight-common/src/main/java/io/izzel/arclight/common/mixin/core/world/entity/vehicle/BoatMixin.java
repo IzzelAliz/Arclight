@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity.vehicle;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.vehicle.Boat;
 import org.bukkit.Bukkit;
@@ -13,7 +15,6 @@ import org.bukkit.event.vehicle.VehicleUpdateEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Boat.class)
@@ -50,9 +51,9 @@ public abstract class BoatMixin extends VehicleEntityMixin {
         this.lastLocation = vehicle.getLocation();
     }
 
-    @Redirect(method = "checkFallDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/Boat;isRemoved()Z"))
-    private boolean arclight$breakVehicle(Boat boatEntity) {
-        if (!boatEntity.isRemoved()) {
+    @Decorate(method = "checkFallDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/Boat;isRemoved()Z"))
+    private boolean arclight$breakVehicle(Boat boatEntity) throws Throwable {
+        if (!(boolean) DecorationOps.callsite().invoke(boatEntity)) {
             final Vehicle vehicle = (Vehicle) this.getBukkitEntity();
             final VehicleDestroyEvent event = new VehicleDestroyEvent(vehicle, null);
             Bukkit.getPluginManager().callEvent(event);

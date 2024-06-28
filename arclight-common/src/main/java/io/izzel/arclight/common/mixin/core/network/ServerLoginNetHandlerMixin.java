@@ -13,8 +13,12 @@ import net.minecraft.DefaultUncaughtExceptionHandler;
 import net.minecraft.Util;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.Connection;
+import net.minecraft.network.ConnectionProtocol;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.PacketUtils;
+import net.minecraft.network.protocol.cookie.ServerboundCookieResponsePacket;
 import net.minecraft.network.protocol.login.ClientboundCustomQueryPacket;
 import net.minecraft.network.protocol.login.ClientboundHelloPacket;
 import net.minecraft.network.protocol.login.ServerboundCustomQueryAnswerPacket;
@@ -29,10 +33,11 @@ import net.minecraft.server.network.ServerLoginPacketListenerImpl;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.util.Crypt;
 import net.minecraft.util.CryptException;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.util.StringUtil;
 import org.apache.commons.lang3.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
+import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.util.Waitable;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerPreLoginEvent;
@@ -62,7 +67,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Mixin(ServerLoginPacketListenerImpl.class)
-public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandlerBridge {
+public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandlerBridge, CraftPlayer.TransferCookieConnection {
 
     // @formatter:off
     @Shadow private ServerLoginPacketListenerImpl.State state;
@@ -77,6 +82,7 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
     @Shadow abstract void startClientVerification(GameProfile p_301095_);
     @Shadow protected abstract boolean isPlayerAlreadyInWorld(GameProfile p_298499_);
     @Shadow @Nullable private GameProfile authenticatedProfile;
+    @Shadow @Final private boolean transferred;
     // @formatter:on
 
     private static final java.util.regex.Pattern PROP_PATTERN = java.util.regex.Pattern.compile("\\w{0,16}");
@@ -105,7 +111,7 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
     @Overwrite
     public void handleHello(ServerboundHelloPacket packetIn) {
         Validate.validState(this.state == ServerLoginPacketListenerImpl.State.HELLO, "Unexpected hello packet");
-        Validate.validState(Player.isValidUsername(packetIn.name()), "Invalid characters in username");
+        Validate.validState(StringUtil.isValidPlayerName(packetIn.name()), "Invalid characters in username");
         this.requestedUsername = packetIn.name();
         GameProfile gameprofile = this.server.getSingleplayerProfile();
         if (gameprofile != null && this.requestedUsername.equalsIgnoreCase(gameprofile.getName())) {
@@ -113,7 +119,7 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
         } else {
             if (this.server.usesAuthentication() && !this.connection.isMemoryConnection()) {
                 this.state = ServerLoginPacketListenerImpl.State.KEY;
-                this.connection.send(new ClientboundHelloPacket("", this.server.getKeyPair().getPublic().getEncoded(), this.challenge));
+                this.connection.send(new ClientboundHelloPacket("", this.server.getKeyPair().getPublic().getEncoded(), this.challenge, true));
             } else {
                 if (VelocitySupport.isEnabled()) {
                     this.arclight$velocityLoginId = ThreadLocalRandom.current().nextInt();
@@ -131,6 +137,7 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
                         LOGGER.warn("Exception verifying {} ", requestedUsername, ex);
                     }
                 });
+                thread.setUncaughtExceptionHandler(new DefaultUncaughtExceptionHandler(LOGGER));
                 thread.start();
             }
         }
@@ -159,7 +166,9 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
 
     @Redirect(method = "verifyLoginAndFinishConnectionSetup", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;canPlayerLogin(Ljava/net/SocketAddress;Lcom/mojang/authlib/GameProfile;)Lnet/minecraft/network/chat/Component;"))
     private Component arclight$canLogin(PlayerList instance, SocketAddress socketAddress, GameProfile gameProfile) {
-        this.player = ((PlayerListBridge) instance).bridge$canPlayerLogin(socketAddress, gameProfile, (ServerLoginPacketListenerImpl) (Object) this);
+        if (this.player == null) {
+            this.player = ((PlayerListBridge) instance).bridge$canPlayerLogin(socketAddress, gameProfile, (ServerLoginPacketListenerImpl) (Object) this);
+        }
         return null;
     }
 
@@ -167,6 +176,10 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
     private void arclight$returnIfFail(GameProfile p_299507_, CallbackInfo ci) {
         if (this.player == null) {
             ci.cancel();
+        } else {
+            if (((CraftPlayer) this.player.bridge$getBukkitEntity()).isAwaitingCookies()) {
+                ci.cancel();
+            }
         }
     }
 
@@ -175,9 +188,22 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
         return this.isPlayerAlreadyInWorld(Objects.requireNonNull(this.authenticatedProfile));
     }
 
-    @Inject(method = "handleLoginAcknowledgement", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Connection;setListener(Lnet/minecraft/network/PacketListener;)V"))
+    @Inject(method = "handleLoginAcknowledgement", at = @At("HEAD"))
+    private void arclight$mainThreadConfiguration(ServerboundLoginAcknowledgedPacket serverboundLoginAcknowledgedPacket, CallbackInfo ci) {
+        PacketUtils.ensureRunningOnSameThread(serverboundLoginAcknowledgedPacket, (ServerLoginPacketListenerImpl) (Object) this, this.server);
+    }
+
+    @Inject(method = "handleLoginAcknowledgement", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Connection;setupInboundProtocol(Lnet/minecraft/network/ProtocolInfo;Lnet/minecraft/network/PacketListener;)V"))
     private void arclight$setPlayer(ServerboundLoginAcknowledgedPacket p_298815_, CallbackInfo ci, CommonListenerCookie cookie, ServerConfigurationPacketListenerImpl listener) {
         ((ServerCommonPacketListenerBridge) listener).bridge$setPlayer(this.player);
+    }
+
+    @Inject(method = "handleCookieResponse", cancellable = true, at = @At("HEAD"))
+    private void arclight$cookieResponse(ServerboundCookieResponsePacket packet, CallbackInfo ci) {
+        PacketUtils.ensureRunningOnSameThread(packet, (ServerLoginPacketListenerImpl) (Object) this, this.server);
+        if (this.player != null && ((CraftPlayer) this.player.bridge$getBukkitEntity()).handleCookieResponse(packet)) {
+            ci.cancel();
+        }
     }
 
     /**
@@ -335,5 +361,20 @@ public abstract class ServerLoginNetHandlerMixin implements ServerLoginNetHandle
             this.bridge$platform$onCustomQuery(packet);
             ci.cancel();
         }
+    }
+
+    @Override
+    public boolean isTransferred() {
+        return this.transferred;
+    }
+
+    @Override
+    public ConnectionProtocol getProtocol() {
+        return ConnectionProtocol.LOGIN;
+    }
+
+    @Override
+    public void sendPacket(Packet<?> packet) {
+        this.connection.send(packet);
     }
 }

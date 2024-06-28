@@ -7,6 +7,7 @@ import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.LivingEntityMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -56,7 +57,7 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
         if (CraftEventFactory.handleNonLivingEntityDamageEvent((net.minecraft.world.entity.decoration.ArmorStand) (Object) this, source, amount)) {
             cir.setReturnValue(false);
         } else {
-            arclight$callEntityDeath();
+            arclight$callEntityDeath(source);
         }
     }
 
@@ -72,23 +73,28 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
         return false;
     }
 
+    @Inject(method = "hurt", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/decoration/ArmorStand;kill()V"))
+    private void arclight$damageDeath0(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        arclight$callEntityDeath(source);
+    }
+
     @Inject(method = "hurt", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/entity/decoration/ArmorStand;kill()V"))
     private void arclight$damageDeath1(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        arclight$callEntityDeath();
+        arclight$callEntityDeath(source);
     }
 
     @Inject(method = "hurt", at = @At(value = "INVOKE", ordinal = 2, target = "Lnet/minecraft/world/entity/decoration/ArmorStand;kill()V"))
     private void arclight$damageDeath2(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        arclight$callEntityDeath();
+        arclight$callEntityDeath(source);
     }
 
     @Inject(method = "causeDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/ArmorStand;kill()V"))
-    private void arclight$deathEvent2(DamageSource source, float p_213817_2_, CallbackInfo ci) {
-        arclight$callEntityDeath();
+    private void arclight$deathEvent2(ServerLevel serverLevel, DamageSource damageSource, float f, CallbackInfo ci) {
+        arclight$callEntityDeath(damageSource);
     }
 
-    @Redirect(method = "brokenByAnything", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/ArmorStand;dropAllDeathLoot(Lnet/minecraft/world/damagesource/DamageSource;)V"))
-    private void arclight$dropLater(net.minecraft.world.entity.decoration.ArmorStand entity, DamageSource damageSourceIn) {
+    @Redirect(method = "brokenByAnything", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/ArmorStand;dropAllDeathLoot(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;)V"))
+    private void arclight$dropLater(net.minecraft.world.entity.decoration.ArmorStand instance, ServerLevel serverLevel, DamageSource damageSource) {
     }
 
     @Redirect(method = "brokenByAnything", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;popResource(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/item/ItemStack;)V"))
@@ -97,18 +103,13 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
     }
 
     @Inject(method = "brokenByAnything", at = @At("RETURN"))
-    private void arclight$spawnLast(DamageSource source, CallbackInfo ci) {
-        this.dropAllDeathLoot(source);
+    private void arclight$spawnLast(ServerLevel serverLevel, DamageSource damageSource, CallbackInfo ci) {
+        this.dropAllDeathLoot(serverLevel, damageSource);
     }
 
     @Override
     protected boolean shouldDropExperience() {
         return true;
-    }
-
-    @Inject(method = "kill", at = @At("HEAD"))
-    private void arclight$deathEvent(CallbackInfo ci) {
-        arclight$callEntityDeath();
     }
 
     private void arclight$tryCaptureDrops(Level worldIn, BlockPos pos, ItemStack stack) {
@@ -121,7 +122,7 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
         }
     }
 
-    private void arclight$callEntityDeath() {
+    private void arclight$callEntityDeath(DamageSource damageSource) {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DEATH);
         Collection<ItemEntity> captureDrops = this.bridge$common$getCapturedDrops();
         List<org.bukkit.inventory.ItemStack> drops;
@@ -132,10 +133,10 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
         } else {
             drops = captureDrops.stream().map(ItemEntity::getItem).map(CraftItemStack::asCraftMirror).collect(Collectors.toList());
         }
-        CraftEventFactory.callEntityDeathEvent((net.minecraft.world.entity.decoration.ArmorStand) (Object) this, drops);
+        CraftEventFactory.callEntityDeathEvent((net.minecraft.world.entity.decoration.ArmorStand) (Object) this, (damageSource == null ? this.damageSources().genericKill() : damageSource), drops);
     }
 
-    @Inject(method = "swapItem", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getAbilities()Lnet/minecraft/world/entity/player/Abilities;"))
+    @Inject(method = "swapItem", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;hasInfiniteMaterials()Z"))
     public void arclight$manipulateEvent(net.minecraft.world.entity.player.Player playerEntity, net.minecraft.world.entity.EquipmentSlot slotType, ItemStack itemStack, InteractionHand hand, CallbackInfoReturnable<Boolean> cir) {
         ItemStack itemStack1 = this.getItemBySlot(slotType);
 
@@ -156,11 +157,11 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
     }
 
     @Override
-    public void setItemSlot(net.minecraft.world.entity.EquipmentSlot slotIn, ItemStack stack, boolean silent) {
+    public void onEquipItem(net.minecraft.world.entity.EquipmentSlot slotIn, ItemStack stack, boolean silent) {
         switch (slotIn.getType()) {
             case HAND ->
                 this.bridge$playEquipSound(slotIn, this.handItems.set(slotIn.getIndex(), stack), stack, silent);
-            case ARMOR ->
+            case HUMANOID_ARMOR ->
                 this.bridge$playEquipSound(slotIn, this.armorItems.set(slotIn.getIndex(), stack), stack, silent);
         }
 

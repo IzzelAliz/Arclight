@@ -2,7 +2,6 @@ package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -34,7 +33,7 @@ public abstract class BedBlockMixin {
      * @reason
      */
     @Overwrite
-    public InteractionResult use(BlockState p_49515_, Level level, BlockPos p_49517_, Player p_49518_, InteractionHand p_49519_, BlockHitResult p_49520_) {
+    public InteractionResult useWithoutItem(BlockState p_49515_, Level level, BlockPos p_49517_, Player p_49518_, BlockHitResult p_49520_) {
         if (level.isClientSide) {
             return InteractionResult.CONSUME;
         } else {

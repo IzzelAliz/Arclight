@@ -31,8 +31,7 @@ public class EnumDefinalizer implements Implementer {
         if (ENUM.contains(node.name)) {
             var find = false;
             for (FieldNode field : node.fields) {
-                if (Modifier.isStatic(field.access) && Modifier.isFinal(field.access)
-                    && field.name.equals("ENUM$VALUES")) {
+                if (Modifier.isStatic(field.access) && Modifier.isFinal(field.access) && (field.name.equals("ENUM$VALUES") || field.name.equals("$VALUES"))) {
                     field.access &= ~Opcodes.ACC_FINAL;
                     Implementer.LOGGER.debug("Definalize enum class {} values field {}", node.name, field.name);
                     if (find) {

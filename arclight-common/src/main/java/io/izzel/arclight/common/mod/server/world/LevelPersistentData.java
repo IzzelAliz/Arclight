@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mod.server.world;
 
 import io.izzel.arclight.common.mod.ArclightConstants;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.saveddata.SavedData;
 import org.bukkit.craftbukkit.v.CraftWorld;
@@ -10,7 +11,7 @@ public class LevelPersistentData extends SavedData {
 
     private CompoundTag tag;
 
-    public LevelPersistentData(CompoundTag tag) {
+    public LevelPersistentData(CompoundTag tag, HolderLookup.Provider provider) {
         this.tag = tag == null ? new CompoundTag() : tag;
     }
 
@@ -24,11 +25,11 @@ public class LevelPersistentData extends SavedData {
     }
 
     @Override
-    public @NotNull CompoundTag save(@NotNull CompoundTag it) {
+    public @NotNull CompoundTag save(@NotNull CompoundTag it, @NotNull HolderLookup.Provider provider) {
         return tag;
     }
 
     public static Factory<LevelPersistentData> factory() {
-        return new SavedData.Factory<>(() -> new LevelPersistentData(null), LevelPersistentData::new, ArclightConstants.BUKKIT_PDC);
+        return new SavedData.Factory<>(() -> new LevelPersistentData(null, null), LevelPersistentData::new, ArclightConstants.BUKKIT_PDC);
     }
 }

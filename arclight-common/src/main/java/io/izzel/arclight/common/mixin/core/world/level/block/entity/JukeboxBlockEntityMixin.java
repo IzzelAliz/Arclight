@@ -1,17 +1,18 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
 import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.JukeboxSongPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.JukeboxBlockEntity;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,7 +25,11 @@ import java.util.List;
 @Mixin(JukeboxBlockEntity.class)
 public abstract class JukeboxBlockEntityMixin extends BlockEntityMixin implements IInventoryBridge, Container {
 
+    // @formatter:off
     @Shadow private ItemStack item;
+    @Shadow @Final private JukeboxSongPlayer jukeboxSongPlayer;
+    @Shadow public abstract void setSongItemWithoutPlaying(ItemStack arg);
+    // @formatter:on
 
     public List<HumanEntity> transaction = new ArrayList<>();
     private int maxStack = MAX_STACK;
@@ -63,13 +68,21 @@ public abstract class JukeboxBlockEntityMixin extends BlockEntityMixin implement
     @Override
     public Location getLocation() {
         if (!DistValidate.isValid(level)) return null;
-        return new Location(((WorldBridge) level).bridge$getWorld(), worldPosition.getX(), worldPosition.getY(), worldPosition.getZ());
+        return new Location(level.bridge$getWorld(), worldPosition.getX(), worldPosition.getY(), worldPosition.getZ());
     }
 
-    @Redirect(method = "setRecordWithoutPlaying", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;updateNeighborsAt(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;)V"))
+    @Redirect(method = "setSongItemWithoutPlaying", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;updateNeighborsAt(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;)V"))
     private void arclight$levelNullCheck(Level instance, BlockPos p_46673_, Block p_46674_) {
         if (instance != null) {
             instance.updateNeighborsAt(p_46673_, p_46674_);
+        }
+    }
+
+    public void setSongItemWithoutPlaying(ItemStack itemstack, long ticksSinceSongStarted) {
+        this.jukeboxSongPlayer.song = null; // CraftBukkit - reset
+        this.setSongItemWithoutPlaying(itemstack);
+        if (this.jukeboxSongPlayer.song != null) {
+            this.jukeboxSongPlayer.ticksSinceSongStarted = ticksSinceSongStarted;
         }
     }
 }

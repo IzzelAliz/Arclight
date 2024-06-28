@@ -19,7 +19,7 @@ loom {
 arclight {
     mcVersion = minecraftVersion
     forgeVersion = project.ext.forgeVersion
-    bukkitVersion = 'v1_20_R3'
+    bukkitVersion = 'v1_21_R1'
     accessTransformer = project.file('bukkit.at')
     extraMapping = project(':arclight-common').file('extra_mapping.tsrg')
 }

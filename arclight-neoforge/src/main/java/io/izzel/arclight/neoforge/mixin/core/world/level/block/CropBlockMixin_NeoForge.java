@@ -14,9 +14,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(CropBlock.class)
 public abstract class CropBlockMixin_NeoForge {
 
-    @Redirect(method = "entityInside", at = @At(value = "INVOKE", remap = false, target = "Lnet/neoforged/neoforge/event/EventHooks;getMobGriefingEvent(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/Entity;)Z"))
+    @Redirect(method = "entityInside", at = @At(value = "INVOKE", remap = false, target = "Lnet/neoforged/neoforge/event/EventHooks;canEntityGrief(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/Entity;)Z"))
     public boolean arclight$entityChangeBlock(Level world, Entity entity, BlockState state, Level worldIn, BlockPos pos) {
-        boolean result = EventHooks.getMobGriefingEvent(world, entity);
+        boolean result = EventHooks.canEntityGrief(world, entity);
         return !CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state, result);
     }
 

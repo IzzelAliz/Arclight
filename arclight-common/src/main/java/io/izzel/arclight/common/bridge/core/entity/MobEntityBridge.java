@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.bridge.core.entity;
 
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -19,8 +18,6 @@ public interface MobEntityBridge extends LivingEntityBridge {
     boolean bridge$setGoalTarget(LivingEntity livingEntity, EntityTargetEvent.TargetReason reason, boolean fireEvent);
 
     boolean bridge$lastGoalTargetResult();
-
-    ResourceLocation bridge$getLootTable();
 
     boolean bridge$isPersistenceRequired();
 

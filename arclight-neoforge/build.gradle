@@ -83,10 +83,11 @@ tasks.register('neoforgeMappings', Copy) {
 project.sourceSets.main.output.dir file('build/neoforge_mappings'), builtBy: tasks.neoforgeMappings
 
 processResources {
-    inputs.property 'version', project.version
+    def ver = "${project.version}+$gitHash"
+    inputs.property 'version', ver
 
-    filesMatching('META-INF/mods.toml') {
-        expand 'version': project.version
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand 'version': ver
     }
 }
 

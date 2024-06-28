@@ -43,11 +43,10 @@ public abstract class StopAttackingIfTargetInvalidMixin {
                         if (event.isCancelled()) {
                             return false;
                         }
-                        if (event.getTarget() == null) {
-                            p_258787_.erase();
+                        if (event.getTarget() != null) {
+                            p_258796_.getBrain().setMemory(MemoryModuleType.ATTACK_TARGET, ((CraftLivingEntity) event.getTarget()).getHandle());
                             return true;
                         }
-                        livingentity = ((CraftLivingEntity) event.getTarget()).getHandle();
                         // CraftBukkit end
                         p_259568_.accept(p_258796_, livingentity);
                         p_258787_.erase();

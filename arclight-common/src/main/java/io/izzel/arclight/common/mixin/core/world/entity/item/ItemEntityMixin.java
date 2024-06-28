@@ -8,8 +8,10 @@ import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBrid
 import io.izzel.arclight.common.bridge.core.network.datasync.SynchedEntityDataBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.EntityMixin;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import io.izzel.arclight.mixin.Local;
 import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.stats.Stats;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -23,7 +25,6 @@ import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -69,79 +70,56 @@ public abstract class ItemEntityMixin extends EntityMixin implements ItemEntityB
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DEATH);
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    public void playerTouch(final Player entity) {
-        if (!this.level().isClientSide) {
-            if (this.pickupDelay > 0) return;
-            ItemStack itemstack = this.getItem();
-            int i = itemstack.getCount();
+    @Decorate(method = "playerTouch", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/item/ItemStack;getCount()I"))
+    private int arclight$playerPickup(ItemStack instance, Player entity, @Local(ordinal = -1) ItemStack itemstack) throws Throwable {
+        var count = (int) DecorationOps.callsite().invoke(instance);
 
-            int hook = this.bridge$forge$onItemPickup(entity);
-            if (hook < 0) return;
-
-            final int canHold = ((PlayerInventoryBridge) entity.getInventory()).bridge$canHold(itemstack);
-            final int remaining = itemstack.getCount() - canHold;
-            if (this.pickupDelay <= 0 && canHold > 0) {
-                itemstack.setCount(canHold);
-                final PlayerPickupItemEvent playerEvent = new PlayerPickupItemEvent(((ServerPlayerEntityBridge) entity).bridge$getBukkitEntity(), (Item) this.getBukkitEntity(), remaining);
-                playerEvent.setCancelled(!((PlayerEntityBridge) entity).bridge$canPickUpLoot());
-                Bukkit.getPluginManager().callEvent(playerEvent);
-                if (playerEvent.isCancelled()) {
-                    itemstack.setCount(canHold + remaining);
-                    return;
-                }
-                final EntityPickupItemEvent entityEvent = new EntityPickupItemEvent(((LivingEntityBridge) entity).bridge$getBukkitEntity(), (Item) this.getBukkitEntity(), remaining);
-                entityEvent.setCancelled(!((PlayerEntityBridge) entity).bridge$canPickUpLoot());
-                Bukkit.getPluginManager().callEvent(entityEvent);
-                if (entityEvent.isCancelled()) {
-                    itemstack.setCount(canHold + remaining);
-                    return;
-                }
-                ItemStack current = this.getItem();
-                if (!itemstack.equals(current)) {
-                    itemstack = current;
-                } else {
-                    itemstack.setCount(canHold + remaining);
-                }
-                this.pickupDelay = 0;
-            } else if (this.pickupDelay == 0 && hook != 1) {
-                this.pickupDelay = -1;
+        final int canHold = ((PlayerInventoryBridge) entity.getInventory()).bridge$canHold(itemstack);
+        final int remaining = count - canHold;
+        if (this.pickupDelay <= 0 && canHold > 0) {
+            itemstack.setCount(canHold);
+            final PlayerPickupItemEvent playerEvent = new PlayerPickupItemEvent(((ServerPlayerEntityBridge) entity).bridge$getBukkitEntity(), (Item) this.getBukkitEntity(), remaining);
+            playerEvent.setCancelled(!((PlayerEntityBridge) entity).bridge$canPickUpLoot());
+            Bukkit.getPluginManager().callEvent(playerEvent);
+            if (playerEvent.isCancelled()) {
+                itemstack.setCount(canHold + remaining);
+                return (int) DecorationOps.cancel().invoke();
             }
-            ItemStack copy = itemstack.copy();
-            if (this.pickupDelay == 0 && (this.target == null /*|| 6000 - this.age <= 200*/ || this.target.equals(entity.getUUID())) && (hook == 1 || entity.getInventory().add(itemstack))) {
-                copy.setCount(copy.getCount() - itemstack.getCount());
-                this.bridge$forge$firePlayerItemPickupEvent(entity, copy);
-                entity.take((ItemEntity) (Object) this, i);
-                if (itemstack.isEmpty()) {
-                    this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
-                    this.discard();
-                    itemstack.setCount(i);
-                }
-                entity.awardStat(Stats.ITEM_PICKED_UP.get(itemstack.getItem()), i);
-                entity.onItemPickup((ItemEntity) (Object) this);
+            final EntityPickupItemEvent entityEvent = new EntityPickupItemEvent(((LivingEntityBridge) entity).bridge$getBukkitEntity(), (Item) this.getBukkitEntity(), remaining);
+            entityEvent.setCancelled(!((PlayerEntityBridge) entity).bridge$canPickUpLoot());
+            Bukkit.getPluginManager().callEvent(entityEvent);
+            if (entityEvent.isCancelled()) {
+                itemstack.setCount(canHold + remaining);
+                return (int) DecorationOps.cancel().invoke();
             }
+            ItemStack current = this.getItem();
+            if (!itemstack.equals(current)) {
+                itemstack = current;
+            } else {
+                itemstack.setCount(canHold + remaining);
+            }
+            this.pickupDelay = 0;
+        } else if (this.pickupDelay == 0) {
+            this.pickupDelay = -1;
         }
+        DecorationOps.blackhole().invoke(itemstack);
+        return count;
     }
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V"),
+    @Inject(method = "playerTouch", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V"))
+    private void arclight$discardReason(Player player, CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
+    }
+
+    @Decorate(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V"),
         slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/item/ItemEntity;age:I")))
-    private void arclight$itemDespawn(ItemEntity instance) {
-        if (this.bridge$common$itemDespawnEvent()) {
-            instance.discard();
-        }
-    }
-
-    @Override
-    public boolean bridge$common$itemDespawnEvent() {
+    private void arclight$itemDespawn(ItemEntity instance) throws Throwable {
         if (CraftEventFactory.callItemDespawnEvent((ItemEntity) (Object) this).isCancelled()) {
             this.age = 0;
-            return false;
+            DecorationOps.cancel().invoke();
+            return;
         }
-        return true;
+        DecorationOps.callsite().invoke(instance);
     }
 
     @Inject(method = "setItem", at = @At("RETURN"))

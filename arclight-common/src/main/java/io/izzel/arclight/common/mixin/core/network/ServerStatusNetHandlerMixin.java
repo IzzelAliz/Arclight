@@ -49,7 +49,7 @@ public class ServerStatusNetHandlerMixin implements ServerStatusPacketListenerBr
             Collections.shuffle(profiles);
             profiles = profiles.subList(0, Math.min(profiles.size(), SpigotConfig.playerSample));
         }
-        ServerStatus.Players playerSample = new ServerStatus.Players(event.getMaxPlayers(), profiles.size(), (server.hidesOnlinePlayers()) ? Collections.emptyList() : profiles);
+        ServerStatus.Players playerSample = new ServerStatus.Players(event.getMaxPlayers(), event.getNumPlayers(), (server.hidesOnlinePlayers()) ? Collections.emptyList() : profiles);
         ServerStatus ping = bridge$platform$createServerStatus(
             CraftChatMessage.fromString(event.getMotd(), true)[0],
             Optional.of(playerSample),

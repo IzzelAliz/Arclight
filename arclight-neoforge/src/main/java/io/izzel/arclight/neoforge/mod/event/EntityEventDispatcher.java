@@ -38,7 +38,7 @@ public class EntityEventDispatcher {
                 itemEntity.setDefaultPickUpDelay();
                 return itemEntity;
             });
-        ArclightEventFactory.callEntityDeathEvent(livingEntity, itemStackList);
+        ArclightEventFactory.callEntityDeathEvent(livingEntity, itemStackList, event.getSource());
         if (drops.isEmpty()) {
             event.setCanceled(true);
         }

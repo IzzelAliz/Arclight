@@ -5,22 +5,21 @@ import io.izzel.arclight.common.bridge.inject.InjectEntityBridge;
 import io.izzel.tools.product.Product;
 import io.izzel.tools.product.Product4;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.EnderDragonPart;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
-import net.minecraft.world.phys.Vec3;
+import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
+import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.List;
 
 public interface EntityBridge extends ICommandSourceBridge, InjectEntityBridge {
 
-    Entity bridge$teleportTo(ServerLevel world, Vec3 blockPos);
-
-    void bridge$setOnFire(int tick, boolean callEvent);
+    void bridge$setOnFire(float seconds, boolean callEvent);
 
     CraftEntity bridge$getBukkitEntity();
 
@@ -52,10 +51,6 @@ public interface EntityBridge extends ICommandSourceBridge, InjectEntityBridge {
 
     void bridge$postTick();
 
-    boolean bridge$removePassenger(Entity passenger);
-
-    boolean bridge$addPassenger(Entity entity);
-
     List<Entity> bridge$getPassengers();
 
     void bridge$setRideCooldown(int rideCooldown);
@@ -66,11 +61,17 @@ public interface EntityBridge extends ICommandSourceBridge, InjectEntityBridge {
 
     void bridge$setLastLavaContact(BlockPos pos);
 
-    Vec3 bridge$getLastTpPos();
-
     void bridge$revive();
 
     void bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause cause);
+
+    CraftPortalEvent bridge$callPortalEvent(Entity entity, Location exit, PlayerTeleportEvent.TeleportCause cause, int searchRadius, int creationRadius);
+
+    boolean bridge$pluginRemoved();
+
+    boolean bridge$isForceDrops();
+
+    void bridge$setForceDrops(boolean b);
 
     default boolean bridge$forge$isPartEntity() {
         return this instanceof EnderDragonPart;

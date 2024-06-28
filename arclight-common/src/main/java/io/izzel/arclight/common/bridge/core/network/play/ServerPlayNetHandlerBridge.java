@@ -20,6 +20,10 @@ public interface ServerPlayNetHandlerBridge extends ServerCommonPacketListenerBr
 
     void bridge$teleport(Location dest);
 
+    void bridge$pushNoTeleportEvent();
+
+    boolean bridge$teleportCancelled();
+
     default Product3<Boolean /* Cancelled */, ItemStack /* SwappedToMainHand */, ItemStack /* SwappedToOffHand */>
     bridge$platform$canSwapHandItems(LivingEntity entity) {
         return Product.of(false, entity.getOffhandItem(), entity.getMainHandItem());

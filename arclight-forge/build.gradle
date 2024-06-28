@@ -87,10 +87,11 @@ tasks.register('forgeMappings', Copy) {
 project.sourceSets.main.output.dir file("build/forge_mappings"), builtBy: tasks.forgeMappings
 
 processResources {
-    inputs.property "version", project.version
+    def ver = "${project.version}+$gitHash"
+    inputs.property 'version', ver
 
     filesMatching("META-INF/mods.toml") {
-        expand "version": project.version
+        expand "version": ver
     }
 }
 
@@ -105,22 +106,23 @@ shadowJar {
 remapJar {
     inputFile.set shadowJar.archiveFile
     dependsOn shadowJar
+    enabled = false
 }
 
 tasks.register('reobfJar', RenameJarTask) {
-    inputJar.set remapJar.archiveFile
+    inputJar.set shadowJar.archiveFile
     archiveClassifier.set 'reobf'
     mappings = arclight.mappingsConfiguration.reobfBukkitPackage
 }
 
 tasks.register('srgJar', Jar) {
-    from(tasks.remapJar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) }) {
+    from(tasks.shadowJar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) }) {
         include 'io/izzel/**'
         exclude 'io/izzel/arclight/common/mixin/**'
         exclude 'io/izzel/arclight/forge/mixin/**'
     }
     archiveClassifier.set('srg')
-    dependsOn remapJar
+    dependsOn shadowJar
 }
 
 tasks.register('spigotJar', RenameJarTask) {

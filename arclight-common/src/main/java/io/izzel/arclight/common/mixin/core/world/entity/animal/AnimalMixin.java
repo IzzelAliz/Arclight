@@ -46,8 +46,12 @@ public abstract class AnimalMixin extends AgeableMobMixin implements AnimalEntit
      * @reason
      */
     @Overwrite
-    public boolean hurt(DamageSource source, float amount) {
-        return super.hurt(source, amount);
+    protected void actuallyHurt(DamageSource arg, float f) {
+        super.actuallyHurt(arg, f);
+        if (!arclight$damageResult) {
+            return;
+        }
+        this.resetLove();
     }
 
     @Inject(method = "setInLove(Lnet/minecraft/world/entity/player/Player;)V", cancellable = true, at = @At("HEAD"))
@@ -90,7 +94,7 @@ public abstract class AnimalMixin extends AgeableMobMixin implements AnimalEntit
         Optional<ServerPlayer> cause = Optional.ofNullable(this.getLoveCause()).or(() -> {
             return Optional.ofNullable(entityanimal.getLoveCause());
         });
-        int experience = this.getRandom().nextInt(7) + 1;
+        int experience = this.random.nextInt(7) + 1;
         if (entityageable != null) {
             org.bukkit.event.entity.EntityBreedEvent entityBreedEvent = CraftEventFactory.callEntityBreedEvent(entityageable, (Animal) (Object) this, entityanimal, cause.orElse(null), this.breedItem, experience);
             if (entityBreedEvent.isCancelled()) {

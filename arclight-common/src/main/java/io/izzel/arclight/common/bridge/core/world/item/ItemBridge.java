@@ -23,11 +23,6 @@ public interface ItemBridge {
         return arrow;
     }
 
-    default boolean bridge$forge$isInfinite(ArrowItem item, ItemStack stack, ItemStack bow, Player player) {
-        int enchant = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.INFINITY_ARROWS, bow);
-        return enchant > 0 && item.getClass() == ArrowItem.class;
-    }
-
     default boolean bridge$forge$onChorusFruitTeleport(LivingEntity entity, double targetX, double targetY, double targetZ) {
         return false;
     }

@@ -28,7 +28,6 @@ import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CookingBookCategory;
-import net.minecraft.world.item.enchantment.EnchantmentCategory;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.dimension.LevelStem;
@@ -90,7 +89,7 @@ public class BukkitRegistry {
         loadEntities();
         loadVillagerProfessions();
         loadBiomes(console);
-        loadArts();
+        loadArts(console);
         loadStats();
         loadSpawnCategory();
         loadEndDragonPhase();
@@ -215,18 +214,19 @@ public class BukkitRegistry {
         putStatic(CraftStatistic.class, "statistics", STATS);
     }
 
-    private static void loadArts() {
+    private static void loadArts(DedicatedServer console) {
         int i = Art.values().length;
         List<Art> newTypes = new ArrayList<>();
         Field key = Arrays.stream(Art.class.getDeclaredFields()).filter(it -> it.getName().equals("key")).findAny().orElse(null);
         long keyOffset = Unsafe.objectFieldOffset(key);
-        for (var paintingType : BuiltInRegistries.PAINTING_VARIANT) {
-            var location = BuiltInRegistries.PAINTING_VARIANT.getKey(paintingType);
+        var reg = console.registryAccess().registryOrThrow(Registries.PAINTING_VARIANT);
+        for (var paintingType : reg) {
+            var location = reg.getKey(paintingType);
             String lookupName = location.getPath().toLowerCase(Locale.ROOT);
             Art bukkit = Art.getByName(lookupName);
             if (bukkit == null) {
                 String standardName = ResourceLocationUtil.standardize(location);
-                bukkit = EnumHelper.makeEnum(Art.class, standardName, i, ImmutableList.of(int.class, int.class, int.class), ImmutableList.of(i, paintingType.getWidth(), paintingType.getHeight()));
+                bukkit = EnumHelper.makeEnum(Art.class, standardName, i, ImmutableList.of(int.class, int.class, int.class), ImmutableList.of(i, paintingType.width(), paintingType.height()));
                 newTypes.add(bukkit);
                 Unsafe.putObject(bukkit, keyOffset, CraftNamespacedKey.fromMinecraft(location));
                 ART_BY_ID.put(i, bukkit);
@@ -341,7 +341,6 @@ public class BukkitRegistry {
 
     private static void loadEnchantmentTargets() {
         int origin = EnchantmentTarget.values().length;
-        int size = EnchantmentCategory.values().length;
         // TODO
     }
 
