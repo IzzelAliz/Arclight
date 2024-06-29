@@ -35,7 +35,7 @@ public interface NeighborUpdaterMixin {
     }
 
     @Decorate(method = "executeUpdate", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/CrashReport;forThrowable(Ljava/lang/Throwable;Ljava/lang/String;)Lnet/minecraft/CrashReport;"))
-    private static void arclight$setLastPhysicsProblem(BlockState instance, Level level, BlockPos pos, @Local(ordinal = -1) Throwable t) {
+    private static void arclight$setLastPhysicsProblem(Level level, BlockState instance, BlockPos pos, @Local(ordinal = -1) Throwable t) {
         if (t instanceof StackOverflowError) {
             ((WorldBridge) level).bridge$setLastPhysicsProblem(pos.immutable());
         }
