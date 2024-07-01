@@ -26,7 +26,9 @@ public class CombatTrackerMixin implements CombatTrackerBridge {
         if (!this.entries.isEmpty()) {
             var entry = this.entries.get(this.entries.size() - 1);
             var deathMessage = ((CombatEntryBridge) (Object) entry).bridge$getDeathMessage();
-            cir.setReturnValue(deathMessage);
+            if (deathMessage != null) {
+                cir.setReturnValue(deathMessage);
+            }
         } else {
             if (this.arclight$emptyComnent != null) {
                 cir.setReturnValue(this.arclight$emptyComnent);

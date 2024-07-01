@@ -11,9 +11,11 @@ import io.izzel.arclight.common.bridge.core.server.management.PlayerListBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import io.izzel.arclight.common.mod.util.Blackhole;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Eject;
+import io.izzel.arclight.mixin.Local;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.LayeredRegistryAccess;
 import net.minecraft.network.Connection;
@@ -396,17 +398,18 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         }
     }
 
-    @Redirect(method = "respawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;teleport(DDDFF)V"))
-    private void arclight$respawnPackets(ServerGamePacketListenerImpl instance, double d, double e, double f, float g, float h) {
-        var player = instance.player;
+    @Decorate(method = "respawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;teleport(DDDFF)V"))
+    private void arclight$respawnPackets(ServerGamePacketListenerImpl instance, double d, double e, double f, float g, float h, @Local(ordinal = -1) ServerPlayer player) throws Throwable {
         player.connection.send(new ClientboundSetChunkCacheRadiusPacket(((WorldBridge) player.serverLevel()).bridge$spigotConfig().viewDistance));
         player.connection.send(new ClientboundSetSimulationDistancePacket(((WorldBridge) player.serverLevel()).bridge$spigotConfig().simulationDistance));
         ((ServerPlayNetHandlerBridge) player.connection).bridge$teleport(new Location(player.serverLevel().bridge$getWorld(), player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot()));
+        if (Blackhole.actuallyFalse()) {
+            DecorationOps.callsite().invoke(instance, d, e, f, g, h);
+        }
     }
 
     @Inject(method = "respawn", at = @At("RETURN"))
     private void arclight$postRespawn(ServerPlayer serverPlayer, boolean bl, Entity.RemovalReason removalReason, CallbackInfoReturnable<ServerPlayer> cir) {
-        var location = arclight$loc;
         arclight$loc = null;
         arclight$respawnReason = null;
         var fromWorld = serverPlayer.serverLevel();
@@ -414,7 +417,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         this.sendAllPlayerInfo(newPlayer);
         newPlayer.onUpdateAbilities();
         newPlayer.triggerDimensionChangeTriggers(fromWorld);
-        if (fromWorld != location.getWorld()) {
+        if (fromWorld != newPlayer.serverLevel()) {
             PlayerChangedWorldEvent event = new PlayerChangedWorldEvent(((ServerPlayerEntityBridge) newPlayer).bridge$getBukkitEntity(), fromWorld.bridge$getWorld());
             Bukkit.getPluginManager().callEvent(event);
         }
