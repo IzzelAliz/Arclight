@@ -54,6 +54,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerSynchronizer;
 import net.minecraft.world.inventory.HorseInventoryMenu;
 import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
@@ -326,6 +327,10 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         }
     }
 
+    public ItemEntity drop(ItemStack itemstack, boolean flag, boolean flag1, boolean callEvent) {
+        return super.drop(itemstack, flag, flag1, callEvent);
+    }
+
     @Redirect(method = "drop(Lnet/minecraft/world/item/ItemStack;ZZ)Lnet/minecraft/world/entity/item/ItemEntity;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private boolean arclight$capturePlayerDrop(Level instance, Entity entity) {
         if (this.bridge$common$isCapturingDrops()) {
@@ -364,7 +369,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         Collection<ItemEntity> drops = this.bridge$common$getCapturedDrops();
         if (drops != null) {
             for (ItemEntity entity : drops) {
-                CraftItemStack craftItemStack = CraftItemStack.asCraftMirror(entity.getItem());
+                var craftItemStack = CraftItemStack.asCraftMirror(entity.getItem()).markForInventoryDrop();
                 loot.add(craftItemStack);
             }
         }

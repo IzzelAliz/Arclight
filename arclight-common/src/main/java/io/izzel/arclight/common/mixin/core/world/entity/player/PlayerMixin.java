@@ -78,6 +78,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 
 @Mixin(net.minecraft.world.entity.player.Player.class)
@@ -124,6 +125,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
     @Shadow public abstract void setRemainingFireTicks(int p_36353_);
     @Shadow public abstract boolean isCreative();
     @Shadow public abstract FoodData getFoodData();
+    @Shadow @Nullable public abstract ItemEntity drop(ItemStack arg, boolean bl, boolean bl2);
     // @formatter:on
 
     public boolean fauxSleeping;
@@ -151,9 +153,23 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
         bridge$pushHealReason(EntityRegainHealthEvent.RegainReason.REGEN);
     }
 
+    private transient boolean arclight$skipDropItemEvent;
+
+    public ItemEntity drop(ItemStack itemstack, boolean flag, boolean flag1, boolean callEvent) {
+        try {
+            arclight$skipDropItemEvent = !callEvent;
+            return this.drop(itemstack, flag, flag1);
+        } finally {
+            arclight$skipDropItemEvent = false;
+        }
+    }
+
     @Inject(method = "drop(Lnet/minecraft/world/item/ItemStack;ZZ)Lnet/minecraft/world/entity/item/ItemEntity;",
         cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "RETURN", ordinal = 1))
     private void arclight$playerDropItem(ItemStack droppedItem, boolean dropAround, boolean traceItem, CallbackInfoReturnable<ItemEntity> cir, double d0, ItemEntity itemEntity) {
+        if (arclight$skipDropItemEvent) {
+            return;
+        }
         Player player = (Player) this.getBukkitEntity();
         Item drop = (Item) itemEntity.bridge$getBukkitEntity();
 
@@ -261,13 +277,14 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
     private void arclight$skipKnockback(LivingEntity instance, double d, double e, double f) {
     }
 
-    @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
+    @Decorate(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
     private boolean arclight$applyKnockback(LivingEntity instance, DamageSource damageSource, float f) throws Throwable {
         var result = (boolean) DecorationOps.callsite().invoke(instance, damageSource, f);
-        if (result) {
-            ((LivingEntityBridge) instance).bridge$pushKnockbackCause((Entity) (Object) this, EntityKnockbackEvent.KnockbackCause.SWEEP_ATTACK);
-            instance.knockback(0.4f, Mth.sin(this.getYRot() * 0.017453292f), -Mth.cos(this.getYRot() * 0.017453292f));
+        if (!result) {
+            throw DecorationOps.jumpToLoopStart();
         }
+        ((LivingEntityBridge) instance).bridge$pushKnockbackCause((Entity) (Object) this, EntityKnockbackEvent.KnockbackCause.SWEEP_ATTACK);
+        instance.knockback(0.4f, Mth.sin(this.getYRot() * 0.017453292f), -Mth.cos(this.getYRot() * 0.017453292f));
         return result;
     }
 
