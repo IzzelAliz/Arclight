@@ -24,6 +24,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
@@ -106,9 +107,7 @@ public abstract class EnderDragonMixin extends MobMixin {
         if (!flag2) {
             return flag;
         }
-        final org.bukkit.entity.Entity bukkitEntity = this.getBukkitEntity();
-        final EntityExplodeEvent event = new EntityExplodeEvent(bukkitEntity, bukkitEntity.getLocation(), destroyedBlocks, 0.0f);
-        bukkitEntity.getServer().getPluginManager().callEvent(event);
+        final EntityExplodeEvent event = CraftEventFactory.callEntityExplodeEvent((EnderDragon) (Object) this, destroyedBlocks, 0.0f, explosionSource.getBlockInteraction());
         if (event.isCancelled()) {
             return flag;
         }

@@ -13,7 +13,6 @@ public class EnumDefinalizer implements Implementer {
         "org/bukkit/Material",
         "org/bukkit/potion/PotionType",
         "org/bukkit/entity/EntityType",
-        "org/bukkit/entity/Villager$Profession",
         "org/bukkit/block/Biome",
         "org/bukkit/Art",
         "org/bukkit/Statistic",

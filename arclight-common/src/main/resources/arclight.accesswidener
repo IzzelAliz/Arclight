@@ -4,6 +4,11 @@ accessible field net/minecraft/core/component/DataComponentPatch map Lit/unimi/d
 accessible field net/minecraft/core/component/DataComponentPatch$Builder map Lit/unimi/dsi/fastutil/objects/Reference2ObjectMap;
 accessible field net/minecraft/world/level/block/entity/HopperBlockEntity facing Lnet/minecraft/core/Direction;
 accessible field net/minecraft/world/item/JukeboxSongPlayer ticksSinceSongStarted J
+accessible field net/minecraft/world/level/block/entity/trialspawner/TrialSpawner normalConfig Lnet/minecraft/world/level/block/entity/trialspawner/TrialSpawnerConfig;
+accessible field net/minecraft/world/level/block/entity/trialspawner/TrialSpawner ominousConfig Lnet/minecraft/world/level/block/entity/trialspawner/TrialSpawnerConfig;
+accessible field net/minecraft/world/level/block/entity/trialspawner/TrialSpawner requiredPlayerRange I
+accessible field net/minecraft/world/level/block/entity/trialspawner/TrialSpawner targetCooldownLength I
+accessible field net/minecraft/world/level/block/entity/trialspawner/TrialSpawner isOminous Z
 # Arclight 1.20.4
 accessible method net/minecraft/world/level/block/entity/HopperBlockEntity setCooldown (I)V
 accessible class net/minecraft/world/inventory/MenuType$MenuSupplier

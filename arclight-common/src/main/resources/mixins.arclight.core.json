@@ -209,6 +209,7 @@
     "world.entity.item.ItemEntityMixin",
     "world.entity.item.PrimedTntMixin",
     "world.entity.monster.AbstractSkeletonMixin",
+    "world.entity.monster.BoggedMixin",
     "world.entity.monster.CaveSpiderMixin",
     "world.entity.monster.CreeperMixin",
     "world.entity.monster.ElderGuardianMixin",

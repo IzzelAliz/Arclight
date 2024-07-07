@@ -43,4 +43,14 @@ public abstract class WolfMixin extends TameableAnimalMixin {
         var ret = instance.nextInt(i);
         return ret == 0 && this.bridge$common$animalTameEvent(player) ? ret : 1;
     }
+
+    @Inject(method = "mobInteract", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/Wolf;spawnAtLocation(Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/entity/item/ItemEntity;"))
+    private void arclight$forceDropPre(Player player, InteractionHand interactionHand, CallbackInfoReturnable<InteractionResult> cir) {
+        this.forceDrops = true;
+    }
+
+    @Inject(method = "mobInteract", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/animal/Wolf;spawnAtLocation(Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/entity/item/ItemEntity;"))
+    private void arclight$forceDropPost(Player player, InteractionHand interactionHand, CallbackInfoReturnable<InteractionResult> cir) {
+        this.forceDrops = false;
+    }
 }

@@ -24,7 +24,6 @@ import net.minecraft.stats.StatType;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
-import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CookingBookCategory;
@@ -48,7 +47,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Pose;
 import org.bukkit.entity.SpawnCategory;
-import org.bukkit.entity.Villager;
 import org.bukkit.potion.PotionType;
 
 import java.lang.reflect.Field;
@@ -87,7 +85,6 @@ public class BukkitRegistry {
         loadPotions();
         loadEnchantmentTargets();
         loadEntities();
-        loadVillagerProfessions();
         loadBiomes(console);
         loadArts(console);
         loadStats();
@@ -262,31 +259,6 @@ public class BukkitRegistry {
         }
         EnumHelper.addEnums(Biome.class, newTypes);
         ArclightServer.LOGGER.info("registry.biome", newTypes.size());
-    }
-
-    private static void loadVillagerProfessions() {
-        int i = Villager.Profession.values().length;
-        List<Villager.Profession> newTypes = new ArrayList<>();
-        Field key = Arrays.stream(Villager.Profession.class.getDeclaredFields()).filter(it -> it.getName().equals("key")).findAny().orElse(null);
-        long keyOffset = Unsafe.objectFieldOffset(key);
-        for (VillagerProfession villagerProfession : BuiltInRegistries.VILLAGER_PROFESSION) {
-            var location = BuiltInRegistries.VILLAGER_PROFESSION.getKey(villagerProfession);
-            String name = ResourceLocationUtil.standardize(location);
-            Villager.Profession profession;
-            try {
-                profession = Villager.Profession.valueOf(name);
-            } catch (Throwable t) {
-                profession = null;
-            }
-            if (profession == null) {
-                profession = EnumHelper.makeEnum(Villager.Profession.class, name, i++, ImmutableList.of(), ImmutableList.of());
-                newTypes.add(profession);
-                Unsafe.putObject(profession, keyOffset, CraftNamespacedKey.fromMinecraft(location));
-                ArclightServer.LOGGER.debug("Registered {} as villager profession {}", location, profession);
-            }
-        }
-        EnumHelper.addEnums(Villager.Profession.class, newTypes);
-        ArclightServer.LOGGER.info("registry.villager-profession", newTypes.size());
     }
 
     public static void registerEnvironments(Registry<LevelStem> registry) {

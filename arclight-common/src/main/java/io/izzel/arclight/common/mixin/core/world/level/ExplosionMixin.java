@@ -20,7 +20,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.TntBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -60,6 +59,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
     @Accessor("radius") public abstract void bridge$setSize(float size);
     @Accessor("blockInteraction") public abstract Explosion.BlockInteraction bridge$getMode();
     @Shadow @Final @Mutable private DamageSource damageSource;
+    @Shadow public abstract Explosion.BlockInteraction getBlockInteraction();
     // @formatter:on
 
     public float yield;
@@ -191,16 +191,14 @@ public abstract class ExplosionMixin implements ExplosionBridge {
         List<org.bukkit.block.Block> bukkitBlocks;
 
         if (exploder != null) {
-            EntityExplodeEvent event = new EntityExplodeEvent(exploder, location, blockList, this.blockInteraction == Explosion.BlockInteraction.DESTROY_WITH_DECAY ? 1.0F / this.radius : 1.0F);
-            Bukkit.getPluginManager().callEvent(event);
+            EntityExplodeEvent event = CraftEventFactory.callEntityExplodeEvent(this.source, blockList, this.yield, this.getBlockInteraction());
             cancelled = event.isCancelled();
             bukkitBlocks = event.blockList();
             this.yield = event.getYield();
         } else {
             org.bukkit.block.Block block = location.getBlock();
             org.bukkit.block.BlockState blockState = (((DamageSourceBridge) damageSource).bridge$directBlockState() != null) ? ((DamageSourceBridge) damageSource).bridge$directBlockState() : block.getState();
-            BlockExplodeEvent event = new BlockExplodeEvent(block, blockState, blockList, this.blockInteraction == Explosion.BlockInteraction.DESTROY_WITH_DECAY ? 1.0F / this.radius : 1.0F);
-            Bukkit.getPluginManager().callEvent(event);
+            BlockExplodeEvent event = CraftEventFactory.callBlockExplodeEvent(block, blockState, blockList, this.yield, this.getBlockInteraction());
             cancelled = event.isCancelled();
             bukkitBlocks = event.blockList();
             this.yield = event.getYield();
