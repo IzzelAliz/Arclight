@@ -94,7 +94,7 @@ public abstract class ThrownPotionMixin extends ThrowableItemProjectileMixin {
                             continue;
                         }
                         ((LivingEntityBridge) entityliving2).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.POTION_SPLASH);
-                        entityliving2.addEffect(new MobEffectInstance(mobeffectlist, i, mobeffect.getAmplifier(), mobeffect.isAmbient(), mobeffect.isVisible()));
+                        entityliving2.addEffect(new MobEffectInstance(mobeffectlist, i, mobeffect.getAmplifier(), mobeffect.isAmbient(), mobeffect.isVisible()), (Entity) null);
                     }
                 }
             }
