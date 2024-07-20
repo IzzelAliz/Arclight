@@ -37,6 +37,12 @@ task collect(type: Copy) {
     dependsOn { project(':arclight-forge').tasks.jar }
 }
 
+task moveJars(type: Exec) {
+    doFirst {
+        commandLine = ['cmd', '/C', 'start', "moveFiles.bat"]
+    }
+}
+
 def gitBranch() {
     def stdout = new ByteArrayOutputStream()
     exec {

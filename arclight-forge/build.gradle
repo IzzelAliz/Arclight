@@ -9,8 +9,6 @@ apply plugin: 'idea'
 apply plugin: 'maven-publish'
 apply plugin: 'com.github.johnrengelman.shadow'
 
-archivesBaseName = archivesBaseName + '-' + minecraftVersion
-
 sourceSets {
     applaunch {
         java {
@@ -21,6 +19,8 @@ sourceSets {
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+archivesBaseName = 'arclight' + '-' + minecraftVersion
 
 configurations {
     installer
@@ -116,6 +116,7 @@ jar {
     }
     from sourceSets.applaunch.output.classesDirs
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set(gitHash)
     dependsOn(project(':arclight-common').tasks.jar)
 }
 

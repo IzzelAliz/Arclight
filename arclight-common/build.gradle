@@ -35,6 +35,8 @@ configurations {
     embed
 }
 
+archivesBaseName = 'arclight' + '-' + minecraftVersion
+
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 minecraft {
@@ -94,6 +96,7 @@ jar {
         exclude "org/apache/commons/lang/enum/**"
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set(gitHash)
 }
 
 tasks.register('srgJar', Jar) {
