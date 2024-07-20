@@ -347,7 +347,9 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             }
         }
         this.keepLevel = keepInventory;
+        Inventory recapturedDrops = new Inventory((ServerPlayer) (Object) this);
         if (!keepInventory) {
+            recapturedDrops.replaceWith(this.getInventory());
             this.getInventory().replaceWith(copyInv);
         }
         PlayerDeathEvent event = CraftEventFactory.callPlayerDeathEvent((ServerPlayer) (Object) this, loot, deathmessage, keepInventory);
@@ -393,6 +395,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
         if (!event.getKeepInventory()) {
             this.getInventory().clearContent();
+            this.getInventory().replaceWith(recapturedDrops);
         }
         this.setCamera((ServerPlayer) (Object) this);
         ((CraftScoreboardManager) Bukkit.getScoreboardManager()).getScoreboardScores(ObjectiveCriteria.DEATH_COUNT, this.getScoreboardName(), Score::increment);
