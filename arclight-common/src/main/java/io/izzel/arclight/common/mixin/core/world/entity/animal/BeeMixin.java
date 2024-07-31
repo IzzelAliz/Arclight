@@ -43,11 +43,11 @@ public abstract class BeeMixin extends AnimalMixin {
         if (this.isInvulnerableTo(source)) {
             return false;
         } else {
-            boolean ret = super.hurt(source, amount);
-            if (ret && !this.level().isClientSide) {
+            boolean result = super.hurt(source, amount);
+            if (result && !this.level().isClientSide) {
                 this.beePollinateGoal.stopPollinating();
             }
-            return ret;
+            return result;
         }
     }
 }

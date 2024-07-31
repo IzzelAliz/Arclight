@@ -354,12 +354,12 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             return (boolean) DecorationOps.cancel().invoke();
         }
         boolean keepInventory = this.level().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY) || this.isSpectator();
-        Inventory copyInv;
+        Inventory copyInventory;
         if (keepInventory) {
-            copyInv = this.getInventory();
+            copyInventory = this.getInventory();
         } else {
-            copyInv = new Inventory((ServerPlayer) (Object) this);
-            copyInv.replaceWith(this.getInventory());
+            copyInventory = new Inventory((ServerPlayer) (Object) this);
+            copyInventory.replaceWith(this.getInventory());
         }
         this.dropAllDeathLoot(this.serverLevel(), damagesource);
 
@@ -375,7 +375,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         }
         this.keepLevel = keepInventory;
         if (!keepInventory) {
-            this.getInventory().replaceWith(copyInv);
+            this.getInventory().replaceWith(copyInventory);
         }
         PlayerDeathEvent event = CraftEventFactory.callPlayerDeathEvent((ServerPlayer) (Object) this, damagesource, loot, deathmessage, keepInventory);
         if (this.containerMenu != this.inventoryMenu) {

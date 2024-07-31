@@ -84,8 +84,8 @@ public class ArclightInterfaceInvokerGen implements PluginTransformer {
         if (classNode == null) return;
         interfaceMethods(classNode.superName, set, classRepo);
         if (classNode.interfaces != null && classNode.interfaces.size() > 0) {
-            for (String intf : classNode.interfaces) {
-                interfaceMethods(intf, set, classRepo);
+            for (String interfaceName : classNode.interfaces) {
+                interfaceMethods(interfaceName, set, classRepo);
             }
         }
         for (MethodNode methodNode : classNode.methods) {
