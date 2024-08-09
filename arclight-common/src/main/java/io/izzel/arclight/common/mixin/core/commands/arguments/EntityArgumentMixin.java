@@ -30,7 +30,7 @@ public class EntityArgumentMixin implements EntityArgumentBridge {
 
     public EntitySelector parse(StringReader reader, boolean overridePermissions) throws CommandSyntaxException {
         int i = 0;
-        EntitySelectorParser entityselectorparser = new EntitySelectorParser(reader);
+        EntitySelectorParser entityselectorparser = new EntitySelectorParser(reader, true);
         EntitySelector entityselector = ((EntitySelectorParserBridge) entityselectorparser).bridge$parse(overridePermissions);
         if (entityselector.getMaxResults() > 1 && this.single) {
             if (this.playersOnly) {

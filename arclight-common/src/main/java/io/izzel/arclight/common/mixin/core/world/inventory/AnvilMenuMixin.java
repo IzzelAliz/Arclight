@@ -16,6 +16,7 @@ import org.bukkit.craftbukkit.v.inventory.CraftInventoryAnvil;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
+import org.bukkit.inventory.view.AnvilView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -44,7 +45,7 @@ public abstract class AnvilMenuMixin extends ItemCombinerMixin implements AnvilM
 
     @Decorate(method = "createResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/ResultContainer;setItem(ILnet/minecraft/world/item/ItemStack;)V"))
     private void arclight$prepareAnvilEvent(ResultContainer instance, int i, ItemStack itemStack) throws Throwable {
-        var event = new PrepareAnvilEvent(getBukkitView(), CraftItemStack.asCraftMirror(itemStack).clone());
+        var event = new PrepareAnvilEvent((AnvilView) getBukkitView(), CraftItemStack.asCraftMirror(itemStack).clone());
         Bukkit.getServer().getPluginManager().callEvent(event);
         DecorationOps.callsite().invoke(instance, i, CraftItemStack.asNMSCopy(event.getResult()));
     }
@@ -71,7 +72,7 @@ public abstract class AnvilMenuMixin extends ItemCombinerMixin implements AnvilM
         }
 
         CraftInventory inventory = new CraftInventoryAnvil(
-            ((IWorldPosCallableBridge) this.access).bridge$getLocation(), this.inputSlots, this.resultSlots, (AnvilMenu) (Object) this);
+            ((IWorldPosCallableBridge) this.access).bridge$getLocation(), this.inputSlots, this.resultSlots);
         bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.player).bridge$getBukkitEntity(), inventory, (AbstractContainerMenu) (Object) this);
         return bukkitEntity;
     }

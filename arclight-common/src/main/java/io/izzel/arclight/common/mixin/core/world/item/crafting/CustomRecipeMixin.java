@@ -11,6 +11,6 @@ public class CustomRecipeMixin implements RecipeBridge {
 
     @Override
     public Recipe bridge$toBukkitRecipe(NamespacedKey id) {
-        return new org.bukkit.craftbukkit.v.inventory.CraftComplexRecipe(id, (CustomRecipe) (Object) this);
+        return new org.bukkit.craftbukkit.v.inventory.CraftComplexRecipe(id, null, (CustomRecipe) (Object) this);
     }
 }

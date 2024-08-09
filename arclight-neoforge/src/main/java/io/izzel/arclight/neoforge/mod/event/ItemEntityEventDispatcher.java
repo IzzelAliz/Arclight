@@ -8,6 +8,8 @@ public class ItemEntityEventDispatcher {
 
     @SubscribeEvent(receiveCanceled = true)
     public void onExpire(ItemExpireEvent event) {
-        event.setCanceled(CraftEventFactory.callItemDespawnEvent(event.getEntity()).isCancelled());
+        if (CraftEventFactory.callItemDespawnEvent(event.getEntity()).isCancelled()) {
+            event.setExtraLife(1);
+        }
     }
 }
