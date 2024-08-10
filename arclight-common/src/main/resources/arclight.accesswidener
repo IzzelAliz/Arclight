@@ -1,4 +1,30 @@
 accessWidener v2 named
+# Arclight 1.21.1
+mutable field net/minecraft/world/level/block/entity/trialspawner/TrialSpawner targetCooldownLength I
+mutable field net/minecraft/world/level/block/entity/trialspawner/TrialSpawner normalConfig Lnet/minecraft/world/level/block/entity/trialspawner/TrialSpawnerConfig;
+mutable field net/minecraft/world/level/block/entity/trialspawner/TrialSpawner requiredPlayerRange I
+mutable field net/minecraft/world/level/block/entity/trialspawner/TrialSpawner ominousConfig Lnet/minecraft/world/level/block/entity/trialspawner/TrialSpawnerConfig;
+accessible class net/minecraft/world/level/biome/Biome$ClimateSettings
+accessible class net/minecraft/world/item/crafting/Ingredient$ItemValue
+accessible field net/minecraft/world/level/biome/Biome climateSettings Lnet/minecraft/world/level/biome/Biome$ClimateSettings;
+accessible class net/minecraft/world/entity/monster/Guardian$GuardianAttackGoal
+accessible class net/minecraft/world/entity/Interaction$PlayerAction
+accessible class net/minecraft/world/item/ItemCooldowns$CooldownInstance
+accessible field net/minecraft/network/protocol/handshake/ClientIntentionPacket hostName Ljava/lang/String;
+mutable field net/minecraft/network/protocol/handshake/ClientIntentionPacket hostName Ljava/lang/String;
+accessible field net/minecraft/network/protocol/handshake/ClientIntentionPacket port I
+accessible class net/minecraft/server/level/ServerPlayer$RespawnPosAngle
+accessible class net/minecraft/world/level/block/ComposterBlock$InputContainer
+accessible class net/minecraft/world/entity/projectile/FishingHook$FishHookState
+accessible class net/minecraft/world/item/crafting/Ingredient$Value
+accessible class net/minecraft/world/level/block/ComposterBlock$OutputContainer
+accessible method net/minecraft/world/damagesource/DamageSource <init> (Lnet/minecraft/core/Holder;Lnet/minecraft/world/entity/Entity;)V
+accessible class net/minecraft/server/level/ChunkMap$TrackedEntity
+accessible class net/minecraft/server/MinecraftServer$ReloadableResources
+accessible class net/minecraft/world/level/block/ComposterBlock$EmptyContainer
+accessible class net/minecraft/world/entity/monster/SpellcasterIllager$IllagerSpell
+mutable field net/minecraft/world/level/block/entity/BeehiveBlockEntity stored Ljava/util/List;
+accessible class net/minecraft/server/dedicated/DedicatedServerProperties$WorldDimensionData
 # Arclight 1.21
 accessible field net/minecraft/core/component/DataComponentPatch map Lit/unimi/dsi/fastutil/objects/Reference2ObjectMap;
 accessible field net/minecraft/core/component/DataComponentPatch$Builder map Lit/unimi/dsi/fastutil/objects/Reference2ObjectMap;
