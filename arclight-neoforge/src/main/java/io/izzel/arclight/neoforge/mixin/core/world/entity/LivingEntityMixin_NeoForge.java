@@ -13,6 +13,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.common.CommonHooks;
+import net.neoforged.neoforge.common.damagesource.DamageContainer;
 import net.neoforged.neoforge.event.EventHooks;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -37,7 +38,7 @@ public abstract class LivingEntityMixin_NeoForge extends EntityMixin_NeoForge im
 
     @Inject(method = "hurt", cancellable = true, at = @At("HEAD"))
     private void arclight$livingHurt(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        if (!CommonHooks.onLivingAttack((LivingEntity) (Object) this, source, amount)) {
+        if (!CommonHooks.onEntityIncomingDamage((LivingEntity) (Object) this, new DamageContainer(source, amount))) {
             cir.setReturnValue(false);
         }
     }

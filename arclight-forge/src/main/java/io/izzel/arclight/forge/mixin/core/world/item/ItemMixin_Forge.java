@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.Mixin;
 public class ItemMixin_Forge implements ItemBridge {
 
     @Override
-    public AbstractArrow bridge$forge$customArrow(BowItem bowItem, ItemStack itemStack, AbstractArrow arrow) {
+    public AbstractArrow bridge$forge$customArrow(BowItem bowItem, ItemStack weapon, ItemStack projectile, AbstractArrow arrow) {
         return bowItem.customArrow(arrow);
     }
 

@@ -18,6 +18,7 @@ loom {
     accessWidenerPath = project(":arclight-common").loom.accessWidenerPath
 
     forge {
+        useCustomMixin = false
         convertAccessWideners = true
         extraAccessWideners.add loom.accessWidenerPath.get().asFile.name
         mixinConfig "mixins.arclight.forge.json"

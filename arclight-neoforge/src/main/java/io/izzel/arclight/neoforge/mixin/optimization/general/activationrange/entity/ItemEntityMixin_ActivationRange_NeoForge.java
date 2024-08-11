@@ -41,7 +41,7 @@ public abstract class ItemEntityMixin_ActivationRange_NeoForge extends EntityMix
     @Override
     public void bridge$forge$optimization$discardItemEntity() {
         if (!this.level().isClientSide && this.age >= this.lifespan) {
-            int hook = EventHooks.onItemExpire((ItemEntity) (Object) this, this.getItem());
+            int hook = EventHooks.onItemExpire((ItemEntity) (Object) this);
             if (hook < 0) this.discard();
             else this.lifespan += hook;
         }
