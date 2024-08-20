@@ -159,7 +159,7 @@ tasks.register('forgeJar', Jar) {
     from sourceSets.main.output
     from sourceSets.forge.output
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    dependsOn(project(':arclight-forge').tasks.shadowJar)
+    dependsOn(project(':arclight-forge').tasks.reobfJar)
 }
 
 tasks.register('neoforgeJar', Jar) {

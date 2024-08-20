@@ -412,6 +412,7 @@
     "world.level.block.CoralPlantBlockMixin",
     "world.level.block.CoralWallFanBlockMixin",
     "world.level.block.CropBlockMixin",
+    "world.level.block.CropBlockMixin_NoNeoForge",
     "world.level.block.DaylightDetectorBlockMixin",
     "world.level.block.DecoratedPotBlockMixin",
     "world.level.block.DetectorRailBlockMixin",

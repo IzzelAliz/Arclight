@@ -18,10 +18,10 @@ allprojects {
     ext {
         minecraftVersion = '1.21.1'
         supportedPlatforms = ['forge', 'neoforge', 'fabric']
-        fabricLoaderVersion = '0.16.0'
-        fabricApiVersion = '0.102.0+1.21.1'
-        forgeVersion = '52.0.1'
-        neoForgeVersion = '21.1.2'
+        fabricLoaderVersion = '0.16.2'
+        fabricApiVersion = '0.102.1+1.21.1'
+        forgeVersion = '52.0.4'
+        neoForgeVersion = '21.1.22'
         apiVersion = '1.7.3'
         toolsVersion = '1.3.0'
         mixinVersion = '0.8.5'
