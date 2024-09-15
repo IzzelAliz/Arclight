@@ -36,7 +36,7 @@ jobs:
         ./gradlew cleanBuild remapSpigotJar idea --no-daemon -i --stacktrace --refresh-dependencies
         ./gradlew build collect --no-daemon -i --stacktrace
     - name: Upload Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: Arclight 
         path: ./build/libs/*.jar
