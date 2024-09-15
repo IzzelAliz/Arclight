@@ -10,6 +10,8 @@ import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraft.world.level.Level;
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.v.CraftServer;
+import org.bukkit.craftbukkit.v.entity.CraftAbstractVillager;
 import org.bukkit.craftbukkit.v.inventory.CraftMerchant;
 import org.bukkit.craftbukkit.v.inventory.CraftMerchantRecipe;
 import org.bukkit.entity.AbstractVillager;
@@ -37,7 +39,7 @@ public abstract class AbstractVillagerMixin extends PathfinderMobMixin implement
 
     @Override
     public CraftMerchant bridge$getCraftMerchant() {
-        return (craftMerchant == null) ? craftMerchant = new CraftMerchant((net.minecraft.world.entity.npc.AbstractVillager) (Object) this) : craftMerchant;
+        return (craftMerchant == null) ? craftMerchant = new CraftAbstractVillager(((CraftServer) Bukkit.getServer()), (net.minecraft.world.entity.npc.AbstractVillager) (Object) this) : craftMerchant;
     }
 
     @Redirect(method = "addOffersFromItemListings", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/trading/MerchantOffers;add(Ljava/lang/Object;)Z"))
