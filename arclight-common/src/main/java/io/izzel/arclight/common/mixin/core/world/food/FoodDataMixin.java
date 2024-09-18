@@ -10,6 +10,7 @@ import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 import net.minecraft.world.food.FoodProperties;
@@ -61,16 +62,17 @@ public abstract class FoodDataMixin implements FoodStatsBridge {
     private void arclight$foodLevelChange(FoodData foodStats, int foodLevelIn, float foodSaturationModifier, FoodProperties food) throws Throwable {
         var stack = this.arclight$eatStack;
         this.arclight$eatStack = null;
+        int deltaFoodLevel = foodLevelIn;
         if (this.entityhuman != null && stack != null) {
-            int oldFoodLevel = this.foodLevel;
-            FoodLevelChangeEvent event = CraftEventFactory.callFoodLevelChangeEvent(this.entityhuman, foodLevel, stack);
+            int newFoodLevel = Mth.clamp(this.foodLevel + foodLevelIn, 0, 20);
+            FoodLevelChangeEvent event = CraftEventFactory.callFoodLevelChangeEvent(this.entityhuman, newFoodLevel, stack);
             if (event.isCancelled()) {
                 return;
             }
-            foodLevelIn = event.getFoodLevel() - oldFoodLevel;
+            deltaFoodLevel = event.getFoodLevel() - this.foodLevel;
             ((ServerPlayerEntityBridge) this.entityhuman).bridge$getBukkitEntity().sendHealthUpdate();
         }
-        DecorationOps.callsite().invoke(foodStats, foodLevelIn, foodSaturationModifier);
+        DecorationOps.callsite().invoke(foodStats, deltaFoodLevel, foodSaturationModifier);
     }
 
     @Inject(method = "tick", at = @At(value = "INVOKE_ASSIGN", remap = false, target = "Ljava/lang/Math;max(II)I"))
