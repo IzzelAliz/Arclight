@@ -29,7 +29,7 @@ public abstract class PlayerMixin_NeoForge extends LivingEntityMixin_NeoForge im
 
     @Inject(method = "hurt", cancellable = true, at = @At("HEAD"))
     private void arclight$onPlayerAttack(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        if (!CommonHooks.onEntityIncomingDamage((Player) (Object) this, new DamageContainer(source, amount))) {
+        if (CommonHooks.onEntityIncomingDamage((Player) (Object) this, new DamageContainer(source, amount))) {
             cir.setReturnValue(false);
         }
     }

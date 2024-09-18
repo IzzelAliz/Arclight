@@ -38,7 +38,7 @@ public abstract class LivingEntityMixin_NeoForge extends EntityMixin_NeoForge im
 
     @Inject(method = "hurt", cancellable = true, at = @At("HEAD"))
     private void arclight$livingHurt(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        if (!CommonHooks.onEntityIncomingDamage((LivingEntity) (Object) this, new DamageContainer(source, amount))) {
+        if (CommonHooks.onEntityIncomingDamage((LivingEntity) (Object) this, new DamageContainer(source, amount))) {
             cir.setReturnValue(false);
         }
     }
