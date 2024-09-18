@@ -2,7 +2,9 @@ package io.izzel.arclight.common.mixin.core.world.item.crafting;
 
 import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeBridge;
 import net.minecraft.world.item.crafting.CustomRecipe;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.spongepowered.asm.mixin.Mixin;
 
@@ -11,6 +13,6 @@ public class CustomRecipeMixin implements RecipeBridge {
 
     @Override
     public Recipe bridge$toBukkitRecipe(NamespacedKey id) {
-        return new org.bukkit.craftbukkit.v.inventory.CraftComplexRecipe(id, null, (CustomRecipe) (Object) this);
+        return new org.bukkit.craftbukkit.v.inventory.CraftComplexRecipe(id, new ItemStack(Material.AIR), (CustomRecipe) (Object) this);
     }
 }
