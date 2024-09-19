@@ -5,6 +5,7 @@ import net.minecraft.world.Container;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
+@SuppressWarnings("public-target")
 @Mixin(targets = "net/minecraft/world/level/block/ChestBlock$2$1")
 public class ChestBlock2_1Mixin {
 
