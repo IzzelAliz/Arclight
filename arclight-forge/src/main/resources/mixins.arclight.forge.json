@@ -56,7 +56,6 @@
     "core.world.item.MilkBucketItemMixin_Forge",
     "core.world.item.ShearsItemMixin_Forge",
     "core.world.item.crafting.RecipeManagerMixin_Forge",
-    "core.world.level.BaseSpawnerMixin_Forge",
     "core.world.level.ExplosionMixin_Forge",
     "core.world.level.LevelMixin_Forge",
     "core.world.level.block.BlockMixin_Forge",
