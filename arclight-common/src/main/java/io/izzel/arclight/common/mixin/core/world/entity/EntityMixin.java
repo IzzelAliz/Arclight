@@ -592,15 +592,6 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             this.level().getChunk((int) Math.floor(this.getX()) >> 4, (int) Math.floor(this.getZ()) >> 4);
     }
 
-    public boolean canCollideWith(Entity entity) {
-        return this.isPushable();
-    }
-
-    @Override
-    public boolean bridge$canCollideWith(Entity entity) {
-        return canCollideWith(entity);
-    }
-
     @Unique protected transient boolean arclight$saveNotIncludeAll = false;
 
     protected void addAdditionalSaveData(CompoundTag tag, boolean includeAll) {

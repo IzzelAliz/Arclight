@@ -25,15 +25,6 @@ public abstract class ParrotMixin extends AnimalMixin {
     private void arclight$handledInSuper(Parrot parrotEntity, boolean p_233687_1_) {
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    public boolean isPushable() {
-        return super.isPushable(); // CraftBukkit - collidable API
-    }
-
     @Redirect(method = "mobInteract", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/RandomSource;nextInt(I)I"))
     private int arclight$tame(RandomSource instance, int i, Player player) {
         var ret = instance.nextInt(i);

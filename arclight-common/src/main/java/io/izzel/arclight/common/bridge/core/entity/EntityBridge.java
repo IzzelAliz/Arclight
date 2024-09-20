@@ -57,8 +57,6 @@ public interface EntityBridge extends ICommandSourceBridge, InjectEntityBridge {
 
     int bridge$getRideCooldown();
 
-    boolean bridge$canCollideWith(Entity entity);
-
     void bridge$setLastLavaContact(BlockPos pos);
 
     void bridge$revive();

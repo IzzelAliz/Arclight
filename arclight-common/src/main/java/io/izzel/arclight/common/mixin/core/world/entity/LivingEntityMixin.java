@@ -828,20 +828,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         return !this.isRemoved() && this.collides;
     }
 
-    /**
-     * @author IzzrlAliz
-     * @reason
-     */
-    @Overwrite
-    public boolean isPushable() {
-        return this.isAlive() && !this.onClimbable() && this.collides;
-    }
-
-    @Override
-    public boolean canCollideWith(Entity entity) {
-        return this.isPushable() && this.collides != this.collidableExemptions.contains(entity.getUUID());
-    }
-
     @Decorate(method = "completeUsingItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;finishUsingItem(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/LivingEntity;)Lnet/minecraft/world/item/ItemStack;"))
     private ItemStack arclight$itemConsume(ItemStack itemStack, Level worldIn, LivingEntity entityLiving) throws
         Throwable {
