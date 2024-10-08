@@ -13,6 +13,7 @@ import net.minecraft.world.inventory.LecternMenu;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryLectern;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
+import org.bukkit.craftbukkit.v.inventory.view.CraftLecternView;
 import org.bukkit.event.player.PlayerTakeLecternBookEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,7 +29,7 @@ public abstract class LecternContainerMixin extends AbstractContainerMenuMixin i
     @Shadow @Final private Container lectern;
     // @formatter:on
 
-    private CraftInventoryView bukkitEntity;
+    private CraftLecternView bukkitEntity;
     private Inventory playerInventory;
 
     @ShadowConstructor
@@ -68,12 +69,12 @@ public abstract class LecternContainerMixin extends AbstractContainerMenuMixin i
     }
 
     @Override
-    public CraftInventoryView getBukkitView() {
+    public CraftLecternView getBukkitView() {
         if (bukkitEntity != null) {
             return bukkitEntity;
         }
         CraftInventoryLectern inventory = new CraftInventoryLectern(this.lectern);
-        bukkitEntity = new CraftInventoryView(((ServerPlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (AbstractContainerMenu) (Object) this);
+        bukkitEntity = new CraftLecternView(((ServerPlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (LecternMenu) (Object) this);
         return bukkitEntity;
     }
 

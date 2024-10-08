@@ -9,6 +9,7 @@ import net.minecraft.world.inventory.BrewingStandMenu;
 import net.minecraft.world.inventory.ContainerData;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryBrewer;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
+import org.bukkit.craftbukkit.v.inventory.view.CraftBrewingStandView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,7 +25,7 @@ public abstract class BrewingStandContainerMixin extends AbstractContainerMenuMi
     @Shadow @Final private Container brewingStand;
     // @formatter:on
 
-    private CraftInventoryView bukkitEntity = null;
+    private CraftBrewingStandView bukkitEntity = null;
     private Inventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;Lnet/minecraft/world/inventory/ContainerData;)V", at = @At("RETURN"))
@@ -38,13 +39,13 @@ public abstract class BrewingStandContainerMixin extends AbstractContainerMenuMi
     }
 
     @Override
-    public CraftInventoryView getBukkitView() {
+    public CraftBrewingStandView getBukkitView() {
         if (bukkitEntity != null) {
             return bukkitEntity;
         }
 
         CraftInventoryBrewer inventory = new CraftInventoryBrewer(this.brewingStand);
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (AbstractContainerMenu) (Object) this);
+        bukkitEntity = new CraftBrewingStandView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (BrewingStandMenu) (Object) this);
         return bukkitEntity;
     }
 }

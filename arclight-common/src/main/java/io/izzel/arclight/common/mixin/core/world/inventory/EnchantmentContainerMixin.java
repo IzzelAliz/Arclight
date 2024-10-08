@@ -26,6 +26,7 @@ import org.bukkit.craftbukkit.v.enchantments.CraftEnchantment;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryEnchanting;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v.inventory.view.CraftEnchantmentView;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.enchantments.EnchantmentOffer;
@@ -58,7 +59,7 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
     @Shadow @Final public int[] levelClue;
     // @formatter:on
 
-    private CraftInventoryView bukkitEntity = null;
+    private CraftEnchantmentView bukkitEntity = null;
     private Inventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/inventory/ContainerLevelAccess;)V", at = @At("RETURN"))
@@ -162,13 +163,13 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
     }
 
     @Override
-    public CraftInventoryView getBukkitView() {
+    public CraftEnchantmentView getBukkitView() {
         if (bukkitEntity != null) {
             return bukkitEntity;
         }
 
         CraftInventoryEnchanting inventory = new CraftInventoryEnchanting(this.enchantSlots);
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (AbstractContainerMenu) (Object) this);
+        bukkitEntity = new CraftEnchantmentView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (EnchantmentMenu) (Object) this);
         return bukkitEntity;
     }
 

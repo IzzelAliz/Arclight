@@ -14,6 +14,7 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryFurnace;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
+import org.bukkit.craftbukkit.v.inventory.view.CraftFurnaceView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -29,7 +30,7 @@ public abstract class AbstractFurnaceContainerMixin extends AbstractContainerMen
     @Shadow @Final private Container container;
     // @formatter:on
 
-    private CraftInventoryView bukkitEntity = null;
+    private CraftFurnaceView bukkitEntity = null;
     private Inventory playerInventory;
 
     @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;Lnet/minecraft/world/item/crafting/RecipeType;Lnet/minecraft/world/inventory/RecipeBookType;ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;Lnet/minecraft/world/inventory/ContainerData;)V", at = @At("RETURN"))
@@ -43,13 +44,13 @@ public abstract class AbstractFurnaceContainerMixin extends AbstractContainerMen
     }
 
     @Override
-    public CraftInventoryView getBukkitView() {
+    public CraftFurnaceView getBukkitView() {
         if (bukkitEntity != null) {
             return bukkitEntity;
         }
 
         CraftInventoryFurnace inventory = new CraftInventoryFurnace((AbstractFurnaceBlockEntity) this.container);
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (AbstractContainerMenu) (Object) this);
+        bukkitEntity = new CraftFurnaceView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (AbstractFurnaceMenu) (Object) this);
         return bukkitEntity;
     }
 }

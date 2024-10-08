@@ -15,6 +15,7 @@ import org.bukkit.craftbukkit.v.inventory.CraftInventory;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryAnvil;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v.inventory.view.CraftAnvilView;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.inventory.view.AnvilView;
 import org.spongepowered.asm.mixin.Final;
@@ -41,7 +42,7 @@ public abstract class AnvilMenuMixin extends ItemCombinerMixin implements AnvilM
     public int maximumAllowedRenameCost = 39;
     public int maximumRepairCost = 40;
 
-    private CraftInventoryView bukkitEntity;
+    private CraftAnvilView bukkitEntity;
 
     @Decorate(method = "createResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/ResultContainer;setItem(ILnet/minecraft/world/item/ItemStack;)V"))
     private void arclight$prepareAnvilEvent(ResultContainer instance, int i, ItemStack itemStack) throws Throwable {
@@ -66,14 +67,14 @@ public abstract class AnvilMenuMixin extends ItemCombinerMixin implements AnvilM
     }
 
     @Override
-    public CraftInventoryView getBukkitView() {
+    public CraftAnvilView getBukkitView() {
         if (bukkitEntity != null) {
             return bukkitEntity;
         }
 
         CraftInventory inventory = new CraftInventoryAnvil(
             ((IWorldPosCallableBridge) this.access).bridge$getLocation(), this.inputSlots, this.resultSlots);
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.player).bridge$getBukkitEntity(), inventory, (AbstractContainerMenu) (Object) this);
+        bukkitEntity = new CraftAnvilView(((PlayerEntityBridge) this.player).bridge$getBukkitEntity(), inventory, (AnvilMenu) (Object) this);
         return bukkitEntity;
     }
 }

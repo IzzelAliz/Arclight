@@ -10,6 +10,7 @@ import net.minecraft.world.inventory.ResultContainer;
 import net.minecraft.world.inventory.StonecutterMenu;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryStonecutter;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
+import org.bukkit.craftbukkit.v.inventory.view.CraftStonecutterView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -26,7 +27,7 @@ public abstract class StonecutterContainerMixin extends AbstractContainerMenuMix
     @Shadow @Final private ContainerLevelAccess access;
     // @formatter:on
 
-    private CraftInventoryView bukkitEntity = null;
+    private CraftStonecutterView bukkitEntity = null;
     private Inventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/inventory/ContainerLevelAccess;)V", at = @At("RETURN"))
@@ -35,13 +36,13 @@ public abstract class StonecutterContainerMixin extends AbstractContainerMenuMix
     }
 
     @Override
-    public CraftInventoryView getBukkitView() {
+    public CraftStonecutterView getBukkitView() {
         if (bukkitEntity != null) {
             return bukkitEntity;
         }
 
         CraftInventoryStonecutter inventory = new CraftInventoryStonecutter(this.container, this.resultContainer);
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (AbstractContainerMenu) (Object) this);
+        bukkitEntity = new CraftStonecutterView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (StonecutterMenu) (Object) this);
         return bukkitEntity;
     }
 

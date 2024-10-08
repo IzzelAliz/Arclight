@@ -9,6 +9,7 @@ import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.item.trading.Merchant;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryMerchant;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
+import org.bukkit.craftbukkit.v.inventory.view.CraftMerchantView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,7 +25,7 @@ public abstract class MerchantContainerMixin extends AbstractContainerMenuMixin 
     @Shadow @Final private MerchantContainer tradeContainer;
     // @formatter:on
 
-    private CraftInventoryView bukkitEntity = null;
+    private CraftMerchantView bukkitEntity = null;
     private Inventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/item/trading/Merchant;)V", at = @At("RETURN"))
@@ -40,9 +41,9 @@ public abstract class MerchantContainerMixin extends AbstractContainerMenuMixin 
     }
 
     @Override
-    public CraftInventoryView getBukkitView() {
+    public CraftMerchantView getBukkitView() {
         if (bukkitEntity == null) {
-            bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), new CraftInventoryMerchant(this.trader, this.tradeContainer), (AbstractContainerMenu) (Object) this);
+            bukkitEntity = new CraftMerchantView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), new CraftInventoryMerchant(this.trader, this.tradeContainer), (MerchantMenu) (Object) this, trader);
         }
         return bukkitEntity;
     }
