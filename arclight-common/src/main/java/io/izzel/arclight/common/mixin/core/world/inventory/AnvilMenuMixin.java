@@ -17,6 +17,7 @@ import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v.inventory.view.CraftAnvilView;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.view.AnvilView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -72,7 +73,7 @@ public abstract class AnvilMenuMixin extends ItemCombinerMixin implements AnvilM
             return bukkitEntity;
         }
 
-        CraftInventory inventory = new CraftInventoryAnvil(
+        var inventory = new CraftInventoryAnvil(
             ((IWorldPosCallableBridge) this.access).bridge$getLocation(), this.inputSlots, this.resultSlots);
         bukkitEntity = new CraftAnvilView(((PlayerEntityBridge) this.player).bridge$getBukkitEntity(), inventory, (AnvilMenu) (Object) this);
         return bukkitEntity;
