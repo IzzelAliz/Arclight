@@ -265,11 +265,6 @@ public abstract class PlayerListMixin implements PlayerListBridge {
     }
 
     public ServerPlayer respawn(ServerPlayer playerIn, boolean flag, Entity.RemovalReason removalReason, PlayerRespawnEvent.RespawnReason respawnReason, Location location) {
-        if (true) { // TODO remove on next update
-            arclight$respawnReason = respawnReason;
-            arclight$loc = location;
-            return this.respawn(playerIn, flag, removalReason);
-        }
         if (respawnReason == null && location != null) {
             // TODO
             if (bridge$platform$onTravelToDimension(playerIn, ((CraftWorld) location.getWorld()).getHandle().dimension)) {
