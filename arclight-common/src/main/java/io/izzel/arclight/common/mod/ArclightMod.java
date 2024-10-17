@@ -5,6 +5,7 @@ import io.izzel.arclight.common.mod.util.log.ArclightI18nLogger;
 import net.minecraftforge.fml.IExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.network.NetworkConstants;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -20,12 +21,12 @@ public class ArclightMod {
 
     public static final Logger LOGGER = ArclightI18nLogger.getLogger("Arclight");
 
-    public ArclightMod() {
+    public ArclightMod(FMLJavaModLoadingContext context) {
         LOGGER.info("mod-load");
         System.setOut(new LoggingPrintStream("STDOUT", System.out, Level.INFO));
         System.setErr(new LoggingPrintStream("STDERR", System.err, Level.ERROR));
         ArclightEventDispatcherRegistry.registerAllEventDispatchers();
-        ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class,
+        context.registerExtensionPoint(IExtensionPoint.DisplayTest.class,
             () -> new IExtensionPoint.DisplayTest(() -> NetworkConstants.IGNORESERVERONLY, (a, b) -> true));
     }
 
