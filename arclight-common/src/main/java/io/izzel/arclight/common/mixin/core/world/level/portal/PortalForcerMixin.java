@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -40,14 +41,9 @@ public abstract class PortalForcerMixin implements TeleporterBridge {
         this.arclight$searchRadius = searchRadius;
     }
 
-    @ModifyArg(method = "findClosestPortalPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ai/village/poi/PoiManager;ensureLoadedAndValid(Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/core/BlockPos;I)V"))
-    private int arclight$useSearchRadius1(int i) {
-        return this.arclight$searchRadius > 0 ? this.arclight$searchRadius : i;
-    }
-
-    @ModifyArg(method = "findClosestPortalPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ai/village/poi/PoiManager;getInSquare(Ljava/util/function/Predicate;Lnet/minecraft/core/BlockPos;ILnet/minecraft/world/entity/ai/village/poi/PoiManager$Occupancy;)Ljava/util/stream/Stream;"))
-    private int arclight$useSearchRadius2(int i) {
-        return this.arclight$searchRadius > 0 ? this.arclight$searchRadius : i;
+    @ModifyVariable(method = "findClosestPortalPosition", ordinal = 0, at = @At(value = "STORE", ordinal = 0))
+    private int arclight$useSearchRadius(int i) {
+        return this.arclight$searchRadius == -1 ? i : this.arclight$searchRadius;
     }
 
     @ModifyArg(method = "createPortal", index = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/core/BlockPos;spiralAround(Lnet/minecraft/core/BlockPos;ILnet/minecraft/core/Direction;Lnet/minecraft/core/Direction;)Ljava/lang/Iterable;"))
