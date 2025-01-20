@@ -28,7 +28,6 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
-import java.util.stream.Collectors;
 
 public class AbstractBootstrap {
 
@@ -91,13 +90,14 @@ public class AbstractBootstrap {
 
     protected void setupMod() throws Exception {
         ArclightVersion.setVersion(ArclightVersion.TRIALS);
+        var logger = LogManager.getLogger("Arclight");
         try (InputStream stream = getClass().getModule().getResourceAsStream("/META-INF/MANIFEST.MF")) {
             Manifest manifest = new Manifest(stream);
             Attributes attributes = manifest.getMainAttributes();
             String version = attributes.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
             extract(getClass().getModule().getResourceAsStream("/common.jar"), version);
             String buildTime = attributes.getValue("Implementation-Timestamp");
-            LogManager.getLogger("Arclight").info(ArclightLocale.getInstance().get("logo"),
+            logger.info(ArclightLocale.getInstance().get("logo"),
                 ArclightLocale.getInstance().get("release-name." + ArclightVersion.current().getReleaseName()), version, buildTime);
         }
     }
@@ -110,7 +110,7 @@ public class AbstractBootstrap {
         }
         var mod = dir.resolve(version + ".jar");
         if (!Files.exists(mod) || Boolean.getBoolean("arclight.alwaysExtract")) {
-            for (Path old : Files.list(dir).collect(Collectors.toList())) {
+            for (Path old : Files.list(dir).toList()) {
                 Files.delete(old);
             }
             Files.copy(path, mod);

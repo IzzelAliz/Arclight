@@ -1,7 +1,10 @@
 package io.izzel.arclight.boot.application;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
@@ -10,12 +13,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.jar.JarFile;
 import java.util.stream.Stream;
 
 public class Main_Forge {
 
     public static void main(String[] args) throws Throwable {
         try {
+            // Modifying the installer with a file archiver will corrupt the jar file
+            // The manifest data will be unavailable for further use, stop here
+            verifyManifest();
             Map.Entry<String, List<String>> install = forgeInstall();
             var cl = Class.forName(install.getKey());
             var method = cl.getMethod("main", String[].class);
@@ -26,6 +33,19 @@ public class Main_Forge {
             System.err.println("Fail to launch Arclight.");
             System.exit(-1);
         }
+    }
+
+    private static void verifyManifest() throws IOException, URISyntaxException {
+        var location = Main_Forge.class.getProtectionDomain().getCodeSource().getLocation();
+        try(JarFile baseArchive = new JarFile(new File(location.toURI()))) {
+            var mf = baseArchive.getManifest();
+            if (mf == null || mf.getEntries().isEmpty()) {
+                System.err.println("Failed to verify completeness for Arclight installer.");
+                System.err.println("The manifest data is corrupted, is the jar file modified?");
+                System.err.println("Cannot proceed, Arclight will exit");
+            }
+        }
+        throw new IOException("The installer jar file is corrupted");
     }
 
     @SuppressWarnings("unchecked")
