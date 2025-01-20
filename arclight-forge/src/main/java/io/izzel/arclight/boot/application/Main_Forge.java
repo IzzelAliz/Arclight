@@ -24,7 +24,8 @@ public class Main_Forge {
             // The manifest data will be unavailable for further use, stop here
             verifyManifest();
             Map.Entry<String, List<String>> install = forgeInstall();
-            var cl = Class.forName(install.getKey());
+            var clazz = Main_Forge.class;
+            var cl = BootstrapTransformer.loadTransform(install.getKey(), clazz.getClassLoader(), clazz.getProtectionDomain());
             var method = cl.getMethod("main", String[].class);
             var target = Stream.concat(install.getValue().stream(), Arrays.stream(args)).toArray(String[]::new);
             method.invoke(null, (Object) target);
@@ -39,13 +40,13 @@ public class Main_Forge {
         var location = Main_Forge.class.getProtectionDomain().getCodeSource().getLocation();
         try(JarFile baseArchive = new JarFile(new File(location.toURI()))) {
             var mf = baseArchive.getManifest();
-            if (mf == null || mf.getEntries().isEmpty()) {
+            if (mf == null || mf.getMainAttributes().isEmpty()) {
                 System.err.println("Failed to verify completeness for Arclight installer.");
                 System.err.println("The manifest data is corrupted, is the jar file modified?");
                 System.err.println("Cannot proceed, Arclight will exit");
+                throw new IOException("The installer jar file is corrupted");
             }
         }
-        throw new IOException("The installer jar file is corrupted");
     }
 
     @SuppressWarnings("unchecked")
