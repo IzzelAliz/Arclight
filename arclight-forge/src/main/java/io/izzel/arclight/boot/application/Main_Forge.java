@@ -1,5 +1,7 @@
 package io.izzel.arclight.boot.application;
 
+import cpw.mods.cl.ModuleClassLoader;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -24,9 +26,9 @@ public class Main_Forge {
             // The manifest data will be unavailable for further use, stop here
             verifyManifest();
             Map.Entry<String, List<String>> install = forgeInstall();
-            var clazz = Main_Forge.class;
-            var cl = BootstrapTransformer.loadTransform(install.getKey(), clazz.getClassLoader(), clazz.getProtectionDomain());
-            var method = cl.getMethod("main", String[].class);
+            var cl = new BootstrapTransformer(Main_Forge.class.getClassLoader());
+            var clazz = cl.loadClass(install.getKey(), true);
+            var method = clazz.getMethod("main", String[].class);
             var target = Stream.concat(install.getValue().stream(), Arrays.stream(args)).toArray(String[]::new);
             method.invoke(null, (Object) target);
         } catch (Exception e) {
