@@ -737,7 +737,7 @@ accessible field net/minecraft/server/dedicated/DedicatedServer serverLinks Lnet
 mutable field net/minecraft/server/dedicated/DedicatedServer serverLinks Lnet/minecraft/server/ServerLinks;
 accessible method net/minecraft/world/entity/projectile/Arrow getPotionContents ()Lnet/minecraft/world/item/alchemy/PotionContents;
 accessible method net/minecraft/world/entity/projectile/Arrow setPotionContents (Lnet/minecraft/world/item/alchemy/PotionContents;)V
-accessible field net/minecraft/world/item/BucketItem content Lnet/minecraft/world/level/material/Fluid;
+# accessible field net/minecraft/world/item/BucketItem content Lnet/minecraft/world/level/material/Fluid;
 accessible class net/minecraft/server/level/ServerPlayer$RespawnPosAngle
 accessible method net/minecraft/world/entity/projectile/windcharge/AbstractWindCharge explode (Lnet/minecraft/world/phys/Vec3;)V
 accessible field net/minecraft/world/entity/animal/MushroomCow stewEffects Lnet/minecraft/world/item/component/SuspiciousStewEffects;

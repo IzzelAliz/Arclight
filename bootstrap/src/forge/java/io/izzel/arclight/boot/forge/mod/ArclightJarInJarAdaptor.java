@@ -56,7 +56,8 @@ public class ArclightJarInJarAdaptor implements IDependencyLocator {
     @SuppressWarnings("unchecked")
     static void inject() {
         try {
-            var field = FMLLoader.class.getDeclaredField("modDiscoverer");
+            var cl = ModDiscoverer.class.getClassLoader();
+            var field = ModDiscoverer.class.getDeclaredField("arclight$INSTANCE");
             field.setAccessible(true);
             var discoverer = (ModDiscoverer) field.get(null);
             var locatorField = ModDiscoverer.class.getDeclaredField("dependencyLocatorList");

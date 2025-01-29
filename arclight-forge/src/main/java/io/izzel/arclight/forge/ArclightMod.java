@@ -1,10 +1,8 @@
 package io.izzel.arclight.forge;
 
 import io.izzel.arclight.api.Arclight;
-import io.izzel.arclight.common.mod.ArclightCommon;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.forge.mod.ForgeArclightServer;
-import io.izzel.arclight.forge.mod.ForgeCommonImpl;
 import io.izzel.arclight.forge.mod.event.ArclightEventDispatcherRegistry;
 import net.minecraftforge.fml.common.Mod;
 import org.apache.logging.log4j.Level;
