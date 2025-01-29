@@ -14,7 +14,8 @@ public class ArclightLaunchHandler extends CommonLaunchHandler {
 
     @Override
     public String getNaming() {
-        return "srg";
+        // Target mapping in use is SRG -> MCP, translates to MCP
+        return "mcp";
     }
 
     @Override
