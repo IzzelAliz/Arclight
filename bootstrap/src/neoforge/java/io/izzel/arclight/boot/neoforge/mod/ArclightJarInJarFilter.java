@@ -4,12 +4,13 @@ import net.neoforged.fml.loading.moddiscovery.ModFile;
 import net.neoforged.neoforgespi.locating.IDependencyLocator;
 import net.neoforged.neoforgespi.locating.IDiscoveryPipeline;
 import net.neoforged.neoforgespi.locating.IModFile;
+import net.neoforged.neoforgespi.locating.IOrderedProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class ArclightJarInJarFilter implements IDependencyLocator {
+public class ArclightJarInJarFilter implements IDependencyLocator, IOrderedProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("ArclightJiJ");
 
@@ -34,5 +35,10 @@ public class ArclightJarInJarFilter implements IDependencyLocator {
     @Override
     public String toString() {
         return "arclight_jij";
+    }
+
+    @Override
+    public int getPriority() {
+        return IOrderedProvider.LOWEST_SYSTEM_PRIORITY;
     }
 }
