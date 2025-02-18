@@ -39,6 +39,8 @@
     "core.world.entity.MobMixin_NeoForge",
     "core.world.entity.ai.behavior.HarvestFarmlandMixin_NeoForge",
     "core.world.entity.animal.MushroomCowMixin_NeoForge",
+    "core.world.entity.animal.SheepMixin_NeoForge",
+    "core.world.entity.animal.WolfMixin_NeoForge",
     "core.world.entity.animal.frog.TadpoleMixin_NeoForge",
     "core.world.entity.item.ItemEntityMixin_NeoForge",
     "core.world.entity.monster.ZombieMixin_NeoForge",

@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.mojang.authlib.properties.Property;
 import com.mojang.util.UndashedUuid;
 import io.izzel.arclight.common.bridge.core.network.NetworkManagerBridge;
-import io.izzel.arclight.common.bridge.core.network.handshake.ServerHandshakeNetHandlerBridge;
 import io.izzel.arclight.common.mod.util.VelocitySupport;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
@@ -26,7 +25,7 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 
 @Mixin(ServerHandshakePacketListenerImpl.class)
-public abstract class ServerHandshakePacketListenerImplMixin implements ServerHandshakeNetHandlerBridge {
+public abstract class ServerHandshakePacketListenerImplMixin {
 
     private static final Gson gson = new Gson();
     private static final java.util.regex.Pattern HOST_PATTERN = java.util.regex.Pattern.compile("[0-9a-f\\.:]{0,45}");
@@ -37,12 +36,11 @@ public abstract class ServerHandshakePacketListenerImplMixin implements ServerHa
     @Shadow @Final private Connection connection;
     // @formatter:on
 
-    @Inject(method = "handleIntention", at = @At("HEAD"))
+    // Don't inject at head to ensure executed after Forge check
+    // See the corresponding mixin on Forge side
+    @Inject(method = "handleIntention", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/handshake/ClientIntentionPacket;intention()Lnet/minecraft/network/protocol/handshake/ClientIntent;"))
     private void arclight$setHostName(ClientIntentionPacket packet, CallbackInfo ci) {
         // TODO
-        if (!bridge$forge$handleSpecialLogin(packet)) {
-            return;
-        }
         ((NetworkManagerBridge) this.connection).bridge$setHostname(packet.hostName() + ":" + packet.port());
     }
 

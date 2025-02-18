@@ -22,10 +22,13 @@
     "core.network.ServerLoginNetHandlerMixin_Fabric",
     "core.world.entity.EntityMixin_Fabric",
     "core.world.entity.LivingEntityMixin_Fabric",
+    "core.world.entity.animal.SheepMixin_Fabric",
+    "core.world.entity.animal.WolfMixin_Fabric",
     "core.world.entity.monster.ZombieMixin_Fabric",
     "core.world.entity.player.PlayerMixin_Fabric",
     "core.world.entity.player.ServerPlayerMixin_Fabric",
     "core.world.level.block.FireBlockMixin_Fabric",
+    "core.world.level.block.entity.AbstractFurnaceBlockEntityMixin_Fabric",
     "core.world.level.block.entity.BrewingStandBlockEntityMixin_Fabric"
   ]
 }
