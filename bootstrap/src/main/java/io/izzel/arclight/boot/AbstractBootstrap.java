@@ -80,50 +80,6 @@ public interface AbstractBootstrap {
             byte[] bytes = cw.toByteArray();
             Unsafe.defineClass("com.mojang.brigadier.tree.CommandNode", bytes, 0, bytes.length, getClass().getClassLoader() /* MC-BOOTSTRAP */, getClass().getProtectionDomain());
         }
-        try (var in = getClass().getClassLoader().getResourceAsStream("net/minecraftforge/fml/loading/moddiscovery/ModDiscoverer.class")) {
-            var clazz = new ClassNode();
-            new ClassReader(in).accept(clazz, 0);
-            final var mdName = "net/minecraftforge/fml/loading/moddiscovery/ModDiscoverer";
-            final var mdSig = "L" + mdName + ";";
-            {
-                MethodNode constructor = null;
-                for (var method: clazz.methods) {
-                    if ("<init>".equals(method.name)) {
-                        constructor = method;
-                    }
-                }
-                if (constructor == null) {
-                    throw new RuntimeException("Cannot transform ModDiscoverer: <init> not found");
-                }
-
-                FrameNode lastFrame = null;
-                for (var insn: constructor.instructions) {
-                    if (insn instanceof FrameNode frame) {
-                        lastFrame = frame;
-                    }
-                }
-                if (lastFrame == null) {
-                    throw new RuntimeException("Cannot transform ModDiscoverer: <init> return not found");
-                }
-
-                var aloadThis = new VarInsnNode(Opcodes.ALOAD, 0);
-                var putField = new FieldInsnNode(Opcodes.PUTSTATIC, mdName, "arclight$INSTANCE", mdSig);
-                constructor.instructions.insertBefore(lastFrame, aloadThis);
-                constructor.instructions.insert(aloadThis, putField);
-                constructor.instructions.insert(putField, new InsnNode(Opcodes.RETURN));
-                constructor.instructions.remove(lastFrame);
-            }
-            {
-                clazz.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "arclight$INSTANCE", mdSig, mdSig, null);
-            }
-            var cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
-            clazz.accept(cw);
-            byte[] bytes = cw.toByteArray();
-            Unsafe.defineClass(mdName.replace('/', '.'), bytes, 0, bytes.length, getClass().getClassLoader() /* MC-BOOTSTRAP */, getClass().getProtectionDomain());
-            System.out.println("Redefined ModDiscoverer in cl:" +getClass().getClassLoader());
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
     }
 
     default void setupMod(ArclightPlatform platform) throws Exception {
