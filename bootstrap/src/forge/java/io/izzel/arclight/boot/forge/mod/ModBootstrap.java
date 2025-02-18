@@ -105,6 +105,12 @@ public class ModBootstrap implements AbstractBootstrap {
                     throw new RuntimeException("Cannot transform ModDiscoverer: <init> not found");
                 }
 
+                for (var field: clazz.fields) {
+                    if ("arclight$INSTANCE".equals(field.name)) {
+                        return;
+                    }
+                }
+
                 FrameNode lastFrame = null;
                 for (var insn: constructor.instructions) {
                     if (insn instanceof FrameNode frame) {
