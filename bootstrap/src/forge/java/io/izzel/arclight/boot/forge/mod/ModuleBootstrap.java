@@ -56,6 +56,7 @@ public class ModuleBootstrap implements BootstrapEntryPoint, AbstractBootstrap {
 
     @Override
     public void dirtyHacks() throws Exception {
+        AbstractBootstrap.super.dirtyHacks();
         try (var in = getClass().getClassLoader().getResourceAsStream("net/minecraftforge/fml/loading/moddiscovery/ModDiscoverer.class")) {
             var clazz = new ClassNode();
             new ClassReader(in).accept(clazz, 0);
