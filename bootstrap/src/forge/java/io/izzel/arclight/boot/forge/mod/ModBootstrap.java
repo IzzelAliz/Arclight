@@ -32,10 +32,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.CodeSigner;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.jar.Manifest;
 
 public class ModBootstrap implements AbstractBootstrap {
@@ -46,7 +43,9 @@ public class ModBootstrap implements AbstractBootstrap {
 
     static void run() {
         var plugin = Launcher.INSTANCE.environment().findLaunchPlugin("arclight_implementer");
-        if (plugin.isPresent()) return;
+        if (plugin.isPresent()) {
+            return;
+        }
         var logger = LogManager.getLogger("Arclight");
         var marker = MarkerManager.getMarker("INSTALL");
         try {
@@ -86,6 +85,7 @@ public class ModBootstrap implements AbstractBootstrap {
         injectLaunchPlugin();
     }
 
+    // No need to check again since it's already checked in run()
     @Override
     public void dirtyHacks() throws Exception {
         AbstractBootstrap.super.dirtyHacks();
@@ -103,12 +103,6 @@ public class ModBootstrap implements AbstractBootstrap {
                 }
                 if (constructor == null) {
                     throw new RuntimeException("Cannot transform ModDiscoverer: <init> not found");
-                }
-
-                for (var field: clazz.fields) {
-                    if ("arclight$INSTANCE".equals(field.name)) {
-                        return;
-                    }
                 }
 
                 FrameNode lastFrame = null;
