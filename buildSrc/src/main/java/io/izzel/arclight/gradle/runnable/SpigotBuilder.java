@@ -5,6 +5,7 @@ import io.izzel.arclight.gradle.util.GitOps;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
+import org.gradle.api.GradleException;
 import org.gradle.process.ExecOperations;
 
 import javax.annotation.Nullable;
@@ -77,13 +78,8 @@ public class SpigotBuilder implements Runnable {
 
         this.outputJar = outputDir.resolve("spigot-" + minecraftVersion + ".jar");
 
-        if (Files.exists(outputJar)) {
-            System.out.println(outputJar);
-            if (forceRebuild) {
-                Files.delete(outputDir);
-            } else {
-                return;
-            }
+        if (forceRebuild) {
+            Files.delete(outputDir);
         }
 
         Files.createDirectories(outputDir);
@@ -103,16 +99,28 @@ public class SpigotBuilder implements Runnable {
             checkout("BuildData", "https://hub.spigotmc.org/stash/scm/spigot/builddata.git", extension.getBuildDataRef());
         }
 
-        execOperations.exec(spec -> {
+        var exit = execOperations.exec(spec -> {
             spec.setWorkingDir(workDir.toFile());
             spec.setStandardOutput(System.out);
 
             if (extension == null) {
-                spec.setCommandLine("java", "-jar", buildToolsJar.normalize().toString(), "--rev", minecraftVersion);
+                spec.setCommandLine("java", "-jar", buildToolsJar.normalize().toString(), "--rev", minecraftVersion, "--compile-if-changed");
             } else {
-                spec.setCommandLine("java", "-jar", buildToolsJar.normalize().toString(), "--dont-update");
+                spec.setCommandLine("java", "-jar", buildToolsJar.normalize().toString(), "--dont-update", "--compile-if-changed");
             }
-        });
+
+            spec.setIgnoreExitValue(true);
+        }).getExitValue();
+
+        if (exit == 0) {
+            if (Files.exists(outputJar)) {
+                Files.delete(outputJar);
+            }
+        } else if (exit == 2) {
+            // No changes.
+        } else {
+            throw new GradleException("Failed to build spigot jar.");
+        }
 
         var spigot = workDir.resolve("spigot-" + minecraftVersion + ".jar");
         var bundler = outputDir.resolve("spigot-" + minecraftVersion + "-bundler.jar");

@@ -59,8 +59,10 @@ class ArclightGradlePlugin implements Plugin<Project> {
 
         if (arclight.mappingsConfiguration.areMappingsExist()
                 && Files.exists(spigotDeobf)) {
+            // Todo: always run spigot builder.
             return
         }
+
         project.logger.lifecycle(":step1 download build tools")
         def downloadBuildTools = new FileDownloader("https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar", buildToolsJar)
         downloadBuildTools.run()
