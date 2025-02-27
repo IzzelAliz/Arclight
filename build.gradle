@@ -1,3 +1,4 @@
+import io.izzel.arclight.gradle.ArclightGradlePlugin
 import io.izzel.arclight.gradle.tasks.UploadFilesTask
 
 allprojects {
@@ -46,6 +47,19 @@ allprojects {
     tasks.register('cleanBuild') {
         doFirst {
             project.file("build/libs").deleteDir()
+        }
+    }
+}
+
+subprojects.findAll(p -> p.name.startsWith('arclight-')).each {p ->
+    configure(p) {
+        apply plugin: ArclightGradlePlugin
+
+        arclight {
+            mcVersion = minecraftVersion
+            bukkitVersion = 'v1_21_R1'
+            accessTransformer = project(':arclight-common').file('bukkit.at')
+            extraMapping = project(':arclight-common').file('extra_mapping.tsrg')
         }
     }
 }

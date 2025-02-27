@@ -14,15 +14,20 @@ repositories {
 }
 
 dependencies {
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
+
     implementation gradleApi()
     implementation localGroovy()
-    implementation('net.md-5:SpecialSource:1.11.3') { transitive false }
     implementation 'org.ow2.asm:asm-tree:9.7.1'
     implementation 'org.ow2.asm:asm-util:9.7.1'
     implementation 'org.ow2.asm:asm-commons:9.7.1'
-    implementation 'org.cadixdev:lorenz-io-proguard:0.5.8'
-    implementation 'org.cadixdev:lorenz:0.5.8'
     implementation 'org.cadixdev:at:0.1.0-rc1'
-    implementation 'net.fabricmc:lorenz-tiny:4.0.2'
-    implementation "dev.architectury:architectury-loom:1.9-SNAPSHOT"
+
+    implementation(libs.loom)
+    implementation(libs.lorenz.core)
+    implementation(libs.lorenz.proguard)
+    implementation(libs.lorenz.tiny)
+    implementation(libs.mercury)
+    implementation(libs.specialsource) { transitive false }
 }

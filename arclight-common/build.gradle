@@ -4,8 +4,6 @@ plugins {
     id 'idea'
 }
 
-apply plugin: io.izzel.arclight.gradle.ArclightGradlePlugin
-
 architectury {
     minecraft = minecraftVersion
     common(project.ext.supportedPlatforms)
@@ -14,14 +12,6 @@ architectury {
 loom {
     silentMojangMappingsLicense()
     accessWidenerPath = file("src/main/resources/arclight.accesswidener")
-}
-
-arclight {
-    mcVersion = minecraftVersion
-    forgeVersion = project.ext.forgeVersion
-    bukkitVersion = 'v1_21_R1'
-    accessTransformer = project.file('bukkit.at')
-    extraMapping = project(':arclight-common').file('extra_mapping.tsrg')
 }
 
 dependencies {

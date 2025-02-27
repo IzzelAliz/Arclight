@@ -1,0 +1,20 @@
+[versions]
+lombok = '1.18.36'
+
+architectury-loom = '1.9-SNAPSHOT'
+lorenz = '0.5.8'
+lorenz-io-proguard = '0.5.8'
+lorenz-tiny = '4.0.2'
+mercury = '0.1.4.17'
+special-source = '1.11.3'
+
+[libraries]
+lombok = { module = 'org.projectlombok:lombok', version.ref = 'lombok'}
+
+loom = { module = 'dev.architectury:architectury-loom', version.ref = 'architectury-loom' }
+lorenz-core = { module = 'org.cadixdev:lorenz', version.ref = 'lorenz' }
+lorenz-proguard = { module = 'org.cadixdev:lorenz-io-proguard', version.ref = 'lorenz-io-proguard' }
+lorenz-tiny = { module = 'net.fabricmc:lorenz-tiny', version.ref = 'lorenz-tiny' }
+mercury = { module = 'dev.architectury:mercury', version.ref = 'mercury' }
+specialsource = { module = 'net.md-5:SpecialSource', version.ref = 'special-source' }
+
