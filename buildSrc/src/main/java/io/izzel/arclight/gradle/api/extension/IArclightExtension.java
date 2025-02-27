@@ -6,8 +6,8 @@ import java.io.File;
 import java.nio.file.Path;
 
 public interface IArclightExtension {
-    Path getWorkDir();
-    void setWorkDir(Path path);
+    Path getCacheDir();
+    void setCacheDir(Path path);
 
     String getMcVersion();
     void setMcVersion(String mcVersion);

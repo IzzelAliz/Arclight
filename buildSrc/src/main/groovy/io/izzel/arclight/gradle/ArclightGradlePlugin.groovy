@@ -20,13 +20,13 @@ class ArclightGradlePlugin implements Plugin<Project> {
         project.plugins.apply(LoomGradlePluginBootstrap)
         def arclight = project.extensions.create('arclight', ArclightExtension, project)
 
-        def arclightRepo = arclight.workDir.resolve('arclight_repo')
+        def arclightRepo = arclight.cacheDir.resolve('arclight_repo')
         project.repositories.maven {
             name = 'Arclight Spigot Repo'
             url = arclightRepo
         }
 
-        def mappingsDir = arclight.workDir.resolve('arclight_cache/mappings')
+        def mappingsDir = arclight.cacheDir.resolve('arclight_cache/mappings')
         def forgeMappings = mappingsDir.resolve('bukkit_srg.srg').toFile()
         def forgeInheritance = mappingsDir.resolve('inheritanceMap.txt').toFile()
         def reobfMappings = mappingsDir.resolve('reobf_bukkit.srg').toFile()
@@ -48,10 +48,10 @@ class ArclightGradlePlugin implements Plugin<Project> {
     private static def setupSpigot(Project project, Path arclightRepo) {
         def arclight = project.extensions.getByName('arclight') as ArclightExtension
 
-        def buildTools = arclight.workDir.resolve('arclight_cache/buildtools')
+        def buildTools = arclight.cacheDir.resolve('arclight_cache/buildtools')
         def buildToolsJar = buildTools.resolve('BuildTools.jar')
 
-        def mappingsDir = arclight.workDir.resolve('arclight_cache/mappings')
+        def mappingsDir = arclight.cacheDir.resolve('arclight_cache/mappings')
 
         def spigotDeps = arclightRepo.resolve("io/izzel/arclight/generated/spigot/${arclight.mcVersion}")
         def spigotMapped = spigotDeps.resolve("spigot-${arclight.mcVersion}-mapped.jar")
@@ -71,7 +71,6 @@ class ArclightGradlePlugin implements Plugin<Project> {
         spigotBuilder.workDir = buildTools
         spigotBuilder.outputDir = spigotDeps
         spigotBuilder.minecraftVersion = arclight.mcVersion
-        spigotBuilder.extension = arclight.spigot
         spigotBuilder.run()
 
         new LocalMavenHelper("io.izzel.arclight.generated", "spigot", arclight.mcVersion, null, arclightRepo).savePom()

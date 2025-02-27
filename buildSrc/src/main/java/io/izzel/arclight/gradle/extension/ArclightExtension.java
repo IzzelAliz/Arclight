@@ -9,7 +9,7 @@ import java.io.File;
 import java.nio.file.Path;
 
 public class ArclightExtension implements IArclightExtension {
-    private Path workDir;
+    private Path cacheDir;
     private String mcVersion;
     private String bukkitVersion;
     private File accessTransformer;
@@ -17,17 +17,17 @@ public class ArclightExtension implements IArclightExtension {
     private final IArclightMappingsExtension mappingsConfiguration = new ArclightMappingsExtension();
 
     public ArclightExtension(Project project) {
-        this.workDir = project.getRootProject().getRootDir().toPath().resolve(".arclight");
+        this.cacheDir = project.getRootProject().getRootDir().toPath().resolve(".gradle/arclight");
     }
 
     @Override
-    public Path getWorkDir() {
-        return workDir;
+    public Path getCacheDir() {
+        return cacheDir;
     }
 
     @Override
-    public void setWorkDir(Path path) {
-        workDir = path;
+    public void setCacheDir(Path path) {
+        cacheDir = path;
     }
 
     @Override

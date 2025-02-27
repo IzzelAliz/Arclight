@@ -41,6 +41,7 @@ public class SpigotBuilder implements Runnable {
 
     /**
      * The specific commit refs.
+     * Todo: add a task to use it.
      */
     @Getter
     @Setter
