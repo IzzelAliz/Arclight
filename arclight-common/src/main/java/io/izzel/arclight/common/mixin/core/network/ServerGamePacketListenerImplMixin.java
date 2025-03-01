@@ -285,14 +285,6 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             if (entity != this.player && entity.getControllingPassenger() == this.player && entity == this.lastVehicle) {
                 ServerLevel worldserver = this.player.serverLevel();
 
-                // CraftBukkit - store current player position
-                double prevX = player.getX();
-                double prevY = player.getY();
-                double prevZ = player.getZ();
-                float prevYaw = player.getYRot();
-                float prevPitch = player.getXRot();
-                // CraftBukkit end
-
                 double d0 = entity.getX();
                 double d2 = entity.getY();
                 double d3 = entity.getZ();
@@ -305,6 +297,20 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                 double d8 = d5 - this.vehicleFirstGoodY;
                 double d9 = d6 - this.vehicleFirstGoodZ;
                 double d10 = entity.getDeltaMovement().lengthSqr();
+
+                // Down shift to support ServerCore injecting into lengthSqr.
+                // They are capturing the above 11 fp numbers (d0-d9, f, f2).
+                // mixin can't distinguish between ours and original ones.
+                // Perhaps due to we have 2 floats that's similar to above.
+                // Mixin plz, allow overlapping possible captures!
+                // CraftBukkit - store current player position
+                double prevX = player.getX();
+                double prevY = player.getY();
+                double prevZ = player.getZ();
+                float prevYaw = player.getYRot();
+                float prevPitch = player.getXRot();
+                // CraftBukkit end
+
                 double d11 = d7 * d7 + d8 * d8 + d9 * d9;
                 this.allowedPlayerTicks += (int) (System.currentTimeMillis() / 50L - this.lastTick);
                 this.allowedPlayerTicks = Math.max(this.allowedPlayerTicks, 1);
@@ -478,6 +484,13 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         DecorationOps.callsite().invoke(instance, i, handStack);
     }
 
+    // Support imfast changing moved wrongly threshold in ATM10
+    @SuppressWarnings("SameParameterValue")
+    private double arclight$selectMovedWronglyThreshold(double raw) {
+        double spigot = org.spigotmc.SpigotConfig.movedWronglyThreshold;
+        return raw != 0.0625 ? Math.max(raw, spigot) : spigot;
+    }
+
     /**
      * @author IzzelAliz
      * @reason
@@ -506,6 +519,21 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                         this.player.serverLevel().getChunkSource().move(this.player);
                         this.allowedPlayerTicks = 20; // CraftBukkit
                     } else {
+                        double d3 = this.player.getX();
+                        double d4 = this.player.getY();
+                        double d5 = this.player.getZ();
+                        // This is not in ServerGamePacketListenerImpl.
+                        // It is unused, then why it's here?
+                        // double d6 = this.player.getY();
+                        double d7 = d0 - this.firstGoodX;
+                        double d8 = d1 - this.firstGoodY;
+                        double d9 = d2 - this.firstGoodZ;
+                        double d10 = this.player.getDeltaMovement().lengthSqr();
+                        double d11 = d7 * d7 + d8 * d8 + d9 * d9;
+
+                        // Down shift to support ServerCore injecting into lengthSqr.
+                        // They are capturing the above 8 fp numbers (d0-d5, f, f1).
+                        // mixin can't distinguish between ours and original ones.
                         // CraftBukkit - Make sure the move is valid but then reset it for plugins to modify
                         double prevX = player.getX();
                         double prevY = player.getY();
@@ -513,15 +541,8 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                         float prevYaw = player.getYRot();
                         float prevPitch = player.getXRot();
                         // CraftBukkit end
-                        double d3 = this.player.getX();
-                        double d4 = this.player.getY();
-                        double d5 = this.player.getZ();
-                        double d6 = this.player.getY();
-                        double d7 = d0 - this.firstGoodX;
-                        double d8 = d1 - this.firstGoodY;
-                        double d9 = d2 - this.firstGoodZ;
-                        double d10 = this.player.getDeltaMovement().lengthSqr();
-                        double d11 = d7 * d7 + d8 * d8 + d9 * d9;
+                        // Below is isSleeping() which can be another injection point.
+                        // Mixin plz, allow overlapping possible captures!
 
                         if (this.player.isSleeping()) {
                             if (d11 > 1.0D) {
@@ -593,7 +614,8 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                             d11 = d7 * d7 + d8 * d8 + d9 * d9;
                             boolean flag1 = false;
 
-                            if (!this.player.isChangingDimension() && d11 > org.spigotmc.SpigotConfig.movedWronglyThreshold && !this.player.isSleeping() && !this.player.gameMode.isCreative() && this.player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) { // Spigot
+                            // Support imfast changing moved wrongly threshold constant (0.0625) in ATM10
+                            if (!this.player.isChangingDimension() && d11 > arclight$selectMovedWronglyThreshold(0.0625) && !this.player.isSleeping() && !this.player.gameMode.isCreative() && this.player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) { // Spigot
                                 flag1 = true;
                                 LOGGER.warn("{} moved wrongly!", this.player.getName().getString());
                             }

@@ -16,11 +16,13 @@ import java.util.function.Function;
 
 public interface MaterialBridge {
 
-    void bridge$setupBlock(ResourceLocation key, Block block, MaterialPropertySpec spec);
+    ResourceLocation AIR = ResourceLocation.parse("air");
+
+    void bridge$setupBlock(ResourceLocation key, MaterialPropertySpec spec);
 
     void bridge$setupVanillaBlock(MaterialPropertySpec spec);
 
-    void bridge$setupItem(ResourceLocation key, Item item, MaterialPropertySpec spec);
+    void bridge$setupItem(ResourceLocation key, MaterialPropertySpec spec);
 
     void bridge$setBlock();
 

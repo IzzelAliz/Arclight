@@ -88,6 +88,7 @@ public abstract class MaterialMixin implements MaterialBridge {
 
     private MaterialPropertySpec.MaterialType arclight$type = MaterialPropertySpec.MaterialType.VANILLA;
     private MaterialPropertySpec arclight$spec;
+    private ResourceLocation arclight$location;
     private boolean arclight$block = false, arclight$item = false;
 
     @Override
@@ -117,6 +118,9 @@ public abstract class MaterialMixin implements MaterialBridge {
     @Inject(method = "isEdible", cancellable = true, at = @At("HEAD"))
     private void arclight$isEdible(CallbackInfoReturnable<Boolean> cir) {
         if (arclight$spec != null) {
+            if (!arclight$spec.isPresent) {
+                arclight$setupCommon();
+            }
             cir.setReturnValue(arclight$spec.edible);
         }
     }
@@ -124,6 +128,9 @@ public abstract class MaterialMixin implements MaterialBridge {
     @Inject(method = "isRecord", cancellable = true, at = @At("HEAD"))
     private void arclight$isRecord(CallbackInfoReturnable<Boolean> cir) {
         if (arclight$spec != null) {
+            if (!arclight$spec.isPresent) {
+                arclight$setupCommon();
+            }
             cir.setReturnValue(arclight$spec.record);
         }
     }
@@ -131,6 +138,9 @@ public abstract class MaterialMixin implements MaterialBridge {
     @Inject(method = "isSolid", cancellable = true, at = @At("HEAD"))
     private void arclight$isSolid(CallbackInfoReturnable<Boolean> cir) {
         if (arclight$spec != null) {
+            if (!arclight$spec.isPresent) {
+                arclight$setupCommon();
+            }
             cir.setReturnValue(arclight$spec.solid);
         }
     }
@@ -138,6 +148,9 @@ public abstract class MaterialMixin implements MaterialBridge {
     @Inject(method = "isAir", cancellable = true, at = @At("HEAD"))
     private void arclight$isAir(CallbackInfoReturnable<Boolean> cir) {
         if (arclight$spec != null) {
+            if (!arclight$spec.isPresent) {
+                arclight$setupCommon();
+            }
             cir.setReturnValue(arclight$spec.air);
         }
     }
@@ -145,6 +158,9 @@ public abstract class MaterialMixin implements MaterialBridge {
     @Inject(method = "isTransparent", cancellable = true, at = @At("HEAD"))
     private void arclight$isTransparent(CallbackInfoReturnable<Boolean> cir) {
         if (arclight$spec != null) {
+            if (!arclight$spec.isPresent) {
+                arclight$setupCommon();
+            }
             cir.setReturnValue(arclight$spec.transparent);
         }
     }
@@ -152,6 +168,9 @@ public abstract class MaterialMixin implements MaterialBridge {
     @Inject(method = "isFlammable", cancellable = true, at = @At("HEAD"))
     private void arclight$isFlammable(CallbackInfoReturnable<Boolean> cir) {
         if (arclight$spec != null) {
+            if (!arclight$spec.isPresent) {
+                arclight$setupCommon();
+            }
             cir.setReturnValue(arclight$spec.flammable);
         }
     }
@@ -159,6 +178,9 @@ public abstract class MaterialMixin implements MaterialBridge {
     @Inject(method = "isBurnable", cancellable = true, at = @At("HEAD"))
     private void arclight$isBurnable(CallbackInfoReturnable<Boolean> cir) {
         if (arclight$spec != null) {
+            if (!arclight$spec.isPresent) {
+                arclight$setupCommon();
+            }
             cir.setReturnValue(arclight$spec.burnable);
         }
     }
@@ -166,6 +188,9 @@ public abstract class MaterialMixin implements MaterialBridge {
     @Inject(method = "isFuel", cancellable = true, at = @At("HEAD"))
     private void arclight$isFuel(CallbackInfoReturnable<Boolean> cir) {
         if (arclight$spec != null) {
+            if (!arclight$spec.isPresent) {
+                arclight$setupCommon();
+            }
             cir.setReturnValue(arclight$spec.fuel);
         }
     }
@@ -173,6 +198,9 @@ public abstract class MaterialMixin implements MaterialBridge {
     @Inject(method = "isOccluding", cancellable = true, at = @At("HEAD"))
     private void arclight$isOccluding(CallbackInfoReturnable<Boolean> cir) {
         if (arclight$spec != null) {
+            if (!arclight$spec.isPresent) {
+                arclight$setupCommon();
+            }
             cir.setReturnValue(arclight$spec.occluding);
         }
     }
@@ -180,6 +208,9 @@ public abstract class MaterialMixin implements MaterialBridge {
     @Inject(method = "hasGravity", cancellable = true, at = @At("HEAD"))
     private void arclight$hasGravity(CallbackInfoReturnable<Boolean> cir) {
         if (arclight$spec != null) {
+            if (!arclight$spec.isPresent) {
+                arclight$setupCommon();
+            }
             cir.setReturnValue(arclight$spec.gravity);
         }
     }
@@ -187,6 +218,9 @@ public abstract class MaterialMixin implements MaterialBridge {
     @Inject(method = "isInteractable", cancellable = true, at = @At("HEAD"))
     private void arclight$isInteractable(CallbackInfoReturnable<Boolean> cir) {
         if (arclight$spec != null) {
+            if (!arclight$spec.isPresent) {
+                arclight$setupCommon();
+            }
             cir.setReturnValue(arclight$spec.interactable);
         }
     }
@@ -194,6 +228,9 @@ public abstract class MaterialMixin implements MaterialBridge {
     @Inject(method = "getHardness", cancellable = true, at = @At("HEAD"))
     private void arclight$getHardness(CallbackInfoReturnable<Float> cir) {
         if (arclight$spec != null) {
+            if (!arclight$spec.isPresent) {
+                arclight$setupCommon();
+            }
             cir.setReturnValue(arclight$spec.hardness);
         }
     }
@@ -201,6 +238,9 @@ public abstract class MaterialMixin implements MaterialBridge {
     @Inject(method = "getBlastResistance", cancellable = true, at = @At("HEAD"))
     private void arclight$getBlastResistance(CallbackInfoReturnable<Float> cir) {
         if (arclight$spec != null) {
+            if (!arclight$spec.isPresent) {
+                arclight$setupCommon();
+            }
             cir.setReturnValue(arclight$spec.blastResistance);
         }
     }
@@ -208,21 +248,34 @@ public abstract class MaterialMixin implements MaterialBridge {
     @Inject(method = "getMaxStackSize", cancellable = true, at = @At("HEAD"))
     private void arclight$getMaxStackSize(CallbackInfoReturnable<Integer> cir) {
         if (arclight$spec != null) {
+            if (!arclight$spec.isPresent) {
+                arclight$setupCommon();
+            }
             cir.setReturnValue(arclight$spec.maxStack);
         }
     }
 
     @Inject(method = "getMaxDurability", cancellable = true, at = @At("HEAD"))
     private void arclight$getMaxDurability(CallbackInfoReturnable<Short> cir) {
-        if (arclight$spec != null && arclight$spec.maxDurability != null) {
-            cir.setReturnValue(arclight$spec.maxDurability.shortValue());
+        if (arclight$spec != null) {
+            if (!arclight$spec.isPresent) {
+                arclight$setupCommon();
+            }
+            if (arclight$spec.maxDurability != null) {
+                cir.setReturnValue(arclight$spec.maxDurability.shortValue());
+            }
         }
     }
 
     @Inject(method = "getCraftingRemainingItem", cancellable = true, at = @At("HEAD"))
     private void arclight$getCraftingRemainingItem(CallbackInfoReturnable<Material> cir) {
-        if (arclight$spec != null && arclight$spec.craftingRemainingItem != null) {
-            cir.setReturnValue(CraftMagicNumbers.getMaterial(BuiltInRegistries.ITEM.get(ResourceLocation.parse(arclight$spec.craftingRemainingItem))));
+        if (arclight$spec != null) {
+            if (!arclight$spec.isPresent) {
+                arclight$setupCommon();
+            }
+            if (arclight$spec.craftingRemainingItem != null) {
+                cir.setReturnValue(CraftMagicNumbers.getMaterial(BuiltInRegistries.ITEM.get(ResourceLocation.parse(arclight$spec.craftingRemainingItem))));
+            }
         }
     }
 
@@ -261,27 +314,27 @@ public abstract class MaterialMixin implements MaterialBridge {
     }
 
     @Override
-    public void bridge$setupBlock(ResourceLocation key, Block block, MaterialPropertySpec spec) {
+    public void bridge$setupBlock(ResourceLocation key, MaterialPropertySpec spec) {
         this.arclight$spec = spec.clone();
         arclight$type = MaterialPropertySpec.MaterialType.FORGE;
         arclight$block = true;
-        arclight$setupCommon(key, block, block.asItem());
+        arclight$setupCommonLazy(key);
     }
 
     @Override
     public void bridge$setupVanillaBlock(MaterialPropertySpec spec) {
-        if (spec != MaterialPropertySpec.EMPTY) {
+        if (spec.isPresent) {
             this.arclight$spec = spec.clone();
             this.setupBlockStateFunc();
         }
     }
 
     @Override
-    public void bridge$setupItem(ResourceLocation key, Item item, MaterialPropertySpec spec) {
+    public void bridge$setupItem(ResourceLocation key, MaterialPropertySpec spec) {
         this.arclight$spec = spec.clone();
         arclight$type = MaterialPropertySpec.MaterialType.FORGE;
         arclight$item = true;
-        arclight$setupCommon(key, null, item);
+        arclight$setupCommonLazy(key);
     }
 
     @Override
@@ -291,7 +344,7 @@ public abstract class MaterialMixin implements MaterialBridge {
     }
 
     @SuppressWarnings("unchecked")
-    private void arclight$setupCommon(ResourceLocation key, Block block, Item item) {
+    private void arclight$setupCommonLazy(ResourceLocation key) {
         this.key = CraftNamespacedKey.fromMinecraft(key);
         if (arclight$spec.materialDataClass != null) {
             try {
@@ -305,6 +358,39 @@ public abstract class MaterialMixin implements MaterialBridge {
                 ArclightServer.LOGGER.warn(e);
             }
         }
+        arclight$location = key;
+    }
+
+    private void arclight$setupCommon() {
+        Block block = BuiltInRegistries.BLOCK.get(arclight$location);
+        Item item = BuiltInRegistries.ITEM.get(arclight$location);
+
+        // Block properties
+        if (arclight$location.equals(MaterialBridge.AIR) || block != Blocks.AIR) {
+            if (arclight$spec.solid == null) {
+                arclight$spec.solid = block.defaultBlockState().canOcclude();
+            }
+            if (arclight$spec.air == null) {
+                arclight$spec.air = block.defaultBlockState().isAir();
+            }
+            if (arclight$spec.transparent == null) {
+                arclight$spec.transparent = block.defaultBlockState().useShapeForLightOcclusion();
+            }
+            if (arclight$spec.flammable == null) {
+                arclight$spec.flammable = ((FireBlockBridge) Blocks.FIRE).bridge$canBurn(block);
+            }
+            if (arclight$spec.burnable == null) {
+                arclight$spec.burnable = ((FireBlockBridge) Blocks.FIRE).bridge$canBurn(block);
+            }
+            if (arclight$spec.hardness == null) {
+                arclight$spec.hardness = block.defaultBlockState().destroySpeed;
+            }
+            if (arclight$spec.blastResistance == null) {
+                arclight$spec.blastResistance = block.getExplosionResistance();
+            }
+        }
+
+        // Item properties
         if (arclight$spec.maxStack == null) {
             arclight$spec.maxStack = bridge$forge$getMaxStackSize(item);
         }
@@ -317,23 +403,8 @@ public abstract class MaterialMixin implements MaterialBridge {
         if (arclight$spec.record == null) {
             arclight$spec.record = false;
         }
-        if (arclight$spec.solid == null) {
-            arclight$spec.solid = block != null && block.defaultBlockState().canOcclude();
-        }
-        if (arclight$spec.air == null) {
-            arclight$spec.air = block != null && block.defaultBlockState().isAir();
-        }
-        if (arclight$spec.transparent == null) {
-            arclight$spec.transparent = block != null && block.defaultBlockState().useShapeForLightOcclusion();
-        }
-        if (arclight$spec.flammable == null) {
-            arclight$spec.flammable = block != null && ((FireBlockBridge) Blocks.FIRE).bridge$canBurn(block);
-        }
-        if (arclight$spec.burnable == null) {
-            arclight$spec.burnable = block != null && ((FireBlockBridge) Blocks.FIRE).bridge$canBurn(block);
-        }
         if (arclight$spec.fuel == null) {
-            arclight$spec.fuel = item != null && bridge$forge$getBurnTime(item) > 0;
+            arclight$spec.fuel = bridge$forge$getBurnTime(item) > 0;
         }
         if (arclight$spec.occluding == null) {
             arclight$spec.occluding = arclight$spec.solid;
@@ -344,19 +415,15 @@ public abstract class MaterialMixin implements MaterialBridge {
         if (arclight$spec.interactable == null) {
             arclight$spec.interactable = true;
         }
-        if (arclight$spec.hardness == null) {
-            arclight$spec.hardness = block != null ? block.defaultBlockState().destroySpeed : 0;
-        }
-        if (arclight$spec.blastResistance == null) {
-            arclight$spec.blastResistance = block != null ? block.getExplosionResistance() : 0;
-        }
         if (arclight$spec.craftingRemainingItem == null) {
             // noinspection deprecation
-            arclight$spec.craftingRemainingItem = item != null && item.hasCraftingRemainingItem() ? bridge$getCraftRemainingItem(item).toString() : null;
+            arclight$spec.craftingRemainingItem = item.hasCraftingRemainingItem() ? bridge$getCraftRemainingItem(item).toString() : null;
         }
         if (arclight$spec.itemMetaType == null) {
             arclight$spec.itemMetaType = "UNSPECIFIC";
         }
+        arclight$spec.present();
+
         BiFunction<Material, CraftMetaItem, ItemMeta> function = TYPES.get(arclight$spec.itemMetaType);
         if (function != null) {
             this.arclight$metaFunc = meta -> function.apply((Material) (Object) this, meta);

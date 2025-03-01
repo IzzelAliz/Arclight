@@ -9,6 +9,7 @@ import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.bridge.bukkit.EntityTypeBridge;
 import io.izzel.arclight.common.bridge.bukkit.MaterialBridge;
 import io.izzel.arclight.common.bridge.bukkit.SimpleRegistryBridge;
+import io.izzel.arclight.common.mixin.core.network.ServerGamePacketListenerImplMixin;
 import io.izzel.arclight.common.mod.server.entity.EntityClassLookup;
 import io.izzel.arclight.common.mod.util.ResourceLocationUtil;
 import io.izzel.arclight.i18n.ArclightConfig;
@@ -346,7 +347,7 @@ public class BukkitRegistry {
             Material material = BY_NAME.get(name);
             if (material == null) {
                 material = EnumHelper.makeEnum(Material.class, name, i, MAT_CTOR, ImmutableList.of(i));
-                ((MaterialBridge) (Object) material).bridge$setupBlock(location, block, matSpec(location));
+                ((MaterialBridge) (Object) material).bridge$setupBlock(location, matSpec(location));
                 BY_NAME.put(name, material);
                 i++;
                 blocks++;
@@ -370,7 +371,7 @@ public class BukkitRegistry {
             Material material = BY_NAME.get(name);
             if (material == null) {
                 material = EnumHelper.makeEnum(Material.class, name, i, MAT_CTOR, ImmutableList.of(i));
-                ((MaterialBridge) (Object) material).bridge$setupItem(location, item, matSpec(location));
+                ((MaterialBridge) (Object) material).bridge$setupItem(location, matSpec(location));
                 BY_NAME.put(name, material);
                 i++;
                 items++;

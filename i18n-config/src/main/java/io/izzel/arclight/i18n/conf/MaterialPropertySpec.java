@@ -6,7 +6,7 @@ import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 @ConfigSerializable
 public class MaterialPropertySpec implements Cloneable {
 
-    public static final MaterialPropertySpec EMPTY = new MaterialPropertySpec();
+    public static final MaterialPropertySpec EMPTY = new MaterialPropertySpec().absent();
 
     @Setting("materialDataClass")
     public String materialDataClass;
@@ -64,6 +64,18 @@ public class MaterialPropertySpec implements Cloneable {
 
     @Setting("blockStateClass")
     public String blockStateClass;
+
+    public boolean isPresent = true;
+
+    public MaterialPropertySpec present() {
+        this.isPresent = true;
+        return this;
+    }
+
+    public MaterialPropertySpec absent() {
+        this.isPresent = false;
+        return this;
+    }
 
     @Override
     public MaterialPropertySpec clone() {
