@@ -140,7 +140,6 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         // in order to avoid having to pass them as arguments.
         craftBridge.bridge$offerGeneratorCache(worldInfo.getLevelName(), gen);
         craftBridge.bridge$offerBiomeProviderCache(worldInfo.getLevelName(), biomeProvider);
-        // Wrap the
         arclight$constructor(server, backgroundExecutor, levelSave, worldInfo, dimension, levelStem, statusListener, isDebug, seed, specialSpawners, shouldBeTicking, seq);
         bridge$getWorld();
     }
@@ -154,10 +153,8 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     private ChunkGenerator arclight$initChunkGenerator(LevelStem instance, @Local(ordinal = -1) MinecraftServer server, @Local(ordinal = -1) ServerLevelData worldInfo) throws Throwable {
         // Pulling up world info init since level info is used when selecting ChunkGenerator.
         if (worldInfo instanceof PrimaryLevelData primary) {
-            ((WorldInfoBridge) primary).bridge$setWorld((ServerLevel) (Object) this);
             this.K = primary;
         } else {
-            ArclightServer.LOGGER.warn("Level {} isn't initialized with PrimaryLevelData.", this.serverLevelData.getLevelName());
             // damn spigot again
             this.K = DelegateWorldInfo.wrap(worldInfo);
         }
@@ -166,14 +163,16 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         this.biomeProvider = craftBridge.bridge$consumeBiomeProviderCache(worldInfo.getLevelName());
         this.generator = craftBridge.bridge$consumeGeneratorCache(worldInfo.getLevelName());
 
-        if (instance.type() == LevelStem.OVERWORLD) {
+        if (instance.type().is(LevelStem.OVERWORLD.location())) {
             this.environment = World.Environment.NORMAL;
-        } else if (instance.type() == LevelStem.NETHER) {
+        } else if (instance.type().is(LevelStem.NETHER.location())) {
             this.environment = World.Environment.NETHER;
-        } else if (instance.type() == LevelStem.END) {
+        } else if (instance.type().is(LevelStem.END.location())) {
             this.environment = World.Environment.THE_END;
         } else {
-            this.environment = World.Environment.CUSTOM;
+            // Don't use CUSTOM; it's not even supported in Multiverse
+            // this.environment = World.Environment.CUSTOM;
+            this.environment = World.Environment.NORMAL;
         }
         // Data needed by getWorld() are all initialized for possible creating CraftWorld.
         // CraftBukkit start: select custom chunk generator
