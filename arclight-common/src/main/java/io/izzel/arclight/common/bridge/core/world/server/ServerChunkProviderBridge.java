@@ -2,7 +2,6 @@ package io.izzel.arclight.common.bridge.core.world.server;
 
 import java.io.IOException;
 import net.minecraft.server.level.ThreadedLevelLightEngine;
-import net.minecraft.world.level.chunk.ChunkGenerator;
 
 public interface ServerChunkProviderBridge {
 
@@ -16,7 +15,7 @@ public interface ServerChunkProviderBridge {
 
     ThreadedLevelLightEngine bridge$getLightManager();
 
-    void bridge$setChunkGenerator(ChunkGenerator chunkGenerator);
-
     void bridge$setViewDistance(int viewDistance);
+
+    void bridge$setSimulationDistance(int simDistance);
 }

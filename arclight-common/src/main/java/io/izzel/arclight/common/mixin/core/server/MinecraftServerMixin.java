@@ -485,6 +485,15 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         this.server = server;
     }
 
+    // Used for one-shot cache access
+    @Override
+    public CraftServer bridge$getServer() {
+        if (this.server == null) {
+            throw new IllegalStateException("CraftServer has not been initialized yet");
+        }
+        return this.server;
+    }
+
     @Override
     public RemoteConsoleCommandSender bridge$getRemoteConsole() {
         return remoteConsole;

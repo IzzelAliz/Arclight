@@ -242,26 +242,9 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
                     throw new RuntimeException(e);
                 }
             }
-            if (environment == null) {
-                environment = ArclightServer.getEnvironment(this.getTypeKey());
-            }
-            if (generator == null) {
-                generator = getCraftServer().getGenerator(((ServerLevelData) this.getLevelData()).getLevelName());
-                if (generator != null && (Object) this instanceof ServerLevel serverWorld) {
-                    org.bukkit.generator.WorldInfo worldInfo = new CraftWorldInfo((ServerLevelData) getLevelData(),
-                        ((ServerWorldBridge) this).bridge$getConvertable(), environment, this.dimensionType());
-                    if (biomeProvider == null && generator != null) {
-                        biomeProvider = generator.getDefaultBiomeProvider(worldInfo);
-                    }
-                    var generator = serverWorld.getChunkSource().getGenerator();
-                    if (biomeProvider != null) {
-                        BiomeSource biomeSource = new CustomWorldChunkManager(worldInfo, biomeProvider, serverWorld.registryAccess().registryOrThrow(Registries.BIOME));
-                        ((ChunkGeneratorBridge) generator).bridge$setBiomeSource(biomeSource);
-                    }
-                    CustomChunkGenerator gen = new CustomChunkGenerator(serverWorld, generator, this.generator);
-                    ((ServerChunkProviderBridge) serverWorld.getChunkSource()).bridge$setChunkGenerator(gen);
-                }
-            }
+            // generator, biomeProvider, environment init moved to ServerLevel;
+            // For other worlds Bukkit can't and shouldn't know these properties.
+            // Though, customizing using one-shot cache is fine, but not necessary now.
             this.world = new CraftWorld((ServerLevel) (Object) this, generator, biomeProvider, environment);
             getCraftServer().addWorld(this.world);
         }

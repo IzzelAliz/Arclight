@@ -16,6 +16,8 @@ public interface MinecraftServerBridge {
 
     void bridge$setServer(CraftServer server);
 
+    CraftServer bridge$getServer();
+
     RemoteConsoleCommandSender bridge$getRemoteConsole();
 
     void bridge$setRemoteConsole(RemoteConsoleCommandSender sender);

@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.bukkit;
 
 import com.google.common.collect.Lists;
 import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import jline.console.ConsoleReader;
 import net.minecraft.server.dedicated.DedicatedPlayerList;
@@ -17,6 +18,8 @@ import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.help.SimpleHelpMap;
 import org.bukkit.craftbukkit.v.scheduler.CraftScheduler;
 import org.bukkit.event.server.ServerLoadEvent;
+import org.bukkit.generator.BiomeProvider;
+import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginLoadOrder;
 import org.bukkit.plugin.PluginManager;
@@ -70,6 +73,8 @@ public abstract class CraftServerMixin implements CraftServerBridge {
     @Shadow public abstract PluginManager getPluginManager();
     @Shadow@Final private String serverVersion;
     @Accessor("logger") @Mutable public abstract void setLogger(Logger logger);
+    @Shadow public abstract ChunkGenerator getGenerator(String world);
+    @Shadow public abstract BiomeProvider getBiomeProvider(String world);
     // @formatter:on
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -174,5 +179,44 @@ public abstract class CraftServerMixin implements CraftServerBridge {
         this.enablePlugins(PluginLoadOrder.STARTUP);
         this.enablePlugins(PluginLoadOrder.POSTWORLD);
         this.getPluginManager().callEvent(new ServerLoadEvent(ServerLoadEvent.LoadType.RELOAD));
+    }
+
+    private final Map<String, ChunkGenerator> generatorCache = new HashMap<>();
+    private final Map<String, BiomeProvider> biomeProviderCache = new HashMap<>();
+
+    @Override
+    public void bridge$offerGeneratorCache(String name, ChunkGenerator generator) {
+        // Newly created level
+        generatorCache.put(name, generator);
+    }
+
+    @Override
+    public ChunkGenerator bridge$consumeGeneratorCache(String name) {
+        var cache = generatorCache.remove(name);
+        if (cache == null) {
+            // If not provided (which means it's not newly created),
+            // load from bukkit.yml configuration.
+            // See CraftServer
+            cache = getGenerator(name);
+        }
+        return cache;
+    }
+
+    @Override
+    public BiomeProvider bridge$consumeBiomeProviderCache(String name) {
+        var cache = biomeProviderCache.remove(name);
+        if (cache == null) {
+            // If not provided (which means it's not newly created),
+            // load from bukkit.yml configuration.
+            // See CraftServer
+            cache = getBiomeProvider(name);
+        }
+        return cache;
+    }
+
+    @Override
+    public void bridge$offerBiomeProviderCache(String name, BiomeProvider provider) {
+        // Newly created level
+        biomeProviderCache.put(name, provider);
     }
 }

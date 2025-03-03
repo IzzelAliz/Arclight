@@ -1,9 +1,11 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
 import com.google.common.collect.Lists;
+import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.core.world.ExplosionBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
@@ -45,27 +47,28 @@ import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.entity.PersistentEntitySectionManager;
 import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.levelgen.FlatLevelSource;
+import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
-import net.minecraft.world.level.storage.DerivedLevelData;
-import net.minecraft.world.level.storage.DimensionDataStorage;
-import net.minecraft.world.level.storage.LevelStorageSource;
-import net.minecraft.world.level.storage.PrimaryLevelData;
-import net.minecraft.world.level.storage.ServerLevelData;
+import net.minecraft.world.level.storage.*;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.generator.CustomChunkGenerator;
+import org.bukkit.craftbukkit.v.generator.CustomWorldChunkManager;
 import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.craftbukkit.v.util.WorldUUID;
 import org.bukkit.entity.HumanEntity;
@@ -124,30 +127,73 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         return this.typeKey;
     }
 
-    // Multiworld support: per-world seed storage
-    @Inject(method = "getSeed", at = @At("HEAD"), cancellable = true)
-    private void arclight$getSeed(CallbackInfoReturnable<Long> cir) {
-        if (K != null) {
-            cir.setReturnValue(K.worldGenOptions().seed());
-        }
-    }
-
     @ShadowConstructor
     public void arclight$constructor(MinecraftServer minecraftServer, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, ServerLevelData worldInfo, ResourceKey<Level> dimension, LevelStem levelStem, ChunkProgressListener statusListener, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking, RandomSequences seq) {
         throw new RuntimeException();
     }
 
     @CreateConstructor
-    public void arclight$constructor(MinecraftServer minecraftServer, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, PrimaryLevelData worldInfo, ResourceKey<Level> dimension, LevelStem levelStem, ChunkProgressListener statusListener, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking, RandomSequences seq, org.bukkit.World.Environment env, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider) {
-        arclight$constructor(minecraftServer, backgroundExecutor, levelSave, worldInfo, dimension, levelStem, statusListener, isDebug, seed, specialSpawners, shouldBeTicking, seq);
-        this.generator = gen;
-        this.environment = env;
-        this.biomeProvider = biomeProvider;
-        if (gen != null) {
-            CustomChunkGenerator generator = new CustomChunkGenerator((ServerLevel) (Object) this, this.chunkSource.getGenerator(), gen);
-            ((ServerChunkProviderBridge) this.chunkSource).bridge$setChunkGenerator(generator);
-        }
+    public void arclight$constructor(MinecraftServer server, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, PrimaryLevelData worldInfo, ResourceKey<Level> dimension, LevelStem levelStem, ChunkProgressListener statusListener, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking, RandomSequences seq, org.bukkit.World.Environment env, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider) {
+        var craftBridge = (CraftServerBridge)(Object) ((MinecraftServerBridge) server).bridge$getServer();
+        assert craftBridge != null; // Already checked in bridge
+        // We have no way but store it somewhere and use a default value
+        // in order to avoid having to pass them as arguments.
+        craftBridge.bridge$offerGeneratorCache(worldInfo.getLevelName(), gen);
+        craftBridge.bridge$offerBiomeProviderCache(worldInfo.getLevelName(), biomeProvider);
+        // Wrap the
+        arclight$constructor(server, backgroundExecutor, levelSave, worldInfo, dimension, levelStem, statusListener, isDebug, seed, specialSpawners, shouldBeTicking, seq);
         bridge$getWorld();
+    }
+
+    // Support custom chunk generator; in consistency with CraftBukkit
+    // The real part is inside ServerChunkCache, when initializing ChunkMap (in ctor),
+    // where a generator state is created, which is later used for chunk generation.
+    // Previously we didn't modify it before ChunkMap is created,
+    // which in turn cause custom world generation from Bukkit failing to work.
+    @Decorate(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/dimension/LevelStem;generator()Lnet/minecraft/world/level/chunk/ChunkGenerator;"))
+    private ChunkGenerator arclight$initChunkGenerator(LevelStem instance, @Local(ordinal = -1) MinecraftServer server, @Local(ordinal = -1) ServerLevelData worldInfo) throws Throwable {
+        // Pulling up world info init since level info is used when selecting ChunkGenerator.
+        if (worldInfo instanceof PrimaryLevelData primary) {
+            ((WorldInfoBridge) primary).bridge$setWorld((ServerLevel) (Object) this);
+            this.K = primary;
+        } else {
+            ArclightServer.LOGGER.warn("Level {} isn't initialized with PrimaryLevelData.", this.serverLevelData.getLevelName());
+            // damn spigot again
+            this.K = DelegateWorldInfo.wrap(worldInfo);
+        }
+
+        var craftBridge = (CraftServerBridge) (Object) ((MinecraftServerBridge) server).bridge$getServer();
+        this.biomeProvider = craftBridge.bridge$consumeBiomeProviderCache(worldInfo.getLevelName());
+        this.generator = craftBridge.bridge$consumeGeneratorCache(worldInfo.getLevelName());
+
+        if (instance.type() == LevelStem.OVERWORLD) {
+            this.environment = World.Environment.NORMAL;
+        } else if (instance.type() == LevelStem.NETHER) {
+            this.environment = World.Environment.NETHER;
+        } else if (instance.type() == LevelStem.END) {
+            this.environment = World.Environment.THE_END;
+        } else {
+            this.environment = World.Environment.CUSTOM;
+        }
+        // Data needed by getWorld() are all initialized for possible creating CraftWorld.
+        // CraftBukkit start: select custom chunk generator
+        ChunkGenerator raw = (ChunkGenerator) DecorationOps.callsite().invoke(instance);
+        if (biomeProvider != null) {
+            BiomeSource biomeSource = new CustomWorldChunkManager(getWorld(), biomeProvider, getServer().registryAccess().registryOrThrow(Registries.BIOME));
+            if (raw instanceof NoiseBasedChunkGenerator noise) {
+                raw = new NoiseBasedChunkGenerator(biomeSource, noise.settings);
+            } else if (raw instanceof FlatLevelSource flat) {
+                ArclightServer.LOGGER.warn("Level {} is flat -- requested biome provider won't be satisfied.", this.serverLevelData.getLevelName());
+                raw = new FlatLevelSource(flat.settings());
+            } else {
+                ArclightServer.LOGGER.warn("Level {} has customized generator -- requested biome provider won't be satisfied.", this.serverLevelData.getLevelName());
+            }
+        }
+        if (generator != null) {
+            raw = new CustomChunkGenerator((ServerLevel)(Object) this, raw, generator);
+        }
+        // CraftBukkit end
+        return raw;
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -166,12 +212,6 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
                 ArclightServer.LOGGER.warn("Assign {} to unknown level stem {}", dimension.location(), levelStem);
                 this.typeKey = ResourceKey.create(Registries.LEVEL_STEM, dimension.location());
             }
-        }
-        if (worldInfo instanceof PrimaryLevelData data) {
-            this.K = data;
-        } else {
-            // damn spigot again
-            this.K = DelegateWorldInfo.wrap(worldInfo);
             if (worldInfo instanceof DerivedLevelData data) {
                 ((DerivedWorldInfoBridge) worldInfo).bridge$setDimType(this.getTypeKey());
                 if (ArclightConfig.spec().getCompat().isSymlinkWorld()) {
@@ -182,9 +222,18 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         this.spigotConfig = new SpigotWorldConfig(worldInfo.getLevelName());
         this.uuid = WorldUUID.getUUID(levelSave.getDimensionPath(this.dimension()).toFile());
         ((ServerChunkProviderBridge) this.chunkSource).bridge$setViewDistance(spigotConfig.viewDistance);
+        ((ServerChunkProviderBridge) this.chunkSource).bridge$setSimulationDistance(spigotConfig.simulationDistance);
         ((WorldInfoBridge) this.K).bridge$setWorld((ServerLevel) (Object) this);
         var data = this.getDataStorage().computeIfAbsent(LevelPersistentData.factory(), "bukkit_pdc");
         this.bridge$getWorld().readBukkitValues(data.getTag());
+    }
+
+    // Multiworld support: per-world seed storage
+    @Inject(method = "getSeed", at = @At("HEAD"), cancellable = true)
+    private void arclight$getSeed(CallbackInfoReturnable<Long> cir) {
+        if (K != null) {
+            cir.setReturnValue(K.worldGenOptions().seed());
+        }
     }
 
     @Inject(method = "saveLevelData", at = @At("RETURN"))
