@@ -2,7 +2,6 @@ package io.izzel.arclight.common.mixin.bukkit;
 
 import com.google.common.collect.Lists;
 import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
-import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import jline.console.ConsoleReader;
 import net.minecraft.server.dedicated.DedicatedPlayerList;
@@ -102,6 +101,9 @@ public abstract class CraftServerMixin implements CraftServerBridge {
 
     @Override
     public void bridge$setPlayerList(PlayerList playerList) {
+        // Though I'm not sure why we need this player list setter
+        // Player list view should be changed along with player list
+        // Or unexpected problem may happen
         this.playerList = (DedicatedPlayerList) playerList;
         this.playerView = Collections.unmodifiableList(Lists.transform(playerList.players, player ->
                 ((ServerPlayerEntityBridge)player).bridge$getBukkitEntity()
