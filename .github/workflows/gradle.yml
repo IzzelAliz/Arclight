@@ -36,7 +36,7 @@ jobs:
       env:
         ARCLIGHT_FILES_TOKEN: ${{ secrets.ARCLIGHT_FILES_TOKEN }}
       run: |
-        ./gradlew cleanBuild build collect uploadFiles --no-daemon --stacktrace
+        ./gradlew cleanBuild build collect --no-daemon --stacktrace
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
