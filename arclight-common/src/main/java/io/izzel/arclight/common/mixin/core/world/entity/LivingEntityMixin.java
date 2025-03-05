@@ -766,52 +766,25 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         return (CraftLivingEntity) internal$getBukkitEntity();
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    private boolean checkTotemDeathProtection(DamageSource damageSourceIn) {
-        if (damageSourceIn.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
-            return false;
+    @Decorate(method = "checkTotemDeathProtection", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;shrink(I)V"))
+    private void arclight$checkTotemDeathProtection(ItemStack itemStack, int shrinks, @Local(ordinal = -1) InteractionHand hand) throws Throwable {
+        org.bukkit.inventory.EquipmentSlot handSlot = (hand != null) ? CraftEquipmentSlot.getHand(hand) : null;
+        EntityResurrectEvent event = new EntityResurrectEvent(this.getBukkitEntity(), handSlot);
+        event.setCancelled(itemStack == null);
+        Bukkit.getPluginManager().callEvent(event);
+
+        if (!event.isCancelled()) {
+            if (!itemStack.isEmpty()) {
+                DecorationOps.callsite().invoke(itemStack, shrinks);
+            }
+
+            this.removeAllEffects(EntityPotionEffectEvent.Cause.TOTEM);
+            this.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 900, 1), EntityPotionEffectEvent.Cause.TOTEM);
+            bridge$pushEffectCause(EntityPotionEffectEvent.Cause.TOTEM);
+            this.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 100, 1), EntityPotionEffectEvent.Cause.TOTEM);
+            this.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 800, 1), EntityPotionEffectEvent.Cause.TOTEM);
         } else {
-            net.minecraft.world.item.ItemStack itemstack = null;
-
-            net.minecraft.world.item.ItemStack itemstack1 = ItemStack.EMPTY;
-            org.bukkit.inventory.EquipmentSlot bukkitHand = null;
-            for (InteractionHand hand : InteractionHand.values()) {
-                itemstack1 = this.getItemInHand(hand);
-                if (itemstack1.is(Items.TOTEM_OF_UNDYING) && this.bridge$forge$onLivingUseTotem((LivingEntity) (Object) this, damageSourceIn, itemstack1, hand)) {
-                    itemstack = itemstack1.copy();
-                    bukkitHand = CraftEquipmentSlot.getHand(hand);
-                    // itemstack1.shrink(1);
-                    break;
-                }
-            }
-
-            EntityResurrectEvent event = new EntityResurrectEvent(this.getBukkitEntity(), bukkitHand);
-            event.setCancelled(itemstack == null);
-            Bukkit.getPluginManager().callEvent(event);
-
-            if (!event.isCancelled()) {
-                if (!itemstack1.isEmpty()) {
-                    itemstack1.shrink(1);
-                }
-                if (itemstack != null && (Object) this instanceof ServerPlayer serverplayerentity) {
-                    serverplayerentity.awardStat(Stats.ITEM_USED.get(Items.TOTEM_OF_UNDYING));
-                    CriteriaTriggers.USED_TOTEM.trigger(serverplayerentity, itemstack);
-                    this.gameEvent(GameEvent.ITEM_INTERACT_FINISH);
-                }
-
-                this.setHealth(1.0F);
-                this.removeAllEffects(EntityPotionEffectEvent.Cause.TOTEM);
-                this.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 900, 1), EntityPotionEffectEvent.Cause.TOTEM);
-                bridge$pushEffectCause(EntityPotionEffectEvent.Cause.TOTEM);
-                this.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 100, 1), EntityPotionEffectEvent.Cause.TOTEM);
-                this.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 800, 1), EntityPotionEffectEvent.Cause.TOTEM);
-                this.level().broadcastEntityEvent((Entity) (Object) this, (byte) 35);
-            }
-            return !event.isCancelled();
+            DecorationOps.cancel().invoke(false);
         }
     }
 
