@@ -71,6 +71,7 @@ tasks.register('forgeMappings', Copy) {
     destinationDir = file("build/forge_mappings")
     from arclight.mappingsConfiguration.bukkitToForge
     from arclight.mappingsConfiguration.bukkitToForgeInheritance
+    from arclight.mappingsConfiguration.bukkitToNeoForge
 }
 
 project.sourceSets.main.output.dir file("build/forge_mappings"), builtBy: tasks.forgeMappings

@@ -67,6 +67,9 @@ tasks.register('fabricMappings', Copy) {
     from(arclight.mappingsConfiguration.bukkitToFabric) {
         rename { name -> 'bukkit_srg.srg' }
     }
+    from(arclight.mappingsConfiguration.bukkitToNeoForge) {
+        rename { name -> 'bukkit_moj.srg' }
+    }
     from(arclight.mappingsConfiguration.bukkitToFabricInheritance) {
         rename { name -> 'inheritanceMap.txt' }
     }

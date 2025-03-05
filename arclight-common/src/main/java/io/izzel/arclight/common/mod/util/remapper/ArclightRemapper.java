@@ -55,15 +55,18 @@ public class ArclightRemapper {
 
     private final JarMapping toNmsMapping;
     private final JarMapping toBukkitMapping;
+    private final JarMapping fromMojMapping;
     public final InheritanceMap inheritanceMap;
     private final List<PluginTransformer> transformerList = new ArrayList<>();
     private final JarRemapper toBukkitRemapper;
     private final JarRemapper toNmsRemapper;
+    private final JarRemapper fromMojRemapper;
     private final List<PluginPatcher> patchers;
 
     public ArclightRemapper() throws Exception {
         this.toNmsMapping = new JarMapping();
         this.toBukkitMapping = new JarMapping();
+        this.fromMojMapping = new JarMapping();
         this.inheritanceMap = new InheritanceMap();
         this.toNmsMapping.loadMappings(
             new BufferedReader(new InputStreamReader(ArclightRemapper.class.getResourceAsStream("/bukkit_srg.srg"))),
@@ -72,6 +75,10 @@ public class ArclightRemapper {
         this.toBukkitMapping.loadMappings(
             new BufferedReader(new InputStreamReader(ArclightRemapper.class.getResourceAsStream("/bukkit_srg.srg"))),
             null, null, true
+        );
+        this.fromMojMapping.loadMappings(
+            new BufferedReader(new InputStreamReader(ArclightRemapper.class.getResourceAsStream("/bukkit_moj.srg"))),
+                null, null, true
         );
         BiMap<String, String> inverseClassMap = HashBiMap.create(toNmsMapping.classes).inverse();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(ArclightRemapper.class.getResourceAsStream("/inheritanceMap.txt")))) {
@@ -82,6 +89,7 @@ public class ArclightRemapper {
         inheritanceProvider.add(new ClassLoaderProvider(ClassLoader.getSystemClassLoader()));
         this.toNmsMapping.setFallbackInheritanceProvider(inheritanceProvider);
         this.toBukkitMapping.setFallbackInheritanceProvider(inheritanceProvider);
+        this.fromMojMapping.setFallbackInheritanceProvider(inheritanceProvider);
         this.transformerList.add(ArclightInterfaceInvokerGen.INSTANCE);
         this.transformerList.add(ArclightRedirectAdapter.INSTANCE);
         this.transformerList.add(ClassLoaderAdapter.INSTANCE);
@@ -92,6 +100,7 @@ public class ArclightRemapper {
         toBukkitMapping.setFallbackInheritanceProvider(GlobalClassRepo.inheritanceProvider());
         this.toBukkitRemapper = new LenientJarRemapper(toBukkitMapping);
         this.toNmsRemapper = new LenientJarRemapper(toNmsMapping);
+        this.fromMojRemapper = new LenientJarRemapper(fromMojMapping);
         RemapSourceHandler.register();
     }
 
@@ -105,6 +114,10 @@ public class ArclightRemapper {
 
     public static JarRemapper getNmsMapper() {
         return INSTANCE.toNmsRemapper;
+    }
+
+    public static JarRemapper getMojRemapper() {
+        return INSTANCE.fromMojRemapper;
     }
 
     public List<PluginTransformer> getTransformerList() {

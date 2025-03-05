@@ -66,6 +66,9 @@ tasks.register('neoforgeMappings', Copy) {
     from(arclight.mappingsConfiguration.bukkitToNeoForge) {
         rename { name -> 'bukkit_srg.srg' }
     }
+    from(arclight.mappingsConfiguration.bukkitToNeoForge) {
+        rename { name -> 'bukkit_moj.srg'}
+    }
     from arclight.mappingsConfiguration.bukkitToForgeInheritance
 }
 

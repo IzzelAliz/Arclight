@@ -1,98 +1,18 @@
 package io.izzel.arclight.common.mod.util.remapper.patcher.integrated;
 
 import io.izzel.arclight.api.PluginPatcher;
+import io.izzel.arclight.common.mod.server.ArclightServer;
+import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
+import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.GeneratorAdapter;
-import org.objectweb.asm.commons.Method;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.InsnNode;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.TypeInsnNode;
-import org.objectweb.asm.tree.VarInsnNode;
+import org.objectweb.asm.tree.*;
 
-import java.util.Locale;
+import java.util.HashMap;
+import java.util.Map;
 
 public class WorldEdit {
-
-    public static void handleBukkitAdapter(ClassNode node, PluginPatcher.ClassRepo repo) {
-        MethodNode standardize = new MethodNode(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC | Opcodes.ACC_SYNTHETIC, "patcher$standardize",
-            Type.getMethodDescriptor(Type.getType(String.class), Type.getType(String.class)), null, null);
-        try {
-            GeneratorAdapter adapter = new GeneratorAdapter(standardize, standardize.access, standardize.name, standardize.desc);
-            adapter.loadArg(0);
-            adapter.push(':');
-            adapter.push('_');
-            adapter.invokeVirtual(Type.getType(String.class), Method.getMethod(String.class.getMethod("replace", char.class, char.class)));
-            adapter.push("\\s+");
-            adapter.push("_");
-            adapter.invokeVirtual(Type.getType(String.class), Method.getMethod(String.class.getMethod("replaceAll", String.class, String.class)));
-            adapter.push("\\W");
-            adapter.push("");
-            adapter.invokeVirtual(Type.getType(String.class), Method.getMethod(String.class.getMethod("replaceAll", String.class, String.class)));
-            adapter.getStatic(Type.getType(Locale.class), "ENGLISH", Type.getType(Locale.class));
-            adapter.invokeVirtual(Type.getType(String.class), Method.getMethod(String.class.getMethod("toUpperCase", Locale.class)));
-            adapter.returnValue();
-            adapter.endMethod();
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
-        node.methods.add(standardize);
-        for (MethodNode method : node.methods) {
-            if (method.name.equals("adapt")) {
-                handleAdapt(node, standardize, method);
-            }
-        }
-    }
-
-    public static void handlePickName(ClassNode node, PluginPatcher.ClassRepo repo) {
-        for (MethodNode method : node.methods) {
-            if (method.name.equals("pickName")) {
-                method.instructions.clear();
-                method.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
-                method.instructions.add(new InsnNode(Opcodes.ARETURN));
-                return;
-            }
-        }
-    }
-
-    private static void handleAdapt(ClassNode node, MethodNode standardize, MethodNode method) {
-        switch (method.desc) {
-            case "(Lcom/sk89q/worldedit/world/item/ItemType;)Lorg/bukkit/Material;":
-            case "(Lcom/sk89q/worldedit/world/block/BlockType;)Lorg/bukkit/Material;":
-            case "(Lcom/sk89q/worldedit/world/biome/BiomeType;)Lorg/bukkit/block/Biome;":
-            case "(Lcom/sk89q/worldedit/world/entity/EntityType;)Lorg/bukkit/entity/EntityType;": {
-                for (AbstractInsnNode instruction : method.instructions) {
-                    if (instruction.getOpcode() == Opcodes.ATHROW) {
-                        InsnList list = new InsnList();
-                        list.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                        list.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, Type.getMethodType(method.desc).getArgumentTypes()[0].getInternalName(), "getId", "()Ljava/lang/String;", false));
-                        list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, node.name, standardize.name, standardize.desc, false));
-                        switch (Type.getMethodType(method.desc).getReturnType().getInternalName()) {
-                            case "org/bukkit/Material":
-                                list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "org/bukkit/Material", "getMaterial", "(Ljava/lang/String;)Lorg/bukkit/Material;", false));
-                                break;
-                            case "org/bukkit/block/Biome":
-                                list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "org/bukkit/block/Biome", "valueOf", "(Ljava/lang/String;)Lorg/bukkit/block/Biome;", false));
-                                break;
-                            case "org/bukkit/entity/EntityType":
-                                list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "org/bukkit/entity/EntityType", "fromName", "(Ljava/lang/String;)Lorg/bukkit/entity/EntityType;", false));
-                                break;
-                        }
-                        list.add(new InsnNode(Opcodes.ARETURN));
-                        method.instructions.insert(instruction, list);
-                        method.instructions.set(instruction, new InsnNode(Opcodes.POP));
-                        return;
-                    }
-                }
-                break;
-            }
-        }
-    }
-
+    // Don't use SpigotWatchdog since we're not using it
     public static void handleWatchdog(ClassNode node, PluginPatcher.ClassRepo repo) {
         if (node.interfaces.size() == 1 && node.interfaces.get(0).equals("com/sk89q/worldedit/extension/platform/Watchdog")
             && node.name.contains("SpigotWatchdog")) {
@@ -107,6 +27,119 @@ public class WorldEdit {
                     method.localVariables.clear();
                     return;
                 }
+            }
+        }
+    }
+
+    // Correctly handle reflection name picking
+    // Their naming mapping for NMS is somehow behind the version
+    public static void handleStaticRefraction(ClassNode node, PluginPatcher.ClassRepo repo) {
+        ArclightServer.LOGGER.warn("Loading WorldEdit Bukkit support for 1.21.1 ...");
+        ArclightServer.LOGGER.warn("For WorldEdit (on bukkit) compatibility issues, please report to us in advance!");
+        var remapper = ArclightRemapper.getMojRemapper();
+        var addEntity = remapper.mapMethodName(
+                "net/minecraft/server/level/ServerLevel",
+                "addFreshEntity",
+                "(Lnet/minecraft/world/entity/Entity;)Z",
+                Opcodes.ACC_PUBLIC
+        );
+
+        var mapped = Map.of(
+                "getChunkFutureMainThread", remapper.mapMethodName(
+                        "net/minecraft/server/level/ServerChunkCache",
+                        "getChunkFutureMainThread",
+                        "(IILnet/minecraft/world/level/chunk/status/ChunkStatus;Z)Ljava/util/concurrent/CompletableFuture;",
+                        Opcodes.ACC_PRIVATE
+                ),
+                "mainThreadProcessor", remapper.mapFieldName(
+                        "net/minecraft/server/level/ServerChunkCache",
+                        "mainThreadProcessor",
+                        "Lnet/minecraft/server/level/ServerChunkCache$MainThreadExecutor;",
+                        Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL
+                ),
+                "nextTickTime", remapper.mapFieldName(
+                        "net/minecraft/server/MinecraftServer",
+                        "nextTickTimeNanos",
+                        "J",
+                        Opcodes.ACC_PRIVATE
+                ),
+                "getBlockEntity", remapper.mapMethodName(
+                        "net/minecraft/world/level/BlockGetter",
+                        "getBlockEntity",
+                        "(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/entity/BlockEntity;",
+                        Opcodes.ACC_PUBLIC
+                ),
+                "addFreshEntity", addEntity,
+                "addFreshEntityWithPassengers", addEntity,
+                "getBlockState", remapper.mapMethodName(
+                        "net/minecraft/world/level/Level",
+                        "getBlockState",
+                        "(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;",
+                        Opcodes.ACC_PUBLIC
+                ),
+                "setBlock", remapper.mapMethodName(
+                        "net/minecraft/world/level/LevelWriter",
+                        "setBlock",
+                        "(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z",
+                        Opcodes.ACC_PUBLIC
+                ),
+                "removeBlock", remapper.mapMethodName(
+                        "net/minecraft/world/level/Level",
+                        "removeBlock",
+                        "(Lnet/minecraft/core/BlockPos;Z)Z",
+                        Opcodes.ACC_PUBLIC
+                ),
+                "destroyBlock", remapper.mapMethodName(
+                        "net/minecraft/world/level/Level",
+                        "destroyBlock",
+                        "(Lnet/minecraft/core/BlockPos;ZLnet/minecraft/world/entity/Entity;I)Z",
+                        Opcodes.ACC_PUBLIC
+                )
+        );
+        for (MethodNode method : node.methods) {
+            if ("<clinit>".equals(method.name)) {
+                boolean isLastPut = true;
+                LdcInsnNode lastLdc = null;
+                Map<String, String> fieldToProvided = new HashMap<>();
+                for(var insn: method.instructions) {
+                    if (isLastPut && insn instanceof LdcInsnNode ldc && ldc.cst instanceof String) {
+                        lastLdc = ldc;
+                        isLastPut = false;
+                    }
+                    if (insn instanceof FieldInsnNode field) {
+                        fieldToProvided.put(field.name, (String) lastLdc.cst);
+                        isLastPut = true;
+                    }
+                }
+                method.instructions.clear();
+
+                int line = 0;
+                for (var entry: fieldToProvided.entrySet()) {
+                    var label = new LabelNode();
+                    method.instructions.add(label);
+                    method.instructions.add(new LineNumberNode(--line, label));
+                    method.instructions.add(new LdcInsnNode(mapped.get(entry.getValue())));
+                    method.instructions.add(new FieldInsnNode(
+                            Opcodes.PUTSTATIC,
+                            node.name,
+                            entry.getKey(),
+                            "Ljava/lang/String;"
+                    ));
+                }
+
+                var label = new LabelNode();
+                method.instructions.add(label);
+                method.instructions.add(new LineNumberNode(--line, label));
+                method.instructions.add(new FieldInsnNode(Opcodes.GETSTATIC, Type.getInternalName(ArclightServer.class), "LOGGER", Type.getDescriptor(Logger.class)));
+                method.instructions.add(new InsnNode(Opcodes.DUP));
+                method.instructions.add(new LdcInsnNode("Arclight is enabling support for WorldEdit!"));
+                method.instructions.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, Type.getInternalName(Logger.class), "warn", "(Ljava/lang/String;)V", true));
+                method.instructions.add(new LdcInsnNode("For issues with WorldEdit please report to Arclight."));
+                method.instructions.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, Type.getInternalName(Logger.class), "warn", "(Ljava/lang/String;)V", true));
+
+                method.instructions.add(new InsnNode(Opcodes.RETURN));
+
+                method.visitMaxs(2, 0);
             }
         }
     }
