@@ -25,6 +25,19 @@ public class IntegratedPatcher implements PluginPatcher {
     }
 
     @Override
+    public String version() {
+        String implVersion = this.getClass().getPackage().getImplementationVersion();
+        StringBuilder sb = new StringBuilder();
+        if (implVersion != null) {
+            sb.append("version=").append(implVersion);
+        }
+        sb.append(" patchers=[");
+        sb.append("WorldEdit 1.21");
+        sb.append("]");
+        return sb.toString();
+    }
+
+    @Override
     public void handleClass(ClassNode node, ClassRepo classRepo) {
         BiConsumer<ClassNode, ClassRepo> consumer = SPECIFIC.get(node.name);
         if (consumer != null) {
