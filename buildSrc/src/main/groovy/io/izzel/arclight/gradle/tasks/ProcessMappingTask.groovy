@@ -20,6 +20,7 @@ import org.cadixdev.lorenz.io.srg.tsrg.TSrgReader
 import org.cadixdev.lorenz.io.srg.tsrg.TSrgWriter
 import org.cadixdev.lorenz.model.ClassMapping
 import org.cadixdev.lorenz.model.FieldMapping
+import org.cadixdev.lorenz.model.Mapping
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
@@ -27,6 +28,7 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
 import org.objectweb.asm.Type
 
+import java.util.jar.JarFile
 import java.util.stream.Collectors
 
 class ProcessMappingTask implements Runnable {
@@ -76,7 +78,7 @@ class ProcessMappingTask implements Runnable {
                     }
                     super.writeClassMapping(mapping)
                 }
-            }.write(new TinyMappingsReader(tree, "srg", "named").read())
+            }.write(mcp.reverse())
         }
 
         def srg = MappingSet.create()
@@ -97,10 +99,21 @@ class ProcessMappingTask implements Runnable {
 
         def im = new InheritanceMap()
         def classes = [] as ArrayList<String>
-        csrg.topLevelClassMappings.each {
+        /*csrg.topLevelClassMappings.each {
             classes.add(it.fullDeobfuscatedName)
             it.innerClassMappings.each {
                 classes.add(it.fullDeobfuscatedName)
+            }
+        }*/
+        def jarFile = new JarFile(this.inJar)
+        for (entry in jarFile.entries()) {
+            var name = entry.name
+            if (name.startsWith("net") && name.endsWith('.class')) {
+                var internalName = name.substring(0, name.lastIndexOf('.'))
+                //if (internalName.split('\\$').any { it.integer }) {
+                //    continue
+                //}
+                classes.add(internalName)
             }
         }
         im.generate(new JarProvider(Jar.init(this.inJar)), classes)
@@ -138,7 +151,14 @@ class ProcessMappingTask implements Runnable {
                     if (!mapping.hasMappings()) {
                         this.writer.println(String.format("%s %s", mapping.getFullObfuscatedName(), mapping.getFullDeobfuscatedName()));
                     } else if (mapping.fullObfuscatedName.contains('/')) {
-                        super.writeClassMapping(mapping)
+                        // hasDeobfuscatedName() has to be true for every mapping
+                        // since we need to preserve identity() mapping
+                        // Or else SpecialSource recognize classes not in mapping as not mapped
+                        this.writer.println(String.format("%s %s", mapping.getFullObfuscatedName(), mapping.getFullDeobfuscatedName()));
+
+                        mapping.getFieldsByName().values().stream().filter(Mapping::hasDeobfuscatedName).sorted(this.getConfig().getFieldMappingComparator()).forEach(this::writeFieldMapping);
+                        mapping.getMethodMappings().stream().filter(Mapping::hasDeobfuscatedName).sorted(this.getConfig().getMethodMappingComparator()).forEach(this::writeMethodMapping);
+                        mapping.getInnerClassMappings().stream().filter(ClassMapping::hasMappings).sorted(this.getConfig().getClassMappingComparator()).forEach(this::writeClassMapping);
                     }
                 }
 
@@ -167,7 +187,13 @@ class ProcessMappingTask implements Runnable {
                     if (!mapping.hasMappings()) {
                         this.writer.println(String.format("%s %s", mapping.getFullObfuscatedName(), mapping.getFullDeobfuscatedName()));
                     } else if (mapping.fullObfuscatedName.contains('/')) {
-                        super.writeClassMapping(mapping)
+                        // hasDeobfuscatedName() has to be true for every mapping
+                        // since we need to preserve identity() mapping
+                        // Or else SpecialSource recognize classes not in mapping as not mapped
+                        this.writer.println(String.format("%s %s", mapping.getFullObfuscatedName(), mapping.getFullDeobfuscatedName()));
+                        mapping.getFieldsByName().values().stream().filter(Mapping::hasDeobfuscatedName).sorted(this.getConfig().getFieldMappingComparator()).forEach(this::writeFieldMapping);
+                        mapping.getMethodMappings().stream().filter(Mapping::hasDeobfuscatedName).sorted(this.getConfig().getMethodMappingComparator()).forEach(this::writeMethodMapping);
+                        mapping.getInnerClassMappings().stream().filter(ClassMapping::hasMappings).sorted(this.getConfig().getClassMappingComparator()).forEach(this::writeClassMapping);
                     }
                 }
 
@@ -196,7 +222,13 @@ class ProcessMappingTask implements Runnable {
                     if (!mapping.hasMappings()) {
                         this.writer.println(String.format("%s %s", mapping.getFullObfuscatedName(), mapping.getFullDeobfuscatedName()));
                     } else if (mapping.fullObfuscatedName.contains('/')) {
-                        super.writeClassMapping(mapping)
+                        // hasDeobfuscatedName() has to be true for every mapping
+                        // since we need to preserve identity() mapping
+                        // Or else SpecialSource recognize classes not in mapping as not mapped
+                        this.writer.println(String.format("%s %s", mapping.getFullObfuscatedName(), mapping.getFullDeobfuscatedName()));
+                        mapping.getFieldsByName().values().stream().filter(Mapping::hasDeobfuscatedName).sorted(this.getConfig().getFieldMappingComparator()).forEach(this::writeFieldMapping);
+                        mapping.getMethodMappings().stream().filter(Mapping::hasDeobfuscatedName).sorted(this.getConfig().getMethodMappingComparator()).forEach(this::writeMethodMapping);
+                        mapping.getInnerClassMappings().stream().filter(ClassMapping::hasMappings).sorted(this.getConfig().getClassMappingComparator()).forEach(this::writeClassMapping);
                     }
                 }
 
