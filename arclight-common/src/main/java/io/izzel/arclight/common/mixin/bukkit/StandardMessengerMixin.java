@@ -58,7 +58,9 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
     @Override
     public ArclightPluginChannel bridge$getAndCheckCrossSend(Plugin src, ResourceLocation channel) {
         var arclight = this.arclight$registry.get(channel);
-        if (!arclight.getOutgoing().contains(src)) {
+        if (src == null) {
+            ArclightServer.LOGGER.warn("Sending anonymous packet on channel {}", channel);
+        } else if (!arclight.getOutgoing().contains(src)) {
             boolean first;
             synchronized (this.crossSend) {
                 first = this.crossSend.put(src, channel);
@@ -74,19 +76,21 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
 
     @Override
     public boolean bridge$checkUnsafeSend(Plugin src, ResourceLocation channel) {
-        if (outgoingByChannel.containsKey(channel.toString())) {
+        var arclight = arclight$registry.get(channel);
+        if (arclight != null && !arclight.getOutgoing().isEmpty()) {
             return true;
         }
         boolean first;
         synchronized (this.unsafeSend) {
             first = this.unsafeSend.put(src, channel);
         }
+        final var name = src == null ? "Unknown" : src.getDescription().getFullName();
         if (first) {
             ArclightServer.LOGGER.error("A plugin is sending message on a channel that's not registered as outgoing by any plugin!");
-            ArclightServer.LOGGER.error("Plugin: [{}], on channel: {}", src.getDescription().getFullName(), channel);
+            ArclightServer.LOGGER.error("Plugin: [{}], on channel: {}", name, channel);
             ArclightServer.LOGGER.error("This detailed error message will only be displayed once for every plugin and channel!");
         }
-        ArclightServer.LOGGER.error("Plugin [{}] is sending message on an unregistered outgoing channel {}, aborting!", src.getDescription().getFullName(), channel);
+        ArclightServer.LOGGER.error("Plugin [{}] is sending message on an unregistered outgoing channel {}, aborting!", name, channel);
         return false;
     }
 
@@ -136,9 +140,9 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
         var namespace = corrected.substring(0, corrected.indexOf(':'));
         var path = corrected.substring(corrected.indexOf(':') + 1);
         if (!ResourceLocation.isValidNamespace(namespace) || !ResourceLocation.isValidPath(path)) {
-            ArclightServer.LOGGER.warn("Channel name is malformed and impossible to register: {}", corrected);
+            ArclightServer.LOGGER.warn("Channel name is malformed and impossible to use: {}", corrected);
             ArclightServer.LOGGER.warn("Related functionality cannot be guaranteed!");
-            ArclightServer.LOGGER.warn("This message will only be displayed once for this name!");
+            ArclightServer.LOGGER.warn("This message will only be displayed once for this channel!");
         }
     }
 }
