@@ -19,6 +19,7 @@
     "bukkit.CraftServerMixin_Forge",
     "bukkit.CraftWorldMixin_Forge",
     "bukkit.MaterialMixin_Forge",
+    "bukkit.StandardMessengerMixin_Forge",
     "core.command.CommandsMixin_Forge",
     "core.fluid.LavaFluidMixin_Forge",
     "core.network.ServerCommonPacketListenerImplMixin_Forge",
@@ -73,9 +74,9 @@
     "forge.ForgeEventFactoryMixin",
     "forge.ForgeHooksMixin",
     "forge.IForgeServerPlayerMixin",
+    "forge.NetworkRegistryAccessor",
     "forge.PacketDistributorMixin",
     "forge.PermissionAPIMixin",
-    "forge.RegisterChannelsTaskMixin",
     "optimization.general.activationrange.entity.ItemEntityMixin_ActivationRange_Forge"
   ]
 }
