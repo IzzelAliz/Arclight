@@ -192,58 +192,9 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
         }
     }
 
-    private static final ResourceLocation CUSTOM_REGISTER = ResourceLocation.withDefaultNamespace("register");
-    private static final ResourceLocation CUSTOM_UNREGISTER = ResourceLocation.withDefaultNamespace("unregister");
-
-    @Inject(method = "handleCustomPayload", at = @At("HEAD"))
-    private void arclight$customPayload(ServerboundCustomPayloadPacket packet, CallbackInfo ci) {
-        var data = bridge$getDiscardedData(packet);
-        if (data != null) {
-            var readerIndex = data.readerIndex();
-            var buf = new byte[data.readableBytes()];
-            data.readBytes(buf);
-            data.readerIndex(readerIndex);
-            ArclightServer.getMinecraftServer().executeIfPossible(() -> {
-                if (((MinecraftServerBridge) ArclightServer.getMinecraftServer()).bridge$hasStopped() || bridge$processedDisconnect()) {
-                    return;
-                }
-                if (this.connection.isConnected()) {
-                    if (packet.payload().type().id().equals(CUSTOM_REGISTER)) {
-                        try {
-                            String channels = new String(buf, StandardCharsets.UTF_8);
-                            for (String channel : channels.split("\0")) {
-                                if (!StringUtil.isNullOrEmpty(channel)) {
-                                    this.bridge$getCraftPlayer().addChannel(channel);
-                                }
-                            }
-                        } catch (Exception ex) {
-                            LOGGER.error("Couldn't register custom payload", ex);
-                            this.bridge$disconnect("Invalid payload REGISTER!");
-                        }
-                    } else if (packet.payload().type().id().equals(CUSTOM_UNREGISTER)) {
-                        try {
-                            final String channels = new String(buf, StandardCharsets.UTF_8);
-                            for (String channel : channels.split("\0")) {
-                                if (!StringUtil.isNullOrEmpty(channel)) {
-                                    this.bridge$getCraftPlayer().removeChannel(channel);
-                                }
-                            }
-                        } catch (Exception ex) {
-                            LOGGER.error("Couldn't unregister custom payload", ex);
-                            this.bridge$disconnect("Invalid payload UNREGISTER!");
-                        }
-                    } else {
-                        try {
-                            this.bridge$getCraftServer().getMessenger().dispatchIncomingMessage(((ServerPlayerEntityBridge) this.bridge$getPlayer()).bridge$getBukkitEntity(), packet.payload().type().id().toString(), buf);
-                        } catch (Exception ex) {
-                            LOGGER.error("Couldn't dispatch custom payload", ex);
-                            this.bridge$disconnect("Invalid custom payload!");
-                        }
-                    }
-                }
-            });
-        }
-    }
+    // Plugin channel impl moved to PSI
+    // @Inject(method = "handleCustomPayload", at = @At("HEAD"))
+    // private void arclight$customPayload(ServerboundCustomPayloadPacket packet, CallbackInfo ci)
 
     @Override
     public boolean isTransferred() {

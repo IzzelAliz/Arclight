@@ -1,0 +1,6 @@
+package io.izzel.arclight.neoforge.mod.plugin.messaging;
+
+import io.izzel.arclight.common.mod.plugin.messaging.ArclightRawPayload;
+import net.neoforged.neoforge.network.handling.IPayloadHandler;
+
+public interface NeoforgePayloadHandler extends IPayloadHandler<ArclightRawPayload> {}
