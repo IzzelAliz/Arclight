@@ -39,7 +39,7 @@ public abstract class NetworkRegistryMixin {
         );
     }
 
-    @Inject(method = "onMinecraftRegister", at = @At("TAIL"))
+    @Inject(method = "onMinecraftRegister", at = @At("RETURN"))
     private static void arclight$syncChannelRegister(Connection connection, Set<ResourceLocation> channels, CallbackInfo ci) {
         if (connection.getPacketListener() instanceof ServerCommonPacketListener listener) {
             var bridge = (ServerCommonPacketListenerBridge) listener;
@@ -55,7 +55,7 @@ public abstract class NetworkRegistryMixin {
         }
     }
 
-    @Inject(method = "onMinecraftUnregister", at = @At("TAIL"))
+    @Inject(method = "onMinecraftUnregister", at = @At("RETURN"))
     private static void arclight$syncChannelUnregister(Connection connection, Set<ResourceLocation> channels, CallbackInfo ci) {
         if (connection.getPacketListener() instanceof ServerCommonPacketListener listener) {
             var bridge = (ServerCommonPacketListenerBridge) listener;

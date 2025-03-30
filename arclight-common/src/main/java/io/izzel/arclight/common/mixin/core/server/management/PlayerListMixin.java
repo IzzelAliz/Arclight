@@ -487,4 +487,11 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         serverPlayer.getRootVehicle().getPassengersAndSelf().forEach(entity ->
             ((EntityBridge) entity).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PLAYER_QUIT));
     }
+
+    @Inject(method = "reloadResources", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;broadcastAll(Lnet/minecraft/network/protocol/Packet;)V"))
+    private void arclight$flushAdvancements(CallbackInfo ci) {
+        for (ServerPlayer player: this.players) {
+            player.getAdvancements().flushDirty(player);
+        }
+    }
 }

@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.bridge.bukkit;
 
 import io.izzel.arclight.common.mod.plugin.messaging.ArclightPluginChannel;
+import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import net.minecraft.resources.ResourceLocation;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.plugin.Plugin;
@@ -8,6 +9,8 @@ import org.bukkit.plugin.Plugin;
 import java.util.function.Consumer;
 
 public interface MessengerBridge {
+    Object2BooleanOpenHashMap<String> valid = new Object2BooleanOpenHashMap<>();
+
     void bridge$setChannelUpdater(Consumer<ArclightPluginChannel> updater);
     void bridge$sendCustomPayload(Plugin src, CraftPlayer dst, ResourceLocation location, byte[] data);
     ArclightPluginChannel bridge$getAndCheckCrossSend(Plugin src, ResourceLocation channel);

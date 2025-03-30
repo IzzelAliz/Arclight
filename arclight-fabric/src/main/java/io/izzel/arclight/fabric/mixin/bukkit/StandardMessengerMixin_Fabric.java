@@ -18,7 +18,7 @@ import java.util.Objects;
 
 @Mixin(value = StandardMessenger.class, remap = false)
 public abstract class StandardMessengerMixin_Fabric implements Messenger, MessengerBridge {
-    @Inject(method = "<init>", at = @At("TAIL"))
+    @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$setUpdater(CallbackInfo ci) {
         bridge$setChannelUpdater(ArclightFabricMessaging::initChannel);
     }

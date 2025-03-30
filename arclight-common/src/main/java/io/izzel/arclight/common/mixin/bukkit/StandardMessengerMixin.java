@@ -28,8 +28,6 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
 
     @Shadow @Final private Map<String, Set<PluginMessageListenerRegistration>> incomingByChannel;
 
-    @Shadow @Final private Map<Plugin, Set<String>> outgoingByPlugin;
-
     @Unique
     private Map<ResourceLocation, ArclightPluginChannel> arclight$registry;
 
@@ -90,7 +88,7 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
             ArclightServer.LOGGER.error("Plugin: [{}], on channel: {}", name, channel);
             ArclightServer.LOGGER.error("This detailed error message will only be displayed once for every plugin and channel!");
         }
-        ArclightServer.LOGGER.error("Plugin [{}] is sending message on an unregistered outgoing channel {}, aborting!", name, channel);
+        ArclightServer.LOGGER.debug("Plugin [{}] is sending message on an unregistered outgoing channel {}, aborting!", name, channel);
         return false;
     }
 
@@ -114,35 +112,45 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
         unsafeSend = MultimapBuilder.hashKeys().hashSetValues().build();
     }
 
-    @Inject(method = "addToOutgoing", at = @At("TAIL"))
+    @Redirect(method = {"removeFromOutgoing*", "removeFromIncoming*"}, at = @At(value = "INVOKE", target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))
+    private Object arclight$skipRemove(Map thus, Object key) {
+        return null;
+    }
+
+    @Inject(method = "addToOutgoing", at = @At("RETURN"))
     private void arclight$registerOut(Plugin plugin, String id, CallbackInfo ci) {
         arclight$updateChannel(id);
     }
 
-    @Inject(method = "removeFromOutgoing(Lorg/bukkit/plugin/Plugin;Ljava/lang/String;)V", at = @At("TAIL"))
+    @Inject(method = "removeFromOutgoing(Lorg/bukkit/plugin/Plugin;Ljava/lang/String;)V", at = @At("RETURN"))
     private void arclight$unregisterOut(Plugin plugin, String id, CallbackInfo ci) {
         arclight$updateChannel(id);
     }
 
-    @Inject(method = "addToIncoming", at = @At("TAIL"))
+    @Inject(method = "addToIncoming", at = @At("RETURN"))
     private void arclight$registerIn(PluginMessageListenerRegistration registration, CallbackInfo ci) {
         arclight$updateChannel(registration.getChannel());
     }
 
-    @Inject(method = "removeFromIncoming(Lorg/bukkit/plugin/messaging/PluginMessageListenerRegistration;)V", at = @At("TAIL"))
+    @Inject(method = "removeFromIncoming(Lorg/bukkit/plugin/messaging/PluginMessageListenerRegistration;)V", at = @At("RETURN"))
     private void arclight$unregisterIn(PluginMessageListenerRegistration registration, CallbackInfo ci) {
         arclight$updateChannel(registration.getChannel());
     }
 
     @Inject(method = "validateAndCorrectChannel", at = @At("TAIL"))
     private static void arclight$enhancedValidation(String channel, CallbackInfoReturnable<String> cir) {
-        var corrected = cir.getReturnValue();
-        var namespace = corrected.substring(0, corrected.indexOf(':'));
-        var path = corrected.substring(corrected.indexOf(':') + 1);
-        if (!ResourceLocation.isValidNamespace(namespace) || !ResourceLocation.isValidPath(path)) {
-            ArclightServer.LOGGER.warn("Channel name is malformed and impossible to use: {}", corrected);
-            ArclightServer.LOGGER.warn("Related functionality cannot be guaranteed!");
-            ArclightServer.LOGGER.warn("This message will only be displayed once for this channel!");
+        if (!valid.containsKey(channel)) {
+            var corrected = cir.getReturnValue();
+            var namespace = corrected.substring(0, corrected.indexOf(':'));
+            var path = corrected.substring(corrected.indexOf(':') + 1);
+            if (!ResourceLocation.isValidNamespace(namespace) || !ResourceLocation.isValidPath(path)) {
+                ArclightServer.LOGGER.warn("Channel name is malformed and impossible to use: {}", corrected);
+                ArclightServer.LOGGER.warn("Related functionality cannot be guaranteed!");
+                ArclightServer.LOGGER.warn("This message will only be displayed once for this channel!");
+                valid.put(channel, false);
+            } else {
+                valid.put(channel, true);
+            }
         }
     }
 }
