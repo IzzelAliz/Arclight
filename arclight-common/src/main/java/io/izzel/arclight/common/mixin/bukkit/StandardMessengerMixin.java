@@ -6,6 +6,7 @@ import io.izzel.arclight.common.bridge.bukkit.MessengerBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.plugin.messaging.ArclightPluginChannel;
 import net.minecraft.resources.ResourceLocation;
+import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.plugin.messaging.PluginMessageListenerRegistration;
@@ -19,7 +20,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.*;
-import java.util.function.Consumer;
 
 @Mixin(value = StandardMessenger.class, remap = false)
 public abstract class StandardMessengerMixin implements Messenger, MessengerBridge {
@@ -29,16 +29,10 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
     @Shadow @Final private Map<String, Set<PluginMessageListenerRegistration>> incomingByChannel;
 
     @Unique
-    private Map<ResourceLocation, ArclightPluginChannel> arclight$registry;
+    private Map<ResourceLocation, ArclightPluginChannel<?>> arclight$registry;
 
     @Unique
-    private SetMultimap<Plugin, ResourceLocation> crossSend;
-
-    @Unique
-    private SetMultimap<Plugin, ResourceLocation> unsafeSend;
-
-    @Unique
-    private Consumer<ArclightPluginChannel> updater;
+    private SetMultimap<Plugin, ResourceLocation> arclight$crossSend;
 
     @ModifyConstant(
             method = "validateAndCorrectChannel",
@@ -49,19 +43,14 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
     }
 
     @Override
-    public void bridge$setChannelUpdater(Consumer<ArclightPluginChannel> updater) {
-        this.updater = updater;
-    }
-
-    @Override
-    public ArclightPluginChannel bridge$getAndCheckCrossSend(Plugin src, ResourceLocation channel) {
+    public ArclightPluginChannel<?> bridge$getAndCheckCrossSend(Plugin src, ResourceLocation channel) {
         var arclight = this.arclight$registry.get(channel);
         if (src == null) {
             ArclightServer.LOGGER.warn("Sending anonymous packet on channel {}", channel);
         } else if (!arclight.getOutgoing().contains(src)) {
             boolean first;
-            synchronized (this.crossSend) {
-                first = this.crossSend.put(src, channel);
+            synchronized (this.arclight$crossSend) {
+                first = this.arclight$crossSend.put(src, channel);
             }
             if (first) {
                 ArclightServer.LOGGER.warn("A plugin is sending message on a channel that's registered as outgoing by other plugins but itself!");
@@ -73,68 +62,84 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
     }
 
     @Override
-    public boolean bridge$checkUnsafeSend(Plugin src, ResourceLocation channel) {
+    public void bridge$checkUnsafeSend(Plugin src, ResourceLocation channel) {
         var arclight = arclight$registry.get(channel);
         if (arclight != null && !arclight.getOutgoing().isEmpty()) {
-            return true;
+            return;
         }
-        boolean first;
-        synchronized (this.unsafeSend) {
-            first = this.unsafeSend.put(src, channel);
+        var fullName = src == null ? "Unknown" : src.getDescription().getFullName();
+        if (src == null) {
+            bridge$registerAnonymousOutgoing(channel);
+        } else {
+            registerOutgoingPluginChannel(src, channel.toString());
         }
-        final var name = src == null ? "Unknown" : src.getDescription().getFullName();
-        if (first) {
-            ArclightServer.LOGGER.error("A plugin is sending message on a channel that's not registered as outgoing by any plugin!");
-            ArclightServer.LOGGER.error("Plugin: [{}], on channel: {}", name, channel);
-            ArclightServer.LOGGER.error("This detailed error message will only be displayed once for every plugin and channel!");
-        }
-        ArclightServer.LOGGER.debug("Plugin [{}] is sending message on an unregistered outgoing channel {}, aborting!", name, channel);
-        return false;
+        ArclightServer.LOGGER.warn("Plugin [{}] is sending message on an unregistered outgoing channel {}, registering.", fullName, channel);
+    }
+
+    @Override
+    public void bridge$sendCustomPayload(Plugin src, CraftPlayer dst, ResourceLocation location, byte[] data) {
+        bridge$checkUnsafeSend(src, location);
+        var channel = bridge$getAndCheckCrossSend(src, location);
+        channel.sendCustomPayload(src, dst, data);
+    }
+
+    @Override
+    public void bridge$registerAnonymousOutgoing(ResourceLocation location) {
+        arclight$updateChannel(location, true);
     }
 
     @Unique
-    private void arclight$updateChannel(String id) {
-        var location = ResourceLocation.tryParse(id);
+    private void arclight$updateChannel(ResourceLocation location, boolean create) {
         if (location != null) {
+            var id = location.toString();
             var channel = arclight$registry.computeIfAbsent(location, it -> {
+                if (!create) {
+                    return null;
+                }
                 var inByChannel = incomingByChannel.computeIfAbsent(id, k -> new HashSet<>());
                 var outByChannel = outgoingByChannel.computeIfAbsent(id, k -> new HashSet<>());
-                return new ArclightPluginChannel((StandardMessenger)(Messenger) this, it, inByChannel, outByChannel);
+                return bridge$setupChannel(location, inByChannel, outByChannel);
             });
-            Objects.requireNonNull(updater, "Channel updater cannot be null").accept(channel);
+            if (channel != null) {
+                bridge$updateChannel(channel);
+            }
         }
+    }
+
+    @Unique
+    private void arclight$updateChannel(String location, boolean create) {
+        arclight$updateChannel(ResourceLocation.tryParse(location), create);
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void arclight$init(CallbackInfo ci) {
         arclight$registry = new HashMap<>();
-        crossSend = MultimapBuilder.hashKeys().hashSetValues().build();
-        unsafeSend = MultimapBuilder.hashKeys().hashSetValues().build();
+        arclight$crossSend = MultimapBuilder.hashKeys().hashSetValues().build();
     }
 
     @Redirect(method = {"removeFromOutgoing*", "removeFromIncoming*"}, at = @At(value = "INVOKE", target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))
-    private Object arclight$skipRemove(Map thus, Object key) {
+    private Object arclight$skipRemove(Map<?, ?> thus, Object key) {
         return null;
     }
 
     @Inject(method = "addToOutgoing", at = @At("RETURN"))
     private void arclight$registerOut(Plugin plugin, String id, CallbackInfo ci) {
-        arclight$updateChannel(id);
+        arclight$updateChannel(id, true);
     }
 
     @Inject(method = "removeFromOutgoing(Lorg/bukkit/plugin/Plugin;Ljava/lang/String;)V", at = @At("RETURN"))
     private void arclight$unregisterOut(Plugin plugin, String id, CallbackInfo ci) {
-        arclight$updateChannel(id);
+        arclight$updateChannel(id, false);
     }
 
     @Inject(method = "addToIncoming", at = @At("RETURN"))
     private void arclight$registerIn(PluginMessageListenerRegistration registration, CallbackInfo ci) {
-        arclight$updateChannel(registration.getChannel());
+        arclight$updateChannel(registration.getChannel(), true);
     }
 
     @Inject(method = "removeFromIncoming(Lorg/bukkit/plugin/messaging/PluginMessageListenerRegistration;)V", at = @At("RETURN"))
     private void arclight$unregisterIn(PluginMessageListenerRegistration registration, CallbackInfo ci) {
-        arclight$updateChannel(registration.getChannel());
+        arclight$updateChannel(registration.getChannel(), false);
     }
 
     @Inject(method = "validateAndCorrectChannel", at = @At("TAIL"))

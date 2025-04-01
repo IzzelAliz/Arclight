@@ -1,48 +1,52 @@
 package io.izzel.arclight.common.mod.plugin.messaging;
 
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
-public record ArclightRawPayload(CustomPacketPayload.Type<ArclightRawPayload> type, byte[] raw) implements CustomPacketPayload {
+public class ArclightRawPayload implements RawPayload {
 
     public static final Map<ResourceLocation, CustomPacketPayload.Type<ArclightRawPayload>> REGISTRY = new HashMap<>();
-
-    public static StreamCodec<? super FriendlyByteBuf, ArclightRawPayload> getStreamCodec(CustomPacketPayload.Type<ArclightRawPayload> type) {
-        return StreamCodec.composite(
-                StreamCodec.of(FriendlyByteBuf::writeBytes, buf -> {
-                    byte[] inner = new byte[buf.readableBytes()];
-                    buf.readBytes(inner);
-                    return inner;
-                }),
-                ArclightRawPayload::raw,
-                it -> new ArclightRawPayload(type, it)
-        );
-    }
-
-    public static StreamCodec<RegistryFriendlyByteBuf, ArclightRawPayload> getRegistryStreamCodec(CustomPacketPayload.Type<ArclightRawPayload> type) {
-        return StreamCodec.composite(
-                StreamCodec.of(FriendlyByteBuf::writeBytes, buf -> {
-                    byte[] inner = new byte[buf.readableBytes()];
-                    buf.readBytes(inner);
-                    return inner;
-                }),
-                ArclightRawPayload::raw,
-                it -> new ArclightRawPayload(type, it)
-        );
-    }
 
     public static CustomPacketPayload.Type<ArclightRawPayload> getType(ResourceLocation channel) {
         return REGISTRY.computeIfAbsent(channel, CustomPacketPayload.Type::new);
     }
 
+    private final Type<ArclightRawPayload> type;
+    private ByteBuf data;
+
+    public ArclightRawPayload(CustomPacketPayload.Type<ArclightRawPayload> type, ByteBuf raw) {
+        Objects.requireNonNull(type, "type cannot be null");
+        this.type = type;
+        this.data = raw;
+    }
+
+    public ArclightRawPayload(CustomPacketPayload.Type<ArclightRawPayload> type, byte[] raw) {
+        this(type, Unpooled.copiedBuffer(raw));
+    }
+
+    public ArclightRawPayload(CustomPacketPayload.Type<ArclightRawPayload> type) {
+        Objects.requireNonNull(type, "type cannot be null");
+        this.type = type;
+    }
+
     @Override
     public Type<ArclightRawPayload> type() {
         return type;
+    }
+
+    @Override
+    public ByteBuf getData() {
+        return data.copy();
+    }
+
+    @Override
+    public void setData(ByteBuf data) {
+        this.data = data;
     }
 }
