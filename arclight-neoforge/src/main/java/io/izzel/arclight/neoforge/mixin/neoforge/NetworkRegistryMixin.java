@@ -3,11 +3,18 @@ package io.izzel.arclight.neoforge.mixin.neoforge;
 import com.google.common.collect.ImmutableMap;
 import io.izzel.arclight.common.bridge.core.network.common.ServerCommonPacketListenerBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
+import io.izzel.arclight.common.mod.ArclightConstants;
+import io.izzel.arclight.common.mod.plugin.messaging.RawPayload;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
 import net.minecraft.network.Connection;
 import net.minecraft.network.ConnectionProtocol;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
 import net.minecraft.network.protocol.common.ServerCommonPacketListener;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -21,6 +28,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +45,22 @@ public abstract class NetworkRegistryMixin {
                 ConnectionProtocol.CONFIGURATION, new ConcurrentHashMap<>(),
                 ConnectionProtocol.PLAY, new ConcurrentHashMap<>()
         );
+    }
+
+    @Inject(method = "getCodec", cancellable = true, at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;)V"))
+    private static void arclight$interceptEncoder(ResourceLocation id, ConnectionProtocol protocol, PacketFlow flow, CallbackInfoReturnable<StreamCodec<? super FriendlyByteBuf, ? extends CustomPacketPayload>> cir) {
+        if (flow == PacketFlow.CLIENTBOUND) {
+            cir.setReturnValue(RawPayload.discardedCodec(id, ArclightConstants.MAX_C2S_CUSTOM_PAYLOAD_SIZE));
+        }
+    }
+
+    @Inject(method = "checkPacket(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/protocol/common/ServerCommonPacketListener;)V", cancellable = true, at = @At("HEAD"))
+    private static void arclight$interceptSendCheck(Packet<?> packet, ServerCommonPacketListener listener, CallbackInfo ci) {
+        if (packet instanceof ClientboundCustomPayloadPacket(CustomPacketPayload payload)) {
+            if (payload instanceof RawPayload) {
+                ci.cancel();
+            }
+        }
     }
 
     @Inject(method = "onMinecraftRegister", at = @At("RETURN"))
