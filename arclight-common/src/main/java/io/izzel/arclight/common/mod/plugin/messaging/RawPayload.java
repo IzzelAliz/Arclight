@@ -10,7 +10,7 @@ import net.minecraft.network.protocol.common.custom.DiscardedPayload;
 import net.minecraft.resources.ResourceLocation;
 
 public interface RawPayload extends CustomPacketPayload {
-    ByteBuf getData();
+    ByteBuf data();
     void setData(ByteBuf data);
 
     static <B extends FriendlyByteBuf> StreamCodec<B, ArclightRawPayload> channelCodec(CustomPacketPayload.Type<ArclightRawPayload> type, int max) {
@@ -22,7 +22,7 @@ public interface RawPayload extends CustomPacketPayload {
                     buf.readBytes(data);
                     return data;
                 }),
-                RawPayload::getData,
+                RawPayload::data,
                 it -> new ArclightRawPayload(type, it)
         );
     }
@@ -45,7 +45,7 @@ public interface RawPayload extends CustomPacketPayload {
             @Override
             public void encode(B buf, CustomPacketPayload obj) {
                 if (obj instanceof RawPayload raw) {
-                    buf.writeBytes(raw.getData());
+                    buf.writeBytes(raw.data());
                 }
             }
         };

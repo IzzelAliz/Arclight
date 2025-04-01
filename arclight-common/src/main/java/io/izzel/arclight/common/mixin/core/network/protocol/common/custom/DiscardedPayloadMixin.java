@@ -33,7 +33,7 @@ public abstract class DiscardedPayloadMixin implements RawPayload {
 
     @Unique
     @Override
-    public ByteBuf getData() {
+    public ByteBuf data() {
         return data.copy();
     }
 
