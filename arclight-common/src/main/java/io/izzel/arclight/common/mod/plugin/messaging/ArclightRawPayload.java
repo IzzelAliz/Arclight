@@ -41,7 +41,7 @@ public class ArclightRawPayload implements RawPayload {
     }
 
     @Override
-    public ByteBuf getData() {
+    public ByteBuf data() {
         return data.copy();
     }
 
