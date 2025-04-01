@@ -34,8 +34,6 @@ public class WorldEdit {
     // Correctly handle reflection name picking
     // Their naming mapping for NMS is somehow behind the version
     public static void handleStaticRefraction(ClassNode node, PluginPatcher.ClassRepo repo) {
-        ArclightServer.LOGGER.warn("Loading WorldEdit Bukkit support for 1.21.1 ...");
-        ArclightServer.LOGGER.warn("For WorldEdit (on bukkit) compatibility issues, please report to us in advance!");
         var remapper = ArclightRemapper.getMojRemapper();
         var addEntity = remapper.mapMethodName(
                 "net/minecraft/server/level/ServerLevel",
@@ -132,9 +130,9 @@ public class WorldEdit {
                 method.instructions.add(new LineNumberNode(--line, label));
                 method.instructions.add(new FieldInsnNode(Opcodes.GETSTATIC, Type.getInternalName(ArclightServer.class), "LOGGER", Type.getDescriptor(Logger.class)));
                 method.instructions.add(new InsnNode(Opcodes.DUP));
-                method.instructions.add(new LdcInsnNode("Arclight is enabling support for WorldEdit!"));
+                method.instructions.add(new LdcInsnNode("patcher.integrated.we-enable"));
                 method.instructions.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, Type.getInternalName(Logger.class), "warn", "(Ljava/lang/String;)V", true));
-                method.instructions.add(new LdcInsnNode("For issues with WorldEdit please report to Arclight."));
+                method.instructions.add(new LdcInsnNode("patcher.integrated.we-warning"));
                 method.instructions.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, Type.getInternalName(Logger.class), "warn", "(Ljava/lang/String;)V", true));
 
                 method.instructions.add(new InsnNode(Opcodes.RETURN));
