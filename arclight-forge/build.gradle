@@ -32,7 +32,7 @@ configurations {
 repositories {
     maven {
         name = 'sponge-repo'
-        url = 'https://repo.spongepowered.org/maven'
+        url = 'https://repo.spongepowered.org/repository/maven-public'
     }
     maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
     maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
