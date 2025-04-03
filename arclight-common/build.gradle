@@ -1,7 +1,7 @@
 buildscript {
     repositories {
         maven { url = 'https://maven.minecraftforge.net' }
-        maven { url = 'https://repo.spongepowered.org/maven' }
+        maven { url = 'https://repo.spongepowered.org/repository/maven-public' }
         mavenCentral()
         maven { url = 'https://maven.izzel.io/releases' }
         // maven { url = 'https://maven.parchmentmc.org' }
@@ -45,7 +45,7 @@ minecraft {
 }
 
 repositories {
-    maven { url = 'https://repo.spongepowered.org/maven' }
+    maven { url = 'https://repo.spongepowered.org/repository/maven-public' }
     maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
     maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
     maven { url = 'https://files.minecraftforge.net/maven/' }
