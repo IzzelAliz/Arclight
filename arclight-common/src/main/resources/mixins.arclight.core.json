@@ -43,7 +43,6 @@
     "network.chat.StyleMixin",
     "network.chat.TextColorMixin",
     "network.protocol.PacketThreadUtilMixin",
-    "network.protocol.common.CustomPayloadPacketMixin",
     "network.protocol.common.custom.DiscardedPayloadMixin",
     "network.protocol.game.ClientboundCommandsPacket_ArgumentNodeStubMixin",
     "network.protocol.game.ClientboundSectionBlocksUpdatePacketMixin",

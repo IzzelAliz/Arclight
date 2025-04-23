@@ -17,6 +17,7 @@
   "mixins": [
     "bukkit.CraftHumanEntityMixin_Fabric",
     "bukkit.CraftServerMixin_Fabric",
+    "bukkit.StandardMessengerMixin_Fabric",
     "core.network.ServerCommonPacketListenerImplMixin_Fabric",
     "core.network.ServerConfigurationPacketListenerImplMixin_Fabric",
     "core.network.ServerLoginPacketListenerImplMixin_Fabric",

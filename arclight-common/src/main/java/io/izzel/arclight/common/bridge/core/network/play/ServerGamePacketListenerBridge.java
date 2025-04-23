@@ -9,12 +9,15 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Location;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
-public interface ServerGamePacketListenerBridge extends ServerCommonPacketListenerBridge {
+import java.util.Set;
+
+public interface ServerPlayNetHandlerBridge extends ServerCommonPacketListenerBridge {
 
     void bridge$pushTeleportCause(PlayerTeleportEvent.TeleportCause cause);
 
@@ -37,4 +40,6 @@ public interface ServerGamePacketListenerBridge extends ServerCommonPacketListen
                                                                  InteractionHand interactionHand) {
         return null;
     }
+
+    void bridge$storeLastPosition(double d, double e, double f, float yaw, float pitch, Set<RelativeMovement> set);
 }
