@@ -17,7 +17,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.Set;
 
-public interface ServerPlayNetHandlerBridge extends ServerCommonPacketListenerBridge {
+public interface ServerGamePacketListenerBridge extends ServerCommonPacketListenerBridge {
 
     void bridge$pushTeleportCause(PlayerTeleportEvent.TeleportCause cause);
 
