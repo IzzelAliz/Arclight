@@ -22,7 +22,7 @@ allprojects {
         fabricLoaderVersion = '0.16.10'
         fabricApiVersion = '0.115.1+1.21.1'
         forgeVersion = '52.1.0'
-        neoForgeVersion = '21.1.133'
+        neoForgeVersion = '21.1.169'
         apiVersion = '1.7.3'
         toolsVersion = '1.3.0'
         mixinVersion = '0.8.5'
