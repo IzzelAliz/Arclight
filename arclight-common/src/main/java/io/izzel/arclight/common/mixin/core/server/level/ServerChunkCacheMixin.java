@@ -5,9 +5,13 @@ import io.izzel.arclight.common.bridge.core.world.server.ChunkHolderBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ChunkMapBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.bridge.core.world.server.TicketManagerBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import io.izzel.arclight.mixin.Local;
 import net.minecraft.server.level.*;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.storage.LevelData;
 import org.bukkit.entity.SpawnCategory;
@@ -37,8 +41,9 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
     // @formatter:on
 
     public boolean isChunkLoaded(final int chunkX, final int chunkZ) {
+        //bridge$chunkHolderAt is getUpdatingChunkIfPresent
         ChunkHolder chunk = ((ChunkMapBridge) this.chunkMap).bridge$chunkHolderAt(ChunkPos.asLong(chunkX, chunkZ));
-        return chunk != null && ((ChunkHolderBridge) chunk).bridge$getFullChunk() != null;
+        return chunk != null && ((ChunkHolderBridge) chunk).bridge$getFullChunkNow() != null;
     }
 
     public LevelChunk getChunkUnchecked(int chunkX, int chunkZ) {
@@ -64,8 +69,18 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
         distanceManager.updateSimulationDistance(simDistance);
     }
 
+    @Decorate(method = "getChunk", at = @At(value = "FIELD", target = "Lnet/minecraft/server/level/ServerChunkCache;lastChunk:[Lnet/minecraft/world/level/chunk/ChunkAccess;"))
+    private ChunkAccess[] arclight$widenChunkAccessibility(ServerChunkCache instance, @Local(ordinal = -1) int l) throws Throwable {
+        final ChunkAccess[] arr = (ChunkAccess[]) DecorationOps.callsite().invoke(instance);
+        final var res = arr[l];
+        if (res != null) {
+            return (ChunkAccess[]) DecorationOps.cancel().invoke(res);
+        }
+        return arr;
+    }
+
     @ModifyVariable(method = "getChunkFutureMainThread", index = 4, at = @At("HEAD"))
-    private boolean arclight$skipIfUnloading(boolean flag, int chunkX, int chunkZ) {
+    private boolean arclight$skipLoadIfUnloading(boolean flag, int chunkX, int chunkZ) {
         if (flag) {
             ChunkHolder chunkholder = this.getVisibleChunkIfPresent(ChunkPos.asLong(chunkX, chunkZ));
             if (chunkholder != null) {

@@ -1,10 +1,14 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
+import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.ServerEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ChunkMap_TrackedEntityBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ServerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerPlayerConnection;
 import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Final;
@@ -29,6 +33,13 @@ public abstract class ChunkMap_TrackedEntityMixin implements ChunkMap_TrackedEnt
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$setTrackedPlayers(ChunkMap outer, Entity entity, int range, int updateFrequency, boolean sendVelocityUpdates, CallbackInfo ci) {
         ((ServerEntityBridge) this.serverEntity).bridge$setTrackedPlayers(this.seenBy);
+    }
+
+    @Decorate(method = "updatePlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;broadcastToPlayer(Lnet/minecraft/server/level/ServerPlayer;)Z"))
+    private boolean arclight$implementVanishing(Entity instance, ServerPlayer serverPlayer) throws Throwable {
+        boolean canSee =  ((ServerPlayerEntityBridge)serverPlayer).bridge$getBukkitEntity().canSee(instance.bridge$getBukkitEntity());
+        boolean canBroadcast = (boolean) DecorationOps.callsite().invoke(instance, serverPlayer);
+        return canSee && canBroadcast;
     }
 
     @Override

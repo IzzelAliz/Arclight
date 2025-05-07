@@ -259,8 +259,8 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         }
     }
 
-    @Redirect(method = "addAdditionalSaveData", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;hasExactlyOnePlayerPassenger()Z"))
-    private boolean arclight$nonPersistVehicle(Entity entity) {
+    @Decorate(method = "addAdditionalSaveData", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;hasExactlyOnePlayerPassenger()Z"))
+    private boolean arclight$nonPersistVehicle(Entity entity) throws Throwable {
         Entity entity1 = this.getVehicle();
         boolean persistVehicle = true;
         if (entity1 != null) {
@@ -272,7 +272,8 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
                 }
             }
         }
-        return persistVehicle && entity.hasExactlyOnePlayerPassenger();
+        boolean hasExactlyOnePlayerPassenger = (boolean) DecorationOps.callsite().invoke(entity);
+        return persistVehicle && hasExactlyOnePlayerPassenger;
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("RETURN"))
@@ -290,7 +291,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             }
             if (world == null || position == null) {
                 world = ((CraftWorld) Bukkit.getServer().getWorlds().get(0)).getHandle();
-                position = Vec3.atCenterOf(((ServerLevel) world).getSharedSpawnPos());
+                position = Vec3.atCenterOf(world.getSharedSpawnPos());
             }
             this.setLevel(world);
             this.setPos(position.x(), position.y(), position.z());
@@ -365,6 +366,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
         Component defaultMessage = this.getCombatTracker().getDeathMessage();
         String deathmessage = defaultMessage.getString();
+        // Arclight: Spigot drops obtained from getCapturedDrops()
         List<org.bukkit.inventory.ItemStack> loot = new ArrayList<>();
         Collection<ItemEntity> drops = this.bridge$common$getCapturedDrops();
         if (drops != null) {
@@ -619,6 +621,34 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         return this.containerCounter;
     }
 
+    @Decorate(method = "openMenu*", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;closeContainer()V"))
+    private void arclight$skipSwitch(ServerPlayer serverPlayer) throws Throwable {
+        if (Blackhole.actuallyFalse()) {
+            DecorationOps.callsite().invoke(serverPlayer);
+        }
+    }
+
+    @Decorate(method = "openMenu*", inject = true, at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/world/MenuProvider;createMenu(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/entity/player/Player;)Lnet/minecraft/world/inventory/AbstractContainerMenu;"))
+    private void arclight$invOpen(MenuProvider iTileInventory, @Local(ordinal = 0) AbstractContainerMenu container) throws Throwable {
+        if (container != null) {
+            ((ContainerBridge) container).bridge$setTitle(iTileInventory.getDisplayName());
+            boolean cancelled = false;
+            ArclightCaptures.captureContainerOwner((ServerPlayer) (Object) this);
+            container = CraftEventFactory.callInventoryOpenEvent((ServerPlayer) (Object) this, container, cancelled);
+            ArclightCaptures.resetContainerOwner();
+            if (container == null && !cancelled) {
+                if (iTileInventory instanceof Container) {
+                    ((Container) iTileInventory).stopOpen((ServerPlayer) (Object) this);
+                } else if (ChestBlockDoubleInventoryHacks.isInstance(iTileInventory)) {
+                    ChestBlockDoubleInventoryHacks.get(iTileInventory).stopOpen((ServerPlayer) (Object) this);
+                }
+                DecorationOps.cancel().invoke(OptionalInt.empty());
+                return;
+            }
+        }
+        DecorationOps.blackhole().invoke();
+    }
+
     @Decorate(method = "openHorseInventory", inject = true, at = @At("HEAD"))
     private void arclight$openHorseInv(final AbstractHorse entityhorseabstract, final Container iinventory) throws Throwable {
         this.nextContainerCounter();
@@ -636,12 +666,16 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     private void arclight$skipSwitchHorse(ServerPlayer instance) {
     }
 
+    @Inject(method = "closeContainer", at = @At("HEAD"))
+    private void arclight$handleContainerClose(CallbackInfo ci) {
+        CraftEventFactory.handleInventoryCloseEvent((ServerPlayer) (Object) this);
+    }
+
     @Inject(method = "doCloseContainer", at = @At("HEAD"))
     private void arclight$invClose(CallbackInfo ci) {
         if (this.containerMenu != this.inventoryMenu) {
             var old = ArclightCaptures.getContainerOwner();
             ArclightCaptures.captureContainerOwner((ServerPlayer) (Object) this);
-            CraftEventFactory.handleInventoryCloseEvent((ServerPlayer) (Object) this);
             ArclightCaptures.captureContainerOwner(old);
         }
     }
@@ -845,34 +879,6 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             yaw = 0.0F;
         }
         DecorationOps.blackhole().invoke(resourceKey, blockPos, yaw, forced);
-    }
-
-    @Decorate(method = "openMenu*", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;closeContainer()V"))
-    private void arclight$skipSwitch(ServerPlayer serverPlayer) throws Throwable {
-        if (Blackhole.actuallyFalse()) {
-            DecorationOps.callsite().invoke(serverPlayer);
-        }
-    }
-
-    @Decorate(method = "openMenu*", inject = true, at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/world/MenuProvider;createMenu(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/entity/player/Player;)Lnet/minecraft/world/inventory/AbstractContainerMenu;"))
-    private void arclight$invOpen(MenuProvider iTileInventory, @Local(ordinal = 0) AbstractContainerMenu container) throws Throwable {
-        if (container != null) {
-            ((ContainerBridge) container).bridge$setTitle(iTileInventory.getDisplayName());
-            boolean cancelled = false;
-            ArclightCaptures.captureContainerOwner((ServerPlayer) (Object) this);
-            container = CraftEventFactory.callInventoryOpenEvent((ServerPlayer) (Object) this, container, cancelled);
-            ArclightCaptures.resetContainerOwner();
-            if (container == null && !cancelled) {
-                if (iTileInventory instanceof Container) {
-                    ((Container) iTileInventory).stopOpen((ServerPlayer) (Object) this);
-                } else if (ChestBlockDoubleInventoryHacks.isInstance(iTileInventory)) {
-                    ChestBlockDoubleInventoryHacks.get(iTileInventory).stopOpen((ServerPlayer) (Object) this);
-                }
-                DecorationOps.cancel().invoke(OptionalInt.empty());
-                return;
-            }
-        }
-        DecorationOps.blackhole().invoke();
     }
 
     @Override

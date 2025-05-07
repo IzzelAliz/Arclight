@@ -6,17 +6,12 @@ import io.izzel.arclight.common.bridge.core.world.server.ChunkMapBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ChunkHolder;
-import net.minecraft.server.level.ChunkLevel;
-import net.minecraft.server.level.ChunkMap;
-import net.minecraft.server.level.ChunkResult;
-import net.minecraft.server.level.FullChunkStatus;
-import net.minecraft.server.level.GenerationChunkHolder;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.*;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
-import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -53,7 +48,7 @@ public abstract class ChunkHolderMixin extends GenerationChunkHolder implements 
     }
 
     @Override
-    public LevelChunk bridge$getFullChunk() {
+    public LevelChunk bridge$getFullChunkNow() {
         return this.getFullChunkNow();
     }
 
@@ -62,8 +57,41 @@ public abstract class ChunkHolderMixin extends GenerationChunkHolder implements 
         return this.getFullChunkNowUnchecked();
     }
 
+    @Override
+    public void bridge$callEventIfUnloading(ChunkMap manager) {
+        callEventIfUnloading(manager);
+    }
+
+    protected void callEventIfUnloading(ChunkMap manager) {
+        FullChunkStatus oldFullChunkStatus = ChunkLevel.fullStatus(this.oldTicketLevel);
+        FullChunkStatus newFullChunkStatus = ChunkLevel.fullStatus(this.ticketLevel);
+        boolean oldIsFull = oldFullChunkStatus.isOrAfter(FullChunkStatus.FULL);
+        boolean newIsFull = newFullChunkStatus.isOrAfter(FullChunkStatus.FULL);
+        if (oldIsFull && !newIsFull) {
+            this.getFullChunkFuture().thenAccept((either) -> {
+                LevelChunk chunk = either.orElse(null);
+                if (chunk != null) {
+                    ((ChunkMapBridge)manager).bridge$getCallbackExecutor().execute(() -> {
+                        // Minecraft will apply the chunks tick lists to the world once the chunk got loaded, and then store the tick
+                        // lists again inside the chunk once the chunk becomes inaccessible and set the chunk's needsSaving flag.
+                        // These actions may however happen deferred, so we manually set the needsSaving flag already here.
+                        chunk.setUnsaved(true);
+                        ((ChunkBridge)chunk).bridge$unloadCallback();
+                    });
+                }
+            }).exceptionally((throwable) -> {
+                // ensure exceptions are printed, by default this is not the case
+                MinecraftServer.LOGGER.error("Failed to schedule unload callback for chunk " + pos, throwable);
+                return null;
+            });
+
+            // Run callback right away if the future was already done
+            ((ChunkMapBridge) manager).bridge$getCallbackExecutor().run();
+        }
+    }
+
     @Inject(method = "blockChanged", cancellable = true,
-        at = @At(value = "FIELD", ordinal = 0, target = "Lnet/minecraft/server/level/ChunkHolder;changedBlocksPerSection:[Lit/unimi/dsi/fastutil/shorts/ShortSet;"))
+            at = @At(value = "FIELD", ordinal = 0, target = "Lnet/minecraft/server/level/ChunkHolder;changedBlocksPerSection:[Lit/unimi/dsi/fastutil/shorts/ShortSet;"))
     private void arclight$outOfBound(BlockPos pos, CallbackInfo ci) {
         int i = this.levelHeightAccessor.getSectionIndex(pos.getY());
         if (i < 0 || i >= this.changedBlocksPerSection.length) {
@@ -71,30 +99,7 @@ public abstract class ChunkHolderMixin extends GenerationChunkHolder implements 
         }
     }
 
-    @Inject(method = "updateFutures", at = @At(value = "JUMP", opcode = Opcodes.IFEQ, ordinal = 0))
-    private void arclight$onChunkUnload(ChunkMap chunkManager, Executor executor, CallbackInfo ci) {
-        FullChunkStatus fullChunkStatus = ChunkLevel.fullStatus(this.oldTicketLevel);
-        FullChunkStatus fullChunkStatus2 = ChunkLevel.fullStatus(this.ticketLevel);
-        if (fullChunkStatus.isOrAfter(FullChunkStatus.FULL) && !fullChunkStatus2.isOrAfter(FullChunkStatus.FULL)) {
-            this.getFullChunkFuture().thenAccept((either) -> {
-                LevelChunk chunk = either.orElse(null);
-                if (chunk != null) {
-                    ((ChunkMapBridge) chunkManager).bridge$getCallbackExecutor().execute(() -> {
-                        chunk.setUnsaved(true);
-                        ((ChunkBridge) chunk).bridge$unloadCallback();
-                    });
-                }
-            }).exceptionally((throwable) -> {
-                // ensure exceptions are printed, by default this is not the case
-                ArclightServer.LOGGER.fatal("Failed to schedule unload callback for chunk " + this.pos, throwable);
-                return null;
-            });
-
-            // Run callback right away if the future was already done
-            ((ChunkMapBridge) chunkManager).bridge$getCallbackExecutor().run();
-        }
-    }
-
+    // Note that this logic is slightly different from the one above
     @Inject(method = "updateFutures", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/level/ChunkHolder$LevelChangeListener;onLevelChange(Lnet/minecraft/world/level/ChunkPos;Ljava/util/function/IntSupplier;ILjava/util/function/IntConsumer;)V"))
     private void arclight$onChunkLoad(ChunkMap chunkManager, Executor executor, CallbackInfo ci) {
         FullChunkStatus fullChunkStatus = ChunkLevel.fullStatus(this.oldTicketLevel);
@@ -105,7 +110,7 @@ public abstract class ChunkHolderMixin extends GenerationChunkHolder implements 
                 LevelChunk chunk = either.orElse(null);
                 if (chunk != null) {
                     ((ChunkMapBridge) chunkManager).bridge$getCallbackExecutor().execute(
-                        ((ChunkBridge) chunk)::bridge$loadCallback
+                            ((ChunkBridge) chunk)::bridge$loadCallback
                     );
                 }
             }).exceptionally((throwable) -> {

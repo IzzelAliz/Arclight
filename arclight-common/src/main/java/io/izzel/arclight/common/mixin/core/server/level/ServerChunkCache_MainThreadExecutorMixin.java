@@ -37,7 +37,8 @@ public abstract class ServerChunkCache_MainThreadExecutorMixin extends Blockable
             }
         } finally {
             ((ChunkMapBridge) outer.chunkMap).bridge$getCallbackExecutor().run();
-            ((MinecraftServerBridge) ArclightServer.getMinecraftServer()).bridge$drainQueuedTasks();
+            // CraftBukkit doesn't run it here
+            // ((MinecraftServerBridge) ArclightServer.getMinecraftServer()).bridge$drainQueuedTasks();
         }
     }
 }

@@ -80,8 +80,9 @@ public abstract class StructureTemplateMixin implements StructureTemplateBridge 
                 }
             }
             craftBlockState = structureTransformer.transformCraftState(craftBlockState);
-            blockState = craftBlockState.getHandle();
-            blockstate = blockState;
+            blockstate = craftBlockState.getHandle();
+            // Input argument blockState is exactly blockstate
+            blockState = blockstate;
             structureBlockInfo = new StructureTemplate.StructureBlockInfo(pos, blockState, (craftBlockState instanceof CraftBlockEntityState<?> craftBlockEntityState ? craftBlockEntityState.getSnapshotNBT() : null));
         }
         DecorationOps.blackhole().invoke(structureBlockInfo, blockstate);

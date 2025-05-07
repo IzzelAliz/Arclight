@@ -12,7 +12,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.util.thread.BlockableEventLoop;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
 import net.minecraft.world.level.chunk.LightChunkGetter;
+import net.minecraft.world.level.chunk.status.WorldGenContext;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
@@ -45,6 +47,8 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
     @Shadow protected abstract void tick();
     @Shadow @Final public ServerLevel level;
     @Shadow @Final @Mutable private RandomState randomState;
+    @Shadow @Final @Mutable private ChunkGeneratorStructureState chunkGeneratorState;
+    @Shadow @Final @Mutable private WorldGenContext worldGenContext;
     @Invoker("tick") public abstract void bridge$tick(BooleanSupplier hasMoreTime);
     @Invoker("setServerViewDistance") public abstract void bridge$setViewDistance(int i);
     // @formatter:on
@@ -83,13 +87,17 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
 
     @Override
     public void bridge$setChunkGenerator(ChunkGenerator generator) {
-        if (generator instanceof CustomChunkGenerator custom) {
-            generator = custom.getDelegate();
+        var rg = generator;
+        if (rg instanceof CustomChunkGenerator custom) {
+            rg = custom.getDelegate();
         }
-        if (generator instanceof NoiseBasedChunkGenerator noisebasedchunkgenerator) {
-            this.randomState = RandomState.create(noisebasedchunkgenerator.generatorSettings().value(), this.level.registryAccess().lookupOrThrow(Registries.NOISE), this.level.getSeed());
+        if (rg instanceof NoiseBasedChunkGenerator noise) {
+            this.randomState = RandomState.create(noise.generatorSettings().value(), this.level.registryAccess().lookupOrThrow(Registries.NOISE), this.level.getSeed());
         } else {
             this.randomState = RandomState.create(NoiseGeneratorSettings.dummy(), this.level.registryAccess().lookupOrThrow(Registries.NOISE), this.level.getSeed());
         }
+        this.chunkGeneratorState = generator.createState(level.registryAccess().lookupOrThrow(Registries.STRUCTURE_SET), this.randomState, level.getSeed());
+        var old = this.worldGenContext;
+        this.worldGenContext = new WorldGenContext(old.level(), generator, old.structureManager(), old.lightEngine(), old.mainThreadMailBox());
     }
 }

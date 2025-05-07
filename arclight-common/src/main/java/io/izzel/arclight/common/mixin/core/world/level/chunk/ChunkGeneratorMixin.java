@@ -54,6 +54,8 @@ public abstract class ChunkGeneratorMixin implements ChunkGeneratorBridge {
         DecorationOps.blackhole().invoke();
     }
 
+    // TODO SpigotWorldConfig support to provide different seed according to the structure kind
+
     public void applyBiomeDecoration(WorldGenLevel level, ChunkAccess chunkAccess, StructureManager structureFeatureManager, boolean vanilla) {
         if (vanilla) {
             this.applyBiomeDecoration(level, chunkAccess, structureFeatureManager);
