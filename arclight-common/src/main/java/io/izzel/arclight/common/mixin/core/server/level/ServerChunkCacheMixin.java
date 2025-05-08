@@ -6,12 +6,9 @@ import io.izzel.arclight.common.bridge.core.world.server.ChunkMapBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.bridge.core.world.server.TicketManagerBridge;
 import io.izzel.arclight.mixin.Decorate;
-import io.izzel.arclight.mixin.DecorationOps;
-import io.izzel.arclight.mixin.Local;
 import net.minecraft.server.level.*;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameRules;
-import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.storage.LevelData;
 import org.bukkit.entity.SpawnCategory;
@@ -67,16 +64,6 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
     @Override
     public void bridge$setSimulationDistance(int simDistance) {
         distanceManager.updateSimulationDistance(simDistance);
-    }
-
-    @Decorate(method = "getChunk", at = @At(value = "FIELD", target = "Lnet/minecraft/server/level/ServerChunkCache;lastChunk:[Lnet/minecraft/world/level/chunk/ChunkAccess;"))
-    private ChunkAccess[] arclight$widenChunkAccessibility(ServerChunkCache instance, @Local(ordinal = -1) int l) throws Throwable {
-        final ChunkAccess[] arr = (ChunkAccess[]) DecorationOps.callsite().invoke(instance);
-        final var res = arr[l];
-        if (res != null) {
-            return (ChunkAccess[]) DecorationOps.cancel().invoke(res);
-        }
-        return arr;
     }
 
     @ModifyVariable(method = "getChunkFutureMainThread", index = 4, at = @At("HEAD"))
