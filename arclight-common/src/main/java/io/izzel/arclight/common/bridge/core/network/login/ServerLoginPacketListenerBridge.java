@@ -17,8 +17,8 @@ public interface ServerLoginPacketListenerBridge {
     void bridge$disconnect(String reason);
 
     default FriendlyByteBuf bridge$getDiscardedQueryAnswerData(ServerboundCustomQueryAnswerPacket packet) {
-        return packet.payload() instanceof ArclightCustomQueryAnswerPayload payload
-            ? new FriendlyByteBuf(payload.buf())
+        return packet.payload() instanceof ArclightCustomQueryAnswerPayload(io.netty.buffer.ByteBuf buf)
+            ? new FriendlyByteBuf(buf)
             : null;
     }
 

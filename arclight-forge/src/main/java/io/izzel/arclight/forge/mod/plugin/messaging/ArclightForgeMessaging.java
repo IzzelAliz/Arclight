@@ -25,11 +25,11 @@ public class ArclightForgeMessaging {
             var registration = channel.getChannelHandler();
             try {
                 NetworkRegistryAccessor.setLock(false);
-                var simple = ChannelBuilder.named(location)
+                var event = ChannelBuilder.named(location)
                         .serverAcceptedVersions(ACCEPT_ALL)
                         .optional()
-                        .simpleChannel();
-                registration.initialize(simple);
+                        .eventNetworkChannel();
+                registration.initialize(event);
             } finally {
                 NetworkRegistryAccessor.setLock(true);
             }

@@ -1,9 +1,11 @@
 package io.izzel.arclight.neoforge.mixin.neoforge;
 
 import com.google.common.collect.ImmutableMap;
+import io.izzel.arclight.common.bridge.bukkit.MessengerBridge;
 import io.izzel.arclight.common.bridge.core.network.common.ServerCommonPacketListenerBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
+import io.izzel.arclight.common.mod.plugin.messaging.PacketRecorder;
 import io.izzel.arclight.common.mod.plugin.messaging.RawPayload;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -22,7 +24,9 @@ import net.neoforged.neoforge.common.extensions.ICommonPacketListener;
 import net.neoforged.neoforge.network.registration.NetworkPayloadSetup;
 import net.neoforged.neoforge.network.registration.NetworkRegistry;
 import net.neoforged.neoforge.network.registration.PayloadRegistration;
+import org.bukkit.Bukkit;
 import org.objectweb.asm.Opcodes;
+import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -48,9 +52,18 @@ public abstract class NetworkRegistryMixin {
     }
 
     @Inject(method = "getCodec", cancellable = true, at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;)V"))
-    private static void arclight$interceptEncoder(ResourceLocation id, ConnectionProtocol protocol, PacketFlow flow, CallbackInfoReturnable<StreamCodec<? super FriendlyByteBuf, ? extends CustomPacketPayload>> cir) {
+    private static void arclight$discardIllegal(ResourceLocation id, ConnectionProtocol protocol, PacketFlow flow, CallbackInfoReturnable<StreamCodec<? super FriendlyByteBuf, ? extends CustomPacketPayload>> cir) {
         if (flow == PacketFlow.CLIENTBOUND) {
             cir.setReturnValue(RawPayload.discardedCodec(id, ArclightConstants.MAX_C2S_CUSTOM_PAYLOAD_SIZE));
+        }
+    }
+
+    @Redirect(method = "getCodec", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;)V"))
+    private static void arclight$recordUnknown(Logger instance, String s, Object o) {
+        if (o instanceof String id) {
+            PacketRecorder recorder = ((MessengerBridge) Bukkit.getMessenger()).bridge$getPacketRecorder();
+            recorder.recordUnknown(id);
+            recorder.update();
         }
     }
 

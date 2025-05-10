@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.bukkit;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.SetMultimap;
 import io.izzel.arclight.common.bridge.bukkit.MessengerBridge;
+import io.izzel.arclight.common.mod.plugin.messaging.PacketRecorder;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.plugin.messaging.ArclightPluginChannel;
 import net.minecraft.resources.ResourceLocation;
@@ -33,6 +34,9 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
 
     @Unique
     private SetMultimap<Plugin, ResourceLocation> arclight$crossSend;
+
+    @Unique
+    private PacketRecorder arclight$recorder;
 
     @ModifyConstant(
             method = "validateAndCorrectChannel",
@@ -88,6 +92,11 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
         arclight$updateChannel(location, true);
     }
 
+    @Override
+    public PacketRecorder bridge$getPacketRecorder() {
+        return arclight$recorder;
+    }
+
     @Unique
     private void arclight$updateChannel(ResourceLocation location, boolean create) {
         if (location != null) {
@@ -115,6 +124,7 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
     private void arclight$init(CallbackInfo ci) {
         arclight$registry = new HashMap<>();
         arclight$crossSend = MultimapBuilder.hashKeys().hashSetValues().build();
+        arclight$recorder = new PacketRecorder();
     }
 
     @Redirect(method = {"removeFromOutgoing*", "removeFromIncoming*"}, at = @At(value = "INVOKE", target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))

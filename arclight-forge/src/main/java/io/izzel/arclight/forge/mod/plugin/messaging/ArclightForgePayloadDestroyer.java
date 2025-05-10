@@ -6,6 +6,7 @@ import io.izzel.arclight.common.mod.plugin.messaging.PayloadDestroyer;
 import net.minecraftforge.event.network.CustomPayloadEvent;
 
 public record ArclightForgePayloadDestroyer(ArclightPluginChannel<ArclightForgePayloadDestroyer> channel) implements ForgePayloadHandler, PayloadDestroyer {
+
     @Override
-    public void accept(ArclightRawPayload arclightRawPayload, CustomPayloadEvent.Context context) {}
+    public void accept(CustomPayloadEvent customPayloadEvent) {}
 }

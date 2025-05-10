@@ -2,7 +2,6 @@ package io.izzel.arclight.common.mod.plugin.messaging;
 
 import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -18,9 +17,7 @@ public interface RawPayload extends CustomPacketPayload {
                 StreamCodec.of(FriendlyByteBuf::writeBytes, buf -> {
                     var size = buf.readableBytes();
                     Preconditions.checkArgument(size <= max, "Custom payload size may not be larger than " + max);
-                    ByteBuf data = Unpooled.buffer(size, size);
-                    buf.readBytes(data);
-                    return data;
+                    return buf.copy();
                 }),
                 RawPayload::data,
                 it -> new ArclightRawPayload(type, it)
@@ -33,7 +30,7 @@ public interface RawPayload extends CustomPacketPayload {
             public DiscardedPayload decode(B buf) {
                 int j = buf.readableBytes();
                 if (j >= 0 && j <= max) {
-                    var heap = buf.readBytes(j);
+                    var heap = buf.copy();
                     var payload = new DiscardedPayload(location);
                     ((RawPayload)(Object)payload).setData(heap);
                     return payload;

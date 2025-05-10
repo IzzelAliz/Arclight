@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.bridge.bukkit;
 
 import io.izzel.arclight.common.mod.plugin.messaging.ArclightPluginChannel;
+import io.izzel.arclight.common.mod.plugin.messaging.PacketRecorder;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import net.minecraft.resources.ResourceLocation;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
@@ -19,4 +20,6 @@ public interface MessengerBridge {
     void bridge$registerAnonymousOutgoing(ResourceLocation location);
     ArclightPluginChannel<?> bridge$getAndCheckCrossSend(Plugin src, ResourceLocation channel);
     void bridge$checkUnsafeSend(Plugin src, ResourceLocation channel);
+
+    PacketRecorder bridge$getPacketRecorder();
 }
