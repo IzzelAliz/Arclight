@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mod.plugin.messaging;
 
+import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import net.minecraft.Util;
@@ -21,7 +22,7 @@ public class PacketRecorder {
 
     public void update() {
         long now = Util.getMillis();
-        if (now - lastUpdate > 5*60*1000) {
+        if (Math.abs(now - lastUpdate) > ArclightConstants.PACKET_RECORDER_PERIOD_SEC *1000) {
             consumeAndLog();
             lastUpdate = now;
         }
