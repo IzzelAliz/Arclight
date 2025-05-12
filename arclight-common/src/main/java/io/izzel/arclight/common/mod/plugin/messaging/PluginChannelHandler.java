@@ -5,5 +5,6 @@ import org.bukkit.plugin.Plugin;
 
 public interface PluginChannelHandler {
     ArclightPluginChannel<?> channel();
+    void updateChannel();
     void sendCustomPayload(Plugin src, CraftPlayer dst, byte[] data);
 }

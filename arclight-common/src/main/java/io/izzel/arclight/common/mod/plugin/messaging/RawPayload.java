@@ -17,7 +17,9 @@ public interface RawPayload extends CustomPacketPayload {
                 StreamCodec.of(FriendlyByteBuf::writeBytes, buf -> {
                     var size = buf.readableBytes();
                     Preconditions.checkArgument(size <= max, "Custom payload size may not be larger than " + max);
-                    return buf.copy();
+                    var heap = buf.alloc().heapBuffer(size, size);
+                    buf.readBytes(heap);
+                    return heap;
                 }),
                 RawPayload::data,
                 it -> new ArclightRawPayload(type, it)
@@ -30,7 +32,8 @@ public interface RawPayload extends CustomPacketPayload {
             public DiscardedPayload decode(B buf) {
                 int j = buf.readableBytes();
                 if (j >= 0 && j <= max) {
-                    var heap = buf.copy();
+                    var heap = buf.alloc().heapBuffer(j, j);
+                    buf.readBytes(heap);
                     var payload = new DiscardedPayload(location);
                     ((RawPayload)(Object)payload).setData(heap);
                     return payload;

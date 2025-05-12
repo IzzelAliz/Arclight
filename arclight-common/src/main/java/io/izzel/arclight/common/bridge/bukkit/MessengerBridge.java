@@ -14,7 +14,6 @@ public interface MessengerBridge {
     Object2BooleanOpenHashMap<String> valid = new Object2BooleanOpenHashMap<>();
 
     ArclightPluginChannel<?> bridge$setupChannel(ResourceLocation channel, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing);
-    default void bridge$updateChannel(ArclightPluginChannel<?> channel) {}
 
     void bridge$sendCustomPayload(Plugin src, CraftPlayer dst, ResourceLocation location, byte[] data);
     void bridge$registerAnonymousOutgoing(ResourceLocation location);

@@ -18,6 +18,11 @@ public record ArclightNfPayloadHandler(ArclightPluginChannel<ArclightNfPayloadHa
     }
 
     @Override
+    public void updateChannel() {
+        ArclightNfMessaging.updateChannel(channel);
+    }
+
+    @Override
     public void sendCustomPayload(Plugin src, CraftPlayer dst, byte[] data) {
         PacketDistributor.sendToPlayer(dst.getHandle(), new ArclightRawPayload(channel.getType(), data));
     }

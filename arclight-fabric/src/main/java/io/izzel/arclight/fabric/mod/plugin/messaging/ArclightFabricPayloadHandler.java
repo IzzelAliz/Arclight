@@ -10,6 +10,11 @@ import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.plugin.Plugin;
 
 public record ArclightFabricPayloadHandler(ArclightPluginChannel<ArclightFabricPayloadHandler> channel) implements FabricPayloadHandler {
+
+    @Override
+    public void updateChannel() {
+    }
+
     @Override
     public void receive(ArclightRawPayload pkt, ServerPlayNetworking.Context ctx) {
         ctx.server().executeIfPossible(() -> {

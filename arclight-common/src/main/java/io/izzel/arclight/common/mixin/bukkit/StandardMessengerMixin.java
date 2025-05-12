@@ -110,7 +110,7 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
                 return bridge$setupChannel(location, inByChannel, outByChannel);
             });
             if (channel != null) {
-                bridge$updateChannel(channel);
+                channel.getChannelHandler().updateChannel();
             }
         }
     }

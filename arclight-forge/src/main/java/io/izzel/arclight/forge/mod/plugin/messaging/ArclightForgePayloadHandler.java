@@ -36,6 +36,11 @@ public class ArclightForgePayloadHandler implements ForgePayloadHandler {
     }
 
     @Override
+    public void updateChannel() {
+
+    }
+
+    @Override
     public void accept(CustomPayloadEvent event) {
         var ctx = event.getSource();
         ctx.setPacketHandled(true);
@@ -43,13 +48,8 @@ public class ArclightForgePayloadHandler implements ForgePayloadHandler {
         final var max = ArclightConstants.MAX_C2S_CUSTOM_PAYLOAD_SIZE;
         Preconditions.checkArgument(buf.readableBytes() <= max, "Custom payload size may not be larger than " + max);
 
-        byte[] data;
-        if (buf.hasArray()) {
-            data = buf.array();
-        } else {
-            data = new byte[buf.readableBytes()];
-            buf.readBytes(data);
-        }
+        byte[] data = new byte[buf.readableBytes()];
+        buf.readBytes(data);
 
         ctx.enqueueWork(() -> {
             var listener = ctx.getConnection().getPacketListener();
