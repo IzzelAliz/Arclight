@@ -14,7 +14,7 @@ public class ServerGamePacketListenerImplMixin_Fabric {
 
     @Inject(method = "handleCustomPayload", at = @At("TAIL"))
     private void arclight$recordUnknown(ServerboundCustomPayloadPacket packet, CallbackInfo ci) {
-        var recorder = ((MessengerBridge) Bukkit.getMessenger()).bridge$getPacketRecorder();
+        var recorder = ((MessengerBridge) Bukkit.getMessenger()).arclight$getPacketRecorder();
         recorder.recordUnknown(packet.payload().type().id().toString());
         recorder.update();
     }

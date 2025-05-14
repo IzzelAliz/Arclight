@@ -47,7 +47,7 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
     }
 
     @Override
-    public ArclightPluginChannel<?> bridge$getAndCheckCrossSend(Plugin src, ResourceLocation channel) {
+    public ArclightPluginChannel<?> arclight$getAndCheckCrossSend(Plugin src, ResourceLocation channel) {
         var arclight = this.arclight$registry.get(channel);
         if (src == null) {
             ArclightServer.LOGGER.warn("Sending anonymous packet on channel {}", channel);
@@ -66,14 +66,14 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
     }
 
     @Override
-    public void bridge$checkUnsafeSend(Plugin src, ResourceLocation channel) {
+    public void arclight$checkUnsafeSend(Plugin src, ResourceLocation channel) {
         var arclight = arclight$registry.get(channel);
         if (arclight != null && !arclight.getOutgoing().isEmpty()) {
             return;
         }
         var fullName = src == null ? "Unknown" : src.getDescription().getFullName();
         if (src == null) {
-            bridge$registerAnonymousOutgoing(channel);
+            arclight$registerAnonymousOutgoing(channel);
         } else {
             registerOutgoingPluginChannel(src, channel.toString());
         }
@@ -81,19 +81,19 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
     }
 
     @Override
-    public void bridge$sendCustomPayload(Plugin src, CraftPlayer dst, ResourceLocation location, byte[] data) {
-        bridge$checkUnsafeSend(src, location);
-        var channel = bridge$getAndCheckCrossSend(src, location);
+    public void arclight$sendCustomPayload(Plugin src, CraftPlayer dst, ResourceLocation location, byte[] data) {
+        arclight$checkUnsafeSend(src, location);
+        var channel = arclight$getAndCheckCrossSend(src, location);
         channel.sendCustomPayload(src, dst, data);
     }
 
     @Override
-    public void bridge$registerAnonymousOutgoing(ResourceLocation location) {
+    public void arclight$registerAnonymousOutgoing(ResourceLocation location) {
         arclight$updateChannel(location, true);
     }
 
     @Override
-    public PacketRecorder bridge$getPacketRecorder() {
+    public PacketRecorder arclight$getPacketRecorder() {
         return arclight$recorder;
     }
 
@@ -107,7 +107,7 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
                 }
                 var inByChannel = incomingByChannel.computeIfAbsent(id, k -> new HashSet<>());
                 var outByChannel = outgoingByChannel.computeIfAbsent(id, k -> new HashSet<>());
-                return bridge$setupChannel(location, inByChannel, outByChannel);
+                return arclight$setupChannel(location, inByChannel, outByChannel);
             });
             if (channel != null) {
                 channel.getChannelHandler().updateChannel();

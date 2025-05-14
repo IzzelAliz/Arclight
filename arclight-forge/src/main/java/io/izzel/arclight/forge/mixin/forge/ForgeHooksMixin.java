@@ -29,7 +29,7 @@ public class ForgeHooksMixin {
     @Inject(method = "onCustomPayload(Lnet/minecraftforge/event/network/CustomPayloadEvent;)Z", at = @At("RETURN"))
     private static void arclight$recordUnknown(CustomPayloadEvent event, CallbackInfoReturnable<Boolean> cir) {
         if (!cir.getReturnValueZ()) {
-            var recorder = ((MessengerBridge) Bukkit.getMessenger()).bridge$getPacketRecorder();
+            var recorder = ((MessengerBridge) Bukkit.getMessenger()).arclight$getPacketRecorder();
             recorder.recordUnknown(event.getChannel().toString());
             recorder.update();
         }

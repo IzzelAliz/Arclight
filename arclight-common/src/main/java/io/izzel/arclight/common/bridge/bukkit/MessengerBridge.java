@@ -13,12 +13,12 @@ import java.util.Set;
 public interface MessengerBridge {
     Object2BooleanOpenHashMap<String> valid = new Object2BooleanOpenHashMap<>();
 
-    ArclightPluginChannel<?> bridge$setupChannel(ResourceLocation channel, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing);
+    ArclightPluginChannel<?> arclight$setupChannel(ResourceLocation channel, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing);
 
-    void bridge$sendCustomPayload(Plugin src, CraftPlayer dst, ResourceLocation location, byte[] data);
-    void bridge$registerAnonymousOutgoing(ResourceLocation location);
-    ArclightPluginChannel<?> bridge$getAndCheckCrossSend(Plugin src, ResourceLocation channel);
-    void bridge$checkUnsafeSend(Plugin src, ResourceLocation channel);
+    void arclight$sendCustomPayload(Plugin src, CraftPlayer dst, ResourceLocation location, byte[] data);
+    void arclight$registerAnonymousOutgoing(ResourceLocation location);
+    ArclightPluginChannel<?> arclight$getAndCheckCrossSend(Plugin src, ResourceLocation channel);
+    void arclight$checkUnsafeSend(Plugin src, ResourceLocation channel);
 
-    PacketRecorder bridge$getPacketRecorder();
+    PacketRecorder arclight$getPacketRecorder();
 }

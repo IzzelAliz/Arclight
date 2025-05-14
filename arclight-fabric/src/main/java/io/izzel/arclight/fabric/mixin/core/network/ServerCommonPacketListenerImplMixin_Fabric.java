@@ -15,7 +15,7 @@ public abstract class ServerCommonPacketListenerImplMixin_Fabric implements Serv
 
     @Inject(method = "handleCustomPayload", at = @At("TAIL"))
     private void arclight$handleUnknownPayload(ServerboundCustomPayloadPacket packet, CallbackInfo ci) {
-        var recorder = ((MessengerBridge) Bukkit.getMessenger()).bridge$getPacketRecorder();
+        var recorder = ((MessengerBridge) Bukkit.getMessenger()).arclight$getPacketRecorder();
         recorder.recordUnknown(packet.payload().type().id().toString());
         recorder.update();
     }

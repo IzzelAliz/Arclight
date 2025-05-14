@@ -16,7 +16,7 @@ import java.util.Set;
 public abstract class StandardMessengerMixin_Fabric implements Messenger, MessengerBridge {
 
     @Override
-    public ArclightPluginChannel<?> bridge$setupChannel(ResourceLocation channel, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
+    public ArclightPluginChannel<?> arclight$setupChannel(ResourceLocation channel, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
         return ArclightFabricMessaging.setupChannel(this, channel, incoming, outgoing);
     }
 }

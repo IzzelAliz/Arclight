@@ -34,7 +34,7 @@ public abstract class CraftPlayerMixin extends CraftEntityMixin {
     private void sendCustomPayload(ResourceLocation location, byte[] data) {
         var messenger = (MessengerBridge) server.getMessenger();
         var craft = (CraftPlayer)(Object) this;
-        messenger.bridge$sendCustomPayload(null, craft, location, data);
+        messenger.arclight$sendCustomPayload(null, craft, location, data);
     }
 
     /**
@@ -49,7 +49,7 @@ public abstract class CraftPlayerMixin extends CraftEntityMixin {
             if (this.channels.contains(channel)) {
                 ResourceLocation location = ResourceLocation.tryParse(StandardMessenger.validateAndCorrectChannel(channel));
                 var craft = (CraftPlayer)(Object) this;
-                messenger.bridge$sendCustomPayload(source, craft, location, data);
+                messenger.arclight$sendCustomPayload(source, craft, location, data);
             }
         }
     }
