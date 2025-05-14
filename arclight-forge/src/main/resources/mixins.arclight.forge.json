@@ -68,7 +68,6 @@
     "core.world.level.block.entity.AbstractFurnaceBlockEntityMixin_Forge",
     "core.world.level.block.entity.HopperBlockEntityMixin_Forge",
     "core.world.level.block.state.BlockBehaviourMixin_Forge",
-    "core.world.level.levelgen.structure.templatesystem.StructureTemplateMixin_Forge",
     "core.world.level.storage.loot.LootContextMixin_Forge",
     "forge.ForgeEventFactoryMixin",
     "forge.ForgeHooksMixin",

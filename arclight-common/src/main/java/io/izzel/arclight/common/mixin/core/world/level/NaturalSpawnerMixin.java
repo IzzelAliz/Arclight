@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.core.world.spawner;
+package io.izzel.arclight.common.mixin.core.world.level;
 
 import io.izzel.arclight.common.bridge.core.world.IWorldWriterBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;

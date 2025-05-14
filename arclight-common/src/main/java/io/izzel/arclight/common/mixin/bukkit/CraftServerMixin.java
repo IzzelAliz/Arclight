@@ -101,9 +101,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
 
     @Override
     public void bridge$setPlayerList(PlayerList playerList) {
-        // Though I'm not sure why we need this player list setter
-        // Player list view should be changed along with player list
-        // Or unexpected problem may happen
+        // Some plugin may change to a different PlayerList
         this.playerList = (DedicatedPlayerList) playerList;
         this.playerView = Collections.unmodifiableList(Lists.transform(playerList.players, player ->
                 ((ServerPlayerEntityBridge)player).bridge$getBukkitEntity()
