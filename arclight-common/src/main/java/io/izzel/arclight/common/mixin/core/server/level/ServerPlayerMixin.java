@@ -666,16 +666,12 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     private void arclight$skipSwitchHorse(ServerPlayer instance) {
     }
 
-    @Inject(method = "closeContainer", at = @At("HEAD"))
-    private void arclight$handleContainerClose(CallbackInfo ci) {
-        CraftEventFactory.handleInventoryCloseEvent((ServerPlayer) (Object) this);
-    }
-
     @Inject(method = "doCloseContainer", at = @At("HEAD"))
     private void arclight$invClose(CallbackInfo ci) {
         if (this.containerMenu != this.inventoryMenu) {
             var old = ArclightCaptures.getContainerOwner();
             ArclightCaptures.captureContainerOwner((ServerPlayer) (Object) this);
+            CraftEventFactory.handleInventoryCloseEvent((ServerPlayer) (Object) this);
             ArclightCaptures.captureContainerOwner(old);
         }
     }

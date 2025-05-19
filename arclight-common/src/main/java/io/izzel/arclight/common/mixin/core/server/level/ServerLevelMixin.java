@@ -157,8 +157,8 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     }
 
     // Support custom chunk generator; in consistency with CraftBukkit
-    // The real part is inside ServerChunkCache, when initializing ChunkMap (in ctor),
-    // where a generator state is created, which is later used for chunk generation.
+    // The real part is inside ServerChunkCache, when initializing ChunkMap (in ctor).
+    // A generator state is created, which is later used for chunk generation.
     // Previously we didn't modify it before ChunkMap is created,
     // which in turn cause custom world generation from Bukkit failing to work.
     @Decorate(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/dimension/LevelStem;generator()Lnet/minecraft/world/level/chunk/ChunkGenerator;"))
