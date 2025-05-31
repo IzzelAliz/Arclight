@@ -667,10 +667,11 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Decorate(method = "hurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurtHelmet(Lnet/minecraft/world/damagesource/DamageSource;F)V"))
     private void arclight$cancelHurtHelmet(LivingEntity instance, DamageSource damageSource, float f) throws
         Throwable {
-        if (entityDamageResult == null || !entityDamageResult.helmetHurtCancelled()) {
-            var result = f + entityDamageResult.armorDamageOffset();
-            if (entityDamageResult.armorDamageOffset() < 0 && result < 0) {
-                result = f + f * (entityDamageResult.armorDamageOffset() / entityDamageResult.originalArmorDamage());
+        if (entityDamageResult != null && !entityDamageResult.helmetHurtCancelled()) {
+            var armorDamageOffset = entityDamageResult.armorDamageOffset();
+            var result = f + armorDamageOffset;
+            if (armorDamageOffset < 0 && result < 0) {
+                result = f + f * (armorDamageOffset / entityDamageResult.originalArmorDamage());
             }
             if (result > 0) {
                 DecorationOps.callsite().invoke(instance, damageSource, result);
