@@ -257,7 +257,7 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
         }
     }
 
-    @Inject(method = "sendPairingData", cancellable = true, require = 0, at = @At("HEAD"))
+    @Inject(method = "addPairing", cancellable = true, require = 0, at = @At("HEAD"))
     private void arclight$returnIfRemoved(CallbackInfo ci) {
         if (this.entity.isRemoved()) {
             ci.cancel();
