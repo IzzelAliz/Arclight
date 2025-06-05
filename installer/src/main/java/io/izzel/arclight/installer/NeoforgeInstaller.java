@@ -35,6 +35,18 @@ public class NeoforgeInstaller {
 
     @SuppressWarnings("unused")
     public static Map.Entry<String, List<String>> applicationInstall() throws Throwable {
+
+
+    boolean librariesCheck = true;
+    try {
+        java.nio.file.Path confPath = java.nio.file.Paths.get("arclight.conf");
+        if (java.nio.file.Files.exists(confPath)) {
+            ninja.leaping.configurate.hocon.HoconConfigurationLoader loader =
+                ninja.leaping.configurate.hocon.HoconConfigurationLoader.builder().setPath(confPath).build();
+            ninja.leaping.configurate.commented.CommentedConfigurationNode node = loader.load();
+            librariesCheck = node.getNode("libraries-check").getBoolean(true);
+        }
+    } catch (Exception ignored) {}
         InputStream stream = ForgeInstaller.class.getResourceAsStream("/META-INF/installer.json");
         InstallInfo installInfo = new Gson().fromJson(new InputStreamReader(stream), InstallInfo.class);
         List<Supplier<Path>> suppliers = MinecraftProvider.checkMavenNoSource(installInfo.libraries);
