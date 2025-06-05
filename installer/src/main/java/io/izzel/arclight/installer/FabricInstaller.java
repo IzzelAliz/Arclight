@@ -40,7 +40,7 @@ public class FabricInstaller {
         List<Supplier<Path>> suppliers = MinecraftProvider.checkMavenNoSource(installInfo.fabricDeps());
         Path path = Paths.get("libraries/net/fabricmc/fabric-loader", installInfo.installer.fabricLoader, "fabric-loader-" + installInfo.installer.fabricLoader + ".jar");
         var installFabric = !Files.exists(path) || fabricClasspathMissing(path);
-        if (!suppliers.isEmpty() || installFabric) {
+        if (librariesCheck && (!suppliers.isEmpty() || installFabric)) {
             System.out.println("Downloading missing libraries ...");
             ExecutorService pool = Executors.newWorkStealingPool(8);
             CompletableFuture<?>[] array = suppliers.stream().map(MinecraftProvider.reportSupply(pool, System.out::println)).toArray(CompletableFuture[]::new);
