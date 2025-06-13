@@ -87,19 +87,46 @@ public class NeoforgeInstaller {
     }
 
     private static boolean forgeClasspathMissing(Path path) throws Exception {
+        System.out.println("Checking NeoForge installation status...");
+        if (!Files.exists(path)) {
+            System.out.println("NeoForge args.txt not found, will reinstall");
+            return true;
+        }
+        
+        // Only check critical files
+        var criticalFiles = new HashSet<String>();
         for (String arg : Files.lines(path).toList()) {
             if (arg.startsWith("-p ")) {
                 var modules = arg.substring(2).trim();
-                if (!Arrays.stream(modules.split(File.pathSeparator)).map(Paths::get).allMatch(Files::exists)) {
-                    return true;
+                // Only check neoforge-related modules
+                if (modules.contains("neoforge")) {
+                    criticalFiles.add(modules);
                 }
             } else if (arg.startsWith("-DlegacyClassPath")) {
                 var classpath = arg.substring("-DlegacyClassPath=".length()).trim();
-                if (!Arrays.stream(classpath.split(File.pathSeparator)).map(Paths::get).allMatch(Files::exists)) {
+                // Only check neoforge-related jars
+                if (classpath.contains("neoforge")) {
+                    criticalFiles.add(classpath);
+                }
+            }
+        }
+        
+        // Check critical files
+        for (String file : criticalFiles) {
+            var paths = Arrays.stream(file.split(File.pathSeparator))
+                .filter(p -> p.contains("neoforge"))
+                .map(Paths::get)
+                .collect(Collectors.toList());
+                
+            for (var p : paths) {
+                if (!Files.exists(p)) {
+                    System.out.println("Critical file missing: " + p);
                     return true;
                 }
             }
         }
+        
+        System.out.println("NeoForge installation check passed");
         return false;
     }
 
