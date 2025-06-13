@@ -44,7 +44,6 @@
     "core.world.entity.animal.frog.TadpoleMixin_Forge",
     "core.world.entity.item.ItemEntityMixin_Forge",
     "core.world.entity.monster.ZombieMixin_Forge",
-    "core.world.entity.monster.piglin.PiglinAiMixin_Forge",
     "core.world.entity.monster.piglin.PiglinMixin_Forge",
     "core.world.entity.player.PlayerMixin_Forge",
     "core.world.entity.player.ServerPlayerMixin_Forge",

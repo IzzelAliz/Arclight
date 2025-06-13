@@ -275,9 +275,15 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
             disconnect("This server requires you to connect with Velocity.");
             return;
         }
-        String playerName = gameProfile.getName();
+        callPlayerPreLoginEvents(gameProfile);
+        LOGGER.info("UUID of player {} is {}", gameProfile.getName(), gameProfile.getId());
+        this.startClientVerification(gameProfile);
+    }
+
+    private void callPlayerPreLoginEvents(GameProfile profile) throws Exception {
+        String playerName = profile.getName();
         InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
-        UUID uniqueId = gameProfile.getId();
+        UUID uniqueId = profile.getId();
         CraftServer craftServer = (CraftServer) Bukkit.getServer();
         AsyncPlayerPreLoginEvent asyncEvent = new AsyncPlayerPreLoginEvent(playerName, address, uniqueId);
         craftServer.getPluginManager().callEvent(asyncEvent);
@@ -298,14 +304,10 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
             ((MinecraftServerBridge) server).bridge$queuedProcess(waitable);
             if (waitable.get() != PlayerPreLoginEvent.Result.ALLOWED) {
                 disconnect(event.getKickMessage());
-                return;
             }
         } else if (asyncEvent.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) {
             disconnect(asyncEvent.getKickMessage());
-            return;
         }
-        LOGGER.info("UUID of player {} is {}", gameProfile.getName(), gameProfile.getId());
-        this.startClientVerification(gameProfile);
     }
 
     @Inject(method = "handleCustomQueryPacket", cancellable = true, at = @At("HEAD"))

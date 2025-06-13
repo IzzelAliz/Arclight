@@ -116,7 +116,7 @@ public class ArclightRemapper {
         return INSTANCE.toNmsRemapper;
     }
 
-    public static JarRemapper getMojRemapper() {
+    public static JarRemapper getMojMapper() {
         return INSTANCE.fromMojRemapper;
     }
 

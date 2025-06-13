@@ -15,7 +15,7 @@ import java.util.List;
 
 public interface IInventoryBridge {
 
-    int MAX_STACK = 64;
+    int MAX_STACK = 99;
 
     default List<ItemStack> getContents() {
         return new WrappedContents((Container) this);

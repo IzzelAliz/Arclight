@@ -48,18 +48,18 @@ public abstract class PortalShapeMixin implements PortalSizeBridge {
         this.blocks = new BlockStateListPopulator(levelAccessor);
     }
 
-    @Redirect(method = "getDistanceUntilEdgeAboveFrame", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockBehaviour$StatePredicate;test(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Z"))
-    private boolean arclight$captureBlock(BlockBehaviour.StatePredicate predicate, net.minecraft.world.level.block.state.BlockState p_test_1_, BlockGetter p_test_2_, BlockPos pos) {
-        boolean test = predicate.test(p_test_1_, p_test_2_, pos);
+    @Decorate(method = "getDistanceUntilEdgeAboveFrame", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockBehaviour$StatePredicate;test(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Z"))
+    private boolean arclight$captureBlock(BlockBehaviour.StatePredicate predicate, net.minecraft.world.level.block.state.BlockState p_test_1_, BlockGetter p_test_2_, BlockPos pos) throws Throwable {
+        boolean test = (boolean) DecorationOps.callsite().invoke(predicate, p_test_1_, p_test_2_, pos);
         if (test) {
             blocks.setBlock(pos, this.level.getBlockState(pos), 18);
         }
         return test;
     }
 
-    @Redirect(method = "hasTopFrame", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockBehaviour$StatePredicate;test(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Z"))
-    private boolean arclight$captureBlock2(BlockBehaviour.StatePredicate predicate, net.minecraft.world.level.block.state.BlockState p_test_1_, BlockGetter p_test_2_, BlockPos pos) {
-        boolean test = predicate.test(p_test_1_, p_test_2_, pos);
+    @Decorate(method = "hasTopFrame", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockBehaviour$StatePredicate;test(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Z"))
+    private boolean arclight$captureBlock2(BlockBehaviour.StatePredicate predicate, net.minecraft.world.level.block.state.BlockState p_test_1_, BlockGetter p_test_2_, BlockPos pos) throws Throwable {
+        boolean test = (boolean) DecorationOps.callsite().invoke(predicate, p_test_1_, p_test_2_, pos);
         if (test) {
             blocks.setBlock(pos, this.level.getBlockState(pos), 18);
         }

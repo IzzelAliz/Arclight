@@ -2,6 +2,9 @@ package io.izzel.arclight.common.mixin.core.world.entity.monster.piglin;
 
 import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.monster.piglin.PiglinBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import io.izzel.arclight.mixin.Local;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
@@ -63,7 +66,7 @@ public abstract class PiglinAiMixin {
             return;
         }
 
-        if (isLovedByPiglin(itemstack, piglinEntity)) {
+        if (isLovedItem(itemstack) || customLovedByPiglin(itemstack, piglinEntity)) {
             piglinEntity.getBrain().eraseMemory(MemoryModuleType.TIME_TRYING_TO_REACH_ADMIRE_ITEM);
             holdInOffhand(piglinEntity, itemstack);
             admireGoldItem(piglinEntity);
@@ -78,47 +81,47 @@ public abstract class PiglinAiMixin {
         }
     }
 
-    private static boolean isLovedByPiglin(ItemStack itemstack, Piglin piglin) {
-        return isLovedItem(itemstack) || (((PiglinBridge) piglin).bridge$getInterestItems().contains(itemstack.getItem())
+    private static boolean customLovedByPiglin(ItemStack itemstack, Piglin piglin) {
+        return (((PiglinBridge) piglin).bridge$getInterestItems().contains(itemstack.getItem())
             || ((PiglinBridge) piglin).bridge$getAllowedBarterItems().contains(itemstack.getItem()));
     }
 
-    private static boolean isBarterItem(ItemStack itemstack, Piglin piglin) {
-        return isBarterCurrency(itemstack) || ((PiglinBridge) piglin).bridge$getAllowedBarterItems().contains(itemstack.getItem());
+    private static boolean customBarterItem(ItemStack itemstack, Piglin piglin) {
+        return ((PiglinBridge) piglin).bridge$getAllowedBarterItems().contains(itemstack.getItem());
     }
 
-    @Redirect(method = "stopHoldingOffHandItem", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/piglin/PiglinAi;isBarterCurrency(Lnet/minecraft/world/item/ItemStack;)Z"))
-    private static boolean arclight$customBarter(ItemStack stack, Piglin piglin) {
-        return isBarterItem(stack, piglin);
+    @Decorate(method = "stopHoldingOffHandItem", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/piglin/PiglinAi;isBarterCurrency(Lnet/minecraft/world/item/ItemStack;)Z"))
+    private static boolean arclight$customBarter(ItemStack stack, Piglin piglin) throws Throwable {
+        return (boolean) DecorationOps.callsite().invoke(stack) || customBarterItem(stack, piglin);
     }
 
-    @Redirect(method = "stopHoldingOffHandItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/piglin/PiglinAi;throwItems(Lnet/minecraft/world/entity/monster/piglin/Piglin;Ljava/util/List;)V"))
-    private static void arclight$barterEvent(Piglin piglin, List<ItemStack> items) {
-        ItemStack stack = piglin.getItemInHand(InteractionHand.OFF_HAND);
-        PiglinBarterEvent event = CraftEventFactory.callPiglinBarterEvent(piglin, getBarterResponseItems(piglin), stack);
+    @Decorate(method = "stopHoldingOffHandItem", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/monster/piglin/PiglinAi;throwItems(Lnet/minecraft/world/entity/monster/piglin/Piglin;Ljava/util/List;)V"))
+    private static void arclight$barterEvent(Piglin piglin, List<ItemStack> items, @Local(ordinal = -1) ItemStack handheld) throws Throwable {
+        PiglinBarterEvent event = CraftEventFactory.callPiglinBarterEvent(piglin, items, handheld);
         if (!event.isCancelled()) {
-            throwItems(piglin, event.getOutcome().stream().map(CraftItemStack::asNMSCopy).collect(Collectors.toList()));
+            items = event.getOutcome().stream().map(CraftItemStack::asNMSCopy).collect(Collectors.toList());
         }
+        DecorationOps.callsite().invoke(piglin, items);
     }
 
-    @Redirect(method = "stopHoldingOffHandItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/piglin/PiglinAi;isLovedItem(Lnet/minecraft/world/item/ItemStack;)Z"))
-    private static boolean arclight$customLove(ItemStack stack, Piglin piglin) {
-        return isLovedByPiglin(stack, piglin);
+    @Decorate(method = "stopHoldingOffHandItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/piglin/PiglinAi;isLovedItem(Lnet/minecraft/world/item/ItemStack;)Z"))
+    private static boolean arclight$customLove(ItemStack stack, Piglin piglin) throws Throwable {
+        return (boolean) DecorationOps.callsite().invoke(stack) || customLovedByPiglin(stack, piglin);
     }
 
-    @Redirect(method = "wantsToPickup", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/piglin/PiglinAi;isBarterCurrency(Lnet/minecraft/world/item/ItemStack;)Z"))
-    private static boolean arclight$customBanter2(ItemStack stack, Piglin piglin) {
-        return isBarterItem(stack, piglin);
+    @Decorate(method = "wantsToPickup", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/piglin/PiglinAi;isBarterCurrency(Lnet/minecraft/world/item/ItemStack;)Z"))
+    private static boolean arclight$customBanter2(ItemStack stack, Piglin piglin) throws Throwable {
+        return (boolean) DecorationOps.callsite().invoke(stack) || customBarterItem(stack, piglin);
     }
 
-    @Redirect(method = "canAdmire", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/piglin/PiglinAi;isBarterCurrency(Lnet/minecraft/world/item/ItemStack;)Z"))
-    private static boolean arclight$customBanter3(ItemStack stack, Piglin piglin) {
-        return isBarterItem(stack, piglin);
+    @Decorate(method = "canAdmire", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/piglin/PiglinAi;isBarterCurrency(Lnet/minecraft/world/item/ItemStack;)Z"))
+    private static boolean arclight$customBanter3(ItemStack stack, Piglin piglin) throws Throwable {
+        return (boolean) DecorationOps.callsite().invoke(stack) || customBarterItem(stack, piglin);
     }
 
-    @Redirect(method = "isNotHoldingLovedItemInOffHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/piglin/PiglinAi;isLovedItem(Lnet/minecraft/world/item/ItemStack;)Z"))
-    private static boolean arclight$customLove2(ItemStack stack, Piglin piglin) {
-        return isLovedByPiglin(stack, piglin);
+    @Decorate(method = "isNotHoldingLovedItemInOffHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/piglin/PiglinAi;isLovedItem(Lnet/minecraft/world/item/ItemStack;)Z"))
+    private static boolean arclight$customLove2(ItemStack stack, Piglin piglin) throws Throwable {
+        return (boolean) DecorationOps.callsite().invoke(stack) || customLovedByPiglin(stack, piglin);
     }
 
     @Inject(method = "removeOneItemFromItemEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V"))
