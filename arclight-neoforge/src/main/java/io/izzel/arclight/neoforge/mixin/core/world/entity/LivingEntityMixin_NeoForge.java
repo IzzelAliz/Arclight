@@ -2,11 +2,17 @@ package io.izzel.arclight.neoforge.mixin.core.world.entity;
 
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
+import io.izzel.arclight.common.mod.util.NeoForgeDamageModifier;
+import io.izzel.arclight.i18n.ArclightConfig;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -15,6 +21,8 @@ import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.common.CommonHooks;
 import net.neoforged.neoforge.common.damagesource.DamageContainer;
 import net.neoforged.neoforge.event.EventHooks;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,8 +32,11 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin_NeoForge extends EntityMixin_NeoForge implements LivingEntityBridge {
@@ -34,13 +45,80 @@ public abstract class LivingEntityMixin_NeoForge extends EntityMixin_NeoForge im
     @Shadow public abstract boolean isSleeping();
     @Shadow public abstract Collection<MobEffectInstance> getActiveEffects();
     @Shadow protected abstract void dropExperience(@Nullable Entity entity);
+    @Shadow public abstract boolean hasEffect(Holder<MobEffect> effect);
+    @Shadow public abstract @Nullable MobEffectInstance getEffect(Holder<MobEffect> effect);
     // @formatter:on
+
+    private List<NeoForgeDamageModifier> forgeModifiers = new ArrayList<>();
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void arclight$init(CallbackInfo ci) {
+        // Add NeoForge damage modifiers
+        forgeModifiers.add(new NeoForgeDamageModifier(
+            damage -> {
+                // Apply NeoForge's damage resistance
+                if (this.hasEffect(MobEffects.DAMAGE_RESISTANCE)) {
+                    MobEffectInstance effect = this.getEffect(MobEffects.DAMAGE_RESISTANCE);
+                    if (effect != null) {
+                        int level = effect.getAmplifier();
+                        return damage * (1.0f - (level + 1) * 0.2f);
+                    }
+                }
+                return damage;
+            },
+            "forge_resistance"
+        ));
+    }
 
     @Inject(method = "hurt", cancellable = true, at = @At("HEAD"))
     private void arclight$livingHurt(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        if (CommonHooks.onEntityIncomingDamage((LivingEntity) (Object) this, new DamageContainer(source, amount))) {
-            cir.setReturnValue(false);
+        if (!ArclightConfig.spec().getCompat().isUseNeoForgeDamageCalculation()) {
+            return;
         }
+
+        // 1. Trigger NeoForge damage event
+        DamageContainer container = new DamageContainer(source, amount);
+        if (CommonHooks.onEntityIncomingDamage((LivingEntity) (Object) this, container)) {
+            cir.setReturnValue(false);
+            return;
+        }
+
+        // 2. Apply NeoForge damage modifiers
+        float modifiedAmount = amount; // Use original amount since DamageContainer doesn't have getAmount()
+        for (NeoForgeDamageModifier modifier : forgeModifiers) {
+            modifiedAmount = (float) modifier.apply(modifiedAmount);
+        }
+
+        // 3. Trigger Bukkit event
+        EntityDamageEvent event = CraftEventFactory.handleLivingEntityDamageEvent(
+            (LivingEntity) (Object) this,
+            source,
+            modifiedAmount,
+            0.0f, // freezingModifier
+            0.0f, // hardHatModifier
+            0.0f, // blockingModifier
+            0.0f, // armorModifier
+            0.0f, // resistanceModifier
+            0.0f, // magicModifier
+            0.0f, // absorptionModifier
+            f -> f, // freezing
+            f -> f, // hardHat
+            f -> f, // blocking
+            f -> f, // armor
+            f -> f, // resistance
+            f -> f, // magic
+            f -> f  // absorption
+        );
+
+        // 4. Handle event result
+        if (event.isCancelled()) {
+            cir.setReturnValue(false);
+            return;
+        }
+
+        // 5. Update final damage value
+        // Since DamageContainer doesn't have setAmount(), we'll just use the event's final damage
+        amount = (float) event.getFinalDamage();
     }
 
     @Redirect(method = "dropAllDeathLoot", at = @At(value = "INVOKE", ordinal = 0, remap = false, target = "Lnet/minecraft/world/entity/LivingEntity;captureDrops(Ljava/util/Collection;)Ljava/util/Collection;"))
@@ -105,5 +183,10 @@ public abstract class LivingEntityMixin_NeoForge extends EntityMixin_NeoForge im
 
     @Override
     public void bridge$common$finishCaptureAndFireEvent(DamageSource damageSource) {
+    }
+
+    @Override
+    public List<NeoForgeDamageModifier> bridge$getForgeModifiers() {
+        return this.forgeModifiers;
     }
 }
