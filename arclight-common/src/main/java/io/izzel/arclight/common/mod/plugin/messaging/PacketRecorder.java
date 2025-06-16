@@ -17,6 +17,10 @@ public class PacketRecorder {
     }
 
     public void recordUnknown(ResourceLocation id) {
+        if (id == null) {
+            ArclightServer.LOGGER.debug("Received packet with null id. This should never happen.");
+            return;
+        }
         int num = unknown.getInt(id);
         unknown.put(id, num + 1);
     }

@@ -1,10 +1,8 @@
 package io.izzel.arclight.neoforge;
 
 import io.izzel.arclight.api.Arclight;
-import io.izzel.arclight.common.mod.ArclightCommon;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.neoforge.mod.NeoForgeArclightServer;
-import io.izzel.arclight.neoforge.mod.NeoForgeCommonImpl;
 import io.izzel.arclight.neoforge.mod.event.ArclightEventDispatcherRegistry;
 import net.neoforged.fml.common.Mod;
 import org.apache.logging.log4j.Level;

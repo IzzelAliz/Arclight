@@ -66,6 +66,7 @@ public abstract class BucketItemMixin implements BucketItemBridge {
         arclight$setDirection(null);
         arclight$setClick(null);
         arclight$setHand(null);
+        arclight$setStack(null);
     }
 
     @ModifyArg(method = "use", index = 2, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemUtils;createFilledResult(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/item/ItemStack;"))

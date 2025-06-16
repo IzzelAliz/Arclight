@@ -47,17 +47,12 @@ public abstract class ProjectileMixin extends EntityMixin {
         }
     }
 
-    private transient boolean arclight$hitEventFired = false;
-
     @Inject(method = "hitTargetOrDeflectSelf", cancellable = true, at = @At("HEAD"))
     private void arclight$hitEvent(HitResult hitResult, CallbackInfoReturnable<ProjectileDeflection> cir) {
-        if (!arclight$hitEventFired) {
-            arclight$hitEventFired = true;
-            org.bukkit.event.entity.ProjectileHitEvent event = CraftEventFactory.callProjectileHitEvent((Projectile) (Object) this, hitResult);
-            this.hitCancelled = event != null && event.isCancelled();
-            if (!(hitResult.getType() == HitResult.Type.BLOCK || !this.hitCancelled)) {
-                cir.setReturnValue(ProjectileDeflection.NONE);
-            }
+        org.bukkit.event.entity.ProjectileHitEvent event = CraftEventFactory.callProjectileHitEvent((Projectile) (Object) this, hitResult);
+        this.hitCancelled = event != null && event.isCancelled();
+        if (!(hitResult.getType() == HitResult.Type.BLOCK || !this.hitCancelled)) {
+            cir.setReturnValue(ProjectileDeflection.NONE);
         }
     }
 }
