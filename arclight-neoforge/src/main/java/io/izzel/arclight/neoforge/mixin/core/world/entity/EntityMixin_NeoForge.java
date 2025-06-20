@@ -48,6 +48,8 @@ public abstract class EntityMixin_NeoForge implements EntityBridge, IEntityExten
     @Shadow public abstract double getZ();
     // @formatter:on
 
+    @Shadow public int invulnerableTime;
+
     @Override
     public void bridge$revive() {
         this.revive();

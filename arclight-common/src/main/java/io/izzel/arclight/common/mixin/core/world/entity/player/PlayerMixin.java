@@ -11,6 +11,7 @@ import io.izzel.arclight.common.bridge.core.util.FoodStatsBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.LivingEntityMixin;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
@@ -231,6 +232,11 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                 //return amount == 0.0F ? false : super.attackEntityFrom(source, amount);
             }
         }
+    }
+
+    @Inject(method = "hurtCurrentlyUsedShield", at = @At("HEAD"))
+    private void arclight$onHurtCurrentlyUsedShield(float f, CallbackInfo ci) {
+        ArclightServer.LOGGER.warn("Hurt currently used shield with damage " + f, new IllegalArgumentException());
     }
 
     /**

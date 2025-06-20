@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.bukkit;
+package io.izzel.arclight.common.mixin.bukkit.event;
 
 import org.bukkit.Bukkit;
 import org.bukkit.event.world.AsyncStructureSpawnEvent;

@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.bukkit;
+package io.izzel.arclight.common.mixin.bukkit.event;
 
 import com.google.common.base.Function;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;

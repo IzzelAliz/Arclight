@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Either;
@@ -8,9 +7,7 @@ import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.network.play.ServerGamePacketListenerBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
-import io.izzel.arclight.common.mod.util.EntityDamageResult;
 import io.izzel.arclight.common.util.IteratorUtil;
-import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
@@ -28,10 +25,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.DamageTypeTags;
-import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.damagesource.CombatRules;
 import net.minecraft.world.damagesource.CombatTracker;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffect;
@@ -53,7 +48,6 @@ import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Equipable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -68,7 +62,6 @@ import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityKnockbackEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
@@ -92,15 +85,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @SuppressWarnings({"ConstantConditions", "Guava"})
 @Mixin(LivingEntity.class)
@@ -117,67 +102,29 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow protected abstract boolean isAlwaysExperienceDropper();
     @Shadow public net.minecraft.world.entity.player.Player lastHurtByPlayer;
     @Shadow public int deathTime;
-    @Shadow protected boolean dead;
     @Shadow public boolean effectsDirty;
     @Shadow public abstract boolean removeAllEffects();
     @Shadow @Final public static EntityDataAccessor<Float> DATA_HEALTH_ID;
     @Shadow public abstract boolean isSleeping();
-    @Shadow public abstract void stopSleeping();
     @Shadow protected int noActionTime;
     @Shadow public abstract net.minecraft.world.item.ItemStack getItemBySlot(EquipmentSlot slotIn);
-    @Shadow public abstract boolean isDamageSourceBlocked(DamageSource damageSourceIn);
-    @Shadow protected abstract void hurtCurrentlyUsedShield(float damage);
-    @Shadow protected abstract void blockUsingShield(LivingEntity entityIn);
-    @Shadow public float lastHurt;
-    @Shadow public int hurtDuration;
-    @Shadow public int hurtTime;
-    @Shadow public abstract void setLastHurtByMob(@Nullable LivingEntity livingBase);
     @Shadow @Nullable protected abstract SoundEvent getDeathSound();
-    @Shadow protected abstract float getSoundVolume();
-    @Shadow public abstract float getVoicePitch();
-    @Shadow public abstract void die(DamageSource cause);
-    @Shadow protected abstract void playHurtSound(DamageSource source);
-    @Shadow private DamageSource lastDamageSource;
-    @Shadow private long lastDamageStamp;
-    @Shadow protected abstract float getDamageAfterArmorAbsorb(DamageSource source, float damage);
     @Shadow public abstract net.minecraft.world.item.ItemStack getItemInHand(InteractionHand hand);
-    @Shadow protected abstract float getDamageAfterMagicAbsorb(DamageSource source, float damage);
-    @Shadow public abstract float getAbsorptionAmount();
-    @Shadow public abstract void setAbsorptionAmount(float amount);
     @Shadow public abstract CombatTracker getCombatTracker();
     @Shadow @Final private AttributeMap attributes;
-    @Shadow public abstract boolean onClimbable();
-    @Shadow protected ItemStack useItem;
     @Shadow public abstract void take(Entity entityIn, int quantity);
     @Shadow public abstract ItemStack getMainHandItem();
-    @Shadow public abstract void setSprinting(boolean sprinting);
-    @Shadow public abstract void setLastHurtMob(Entity entityIn);
-    @Shadow public abstract void setItemInHand(InteractionHand hand, ItemStack stack);
-    @Shadow @Nullable public abstract LivingEntity getKillCredit();
-    @Shadow protected int deathScore;
-    @Shadow public abstract Collection<MobEffectInstance> getActiveEffects();
-    @Shadow public abstract void setArrowCount(int count);
     @Shadow @Nullable public LivingEntity lastHurtByMob;
     @Shadow public CombatTracker combatTracker;
     @Shadow public abstract ItemStack getOffhandItem();
     @Shadow public abstract Optional<BlockPos> getSleepingPos();
     @Shadow @Final private static EntityDataAccessor<Boolean> DATA_EFFECT_AMBIENCE_ID;
     @Shadow @Final public Map<MobEffect, MobEffectInstance> activeEffects;
-    @Shadow protected abstract void onEffectRemoved(MobEffectInstance effect);
-    @Shadow protected abstract void updateInvisibilityStatus();
-    @Shadow public abstract boolean canBeAffected(MobEffectInstance potioneffectIn);
-    @Shadow protected abstract void createWitherRose(@Nullable LivingEntity entitySource);
-    @Shadow protected abstract void hurtArmor(DamageSource damageSource, float damage);
     @Shadow public abstract boolean isDeadOrDying();
     @Shadow public abstract int getArrowCount();
     @Shadow @Final public static EntityDataAccessor<Integer> DATA_ARROW_COUNT_ID;
     @Shadow public abstract void setItemSlot(EquipmentSlot slotIn, ItemStack stack);
-    @Shadow protected abstract void onEffectUpdated(MobEffectInstance p_147192_, boolean p_147193_, @org.jetbrains.annotations.Nullable Entity p_147194_);
-    @Shadow protected abstract void onEffectAdded(MobEffectInstance p_147190_, @org.jetbrains.annotations.Nullable Entity p_147191_);
     @Shadow public abstract void knockback(double p_147241_, double p_147242_, double p_147243_);
-    @Shadow public abstract boolean canAttack(LivingEntity p_21171_);
-    @Shadow public abstract boolean hasLineOfSight(Entity p_147185_);
-    @Shadow protected abstract void hurtHelmet(DamageSource p_147213_, float p_147214_);
     @Shadow public abstract void stopUsingItem();
     @Shadow protected abstract boolean doesEmitEquipEvent(EquipmentSlot p_217035_);
     @Shadow protected abstract void verifyEquippedItem(ItemStack p_181123_);
@@ -187,23 +134,15 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow protected abstract SoundEvent getDrinkingSound(ItemStack p_21174_);
     @Shadow public abstract SoundEvent getEatingSound(ItemStack p_21202_);
     @Shadow public abstract InteractionHand getUsedItemHand();
-    @Shadow @Final public WalkAnimationState walkAnimation;
     @Shadow public int invulnerableDuration;
-    @Shadow public abstract void indicateDamage(double p_270514_, double p_270826_);
     @Shadow protected void actuallyHurt(DamageSource p_21240_, float p_21241_) {}
     @Shadow public abstract void skipDropExperience();
-    @Shadow public abstract AttributeMap getAttributes();
-    @Shadow protected abstract void updateGlowingStatus();
     @Shadow public abstract int getExperienceReward(ServerLevel serverLevel, @org.jetbrains.annotations.Nullable Entity entity);
-    @Shadow protected abstract void triggerOnDeathMobEffects(Entity.RemovalReason removalReason);
     @Shadow @org.jetbrains.annotations.Nullable public abstract AttributeInstance getAttribute(Holder<Attribute> holder);
-    @Shadow public abstract boolean hasEffect(Holder<MobEffect> holder);
-    @Shadow @org.jetbrains.annotations.Nullable public abstract MobEffectInstance getEffect(Holder<MobEffect> holder);
     @Shadow public abstract double getAttributeValue(Holder<Attribute> holder);
     @Shadow public abstract boolean removeEffect(Holder<MobEffect> holder);
     @Shadow public abstract boolean addEffect(MobEffectInstance mobEffectInstance, @org.jetbrains.annotations.Nullable Entity entity);
     @Shadow @org.jetbrains.annotations.Nullable public abstract MobEffectInstance removeEffectNoUpdate(Holder<MobEffect> holder);
-    @Shadow public abstract int getArmorValue();
     @Shadow public abstract EquipmentSlot getEquipmentSlotForItem(ItemStack itemStack);
     @Shadow protected abstract void dropAllDeathLoot(ServerLevel serverLevel, DamageSource damageSource);
     @Shadow public abstract void onEquipItem(EquipmentSlot slot, ItemStack original, ItemStack newStack);
@@ -533,149 +472,11 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         }
     }
 
-    @Unique protected transient EntityDamageResult entityDamageResult;
+    protected transient boolean arclight$damageResult;
 
-    @Decorate(method = "hurt", inject = true, at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/LivingEntity;noActionTime:I"))
-    private void arclight$entityDamageEvent(DamageSource damagesource, float originalDamage) throws Throwable {
+    @Inject(method = "hurt", at = @At("HEAD"))
+    private void arclight$resetDamageResult(DamageSource damageSource, float f, CallbackInfoReturnable<Boolean> cir) {
         arclight$damageResult = false;
-        entityDamageResult = null;
-        final boolean human = (Object) this instanceof net.minecraft.world.entity.player.Player;
-
-        float damage = originalDamage;
-
-        Function<Double, Double> blocking = f -> -((this.isDamageSourceBlocked(damagesource)) ? f : 0.0);
-        float blockingModifier = blocking.apply((double) damage).floatValue();
-        damage += blockingModifier;
-
-        Function<Double, Double> freezing = f -> {
-            if (damagesource.is(DamageTypeTags.IS_FREEZING) && this.getType().is(EntityTypeTags.FREEZE_HURTS_EXTRA_TYPES)) {
-                return -(f - (f * 5.0F));
-            }
-            return -0.0;
-        };
-        float freezingModifier = freezing.apply((double) damage).floatValue();
-        damage += freezingModifier;
-
-        Function<Double, Double> hardHat = f -> {
-            if (damagesource.is(DamageTypeTags.DAMAGES_HELMET) && !this.getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {
-                return -(f - (f * 0.75F));
-            }
-            return -0.0;
-        };
-        float hardHatModifier = hardHat.apply((double) damage).floatValue();
-        damage += hardHatModifier;
-
-        if ((float) this.invulnerableTime > (float) this.invulnerableDuration / 2.0F && !damagesource.is(DamageTypeTags.BYPASSES_COOLDOWN)) {
-            if (damage <= this.lastHurt) {
-                if (damagesource.getEntity() instanceof net.minecraft.world.entity.player.Player) {
-                    ((net.minecraft.world.entity.player.Player) damagesource.getEntity()).resetAttackStrengthTicker();
-                }
-                return;
-            }
-        }
-
-        Function<Double, Double> armor = f -> {
-            if (!damagesource.is(DamageTypeTags.BYPASSES_ARMOR)) {
-                return -(f - CombatRules.getDamageAfterAbsorb((LivingEntity) (Object) this, f.floatValue(), damagesource, (float) this.getArmorValue(), (float) this.getAttributeValue(Attributes.ARMOR_TOUGHNESS)));
-            }
-
-            return -0.0;
-        };
-        float originalArmorDamage = damage;
-        float armorModifier = armor.apply((double) damage).floatValue();
-        damage += armorModifier;
-
-        Function<Double, Double> resistance = f -> {
-            if (!damagesource.is(DamageTypeTags.BYPASSES_EFFECTS) && this.hasEffect(MobEffects.DAMAGE_RESISTANCE) && !damagesource.is(DamageTypeTags.BYPASSES_RESISTANCE)) {
-                int i = (this.getEffect(MobEffects.DAMAGE_RESISTANCE).getAmplifier() + 1) * 5;
-                int j = 25 - i;
-                float f1 = f.floatValue() * (float) j;
-                return -(f - (f1 / 25.0F));
-            }
-            return -0.0;
-        };
-        float resistanceModifier = resistance.apply((double) damage).floatValue();
-        damage += resistanceModifier;
-
-        Function<Double, Double> magic = f -> {
-            float l;
-            if (this.level() instanceof ServerLevel serverLevel) {
-                l = EnchantmentHelper.getDamageProtection(serverLevel, (LivingEntity) (Object) this, damagesource);
-            } else {
-                l = 0.0F;
-            }
-
-            if (l > 0.0F) {
-                return -(f - CombatRules.getDamageAfterMagicAbsorb(f.floatValue(), l));
-            }
-            return -0.0;
-        };
-        float magicModifier = magic.apply((double) damage).floatValue();
-        damage += magicModifier;
-
-        Function<Double, Double> absorption = f -> -(Math.max(f - Math.max(f - this.getAbsorptionAmount(), 0.0F), 0.0F));
-        float absorptionModifier = absorption.apply((double) damage).floatValue();
-
-        EntityDamageEvent event = CraftEventFactory.handleLivingEntityDamageEvent((LivingEntity) (Object) this, damagesource, originalDamage, freezingModifier, hardHatModifier, blockingModifier, armorModifier, resistanceModifier, magicModifier, absorptionModifier, freezing, hardHat, blocking, armor, resistance, magic, absorption);
-        if (damagesource.getEntity() instanceof net.minecraft.world.entity.player.Player) {
-            ((net.minecraft.world.entity.player.Player) damagesource.getEntity()).resetAttackStrengthTicker();
-        }
-
-        if (event.isCancelled()) {
-            DecorationOps.cancel().invoke(false);
-            return;
-        }
-
-        damage = (float) event.getFinalDamage();
-        float damageOffset = damage - originalDamage;
-        float armorDamage = (float) (event.getDamage() + event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) + event.getDamage(EntityDamageEvent.DamageModifier.HARD_HAT));
-        entityDamageResult = new
-
-            EntityDamageResult(
-            Math.abs(damageOffset) > 1E-6,
-            originalDamage,
-            damage,
-            damageOffset,
-            originalArmorDamage,
-            armorDamage - originalArmorDamage,
-            hardHatModifier > 0 && damage <= 0,
-            armorModifier > 0 && (event.getDamage() + event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) + event.getDamage(EntityDamageEvent.DamageModifier.HARD_HAT)) <= 0,
-            blockingModifier < 0 && event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) >= 0
-        );
-
-        if (damage > 0 || !human) {
-            arclight$damageResult = true;
-        } else {
-            if (event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) < 0) {
-                arclight$damageResult = true;
-            } else {
-                arclight$damageResult = originalDamage > 0;
-            }
-        }
-        if (damage == 0) {
-            originalDamage = 0;
-            DecorationOps.blackhole().invoke(originalDamage);
-        }
-    }
-
-    @Decorate(method = "hurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;isDamageSourceBlocked(Lnet/minecraft/world/damagesource/DamageSource;)Z"))
-    private boolean arclight$cancelShieldBlock(LivingEntity instance, DamageSource damageSource,
-                                               @Local(ordinal = -1) boolean blocked) throws Throwable {
-        return (entityDamageResult == null || !entityDamageResult.blockingCancelled()) && (boolean) DecorationOps.callsite().invoke(instance, damageSource);
-    }
-
-    @Decorate(method = "hurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurtHelmet(Lnet/minecraft/world/damagesource/DamageSource;F)V"))
-    private void arclight$cancelHurtHelmet(LivingEntity instance, DamageSource damageSource, float f) throws
-        Throwable {
-        if (entityDamageResult == null || !entityDamageResult.helmetHurtCancelled()) {
-            var result = f + entityDamageResult.armorDamageOffset();
-            if (entityDamageResult.armorDamageOffset() < 0 && result < 0) {
-                result = f + f * (entityDamageResult.armorDamageOffset() / entityDamageResult.originalArmorDamage());
-            }
-            if (result > 0) {
-                DecorationOps.callsite().invoke(instance, damageSource, result);
-            }
-        }
     }
 
     @Decorate(method = "hurt", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/LivingEntity;invulnerableTime:I"),
@@ -685,48 +486,14 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         return result + 10 - (int) (this.invulnerableDuration / 2.0F);
     }
 
-    @Decorate(method = "hurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;actuallyHurt(Lnet/minecraft/world/damagesource/DamageSource;F)V"))
-    private void arclight$returnIfBlocked(LivingEntity instance, DamageSource damageSource, float f) throws
-        Throwable {
-        DecorationOps.callsite().invoke(instance, damageSource, f);
-        if (!arclight$damageResult) {
-            DecorationOps.cancel().invoke(false);
-            return;
-        }
-        DecorationOps.blackhole().invoke();
+    @Inject(method = "actuallyHurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getCombatTracker()Lnet/minecraft/world/damagesource/CombatTracker;"))
+    private void arclight$setDamageResult(DamageSource damageSource, float f, CallbackInfo ci) {
+        arclight$damageResult = true;
     }
 
     @Inject(method = "hurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDD)V"))
     private void arclight$knockbackCause(DamageSource damageSource, float f, CallbackInfoReturnable<Boolean> cir) {
         this.bridge$pushKnockbackCause(damageSource.getEntity(), damageSource.getEntity() == null ? EntityKnockbackEvent.KnockbackCause.DAMAGE : EntityKnockbackEvent.KnockbackCause.ENTITY_ATTACK);
-    }
-
-    @Decorate(method = "actuallyHurt", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getCombatTracker()Lnet/minecraft/world/damagesource/CombatTracker;"))
-    private void arclight$setDamageResult(DamageSource damageSource, float f) throws Throwable {
-        arclight$damageResult = true;
-        if (entityDamageResult != null && entityDamageResult.damageOverride()) {
-            float newDamage;
-            if (ArclightConfig.spec().getCompat().isExactPluginEntityDamageControl()) {
-                newDamage = entityDamageResult.finalDamage();
-            } else {
-                newDamage = f + entityDamageResult.damageOffset();
-                if (newDamage < 0 && entityDamageResult.damageOffset() < 0) {
-                    newDamage = f + f * (entityDamageResult.damageOffset() / entityDamageResult.originalDamage());
-                }
-            }
-            f = newDamage;
-            DecorationOps.blackhole().invoke(f);
-        }
-    }
-
-    protected transient boolean arclight$damageResult;
-
-    @Decorate(method = "getDamageAfterArmorAbsorb", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurtArmor(Lnet/minecraft/world/damagesource/DamageSource;F)V"))
-    private void arclight$muteDamageArmor(LivingEntity entity, DamageSource damageSource, float damage) throws
-        Throwable {
-        if (entityDamageResult == null || !entityDamageResult.armorHurtCancelled()) {
-            DecorationOps.callsite().invoke(entity, damageSource, damage);
-        }
     }
 
     private transient EntityRegainHealthEvent.RegainReason arclight$regainReason;

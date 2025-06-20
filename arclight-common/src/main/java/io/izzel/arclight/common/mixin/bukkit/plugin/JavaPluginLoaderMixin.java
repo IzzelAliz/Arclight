@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.bukkit;
+package io.izzel.arclight.common.mixin.bukkit.plugin;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;

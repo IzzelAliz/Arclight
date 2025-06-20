@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.bukkit;
+package io.izzel.arclight.common.mixin.bukkit.plugin;
 
 import io.izzel.arclight.common.mod.util.remapper.generated.RemappingURLClassLoader;
 import org.spongepowered.asm.mixin.Mixin;

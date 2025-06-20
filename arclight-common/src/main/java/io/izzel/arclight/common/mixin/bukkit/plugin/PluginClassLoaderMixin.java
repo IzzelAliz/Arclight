@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.bukkit;
+package io.izzel.arclight.common.mixin.bukkit.plugin;
 
 import com.google.common.collect.Iterators;
 import com.google.common.io.ByteStreams;
