@@ -5,7 +5,6 @@ import net.minecraft.world.CompoundContainer;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.inventory.MenuType;
 import org.bukkit.craftbukkit.v.inventory.CraftInventory;
@@ -27,7 +26,7 @@ public abstract class ChestContainerMixin extends AbstractContainerMenuMixin {
     @Shadow @Final private Container container;
     // @formatter:on
 
-    private CraftInventoryView bukkitEntity;
+    private CraftInventoryView<ChestMenu, ?> bukkitEntity;
     private Inventory playerInventory;
 
     @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;I)V", at = @At("RETURN"))
@@ -41,7 +40,7 @@ public abstract class ChestContainerMixin extends AbstractContainerMenuMixin {
     }
 
     @Override
-    public CraftInventoryView getBukkitView() {
+    public CraftInventoryView<ChestMenu, ?> getBukkitView() {
         if (bukkitEntity != null) {
             return bukkitEntity;
         }
@@ -55,7 +54,7 @@ public abstract class ChestContainerMixin extends AbstractContainerMenuMixin {
             inventory = new CraftInventory(this.container);
         }
 
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (AbstractContainerMenu) (Object) this);
+        bukkitEntity = new CraftInventoryView<>(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (ChestMenu) (Object) this);
         return bukkitEntity;
     }
 }

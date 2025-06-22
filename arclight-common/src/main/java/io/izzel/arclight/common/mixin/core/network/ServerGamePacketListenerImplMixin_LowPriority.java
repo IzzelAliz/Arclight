@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Set;
 
 @Mixin(value = ServerGamePacketListenerImpl.class, priority = 1500)
-public abstract class ServerGamePacketListenerImplMixin_HighPriority implements ServerGamePacketListenerBridge {
+public abstract class ServerGamePacketListenerImplMixin_LowPriority implements ServerGamePacketListenerBridge {
 
     @Shadow private Vec3 awaitingPositionFromClient;
 

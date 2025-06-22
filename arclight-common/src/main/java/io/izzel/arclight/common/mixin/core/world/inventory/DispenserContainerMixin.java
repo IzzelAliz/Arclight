@@ -4,7 +4,6 @@ import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.DispenserMenu;
 import org.bukkit.craftbukkit.v.inventory.CraftInventory;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
@@ -23,7 +22,7 @@ public abstract class DispenserContainerMixin extends AbstractContainerMenuMixin
     @Shadow @Final public Container dispenser;
     // @formatter:on
 
-    private CraftInventoryView bukkitEntity;
+    private CraftInventoryView<DispenserMenu, ?> bukkitEntity;
     private Inventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;)V", at = @At("RETURN"))
@@ -37,13 +36,13 @@ public abstract class DispenserContainerMixin extends AbstractContainerMenuMixin
     }
 
     @Override
-    public CraftInventoryView getBukkitView() {
+    public CraftInventoryView<DispenserMenu, ?> getBukkitView() {
         if (bukkitEntity != null) {
             return bukkitEntity;
         }
 
         CraftInventory inventory = new CraftInventory(this.dispenser);
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (AbstractContainerMenu) (Object) this);
+        bukkitEntity = new CraftInventoryView<>(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (DispenserMenu) (Object) this);
         return bukkitEntity;
     }
 }

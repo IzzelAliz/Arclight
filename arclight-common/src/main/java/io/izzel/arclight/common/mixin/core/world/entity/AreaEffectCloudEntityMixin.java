@@ -26,7 +26,6 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Mixin(AreaEffectCloud.class)
 public abstract class AreaEffectCloudEntityMixin extends EntityMixin implements AreaEffectCloudEntityBridge {
@@ -42,21 +41,39 @@ public abstract class AreaEffectCloudEntityMixin extends EntityMixin implements 
                                                     @Local(ordinal = 0) float radius,
                                                     @Local(ordinal = -1) List<MobEffectInstance> effects) throws Throwable {
         var entities = (List<LivingEntity>) DecorationOps.callsite().invoke(instance, cl, aabb);
-        var affected = entities.stream().filter(it -> !this.victims.containsKey(it) && it.isAffectedByPotions())
-            .filter(it -> effects.stream().anyMatch(it::canBeAffected))
-            .filter(it -> {
-                double d3 = it.getX() - this.getX();
-                double d4 = it.getZ() - this.getZ();
-                double d5 = d3 * d3 + d4 * d4;
-                return d5 <= (double) (radius * radius);
-            })
-            .map(it -> (org.bukkit.entity.LivingEntity) it.bridge$getBukkitEntity())
-            .toList();
-        var event = CraftEventFactory.callAreaEffectCloudApplyEvent((AreaEffectCloud) (Object) this, affected);
-        if (!event.isCancelled()) {
-            return event.getAffectedEntities().stream().map(it -> ((CraftLivingEntity) it).getHandle()).collect(Collectors.toCollection(ArrayList::new));
+        final var affected = new ArrayList<org.bukkit.entity.LivingEntity>();
+        for (var entity: entities) {
+            if (this.victims.containsKey(entity) || !entity.isAffectedByPotions()) {
+                continue;
+            }
+            boolean hasEffect = false;
+            for (var effect: effects) {
+                if (entity.canBeAffected(effect)) {
+                    hasEffect = true;
+                    break;
+                }
+            }
+            if (!hasEffect) {
+                continue;
+            }
+            double d3 = entity.getX() - this.getX();
+            double d4 = entity.getZ() - this.getZ();
+            double d5 = d3 * d3 + d4 * d4;
+            if (d5 > (double) (radius * radius)) {
+                continue;
+            }
+            affected.add((org.bukkit.entity.LivingEntity) entity.bridge$getBukkitEntity());
         }
-        return new ArrayList<>();
+        var event = CraftEventFactory.callAreaEffectCloudApplyEvent((AreaEffectCloud) (Object) this, affected);
+        if (event.isCancelled()) {
+            return new ArrayList<>(0);
+        }
+        final var eventRes = event.getAffectedEntities();
+        final var result = new ArrayList<LivingEntity>(eventRes.size());
+        for (var eventResult: event.getAffectedEntities()) {
+            result.add(((CraftLivingEntity) eventResult).getHandle());
+        }
+        return result;
     }
 
     @Decorate(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)Z"))

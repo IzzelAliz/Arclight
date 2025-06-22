@@ -28,7 +28,7 @@ public abstract class PlayerContainerMixin extends AbstractContainerMenuMixin {
     @Shadow @Final private ResultContainer resultSlots;
     // @formatter:on
 
-    private CraftInventoryView bukkitEntity;
+    private CraftInventoryView<InventoryMenu, ?> bukkitEntity;
     private Inventory playerInventory;
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -45,13 +45,13 @@ public abstract class PlayerContainerMixin extends AbstractContainerMenuMixin {
     }
 
     @Override
-    public CraftInventoryView getBukkitView() {
+    public CraftInventoryView<InventoryMenu, ?> getBukkitView() {
         if (bukkitEntity != null) {
             return bukkitEntity;
         }
 
         CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftSlots, this.resultSlots);
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (AbstractContainerMenu) (Object) this);
+        bukkitEntity = new CraftInventoryView<>(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (InventoryMenu) (Object) this);
         return bukkitEntity;
     }
 }

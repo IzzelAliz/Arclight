@@ -33,7 +33,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -48,7 +47,7 @@ public abstract class CraftingMenuMixin extends AbstractContainerMenuMixin imple
     @Accessor("access") public abstract ContainerLevelAccess bridge$getWorldPos();
     // @formatter:on
 
-    private CraftInventoryView bukkitEntity;
+    private CraftInventoryView<CraftingMenu, ?> bukkitEntity;
     private Inventory playerInventory;
 
     @Inject(method = "stillValid", cancellable = true, at = @At("HEAD"))
@@ -61,13 +60,13 @@ public abstract class CraftingMenuMixin extends AbstractContainerMenuMixin imple
         ArclightCaptures.captureWorkbenchContainer((CraftingMenu) (Object) this);
     }
 
-    private static transient boolean arclight$isRepair;
+    private static boolean arclight$isRepair;
 
-    @Redirect(method = "slotChangedCraftingGrid", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Optional;isPresent()Z"))
-    private static boolean arclight$testRepair(Optional<RecipeHolder<CraftingRecipe>> optional, AbstractContainerMenu abstractContainerMenu, Level level, Player player, CraftingContainer craftingContainer) {
+    @Decorate(method = "slotChangedCraftingGrid", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Optional;isPresent()Z"))
+    private static boolean arclight$testRepair(Optional<RecipeHolder<CraftingRecipe>> optional, AbstractContainerMenu menu, Level level, Player player, CraftingContainer craftingContainer) throws Throwable {
         ((IInventoryBridge) craftingContainer).setCurrentRecipe(optional.orElse(null));
         arclight$isRepair = optional.map(RecipeHolder::value).orElse(null) instanceof RepairItemRecipe;
-        return optional.isPresent();
+        return (boolean) DecorationOps.callsite().invoke(optional);
     }
 
     @Decorate(method = "slotChangedCraftingGrid", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/ResultContainer;setItem(ILnet/minecraft/world/item/ItemStack;)V"))
@@ -85,13 +84,13 @@ public abstract class CraftingMenuMixin extends AbstractContainerMenuMixin imple
     }
 
     @Override
-    public CraftInventoryView getBukkitView() {
+    public CraftInventoryView<CraftingMenu, ?> getBukkitView() {
         if (bukkitEntity != null) {
             return bukkitEntity;
         }
 
         CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftSlots, this.resultSlots);
-        bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (AbstractContainerMenu) (Object) this);
+        bukkitEntity = new CraftInventoryView<>(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (CraftingMenu) (Object) this);
         return bukkitEntity;
     }
 }

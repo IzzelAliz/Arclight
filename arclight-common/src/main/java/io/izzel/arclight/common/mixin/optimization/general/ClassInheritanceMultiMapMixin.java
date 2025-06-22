@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 @Mixin(ClassInstanceMultiMap.class)
-@LoadIfMod(modid = {ModIds.LITHIUM, ModIds.CANARY, ModIds.RADIUM}, condition = LoadIfMod.ModCondition.ABSENT)
+@LoadIfMod(modid = {ModIds.LITHIUM, ModIds.CANARY, ModIds.RADIUM, ModIds.RECRUITS}, condition = LoadIfMod.ModCondition.ABSENT)
 public class ClassInheritanceMultiMapMixin<T> {
 
     // @formatter:off

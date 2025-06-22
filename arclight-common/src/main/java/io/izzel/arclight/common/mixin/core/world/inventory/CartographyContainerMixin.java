@@ -4,7 +4,6 @@ import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBrid
 import io.izzel.arclight.common.bridge.core.inventory.container.PosContainerBridge;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.CartographyTableMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.ResultContainer;
@@ -28,7 +27,7 @@ public abstract class CartographyContainerMixin extends AbstractContainerMenuMix
     @Shadow @Final private ResultContainer resultContainer;
     // @formatter:on
 
-    private CraftInventoryView bukkitEntity = null;
+    private CraftInventoryView<CartographyTableMenu, ?> bukkitEntity = null;
     private Player player;
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/inventory/ContainerLevelAccess;)V", at = @At("RETURN"))
@@ -42,13 +41,13 @@ public abstract class CartographyContainerMixin extends AbstractContainerMenuMix
     }
 
     @Override
-    public CraftInventoryView getBukkitView() {
+    public CraftInventoryView<CartographyTableMenu, ?> getBukkitView() {
         if (bukkitEntity != null) {
             return bukkitEntity;
         }
 
         CraftInventoryCartography inventory = new CraftInventoryCartography(this.container, this.resultContainer);
-        bukkitEntity = new CraftInventoryView(this.player, inventory, (AbstractContainerMenu) (Object) this);
+        bukkitEntity = new CraftInventoryView<>(this.player, inventory, (CartographyTableMenu) (Object) this);
         return bukkitEntity;
     }
 

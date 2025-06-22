@@ -5,11 +5,9 @@ import io.izzel.arclight.common.bridge.core.inventory.container.PosContainerBrid
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.LoomMenu;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryLoom;
-import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
 import org.bukkit.craftbukkit.v.inventory.view.CraftLoomView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

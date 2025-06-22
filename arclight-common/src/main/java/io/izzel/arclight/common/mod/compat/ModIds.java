@@ -9,4 +9,6 @@ public class ModIds {
         LITHIUM = "lithium",
         CANARY = "canary",
         RADIUM = "radium";
+
+    public static final String RECRUITS = "recruits";
 }

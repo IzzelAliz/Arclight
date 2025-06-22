@@ -34,7 +34,7 @@
     "network.ServerConfigurationPacketListenerImplMixin",
     "network.ServerGamePacketListenerImpl_HandlerMixin",
     "network.ServerGamePacketListenerImplMixin",
-    "network.ServerGamePacketListenerImplMixin_HighPriority",
+    "network.ServerGamePacketListenerImplMixin_LowPriority",
     "network.ServerHandshakePacketListenerImplMixin",
     "network.ServerLoginPacketListenerImplMixin",
     "network.ServerStatusPacketListenerImplMixin",

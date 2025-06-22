@@ -447,14 +447,15 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
         }
     }
 
-    @Redirect(method = "causeFoodExhaustion", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/food/FoodData;addExhaustion(F)V"))
-    private void arclight$exhaustEvent(FoodData foodData, float amount) {
+    @Decorate(method = "causeFoodExhaustion", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/food/FoodData;addExhaustion(F)V"))
+    private void arclight$exhaustEvent(FoodData foodData, float amount) throws Throwable {
         EntityExhaustionEvent.ExhaustionReason reason = arclight$exhaustReason == null ? EntityExhaustionEvent.ExhaustionReason.UNKNOWN : arclight$exhaustReason;
         arclight$exhaustReason = null;
         EntityExhaustionEvent event = CraftEventFactory.callPlayerExhaustionEvent((net.minecraft.world.entity.player.Player) (Object) this, reason, amount);
-        if (!event.isCancelled()) {
-            this.foodData.addExhaustion(event.getExhaustion());
+        if (event.isCancelled()) {
+            return;
         }
+        DecorationOps.callsite().invoke(foodData, amount);
     }
 
     private EntityExhaustionEvent.ExhaustionReason arclight$exhaustReason;

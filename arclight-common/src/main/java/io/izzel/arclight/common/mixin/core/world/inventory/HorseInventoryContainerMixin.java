@@ -5,7 +5,6 @@ import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.HorseInventoryMenu;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
 import org.spongepowered.asm.mixin.Final;
@@ -22,7 +21,7 @@ public abstract class HorseInventoryContainerMixin extends AbstractContainerMenu
     @Shadow @Final private Container horseContainer;
     // @formatter:on
 
-    CraftInventoryView bukkitEntity;
+    CraftInventoryView<HorseInventoryMenu, ?> bukkitEntity;
     Inventory playerInventory;
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -31,11 +30,11 @@ public abstract class HorseInventoryContainerMixin extends AbstractContainerMenu
     }
 
     @Override
-    public CraftInventoryView getBukkitView() {
+    public CraftInventoryView<HorseInventoryMenu, ?> getBukkitView() {
         if (bukkitEntity != null) {
             return bukkitEntity;
         }
-        return bukkitEntity = new CraftInventoryView(((PlayerEntityBridge) playerInventory.player).bridge$getBukkitEntity(),
-            ((IInventoryBridge) this.horseContainer).getOwner().getInventory(), (AbstractContainerMenu) (Object) this);
+        return bukkitEntity = new CraftInventoryView<>(((PlayerEntityBridge) playerInventory.player).bridge$getBukkitEntity(),
+            ((IInventoryBridge) this.horseContainer).getOwner().getInventory(), (HorseInventoryMenu) (Object) this);
     }
 }

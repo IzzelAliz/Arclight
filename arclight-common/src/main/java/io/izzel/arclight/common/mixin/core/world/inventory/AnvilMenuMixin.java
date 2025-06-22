@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.inventory;
 import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.inventory.AnvilMenuBridge;
 import io.izzel.arclight.common.bridge.core.util.IWorldPosCallableBridge;
+import io.izzel.arclight.common.mod.server.world.inventory.ArclightAnvilView;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.world.entity.player.Player;
@@ -11,6 +12,7 @@ import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.ResultContainer;
 import net.minecraft.world.item.ItemStack;
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryAnvil;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v.inventory.view.CraftAnvilView;
@@ -54,9 +56,16 @@ public abstract class AnvilMenuMixin extends ItemCombinerMixin implements AnvilM
     @Decorate(method = "createResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/ResultContainer;setItem(ILnet/minecraft/world/item/ItemStack;)V"))
     private void arclight$prepareAnvilEvent(ResultContainer instance, int i, ItemStack itemStack) throws Throwable {
         arclight$zeroCostAllowed = false;
-        var event = new PrepareAnvilEvent(getBukkitView(), CraftItemStack.asCraftMirror(itemStack).clone());
-        Bukkit.getServer().getPluginManager().callEvent(event);
-        DecorationOps.callsite().invoke(instance, i, CraftItemStack.asNMSCopy(event.getResult()));
+        final CraftAnvilView craft = getBukkitView();
+        if (craft.getClass() == ArclightAnvilView.class) {
+            // Call anvil event; preserve injection point
+            var event = new PrepareAnvilEvent(craft, CraftItemStack.asCraftMirror(itemStack).clone());
+            Bukkit.getServer().getPluginManager().callEvent(event);
+            DecorationOps.callsite().invoke(instance, i, CraftItemStack.asNMSCopy(event.getResult()));
+        } else {
+            // Run plugin custom logic
+            CraftEventFactory.callPrepareAnvilEvent(craft, itemStack);
+        }
     }
 
     @Decorate(method = "mayPickup", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/DataSlot;get()I"))
@@ -96,7 +105,7 @@ public abstract class AnvilMenuMixin extends ItemCombinerMixin implements AnvilM
 
         var inventory = new CraftInventoryAnvil(
             ((IWorldPosCallableBridge) this.access).bridge$getLocation(), this.inputSlots, this.resultSlots);
-        bukkitEntity = new CraftAnvilView(((PlayerEntityBridge) this.player).bridge$getBukkitEntity(), inventory, (AnvilMenu) (Object) this);
+        bukkitEntity = new ArclightAnvilView(((PlayerEntityBridge) this.player).bridge$getBukkitEntity(), inventory, (AnvilMenu) (Object) this);
         return bukkitEntity;
     }
 }
