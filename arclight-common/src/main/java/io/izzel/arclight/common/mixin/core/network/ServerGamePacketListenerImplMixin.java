@@ -1690,7 +1690,6 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             PlayerTeleportEvent event = new PlayerTeleportEvent(player, from.clone(), to.clone(), cause);
             this.cserver.getPluginManager().callEvent(event);
             if (event.isCancelled() || !to.equals(event.getTo())) {
-                relativeSet.clear();
                 to = (event.isCancelled() ? event.getFrom() : event.getTo());
                 x = to.getX();
                 y = to.getY();
