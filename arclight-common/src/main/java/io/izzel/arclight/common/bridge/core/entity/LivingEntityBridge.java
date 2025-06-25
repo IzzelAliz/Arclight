@@ -17,8 +17,10 @@ import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.event.entity.EntityKnockbackEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
+import io.izzel.arclight.common.mod.util.NeoForgeDamageModifier;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface LivingEntityBridge extends EntityBridge {
@@ -82,4 +84,6 @@ public interface LivingEntityBridge extends EntityBridge {
     Collection<ItemEntity> bridge$common$getCapturedDrops();
 
     void bridge$common$finishCaptureAndFireEvent(DamageSource damageSource);
+
+    List<NeoForgeDamageModifier> bridge$getForgeModifiers();
 }

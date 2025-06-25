@@ -32,6 +32,12 @@ public class CompatSpec {
     @Setting("exact-plugin-entity-damage-control")
     private boolean exactPluginEntityDamageControl;
 
+    @Setting("use-neoforge-damage-calculation")
+    private boolean useNeoForgeDamageCalculation = true;
+
+    @Setting("prioritize-neoforge-events")
+    private boolean prioritizeNeoForgeEvents = false;
+
     public Map<String, MaterialPropertySpec> getMaterials() {
         return materials;
     }
@@ -70,5 +76,13 @@ public class CompatSpec {
 
     public boolean isExactPluginEntityDamageControl() {
         return exactPluginEntityDamageControl;
+    }
+
+    public boolean isUseNeoForgeDamageCalculation() {
+        return useNeoForgeDamageCalculation;
+    }
+
+    public boolean isPrioritizeNeoForgeEvents() {
+        return prioritizeNeoForgeEvents;
     }
 }
