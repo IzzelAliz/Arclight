@@ -1,6 +1,7 @@
 package io.izzel.arclight.neoforge.mixin.neoforge;
 
 import net.minecraft.network.ConnectionProtocol;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.registration.NetworkRegistry;
 import net.neoforged.neoforge.network.registration.PayloadRegistration;
@@ -13,6 +14,11 @@ import java.util.Map;
 public interface NetworkRegistryAccessor {
     @Accessor("PAYLOAD_REGISTRATIONS")
     static Map<ConnectionProtocol, Map<ResourceLocation, PayloadRegistration<?>>> getRegistration() {
+        throw new AbstractMethodError();
+    }
+
+    @Accessor("BUILTIN_PAYLOADS")
+    static Map<ResourceLocation, StreamCodec<?, ?>> getBuiltinPayload() {
         throw new AbstractMethodError();
     }
 }

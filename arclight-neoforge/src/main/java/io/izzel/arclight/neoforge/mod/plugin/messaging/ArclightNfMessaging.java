@@ -35,7 +35,8 @@ public class ArclightNfMessaging {
     public static boolean verifyChannel(ResourceLocation location, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
         for (var protocol : ArclightPluginChannel.PROTOCOLS) {
             var known = NetworkRegistryAccessor.getRegistration().get(protocol).get(location);
-            if (known != null) {
+            var builtin = NetworkRegistryAccessor.getBuiltinPayload().get(location);
+            if (known != null || builtin != null) {
                 var pluginList = Stream.concat(outgoing.stream(), incoming.stream().map(PluginMessageListenerRegistration::getPlugin))
                         .distinct()
                         .map(Plugin::getName)
@@ -43,7 +44,9 @@ public class ArclightNfMessaging {
                 ArclightServer.LOGGER.error("Attempting to register a channel that has already been registered by NeoForge!");
                 ArclightServer.LOGGER.error("Channel conflict: {}, in protocol: {}", location, protocol);
                 ArclightServer.LOGGER.error("Registered by plugin(s): {}", pluginList);
-                ArclightServer.LOGGER.error("Registered by mod version: {}", known.version());
+                if (known != null) {
+                    ArclightServer.LOGGER.error("Registered by mod version: {}", known.version());
+                }
                 ArclightServer.LOGGER.error("This channel will be ignored for the rest of the time!");
                 return false;
             }

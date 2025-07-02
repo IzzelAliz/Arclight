@@ -423,7 +423,8 @@ public abstract class MaterialMixin implements MaterialBridge {
         }
         if (arclight$spec.craftingRemainingItem == null) {
             // noinspection deprecation
-            arclight$spec.craftingRemainingItem = item.hasCraftingRemainingItem() ? bridge$getCraftRemainingItem(item).toString() : null;
+            final var remaining = bridge$getCraftRemainingItem(item);
+            arclight$spec.craftingRemainingItem = remaining != null ? remaining.toString() : null;
         }
         if (arclight$spec.itemMetaType == null) {
             arclight$spec.itemMetaType = "UNSPECIFIC";
