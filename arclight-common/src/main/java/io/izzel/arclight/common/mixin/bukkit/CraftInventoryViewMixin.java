@@ -1,9 +1,8 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
-import io.izzel.arclight.common.mod.server.ArclightContainer;
+import io.izzel.arclight.common.mod.server.world.inventory.ArclightInventoryView;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
-import org.bukkit.craftbukkit.v.inventory.CraftInventory;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.Inventory;
@@ -25,7 +24,7 @@ public abstract class CraftInventoryViewMixin implements InventoryView {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$validate(HumanEntity player, Inventory viewing, AbstractContainerMenu container, CallbackInfo ci) {
         if (container.slots.size() > this.countSlots()) {
-            this.viewing = ArclightContainer.createInv(((CraftHumanEntity) player).getHandle(), container);
+            this.viewing = ArclightInventoryView.createInv(((CraftHumanEntity) player).getHandle(), container);
         }
     }
 }

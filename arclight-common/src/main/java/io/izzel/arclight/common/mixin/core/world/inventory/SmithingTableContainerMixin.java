@@ -2,7 +2,6 @@ package io.izzel.arclight.common.mixin.core.world.inventory;
 
 import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.util.IWorldPosCallableBridge;
-import io.izzel.arclight.common.mod.server.world.inventory.ArclightGrindstoneView;
 import io.izzel.arclight.common.mod.server.world.inventory.ArclightSmithingView;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -26,7 +25,7 @@ public abstract class SmithingTableContainerMixin extends ItemCombinerMixin {
     @Decorate(method = "createResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/ResultContainer;setItem(ILnet/minecraft/world/item/ItemStack;)V"))
     private void arclight$prepareSmithing(ResultContainer craftResultInventory, int index, ItemStack stack) throws Throwable {
         final CraftInventoryView<SmithingMenu, ?> craft = getBukkitView();
-        if (craft.getClass() == ArclightGrindstoneView.class) {
+        if (craft instanceof ArclightSmithingView) {
             // Call preparing event; preserve injection logic
             PrepareSmithingEvent event = new PrepareSmithingEvent(craft, CraftItemStack.asCraftMirror(stack).clone());
             Bukkit.getServer().getPluginManager().callEvent(event);

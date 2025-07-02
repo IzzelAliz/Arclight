@@ -21,9 +21,9 @@ public class NeoForgeCommonImpl implements ArclightCommon.Api {
             ClassLoader classLoader = NeoForgeCommonImpl.class.getClassLoader();
             Field classTransformer = TransformingClassLoader.class.getDeclaredField("classTransformer");
             classTransformer.setAccessible(true);
-            ClassTransformer tranformer = (ClassTransformer) classTransformer.get(classLoader);
-            Method transform = tranformer.getClass().getDeclaredMethod("transform", byte[].class, String.class, String.class);
-            MH_TRANSFORM = Unsafe.lookup().unreflect(transform).bindTo(tranformer);
+            ClassTransformer transformer = (ClassTransformer) classTransformer.get(classLoader);
+            Method transform = transformer.getClass().getDeclaredMethod("transform", byte[].class, String.class, String.class);
+            MH_TRANSFORM = Unsafe.lookup().unreflect(transform).bindTo(transformer);
         } catch (Throwable t) {
             throw new IllegalStateException("Unknown modlauncher version", t);
         }

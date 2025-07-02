@@ -15,6 +15,7 @@
     "ColouredConsoleSenderMixin",
     "CraftAbstractVillagerMixin",
     "CraftAnvilViewMixin",
+    "CraftBlockEntityStateAccessor",
     "CraftBlockMixin",
     "CraftBlockStateMixin",
     "CraftConsoleCommandSenderMixin",

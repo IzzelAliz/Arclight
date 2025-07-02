@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(BlockBehaviour.class)
-public abstract class BlockBehaviourMixin_Forge implements BlockBehaviourBridge {
+public abstract class BlockBehaviourMixin_NeoForge implements BlockBehaviourBridge {
 
     @Override
     public boolean bridge$forge$canDropFromExplosion(BlockState state, BlockGetter level, BlockPos pos, Explosion explosion) {

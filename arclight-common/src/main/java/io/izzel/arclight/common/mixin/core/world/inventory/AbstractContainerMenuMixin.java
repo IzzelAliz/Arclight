@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.inventory;
 
 import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.inventory.container.ContainerBridge;
-import io.izzel.arclight.common.mod.server.ArclightContainer;
+import io.izzel.arclight.common.mod.server.world.inventory.ArclightInventoryView;
 import io.izzel.arclight.common.mod.util.Blackhole;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -62,7 +62,7 @@ public abstract class AbstractContainerMenuMixin implements ContainerBridge {
 
     public InventoryView getBukkitView() {
         if (bukkitView == null) {
-            bukkitView = ArclightContainer.createInvView((AbstractContainerMenu) (Object) this);
+            bukkitView = ArclightInventoryView.createInvView((AbstractContainerMenu) (Object) this);
         }
         return bukkitView;
     }

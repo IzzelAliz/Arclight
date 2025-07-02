@@ -75,6 +75,10 @@
     "forge.NetworkRegistryAccessor",
     "forge.PacketDistributorMixin",
     "forge.PermissionAPIMixin",
+    "forge.items.CombinedInvWrapperAccessor",
+    "forge.items.RangedWrapperAccessor",
+    "forge.items.SidedInvWrapperAccessor",
+    "forge.items.VanillaInventoryCodeHooksMixin",
     "optimization.general.activationrange.entity.ItemEntityMixin_ActivationRange_Forge"
   ]
 }

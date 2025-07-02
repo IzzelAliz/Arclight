@@ -67,7 +67,8 @@
     "core.world.level.block.FireBlockMixin_NeoForge",
     "core.world.level.block.TntBlockMixin_NeoForge",
     "core.world.level.block.entity.AbstractFurnaceBlockEntityMixin_NeoForge",
-    "core.world.level.block.state.BlockBehaviourMixin_Forge",
+    "core.world.level.block.entity.HopperBlockEntity_NeoForge",
+    "core.world.level.block.state.BlockBehaviourMixin_NeoForge",
     "core.world.level.levelgen.structure.templatesystem.StructureTemplateMixin_NeoForge",
     "core.world.level.storage.loot.LootContextMixin_NeoForge",
     "neoforge.CommonHooksMixin",
@@ -77,6 +78,10 @@
     "neoforge.NetworkRegistryMixin",
     "neoforge.PacketDistributorMixin",
     "neoforge.PermissionAPIMixin",
+    "neoforge.items.CombinedInvWrapperAccessor",
+    "neoforge.items.RangedWrapperAccessor",
+    "neoforge.items.SidedInvWrapperAccessor",
+    "neoforge.items.VanillaInventoryCodeHooksMixin",
     "optimization.general.activationrange.entity.ItemEntityMixin_ActivationRange_NeoForge"
   ]
 }

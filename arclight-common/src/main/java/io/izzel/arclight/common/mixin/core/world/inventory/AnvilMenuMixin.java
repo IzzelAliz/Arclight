@@ -57,7 +57,7 @@ public abstract class AnvilMenuMixin extends ItemCombinerMixin implements AnvilM
     private void arclight$prepareAnvilEvent(ResultContainer instance, int i, ItemStack itemStack) throws Throwable {
         arclight$zeroCostAllowed = false;
         final CraftAnvilView craft = getBukkitView();
-        if (craft.getClass() == ArclightAnvilView.class) {
+        if (craft instanceof ArclightAnvilView) {
             // Call anvil event; preserve injection point
             var event = new PrepareAnvilEvent(craft, CraftItemStack.asCraftMirror(itemStack).clone());
             Bukkit.getServer().getPluginManager().callEvent(event);

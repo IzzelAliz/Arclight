@@ -39,7 +39,7 @@ public abstract class GrindstoneContainerMixin extends AbstractContainerMenuMixi
     @Decorate(method = "createResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/Container;setItem(ILnet/minecraft/world/item/ItemStack;)V"))
     private void arclight$prepareEvent(Container instance, int i, ItemStack itemStack) throws Throwable {
         final CraftInventoryView<GrindstoneMenu, ?> craft = getBukkitView();
-        if (craft.getClass() == ArclightGrindstoneView.class) {
+        if (craft instanceof ArclightGrindstoneView) {
             // Call prepare event; preserve injection point
             PrepareGrindstoneEvent event = new PrepareGrindstoneEvent(craft, CraftItemStack.asCraftMirror(itemStack).clone());
             event.getView().getPlayer().getServer().getPluginManager().callEvent(event);

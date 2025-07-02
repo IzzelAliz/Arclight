@@ -64,6 +64,7 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerVelocityEvent;
 import org.bukkit.scoreboard.Team;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.FrameNode;
 import org.spigotmc.SpigotWorldConfig;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -349,7 +350,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
             if (blockPos != null) {
                 bed = CraftBlock.at(this.level(), blockPos);
             } else {
-                bed = ((WorldBridge) this.level()).bridge$getWorld().getBlockAt(player.getLocation());
+                bed = this.level().bridge$getWorld().getBlockAt(player.getLocation());
             }
             PlayerBedLeaveEvent event = new PlayerBedLeaveEvent(player, bed, true);
             Bukkit.getPluginManager().callEvent(event);
@@ -421,12 +422,12 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
     }
 
     public CraftHumanEntity getBukkitEntity() {
-        return (CraftHumanEntity) ((InternalEntityBridge) this).internal$getBukkitEntity();
+        return (CraftHumanEntity) this.internal$getBukkitEntity();
     }
 
     @Override
     public CraftHumanEntity bridge$getBukkitEntity() {
-        return (CraftHumanEntity) ((InternalEntityBridge) this).internal$getBukkitEntity();
+        return (CraftHumanEntity) this.internal$getBukkitEntity();
     }
 
     @Override
@@ -441,15 +442,17 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
         }
     }
 
-    @Decorate(method = "causeFoodExhaustion", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/food/FoodData;addExhaustion(F)V"))
-    private void arclight$exhaustEvent(FoodData foodData, float amount) throws Throwable {
+    @Decorate(method = "causeFoodExhaustion", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/food/FoodData;addExhaustion(F)V"))
+    private void arclight$exhaustEvent(float amount) throws Throwable {
         EntityExhaustionEvent.ExhaustionReason reason = arclight$exhaustReason == null ? EntityExhaustionEvent.ExhaustionReason.UNKNOWN : arclight$exhaustReason;
         arclight$exhaustReason = null;
         EntityExhaustionEvent event = CraftEventFactory.callPlayerExhaustionEvent((net.minecraft.world.entity.player.Player) (Object) this, reason, amount);
         if (event.isCancelled()) {
+            DecorationOps.cancel().invoke();
             return;
         }
-        DecorationOps.callsite().invoke(foodData, amount);
+        amount = event.getExhaustion();
+        DecorationOps.blackhole().invoke(amount);
     }
 
     private EntityExhaustionEvent.ExhaustionReason arclight$exhaustReason;

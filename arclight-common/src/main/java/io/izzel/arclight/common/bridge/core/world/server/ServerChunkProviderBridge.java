@@ -8,7 +8,6 @@ public interface ServerChunkProviderBridge {
     void bridge$close(boolean save) throws IOException;
 
     void bridge$purgeUnload();
-
     boolean bridge$tickDistanceManager();
 
     boolean bridge$isChunkLoaded(int x, int z);

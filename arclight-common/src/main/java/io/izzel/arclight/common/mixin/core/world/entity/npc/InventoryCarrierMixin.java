@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.npc;
 
-import io.izzel.arclight.common.mod.server.ArclightContainer;
+import io.izzel.arclight.common.mod.server.world.inventory.ArclightInventoryView;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -33,7 +33,7 @@ public interface InventoryCarrierMixin {
                 return;
             }
 
-            var remaining = ArclightContainer.copyOf(carrier.getInventory()).addItem(itemstack);
+            var remaining = ArclightInventoryView.copyOf(carrier.getInventory()).addItem(itemstack);
             if (CraftEventFactory.callEntityPickupItemEvent(mob, itemEntity, remaining.getCount(), false).isCancelled()) {
                 return;
             }

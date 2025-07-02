@@ -1273,8 +1273,6 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                 ClickType click = ClickType.UNKNOWN;
                 InventoryAction action = InventoryAction.UNKNOWN;
 
-                ItemStack itemstack = ItemStack.EMPTY;
-
                 switch (packet.getClickType()) {
                     case PICKUP:
                         if (packet.getButtonNum() == 0) {
