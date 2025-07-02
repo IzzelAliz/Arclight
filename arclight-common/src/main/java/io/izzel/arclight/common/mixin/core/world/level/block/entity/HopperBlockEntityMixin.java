@@ -140,7 +140,6 @@ public abstract class HopperBlockEntityMixin extends LockableBlockEntityMixin {
     }
 
     private static Container runHopperInventorySearchEvent(Container inventory, CraftBlock hopper, CraftBlock searchLocation, HopperInventorySearchEvent.ContainerType containerType) {
-        ArclightServer.LOGGER.info("Call Inventory search event");
         var event = new HopperInventorySearchEvent((inventory != null) ? new CraftInventory(inventory) : null, containerType, hopper, searchLocation);
         Bukkit.getServer().getPluginManager().callEvent(event);
         CraftInventory craftInventory = (CraftInventory) event.getInventory();
