@@ -1,12 +1,15 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Either;
+import io.izzel.arclight.common.bridge.bukkit.EntityDamageEventBridge;
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.network.play.ServerGamePacketListenerBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
+import io.izzel.arclight.common.mod.util.ArclightDamageContainer;
 import io.izzel.arclight.common.util.IteratorUtil;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -25,8 +28,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.CombatRules;
 import net.minecraft.world.damagesource.CombatTracker;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffect;
@@ -48,6 +53,7 @@ import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Equipable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -62,12 +68,7 @@ import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityKnockbackEvent;
-import org.bukkit.event.entity.EntityPotionEffectEvent;
-import org.bukkit.event.entity.EntityRegainHealthEvent;
-import org.bukkit.event.entity.EntityRemoveEvent;
-import org.bukkit.event.entity.EntityResurrectEvent;
-import org.bukkit.event.entity.EntityTeleportEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
@@ -147,6 +148,18 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow protected abstract void dropAllDeathLoot(ServerLevel serverLevel, DamageSource damageSource);
     @Shadow public abstract void onEquipItem(EquipmentSlot slot, ItemStack original, ItemStack newStack);
     // @formatter:on
+
+    @Shadow public abstract boolean isDamageSourceBlocked(DamageSource arg);
+
+    @Shadow public float lastHurt;
+
+    @Shadow public abstract boolean hasEffect(Holder<MobEffect> arg);
+
+    @Shadow @Nullable public abstract MobEffectInstance getEffect(Holder<MobEffect> arg);
+
+    @Shadow public abstract float getAbsorptionAmount();
+
+    @Shadow public abstract int getArmorValue();
 
     public int expToDrop;
     public CraftAttributeMap craftAttributes;
@@ -484,6 +497,85 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     private int arclight$useInvulnerableDuration(LivingEntity instance) throws Throwable {
         int result = (int) DecorationOps.callsite().invoke(instance);
         return result + 10 - (int) (this.invulnerableDuration / 2.0F);
+    }
+
+    @Override
+    public EntityDamageEvent arclight$fireEntityDamageEvent(DamageSource source, float original) {
+        float damage = original;
+
+        Function<Double, Double> blocking = f -> -((this.isDamageSourceBlocked(source)) ? f : 0.0);
+        float blockingModifier = blocking.apply((double) damage).floatValue();
+        damage += blockingModifier;
+
+        Function<Double, Double> freezing = f -> {
+            if (source.is(DamageTypeTags.IS_FREEZING) && this.getType().is(EntityTypeTags.FREEZE_HURTS_EXTRA_TYPES)) {
+                return -(f - (f * 5.0F));
+            }
+            return -0.0;
+        };
+        float freezingModifier = freezing.apply((double) damage).floatValue();
+        damage += freezingModifier;
+
+        Function<Double, Double> hardHat = f -> {
+            if (source.is(DamageTypeTags.DAMAGES_HELMET) && !this.getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {
+                return -(f - (f * 0.75F));
+            }
+            return -0.0;
+        };
+        float hardHatModifier = hardHat.apply((double) damage).floatValue();
+        damage += hardHatModifier;
+
+        if ((float) this.invulnerableTime > (float) this.invulnerableDuration / 2.0F && !source.is(DamageTypeTags.BYPASSES_COOLDOWN)) {
+            if (damage <= this.lastHurt) {
+                if (source.getEntity() instanceof net.minecraft.world.entity.player.Player) {
+                    ((net.minecraft.world.entity.player.Player) source.getEntity()).resetAttackStrengthTicker();
+                }
+                return null;
+            }
+        }
+
+        Function<Double, Double> armor = f -> {
+            if (!source.is(DamageTypeTags.BYPASSES_ARMOR)) {
+                return -(f - CombatRules.getDamageAfterAbsorb((LivingEntity) (Object) this, f.floatValue(), source, (float) this.getArmorValue(), (float) this.getAttributeValue(Attributes.ARMOR_TOUGHNESS)));
+            }
+
+            return -0.0;
+        };
+        float armorModifier = armor.apply((double) damage).floatValue();
+        damage += armorModifier;
+
+        Function<Double, Double> resistance = f -> {
+            if (!source.is(DamageTypeTags.BYPASSES_EFFECTS) && this.hasEffect(MobEffects.DAMAGE_RESISTANCE) && !source.is(DamageTypeTags.BYPASSES_RESISTANCE)) {
+                int i = (this.getEffect(MobEffects.DAMAGE_RESISTANCE).getAmplifier() + 1) * 5;
+                int j = 25 - i;
+                float f1 = f.floatValue() * (float) j;
+                return -(f - (f1 / 25.0F));
+            }
+            return -0.0;
+        };
+        float resistanceModifier = resistance.apply((double) damage).floatValue();
+        damage += resistanceModifier;
+
+        Function<Double, Double> magic = f -> {
+            float l;
+            if (this.level() instanceof ServerLevel serverLevel) {
+                l = EnchantmentHelper.getDamageProtection(serverLevel, (LivingEntity) (Object) this, source);
+            } else {
+                l = 0.0F;
+            }
+
+            if (l > 0.0F) {
+                return -(f - CombatRules.getDamageAfterMagicAbsorb(f.floatValue(), l));
+            }
+            return -0.0;
+        };
+        float magicModifier = magic.apply((double) damage).floatValue();
+        damage += magicModifier;
+
+        Function<Double, Double> absorption = f -> -(Math.max(f - Math.max(f - this.getAbsorptionAmount(), 0.0F), 0.0F));
+        float absorptionModifier = absorption.apply((double) damage).floatValue();
+
+        return CraftEventFactory.handleLivingEntityDamageEvent((LivingEntity) (Object) this, source, original, freezingModifier, hardHatModifier, blockingModifier, armorModifier, resistanceModifier, magicModifier, absorptionModifier, freezing, hardHat, blocking, armor, resistance, magic, absorption);
     }
 
     @Inject(method = "actuallyHurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getCombatTracker()Lnet/minecraft/world/damagesource/CombatTracker;"))

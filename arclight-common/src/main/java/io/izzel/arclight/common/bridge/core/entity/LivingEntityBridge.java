@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.bridge.core.entity;
 
+import io.izzel.arclight.common.mod.util.ArclightDamageContainer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.world.InteractionHand;
@@ -14,10 +15,12 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityKnockbackEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -82,4 +85,7 @@ public interface LivingEntityBridge extends EntityBridge {
     Collection<ItemEntity> bridge$common$getCapturedDrops();
 
     void bridge$common$finishCaptureAndFireEvent(DamageSource damageSource);
+
+    @Nullable
+    EntityDamageEvent arclight$fireEntityDamageEvent(DamageSource source, float original);
 }
