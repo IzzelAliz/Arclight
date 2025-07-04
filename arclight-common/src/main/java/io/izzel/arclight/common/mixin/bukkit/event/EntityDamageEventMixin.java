@@ -2,7 +2,6 @@ package io.izzel.arclight.common.mixin.bukkit.event;
 
 import com.google.common.base.Function;
 import io.izzel.arclight.common.bridge.bukkit.EntityDamageEventBridge;
-import io.izzel.arclight.common.mod.server.ArclightServer;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.Event;
@@ -11,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -25,8 +25,8 @@ public abstract class EntityDamageEventMixin extends Event implements EntityDama
 
     @Shadow public abstract double getDamage(@NotNull EntityDamageEvent.DamageModifier type) throws IllegalArgumentException;
 
+    @Unique
     private Map<EntityDamageEvent.DamageModifier, ? extends Function<? super Double, Double>> arclight$originalFunction;
-    private boolean actuallyHurt = false;
 
     @Inject(method = "<init>(Lorg/bukkit/entity/Entity;Lorg/bukkit/event/entity/EntityDamageEvent$DamageCause;Lorg/bukkit/damage/DamageSource;Ljava/util/Map;Ljava/util/Map;)V", at = @At("RETURN"))
     private void arclight$init(Entity damagee, EntityDamageEvent.DamageCause cause, DamageSource source, Map modifiers, Map modifierFunctions, CallbackInfo ci) {
@@ -61,15 +61,5 @@ public abstract class EntityDamageEventMixin extends Event implements EntityDama
     @Override
     public boolean arclight$isStillOriginal(EntityDamageEvent.DamageModifier modifier, double offset) {
         return Math.abs(offset - arclight$getOriginalDamage(modifier)) < 10E-3;
-    }
-
-    @Override
-    public void arclight$setActuallyHurt() {
-        actuallyHurt = true;
-    }
-
-    @Override
-    public boolean arclight$actuallyHurt() {
-        return actuallyHurt;
     }
 }

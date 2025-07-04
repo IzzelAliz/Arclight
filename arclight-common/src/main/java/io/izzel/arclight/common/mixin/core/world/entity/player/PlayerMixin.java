@@ -234,11 +234,6 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
         }
     }
 
-    @Inject(method = "hurtCurrentlyUsedShield", at = @At("HEAD"))
-    private void arclight$onHurtCurrentlyUsedShield(float f, CallbackInfo ci) {
-        ArclightServer.LOGGER.warn("Hurt currently used shield with damage " + f, new IllegalArgumentException());
-    }
-
     /**
      * @author IzzelAliz
      * @reason
