@@ -116,7 +116,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     // @formatter:on
 
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
-    public PrimaryLevelData K; // TODO f_8549_ check on update
+    public PrimaryLevelData K; // Stupid CraftBukkit patch.
     public LevelStorageSource.LevelStorageAccess convertable;
     public UUID uuid;
     public ResourceKey<LevelStem> typeKey;
@@ -159,14 +159,16 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
                 this.typeKey = ResourceKey.create(Registries.LEVEL_STEM, dimension.location());
             }
         }
-        if (worldInfo instanceof PrimaryLevelData) {
-            this.K = (PrimaryLevelData) worldInfo;
-        } else if (worldInfo instanceof DerivedLevelData) {
+        if (worldInfo instanceof PrimaryLevelData data) {
+            this.K = data;
+        } else {
             // damn spigot again
-            this.K = DelegateWorldInfo.wrap(((DerivedLevelData) worldInfo));
-            ((DerivedWorldInfoBridge) worldInfo).bridge$setDimType(this.getTypeKey());
-            if (ArclightConfig.spec().getCompat().isSymlinkWorld()) {
-                WorldSymlink.create((DerivedLevelData) worldInfo, levelSave.getDimensionPath(this.dimension()).toFile());
+            this.K = DelegateWorldInfo.wrap(worldInfo);
+            if (worldInfo instanceof DerivedLevelData data) {
+                ((DerivedWorldInfoBridge) worldInfo).bridge$setDimType(this.getTypeKey());
+                if (ArclightConfig.spec().getCompat().isSymlinkWorld()) {
+                    WorldSymlink.create(data, levelSave.getDimensionPath(this.dimension()).toFile());
+                }
             }
         }
         this.spigotConfig = new SpigotWorldConfig(worldInfo.getLevelName());
