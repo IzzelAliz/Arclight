@@ -9,6 +9,7 @@ import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -147,7 +148,7 @@ public abstract class LivingEntityMixin_NeoForge extends EntityMixin_NeoForge im
     private float arclight$neoforge$postApplyMagic(LivingEntity entity, DamageSource source, float original, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer arclight) throws Throwable {
         float result = (float) DecorationOps.callsite().invoke(entity, source, original);
         float newResult = arclight.calculateStage(EntityDamageEvent.DamageModifier.MAGIC, result);
-        if (Math.abs(result - newResult) > 10E-3) {
+        if (Math.abs(result - newResult) > Mth.EPSILON) {
             DamageContainer container = damageContainers.peek();
             container.setNewDamage(original);
             container.setReduction(DamageContainer.Reduction.ENCHANTMENTS, original - newResult);
@@ -167,7 +168,7 @@ public abstract class LivingEntityMixin_NeoForge extends EntityMixin_NeoForge im
         float currentDamage = damageContainers.peek().getNewDamage();
         float exactDamage = currentDamage - amount;
         float afterDamage = arclight.calculateStage(EntityDamageEvent.DamageModifier.ABSORPTION, exactDamage);
-        if (Math.abs(afterDamage - exactDamage) > 10E-3) {
+        if (Math.abs(afterDamage - exactDamage) > Mth.EPSILON) {
             amount = currentDamage - afterDamage;
         }
         DecorationOps.callsite().invoke(container, reduction, amount);
