@@ -95,7 +95,10 @@ public class ArclightModdedMenuContainer implements Container, IInventoryBridge 
 
     @Override
     public void clearContent() {
-        ArclightServer.LOGGER.debug("Skipping clear all for a modded container");
+        ArclightServer.LOGGER.debug("Clearing everything for a modded container menu container");
+        for (Slot slot : container.slots) {
+            slot.remove(Integer.MAX_VALUE);
+        }
     }
 
     @Override

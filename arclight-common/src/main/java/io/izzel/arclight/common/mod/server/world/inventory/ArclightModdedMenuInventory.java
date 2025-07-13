@@ -12,18 +12,14 @@ public class ArclightModdedMenuInventory extends CraftInventory {
     }
 
     @Override
-    public void setStorageContents(ItemStack[] items) throws IllegalArgumentException {
-        setContents(items);
-    }
-
-    @Override
     public void setContents(ItemStack[] items) {
-        Preconditions.checkArgument(items.length <= this.getSize(), "Invalid inventory size (%s); expected %s or less", items.length, this.getSize());
-        ArclightServer.LOGGER.debug("Skipping content override for a modded inventory");
+        ArclightServer.LOGGER.debug("Overriding content for a modded container menu inventory");
+        super.setContents(items);
     }
 
     @Override
     public void clear() {
-        ArclightServer.LOGGER.debug("Skipping clear all for a modded inventory");
+        ArclightServer.LOGGER.debug("Clearing everything for a modded container menu inventory");
+        super.clear();
     }
 }
