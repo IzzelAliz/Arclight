@@ -26,22 +26,23 @@ public class ArclightDamageContainer {
 
     public void applyOffset(double offset) {
         this.currentDamage += (float) offset;
+        // Why don't we try to be branchless
+        // currentDamage = (currentDamage + Float.intBitsToFloat(Float.floatToIntBits(currentDamage) & Integer.MAX_VALUE)) / 2;
+        if (currentDamage < 0) {
+            currentDamage = 0.0F;
+        }
     }
 
     public float calculateStage(EntityDamageEvent.DamageModifier stage, float original) {
         final EntityDamageEventBridge bridge = (EntityDamageEventBridge) getBukkit();
         double before = getCurrentDamage();
-        if (bridge.arclight$applicable(stage)) {
-            // If not applicable then it won't be overridden
-            double actualOffset = original - before;
-            if (bridge.arclight$isStillOriginal(stage, actualOffset)) {
-                // If the offset fits vanilla result
-                // Override damage using Bukkit value
-                applyOffset(getBukkit().getDamage(stage));
-            } else {
-                // Or else, we have to use Modded result
-                applyOffset(actualOffset);
-            }
+        if (bridge.arclight$applicable(stage) && bridge.arclight$isStillOriginal(stage, before, original)) {
+            // If not applicable then it won't be overridden.
+            // If the offset fits vanilla result, override damage using Bukkit value
+            applyOffset(getBukkit().getDamage(stage));
+        } else {
+            // Or else, we have to use Modded / Vanilla result
+            applyOffset(original - before);
         }
         return getCurrentDamage();
     }

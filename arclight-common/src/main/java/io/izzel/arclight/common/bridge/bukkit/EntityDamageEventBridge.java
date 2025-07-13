@@ -9,7 +9,6 @@ public interface EntityDamageEventBridge {
             BASE, BLOCKING, FREEZING, HARD_HAT, ARMOR, RESISTANCE, MAGIC, ABSORPTION
     };
     boolean arclight$applicable(EntityDamageEvent.DamageModifier stage);
-    double arclight$getOriginalDamage(EntityDamageEvent.DamageModifier modifier);
-    double arclight$accumulateBefore(EntityDamageEvent.DamageModifier modifier);
-    boolean arclight$isStillOriginal(EntityDamageEvent.DamageModifier modifier, double offset);
+    double arclight$applyOriginal(EntityDamageEvent.DamageModifier currentStage, double lastStage);
+    boolean arclight$isStillOriginal(EntityDamageEvent.DamageModifier modifier, double last, double current);
 }

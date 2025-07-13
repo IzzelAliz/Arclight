@@ -2,11 +2,11 @@ package io.izzel.arclight.common.mixin.bukkit.event;
 
 import com.google.common.base.Function;
 import io.izzel.arclight.common.bridge.bukkit.EntityDamageEventBridge;
+import net.minecraft.util.Mth;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.Event;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -23,8 +23,6 @@ public abstract class EntityDamageEventMixin extends Event implements EntityDama
 
     @Shadow @Final private Map<EntityDamageEvent.DamageModifier, Double> modifiers;
 
-    @Shadow public abstract double getDamage(@NotNull EntityDamageEvent.DamageModifier type) throws IllegalArgumentException;
-
     @Unique
     private Map<EntityDamageEvent.DamageModifier, ? extends Function<? super Double, Double>> arclight$originalFunction;
 
@@ -40,26 +38,12 @@ public abstract class EntityDamageEventMixin extends Event implements EntityDama
     }
 
     @Override
-    public double arclight$getOriginalDamage(EntityDamageEvent.DamageModifier modifier) {
-        double original = arclight$originalFunction.get(modifier).apply(arclight$accumulateBefore(modifier));
-        return original;
+    public double arclight$applyOriginal(EntityDamageEvent.DamageModifier currentStage, double lastStage) {
+        return arclight$originalFunction.get(currentStage).apply(lastStage);
     }
 
     @Override
-    public double arclight$accumulateBefore(EntityDamageEvent.DamageModifier modifier) {
-        final EntityDamageEvent.DamageModifier[] values = VANILLA_VALUES;
-        double now = 0;
-        int index = 0;
-        EntityDamageEvent.DamageModifier current;
-        while ((current = values[index]) != modifier) {
-            now += getDamage(current);
-            index++;
-        }
-        return now;
-    }
-
-    @Override
-    public boolean arclight$isStillOriginal(EntityDamageEvent.DamageModifier modifier, double offset) {
-        return Math.abs(offset - arclight$getOriginalDamage(modifier)) < 10E-3;
+    public boolean arclight$isStillOriginal(EntityDamageEvent.DamageModifier modifier, double last, double current) {
+        return Math.abs((current - last) - arclight$applyOriginal(modifier, last)) < Mth.EPSILON;
     }
 }
