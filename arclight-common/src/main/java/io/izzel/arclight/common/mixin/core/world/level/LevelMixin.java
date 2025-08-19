@@ -2,32 +2,27 @@ package io.izzel.arclight.common.mixin.core.world.level;
 
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.border.WorldBorderBridge;
-import io.izzel.arclight.common.bridge.core.world.level.levelgen.ChunkGeneratorBridge;
-import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
-import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
 import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
 import io.izzel.arclight.common.mod.mixins.annotation.TransformAccess;
-import io.izzel.arclight.common.mod.server.ArclightServer;
-import io.izzel.arclight.common.mod.server.world.WrappedWorlds;
+import io.izzel.arclight.common.mod.server.world.ArclightWorldConfig;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import io.izzel.arclight.common.util.CheckedRandomSource;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.FullChunkStatus;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelWriter;
-import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -35,8 +30,8 @@ import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
+import net.minecraft.world.level.levelgen.BitRandomSource;
 import net.minecraft.world.level.storage.LevelData;
-import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.level.storage.WritableLevelData;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
@@ -45,9 +40,6 @@ import org.bukkit.craftbukkit.v.block.CapturedBlockState;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.generator.CraftWorldInfo;
-import org.bukkit.craftbukkit.v.generator.CustomChunkGenerator;
-import org.bukkit.craftbukkit.v.generator.CustomWorldChunkManager;
 import org.bukkit.craftbukkit.v.util.CraftSpawnCategory;
 import org.bukkit.entity.SpawnCategory;
 import org.bukkit.event.block.BlockPhysicsEvent;
@@ -55,9 +47,7 @@ import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.generator.ChunkGenerator;
 import org.objectweb.asm.Opcodes;
 import org.spigotmc.SpigotWorldConfig;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -66,10 +56,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 @Mixin(Level.class)
@@ -108,6 +96,8 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
     public Map<BlockPos, CapturedBlockState> capturedBlockStates = new java.util.LinkedHashMap<>();
     public Map<BlockPos, BlockEntity> capturedTileEntities = new HashMap<>();
 
+    @Unique private boolean arclight$isActual;
+
     @ShadowConstructor
     public void arclight$constructor(WritableLevelData worldInfo, ResourceKey<Level> dimension, RegistryAccess registryAccess, final Holder<DimensionType> dimensionType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed, int maxNeighborUpdate) {
         throw new RuntimeException();
@@ -119,7 +109,11 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
         this.generator = gen;
         this.environment = env;
         this.biomeProvider = biomeProvider;
-        bridge$getWorld();
+    }
+
+    @Inject(method = "<init>", at = @At("CTOR_HEAD"))
+    private void arclight$preInit(WritableLevelData writableLevelData, ResourceKey resourceKey, RegistryAccess registryAccess, Holder holder, Supplier supplier, boolean bl, boolean bl2, long l, int i, CallbackInfo ci) {
+        this.arclight$isActual = WorldBridge.super.arclight$isActual();
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -135,6 +129,11 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
     @Override
     public Map<BlockPos, CapturedBlockState> bridge$getCapturedBlockState() {
         return this.capturedBlockStates;
+    }
+
+    @Override
+    public boolean arclight$isActual() {
+        return arclight$isActual;
     }
 
     @Override
@@ -161,6 +160,9 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
 
     @Override
     public SpigotWorldConfig bridge$spigotConfig() {
+        if (spigotConfig == null) {
+            return ArclightWorldConfig.DEFAULT;
+        }
         return this.spigotConfig;
     }
 
@@ -234,19 +236,7 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
 
     public CraftWorld getWorld() {
         if (this.world == null) {
-            Optional<Field> delegate = WrappedWorlds.getDelegate(this.getClass());
-            if (delegate.isPresent()) {
-                try {
-                    return ((WorldBridge) delegate.get().get(this)).bridge$getWorld();
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            // generator, biomeProvider, environment init moved to ServerLevel;
-            // For other worlds Bukkit can't and shouldn't know these properties.
-            // Though, customizing using one-shot cache is fine, but not necessary now.
-            this.world = new CraftWorld((ServerLevel) (Object) this, generator, biomeProvider, environment);
-            getCraftServer().addWorld(this.world);
+            throw new UnsupportedOperationException(String.format("World %s does not have a CraftWorld. This method should not be invoked on this world for any reason.", dimension().location()));
         }
         return this.world;
     }
@@ -288,11 +278,6 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
     @Override
     public ChunkGenerator bridge$getGenerator() {
         return generator;
-    }
-
-    @Override
-    public ServerLevel bridge$getMinecraftWorld() {
-        return getWorld().getHandle();
     }
 
     @Override

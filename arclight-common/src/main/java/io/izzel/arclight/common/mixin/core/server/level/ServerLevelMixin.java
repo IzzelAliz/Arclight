@@ -8,7 +8,6 @@ import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBrid
 import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.core.world.ExplosionBridge;
-import io.izzel.arclight.common.bridge.core.world.IWorldBridge;
 import io.izzel.arclight.common.bridge.core.world.level.levelgen.flat.FlatLevelGeneratorSettingsBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
@@ -73,6 +72,7 @@ import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.block.CraftBlockState;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -157,7 +157,6 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         craftBridge.bridge$offerGeneratorCache(worldInfo.getLevelName(), gen);
         craftBridge.bridge$offerBiomeProviderCache(worldInfo.getLevelName(), biomeProvider);
         arclight$constructor(server, backgroundExecutor, levelSave, worldInfo, dimension, levelStem, statusListener, isDebug, seed, specialSpawners, shouldBeTicking, seq);
-        bridge$getWorld();
     }
 
     // Support custom chunk generator; in consistency with CraftBukkit
@@ -175,44 +174,51 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
             this.K = DelegateWorldInfo.wrap(worldInfo);
         }
 
-        var craftBridge = (CraftServerBridge) (Object) ((MinecraftServerBridge) server).bridge$getServer();
+        if (arclight$isActual()) {
+            var craftBridge = (CraftServerBridge) (Object) ((MinecraftServerBridge) server).bridge$getServer();
 
-        this.biomeProvider = craftBridge.bridge$consumeBiomeProviderCache(worldInfo.getLevelName());
-        this.generator = craftBridge.bridge$consumeGeneratorCache(worldInfo.getLevelName());
-        this.environment = craftBridge.bridge$consumeEnvironmentCache(worldInfo.getLevelName());
+            this.biomeProvider = craftBridge.bridge$consumeBiomeProviderCache(worldInfo.getLevelName());
+            this.generator = craftBridge.bridge$consumeGeneratorCache(worldInfo.getLevelName());
+            this.environment = craftBridge.bridge$consumeEnvironmentCache(worldInfo.getLevelName());
 
-        if (this.environment == null) {
-            // Select world environment for vanilla/mod world creation
-            if (instance.type().is(LevelStem.OVERWORLD.location())) {
-                this.environment = World.Environment.NORMAL;
-            } else if (instance.type().is(LevelStem.NETHER.location())) {
-                this.environment = World.Environment.NETHER;
-            } else if (instance.type().is(LevelStem.END.location())) {
-                this.environment = World.Environment.THE_END;
-            } else {
-                // Don't use CUSTOM; it's not even supported in Multiverse
-                // this.environment = World.Environment.CUSTOM;
-                this.environment = World.Environment.NORMAL;
+            if (this.environment == null) {
+                // Select world environment for vanilla/mod world creation
+                if (instance.type().is(LevelStem.OVERWORLD.location())) {
+                    this.environment = World.Environment.NORMAL;
+                } else if (instance.type().is(LevelStem.NETHER.location())) {
+                    this.environment = World.Environment.NETHER;
+                } else if (instance.type().is(LevelStem.END.location())) {
+                    this.environment = World.Environment.THE_END;
+                } else {
+                    // Don't use CUSTOM; it's not even supported in Multiverse
+                    // this.environment = World.Environment.CUSTOM;
+                    this.environment = World.Environment.NORMAL;
+                }
             }
         }
 
-        // Data needed by getWorld() are all initialized for possible creating CraftWorld.
-        // CraftBukkit start: select custom chunk generator
         ChunkGenerator raw = (ChunkGenerator) DecorationOps.callsite().invoke(instance);
-        if (biomeProvider != null) {
-            BiomeSource biomeSource = new CustomWorldChunkManager(getWorld(), biomeProvider, getServer().registryAccess().registryOrThrow(Registries.BIOME));
-            if (raw instanceof NoiseBasedChunkGenerator noise) {
-                raw = new NoiseBasedChunkGenerator(biomeSource, noise.settings);
-            } else if (raw instanceof FlatLevelSource flat) {
-                raw = new FlatLevelSource(((FlatLevelGeneratorSettingsBridge)flat.settings()).bridge$withBiomeSource(biomeSource));
-            } else {
-                ArclightServer.LOGGER.warn("Level {} has unknown customized generator -- requested biome provider won't be satisfied.", this.serverLevelData.getLevelName());
+        if (arclight$isActual()) {
+            // Data needed by getWorld() are all initialized for possible creating CraftWorld.
+            // CraftBukkit start: select custom chunk generator
+            if (biomeProvider != null) {
+                BiomeSource biomeSource = new CustomWorldChunkManager(getWorld(), biomeProvider, getServer().registryAccess().registryOrThrow(Registries.BIOME));
+                if (raw instanceof NoiseBasedChunkGenerator noise) {
+                    raw = new NoiseBasedChunkGenerator(biomeSource, noise.settings);
+                } else if (raw instanceof FlatLevelSource flat) {
+                    raw = new FlatLevelSource(((FlatLevelGeneratorSettingsBridge) flat.settings()).bridge$withBiomeSource(biomeSource));
+                } else {
+                    ArclightServer.LOGGER.warn("Level {} has unknown customized generator -- requested biome provider won't be satisfied.", this.serverLevelData.getLevelName());
+                }
             }
+            if (generator != null) {
+                raw = new CustomChunkGenerator((ServerLevel) (Object) this, raw, generator);
+            }
+            // CraftBukkit end
+
+            // Now we create the CraftWorld
+            this.world = new CraftWorld((ServerLevel) (Object) this, generator, biomeProvider, environment);
         }
-        if (generator != null) {
-            raw = new CustomChunkGenerator((ServerLevel)(Object) this, raw, generator);
-        }
-        // CraftBukkit end
         return raw;
     }
 
@@ -252,8 +258,10 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         ((ServerChunkProviderBridge) this.chunkSource).bridge$setViewDistance(spigotConfig.viewDistance);
         ((ServerChunkProviderBridge) this.chunkSource).bridge$setSimulationDistance(spigotConfig.simulationDistance);
         ((WorldInfoBridge) this.K).bridge$setWorld((ServerLevel) (Object) this);
-        var data = this.getDataStorage().computeIfAbsent(LevelPersistentData.factory(), "bukkit_pdc");
-        this.bridge$getWorld().readBukkitValues(data.getTag());
+        if (arclight$isActual()) {
+            var data = this.getDataStorage().computeIfAbsent(LevelPersistentData.factory(), "bukkit_pdc");
+            this.bridge$getWorld().readBukkitValues(data.getTag());
+        }
     }
 
     @Inject(method = "saveLevelData", at = @At("RETURN"))

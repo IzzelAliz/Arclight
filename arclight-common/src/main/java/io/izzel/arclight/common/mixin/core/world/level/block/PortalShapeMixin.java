@@ -8,6 +8,7 @@ import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Blocks;
@@ -23,7 +24,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
@@ -80,16 +80,19 @@ public abstract class PortalShapeMixin implements PortalSizeBridge {
 
     @Inject(method = "createPortalBlocks", cancellable = true, at = @At("HEAD"))
     private void arclight$buildPortal(CallbackInfo ci) {
-        World world = ((IWorldBridge) this.level).bridge$getMinecraftWorld().bridge$getWorld();
-        net.minecraft.world.level.block.state.BlockState blockState = Blocks.NETHER_PORTAL.defaultBlockState().setValue(NetherPortalBlock.AXIS, this.axis);
-        BlockPos.betweenClosed(this.bottomLeft, this.bottomLeft.relative(Direction.UP, this.height - 1).relative(this.rightDir, this.width - 1)).forEach((blockPos) -> {
-            blocks.setBlock(blockPos, blockState, 18);
-        });
-        PortalCreateEvent event = new PortalCreateEvent((java.util.List<org.bukkit.block.BlockState>) (java.util.List) this.blocks.getList(), world, null, PortalCreateEvent.CreateReason.FIRE);
-        Bukkit.getPluginManager().callEvent(event);
-        arclight$ret = !event.isCancelled();
-        if (event.isCancelled()) {
-            ci.cancel();
+        ServerLevel level = IWorldBridge.checkActual(this.level);
+        if (level != null) {
+            World world = level.bridge$getWorld();
+            net.minecraft.world.level.block.state.BlockState blockState = Blocks.NETHER_PORTAL.defaultBlockState().setValue(NetherPortalBlock.AXIS, this.axis);
+            BlockPos.betweenClosed(this.bottomLeft, this.bottomLeft.relative(Direction.UP, this.height - 1).relative(this.rightDir, this.width - 1)).forEach((blockPos) -> {
+                blocks.setBlock(blockPos, blockState, 18);
+            });
+            PortalCreateEvent event = new PortalCreateEvent((java.util.List<org.bukkit.block.BlockState>) (java.util.List) this.blocks.getList(), world, null, PortalCreateEvent.CreateReason.FIRE);
+            Bukkit.getPluginManager().callEvent(event);
+            arclight$ret = !event.isCancelled();
+            if (event.isCancelled()) {
+                ci.cancel();
+            }
         }
     }
 

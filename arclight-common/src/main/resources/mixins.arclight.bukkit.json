@@ -42,6 +42,7 @@
     "MaterialMixin",
     "PotionTypeMixin",
     "Registry_SimpleRegistryMixin",
+    "SpigotWorldConfigMixin",
     "StandardMessengerMixin",
     "WatchdogThreadMixin",
     "event.AsyncStructureSpawnEventMixin",

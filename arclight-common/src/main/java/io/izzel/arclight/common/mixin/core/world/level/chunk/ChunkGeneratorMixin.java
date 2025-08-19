@@ -6,6 +6,7 @@ import io.izzel.arclight.common.mod.mixins.annotation.InvokeSpecial;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.WorldGenLevel;
@@ -44,12 +45,15 @@ public abstract class ChunkGeneratorMixin implements ChunkGeneratorBridge {
 
     @Decorate(method = "tryGenerateStructure", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/StructureManager;setStartForStructure(Lnet/minecraft/core/SectionPos;Lnet/minecraft/world/level/levelgen/structure/Structure;Lnet/minecraft/world/level/levelgen/structure/StructureStart;Lnet/minecraft/world/level/chunk/StructureAccess;)V"))
     private void arclight$structureSpawn(@Local(ordinal = -1) StructureManager manager, @Local(ordinal = -1) ChunkPos chunkPos, @Local(ordinal = -1) Structure structure, @Local(ordinal = -1) StructureStart structurestart) throws Throwable {
-        var box = structurestart.getBoundingBox();
-        var event = new org.bukkit.event.world.AsyncStructureSpawnEvent(((IWorldBridge) manager.level).bridge$getMinecraftWorld().bridge$getWorld(), CraftStructure.minecraftToBukkit(structure), new org.bukkit.util.BoundingBox(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ()), chunkPos.x, chunkPos.z);
-        Bukkit.getPluginManager().callEvent(event);
-        if (event.isCancelled()) {
-            DecorationOps.cancel().invoke(true);
-            return;
+        ServerLevel level = IWorldBridge.checkActual(manager.level);
+        if (level != null) {
+            var box = structurestart.getBoundingBox();
+            var event = new org.bukkit.event.world.AsyncStructureSpawnEvent(level.bridge$getWorld(), CraftStructure.minecraftToBukkit(structure), new org.bukkit.util.BoundingBox(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ()), chunkPos.x, chunkPos.z);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                DecorationOps.cancel().invoke(true);
+                return;
+            }
         }
         DecorationOps.blackhole().invoke();
     }
@@ -70,7 +74,7 @@ public abstract class ChunkGeneratorMixin implements ChunkGeneratorBridge {
     }
 
     private void addDecorations(WorldGenLevel region, ChunkAccess chunk, StructureManager structureManager) {
-        org.bukkit.World world = ((IWorldBridge) region).bridge$getMinecraftWorld().bridge$getWorld();
+        org.bukkit.World world = region.getLevel().bridge$getWorld();
         // only call when a populator is present (prevents unnecessary entity conversion)
         if (!world.getPopulators().isEmpty()) {
             CraftLimitedRegion limitedRegion = new CraftLimitedRegion(region, chunk.getPos());

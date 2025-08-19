@@ -5,10 +5,10 @@ import io.izzel.arclight.common.bridge.core.world.IWorldBridge;
 import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSources;
 import org.bukkit.craftbukkit.v.block.CraftBlockState;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -31,12 +31,15 @@ public abstract class SnowGolemMixin extends PathfinderMobMixin {
 
     @Decorate(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
     private boolean arclight$blockForm(Level world, BlockPos pos, BlockState newState) throws Throwable {
-        final var event = ArclightEventFactory.callBlockFormEvent(((IWorldBridge) world).bridge$getMinecraftWorld(), pos, newState, 3, (SnowGolem)(Object) this);
-        if (event != null) {
-            if (event.isCancelled()) {
-                return false;
+        ServerLevel level = IWorldBridge.checkActual(world);
+        if (level != null) {
+            final var event = ArclightEventFactory.callBlockFormEvent(level, pos, newState, 3, (SnowGolem) (Object) this);
+            if (event != null) {
+                if (event.isCancelled()) {
+                    return false;
+                }
+                newState = ((CraftBlockState) event.getNewState()).getHandle();
             }
-            newState = ((CraftBlockState) event.getNewState()).getHandle();
         }
         return (boolean) DecorationOps.callsite().invoke(world, pos, newState);
     }

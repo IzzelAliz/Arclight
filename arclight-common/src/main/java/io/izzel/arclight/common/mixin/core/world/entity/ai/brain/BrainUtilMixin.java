@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.mixin.core.world.entity.ai.brain;
 
-import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.behavior.BehaviorUtils;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -26,7 +25,7 @@ public class BrainUtilMixin {
     @Inject(method = "throwItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;F)V", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private static void arclight$entityDropItem(LivingEntity entity, ItemStack p_217135_, Vec3 p_217136_, Vec3 p_217137_, float p_217138_, CallbackInfo ci, double d0, ItemEntity itemEntity) {
-        EntityDropItemEvent event = new EntityDropItemEvent(((EntityBridge) entity).bridge$getBukkitEntity(), (Item) ((EntityBridge) itemEntity).bridge$getBukkitEntity());
+        EntityDropItemEvent event = new EntityDropItemEvent(entity.bridge$getBukkitEntity(), (Item) itemEntity.bridge$getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             ci.cancel();

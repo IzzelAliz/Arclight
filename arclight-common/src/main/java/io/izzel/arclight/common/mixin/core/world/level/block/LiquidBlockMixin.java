@@ -5,6 +5,7 @@ import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.LiquidBlock;
@@ -22,12 +23,15 @@ public class LiquidBlockMixin {
 
     @Decorate(method = "shouldSpreadLiquid", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
     public boolean arclight$blockForm(Level world, BlockPos pos, BlockState newState) throws Throwable {
-        final var event = ArclightEventFactory.callBlockFormEvent(((IWorldBridge) world).bridge$getMinecraftWorld(), pos, newState, 3, null);
-        if (event != null) {
-            if (event.isCancelled()) {
-                return false;
+        ServerLevel level = IWorldBridge.checkActual(world);
+        if (level != null) {
+            final var event = ArclightEventFactory.callBlockFormEvent(level, pos, newState, 3, null);
+            if (event != null) {
+                if (event.isCancelled()) {
+                    return false;
+                }
+                newState = ((CraftBlockState) event.getNewState()).getHandle();
             }
-            newState = ((CraftBlockState) event.getNewState()).getHandle();
         }
         return arclight$fizz = (boolean) DecorationOps.callsite().invoke(world, pos, newState);
     }
