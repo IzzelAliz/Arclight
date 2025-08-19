@@ -48,6 +48,8 @@ public interface ServerPlayerEntityBridge extends PlayerEntityBridge {
 
     void bridge$setTrackerDirty(boolean flag);
 
+    boolean arclight$isKeepLevel();
+
     interface RespawnPosAngleBridge {
 
         boolean bridge$isBedSpawn();

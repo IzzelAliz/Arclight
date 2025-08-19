@@ -79,10 +79,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.Slice;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -99,7 +96,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     // @formatter:off
     @Shadow private float yRot;
     @Shadow public abstract Level level();
-    @Shadow protected int boardingCooldown;
+    @Shadow public int boardingCooldown;
     @Shadow private float xRot;
     @Shadow public abstract float getYRot();
     @Shadow public abstract float getXRot();
@@ -122,7 +119,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow @Nullable public abstract MinecraftServer getServer();
     @Shadow public abstract Vec3 getDeltaMovement();
     @Shadow public abstract EntityType<?> getType();
-    @Shadow @Final protected RandomSource random;
+    @Shadow @Final public RandomSource random;
     @Shadow public abstract float getBbWidth();
     @Shadow public abstract float getBbHeight();
     @Shadow public abstract boolean isInvisible();
@@ -135,7 +132,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow public void tick() {}
     @Shadow public abstract AABB getBoundingBox();
     @Shadow public abstract BlockPos blockPosition();
-    @Shadow protected boolean onGround;
+    @Shadow public boolean onGround;
     @Shadow public abstract boolean isInWater();
     @Shadow public abstract boolean isPassenger();
     @Shadow public float fallDistance;
@@ -177,7 +174,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow public abstract Vec3 position();
     @Shadow public abstract boolean isPushable();
     @Shadow protected abstract void removeAfterChangingDimensions();
-    @Shadow protected abstract Vec3 getRelativePortalPosition(Direction.Axis axis, BlockUtil.FoundRectangle result);
+    @Shadow public abstract Vec3 getRelativePortalPosition(Direction.Axis axis, BlockUtil.FoundRectangle result);
     @Shadow public abstract EntityDimensions getDimensions(Pose poseIn);
     @Shadow protected abstract boolean updateInWaterStateAndDoFluidPushing();
     @Shadow public abstract boolean isInLava();
@@ -219,9 +216,8 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow protected abstract void applyGravity();
     @Shadow public abstract void igniteForSeconds(float f);
     @Shadow public abstract boolean onGround();
+    @Shadow @org.jetbrains.annotations.Nullable public abstract ItemEntity spawnAtLocation(ItemStack itemStack, float f);
     // @formatter:on
-
-    @Shadow private Level level;
     private static final int CURRENT_LEVEL = 2;
     public boolean forceDrops;
     public boolean persist = true;
@@ -726,10 +722,33 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         }
     }
 
+    private boolean arclight$spawnNoAdd = false;
+
+    @Override
+    public ItemEntity arclight$spawnAtLocationNoAdd(ItemStack stack, float yOffset) {
+        try {
+            arclight$spawnNoAdd = true;
+            return spawnAtLocation(stack, yOffset);
+        } finally {
+            arclight$spawnNoAdd = false;
+        }
+    }
+
+    @Decorate(method = "spawnAtLocation(Lnet/minecraft/world/item/ItemStack;F)Lnet/minecraft/world/entity/item/ItemEntity;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
+    private boolean arclight$spawnNoAdd(Level instance, Entity entity) throws Throwable {
+        if (arclight$spawnNoAdd) {
+            return true;
+        }
+        return (boolean) DecorationOps.callsite().invoke(instance, entity);
+    }
+
     @Inject(method = "spawnAtLocation(Lnet/minecraft/world/item/ItemStack;F)Lnet/minecraft/world/entity/item/ItemEntity;",
         cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     public void arclight$entityDropItem(ItemStack stack, float offsetY, CallbackInfoReturnable<ItemEntity> cir, ItemEntity itementity) {
+        if (arclight$spawnNoAdd) {
+            return;
+        }
         EntityDropItemEvent event = new EntityDropItemEvent(this.getBukkitEntity(), (org.bukkit.entity.Item) itementity.bridge$getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {

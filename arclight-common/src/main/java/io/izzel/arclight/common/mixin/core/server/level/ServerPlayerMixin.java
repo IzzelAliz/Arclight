@@ -14,6 +14,7 @@ import io.izzel.arclight.common.mixin.core.world.entity.player.PlayerMixin;
 import io.izzel.arclight.common.mod.mixins.annotation.RenameInto;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.server.block.ChestBlockDoubleInventoryHacks;
+import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
 import io.izzel.arclight.common.mod.server.world.item.ArclightItemStack;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.Blackhole;
@@ -127,14 +128,14 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Shadow public boolean isChangingDimension;
     @Shadow public abstract ServerLevel serverLevel();
     @Shadow public boolean wonGame;
-    @Shadow private boolean seenCredits;
+    @Shadow public boolean seenCredits;
     @Shadow @Nullable private Vec3 enteredNetherPosition;
     @Shadow public abstract void triggerDimensionChangeTriggers(ServerLevel p_213846_1_);
     @Shadow public int lastSentExp;
     @Shadow private float lastSentHealth;
     @Shadow private int lastSentFood;
-    @Shadow public int containerCounter;
-    @Shadow private String language;
+    @Shadow private int containerCounter;
+    @Shadow public String language;
     @Shadow public abstract void teleportTo(ServerLevel newWorld, double x, double y, double z, float yaw, float pitch);
     @Shadow public abstract void giveExperiencePoints(int p_195068_1_);
     @Shadow private ResourceKey<Level> respawnDimension;
@@ -351,20 +352,33 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
         Component defaultMessage = this.getCombatTracker().getDeathMessage();
         String deathmessage = defaultMessage.getString();
-        // Arclight: Spigot drops obtained from getCapturedDrops()
-        List<org.bukkit.inventory.ItemStack> loot;
-        List<ItemEntity> drops = ArclightCaptures.consumeExtraDrops();
+        PlayerDeathEvent event;
+        Level level = level();
+        try {
+            // Obtain Player drops captured by EntityEventHandler
+            List<ItemEntity> drops = ArclightCaptures.consumeExtraDrops();
+            if (drops == null) {
+                drops = new ArrayList<>();
+            }
 
-        if (drops != null) {
-            loot = ArclightItemStack.initDecorate((ServerPlayer) (Object)this, drops);
-        } else {
-            loot = new ArrayList<>();
+            // Arclight: Spigot drops obtained from getCapturedDrops()
+            // Already respect vanilla behaviours by using entity capture
+            List<org.bukkit.inventory.ItemStack> loot = ArclightItemStack.initDecorate(drops);
+            this.keepLevel = keepInventory;
+            if (!keepInventory) {
+                this.getInventory().replaceWith(copyInv);
+            }
+            int expReward = bridge$getExpReward(damagesource.getEntity());
+            event = ArclightEventFactory.callPlayerDeathEvent((ServerPlayer) (Object) this, damagesource, loot, expReward, deathmessage, keepInventory);
+            keepLevel = event.getKeepLevel();
+            newLevel = event.getNewLevel();
+            newTotalExp = event.getNewTotalExp();
+            expToDrop = event.getDroppedExp();
+            newExp = event.getNewExp();
+            ArclightItemStack.forEach(loot, it -> arclight$spawnAtLocationNoAdd(it, 0f), level::addFreshEntity);
+        } finally {
+            ArclightItemStack.cleanup();
         }
-        this.keepLevel = keepInventory;
-        if (!keepInventory) {
-            this.getInventory().replaceWith(copyInv);
-        }
-        PlayerDeathEvent event = CraftEventFactory.callPlayerDeathEvent((ServerPlayer) (Object) this, damagesource, loot, deathmessage, keepInventory);
         if (this.containerMenu != this.inventoryMenu) {
             this.closeContainer();
         }

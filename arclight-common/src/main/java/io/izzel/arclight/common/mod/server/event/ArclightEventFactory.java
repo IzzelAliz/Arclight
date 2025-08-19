@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mod.server.event;
 
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.item.ItemStackBridge;
 import io.izzel.arclight.common.bridge.core.world.level.block.BlockBridge;
@@ -30,6 +31,7 @@ import org.bukkit.craftbukkit.v.block.CraftBlockState;
 import org.bukkit.craftbukkit.v.block.CraftBlockStates;
 import org.bukkit.craftbukkit.v.damage.CraftDamageSource;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -39,6 +41,7 @@ import org.bukkit.event.block.BlockFormEvent;
 import org.bukkit.event.block.EntityBlockFormEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityDropItemEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nullable;
@@ -60,6 +63,19 @@ public abstract class ArclightEventFactory {
         CraftLivingEntity craftLivingEntity = ((LivingEntityBridge) entity).bridge$getBukkitEntity();
         EntityDeathEvent event = new EntityDeathEvent(craftLivingEntity, bukkitDamageSource, drops, ((LivingEntityBridge) entity).bridge$getExpReward(damageSource.getEntity()));
         return callEvent(event);
+    }
+
+    /**
+     * @see CraftEventFactory#callPlayerDeathEvent(ServerPlayer, DamageSource, List, String, boolean)
+     */
+    public static PlayerDeathEvent callPlayerDeathEvent(ServerPlayer victim, DamageSource damageSource, List<ItemStack> drops, int expReward, String deathMessage, boolean keepInventory) {
+        CraftPlayer entity = (CraftPlayer) victim.bridge$getBukkitEntity();
+        CraftDamageSource bukkitDamageSource = new CraftDamageSource(damageSource);
+        PlayerDeathEvent event = new PlayerDeathEvent(entity, bukkitDamageSource, drops, expReward, 0, deathMessage);
+        event.setKeepInventory(keepInventory);
+        event.setKeepLevel(((ServerPlayerEntityBridge) victim).arclight$isKeepLevel());
+        callEvent(event);
+        return event;
     }
 
     /**

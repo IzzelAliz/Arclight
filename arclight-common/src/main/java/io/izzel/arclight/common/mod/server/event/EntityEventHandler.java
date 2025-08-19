@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mod.server.event;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.mod.server.world.item.ArclightItemStack;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
@@ -33,9 +34,11 @@ public class EntityEventHandler {
             if (extra != null) {
                 drops.addAll(extra);
             }
+
             try {
-                List<ItemStack> itemStackList = ArclightItemStack.initDecorate(living, drops);
+                List<ItemStack> itemStackList = ArclightItemStack.initDecorate(drops);
                 final var event = ArclightEventFactory.callEntityDeathEvent(living, source, itemStackList);
+                ArclightItemStack.convert(itemStackList, drops, it -> ((EntityBridge) living).arclight$spawnAtLocationNoAdd(it, 0f));
                 ((LivingEntityBridge) living).bridge$setExpToDrop(event.getDroppedExp());
             } finally {
                 ArclightItemStack.cleanup();

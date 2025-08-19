@@ -9,6 +9,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.EnderDragonPart;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
@@ -101,4 +103,6 @@ public interface EntityBridge extends CommandSourceBridge, InjectEntityBridge {
     void arclight$pushExtraSpawnReason(ArclightSpawnReason reason);
 
     ArclightSpawnReason arclight$getExtraSpawnReason();
+
+    ItemEntity arclight$spawnAtLocationNoAdd(ItemStack stack, float yOffset);
 }

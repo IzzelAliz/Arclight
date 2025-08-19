@@ -1,35 +1,53 @@
 package io.izzel.arclight.common.mod.server.world.item;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import io.izzel.tools.collection.XmapList;
-import net.minecraft.world.entity.LivingEntity;
+import io.izzel.arclight.common.bridge.bukkit.CraftItemStackBridge;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.item.ItemStack;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class ArclightItemStack {
 
-    private static final BiMap<ItemEntity, org.bukkit.inventory.ItemStack> ALLOCATED = HashBiMap.create();
+    private static final List<ItemStack> ALLOCATED = new ArrayList<>();
 
-    public static XmapList<ItemEntity, org.bukkit.inventory.ItemStack> initDecorate(LivingEntity living, List<ItemEntity> items) {
-        items.forEach(item -> ALLOCATED.put(item, CraftItemStack.asCraftMirror(item.getItem())));
-        return XmapList.create(
-                items, org.bukkit.inventory.ItemStack.class,
-                entity -> ALLOCATED.computeIfAbsent(entity, ct -> CraftItemStack.asCraftMirror(entity.getItem())),
-                stack -> ALLOCATED.inverse().computeIfAbsent(stack, craft -> spawnAt(living, CraftItemStack.asNMSCopy(craft)))
-        );
+    public static List<ItemStack> initDecorate(List<ItemEntity> items) {
+        List<ItemStack> bukkit = new ArrayList<>();
+        for (ItemEntity item : items) {
+            CraftItemStack stack = CraftItemStack.asCraftMirror(item.getItem());
+            ((CraftItemStackBridge)(Object) stack).arclight$setItemEntity(item);
+            ALLOCATED.add(stack);
+            bukkit.add(stack);
+        }
+        return bukkit;
     }
 
-    public static ItemEntity spawnAt(LivingEntity entity, ItemStack stack) {
-        final var result = new ItemEntity(entity.level(), entity.getX(), entity.getY(), entity.getZ(), stack);
-        result.setDefaultPickUpDelay();
-        return result;
+    public static void convert(List<ItemStack> bukkit, List<ItemEntity> resultContainer, Function<net.minecraft.world.item.ItemStack, ItemEntity> factory) {
+        resultContainer.clear();
+        for (ItemStack item : bukkit) {
+            ItemEntity entity = ((CraftItemStackBridge) item).arclight$getItemEntity();
+            if (entity == null) {
+                entity = factory.apply(CraftItemStack.asNMSCopy(item));
+            }
+            resultContainer.add(entity);
+        }
+    }
+
+    public static void forEach(List<ItemStack> bukkit, Function<net.minecraft.world.item.ItemStack, ItemEntity> factory, Consumer<ItemEntity> consumer) {
+        for (ItemStack item : bukkit) {
+            ItemEntity entity = ((CraftItemStackBridge) item).arclight$getItemEntity();
+            if (entity == null) {
+                entity = factory.apply(CraftItemStack.asNMSCopy(item));
+            }
+            consumer.accept(entity);
+        }
     }
 
     public static void cleanup() {
+        ALLOCATED.forEach(stack -> ((CraftItemStackBridge) stack).arclight$setItemEntity(null));
         ALLOCATED.clear();
     }
 }
