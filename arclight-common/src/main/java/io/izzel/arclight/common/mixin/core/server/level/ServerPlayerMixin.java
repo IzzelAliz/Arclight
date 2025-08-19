@@ -14,6 +14,7 @@ import io.izzel.arclight.common.mixin.core.world.entity.player.PlayerMixin;
 import io.izzel.arclight.common.mod.mixins.annotation.RenameInto;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.server.block.ChestBlockDoubleInventoryHacks;
+import io.izzel.arclight.common.mod.server.world.item.ArclightItemStack;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.Blackhole;
 import io.izzel.arclight.mixin.Decorate;
@@ -75,7 +76,6 @@ import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v.scoreboard.CraftScoreboardManager;
 import org.bukkit.craftbukkit.v.util.CraftChatMessage;
 import org.bukkit.craftbukkit.v.util.CraftLocation;
@@ -105,7 +105,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -332,20 +331,6 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         return super.drop(itemstack, flag, flag1, callEvent);
     }
 
-    @Redirect(method = "drop(Lnet/minecraft/world/item/ItemStack;ZZ)Lnet/minecraft/world/entity/item/ItemEntity;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
-    private boolean arclight$capturePlayerDrop(Level instance, Entity entity) {
-        if (this.bridge$common$isCapturingDrops()) {
-            this.bridge$common$captureDrop((ItemEntity) entity);
-            return true;
-        } else {
-            return instance.addFreshEntity(entity);
-        }
-    }
-
-    @Override
-    public void bridge$common$finishCaptureAndFireEvent(DamageSource damageSource) {
-    }
-
     @Decorate(method = "die", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/level/GameRules;getBoolean(Lnet/minecraft/world/level/GameRules$Key;)Z"),
         slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/level/GameRules;RULE_SHOWDEATHMESSAGES:Lnet/minecraft/world/level/GameRules$Key;")))
     private boolean arclight$firePlayerDeath(GameRules instance, GameRules.Key<GameRules.BooleanValue> key, DamageSource damagesource,
@@ -367,13 +352,13 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         Component defaultMessage = this.getCombatTracker().getDeathMessage();
         String deathmessage = defaultMessage.getString();
         // Arclight: Spigot drops obtained from getCapturedDrops()
-        List<org.bukkit.inventory.ItemStack> loot = new ArrayList<>();
-        Collection<ItemEntity> drops = this.bridge$common$getCapturedDrops();
+        List<org.bukkit.inventory.ItemStack> loot;
+        List<ItemEntity> drops = ArclightCaptures.consumeExtraDrops();
+
         if (drops != null) {
-            for (ItemEntity entity : drops) {
-                var craftItemStack = CraftItemStack.asCraftMirror(entity.getItem()).markForInventoryDrop();
-                loot.add(craftItemStack);
-            }
+            loot = ArclightItemStack.initDecorate((ServerPlayer) (Object)this, drops);
+        } else {
+            loot = new ArrayList<>();
         }
         this.keepLevel = keepInventory;
         if (!keepInventory) {
@@ -741,12 +726,12 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     }
 
     public CraftPlayer getBukkitEntity() {
-        return (CraftPlayer) ((InternalEntityBridge) this).internal$getBukkitEntity();
+        return (CraftPlayer) this.internal$getBukkitEntity();
     }
 
     @Override
     public CraftPlayer bridge$getBukkitEntity() {
-        return (CraftPlayer) ((InternalEntityBridge) this).internal$getBukkitEntity();
+        return (CraftPlayer) this.internal$getBukkitEntity();
     }
 
     @Override

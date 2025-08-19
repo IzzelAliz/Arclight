@@ -4,20 +4,16 @@ import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Either;
-import io.izzel.arclight.common.bridge.bukkit.EntityDamageEventBridge;
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.network.play.ServerGamePacketListenerBridge;
 import io.izzel.arclight.common.bridge.core.world.IWorldBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
-import io.izzel.arclight.common.mod.util.ArclightDamageContainer;
-import io.izzel.arclight.common.mod.util.DistValidate;
 import io.izzel.arclight.common.util.IteratorUtil;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
-import io.izzel.tools.collection.XmapList;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -45,7 +41,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.WalkAnimationState;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeMap;
@@ -771,63 +766,6 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
             DecorationOps.callsite().invoke(entity, x, y, z);
         }
         DecorationOps.blackhole().invoke();
-    }
-
-    @Unique private List<ItemEntity> arclight$capturedDrops;
-
-    @Override
-    public void bridge$common$startCaptureDrops() {
-        arclight$capturedDrops = new ArrayList<>();
-    }
-
-    @Override
-    public boolean bridge$common$isCapturingDrops() {
-        return arclight$capturedDrops != null;
-    }
-
-    @Override
-    public Collection<ItemEntity> bridge$common$getCapturedDrops() {
-        try {
-            return arclight$capturedDrops;
-        } finally {
-            arclight$capturedDrops = null;
-        }
-    }
-
-    @Override
-    public void bridge$common$captureDrop(ItemEntity itemEntity) {
-        if (arclight$capturedDrops != null) {
-            arclight$capturedDrops.add(itemEntity);
-        }
-    }
-
-    @Override
-    public void bridge$common$finishCaptureAndFireEvent(DamageSource damageSource) {
-        // in vanilla all items are dropped here
-        // in forge we do not capture items ourselves but use forge system
-        var drops = arclight$capturedDrops;
-        if (!(drops instanceof ArrayList)) {
-            drops = new ArrayList<>(drops);
-        }
-        var itemStackList = XmapList.create(drops, org.bukkit.inventory.ItemStack.class,
-            (ItemEntity entity) -> CraftItemStack.asCraftMirror(entity.getItem()),
-            itemStack -> {
-                ItemEntity itemEntity = new ItemEntity(this.level(), this.getX(), this.getY(), this.getZ(), CraftItemStack.asNMSCopy(itemStack));
-                itemEntity.setDefaultPickUpDelay();
-                return itemEntity;
-            });
-        CraftEventFactory.callEntityDeathEvent((LivingEntity) (Object) this, damageSource, itemStackList);
-        arclight$capturedDrops = null;
-    }
-
-    @Inject(method = "dropAllDeathLoot", at = @At("HEAD"))
-    private void arclight$startCapture(ServerLevel serverLevel, DamageSource damageSource, CallbackInfo ci) {
-        this.bridge$common$startCaptureDrops();
-    }
-
-    @Inject(method = "dropAllDeathLoot", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;dropExperience(Lnet/minecraft/world/entity/Entity;)V"))
-    private void arclight$stopCapture(ServerLevel serverLevel, DamageSource damageSource, CallbackInfo ci) {
-        this.bridge$common$finishCaptureAndFireEvent(damageSource);
     }
 
     @Inject(method = "addEatEffect", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;)Z"))

@@ -54,7 +54,7 @@ public abstract class ServerPlayerGameModeMixin_Forge implements PlayerInteracti
             // Arclight: we need to fire it anyway since they should at least know about it
             switch (action) {
                 case START_DESTROY_BLOCK -> {
-                    ArclightCaptures.cancelPlayerInteract();
+                    ArclightCaptures.cancelNextPlayerInteract();
                     CraftEventFactory.callPlayerInteractEvent(player, Action.LEFT_CLICK_BLOCK, pos, face, player.getInventory().getSelected(), true, InteractionHand.MAIN_HAND, null);
                 }
                 // Arclight: Returning directly from the method is really a rude decision, don't know how to handle now...

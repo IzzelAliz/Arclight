@@ -1,7 +1,6 @@
 package io.izzel.arclight.neoforge.mixin.core.world.entity;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.tools.product.Product;
 import io.izzel.tools.product.Product4;
 import net.minecraft.core.BlockPos;
@@ -46,9 +45,9 @@ public abstract class EntityMixin_NeoForge implements EntityBridge, IEntityExten
     @Shadow public abstract double getX();
     @Shadow public abstract double getY(double d);
     @Shadow public abstract double getZ();
-    // @formatter:on
-
     @Shadow public int invulnerableTime;
+    @Shadow public abstract Collection<ItemEntity> captureDrops();
+    // @formatter:on
 
     @Override
     public void bridge$revive() {
@@ -66,7 +65,7 @@ public abstract class EntityMixin_NeoForge implements EntityBridge, IEntityExten
     @Redirect(method = "spawnAtLocation(Lnet/minecraft/world/item/ItemStack;F)Lnet/minecraft/world/entity/item/ItemEntity;", at = @At(value = "INVOKE", remap = false, ordinal = 0, target = "Lnet/minecraft/world/entity/Entity;captureDrops()Ljava/util/Collection;"))
     public Collection<ItemEntity> arclight$forceDrops(Entity entity) {
         Collection<ItemEntity> drops = entity.captureDrops();
-        if (this instanceof LivingEntityBridge && ((LivingEntityBridge) this).bridge$isForceDrops()) {
+        if (this.bridge$isForceDrops()) {
             drops = null;
         }
         return drops;

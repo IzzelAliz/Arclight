@@ -4,13 +4,13 @@ import com.google.common.collect.ImmutableList;
 import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.InternalEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.network.datasync.SynchedEntityDataBridge;
 import io.izzel.arclight.common.bridge.core.util.DamageSourceBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.level.portal.DimensionTransitionBridge;
 import io.izzel.arclight.common.mod.server.BukkitRegistry;
+import io.izzel.arclight.common.mod.server.entity.ArclightSpawnReason;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -67,18 +67,7 @@ import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
 import org.bukkit.craftbukkit.v.util.CraftLocation;
 import org.bukkit.entity.Hanging;
 import org.bukkit.entity.Vehicle;
-import org.bukkit.event.entity.EntityAirChangeEvent;
-import org.bukkit.event.entity.EntityCombustByBlockEvent;
-import org.bukkit.event.entity.EntityCombustByEntityEvent;
-import org.bukkit.event.entity.EntityCombustEvent;
-import org.bukkit.event.entity.EntityDismountEvent;
-import org.bukkit.event.entity.EntityDropItemEvent;
-import org.bukkit.event.entity.EntityMountEvent;
-import org.bukkit.event.entity.EntityPortalEvent;
-import org.bukkit.event.entity.EntityPoseChangeEvent;
-import org.bukkit.event.entity.EntityRemoveEvent;
-import org.bukkit.event.entity.EntityTeleportEvent;
-import org.bukkit.event.entity.EntityUnleashEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.vehicle.VehicleBlockCollisionEvent;
@@ -340,7 +329,30 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         this.unsetRemoved();
     }
 
-    private transient EntityRemoveEvent.Cause arclight$removeCause;
+    @Unique private transient CreatureSpawnEvent.SpawnReason arclight$spawnReason;
+    @Unique private transient ArclightSpawnReason arclight$extraSpawnReason;
+
+    @Override
+    public CreatureSpawnEvent.SpawnReason arclight$getAddEntityReason() {
+        return arclight$spawnReason;
+    }
+
+    @Override
+    public void arclight$pushAddEntityReason(CreatureSpawnEvent.SpawnReason reason) {
+        arclight$spawnReason = reason;
+    }
+
+    @Override
+    public ArclightSpawnReason arclight$getExtraSpawnReason() {
+        return arclight$extraSpawnReason;
+    }
+
+    @Override
+    public void arclight$pushExtraSpawnReason(ArclightSpawnReason reason) {
+        arclight$extraSpawnReason = reason;
+    }
+
+    @Unique private transient EntityRemoveEvent.Cause arclight$removeCause;
 
     @Override
     public void bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause cause) {
@@ -711,14 +723,6 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     private void arclight$preventVisible(boolean invisible, CallbackInfo ci) {
         if (this.persistentInvisibility) {
             ci.cancel();
-        }
-    }
-
-    @Inject(method = "spawnAtLocation(Lnet/minecraft/world/item/ItemStack;F)Lnet/minecraft/world/entity/item/ItemEntity;", cancellable = true, at = @At(value = "NEW", target = "(Lnet/minecraft/world/level/Level;DDDLnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/entity/item/ItemEntity;"))
-    private void arclight$captureEntityDrops(ItemStack itemStack, float f, CallbackInfoReturnable<ItemEntity> cir) {
-        if (this instanceof LivingEntityBridge && !((LivingEntityBridge) this).bridge$isForceDrops() && ((LivingEntityBridge) this).bridge$common$isCapturingDrops()) {
-            ((LivingEntityBridge) this).bridge$common$captureDrop(new ItemEntity(this.level(), this.getX(), this.getY() + (double) f, this.getZ(), itemStack));
-            cir.setReturnValue(null);
         }
     }
 

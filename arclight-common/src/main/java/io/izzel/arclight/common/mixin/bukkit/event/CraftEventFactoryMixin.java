@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.bukkit.event;
 
 import com.google.common.base.Function;
+import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import io.izzel.arclight.common.bridge.core.util.DamageSourceBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
@@ -19,32 +20,35 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.block.sign.Side;
+import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.block.CraftBlockState;
 import org.bukkit.craftbukkit.v.block.CraftBlockStates;
 import org.bukkit.craftbukkit.v.block.CraftSign;
 import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
 import org.bukkit.craftbukkit.v.damage.CraftDamageSource;
+import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.BlockFadeEvent;
-import org.bukkit.event.block.BlockFormEvent;
 import org.bukkit.event.block.BlockGrowEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
-import org.bukkit.event.block.EntityBlockFormEvent;
 import org.bukkit.event.block.NotePlayEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.player.PlayerSignOpenEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -55,6 +59,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Map;
 
 @Mixin(value = CraftEventFactory.class, remap = false)
@@ -97,6 +102,26 @@ public abstract class CraftEventFactoryMixin {
             ((Cancellable) event).setCancelled(true);
         }
         DecorationOps.callsite().invoke(instance, event);
+    }
+
+    /**
+     * @author InitAuther97
+     * @reason
+     */
+    @Overwrite
+    public static EntityDeathEvent callEntityDeathEvent(net.minecraft.world.entity.LivingEntity victim, DamageSource damageSource, List<ItemStack> drops) {
+        LivingEntityBridge living = (LivingEntityBridge) victim;
+        CraftLivingEntity craft = living.bridge$getBukkitEntity();
+        EntityDeathEvent event = ArclightEventFactory.callEntityDeathEvent(victim, damageSource, drops);
+
+        CraftWorld world = (CraftWorld) craft.getWorld();
+        living.bridge$setExpToDrop(event.getDroppedExp());
+        for(org.bukkit.inventory.ItemStack stack : event.getDrops()) {
+            if (stack != null && stack.getType() != Material.AIR && stack.getAmount() != 0) {
+                world.dropItem(craft.getLocation(), stack);
+            }
+        }
+        return event;
     }
 
     /**

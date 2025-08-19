@@ -1,7 +1,8 @@
 package io.izzel.arclight.forge.mixin.core.world.entity;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.tools.product.Product;
 import io.izzel.tools.product.Product4;
 import net.minecraft.core.BlockPos;
@@ -20,7 +21,6 @@ import net.minecraftforge.event.entity.EntityTeleportEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.Collection;
 
@@ -55,21 +55,20 @@ public abstract class EntityMixin_Forge implements EntityBridge, IForgeEntity {
         this.revive();
     }
 
-    @Redirect(method = "updateFluidHeightAndDoFluidPushing(Ljava/util/function/Predicate;)V", remap = false, at = @At(value = "INVOKE", remap = true, target = "Lnet/minecraft/world/level/material/FluidState;getFlow(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/Vec3;"))
-    private Vec3 arclight$setLava(FluidState instance, BlockGetter level, BlockPos pos) {
+    @Decorate(method = "updateFluidHeightAndDoFluidPushing(Ljava/util/function/Predicate;)V", remap = false, at = @At(value = "INVOKE", remap = true, target = "Lnet/minecraft/world/level/material/FluidState;getFlow(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/Vec3;"))
+    private Vec3 arclight$setLava(FluidState instance, BlockGetter level, BlockPos pos) throws Throwable {
         if (instance.getType().is(FluidTags.LAVA)) {
             this.bridge$setLastLavaContact(pos.immutable());
         }
-        return instance.getFlow(level, pos);
+        return (Vec3) DecorationOps.callsite().invoke(instance, level, pos);
     }
 
-    @Redirect(method = "spawnAtLocation(Lnet/minecraft/world/item/ItemStack;F)Lnet/minecraft/world/entity/item/ItemEntity;", at = @At(value = "INVOKE", remap = false, ordinal = 0, target = "Lnet/minecraft/world/entity/Entity;captureDrops()Ljava/util/Collection;"))
-    public Collection<ItemEntity> arclight$forceDrops(Entity entity) {
-        Collection<ItemEntity> drops = entity.captureDrops();
-        if (this instanceof LivingEntityBridge && ((LivingEntityBridge) this).bridge$isForceDrops()) {
-            drops = null;
+    @Decorate(method = "spawnAtLocation(Lnet/minecraft/world/item/ItemStack;F)Lnet/minecraft/world/entity/item/ItemEntity;", at = @At(value = "INVOKE", remap = false, ordinal = 0, target = "Lnet/minecraft/world/entity/Entity;captureDrops()Ljava/util/Collection;"))
+    public Collection<ItemEntity> arclight$forceDrops(Entity entity) throws Throwable {
+        if (this.bridge$isForceDrops()) {
+            return null;
         }
-        return drops;
+        return (Collection<ItemEntity>) DecorationOps.callsite().invoke(entity);
     }
 
     @Override

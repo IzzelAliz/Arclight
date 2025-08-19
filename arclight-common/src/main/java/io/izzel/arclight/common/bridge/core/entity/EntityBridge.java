@@ -2,6 +2,7 @@ package io.izzel.arclight.common.bridge.core.entity;
 
 import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
 import io.izzel.arclight.common.bridge.inject.InjectEntityBridge;
+import io.izzel.arclight.common.mod.server.entity.ArclightSpawnReason;
 import io.izzel.tools.product.Product;
 import io.izzel.tools.product.Product4;
 import net.minecraft.core.BlockPos;
@@ -11,6 +12,7 @@ import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.projectiles.ProjectileSource;
@@ -91,4 +93,12 @@ public interface EntityBridge extends CommandSourceBridge, InjectEntityBridge {
     default boolean bridge$forge$canUpdate() {
         return true;
     }
+
+    void arclight$pushAddEntityReason(CreatureSpawnEvent.SpawnReason reason);
+
+    CreatureSpawnEvent.SpawnReason arclight$getAddEntityReason();
+
+    void arclight$pushExtraSpawnReason(ArclightSpawnReason reason);
+
+    ArclightSpawnReason arclight$getExtraSpawnReason();
 }

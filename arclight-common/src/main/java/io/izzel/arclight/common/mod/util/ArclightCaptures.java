@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mod.util;
 
+import com.google.common.base.Preconditions;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -17,10 +18,7 @@ import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Stack;
+import java.util.*;
 
 public class ArclightCaptures {
 
@@ -72,8 +70,11 @@ public class ArclightCaptures {
     public static List<ItemEntity> getBlockDrops() {
         if (!blockBreakEventStack.empty()) {
             return blockBreakEventStack.peek().getBlockDrops();
+        } else if (captureBlockPopRes) {
+            return Preconditions.checkNotNull(extraDrops, "Not capturing drops!");
+        } else {
+            return null;
         }
-        return null;
     }
 
     public static boolean getBlockBreakDropItems() {
@@ -84,7 +85,7 @@ public class ArclightCaptures {
     }
 
     public static BlockBreakEventContext popPrimaryBlockBreakEvent() {
-        if (blockBreakEventStack.size() > 0) {
+        if (!blockBreakEventStack.empty()) {
             BlockBreakEventContext eventContext = blockBreakEventStack.pop();
 
             // deal with unhandled secondary events
@@ -107,7 +108,7 @@ public class ArclightCaptures {
     }
 
     public static BlockBreakEventContext popSecondaryBlockBreakEvent() {
-        if (blockBreakEventStack.size() > 0) {
+        if (!blockBreakEventStack.empty()) {
             BlockBreakEventContext eventContext = blockBreakEventStack.peek();
             if (!eventContext.isPrimary()) {
                 return blockBreakEventStack.pop();
@@ -378,13 +379,37 @@ public class ArclightCaptures {
 
     private static boolean playerInteractCancelled;
 
-    public static void cancelPlayerInteract() { playerInteractCancelled = true; }
+    public static void cancelNextPlayerInteract() { playerInteractCancelled = true; }
 
     public static boolean shouldCancelPlayerInteract() {
         try {
             return playerInteractCancelled;
         } finally {
             playerInteractCancelled = false;
+        }
+    }
+
+    private static boolean captureBlockPopRes = false;
+
+    public static void captureBlockPopRes(boolean state) {
+        captureBlockPopRes = state;
+    }
+
+    private static List<ItemEntity> extraDrops;
+
+    /**
+     * 1. Used by armor stands to capture their contents.
+     * 2. Used by LivingDropsEvent handlers to recapture player inventories.
+     */
+    public static void captureExtraDrops(List<ItemEntity> capturedDrops) {
+        extraDrops = capturedDrops;
+    }
+
+    public static List<ItemEntity> consumeExtraDrops() {
+        try {
+            return extraDrops;
+        } finally {
+            extraDrops = null;
         }
     }
 

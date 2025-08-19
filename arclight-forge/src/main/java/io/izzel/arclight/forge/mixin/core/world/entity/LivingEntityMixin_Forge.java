@@ -175,26 +175,4 @@ public abstract class LivingEntityMixin_Forge extends EntityMixin_Forge implemen
     public boolean bridge$forge$canEntityDestroy(Level level, BlockPos pos, LivingEntity entity) {
         return ForgeHooks.canEntityDestroy(level, pos, entity);
     }
-
-    @Override
-    public void bridge$common$startCaptureDrops() {
-    }
-
-    @Override
-    public boolean bridge$common$isCapturingDrops() {
-        return false;
-    }
-
-    @Override
-    public void bridge$common$captureDrop(ItemEntity itemEntity) {
-    }
-
-    @Override
-    public Collection<ItemEntity> bridge$common$getCapturedDrops() {
-        return this.captureDrops(null);
-    }
-
-    @Override
-    public void bridge$common$finishCaptureAndFireEvent(DamageSource damageSource) {
-    }
 }

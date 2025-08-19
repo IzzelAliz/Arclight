@@ -1,11 +1,13 @@
 package io.izzel.arclight.common.mixin.vanilla.world.entity;
 
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.vanilla.world.entity.LivingEntityBridge_Vanilla;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.ArclightDamageContainer;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -15,7 +17,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LivingEntity.class)
-public abstract class LivingEntityMixin_Vanilla extends EntityMixin_Vanilla implements LivingEntityBridge {
+public abstract class LivingEntityMixin_Vanilla extends EntityMixin_Vanilla implements LivingEntityBridge, LivingEntityBridge_Vanilla {
+
+    @Inject(method = "dropAllDeathLoot", at = @At("HEAD"))
+    private void arclight$startCapture(ServerLevel serverLevel, DamageSource damageSource, CallbackInfo ci) {
+        this.arclight$startCaptureDrops();
+    }
+
+    @Inject(method = "dropAllDeathLoot", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;dropExperience(Lnet/minecraft/world/entity/Entity;)V"))
+    private void arclight$stopCapture(ServerLevel serverLevel, DamageSource damageSource, CallbackInfo ci) {
+        this.arclight$vanilla$callLivingDropsEvent(damageSource, this.arclight$finishCaptureDrops());
+    }
 
     @Decorate(method = "hurt", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;isSleeping()Z"))
     private void arclight$entityDamageEvent(DamageSource damagesource, float originalDamage, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer container) throws Throwable {
