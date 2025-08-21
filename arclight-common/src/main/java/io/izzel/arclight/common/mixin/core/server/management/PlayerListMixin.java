@@ -394,18 +394,6 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         return dimensiontransition;
     }
 
-    @Decorate(method = "respawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;restoreFrom(Lnet/minecraft/server/level/ServerPlayer;Z)V"))
-    private void arclight$restoreInv(ServerPlayer newPlayer, ServerPlayer oldPlayer, boolean bl, ServerPlayer serverPlayer, boolean conqueredEnd) throws Throwable {
-        DecorationOps.callsite().invoke(newPlayer, oldPlayer, bl);
-        if (!conqueredEnd) {  // keep inventory here since inventory dropped at ServerPlayerEntity#onDeath
-            newPlayer.getInventory().replaceWith(oldPlayer.getInventory());
-            newPlayer.experienceLevel = oldPlayer.experienceLevel;
-            newPlayer.totalExperience = oldPlayer.totalExperience;
-            newPlayer.experienceProgress = oldPlayer.experienceProgress;
-            newPlayer.setScore(oldPlayer.getScore());
-        }
-    }
-
     @Decorate(method = "respawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;teleport(DDDFF)V"))
     private void arclight$respawnPackets(ServerGamePacketListenerImpl instance, double d, double e, double f, float g, float h, @Local(ordinal = -1) ServerPlayer player) throws Throwable {
         player.connection.send(new ClientboundSetChunkCacheRadiusPacket(((WorldBridge) player.serverLevel()).bridge$spigotConfig().viewDistance));

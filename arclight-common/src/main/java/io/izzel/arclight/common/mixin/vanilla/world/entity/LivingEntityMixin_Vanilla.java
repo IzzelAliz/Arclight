@@ -26,7 +26,9 @@ public abstract class LivingEntityMixin_Vanilla extends EntityMixin_Vanilla impl
 
     @Inject(method = "dropAllDeathLoot", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;dropExperience(Lnet/minecraft/world/entity/Entity;)V"))
     private void arclight$stopCapture(ServerLevel serverLevel, DamageSource damageSource, CallbackInfo ci) {
-        this.arclight$vanilla$callLivingDropsEvent(damageSource, this.arclight$finishCaptureDrops());
+        final var list = this.arclight$finishCaptureDrops();
+        this.arclight$vanilla$callLivingDropsEvent(damageSource, list);
+        list.forEach(serverLevel::addFreshEntity);
     }
 
     @Decorate(method = "hurt", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;isSleeping()Z"))

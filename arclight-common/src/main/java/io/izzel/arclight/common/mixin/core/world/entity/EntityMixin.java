@@ -43,6 +43,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.RelativeMovement;
+import net.minecraft.world.entity.animal.Fox;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -722,7 +723,11 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         }
     }
 
-    private boolean arclight$spawnNoAdd = false;
+    /**
+     * @see io.izzel.arclight.common.mixin.core.world.entity.animal.FoxMixin#arclight$captureFoxDrop(Fox, ItemStack)
+     */
+    @SuppressWarnings("JavadocReference")
+    protected boolean arclight$spawnNoAdd = false;
 
     @Override
     public ItemEntity arclight$spawnAtLocationNoAdd(ItemStack stack, float yOffset) {

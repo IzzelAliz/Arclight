@@ -80,10 +80,10 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
     @Decorate(method = "brokenByAnything", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;popResource(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/item/ItemStack;)V"))
     private void arclight$captureDropsDeath(Level worldIn, BlockPos pos, ItemStack stack) throws Throwable {
         try {
-            ArclightCaptures.captureBlockPopRes(true);
+            ArclightCaptures.captureBlockPopResForExtraDrops(true);
             DecorationOps.callsite().invoke(worldIn, pos, stack);
         } finally {
-            ArclightCaptures.captureBlockPopRes(false);
+            ArclightCaptures.captureBlockPopResForExtraDrops(false);
         }
     }
 

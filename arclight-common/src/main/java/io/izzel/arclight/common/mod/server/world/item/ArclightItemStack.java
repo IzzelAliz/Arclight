@@ -27,21 +27,12 @@ public class ArclightItemStack {
 
     public static void convert(List<ItemStack> bukkit, List<ItemEntity> resultContainer, Function<net.minecraft.world.item.ItemStack, ItemEntity> factory) {
         resultContainer.clear();
-        for (ItemStack item : bukkit) {
-            ItemEntity entity = ((CraftItemStackBridge) item).arclight$getItemEntity();
-            if (entity == null) {
-                entity = factory.apply(CraftItemStack.asNMSCopy(item));
-            }
-            resultContainer.add(entity);
-        }
+        forEach(bukkit, factory, resultContainer::add);
     }
 
     public static void forEach(List<ItemStack> bukkit, Function<net.minecraft.world.item.ItemStack, ItemEntity> factory, Consumer<ItemEntity> consumer) {
         for (ItemStack item : bukkit) {
-            ItemEntity entity = ((CraftItemStackBridge) item).arclight$getItemEntity();
-            if (entity == null) {
-                entity = factory.apply(CraftItemStack.asNMSCopy(item));
-            }
+            ItemEntity entity = item instanceof CraftItemStackBridge bridge && bridge.arclight$getItemEntity() instanceof ItemEntity ie ? ie : factory.apply(CraftItemStack.asNMSCopy(item));
             consumer.accept(entity);
         }
     }

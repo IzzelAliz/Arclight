@@ -105,4 +105,8 @@ public interface EntityBridge extends CommandSourceBridge, InjectEntityBridge {
     ArclightSpawnReason arclight$getExtraSpawnReason();
 
     ItemEntity arclight$spawnAtLocationNoAdd(ItemStack stack, float yOffset);
+
+    default ItemEntity arclight$spawnAtLocationNoAdd(ItemStack stack) {
+        return arclight$spawnAtLocationNoAdd(stack, 0f);
+    }
 }

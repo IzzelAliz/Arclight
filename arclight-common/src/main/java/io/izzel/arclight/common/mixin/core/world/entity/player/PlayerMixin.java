@@ -207,7 +207,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
             return false;
         } else {
             this.noActionTime = 0;
-            if (this.getHealth() <= 0.0F) {
+            if (this.isDeadOrDying()) {
                 return false;
             } else {
                 if (source.scalesWithDifficulty()) {

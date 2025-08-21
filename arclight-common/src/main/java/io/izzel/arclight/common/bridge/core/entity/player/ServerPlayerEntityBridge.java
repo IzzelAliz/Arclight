@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerSpawnChangeEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -49,6 +50,8 @@ public interface ServerPlayerEntityBridge extends PlayerEntityBridge {
     void bridge$setTrackerDirty(boolean flag);
 
     boolean arclight$isKeepLevel();
+
+    void arclight$readDeathEvent(PlayerDeathEvent event);
 
     interface RespawnPosAngleBridge {
 
