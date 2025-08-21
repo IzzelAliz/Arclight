@@ -17,7 +17,6 @@ import net.minecraft.world.phys.BlockHitResult;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -37,11 +36,17 @@ public abstract class ChorusFlowerBlockMixin extends BlockMixin {
     // @formatter:on
 
     /**
-     * @author IzzelAliz
-     * @reason
+     * @author QianMoo0121
+     * @reason changed from @Overwrite to @Inject to allow other mods to inject
      */
-    @Overwrite
-    public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random) {
+    @Inject(method = "randomTick", at = @At("HEAD"), cancellable = true)
+    public void arclight$randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random, CallbackInfo ci) {
+        // Call the original logic but make it cancellable for compatibility
+        this.arclight$performRandomTick(state, worldIn, pos, random);
+        ci.cancel(); // Prevent original method execution
+    }
+
+    private void arclight$performRandomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random) {
         BlockPos blockpos = pos.above();
         if (worldIn.isEmptyBlock(blockpos) && blockpos.getY() < 256) {
             int i = state.getValue(AGE);
