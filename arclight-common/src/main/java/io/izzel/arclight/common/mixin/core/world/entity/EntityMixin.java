@@ -724,11 +724,15 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     }
 
     /**
-     * @see io.izzel.arclight.common.mixin.core.world.entity.animal.FoxMixin#arclight$captureFoxDrop(Fox, ItemStack)
+     * @see io.izzel.arclight.common.mixin.vanilla.world.entity.animal.FoxMixin_Vanilla#arclight$captureFoxDrop(Fox, ItemStack)
      */
     @SuppressWarnings("JavadocReference")
     protected boolean arclight$spawnNoAdd = false;
 
+    /**
+     * This should only be used when capturing outside dropAllDeathLoot
+     */
+    @SuppressWarnings("JavadocReference")
     @Override
     public ItemEntity arclight$spawnAtLocationNoAdd(ItemStack stack, float yOffset) {
         try {
@@ -744,21 +748,12 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         if (arclight$spawnNoAdd) {
             return true;
         }
-        return (boolean) DecorationOps.callsite().invoke(instance, entity);
-    }
-
-    @Inject(method = "spawnAtLocation(Lnet/minecraft/world/item/ItemStack;F)Lnet/minecraft/world/entity/item/ItemEntity;",
-        cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
-    public void arclight$entityDropItem(ItemStack stack, float offsetY, CallbackInfoReturnable<ItemEntity> cir, ItemEntity itementity) {
-        if (arclight$spawnNoAdd) {
-            return;
-        }
-        EntityDropItemEvent event = new EntityDropItemEvent(this.getBukkitEntity(), (org.bukkit.entity.Item) itementity.bridge$getBukkitEntity());
+        EntityDropItemEvent event = new EntityDropItemEvent(this.getBukkitEntity(), (org.bukkit.entity.Item) entity.bridge$getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
-            cir.setReturnValue(null);
+            return (boolean) DecorationOps.cancel().invoke((ItemEntity) null);
         }
+        return (boolean) DecorationOps.callsite().invoke(instance, entity);
     }
 
     @Inject(method = "interact", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Leashable;dropLeash(ZZ)V"))
