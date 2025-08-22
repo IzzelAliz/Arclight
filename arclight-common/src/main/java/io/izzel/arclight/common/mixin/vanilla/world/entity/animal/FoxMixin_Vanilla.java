@@ -1,4 +1,4 @@
-package io.izzel.arclight.fabric.mixin.core.world.entity.animal;
+package io.izzel.arclight.common.mixin.vanilla.world.entity.animal;
 
 import io.izzel.arclight.common.mixin.core.world.entity.animal.AnimalMixin;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import java.util.List;
 
 @Mixin(Fox.class)
-public abstract class FoxMixin_Fabric extends AnimalMixin {
+public abstract class FoxMixin_Vanilla extends AnimalMixin {
 
     @Decorate(method = "dropAllDeathLoot", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/Fox;spawnAtLocation(Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/entity/item/ItemEntity;"))
     private ItemEntity arclight$captureFoxDrop(Fox instance, ItemStack itemStack) throws Throwable {

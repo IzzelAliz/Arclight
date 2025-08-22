@@ -24,6 +24,7 @@
     "world.effect.PoisonMobEffectMixin_Vanilla",
     "world.entity.EntityMixin_Vanilla",
     "world.entity.LivingEntityMixin_Vanilla",
+    "world.entity.animal.FoxMixin_Vanilla",
     "world.entity.animal.MushroomCowMixin_Vanilla",
     "world.entity.animal.SheepMixin_Vanilla",
     "world.entity.animal.SnowGolemMixin_Vanilla",
