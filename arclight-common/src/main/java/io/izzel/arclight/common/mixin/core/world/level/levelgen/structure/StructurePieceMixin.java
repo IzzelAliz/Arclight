@@ -116,13 +116,15 @@ public abstract class StructurePieceMixin implements StructurePieceBridge {
     }
 
     @Override
-    public void bridge$placeCraftBlockEntity(ServerLevelAccessor worldAccess, BlockPos position, CraftBlockEntityState<?> craftBlockEntityState, int i) {
-        placeCraftBlockEntity(worldAccess, position, craftBlockEntityState, i);
+    public boolean bridge$placeCraftBlockEntity(ServerLevelAccessor worldAccess, BlockPos position, CraftBlockEntityState<?> craftBlockEntityState, int i) {
+        return placeCraftBlockEntity(worldAccess, position, craftBlockEntityState, i);
     }
 
     @Override
-    public void bridge$placeCraftSpawner(ServerLevelAccessor worldAccess, BlockPos position, EntityType entityType, int i) {
-        placeCraftSpawner(worldAccess, position, entityType, i);
+    public boolean bridge$placeCraftSpawner(ServerLevelAccessor worldAccess, BlockPos position, EntityType entityType, int i) {
+        var spawner = (CraftCreatureSpawner) CraftBlockStates.getBlockState(worldAccess, position, Blocks.SPAWNER.defaultBlockState(), null);
+        spawner.setSpawnedType(entityType);
+        return placeCraftBlockEntity(worldAccess, position, spawner, i);
     }
 
     @Override

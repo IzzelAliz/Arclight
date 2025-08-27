@@ -21,14 +21,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(NetherFortressPieces.MonsterThrone.class)
 public class NetherFortressPiecesPieceMixin {
-    @Inject(method = "postProcess", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/level/levelgen/structure/structures/NetherFortressPieces$MonsterThrone;hasPlacedSpawner:Z"))
-    private void arclight$customPlaceSpawner(WorldGenLevel level, StructureManager manager, ChunkGenerator generator, RandomSource random, BoundingBox aabb, ChunkPos chunkIn, BlockPos blockIn, CallbackInfo ci) {
-        ((StructurePieceBridge) this).bridge$placeCraftSpawner(level, blockIn, EntityType.CAVE_SPIDER, 2);
-    }
 
     @Redirect(method = "postProcess", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/level/WorldGenLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     private boolean arclight$skipSetBlock(WorldGenLevel instance, BlockPos blockPos, BlockState blockState, int i) {
-        return false;
+        return ((StructurePieceBridge) this).bridge$placeCraftSpawner(instance, blockPos, EntityType.BLAZE, 2);
     }
 
     @Redirect(method = "postProcess", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/level/WorldGenLevel;getBlockEntity(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/entity/BlockEntity;"))

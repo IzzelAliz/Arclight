@@ -549,6 +549,7 @@
     "world.level.levelgen.structure.structures.DesertPyramidStructureMixin",
     "world.level.levelgen.structure.structures.EndCityPiecesPieceMixin",
     "world.level.levelgen.structure.structures.IglooPiecesPieceMixin",
+    "world.level.levelgen.structure.structures.MineshaftPiecesPieceMixin",
     "world.level.levelgen.structure.structures.NetherFortressPiecesPieceMixin",
     "world.level.levelgen.structure.structures.OceanRuinPiecesPieceMixin",
     "world.level.levelgen.structure.structures.ShipwreckPiecesPieceMixin",

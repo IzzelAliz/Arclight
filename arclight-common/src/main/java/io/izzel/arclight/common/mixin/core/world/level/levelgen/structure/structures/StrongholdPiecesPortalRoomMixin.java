@@ -22,14 +22,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(StrongholdPieces.PortalRoom.class)
 public class StrongholdPiecesPortalRoomMixin {
 
-    @Inject(method = "postProcess", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/level/levelgen/structure/structures/StrongholdPieces$PortalRoom;hasPlacedSpawner:Z"))
-    private void arclight$customPlaceSpawner(WorldGenLevel level, StructureManager manager, ChunkGenerator generator, RandomSource random, BoundingBox aabb, ChunkPos chunkIn, BlockPos blockIn, CallbackInfo ci) {
-        ((StructurePieceBridge) this).bridge$placeCraftSpawner(level, blockIn, EntityType.SILVERFISH, 2);
-    }
-
     @Redirect(method = "postProcess", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/level/WorldGenLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     private boolean arclight$skipSetBlock(WorldGenLevel instance, BlockPos blockPos, BlockState blockState, int i) {
-        return false;
+        return ((StructurePieceBridge) this).bridge$placeCraftSpawner(instance, blockPos, EntityType.SILVERFISH, 2);
     }
 
     @Redirect(method = "postProcess", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/WorldGenLevel;getBlockEntity(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/entity/BlockEntity;"))

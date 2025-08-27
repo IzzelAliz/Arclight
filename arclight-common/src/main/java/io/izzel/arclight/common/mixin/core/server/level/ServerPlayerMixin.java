@@ -162,6 +162,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Shadow public abstract void setRespawnPosition(ResourceKey<Level> arg, @org.jetbrains.annotations.Nullable BlockPos arg2, float f, boolean bl, boolean bl2);
     // @formatter:on
 
+    // FIXME: InitAuther97: Current management of TransferCookieConnection is brittle.
     public CraftPlayer.TransferCookieConnection transferCookieConnection;
     public String displayName;
     public Component listName;
@@ -951,6 +952,8 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Inject(method = "restoreFrom", at = @At("HEAD"))
     private void arclight$forwardHandle(ServerPlayer serverPlayer, boolean bl, CallbackInfo ci) {
         ((InternalEntityBridge) serverPlayer).internal$getBukkitEntity().setHandle((Entity) (Object) this);
+
+        this.transferCookieConnection = ((ServerPlayerMixin)(Object) serverPlayer).transferCookieConnection;
         this.bridge$setBukkitEntity(((InternalEntityBridge) serverPlayer).internal$getBukkitEntity());
     }
 }
