@@ -8,11 +8,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerPlayerGameMode;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-
-import javax.annotation.Nullable;
 
 @Mixin(ServerPlayer.class)
 public abstract class ServerPlayerMixin_Fabric extends PlayerMixin_Fabric implements ServerPlayerEntityBridge {

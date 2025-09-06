@@ -23,10 +23,10 @@ dependencies {
 
     implementation(libs.spigot.api) { transitive = false }
     shadowBundle(libs.spigot.api) { transitive = false }
+    implementation(libs.bungeecord.chat) { transitive = false }
+    shadowBundle(libs.bungeecord.chat) { transitive = false }
     implementation rootProject.ext.generatedSpigot
     shadowBundle rootProject.ext.generatedSpigot
-    implementation libs.bungeecord.chat
-    shadowBundle libs.bungeecord.chat
 
     modImplementation libs.fabric.permissions.api
     include libs.fabric.permissions.api
@@ -34,7 +34,7 @@ dependencies {
     // XXX: for compiling (arclight-api): FabricArclightServer#registerForgeEvent
     compileOnly("net.minecraftforge:eventbus:4.0.0") { transitive = false }
 
-    implementation(project(':i18n-config')) {transitive = false}
+    implementation(project(':i18n-config')) { transitive = false }
 
     common(project(path: ':arclight-common', configuration: 'namedElements')) { transitive = false }
     shadowBundle(project(path: ':arclight-common', configuration: 'transformProductionFabric')) { transitive = false }

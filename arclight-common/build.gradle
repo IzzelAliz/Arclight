@@ -30,7 +30,7 @@ dependencies {
     implementation libs.mysql.connector.j
     implementation libs.snakeyaml
 
-    implementation(project(':i18n-config')) {transitive = false}
+    implementation project(':i18n-config')
 }
 
 compileJava {

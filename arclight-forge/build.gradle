@@ -28,12 +28,12 @@ dependencies {
 
     implementation(libs.spigot.api) { transitive = false }
     shadowBundle(libs.spigot.api) { transitive = false }
+    implementation(libs.bungeecord.chat) { transitive = false }
+    shadowBundle(libs.bungeecord.chat) { transitive = false }
     implementation rootProject.ext.generatedSpigot
     shadowBundle rootProject.ext.generatedSpigot
-    implementation libs.bungeecord.chat
-    shadowBundle libs.bungeecord.chat
 
-    implementation project(':i18n-config')
+    implementation(project(':i18n-config')) { transitive = false }
 
     common(project(path: ":arclight-common", configuration: "namedElements")) { transitive false }
     shadowBundle(project(path: ":arclight-common", configuration: "transformProductionForge")) { transitive = false }
