@@ -1,64 +1,42 @@
 plugins {
-    id 'architectury-plugin' version "${architect_plugin_version}"
-    id 'com.gradleup.shadow' version "${shadow_plugin_version}"
+    id 'architectury-plugin'
+    id 'com.gradleup.shadow'
 }
 
 architectury {
-    minecraft = minecraftVersion
     platformSetupLoomIde()
     neoForge()
 }
 
 loom {
-    silentMojangMappingsLicense()
-    accessWidenerPath = project(":arclight-common").loom.accessWidenerPath
+    accessWidenerPath = getRootProject().ext.commonProject.loom.accessWidenerPath
 
     neoForge {
     }
 }
 
-configurations {
-    common
-    shadowCommon
-    compileClasspath.extendsFrom common
-    runtimeClasspath.extendsFrom common
-    developmentNeoForge.extendsFrom common
-}
-
 dependencies {
-    minecraft "com.mojang:minecraft:$minecraftVersion"
-    mappings loom.officialMojangMappings()
-    neoForge "net.neoforged:neoforge:$neoForgeVersion"
+    neoForge libs.neoforge
 
-    implementation("org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT") { transitive = false }
-    implementation "io.izzel.arclight.generated:spigot:$minecraftVersion:deobf"
-    implementation 'net.md-5:bungeecord-chat:1.20-R0.2'
+    implementation libs.izzel.tools
+    implementation libs.arclight.api
+    implementation libs.mixin.tools
+//    annotationProcessor(libs.mixin.tools) { transitive = false }
 
-    implementation("io.izzel.arclight:mixin-tools:$mixinToolsVersion") { transitive = false }
+    implementation(libs.spigot.api) { transitive = false }
+    shadowBundle(libs.spigot.api) { transitive = false }
+    implementation rootProject.ext.generatedSpigot
+    shadowBundle rootProject.ext.generatedSpigot
+    implementation libs.bungeecord.chat
+    shadowBundle libs.bungeecord.chat
 
-    shadowCommon("org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT") { transitive = false }
-    shadowCommon "io.izzel.arclight.generated:spigot:$minecraftVersion:deobf"
-    shadowCommon('net.md-5:bungeecord-chat:1.20-R0.2') { transitive = false }
-
-    implementation "io.izzel:tools:$toolsVersion"
-    implementation "io.izzel.arclight:arclight-api:$apiVersion"
+    // XXX: for compiling (arclight-api): NeoForgeArclightServer#registerForgeEvent
     compileOnly("net.minecraftforge:eventbus:4.0.0") { transitive = false }
+
     implementation project(':i18n-config')
 
     common(project(path: ':arclight-common', configuration: 'namedElements')) { transitive = false }
-    shadowCommon(project(path: ':arclight-common', configuration: 'transformProductionNeoForge')) { transitive = false }
-}
-
-java {
-    withSourcesJar()
-}
-
-jar {
-    manifest.attributes 'MixinConnector': 'io.izzel.arclight.common.mod.ArclightConnector'
-    manifest.attributes 'Implementation-Title': 'Arclight'
-    manifest.attributes 'Implementation-Version': "arclight-$minecraftVersion-${project.version}-$gitHash"
-    manifest.attributes 'Implementation-Vendor': 'Arclight Team'
-    manifest.attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd HH:mm:ss")
+    shadowBundle(project(path: ':arclight-common', configuration: 'transformProductionNeoForge')) { transitive = false }
 }
 
 tasks.register('neoforgeMappings', Copy) {
@@ -87,7 +65,7 @@ shadowJar {
     exclude 'fabric.mod.json'
     exclude 'architectury.common.json'
 
-    configurations = [project.configurations.shadowCommon]
+    configurations = [project.configurations.shadowBundle]
     archiveClassifier = 'dev-shadow'
 }
 
@@ -108,13 +86,7 @@ tasks.register('srgJar', Jar) {
 }
 
 sourcesJar {
-    def commonSources = project(':arclight-common').sourcesJar
+    def commonSources = rootProject.ext.commonProject.sourcesJar
     dependsOn commonSources
     from commonSources.archiveFile.map { zipTree(it) }
-}
-
-components.java {
-    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
-        skip()
-    }
 }

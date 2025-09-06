@@ -1,46 +1,36 @@
 plugins {
-    id 'architectury-plugin' version "${architect_plugin_version}"
-    id 'java'
-    id 'idea'
+    id 'architectury-plugin'
 }
 
 architectury {
-    minecraft = minecraftVersion
-    common(project.ext.supportedPlatforms)
+    common(rootProject.ext.supportedPlatforms)
 }
 
 loom {
-    silentMojangMappingsLicense()
-    accessWidenerPath = file("src/main/resources/arclight.accesswidener")
+    accessWidenerPath = file('src/main/resources/arclight.accesswidener')
 }
 
 dependencies {
-    minecraft "com.mojang:minecraft:$minecraftVersion"
-    mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:$fabricLoaderVersion"
+    modImplementation libs.fabric.loader
 
-    compileOnly "io.izzel.arclight.generated:spigot:${minecraftVersion}:deobf"
+    compileOnly rootProject.ext.generatedSpigot
 
-    implementation "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
-    implementation 'org.jetbrains:annotations:23.0.0'
+    implementation libs.izzel.tools
+    implementation libs.arclight.api
+    implementation libs.mixin.tools
+    annotationProcessor(libs.mixin.tools) { transitive = false }
 
-    implementation ("io.izzel.arclight:mixin-tools:$mixinToolsVersion") { transitive = false }
-    annotationProcessor ("io.izzel.arclight:mixin-tools:$mixinToolsVersion") { transitive = false }
+    // spigot
+    implementation libs.spigot.api
+    implementation libs.jline
+    implementation libs.terminal.console.appender
+    implementation libs.specialsource
+    implementation libs.log4j.jul
+    implementation libs.bungeecord.chat
+    implementation libs.mysql.connector.j
+    implementation libs.snakeyaml
 
-    implementation 'jline:jline:2.12.1'
-    implementation 'net.minecrell:terminalconsoleappender:1.2.0'
-    implementation 'net.md-5:SpecialSource:1.11.3'
-    implementation 'org.apache.logging.log4j:log4j-jul:2.22.1'
-    implementation 'net.md-5:bungeecord-chat:1.20-R0.2'
-    implementation 'com.mysql:mysql-connector-j:8.4.0'
-    implementation 'org.yaml:snakeyaml:2.0'
-    implementation "io.izzel:tools:$toolsVersion"
-    implementation "io.izzel.arclight:arclight-api:$apiVersion"
-    implementation project(':i18n-config')
-}
-
-java {
-    withSourcesJar()
+    implementation(project(':i18n-config')) {transitive = false}
 }
 
 compileJava {

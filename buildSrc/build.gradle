@@ -19,18 +19,14 @@ dependencies {
 
     implementation gradleApi()
     implementation localGroovy()
-    implementation 'org.ow2.asm:asm-tree:9.7.1'
-    implementation 'org.ow2.asm:asm-util:9.7.1'
-    implementation 'org.ow2.asm:asm-commons:9.7.1'
-    implementation 'org.cadixdev:at:0.1.0-rc1'
 
-    implementation(libs.loom)
-    implementation(libs.lorenz.core)
-    implementation(libs.lorenz.proguard)
-    implementation(libs.lorenz.tiny)
-    implementation(libs.mercury)
+    implementation libs.bundles.asm
+    implementation libs.commons.io
+
+    implementation libs.loom
+    implementation libs.bundles.lorenz
+    implementation libs.mercury
+    implementation libs.at
+
     implementation(libs.specialsource) { transitive false }
-
-    // https://mvnrepository.com/artifact/commons-io/commons-io
-    implementation("commons-io:commons-io:2.19.0")
 }

@@ -1,20 +1,106 @@
 [versions]
-lombok = '1.18.36'
-
+# plugins
 architectury-loom = '1.9-SNAPSHOT'
+# architectury-plugin, gradleup-shadow version: ../build.gradle
+
+# common
+lombok = '1.18.38'
+jetbrains-annotations = '23.0.0'
+
+asm = '9.7.1'
+commons-io = '2.19.0'
+gson = '2.10.1'
+hocon = '3.6.1'
+
 lorenz = '0.5.8'
 lorenz-io-proguard = '0.5.8'
-lorenz-tiny = '4.0.2'
-mercury = '0.1.4.17'
+fabric-lorenz-tiny = '4.0.2'
+cadixdev-at = '0.1.0-rc1'
+cadixdev-mercury = '0.1.4.17'
 special-source = '1.11.5'
 
-[libraries]
-lombok = { module = 'org.projectlombok:lombok', version.ref = 'lombok'}
+mixin = '0.8.5'
 
+# arclight
+arclight-api = '1.7.3'
+izzel-tools = '1.3.0'
+mixin-tools = '1.2.6'
+
+# minecraft, loaders dependencies (CHECK when migrating Minecraft Versions)
+minecraft = '1.21.1'
+parchment = '2024.11.17'
+forge = '52.1.3'
+full-forge = '1.21.1-52.1.3'
+fabric-loader = '0.17.2'
+fabric-api = '0.116.6+1.21.1'
+neoforge = '21.1.206'
+fabric-permissions-api = '0.3.1'
+
+# spigot dependencies (CHECK when migrating Spigot Versions)
+bukkit-api = 'v1_21_R1'
+spigot-api = '1.21.1-R0.1-SNAPSHOT'
+bungeecord-chat-api = '1.20-R0.2'
+jline = '2.12.1'
+terminal-console-appender = '1.2.0'
+log4j = '2.22.1'
+snakeyaml = '2.0'
+mysql-connector-j = '8.4.0'
+
+
+[libraries]
+# common
+lombok = { module = 'org.projectlombok:lombok', version.ref = 'lombok' }
+jetbrains-annotations = { module = 'org.jetbrains:annotations', version.ref = 'jetbrains-annotations' }
+
+# buildSrc
 loom = { module = 'dev.architectury:architectury-loom', version.ref = 'architectury-loom' }
+
+asm-commons = { module = 'org.ow2.asm:asm-commons', version.ref = 'asm' }
+asm-tree = { module = 'org.ow2.asm:asm-tree', version.ref = 'asm' }
+asm-util = { module = 'org.ow2.asm:asm-util', version.ref = 'asm' }
+commons-io = { module = 'commons-io:commons-io', version.ref = 'commons-io' }
+
 lorenz-core = { module = 'org.cadixdev:lorenz', version.ref = 'lorenz' }
 lorenz-proguard = { module = 'org.cadixdev:lorenz-io-proguard', version.ref = 'lorenz-io-proguard' }
-lorenz-tiny = { module = 'net.fabricmc:lorenz-tiny', version.ref = 'lorenz-tiny' }
-mercury = { module = 'dev.architectury:mercury', version.ref = 'mercury' }
+lorenz-tiny = { module = 'net.fabricmc:lorenz-tiny', version.ref = 'fabric-lorenz-tiny' }
+at = { module = 'org.cadixdev:at', version.ref = 'cadixdev-at' }
+mercury = { module = 'dev.architectury:mercury', version.ref = 'cadixdev-mercury' }
 specialsource = { module = 'net.md-5:SpecialSource', version.ref = 'special-source' }
 
+# subProjects (arclight-common, and other in platforms)
+minecraft = { module = 'com.mojang:minecraft', version.ref = 'minecraft' }
+spigot-api = { module = 'org.spigotmc:spigot-api', version.ref = 'spigot-api' }
+bungeecord-chat = { module = 'net.md-5:bungeecord-chat', version.ref = 'bungeecord-chat-api' }
+snakeyaml = { module = 'org.yaml:snakeyaml', version.ref = 'snakeyaml' }
+mysql-connector-j = { module = 'com.mysql:mysql-connector-j', version.ref = 'mysql-connector-j' }
+
+jline = { module = 'jline:jline', version.ref = 'jline' }
+terminal-console-appender = { module = 'net.minecrell:terminalconsoleappender', version.ref = 'terminal-console-appender' }
+log4j-api = { module = 'org.apache.logging.log4j:log4j-api', version.ref = 'log4j' }
+log4j-core = { module = 'org.apache.logging.log4j:log4j-core', version.ref = 'log4j' }
+log4j-jul = { module = 'org.apache.logging.log4j:log4j-jul', version.ref = 'log4j' }
+
+arclight-api = { module = 'io.izzel.arclight:arclight-api', version.ref = 'arclight-api' }
+izzel-tools = { module = 'io.izzel:tools', version.ref = 'izzel-tools' }
+mixin-tools = { module = 'io.izzel.arclight:mixin-tools', version.ref = 'mixin-tools' }
+
+# platforms (arclight-forge, arclight-fabric, arclight-neoforge)
+forge = { module = 'net.minecraftforge:forge', version.ref = 'full_forge' }
+fabric-loader = { module = 'net.fabricmc:fabric-loader', version.ref = 'fabric-loader' }
+fabric-api = { module = 'net.fabricmc.fabric-api:fabric-api', version.ref = 'fabric-api' }
+fabric-permissions-api = { module ='me.lucko:fabric-permissions-api', version.ref = 'fabric-permissions-api' }
+neoforge = { module ='net.neoforged:neoforge', version.ref = 'neoforge' }
+
+# installer
+gson = { module = 'com.google.code.gson:gson', version.ref = 'gson' }
+
+# i18n-config
+configurate-hocon = { module = 'org.spongepowered:configurate-hocon', version.ref = 'hocon' }
+
+# bootstrap
+sponge-mixin = { module = 'org.spongepowered:mixin', version.ref = 'mixin' }
+
+[bundles]
+asm = ['asm-commons', 'asm-tree', 'asm-util']
+lorenz = ['lorenz-core', 'lorenz-proguard', 'lorenz-tiny']
+log4j = ['log4j-api', 'log4j-core', 'log4j-jul']
