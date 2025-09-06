@@ -705,7 +705,8 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             } else {
                 List<Entity> list = Lists.newArrayList(this.passengers);
 
-                if (!this.level().isClientSide && entity instanceof Player && !(this.getFirstPassenger() instanceof Player)) {
+                boolean isCreateCarriage = this.getClass().getName().equals("com.simibubi.create.content.trains.entity.CarriageContraptionEntity");
+                if (!this.level().isClientSide && entity instanceof Player && !(this.getFirstPassenger() instanceof Player) && !isCreateCarriage) {
                     list.add(0, entity);
                 } else {
                     list.add(entity);
