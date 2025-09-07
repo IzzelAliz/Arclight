@@ -35,10 +35,6 @@ public abstract class ChorusFlowerBlockMixin extends BlockMixin {
     @Shadow protected abstract void placeDeadFlower(Level worldIn, BlockPos pos);
     // @formatter:on
 
-    /**
-     * @author QianMoo0121
-     * @reason changed from @Overwrite to @Inject to allow other mods to inject
-     */
     @Inject(method = "randomTick", at = @At("HEAD"), cancellable = true)
     public void arclight$randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random, CallbackInfo ci) {
         // Call the original logic but make it cancellable for compatibility
