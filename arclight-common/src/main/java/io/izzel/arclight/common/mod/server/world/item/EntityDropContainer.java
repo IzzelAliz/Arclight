@@ -6,39 +6,40 @@ import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class ArclightItemStack {
+public class EntityDropContainer implements AutoCloseable {
 
-    private static final List<ItemStack> ALLOCATED = new ArrayList<>();
+    private final List<ItemStack> allocated = new LinkedList<>();
 
-    public static List<ItemStack> initDecorate(List<ItemEntity> items) {
-        List<ItemStack> bukkit = new ArrayList<>();
+    public List<ItemStack> initDecorate(List<ItemEntity> items) {
+        List<ItemStack> bukkit = new ArrayList<>(items.size());
         for (ItemEntity item : items) {
             CraftItemStack stack = CraftItemStack.asCraftMirror(item.getItem());
             ((CraftItemStackBridge)(Object) stack).arclight$setItemEntity(item);
-            ALLOCATED.add(stack);
+            allocated.add(stack);
             bukkit.add(stack);
         }
         return bukkit;
     }
 
-    public static void convert(List<ItemStack> bukkit, List<ItemEntity> resultContainer, Function<net.minecraft.world.item.ItemStack, ItemEntity> factory) {
+    public void convert(List<ItemStack> bukkit, List<ItemEntity> resultContainer, Function<net.minecraft.world.item.ItemStack, ItemEntity> factory) {
         resultContainer.clear();
         forEach(bukkit, factory, resultContainer::add);
     }
 
-    public static void forEach(List<ItemStack> bukkit, Function<net.minecraft.world.item.ItemStack, ItemEntity> factory, Consumer<ItemEntity> consumer) {
+    public void forEach(List<ItemStack> bukkit, Function<net.minecraft.world.item.ItemStack, ItemEntity> factory, Consumer<ItemEntity> consumer) {
         for (ItemStack item : bukkit) {
             ItemEntity entity = item instanceof CraftItemStackBridge bridge && bridge.arclight$getItemEntity() instanceof ItemEntity ie ? ie : factory.apply(CraftItemStack.asNMSCopy(item));
             consumer.accept(entity);
         }
     }
 
-    public static void cleanup() {
-        ALLOCATED.forEach(stack -> ((CraftItemStackBridge) stack).arclight$setItemEntity(null));
-        ALLOCATED.clear();
+    @Override
+    public void close() {
+        allocated.forEach(stack -> ((CraftItemStackBridge) stack).arclight$setItemEntity(null));
     }
 }

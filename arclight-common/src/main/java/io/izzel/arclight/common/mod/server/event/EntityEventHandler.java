@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mod.server.event;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.mod.server.world.item.ArclightItemStack;
+import io.izzel.arclight.common.mod.server.world.item.EntityDropContainer;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -41,14 +41,12 @@ public class EntityEventHandler {
             }
             int expReward = bridge.bridge$getExpReward(source.getEntity());
             final PlayerDeathEvent event;
-            try {
+            try (final var container = new EntityDropContainer()) {
                 // Arclight: Spigot drops obtained from getCapturedDrops()
                 // Already respect vanilla behaviours by using entity capture
-                List<org.bukkit.inventory.ItemStack> loot = ArclightItemStack.initDecorate(drops);
+                List<org.bukkit.inventory.ItemStack> loot = container.initDecorate(drops);
                 event = ArclightEventFactory.callPlayerDeathEvent(player, source, loot, expReward, dmsgOrig, keepInventory);
-                ArclightItemStack.convert(loot, drops, bridge::arclight$spawnAtLocationNoAdd);
-            } finally {
-                ArclightItemStack.cleanup();
+                container.convert(loot, drops, bridge::arclight$spawnAtLocationNoAdd);
             }
             if (inv != null) {
                 player.getInventory().clearContent();
@@ -60,12 +58,10 @@ public class EntityEventHandler {
                 drops.addAll(extra);
             }
             final EntityDeathEvent event;
-            try {
-                List<ItemStack> itemStackList = ArclightItemStack.initDecorate(drops);
+            try (final var container = new EntityDropContainer()) {
+                List<ItemStack> itemStackList = container.initDecorate(drops);
                 event = ArclightEventFactory.callEntityDeathEvent(living, source, itemStackList);
-                ArclightItemStack.convert(itemStackList, drops, ((EntityBridge) living)::arclight$spawnAtLocationNoAdd);
-            } finally {
-                ArclightItemStack.cleanup();
+                container.convert(itemStackList, drops, ((EntityBridge) living)::arclight$spawnAtLocationNoAdd);
             }
             bridge.bridge$setExpToDrop(event.getDroppedExp());
         }

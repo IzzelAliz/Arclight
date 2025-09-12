@@ -14,8 +14,6 @@ import io.izzel.arclight.common.mixin.core.world.entity.player.PlayerMixin;
 import io.izzel.arclight.common.mod.mixins.annotation.RenameInto;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.server.block.ChestBlockDoubleInventoryHacks;
-import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
-import io.izzel.arclight.common.mod.server.world.item.ArclightItemStack;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.Blackhole;
 import io.izzel.arclight.mixin.Decorate;
@@ -105,7 +103,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
