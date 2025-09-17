@@ -1,12 +1,17 @@
 name: 🐞 错误报告表格
 description: 通过填写表格来报告错误
-labels: [ "Status: Triage | 待检查" ]
+labels: [ "Status: Triage" ]
 
 body:
+  - type: markdown
+    id: announcements
+    value: |
+      Arclight是混合服务端，不可避免地存在一些问题，遇到问题请先向Arclight反馈，不要去烦模组/插件作者
+
   - type: checkboxes
     id: pre-requirements
     attributes:
-      label: 我已经做过以下尝试
+      label: 我已经做过以下尝试：
       description: 请进行如下尝试，以免无效反馈
       options:
         - label: 我正在使用最新的[Arclight构建版本](https://arclight.izzel.io/)
@@ -21,9 +26,11 @@ body:
           required: true
         - label: 我已把所有模组和（或）插件更新至最新版
           required: true
-        - label: 此问题不可在Spigot服务端复现（模组问题视为无法在Spigot复现）
+        - label: 此问题不可在Spigot服务端复现
+          description: 模组问题视为无法在Spigot复现
           required: true
-        - label: 此问题不可在对应Mod加载器服务端（Forge/NeoForge/Fabric）复现（插件问题视为无法在模组端复现）
+        - label: 此问题不可在对应Mod加载器服务端（Forge/NeoForge/Fabric）复现
+          description: 插件问题视为无法在模组端复现
           required: true
 
   - type: input
