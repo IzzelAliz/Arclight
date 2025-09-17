@@ -113,7 +113,7 @@ body:
       description: |
         `logs/latest.log`文件中的内容就是服务器日志  
         服务器关闭后，将日志文件拖拽至输入框上传  
-        或上传至在线剪贴板网站（如https://paste.ubuntu.com/），提交后将链接附在下方  
+        或上传至在线剪贴板网站（如[mclo.gs](https://mclo.gs/)）提交后将链接附在下方  
         **请勿直接复制粘贴日志文本**
       placeholder: 日志链接，或将日志文件拖到此处上传
 
