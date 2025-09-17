@@ -27,11 +27,11 @@ body:
         - label: 我已把所有模组和（或）插件更新至最新版
           required: true
         - label: |
-            此问题不可在Spigot服务端复现    
+            此问题不可在Spigot服务端复现
             （模组问题视为无法在Spigot复现）
           required: true
         - label: |
-            此问题不可在对应Mod加载器服务端（Forge/NeoForge/Fabric）复现  
+            此问题不可在对应Mod加载器服务端（Forge/NeoForge/Fabric）复现
             （插件问题视为无法在模组端复现）
           required: true
 
