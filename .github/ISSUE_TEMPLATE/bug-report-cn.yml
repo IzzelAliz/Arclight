@@ -37,7 +37,7 @@ body:
     id: arclight-version
     attributes:
       label: Arclight版本
-      description: 在Arclight启动时会打印版本
+      description: 在Arclight服务端启动时会输出版本
       placeholder: 如：arclight-1.15.2-1.0.3-SNAPSHOT-9455d03
     validations:
       required: true
@@ -47,7 +47,7 @@ body:
     attributes:
       label: 操作系统版本
       description: 操作系统版本
-      placeholder: 如：Windows 11或Ubuntu 24.04 arm64（如果不是amd64，请说明）
+      placeholder: 如：Windows 11或Ubuntu 24.04 arm64（如果架构不是amd64，请标注）
     validations:
       required: true
 
@@ -68,9 +68,10 @@ body:
     attributes:
       label: 相关模组和（或）插件的名称及版本
       description: |
-        输入`/plugins`和`/forge mods`命令可获取相关信息  
-        排除无关的模组和插件有助于问题及时解决  
-        如果它和任何模组/插件无关，请留空
+        输入`/plugins`命令可获取插件列表  
+        Forge上使用`/forge mods`命令得到模组列表  
+        Fabric和NeoForge的模组列表会在服务器启动时输出  
+        排除无关的模组和插件有助于问题及时解决，如果它和任何模组/插件无关，请留空
       placeholder: |
         Mods: 
           Mod A
