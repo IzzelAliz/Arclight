@@ -51,7 +51,7 @@ body:
     validations:
       required: true
 
-  - type: input
+  - type: textarea
     id: java-version
     attributes:
       label: Java版本
@@ -68,8 +68,8 @@ body:
     attributes:
       label: 相关模组和（或）插件的名称及版本
       description: |
-        输入`/plugins`和`/forge mods`命令可获取相关信息
-        排除无关的模组和插件有助于问题及时解决
+        输入`/plugins`和`/forge mods`命令可获取相关信息  
+        排除无关的模组和插件有助于问题及时解决  
         如果它和任何模组/插件无关，请留空
       placeholder: |
         Mods: 
@@ -108,18 +108,18 @@ body:
   - type: textarea
     id: logs
     attributes:
-      label: 报错信息
+      label: 服务器日志
       description: |
-        可以在`logs/latest.log`文件里找到日志
-        服务器关闭后，将日志文件拖拽至输入框上传
-        或上传至在线剪贴板网站（如https://paste.ubuntu.com/），提交后将链接附在下方
-        请勿直接复制粘贴日志文本
+        `logs/latest.log`文件中的内容就是服务器日志  
+        服务器关闭后，将日志文件拖拽至输入框上传  
+        或上传至在线剪贴板网站（如https://paste.ubuntu.com/），提交后将链接附在下方  
+        **请勿直接复制粘贴日志文本**
       placeholder: 日志链接，或将日志文件拖到此处上传
 
   - type: input
-    id: pack
+    id: pack-to-reproduce
     attributes:
       label: 复现用压缩包下载链接
       description: |
-        如果模组或插件太多，可以打包服务端并上传到网盘，便于开发者下载测试
-        如果是整合包，也可以贴上整合包的原帖链接
+        如果模组或插件太多，可以打包服务端并上传到网盘，便于开发者下载测试  
+        如果是整合包，也可以贴上整合包的原帖链接  
