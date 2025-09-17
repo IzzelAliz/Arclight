@@ -79,7 +79,7 @@ body:
         Plugins: 
           Plugin A
           Plugin B
-      render: 'raw'
+      render: raw
     validations:
       required: false
 
@@ -88,11 +88,11 @@ body:
     attributes:
       label: 错误描述
       description: |
-        请尽可能详细描述问题，如果不知道如何描述，可以参考：
-        出现了什么问题？
-        它应该是怎么样的？
+        请尽可能详细描述问题，如果不知道如何描述，可以参考：  
+        出现了什么问题？  
+        它应该是怎么样的？  
         是否做过解决此问题的尝试？如果有，是怎么做的，结果如何？
-      placeholder: "它为什么是一个错误"
+      placeholder: 详细描述它为什么是一个错误……
     validations:
       required: true
 
