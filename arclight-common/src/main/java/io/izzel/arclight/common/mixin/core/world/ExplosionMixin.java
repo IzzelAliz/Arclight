@@ -90,12 +90,17 @@ public abstract class ExplosionMixin implements ExplosionBridge {
         this.radius = Math.max(sizeIn, 0F);
     }
 
+    @Inject(method = "explode", at = @At("HEAD"), cancellable = true)
+    public void arclight$explode(CallbackInfo ci) {
+        ci.cancel();
+        this.arclight$explodeImpl();
+    }
+
     /**
      * @author IzzelAliz
      * @reason
      */
-    @Overwrite
-    public void explode() {
+    private void arclight$explodeImpl() {
         if (this.radius < 0.1F) {
             return;
         }
