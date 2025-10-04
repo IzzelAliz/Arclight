@@ -96,10 +96,6 @@ public abstract class ExplosionMixin implements ExplosionBridge {
         this.arclight$explodeImpl();
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
     private void arclight$explodeImpl() {
         if (this.radius < 0.1F) {
             return;
