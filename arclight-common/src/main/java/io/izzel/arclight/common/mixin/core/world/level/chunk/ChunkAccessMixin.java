@@ -26,6 +26,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -45,6 +46,8 @@ public abstract class ChunkAccessMixin implements BlockGetter, BiomeManager.Nois
     @Shadow @Final protected Map<BlockPos, CompoundTag> pendingBlockEntities;
     @Shadow @Final protected ChunkPos chunkPos;
     // @formatter:on
+    @Unique
+    public long coordinateKey; public int locX; public int locZ; // Paper - cache coordinate key
 
 
     private static final CraftPersistentDataTypeRegistry DATA_TYPE_REGISTRY = new CraftPersistentDataTypeRegistry();
@@ -53,6 +56,9 @@ public abstract class ChunkAccessMixin implements BlockGetter, BiomeManager.Nois
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(ChunkPos p_187621_, UpgradeData p_187622_, LevelHeightAccessor p_187623_, Registry<Biome> registry, long p_187625_, LevelChunkSection[] p_187626_, BlendingData p_187627_, CallbackInfo ci) {
+        this.locX = chunkPos.x;
+        this.locZ = chunkPos.z;
+        this.coordinateKey = ChunkPos.asLong(locX, locZ);
         this.biomeRegistry = registry;
     }
 
@@ -66,6 +72,11 @@ public abstract class ChunkAccessMixin implements BlockGetter, BiomeManager.Nois
     @Inject(method = "isUnsaved", cancellable = true, at = @At("RETURN"))
     private void arclight$isDirty(CallbackInfoReturnable<Boolean> cir) {
         cir.setReturnValue(cir.getReturnValueZ() || this.persistentDataContainer.dirty());
+    }
+
+    @Override
+    public long bridge$getCoordinateKey() {
+        return coordinateKey;
     }
 
     @Override

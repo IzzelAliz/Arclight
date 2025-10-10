@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.level.chunk;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.chunk.ChunkAccessBridge;
 import io.izzel.arclight.common.bridge.core.world.chunk.ChunkBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -120,6 +121,8 @@ public abstract class LevelChunkMixin extends ChunkAccessMixin implements ChunkB
 
     public void loadCallback() {
         org.bukkit.Server server = Bukkit.getServer();
+        var self = (LevelChunk) (Object) this;
+        ((ServerChunkProviderBridge) this.level.getChunkSource()).bridge$addLoadedChunk(self); // Paper
         if (server != null) {
             /*
              * If it's a new world, the first few chunks are generated inside
@@ -127,7 +130,7 @@ public abstract class LevelChunkMixin extends ChunkAccessMixin implements ChunkB
              * no way of creating a CraftWorld/CraftServer at that point.
              */
 
-            var bukkitChunk = new CraftChunk((LevelChunk) (Object) this);
+            var bukkitChunk = new CraftChunk(self);
             server.getPluginManager().callEvent(new ChunkLoadEvent(bukkitChunk, this.needsDecoration));
 
             if (this.needsDecoration) {
@@ -156,11 +159,13 @@ public abstract class LevelChunkMixin extends ChunkAccessMixin implements ChunkB
 
     public void unloadCallback() {
         org.bukkit.Server server = Bukkit.getServer();
-        var bukkitChunk = new CraftChunk((LevelChunk) (Object) this);
+        var self = (LevelChunk) (Object) this;
+        var bukkitChunk = new CraftChunk(self);
         org.bukkit.event.world.ChunkUnloadEvent unloadEvent = new org.bukkit.event.world.ChunkUnloadEvent(bukkitChunk, this.isUnsaved());
         server.getPluginManager().callEvent(unloadEvent);
         // note: saving can be prevented, but not forced if no saving is actually required
         this.mustNotSave = !unloadEvent.isSaveChunk();
+        ((ServerChunkProviderBridge) this.level.getChunkSource()).bridge$removeLoadedChunk(self); // Paper
     }
 
     @Redirect(method = "setBlockState", at = @At(value = "FIELD", ordinal = 1, target = "Lnet/minecraft/world/level/Level;isClientSide:Z"))

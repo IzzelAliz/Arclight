@@ -7,7 +7,9 @@ import jline.console.ConsoleReader;
 import net.minecraft.server.dedicated.DedicatedPlayerList;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.TicketType;
 import net.minecraft.server.players.PlayerList;
+import net.minecraft.util.Unit;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -24,6 +26,7 @@ import org.bukkit.plugin.PluginLoadOrder;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.SimplePluginManager;
 import org.bukkit.scheduler.BukkitWorker;
+import org.objectweb.asm.Opcodes;
 import org.spigotmc.SpigotConfig;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,6 +36,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -79,6 +83,11 @@ public abstract class CraftServerMixin implements CraftServerBridge {
     @Inject(method = "<init>", at = @At("RETURN"))
     public void arclight$setBrand(DedicatedServer console, PlayerList playerList, CallbackInfo ci) {
         this.serverName = "Arclight";
+    }
+
+    @Redirect(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/server/level/TicketType;timeout:J", opcode = Opcodes.PUTFIELD, remap = true))
+    public void arclight$setTicketTypePluginTimeout(TicketType<Unit> instance, long value) {
+        instance.timeout = Math.min(20, this.configuration.getInt("chunk-gc.period-in-ticks")); // Paper - cap plugin loads to 1 second
     }
 
     /**
