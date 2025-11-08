@@ -167,11 +167,15 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     @Decorate(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/dimension/LevelStem;generator()Lnet/minecraft/world/level/chunk/ChunkGenerator;"))
     private ChunkGenerator arclight$initChunkGenerator(LevelStem instance, @Local(ordinal = -1) MinecraftServer server, @Local(ordinal = -1) ServerLevelData worldInfo) throws Throwable {
         // Pulling up world info init since level info is used when selecting ChunkGenerator.
-        if (worldInfo instanceof PrimaryLevelData primary) {
-            this.K = primary;
+        if (arclight$isActual()) {
+            if (worldInfo instanceof PrimaryLevelData primary) {
+                this.K = primary;
+            } else {
+                // damn spigot again
+                this.K = DelegateWorldInfo.wrap(worldInfo);
+            }
         } else {
-            // damn spigot again
-            this.K = DelegateWorldInfo.wrap(worldInfo);
+            this.K = null;
         }
 
         if (arclight$isActual()) {
@@ -231,7 +235,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     private void arclight$init(MinecraftServer minecraftServer, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, ServerLevelData worldInfo, ResourceKey<Level> dimension, LevelStem levelStem, ChunkProgressListener statusListener, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking, RandomSequences seq, CallbackInfo ci) {
         this.pvpMode = minecraftServer.isPvpAllowed();
         this.convertable = levelSave;
-        if (this.dragonFight == null && this.environment == World.Environment.THE_END) {
+        if (arclight$isActual() && this.dragonFight == null && this.environment == World.Environment.THE_END) {
             this.dragonFight = new EndDragonFight((ServerLevel)(Object) this, K.worldGenOptions().seed(), K.endDragonFightData());
         }
         var typeKey = ((LevelStorageSourceBridge.LevelStorageAccessBridge) levelSave).bridge$getTypeKey();
@@ -257,8 +261,8 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         this.uuid = WorldUUID.getUUID(levelSave.getDimensionPath(this.dimension()).toFile());
         ((ServerChunkProviderBridge) this.chunkSource).bridge$setViewDistance(spigotConfig.viewDistance);
         ((ServerChunkProviderBridge) this.chunkSource).bridge$setSimulationDistance(spigotConfig.simulationDistance);
-        ((WorldInfoBridge) this.K).bridge$setWorld((ServerLevel) (Object) this);
         if (arclight$isActual()) {
+            ((WorldInfoBridge) this.K).bridge$setWorld((ServerLevel) (Object) this);
             var data = this.getDataStorage().computeIfAbsent(LevelPersistentData.factory(), "bukkit_pdc");
             this.bridge$getWorld().readBukkitValues(data.getTag());
         }
@@ -447,7 +451,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
             return;
         }
         CreatureSpawnEvent.SpawnReason spawnReason = reason == null ? CreatureSpawnEvent.SpawnReason.DEFAULT : reason;
-        if (DistValidate.isValid(this) && !CraftEventFactory.doEntityAddEventCalling((ServerLevel) (Object) this, entityIn, spawnReason)) {
+        if (DistValidate.isValid(this) && arclight$isActual() && !CraftEventFactory.doEntityAddEventCalling((ServerLevel) (Object) this, entityIn, spawnReason)) {
             cir.setReturnValue(false);
         }
     }

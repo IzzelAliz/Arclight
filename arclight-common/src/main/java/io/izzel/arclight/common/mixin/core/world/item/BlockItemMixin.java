@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.IWorldBridge;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -47,8 +48,9 @@ public abstract class BlockItemMixin {
         org.bukkit.block.BlockState state = arclight$state;
         arclight$state = null;
         BlockPos pos = context1.getClickedPos();
-        if (state != null && DistValidate.isValid(context)) {
-            org.bukkit.event.block.BlockPlaceEvent placeEvent = CraftEventFactory.callBlockPlaceEvent((ServerLevel) context1.getLevel(), context1.getPlayer(), context1.getHand(), state, pos.getX(), pos.getY(), pos.getZ());
+        ServerLevel level = IWorldBridge.checkActual(context1.getLevel());
+        if (state != null && level != null) {
+            org.bukkit.event.block.BlockPlaceEvent placeEvent = CraftEventFactory.callBlockPlaceEvent(level, context1.getPlayer(), context1.getHand(), state, pos.getX(), pos.getY(), pos.getZ());
             if (placeEvent != null && (placeEvent.isCancelled() || !placeEvent.canBuild())) {
                 state.update(true, false);
                 if ((Object) this instanceof SolidBucketItem) {
