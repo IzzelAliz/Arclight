@@ -371,6 +371,7 @@
     "world.item.enchantment.effects.ReplaceBlockMixin",
     "world.item.enchantment.effects.ReplaceDiskMixin",
     "world.level.BaseSpawnerMixin",
+    "world.level.ChunkPosMixin",
     "world.level.ExplosionMixin",
     "world.level.GameRules_BooleanValueMixin",
     "world.level.GameRules_IntegerValueMixin",

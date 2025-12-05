@@ -45,14 +45,19 @@ public abstract class NaturalSpawnerMixin {
         world.getProfiler().push("spawner");
         MobCategory[] classifications = SPAWNING_CATEGORIES;
         LevelData worldInfo = world.getLevelData();
+
         for (MobCategory classification : classifications) {
             boolean spawnThisTick = true;
             int limit = classification.getMaxInstancesPerChunk();
             SpawnCategory spawnCategory = CraftSpawnCategory.toBukkit(classification);
+
             if (CraftSpawnCategory.isValidForLimits(spawnCategory)) {
-                spawnThisTick = ((WorldBridge) world).bridge$ticksPerSpawnCategory().getLong(spawnCategory) != 0 && worldInfo.getGameTime() % ((WorldBridge) world).bridge$ticksPerSpawnCategory().getLong(spawnCategory) == 0;
+                spawnThisTick = ((WorldBridge) world).bridge$ticksPerSpawnCategory().getLong(spawnCategory) != 0
+                        && worldInfo.getGameTime() % ((WorldBridge) world).bridge$ticksPerSpawnCategory().getLong(spawnCategory) == 0;
+
                 limit = world.bridge$getWorld().getSpawnLimit(spawnCategory);
             }
+
             if (spawnThisTick) {
                 if (limit != 0) {
                     if ((flag || !classification.isFriendly()) && (flag1 || classification.isFriendly()) && (flag2 || !classification.isPersistent())

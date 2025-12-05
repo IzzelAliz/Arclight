@@ -49,6 +49,8 @@ public abstract class EntityMixin_NeoForge implements EntityBridge, IEntityExten
     @Shadow public abstract Collection<ItemEntity> captureDrops();
     // @formatter:on
 
+    @Shadow protected abstract BlockPos getOnPos(float yOffset);
+
     @Override
     public void bridge$revive() {
         this.revive();

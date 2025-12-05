@@ -22,10 +22,6 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(MushroomCow.class)
 public abstract class MushroomCowMixin_NeoForge extends MobMixin_NeoForge {
-
-    // @formatter:off
-    // @formatter:on
-
     @Redirect(method = "shear", remap = false, at = @At(value = "INVOKE", remap = true, target = "Lnet/minecraft/world/entity/animal/MushroomCow;discard()V"))
     private void arclight$animalTransformPre(MushroomCow mushroomCow) {
     }
