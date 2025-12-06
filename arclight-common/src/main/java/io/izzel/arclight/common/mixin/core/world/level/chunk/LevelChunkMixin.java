@@ -4,7 +4,6 @@ import io.izzel.arclight.common.bridge.core.world.IWorldBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.chunk.ChunkAccessBridge;
 import io.izzel.arclight.common.bridge.core.world.chunk.ChunkBridge;
-import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -48,9 +47,8 @@ public abstract class LevelChunkMixin extends ChunkAccessMixin implements ChunkB
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/UpgradeData;Lnet/minecraft/world/ticks/LevelChunkTicks;Lnet/minecraft/world/ticks/LevelChunkTicks;J[Lnet/minecraft/world/level/chunk/LevelChunkSection;Lnet/minecraft/world/level/chunk/LevelChunk$PostLoadProcessor;Lnet/minecraft/world/level/levelgen/blending/BlendingData;)V", at = @At("RETURN"))
     private void arclight$init(Level worldIn, ChunkPos p_196855_, UpgradeData p_196856_, LevelChunkTicks<Block> p_196857_, LevelChunkTicks<Fluid> p_196858_, long p_196859_, @Nullable LevelChunkSection[] p_196860_, @Nullable LevelChunk.PostLoadProcessor p_196861_, @Nullable BlendingData p_196862_, CallbackInfo ci) {
-        ServerLevel level = IWorldBridge.checkActual(worldIn);
-        if (level != null) {
-            this.r = level;
+        if (IWorldBridge.from(worldIn) instanceof IWorldBridge bridge) {
+            this.r = bridge.bridge$getMinecraftWorld();
         }
     }
 

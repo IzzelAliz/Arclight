@@ -2,19 +2,12 @@ package io.izzel.arclight.common.bridge.core.world;
 
 import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 
 public interface IWorldBridge {
-
-    static ServerLevel checkActual(LevelAccessor world) {
+    static IWorldBridge from(LevelAccessor world) {
         final var result = (IWorldBridge) world;
-        return result.arclight$isActual() ? result.bridge$getMinecraftWorld() : null;
-    }
-
-    static ServerLevel checkActual(Level level) {
-        final var result = (IWorldBridge) level;
-        return result.arclight$isActual() ? result.bridge$getMinecraftWorld() : null;
+        return result.arclight$isActual() ? result : null;
     }
 
     default boolean arclight$isActual() {

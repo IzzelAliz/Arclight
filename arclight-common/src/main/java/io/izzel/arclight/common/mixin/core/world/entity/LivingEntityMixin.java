@@ -687,9 +687,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
 
     @Decorate(method = "createWitherRose", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     private boolean arclight$fireWitherRoseForm(Level level, BlockPos pos, BlockState newState, int flags) throws Throwable {
-        ServerLevel serverLevel = IWorldBridge.checkActual(level);
-        if (serverLevel != null) {
-            final var event = ArclightEventFactory.callBlockFormEvent(serverLevel, pos, newState, flags, null);
+        if (IWorldBridge.from(level) instanceof IWorldBridge bridge) {
+            final var event = ArclightEventFactory.callBlockFormEvent(bridge.bridge$getMinecraftWorld(), pos, newState, flags, null);
             if (event != null) {
                 if (event.isCancelled()) {
                     return false;

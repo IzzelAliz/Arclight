@@ -48,9 +48,8 @@ public abstract class BlockItemMixin {
         org.bukkit.block.BlockState state = arclight$state;
         arclight$state = null;
         BlockPos pos = context1.getClickedPos();
-        ServerLevel level = IWorldBridge.checkActual(context1.getLevel());
-        if (state != null && level != null) {
-            org.bukkit.event.block.BlockPlaceEvent placeEvent = CraftEventFactory.callBlockPlaceEvent(level, context1.getPlayer(), context1.getHand(), state, pos.getX(), pos.getY(), pos.getZ());
+        if (IWorldBridge.from(context1.getLevel()) instanceof IWorldBridge bridge && state != null) {
+            org.bukkit.event.block.BlockPlaceEvent placeEvent = CraftEventFactory.callBlockPlaceEvent(bridge.bridge$getMinecraftWorld(), context1.getPlayer(), context1.getHand(), state, pos.getX(), pos.getY(), pos.getZ());
             if (placeEvent != null && (placeEvent.isCancelled() || !placeEvent.canBuild())) {
                 state.update(true, false);
                 if ((Object) this instanceof SolidBucketItem) {
