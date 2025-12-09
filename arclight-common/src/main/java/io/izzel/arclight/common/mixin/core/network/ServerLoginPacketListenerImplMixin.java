@@ -275,23 +275,34 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
             disconnect("This server requires you to connect with Velocity.");
             return;
         }
-        callPlayerPreLoginEvents(gameProfile);
+
+        if (server.isStopped() || !server.isRunning()) {
+            disconnect("Server is loading now. Please try again later.");
+            return;
+        }
+
+        arclight$callPlayerPreLoginEvents(gameProfile);
+
         LOGGER.info("UUID of player {} is {}", gameProfile.getName(), gameProfile.getId());
         this.startClientVerification(gameProfile);
     }
 
-    private void callPlayerPreLoginEvents(GameProfile profile) throws Exception {
+    @Unique
+    private void arclight$callPlayerPreLoginEvents(GameProfile profile) throws Exception {
         String playerName = profile.getName();
         InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
         UUID uniqueId = profile.getId();
         CraftServer craftServer = (CraftServer) Bukkit.getServer();
+
         AsyncPlayerPreLoginEvent asyncEvent = new AsyncPlayerPreLoginEvent(playerName, address, uniqueId);
         craftServer.getPluginManager().callEvent(asyncEvent);
+
         if (PlayerPreLoginEvent.getHandlerList().getRegisteredListeners().length != 0) {
             PlayerPreLoginEvent event = new PlayerPreLoginEvent(playerName, address, uniqueId);
             if (asyncEvent.getResult() != PlayerPreLoginEvent.Result.ALLOWED) {
                 event.disallow(asyncEvent.getResult(), asyncEvent.getKickMessage());
             }
+
             class SyncPreLogin extends Waitable<PlayerPreLoginEvent.Result> {
 
                 @Override

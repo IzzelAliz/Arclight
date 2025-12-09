@@ -769,3 +769,5 @@ accessible field net/minecraft/world/item/enchantment/ItemEnchantments showInToo
 accessible method net/minecraft/world/entity/projectile/AbstractHurtingProjectile assignDirectionalMovement (Lnet/minecraft/world/phys/Vec3;D)V
 accessible field net/minecraft/world/level/block/entity/DecoratedPotBlockEntity decorations Lnet/minecraft/world/level/block/entity/PotDecorations;
 accessible field net/minecraft/world/entity/vehicle/AbstractMinecartContainer lootTable Lnet/minecraft/resources/ResourceKey;
+#arclight smc fork
+accessible class net/minecraft/server/level/ChunkMap$DistanceManager

@@ -1,4 +1,4 @@
-package io.izzel.arclight.common.mixin.core.world.level;
+package io.izzel.arclight.common.mixin.optimization.general.world.level;
 
 import net.minecraft.world.level.ChunkPos;
 import org.spongepowered.asm.mixin.*;

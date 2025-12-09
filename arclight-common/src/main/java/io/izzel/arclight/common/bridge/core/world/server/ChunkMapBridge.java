@@ -2,6 +2,7 @@ package io.izzel.arclight.common.bridge.core.world.server;
 
 import io.izzel.arclight.common.mod.util.ArclightCallbackExecutor;
 import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.DistanceManager;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 
