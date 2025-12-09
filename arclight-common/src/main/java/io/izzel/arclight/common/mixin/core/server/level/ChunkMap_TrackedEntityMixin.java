@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.List;
 import java.util.Set;
 
 @Mixin(ChunkMap.TrackedEntity.class)
@@ -29,6 +30,9 @@ public abstract class ChunkMap_TrackedEntityMixin implements ChunkMap_TrackedEnt
     @Shadow @Final Entity entity;
     @Shadow SectionPos lastSectionPos;
     // @formatter:on
+
+    @Shadow
+    public abstract void updatePlayers(List<ServerPlayer> playersList);
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$setTrackedPlayers(ChunkMap outer, Entity entity, int range, int updateFrequency, boolean sendVelocityUpdates, CallbackInfo ci) {
@@ -60,5 +64,10 @@ public abstract class ChunkMap_TrackedEntityMixin implements ChunkMap_TrackedEnt
     @Override
     public void bridge$setLastSectionPos(SectionPos pos) {
         this.lastSectionPos = pos;
+    }
+
+    @Override
+    public void bridge$updatePlayers(List<ServerPlayer> list) {
+        updatePlayers(list);
     }
 }

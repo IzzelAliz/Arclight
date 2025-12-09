@@ -17,5 +17,5 @@ public interface ChunkMap_TrackedEntityBridge {
 
     void bridge$setLastSectionPos(SectionPos pos);
 
-    void bridge$updatePlayers(List<ServerPlayer> list2);
+    void bridge$updatePlayers(List<ServerPlayer> list);
 }
