@@ -277,7 +277,7 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
         }
 
         if (server.isStopped() || !server.isRunning()) {
-            disconnect("Server is loading now. Please try again later.");
+            disconnect("Server is not available now. Please try again later.");
             return;
         }
 
