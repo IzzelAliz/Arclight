@@ -439,7 +439,11 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
             return;
         }
         CreatureSpawnEvent.SpawnReason spawnReason = reason == null ? CreatureSpawnEvent.SpawnReason.DEFAULT : reason;
-        if (DistValidate.isValid(this) && !CraftEventFactory.doEntityAddEventCalling((ServerLevel) (Object) this, entityIn, spawnReason)) {
+        if (!DistValidate.isValid(this)) {
+            return;
+        }
+        ((EntityBridge) entityIn).arclight$onAddedToLevel();
+        if (!CraftEventFactory.doEntityAddEventCalling((ServerLevel) (Object) this, entityIn, spawnReason)) {
             cir.setReturnValue(false);
         }
     }

@@ -115,13 +115,13 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
     public void sendChanges() {
         List<Entity> list = this.entity.getPassengers();
         if (!list.equals(this.lastPassengers)) {
-            this.lastPassengers = list;
             this.broadcastAndSend(new ClientboundSetPassengersPacket(this.entity));
             removedPassengers(list, this.lastPassengers).forEach((p_289307_) -> {
                 if (p_289307_ instanceof ServerPlayer serverplayer1) {
                     serverplayer1.connection.teleport(serverplayer1.getX(), serverplayer1.getY(), serverplayer1.getZ(), serverplayer1.getYRot(), serverplayer1.getXRot());
                 }
             });
+            this.lastPassengers = list;
         }
         int elapsedTicks = ArclightConstants.currentTick - this.lastTick;
         if (elapsedTicks < 0) {

@@ -8,6 +8,7 @@ import net.minecraft.world.damagesource.CombatTracker;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -19,6 +20,7 @@ public class CombatTrackerMixin implements CombatTrackerBridge {
 
     @Shadow @Final private List<CombatEntry> entries;
 
+    @Unique
     private Component arclight$emptyComnent;
 
     @Inject(method = "getDeathMessage", cancellable = true, at = @At("HEAD"))
@@ -41,7 +43,7 @@ public class CombatTrackerMixin implements CombatTrackerBridge {
     public void bridge$setDeathMessage(Component component) {
         this.arclight$emptyComnent = component;
         if (!this.entries.isEmpty()) {
-            var entry = this.entries.get(this.entries.size() - 1);
+            var entry = this.entries.getLast();
             ((CombatEntryBridge) (Object) entry).bridge$setDeathMessage(component);
         }
     }

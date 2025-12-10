@@ -225,18 +225,20 @@ public class ArclightCaptures {
         }
     }
 
-    private static transient Player containerOwner;
+    private static transient Stack<Player> containerOwner = new Stack<>();
 
     public static void captureContainerOwner(Player entity) {
-        containerOwner = entity;
+        containerOwner.push(entity);
     }
 
     public static Player getContainerOwner() {
-        return containerOwner;
+        return containerOwner.peek();
     }
 
-    public static void resetContainerOwner() {
-        containerOwner = null;
+    public static void popContainerOwner(Player entity) {
+        if (!containerOwner.empty() && entity == getContainerOwner()) {
+            containerOwner.pop();
+        }
     }
 
     private static transient CraftPortalEvent craftPortalEvent;

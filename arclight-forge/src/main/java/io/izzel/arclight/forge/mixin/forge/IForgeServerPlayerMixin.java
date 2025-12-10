@@ -47,9 +47,12 @@ public interface IForgeServerPlayerMixin {
             return;
 
         ((ContainerBridge) c).bridge$setTitle(containerSupplier.getDisplayName());
-        ArclightCaptures.captureContainerOwner(player);
-        c = CraftEventFactory.callInventoryOpenEvent(player, c);
-        ArclightCaptures.resetContainerOwner();
+        try {
+            ArclightCaptures.captureContainerOwner(player);
+            c = CraftEventFactory.callInventoryOpenEvent(player, c);
+        } finally {
+            ArclightCaptures.popContainerOwner(player);
+        }
         if (c == null) {
             if (containerSupplier instanceof Container) {
                 ((Container) containerSupplier).stopOpen(player);

@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.entity.boss.enderdragon;
 import io.izzel.arclight.common.mixin.core.world.entity.MobMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
@@ -31,9 +32,7 @@ import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
@@ -145,6 +144,7 @@ public abstract class EnderDragonMixin extends MobMixin {
     }
 
     // TODO FIXME: exp patch for end dragon
+    // TODO: InitAuther97, 25.12.07: Do you mean these below?
     @Override
     public int getExpReward(Entity entity) {
         // CraftBukkit - Moved from #tickDeath method
@@ -156,5 +156,22 @@ public abstract class EnderDragonMixin extends MobMixin {
         }
 
         return flag ? short0 : 0;
+    }
+
+    @ModifyConstant(method = "tickDeath", constant = {@Constant(intValue = 500), @Constant(intValue = 12000)})
+    private int arclight$modifyDeathExp(int constant) {
+        return this.expToDrop;
+    }
+
+    @Inject(method = "addAdditionalSaveData", at = @At("RETURN"))
+    private void arclight$storeExpToDrop(CompoundTag compound, CallbackInfo ci) {
+        compound.putInt("Bukkit.expToDrop", this.expToDrop);
+    }
+
+    @Inject(method = "readAdditionalSaveData", at = @At("RETURN"))
+    private void arclight$readExpToDrop(CompoundTag compound, CallbackInfo ci) {
+        if (compound.contains("Bukkit.expToDrop")) {
+            this.expToDrop = compound.getInt("Bukkit.expToDrop");
+        }
     }
 }
