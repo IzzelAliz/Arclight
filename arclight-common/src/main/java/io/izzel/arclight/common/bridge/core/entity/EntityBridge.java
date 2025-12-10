@@ -109,4 +109,15 @@ public interface EntityBridge extends CommandSourceBridge, InjectEntityBridge {
     default ItemEntity arclight$spawnAtLocationNoAdd(ItemStack stack) {
         return arclight$spawnAtLocationNoAdd(stack, 0f);
     }
+
+    /**
+     * Called when an Entity is added to a ServerLevel via {@link net.minecraft.server.level.ServerLevel#addEntity(Entity)}.
+     * If entity is discarded before it can enter the level, the remove event will be wrongly sent (before it's actually added).
+     * And in the case when used by world generation, the server may crash for triggering {@link org.bukkit.event.entity.EntityRemoveEvent}
+     * asynchronously.
+     * We maintain whether it's "in the level" here, recording whether the event has been sent, with the assumption that an entity
+     * is only removed from the main thread, once it's added to the world. This will solve the problem above and more potential problems.
+     */
+    @SuppressWarnings("JavadocReference")
+    void arclight$onAddedToLevel();
 }

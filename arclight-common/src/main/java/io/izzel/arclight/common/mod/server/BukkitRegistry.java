@@ -4,14 +4,11 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.mojang.brigadier.arguments.BoolArgumentType;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
 import io.izzel.arclight.api.EnumHelper;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.bridge.bukkit.EntityTypeBridge;
 import io.izzel.arclight.common.bridge.bukkit.MaterialBridge;
 import io.izzel.arclight.common.bridge.bukkit.SimpleRegistryBridge;
-import io.izzel.arclight.common.mixin.core.network.ServerGamePacketListenerImplMixin;
 import io.izzel.arclight.common.mod.server.entity.EntityClassLookup;
 import io.izzel.arclight.common.mod.util.ResourceLocationUtil;
 import io.izzel.arclight.i18n.ArclightConfig;
@@ -27,9 +24,11 @@ import net.minecraft.stats.StatType;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
+import net.minecraft.world.inventory.RecipeBookType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CookingBookCategory;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -47,17 +46,13 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Pose;
 import org.bukkit.entity.SpawnCategory;
+import org.bukkit.event.player.PlayerRecipeBookSettingsChangeEvent;
 import org.bukkit.potion.PotionType;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 @SuppressWarnings({"ConstantConditions", "deprecation"})
 public class BukkitRegistry {
@@ -93,6 +88,8 @@ public class BukkitRegistry {
         loadSpawnCategory();
         loadEndDragonPhase();
         loadCookingBookCategory();
+        loadCraftingBookCategory();
+        loadRecipeBookType();
         loadFluids();
         loadGameRules();
         try {
@@ -163,6 +160,22 @@ public class BukkitRegistry {
         EnumHelper.addEnums(org.bukkit.Fluid.class, newTypes);
     }
 
+    private static void loadCraftingBookCategory() {
+        var id = CraftingBookCategory.values().length;
+        var newTypes = new ArrayList<org.bukkit.inventory.recipe.CraftingBookCategory>();
+        for (CraftingBookCategory category : CraftingBookCategory.values()) {
+            try {
+                CraftRecipe.getCategory(category);
+            } catch (Exception e) {
+                var name = category.name();
+                var bukkit = EnumHelper.makeEnum(org.bukkit.inventory.recipe.CraftingBookCategory.class, name, id++, List.of(), List.of());
+                newTypes.add(bukkit);
+                ArclightServer.LOGGER.debug("Registered {} as crafting category {}", name, bukkit);
+            }
+        }
+        EnumHelper.addEnums(org.bukkit.inventory.recipe.CraftingBookCategory.class, newTypes);
+    }
+
     private static void loadCookingBookCategory() {
         var id = CookingBookCategory.values().length;
         var newTypes = new ArrayList<org.bukkit.inventory.recipe.CookingBookCategory>();
@@ -177,6 +190,28 @@ public class BukkitRegistry {
             }
         }
         EnumHelper.addEnums(org.bukkit.inventory.recipe.CookingBookCategory.class, newTypes);
+    }
+
+    private static void loadRecipeBookType() {
+        var knownTypes = new ArrayList<String>();
+        for (PlayerRecipeBookSettingsChangeEvent.RecipeBookType type : PlayerRecipeBookSettingsChangeEvent.RecipeBookType.values()) {
+            knownTypes.add(type.name());
+        }
+        var newTypes = new ArrayList<PlayerRecipeBookSettingsChangeEvent.RecipeBookType>();
+        int id = PlayerRecipeBookSettingsChangeEvent.RecipeBookType.values().length;
+        for (RecipeBookType type : RecipeBookType.values()) {
+            var name = type.name();
+            if (!knownTypes.remove(name)) {
+                var bukkit = EnumHelper.makeEnum(PlayerRecipeBookSettingsChangeEvent.RecipeBookType.class, name, id++, List.of(), List.of());
+                newTypes.add(bukkit);
+                ArclightServer.LOGGER.debug("Registered {} as recipe book type {}", name, bukkit);
+            }
+        }
+        if (!knownTypes.isEmpty()) {
+            ArclightServer.LOGGER.fatal("Assertion failed, found unknown recipe book type in Bukkit: {}", knownTypes);
+            throw new IllegalArgumentException("Assertion failed, found unknown recipe book type in Bukkit");
+        }
+        EnumHelper.addEnums(PlayerRecipeBookSettingsChangeEvent.RecipeBookType.class, newTypes);
     }
 
     private static void loadEndDragonPhase() {

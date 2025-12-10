@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mod.server.event;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.server.world.item.EntityDropContainer;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.server.level.ServerPlayer;
@@ -33,11 +34,14 @@ public class EntityEventHandler {
         }
         if (living instanceof ServerPlayer player) {
             String dmsgOrig = player.getCombatTracker().getDeathMessage().getString();
-            Inventory inv = ArclightCaptures.getDeathPlayerInv();
-            boolean keepInventory = true;
-            if (inv != null) {
-                keepInventory = false;
-                player.getInventory().replaceWith(inv);
+            Inventory beforeDeath = ArclightCaptures.getDeathPlayerInv();
+            Inventory original;
+            if (beforeDeath != null) { // not keeping inventory, from game rule
+                original = new Inventory(player);
+                original.replaceWith(player.getInventory());
+                player.getInventory().replaceWith(beforeDeath);
+            } else {
+                original = null;
             }
             int expReward = bridge.bridge$getExpReward(source.getEntity());
             final PlayerDeathEvent event;
@@ -45,11 +49,24 @@ public class EntityEventHandler {
                 // Arclight: Spigot drops obtained from getCapturedDrops()
                 // Already respect vanilla behaviours by using entity capture
                 List<org.bukkit.inventory.ItemStack> loot = container.initDecorate(drops);
-                event = ArclightEventFactory.callPlayerDeathEvent(player, source, loot, expReward, dmsgOrig, keepInventory);
+                event = ArclightEventFactory.callPlayerDeathEvent(player, source, loot, expReward, dmsgOrig, original == null);
+                if (event.getKeepInventory()) {
+                    original = null;
+                }
                 container.convert(loot, drops, bridge::arclight$spawnAtLocationNoAdd);
             }
-            if (inv != null) {
-                player.getInventory().clearContent();
+            // beforeDeath == null : true if we used to keepInventory
+            // original == null : true if now we don't keepInventory
+            if (beforeDeath != null) {
+                if (original == null) {
+                    ArclightServer.LOGGER.debug("Overriding keepInventory from false to true. Preserve modified inventory before death.");
+                } else {
+                    // Don't clear it. Preserve original content.
+                    // player.getInventory().clearContent();
+                    player.getInventory().replaceWith(original);
+                }
+            } else if (!event.getKeepInventory()) {
+                ArclightServer.LOGGER.warn("Overriding keepInventory from true to false. This won't take effect.");
             }
             ((ServerPlayerEntityBridge) player).arclight$readDeathEvent(event);
         } else {

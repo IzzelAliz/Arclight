@@ -378,6 +378,10 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
 
     @Inject(method = "setRemoved", at = @At("HEAD"))
     private void arclight$removeEvent(Entity.RemovalReason removalReason, CallbackInfo ci) {
+        // InitAuther97: fix #2038, see implementation for explanation
+        if (!arclight$addedEventCalled) {
+            return;
+        }
         CraftEventFactory.callEntityRemoveEvent((Entity) (Object) this, arclight$removeCause);
         arclight$removeCause = null;
     }
@@ -986,4 +990,12 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     public void refreshEntityData(ServerPlayer to) {
         ((SynchedEntityDataBridge) this.entityData).bridge$refresh(to);
     }
+
+    private boolean arclight$addedEventCalled;
+
+    @Override
+    public void arclight$onAddedToLevel() {
+        this.arclight$addedEventCalled = true;
+    }
+
 }

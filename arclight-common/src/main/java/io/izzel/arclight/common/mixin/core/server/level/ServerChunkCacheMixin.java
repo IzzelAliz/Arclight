@@ -66,7 +66,7 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
         distanceManager.updateSimulationDistance(simDistance);
     }
 
-    @ModifyVariable(method = "getChunkFutureMainThread", index = 4, at = @At("HEAD"))
+    @ModifyVariable(method = "getChunkFutureMainThread", index = 4, at = @At("HEAD"), argsOnly = true)
     private boolean arclight$skipLoadIfUnloading(boolean flag, int chunkX, int chunkZ) {
         if (flag) {
             ChunkHolder chunkholder = this.getVisibleChunkIfPresent(ChunkPos.asLong(chunkX, chunkZ));

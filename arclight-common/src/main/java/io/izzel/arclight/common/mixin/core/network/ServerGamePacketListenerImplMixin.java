@@ -162,7 +162,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
 import java.util.logging.Level;
 
 @Mixin(ServerGamePacketListenerImpl.class)
@@ -1252,9 +1251,14 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                     return;
                 }
 
-                ArclightCaptures.captureContainerOwner(this.player);
-                InventoryView inventory = ((ContainerBridge) this.player.containerMenu).bridge$getBukkitView();
-                ArclightCaptures.resetContainerOwner();
+                ServerPlayer owner = this.player;
+                InventoryView inventory;
+                try {
+                    ArclightCaptures.captureContainerOwner(owner);
+                    inventory = ((ContainerBridge) this.player.containerMenu).bridge$getBukkitView();
+                } finally {
+                    ArclightCaptures.popContainerOwner(owner);
+                }
                 InventoryType.SlotType type = inventory.getSlotType(packet.getSlotNum());
 
                 InventoryClickEvent event;
