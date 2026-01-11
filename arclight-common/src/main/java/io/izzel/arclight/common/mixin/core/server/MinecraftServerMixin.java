@@ -79,6 +79,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -279,25 +280,30 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         return new ArclightDelegatedBorderListener(arg, (BorderChangeListener.DelegateBorderChangeListener) DecorationOps.callsite().invoke(arg));
     }
 
-    @Decorate(method = "createLevels", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
-    private Object arclight$worldInit(Map<Object, Object> instance, Object k, Object v, ChunkProgressListener chunkProgressListener) throws Throwable {
-        if (v instanceof ServerLevel level) {
-            if (((CraftServer) Bukkit.getServer()).scoreboardManager == null) {
-                ((CraftServer) Bukkit.getServer()).scoreboardManager = new CraftScoreboardManager((MinecraftServer) (Object) this, level.getScoreboard());
-            }
-            if (((WorldBridge) level).bridge$getGenerator() != null) {
-                level.bridge$getWorld().getPopulators().addAll(
-                    ((WorldBridge) level).bridge$getGenerator().getDefaultPopulators(
-                        level.bridge$getWorld()));
-            }
-            Bukkit.getPluginManager().callEvent(new WorldInitEvent(level.bridge$getWorld()));
-
-            // Arclight: move world border listener initialization to world registration
-            // Arclight: ArclightBorderChangeListener is singleton so won't be added more than once
-            // Arclight: since it seems that we can't apply multiple Decorators to a target on Forge...
-            level.getWorldBorder().addListener(ArclightBorderChangeListener.typed());
+    @SuppressWarnings("rawtypes")
+    @Redirect(method = "createLevels", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
+    private Object arclight$worldInit(Map instance, Object key, Object value) {
+        ResourceKey<Level> k = (ResourceKey<Level>) key;
+        ServerLevel level = (ServerLevel) value;
+        
+        Object result = instance.put(k, level);
+        
+        if (((CraftServer) Bukkit.getServer()).scoreboardManager == null) {
+            ((CraftServer) Bukkit.getServer()).scoreboardManager = new CraftScoreboardManager((MinecraftServer) (Object) this, level.getScoreboard());
         }
-        return DecorationOps.callsite().invoke(instance, k, v);
+        if (((WorldBridge) level).bridge$getGenerator() != null) {
+            level.bridge$getWorld().getPopulators().addAll(
+                ((WorldBridge) level).bridge$getGenerator().getDefaultPopulators(
+                    level.bridge$getWorld()));
+        }
+        Bukkit.getPluginManager().callEvent(new WorldInitEvent(level.bridge$getWorld()));
+
+        // Arclight: move world border listener initialization to world registration
+        // Arclight: ArclightBorderChangeListener is singleton so won't be added more than once
+        // Arclight: since it seems that we can't apply multiple Decorators to a target on Forge...
+        level.getWorldBorder().addListener(ArclightBorderChangeListener.typed());
+        
+        return result;
     }
 
     /**
