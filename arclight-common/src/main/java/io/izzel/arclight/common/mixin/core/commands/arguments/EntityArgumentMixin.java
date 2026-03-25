@@ -2,8 +2,8 @@ package io.izzel.arclight.common.mixin.core.commands.arguments;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import io.izzel.arclight.common.bridge.core.command.arguments.EntityArgumentBridge;
-import io.izzel.arclight.common.bridge.core.command.arguments.EntitySelectorParserBridge;
+import io.izzel.arclight.common.bridge.core.commands.arguments.EntityArgumentBridge;
+import io.izzel.arclight.common.bridge.core.commands.arguments.selector.EntitySelectorParserBridge;
 import io.izzel.arclight.mixin.Decorate;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.selector.EntitySelector;

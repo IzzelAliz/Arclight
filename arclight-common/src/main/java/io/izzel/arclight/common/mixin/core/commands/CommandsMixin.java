@@ -7,8 +7,8 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
-import io.izzel.arclight.common.bridge.core.command.CommandsBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.commands.CommandsBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.mod.compat.CommandNodeHooks;
 import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
@@ -83,7 +83,7 @@ public abstract class CommandsMixin implements CommandsBridge {
         for (CommandNode<SharedSuggestionProvider> child : node.getChildren()) {
             set.add(child.getName());
         }
-        PlayerCommandSendEvent event = new PlayerCommandSendEvent(((ServerPlayerEntityBridge) player).bridge$getBukkitEntity(), new LinkedHashSet<>(set));
+        PlayerCommandSendEvent event = new PlayerCommandSendEvent(((ServerPlayerBridge) player).bridge$getBukkitEntity(), new LinkedHashSet<>(set));
         Bukkit.getPluginManager().callEvent(event);
         for (String s : set) {
             if (!event.getCommands().contains(s)) {

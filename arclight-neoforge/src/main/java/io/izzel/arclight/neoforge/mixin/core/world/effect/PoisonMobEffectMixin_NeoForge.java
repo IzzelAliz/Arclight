@@ -1,6 +1,6 @@
 package io.izzel.arclight.neoforge.mixin.core.world.effect;
 
-import io.izzel.arclight.common.bridge.core.util.DamageSourceBridge;
+import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge;
 import net.minecraft.world.damagesource.DamageSource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

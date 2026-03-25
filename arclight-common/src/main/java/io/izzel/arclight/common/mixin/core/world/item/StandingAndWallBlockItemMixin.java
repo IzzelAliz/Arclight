@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import net.minecraft.world.item.StandingAndWallBlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.state.BlockState;
@@ -22,7 +22,7 @@ public class StandingAndWallBlockItemMixin {
     private void arclight$blockCanPlace(BlockPlaceContext context, CallbackInfoReturnable<BlockState> cir, BlockState place, BlockState defaultReturn) {
         if (defaultReturn != null) {
             var result = context.getLevel().isUnobstructed(defaultReturn, context.getClickedPos(), CollisionContext.empty());
-            var player = (context.getPlayer() instanceof ServerPlayerEntityBridge bridge) ? bridge.bridge$getBukkitEntity() : null;
+            var player = (context.getPlayer() instanceof ServerPlayerBridge bridge) ? bridge.bridge$getBukkitEntity() : null;
 
             var event = new BlockCanBuildEvent(CraftBlock.at(context.getLevel(), context.getClickedPos()), player, CraftBlockData.fromData(defaultReturn), result);
             Bukkit.getPluginManager().callEvent(event);

@@ -1,6 +1,6 @@
 package io.izzel.arclight.forge.mixin.core.world.level;
 
-import io.izzel.arclight.common.bridge.core.world.ExplosionBridge;
+import io.izzel.arclight.common.bridge.core.world.level.ExplosionBridge;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;

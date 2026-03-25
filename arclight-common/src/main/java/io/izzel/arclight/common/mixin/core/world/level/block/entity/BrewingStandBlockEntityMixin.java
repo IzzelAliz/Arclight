@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
-import io.izzel.arclight.common.bridge.core.tileentity.TileEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.level.block.entity.BlockEntityBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(BrewingStandBlockEntity.class)
-public abstract class BrewingStandBlockEntityMixin extends LockableBlockEntityMixin {
+public abstract class BrewingStandBlockEntityMixin extends BaseContainerBlockEntityMixin {
 
     // @formatter:off
     @Shadow private NonNullList<ItemStack> items;
@@ -70,7 +70,7 @@ public abstract class BrewingStandBlockEntityMixin extends LockableBlockEntityMi
                                                     @Local(allocate = "brewResults") List<org.bukkit.inventory.ItemStack> brewResults) throws Throwable {
         var potionBrewing = (PotionBrewing) DecorationOps.callsite().invoke(instance);
         BrewingStandBlockEntity entity = ArclightCaptures.getTickingBlockEntity();
-        InventoryHolder owner = entity == null ? null : ((TileEntityBridge) entity).bridge$getOwner();
+        InventoryHolder owner = entity == null ? null : ((BlockEntityBridge) entity).bridge$getOwner();
         ItemStack ing = stacks.get(3);
         brewResults = new ArrayList<>(3);
         for (int i = 0; i < 3; ++i) {

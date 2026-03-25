@@ -1,7 +1,7 @@
 package io.izzel.arclight.forge.mod.plugin.messaging;
 
 import com.google.common.base.Preconditions;
-import io.izzel.arclight.common.bridge.core.network.common.ServerCommonPacketListenerBridge;
+import io.izzel.arclight.common.bridge.core.server.network.ServerCommonPacketListenerImplBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.plugin.messaging.ArclightPluginChannel;
 import io.netty.buffer.Unpooled;
@@ -53,7 +53,7 @@ public class ArclightForgePayloadHandler implements ForgePayloadHandler {
 
         ctx.enqueueWork(() -> {
             var listener = ctx.getConnection().getPacketListener();
-            if (listener instanceof ServerCommonPacketListenerBridge bridge) {
+            if (listener instanceof ServerCommonPacketListenerImplBridge bridge) {
                 var craftbukkit = bridge.bridge$getCraftPlayer();
                 bukkit.dispatchMessage(craftbukkit, data);
             }

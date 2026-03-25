@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.bridge.core.entity.passive.TurtleEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.animal.TurtleBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.MoveToBlockGoal;
@@ -34,9 +34,9 @@ public abstract class Turtle_LayEggGoalMixin extends MoveToBlockGoal {
         super.tick();
         BlockPos blockpos = this.turtle.blockPosition();
         if (!this.turtle.isInWater() && this.isReachedTarget()) {
-            if (((TurtleEntityBridge) this.turtle).bridge$getDigging() < 1) {
-                ((TurtleEntityBridge) this.turtle).bridge$setDigging(true);
-            } else if (((TurtleEntityBridge) this.turtle).bridge$getDigging() > 200) {
+            if (((TurtleBridge) this.turtle).bridge$getDigging() < 1) {
+                ((TurtleBridge) this.turtle).bridge$setDigging(true);
+            } else if (((TurtleBridge) this.turtle).bridge$getDigging() > 200) {
                 Level world = this.turtle.level();
                 if (CraftEventFactory.callEntityChangeBlockEvent(this.turtle, this.blockPos.above(), (Blocks.TURTLE_EGG.defaultBlockState()).setValue(TurtleEggBlock.EGGS, this.turtle.getRandom().nextInt(4) + 1))) {
                     BlockPos blockpos1 = this.blockPos.above();
@@ -44,13 +44,13 @@ public abstract class Turtle_LayEggGoalMixin extends MoveToBlockGoal {
                     world.setBlock(blockpos1, blockstate, 3);
                     world.gameEvent(GameEvent.BLOCK_PLACE, blockpos1, GameEvent.Context.of(this.turtle, blockstate));
                 }
-                ((TurtleEntityBridge) this.turtle).bridge$setHasEgg(false);
-                ((TurtleEntityBridge) this.turtle).bridge$setDigging(false);
+                ((TurtleBridge) this.turtle).bridge$setHasEgg(false);
+                ((TurtleBridge) this.turtle).bridge$setDigging(false);
                 this.turtle.setInLoveTime(600);
             }
 
             if (this.turtle.isLayingEgg()) {
-                ((TurtleEntityBridge) this.turtle).bridge$setDigging(((TurtleEntityBridge) this.turtle).bridge$getDigging() + 1);
+                ((TurtleBridge) this.turtle).bridge$setDigging(((TurtleBridge) this.turtle).bridge$getDigging() + 1);
             }
         }
 

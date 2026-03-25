@@ -1,7 +1,7 @@
 package io.izzel.arclight.fabric.mod.plugin.messaging;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.network.common.ServerCommonPacketListenerBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.server.network.ServerCommonPacketListenerImplBridge;
 import io.izzel.arclight.common.mod.plugin.messaging.ArclightPluginChannel;
 import io.izzel.arclight.common.mod.plugin.messaging.ArclightRawPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerConfigurationNetworking;
@@ -18,7 +18,7 @@ public record ArclightFabricPayloadHandler(ArclightPluginChannel<ArclightFabricP
     @Override
     public void receive(ArclightRawPayload pkt, ServerPlayNetworking.Context ctx) {
         ctx.server().executeIfPossible(() -> {
-            var bukkit = ((ServerPlayerEntityBridge)ctx.player()).bridge$getBukkitEntity();
+            var bukkit = ((ServerPlayerBridge)ctx.player()).bridge$getBukkitEntity();
             channel.dispatchMessage(bukkit, pkt.arclight$leak());
         });
     }
@@ -26,7 +26,7 @@ public record ArclightFabricPayloadHandler(ArclightPluginChannel<ArclightFabricP
     @Override
     public void receive(ArclightRawPayload pkt, ServerConfigurationNetworking.Context ctx) {
         ctx.server().executeIfPossible(() -> {
-            var bukkit = ((ServerCommonPacketListenerBridge)ctx.networkHandler()).bridge$getCraftPlayer();
+            var bukkit = ((ServerCommonPacketListenerImplBridge)ctx.networkHandler()).bridge$getCraftPlayer();
             channel.dispatchMessage(bukkit, pkt.arclight$leak());
         });
     }

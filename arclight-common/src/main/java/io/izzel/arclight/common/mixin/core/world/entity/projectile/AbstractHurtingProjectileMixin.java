@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
-import io.izzel.arclight.common.bridge.core.entity.projectile.DamagingProjectileEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.projectile.AbstractHurtingProjectileBridge;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.projectile.AbstractHurtingProjectile;
 import net.minecraft.world.level.Level;
@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(AbstractHurtingProjectile.class)
-public abstract class AbstractHurtingProjectileMixin extends ProjectileMixin implements DamagingProjectileEntityBridge {
+public abstract class AbstractHurtingProjectileMixin extends ProjectileMixin implements AbstractHurtingProjectileBridge {
 
     public float bukkitYield;
     public boolean isIncendiary;

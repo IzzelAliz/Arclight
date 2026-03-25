@@ -1,6 +1,6 @@
 package io.izzel.arclight.neoforge.mixin.core.world.level.storage.loot;
 
-import io.izzel.arclight.common.bridge.core.world.storage.loot.LootContextBridge;
+import io.izzel.arclight.common.bridge.core.world.level.storage.loot.LootContextBridge;
 import net.minecraft.world.level.storage.loot.LootContext;
 import org.spongepowered.asm.mixin.Mixin;
 

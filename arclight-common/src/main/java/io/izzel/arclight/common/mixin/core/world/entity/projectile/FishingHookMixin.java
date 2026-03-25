@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.projectile.FishingHookBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.projectile.FishingHookBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
@@ -56,13 +56,13 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
 
     @Inject(method = "catchingFish", at = @At(value = "FIELD", shift = At.Shift.AFTER, ordinal = 0, target = "Lnet/minecraft/world/entity/projectile/FishingHook;timeUntilHooked:I"))
     private void arclight$attemptFail(BlockPos blockPos, CallbackInfo ci) {
-        PlayerFishEvent event = new PlayerFishEvent(((ServerPlayerEntityBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), null, (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.FAILED_ATTEMPT);
+        PlayerFishEvent event = new PlayerFishEvent(((ServerPlayerBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), null, (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.FAILED_ATTEMPT);
         Bukkit.getPluginManager().callEvent(event);
     }
 
     @Inject(method = "catchingFish", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/FishingHook;playSound(Lnet/minecraft/sounds/SoundEvent;FF)V"))
     private void arclight$fishBite(BlockPos blockPos, CallbackInfo ci) {
-        PlayerFishEvent event = new PlayerFishEvent(((ServerPlayerEntityBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), null, (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.BITE);
+        PlayerFishEvent event = new PlayerFishEvent(((ServerPlayerBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), null, (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.BITE);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             ci.cancel();
@@ -111,7 +111,7 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
 
     @Inject(method = "retrieve", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/FishingHook;pullEntity(Lnet/minecraft/world/entity/Entity;)V"))
     private void arclight$catchEntity(ItemStack itemStack, CallbackInfoReturnable<Integer> cir) {
-        PlayerFishEvent fishEvent = new PlayerFishEvent(((ServerPlayerEntityBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), this.hookedIn.bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.CAUGHT_ENTITY);
+        PlayerFishEvent fishEvent = new PlayerFishEvent(((ServerPlayerBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), this.hookedIn.bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.CAUGHT_ENTITY);
         Bukkit.getPluginManager().callEvent(fishEvent);
         if (fishEvent.isCancelled()) {
             cir.setReturnValue(0);
@@ -120,7 +120,7 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
 
     @Decorate(method = "retrieve", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;setDeltaMovement(DDD)V"))
     private void arclight$catchFish(ItemStack stack, @Local(ordinal = -1) ItemEntity itementity, @Local(allocate = "expToDrop") int expToDrop) throws Throwable {
-        PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerEntityBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), itementity.bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.CAUGHT_FISH);
+        PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), itementity.bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.CAUGHT_FISH);
         playerFishEvent.setExpToDrop(this.random.nextInt(6) + 1);
         Bukkit.getPluginManager().callEvent(playerFishEvent);
 
@@ -147,7 +147,7 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
     @Inject(method = "retrieve", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/FishingHook;onGround()Z"))
     private void arclight$onGround(ItemStack itemStack, CallbackInfoReturnable<Integer> cir) {
         if (this.onGround()) {
-            PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerEntityBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), null, (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.IN_GROUND);
+            PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), null, (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.IN_GROUND);
             Bukkit.getPluginManager().callEvent(playerFishEvent);
 
             if (playerFishEvent.isCancelled()) {
@@ -159,7 +159,7 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
     @Inject(method = "retrieve", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/FishingHook;discard()V"))
     private void arclight$reelIn(ItemStack itemStack, CallbackInfoReturnable<Integer> cir, Player player, int i) {
         if (i == 0) {
-            PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerEntityBridge) player).bridge$getBukkitEntity(), null, (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.REEL_IN);
+            PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerBridge) player).bridge$getBukkitEntity(), null, (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.REEL_IN);
             Bukkit.getPluginManager().callEvent(playerFishEvent);
             if (playerFishEvent.isCancelled()) {
                 cir.setReturnValue(0);

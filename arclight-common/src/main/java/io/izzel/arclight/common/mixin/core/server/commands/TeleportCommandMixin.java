@@ -3,8 +3,8 @@ package io.izzel.arclight.common.mixin.core.server.commands;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge;
 import io.izzel.tools.product.Product;
 import io.izzel.tools.product.Product4;
 import net.minecraft.commands.CommandSourceStack;
@@ -56,10 +56,10 @@ public class TeleportCommandMixin {
 
             boolean result;
             if (entity instanceof ServerPlayer player) {
-                ((ServerPlayerEntityBridge) player).bridge$pushChangeDimensionCause(PlayerTeleportEvent.TeleportCause.COMMAND);
+                ((ServerPlayerBridge) player).bridge$pushChangeDimensionCause(PlayerTeleportEvent.TeleportCause.COMMAND);
                 result = player.teleportTo(level, x, y, z, set, f, f1);
             } else {
-                Location to = new Location(((ServerWorldBridge) level).bridge$getWorld(), x, y, z, yaw, pitch);
+                Location to = new Location(((ServerLevelBridge) level).bridge$getWorld(), x, y, z, yaw, pitch);
                 var e = new org.bukkit.event.entity.EntityTeleportEvent(((EntityBridge) entity).bridge$getBukkitEntity(), ((EntityBridge) entity).bridge$getBukkitEntity().getLocation(), to);
                 Bukkit.getPluginManager().callEvent(e);
                 if (e.isCancelled()) {

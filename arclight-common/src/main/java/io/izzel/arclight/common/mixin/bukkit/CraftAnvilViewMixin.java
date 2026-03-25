@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
-import io.izzel.arclight.common.bridge.core.inventory.AnvilMenuBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.AnvilMenuBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import org.bukkit.craftbukkit.v.inventory.view.CraftAnvilView;

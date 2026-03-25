@@ -1,6 +1,6 @@
 package io.izzel.arclight.neoforge.mixin.core.world.entity.projectile;
 
-import io.izzel.arclight.common.bridge.core.entity.projectile.FishingHookBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.projectile.FishingHookBridge;
 import io.izzel.tools.product.Product;
 import io.izzel.tools.product.Product2;
 import net.minecraft.world.entity.projectile.FishingHook;

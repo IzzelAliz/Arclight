@@ -1,6 +1,6 @@
 package io.izzel.arclight.neoforge.mixin.core.server.level;
 
-import io.izzel.arclight.common.bridge.core.world.server.TicketManagerBridge;
+import io.izzel.arclight.common.bridge.core.server.level.DistanceManagerBridge;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.server.level.DistanceManager;
 import net.minecraft.server.level.Ticket;
@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(DistanceManager.class)
-public abstract class DistanceManagerMixin_NeoForge implements TicketManagerBridge {
+public abstract class DistanceManagerMixin_NeoForge implements DistanceManagerBridge {
 
     // @formatter:off
     @Shadow(remap = false) @Final private Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> forcedTickets;

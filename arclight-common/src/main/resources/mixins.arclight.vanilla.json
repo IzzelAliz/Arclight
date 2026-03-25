@@ -19,7 +19,7 @@
     "server.Main_ServerShutdownThreadMixin_Vanilla",
     "server.dedicated.DedicatedServer_ServerInputThreadMixin_Vanilla",
     "server.dedicated.DedicatedServerMixin_Vanilla",
-    "server.level.ServerPlayerGameMode_Vanilla",
+    "server.level.ServerPlayerGameModeMixin",
     "server.level.ServerPlayerMixin_Vanilla",
     "world.effect.PoisonMobEffectMixin_Vanilla",
     "world.entity.EntityMixin_Vanilla",
@@ -39,7 +39,7 @@
     "world.level.LevelMixin_Vanilla",
     "world.level.block.BlockMixin_Vanilla",
     "world.level.block.CropBlockMixin_Vanilla",
-    "world.level.block.RedstoneOreBlockMixin_Vanilla",
+    "world.level.block.RedStoneOreBlockMixin_Vanilla",
     "world.level.block.TntBlockMixin_Vanilla",
     "world.level.block.entity.AbstractFurnaceBlockEntityMixin_Vanilla",
     "world.level.levelgen.structure.templatesystem.StructureTemplateMixin_Vanilla"

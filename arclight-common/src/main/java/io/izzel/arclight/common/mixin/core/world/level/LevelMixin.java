@@ -1,13 +1,14 @@
 package io.izzel.arclight.common.mixin.core.world.level;
 
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
-import io.izzel.arclight.common.bridge.core.world.border.WorldBorderBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.level.border.WorldBorderBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
 import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
 import io.izzel.arclight.common.mod.mixins.annotation.TransformAccess;
 import io.izzel.arclight.common.mod.server.world.ArclightWorldConfig;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import io.izzel.arclight.common.mod.util.DistValidate;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -114,7 +115,7 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
     // InitAuther97: unsafe = true can't be removed because unsafe is default to false on Forge
     @Inject(method = "<init>", at = @At(value = "CTOR_HEAD", unsafe = true))
     private void arclight$preInit(WritableLevelData writableLevelData, ResourceKey resourceKey, RegistryAccess registryAccess, Holder holder, Supplier supplier, boolean bl, boolean bl2, long l, int i, CallbackInfo ci) {
-        this.arclight$isActual = WorldBridge.super.arclight$isActual();
+        this.arclight$isActual = DistValidate.isValid((LevelAccessor) (Object) this);
     }
 
     // InitAuther97: inject later than ironsspellbooks, see their LevelMixin

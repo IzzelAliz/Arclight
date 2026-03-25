@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.levelgen.structure.structures;
 
-import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
@@ -21,11 +21,11 @@ public class SwampHutPieceMixin {
 
     @Inject(method = "postProcess", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/WorldGenLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V"))
     private void arclight$addSpawnReasonForWitch(WorldGenLevel worldGenLevel, StructureManager structureManager, ChunkGenerator chunkGenerator, RandomSource randomSource, BoundingBox boundingBox, ChunkPos chunkPos, BlockPos blockPos, CallbackInfo ci) {
-        ((ServerWorldBridge) worldGenLevel).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.CHUNK_GEN);
+        ((ServerLevelBridge) worldGenLevel).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.CHUNK_GEN);
     }
 
     @Inject(method = "spawnCat", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ServerLevelAccessor;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V"))
     private void arclight$addSpawnReasonForCat(ServerLevelAccessor serverLevelAccessor, BoundingBox boundingBox, CallbackInfo ci) {
-        ((ServerWorldBridge) serverLevelAccessor).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.CHUNK_GEN);
+        ((ServerLevelBridge) serverLevelAccessor).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.CHUNK_GEN);
     }
 }

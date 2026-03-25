@@ -1,6 +1,6 @@
 package io.izzel.arclight.forge.mixin.core.world.effect;
 
-import io.izzel.arclight.common.bridge.core.util.DamageSourcesBridge;
+import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourcesBridge;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageSources;
 import org.spongepowered.asm.mixin.Mixin;

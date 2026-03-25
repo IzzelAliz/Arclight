@@ -1,6 +1,6 @@
 package io.izzel.arclight.neoforge.mixin.core.world.entity;
 
-import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.MobBridge;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(Mob.class)
-public abstract class MobMixin_NeoForge extends LivingEntityMixin_NeoForge implements MobEntityBridge {
+public abstract class MobMixin_NeoForge extends LivingEntityMixin_NeoForge implements MobBridge {
 
     @Override
     public AgeableMob bridge$forge$onBabyEntitySpawn(Mob partner, @Nullable AgeableMob proposedChild) {

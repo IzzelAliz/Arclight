@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
@@ -31,7 +31,7 @@ public class ProjectileWeaponItemMixin {
         if (event.getProjectile() == entity.bridge$getBukkitEntity()) {
             if (!(boolean) DecorationOps.callsite().invoke(instance, entity)) {
                 if (livingEntity instanceof net.minecraft.server.level.ServerPlayer) {
-                    ((ServerPlayerEntityBridge) livingEntity).bridge$getBukkitEntity().updateInventory();
+                    ((ServerPlayerBridge) livingEntity).bridge$getBukkitEntity().updateInventory();
                 }
                 return false;
             }

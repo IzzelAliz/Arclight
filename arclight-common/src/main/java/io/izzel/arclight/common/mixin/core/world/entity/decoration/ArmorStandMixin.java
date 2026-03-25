@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.decoration;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.LivingEntityMixin;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.mixin.Decorate;
@@ -105,7 +105,7 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
         org.bukkit.inventory.ItemStack armorStandItem = CraftItemStack.asCraftMirror(itemStack1);
         org.bukkit.inventory.ItemStack playerHeldItem = CraftItemStack.asCraftMirror(itemStack);
 
-        Player player = ((ServerPlayerEntityBridge) playerEntity).bridge$getBukkitEntity();
+        Player player = ((ServerPlayerBridge) playerEntity).bridge$getBukkitEntity();
         ArmorStand self = (ArmorStand) ((EntityBridge) this).bridge$getBukkitEntity();
 
         EquipmentSlot slot = CraftEquipmentSlot.getSlot(slotType);

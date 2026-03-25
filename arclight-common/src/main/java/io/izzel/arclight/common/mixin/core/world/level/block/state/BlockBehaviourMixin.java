@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.state;
 
-import io.izzel.arclight.common.bridge.core.world.ExplosionBridge;
+import io.izzel.arclight.common.bridge.core.world.level.ExplosionBridge;
 import io.izzel.arclight.common.bridge.core.world.level.block.state.BlockBehaviourBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.Local;

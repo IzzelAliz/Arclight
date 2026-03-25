@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.vanilla.world.item;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -78,7 +78,7 @@ public abstract class ItemStackMixin_Vanilla {
     private int arclight$itemDamage(ServerLevel serverLevel, ItemStack itemStack, int i, @Local(ordinal = 0) ServerPlayer damager) throws Throwable {
         int result = (int) DecorationOps.callsite().invoke(serverLevel, itemStack, i);
         if (damager != null) {
-            PlayerItemDamageEvent event = new PlayerItemDamageEvent(((ServerPlayerEntityBridge) damager).bridge$getBukkitEntity(), CraftItemStack.asCraftMirror((ItemStack) (Object) this), result);
+            PlayerItemDamageEvent event = new PlayerItemDamageEvent(((ServerPlayerBridge) damager).bridge$getBukkitEntity(), CraftItemStack.asCraftMirror((ItemStack) (Object) this), result);
             event.getPlayer().getServer().getPluginManager().callEvent(event);
 
             if (result != event.getDamage() || event.isCancelled()) {

@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.projectile.TridentEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.projectile.ThrownTridentBridge;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -33,12 +33,12 @@ public class TridentItemMixin {
     public boolean arclight$addEntity(Level world, Entity entityIn, ItemStack stack, Level worldIn, LivingEntity entityLiving, int timeLeft) throws Throwable {
         if (!(boolean) DecorationOps.callsite().invoke(world, entityIn)) {
             if (entityLiving instanceof ServerPlayer) {
-                ((ServerPlayerEntityBridge) entityLiving).bridge$getBukkitEntity().updateInventory();
+                ((ServerPlayerBridge) entityLiving).bridge$getBukkitEntity().updateInventory();
             }
             return (boolean) DecorationOps.cancel().invoke();
         }
         stack.hurtAndBreak(1, entityLiving, LivingEntity.getSlotForHand(entityLiving.getUsedItemHand()));
-        ((TridentEntityBridge) entityIn).bridge$setThrownStack(stack.copy());
+        ((ThrownTridentBridge) entityIn).bridge$setThrownStack(stack.copy());
         return true;
     }
 

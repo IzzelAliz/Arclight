@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.damagesource;
 
-import io.izzel.arclight.common.bridge.core.util.DamageSourceBridge;
-import io.izzel.arclight.common.bridge.core.util.DamageSourcesBridge;
+import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge;
+import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourcesBridge;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.damagesource.DamageSource;

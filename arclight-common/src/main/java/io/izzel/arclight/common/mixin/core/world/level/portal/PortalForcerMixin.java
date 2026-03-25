@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.portal;
 
-import io.izzel.arclight.common.bridge.core.world.TeleporterBridge;
+import io.izzel.arclight.common.bridge.core.world.level.portal.PortalForcerBridge;
 import net.minecraft.BlockUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Mixin(value = PortalForcer.class, priority = 1500)
-public abstract class PortalForcerMixin implements TeleporterBridge {
+public abstract class PortalForcerMixin implements PortalForcerBridge {
 
     // @formatter:off
     @Shadow public abstract Optional<BlockUtil.FoundRectangle> createPortal(BlockPos pos, Direction.Axis axis);

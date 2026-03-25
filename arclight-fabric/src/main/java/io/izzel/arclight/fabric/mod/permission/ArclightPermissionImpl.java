@@ -1,6 +1,6 @@
 package io.izzel.arclight.fabric.mod.permission;
 
-import io.izzel.arclight.common.bridge.core.command.CommandSourceStackBridge;
+import io.izzel.arclight.common.bridge.core.commands.CommandSourceStackBridge;
 import io.izzel.arclight.i18n.ArclightConfig;
 import me.lucko.fabric.api.permissions.v0.PermissionCheckEvent;
 import net.fabricmc.fabric.api.util.TriState;

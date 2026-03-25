@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mod.server.event;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.server.world.item.EntityDropContainer;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
@@ -68,7 +68,7 @@ public class EntityEventHandler {
             } else if (!event.getKeepInventory()) {
                 ArclightServer.LOGGER.warn("Overriding keepInventory from true to false. This won't take effect.");
             }
-            ((ServerPlayerEntityBridge) player).arclight$readDeathEvent(event);
+            ((ServerPlayerBridge) player).arclight$readDeathEvent(event);
         } else {
             final var extra = ArclightCaptures.consumeExtraDrops();
             if (extra != null) {

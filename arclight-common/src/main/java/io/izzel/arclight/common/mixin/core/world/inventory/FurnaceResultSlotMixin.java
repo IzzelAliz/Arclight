@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.core.tileentity.AbstractFurnaceTileEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.level.block.entity.AbstractFurnaceBlockEntityBridge;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.FurnaceResultSlot;
 import net.minecraft.world.item.ItemStack;
@@ -19,6 +19,6 @@ public class FurnaceResultSlotMixin {
 
     @Redirect(method = "checkTakeAchievements(Lnet/minecraft/world/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;awardUsedRecipesAndPopExperience(Lnet/minecraft/server/level/ServerPlayer;)V"))
     public void arclight$furnaceDropExp(AbstractFurnaceBlockEntity furnace, ServerPlayer player, ItemStack stack) {
-        ((AbstractFurnaceTileEntityBridge) furnace).bridge$dropExp(player, stack, this.removeCount);
+        ((AbstractFurnaceBlockEntityBridge) furnace).bridge$dropExp(player, stack, this.removeCount);
     }
 }

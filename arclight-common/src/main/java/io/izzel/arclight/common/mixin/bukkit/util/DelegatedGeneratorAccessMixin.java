@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.bukkit.util;
 
-import io.izzel.arclight.common.bridge.core.world.IWorldWriterBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.level.IWorldWriterBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.WorldGenLevel;
 import org.bukkit.craftbukkit.v.util.DelegatedGeneratorAccess;

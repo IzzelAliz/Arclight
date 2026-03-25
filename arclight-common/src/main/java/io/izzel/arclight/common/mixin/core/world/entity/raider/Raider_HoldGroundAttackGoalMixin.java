@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.raider;
 
-import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.MobBridge;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.raid.Raider;
 import org.bukkit.event.entity.EntityTargetEvent;
@@ -13,13 +13,13 @@ public abstract class Raider_HoldGroundAttackGoalMixin {
 
     @Redirect(method = "start", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/raid/Raider;setTarget(Lnet/minecraft/world/entity/LivingEntity;)V"))
     private void arclight$reason(Raider abstractRaiderEntity, LivingEntity entitylivingbaseIn) {
-        ((MobEntityBridge) abstractRaiderEntity).bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.FOLLOW_LEADER, true);
+        ((MobBridge) abstractRaiderEntity).bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.FOLLOW_LEADER, true);
         abstractRaiderEntity.setTarget(entitylivingbaseIn);
     }
 
     @Redirect(method = "stop", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/raid/Raider;setTarget(Lnet/minecraft/world/entity/LivingEntity;)V"))
     private void arclight$reason2(Raider abstractRaiderEntity, LivingEntity entitylivingbaseIn) {
-        ((MobEntityBridge) abstractRaiderEntity).bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.FOLLOW_LEADER, true);
+        ((MobBridge) abstractRaiderEntity).bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.FOLLOW_LEADER, true);
         abstractRaiderEntity.setTarget(entitylivingbaseIn);
     }
 }

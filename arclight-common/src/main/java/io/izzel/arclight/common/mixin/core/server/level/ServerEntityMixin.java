@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.ServerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerEntityBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
 import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
@@ -232,7 +232,7 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
         if (this.entity.hurtMarked) {
             boolean cancelled = false;
             if (this.entity instanceof ServerPlayer) {
-                Player player = ((ServerPlayerEntityBridge) this.entity).bridge$getBukkitEntity();
+                Player player = ((ServerPlayerBridge) this.entity).bridge$getBukkitEntity();
                 Vector velocity = player.getVelocity();
                 PlayerVelocityEvent event = new PlayerVelocityEvent(player, velocity.clone());
                 Bukkit.getPluginManager().callEvent(event);
@@ -252,7 +252,7 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
 
     @Inject(method = "sendDirtyEntityData", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/server/level/ServerEntity;broadcastAndSend(Lnet/minecraft/network/protocol/Packet;)V"))
     private void arclight$sendScaledHealth(CallbackInfo ci, SynchedEntityData entitydatamanager, List<SynchedEntityData.DataValue<?>> list, Set<AttributeInstance> set) {
-        if (this.entity instanceof ServerPlayerEntityBridge player) {
+        if (this.entity instanceof ServerPlayerBridge player) {
             player.bridge$getBukkitEntity().injectScaledMaxHealth(set, false);
         }
     }
@@ -267,7 +267,7 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
     @Redirect(method = "sendPairingData", require = 0, at = @At(value = "INVOKE", target = "Ljava/util/Collection;isEmpty()Z"))
     private boolean arclight$injectScaledHealth(Collection<AttributeInstance> instance, ServerPlayer player) {
         if (this.entity.getId() == player.getId()) {
-            ((ServerPlayerEntityBridge) this.entity).bridge$getBukkitEntity().injectScaledMaxHealth(instance, false);
+            ((ServerPlayerBridge) this.entity).bridge$getBukkitEntity().injectScaledMaxHealth(instance, false);
         }
         return instance.isEmpty();
     }

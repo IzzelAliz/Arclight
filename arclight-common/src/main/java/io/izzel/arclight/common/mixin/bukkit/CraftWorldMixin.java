@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
-import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.GameRules;
 import org.bukkit.GameRule;
@@ -29,7 +29,7 @@ public abstract class CraftWorldMixin {
      */
     @Overwrite(remap = false)
     public File getWorldFolder() {
-        return ((ServerWorldBridge) this.world).bridge$getConvertable().getDimensionPath(this.world.dimension()).toFile();
+        return ((ServerLevelBridge) this.world).bridge$getConvertable().getDimensionPath(this.world.dimension()).toFile();
     }
 
     @Inject(method = "convert", cancellable = true, at = @At("HEAD"), remap = false)

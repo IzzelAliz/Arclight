@@ -2,11 +2,11 @@ package io.izzel.arclight.common.mixin.core.server.level;
 
 import com.mojang.datafixers.util.Either;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.inventory.container.ContainerBridge;
-import io.izzel.arclight.common.bridge.core.network.play.ServerGamePacketListenerBridge;
-import io.izzel.arclight.common.bridge.core.util.FoodStatsBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.AbstractContainerMenuBridge;
+import io.izzel.arclight.common.bridge.core.server.network.ServerGamePacketListenerImplBridge;
+import io.izzel.arclight.common.bridge.core.world.food.FoodDataBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.damagesource.CombatTrackerBridge;
 import io.izzel.arclight.common.bridge.core.world.level.portal.DimensionTransitionBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.player.PlayerMixin;
@@ -111,7 +111,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 @Mixin(ServerPlayer.class)
-public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPlayerEntityBridge {
+public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPlayerBridge {
 
     // @formatter:off
     @Shadow @Final public MinecraftServer server;
@@ -427,7 +427,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
             PlayerRespawnEvent respawnEvent = new PlayerRespawnEvent(respawnPlayer, location, isBedSpawn, isAnchorSpawn, arclight$respawnReason);
             Bukkit.getPluginManager().callEvent(respawnEvent);
-            if (((ServerGamePacketListenerBridge) this.connection).bridge$isDisconnected()) {
+            if (((ServerGamePacketListenerImplBridge) this.connection).bridge$isDisconnected()) {
                 DecorationOps.cancel().invoke((DimensionTransition) null);
                 return;
             }
@@ -463,7 +463,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     private void arclight$forwardReason(ServerLevel p_265564_, double p_265424_, double p_265680_, double p_265312_, Set<RelativeMovement> p_265192_, float p_265059_, float p_265266_, CallbackInfoReturnable<Boolean> cir) {
         var teleportCause = arclight$cause;
         arclight$cause = null;
-        ((ServerGamePacketListenerBridge) this.connection).bridge$pushTeleportCause(teleportCause);
+        ((ServerGamePacketListenerImplBridge) this.connection).bridge$pushTeleportCause(teleportCause);
     }
 
     @Override
@@ -479,7 +479,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
     @Inject(method = "changeDimension", cancellable = true, at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;teleport(DDDFF)V"))
     private void arclight$cancelledTeleport(DimensionTransition dimensionTransition, CallbackInfoReturnable<Entity> cir) {
-        if (((ServerGamePacketListenerBridge) this.connection).bridge$teleportCancelled()) {
+        if (((ServerGamePacketListenerImplBridge) this.connection).bridge$teleportCancelled()) {
             cir.setReturnValue(null);
         }
     }
@@ -497,7 +497,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         exit = tpEvent.getTo();
         newLevel = ((CraftWorld) exit.getWorld()).getHandle();
         dimensionTransition = new DimensionTransition(newLevel, new Vec3(exit.getX(), exit.getY(), exit.getZ()), dimensionTransition.speed(), exit.getYaw(), exit.getPitch(), dimensionTransition.postDimensionTransition());
-        ((ServerGamePacketListenerBridge) this.connection).bridge$pushNoTeleportEvent();
+        ((ServerGamePacketListenerImplBridge) this.connection).bridge$pushNoTeleportEvent();
         DecorationOps.blackhole().invoke(newLevel, dimensionTransition);
     }
 
@@ -578,7 +578,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             ci.cancel();
         } else {
             if (this.connection != null) {
-                ((ServerGamePacketListenerBridge) this.connection).bridge$pushTeleportCause(PlayerTeleportEvent.TeleportCause.EXIT_BED);
+                ((ServerGamePacketListenerImplBridge) this.connection).bridge$pushTeleportCause(PlayerTeleportEvent.TeleportCause.EXIT_BED);
             }
         }
     }
@@ -599,7 +599,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Decorate(method = "openMenu*", inject = true, at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/world/MenuProvider;createMenu(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/entity/player/Player;)Lnet/minecraft/world/inventory/AbstractContainerMenu;"))
     private void arclight$invOpen(MenuProvider iTileInventory, @Local(ordinal = 0) AbstractContainerMenu container) throws Throwable {
         if (container != null) {
-            ((ContainerBridge) container).bridge$setTitle(iTileInventory.getDisplayName());
+            ((AbstractContainerMenuBridge) container).bridge$setTitle(iTileInventory.getDisplayName());
             boolean cancelled = false;
             try {
                 ArclightCaptures.captureContainerOwner((ServerPlayer) (Object) this);
@@ -624,7 +624,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     private void arclight$openHorseInv(final AbstractHorse entityhorseabstract, final Container iinventory) throws Throwable {
         this.nextContainerCounter();
         AbstractContainerMenu container = new HorseInventoryMenu(this.containerCounter, this.getInventory(), iinventory, entityhorseabstract, entityhorseabstract.getInventoryColumns());
-        ((ContainerBridge) container).bridge$setTitle(entityhorseabstract.getDisplayName());
+        ((AbstractContainerMenuBridge) container).bridge$setTitle(entityhorseabstract.getDisplayName());
         container = CraftEventFactory.callInventoryOpenEvent((ServerPlayer) (Object) this, container);
         if (container == null) {
             iinventory.stopOpen((ServerPlayer) (Object) this);
@@ -903,7 +903,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         this.setRemainingFireTicks(0);
         this.resetFallDistance();
         this.foodData = new FoodData();
-        ((FoodStatsBridge) this.foodData).bridge$setEntityHuman(player);
+        ((FoodDataBridge) this.foodData).bridge$setEntityHuman(player);
         this.deathTime = 0;
         this.setArrowCount(0, true);
         this.removeAllEffects(EntityPotionEffectEvent.Cause.DEATH);

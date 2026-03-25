@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level;
 
-import io.izzel.arclight.common.bridge.core.world.IWorldWriterBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.level.IWorldWriterBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.spawner.WorldEntitySpawnerBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;

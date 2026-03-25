@@ -1,8 +1,8 @@
 package io.izzel.arclight.forge.mixin.forge.items;
 
 import com.google.common.base.Preconditions;
-import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.forge.mod.util.DelegatedContainer;
 import io.izzel.arclight.mixin.Decorate;

@@ -6,11 +6,11 @@ import com.google.common.collect.Lists;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.Lifecycle;
 import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.server.dedicated.DedicatedServerBridge;
 import io.izzel.arclight.common.bridge.core.world.level.GameRules_ValueBridge;
-import io.izzel.arclight.common.bridge.core.world.storage.LevelStorageSourceBridge;
-import io.izzel.arclight.common.bridge.core.world.storage.WorldInfoBridge;
+import io.izzel.arclight.common.bridge.core.world.level.storage.LevelStorageSourceBridge;
+import io.izzel.arclight.common.bridge.core.world.level.storage.PrimaryLevelDataBridge;
 import io.izzel.arclight.i18n.ArclightConfig;
 import jline.console.ConsoleReader;
 import net.minecraft.core.Registry;
@@ -155,7 +155,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
         // Some plugin may change to a different PlayerList
         this.playerList = (DedicatedPlayerList) playerList;
         this.playerView = Collections.unmodifiableList(Lists.transform(playerList.players, player ->
-                ((ServerPlayerEntityBridge)player).bridge$getBukkitEntity()
+                ((ServerPlayerBridge)player).bridge$getBukkitEntity()
                 ));
     }
 
@@ -425,9 +425,9 @@ public abstract class CraftServerMixin implements CraftServerBridge {
                 throw new IllegalArgumentException("Unknown level stem: " + actualDimension);
             }
             if (actualDimension != null) {
-                ((WorldInfoBridge) levelData).arclight$offerCustomDimensions(stems);
+                ((PrimaryLevelDataBridge) levelData).arclight$offerCustomDimensions(stems);
             }
-            ((WorldInfoBridge) levelData).arclight$checkName(name);
+            ((PrimaryLevelDataBridge) levelData).arclight$checkName(name);
             levelData.setModdedInfo(this.console.getServerModName(), this.console.getModdedStatus().shouldReportAsModified());
 
             ((DedicatedServerBridge) this.console).arclight$forceUpgradeIfNeeded(worldSession, dimensions); // Arclight

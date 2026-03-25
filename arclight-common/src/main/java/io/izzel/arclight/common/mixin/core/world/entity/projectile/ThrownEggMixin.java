@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
-import io.izzel.arclight.common.bridge.bukkit.EntityTypeBridge;
+import io.izzel.arclight.common.bridge.bukkit.world.entity.EntityTypeBridge;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mod.util.Blackhole;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -46,7 +46,7 @@ public abstract class ThrownEggMixin extends ThrowableProjectileMixin {
             org.bukkit.entity.EntityType hatchingType = org.bukkit.entity.EntityType.CHICKEN;
             Entity shooter = this.getOwner();
             if (shooter instanceof ServerPlayer) {
-                PlayerEggThrowEvent event = new PlayerEggThrowEvent(((ServerPlayerEntityBridge) shooter).bridge$getBukkitEntity(), (Egg) this.getBukkitEntity(), hatching, b0, hatchingType);
+                PlayerEggThrowEvent event = new PlayerEggThrowEvent(((ServerPlayerBridge) shooter).bridge$getBukkitEntity(), (Egg) this.getBukkitEntity(), hatching, b0, hatchingType);
                 Bukkit.getPluginManager().callEvent(event);
                 b0 = event.getNumHatches();
                 hatching = event.isHatching();

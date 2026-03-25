@@ -1,6 +1,6 @@
 package io.izzel.arclight.neoforge.mixin.core.world.entity.monster.piglin;
 
-import io.izzel.arclight.common.bridge.core.entity.monster.piglin.PiglinBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.monster.piglin.PiglinBridge;
 import net.minecraft.world.entity.monster.piglin.Piglin;
 import net.minecraft.world.entity.monster.piglin.PiglinAi;
 import net.minecraft.world.item.ItemStack;

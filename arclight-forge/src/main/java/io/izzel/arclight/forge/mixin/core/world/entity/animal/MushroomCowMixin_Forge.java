@@ -1,6 +1,6 @@
 package io.izzel.arclight.forge.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.forge.mixin.core.world.entity.MobMixin_Forge;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.animal.Cow;

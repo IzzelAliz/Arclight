@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.bridge.core.entity.passive.FoxEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.animal.FoxBridge;
 import net.minecraft.world.entity.animal.Fox;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.UUID;
 
 @Mixin(Fox.class)
-public abstract class FoxMixin extends AnimalMixin implements FoxEntityBridge {
+public abstract class FoxMixin extends AnimalMixin implements FoxBridge {
 
     // @formatter:off
     @Invoker("addTrustedUUID") @Override public abstract void bridge$addTrustedUUID(UUID uuidIn);

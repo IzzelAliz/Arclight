@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.bridge.core.network.datasync.SynchedEntityDataBridge;
+import io.izzel.arclight.common.bridge.core.network.syncher.SynchedEntityDataBridge;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;

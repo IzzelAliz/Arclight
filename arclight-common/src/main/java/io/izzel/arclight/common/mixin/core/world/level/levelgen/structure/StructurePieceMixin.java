@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.levelgen.structure;
 
-import io.izzel.arclight.common.bridge.core.world.level.levelgen.StructurePieceBridge;
+import io.izzel.arclight.common.bridge.core.world.level.levelgen.structure.StructurePieceBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
