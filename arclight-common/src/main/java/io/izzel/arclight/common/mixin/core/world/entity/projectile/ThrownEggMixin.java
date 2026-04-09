@@ -36,26 +36,44 @@ public abstract class ThrownEggMixin extends ThrowableProjectileMixin {
         super.onHit(result);
         if (!this.level().isClientSide) {
             boolean hatching = this.random.nextInt(8) == 0;
-            byte b0 = 1;
+            int hatches = 1;
             if (this.random.nextInt(32) == 0) {
-                b0 = 4;
+                hatches = 4;
             }
             if (!hatching) {
-                b0 = 0;
+                hatches = 0;
             }
             org.bukkit.entity.EntityType hatchingType = org.bukkit.entity.EntityType.CHICKEN;
             Entity shooter = this.getOwner();
             if (shooter instanceof ServerPlayer) {
-                PlayerEggThrowEvent event = new PlayerEggThrowEvent(((ServerPlayerEntityBridge) shooter).bridge$getBukkitEntity(), (Egg) this.getBukkitEntity(), hatching, b0, hatchingType);
+                PlayerEggThrowEvent event = new PlayerEggThrowEvent(((ServerPlayerEntityBridge) shooter).bridge$getBukkitEntity(), (Egg) this.getBukkitEntity(), hatching, (byte) hatches, hatchingType);
                 Bukkit.getPluginManager().callEvent(event);
-                b0 = event.getNumHatches();
+                hatches = event.getNumHatches();
                 hatching = event.isHatching();
                 hatchingType = event.getHatchingType();
             }
-            if (hatching) {
-                for (int i = 0; i < b0; ++i) {
+            if (hatching && hatchingType == org.bukkit.entity.EntityType.CHICKEN) {
+                for (int i = 0; i < hatches; ++i) {
+                    // Preserve an explicit Chicken local and the vanilla-like hatch path for mod compatibility.
+                    // - Meadow / Let's Do keeps relying on a Chicken local-store shape (#1149).
+                    // - VanillaBackport captures locals around addFreshEntity(Chicken) on this path (#2112).
+                    Chicken chicken = net.minecraft.world.entity.EntityType.CHICKEN.create(this.level());
+                    if (chicken != null) {
+                        Blackhole.consume(chicken);
+                        chicken.setAge(-24000);
+                        chicken.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), 0.0F);
+                        if (!chicken.fudgePositionAfterSizeChange(ZERO_SIZED_DIMENSIONS)) {
+                            break;
+                        }
+                        ((WorldBridge) this.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.EGG);
+                        this.level().addFreshEntity(chicken);
+                    }
+                }
+            } else if (hatching) {
+                for (int i = 0; i < hatches; ++i) {
                     // TrickOrTreatMod compat https://github.com/IzzelAliz/Arclight/issues/1178
                     // https://github.com/MehVahdJukaar/TrickOrTreatMod/blob/020bc478b8f8de6bfec2191a9e667f423f45d7db/common/src/main/java/net/mehvahdjukaar/hauntedharvest/mixins/ThrownEggEntityMixin.java
+                    // Keep the non-chicken fallback on EntityType#create(Level) for existing compat expectations.
                     var entityType = ((EntityTypeBridge) (Object) hatchingType).bridge$getHandle();
                     var entity = entityType.create(this.level());
                     // Let's do: Meadow mixin compatibility https://github.com/IzzelAliz/Arclight/issues/1149
