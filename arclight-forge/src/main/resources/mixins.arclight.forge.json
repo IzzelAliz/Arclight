@@ -80,6 +80,6 @@
     "forge.items.RangedWrapperAccessor",
     "forge.items.SidedInvWrapperAccessor",
     "forge.items.VanillaInventoryCodeHooksMixin",
-    "optimization.world.entity.item.ItemEntityMixin_ActivationRange_Forge"
+    "optimization.general.activationrange.entity.ItemEntityMixin_ActivationRange_Forge",
   ]
 }
