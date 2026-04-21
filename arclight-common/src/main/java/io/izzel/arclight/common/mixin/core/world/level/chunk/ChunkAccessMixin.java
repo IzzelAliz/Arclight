@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.chunk;
 
 import io.izzel.arclight.common.bridge.core.world.chunk.ChunkAccessBridge;
-import io.izzel.arclight.common.bridge.core.world.chunk.LevelChunkSectionBridge;
+import io.izzel.arclight.common.bridge.core.world.level.chunk.LevelChunkSectionBridge;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;

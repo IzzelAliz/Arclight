@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mod.server.world.inventory;
 
-import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Player;
@@ -18,7 +18,7 @@ public class ArclightInventoryView {
     public static InventoryView createInvView(AbstractContainerMenu container) {
         var containerOwner = ArclightCaptures.getContainerOwner();
         Inventory viewing = createInv(containerOwner, container);
-        return new CraftInventoryView<>(((PlayerEntityBridge) containerOwner).bridge$getBukkitEntity(), viewing, container);
+        return new CraftInventoryView<>(((PlayerBridge) containerOwner).bridge$getBukkitEntity(), viewing, container);
     }
 
     public static CraftInventory createInv(Player containerOwner, AbstractContainerMenu container) {

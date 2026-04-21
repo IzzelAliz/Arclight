@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.vanilla.world.entity.animal;
 
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mixin.vanilla.world.entity.EntityMixin_Vanilla;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;

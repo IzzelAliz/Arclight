@@ -3,13 +3,13 @@ package io.izzel.arclight.common.mixin.core.world.entity.player;
 import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Either;
 import io.izzel.arclight.common.bridge.core.entity.InternalEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.core.util.FoodStatsBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
-import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.world.food.FoodDataBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.LivingEntityMixin;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.mixin.Decorate;
@@ -84,7 +84,7 @@ import javax.annotation.Nullable;
 import java.util.Optional;
 
 @Mixin(net.minecraft.world.entity.player.Player.class)
-public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEntityBridge {
+public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBridge {
 
     // @formatter:off
     @Shadow public abstract String getScoreboardName();
@@ -136,7 +136,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(CallbackInfo ci) {
         oldLevel = -1;
-        ((FoodStatsBridge) this.foodData).bridge$setEntityHuman((net.minecraft.world.entity.player.Player) (Object) this);
+        ((FoodDataBridge) this.foodData).bridge$setEntityHuman((net.minecraft.world.entity.player.Player) (Object) this);
         ((IInventoryBridge) this.enderChestInventory).setOwner(this.getBukkitEntity());
     }
 
@@ -244,7 +244,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
         Team team;
         if (entityhuman instanceof ServerPlayer) {
             final ServerPlayer thatPlayer = (ServerPlayer) entityhuman;
-            team = ((ServerPlayerEntityBridge) thatPlayer).bridge$getBukkitEntity().getScoreboard().getPlayerTeam(((ServerPlayerEntityBridge) thatPlayer).bridge$getBukkitEntity());
+            team = ((ServerPlayerBridge) thatPlayer).bridge$getBukkitEntity().getScoreboard().getPlayerTeam(((ServerPlayerBridge) thatPlayer).bridge$getBukkitEntity());
             if (team == null || team.allowFriendlyFire()) {
                 return true;
             }
@@ -256,7 +256,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
             }
         }
         if ((Object) this instanceof ServerPlayer) {
-            return !team.hasPlayer(((ServerPlayerEntityBridge) this).bridge$getBukkitEntity());
+            return !team.hasPlayer(((ServerPlayerBridge) this).bridge$getBukkitEntity());
         }
         return !team.hasPlayer(Bukkit.getOfflinePlayer(this.getScoreboardName()));
     }
@@ -317,14 +317,14 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
     @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;playSound(Lnet/minecraft/world/entity/player/Player;DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V"),
         slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/sounds/SoundEvents;PLAYER_ATTACK_NODAMAGE:Lnet/minecraft/sounds/SoundEvent;")))
     private void arclight$updateInv(Entity entity, CallbackInfo ci) {
-        if (this instanceof ServerPlayerEntityBridge b) {
+        if (this instanceof ServerPlayerBridge b) {
             b.bridge$getBukkitEntity().updateInventory();
         }
     }
 
     @Inject(method = "eat", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/food/FoodData;eat(Lnet/minecraft/world/food/FoodProperties;)V"))
     private void arclight$eatStack(Level level, ItemStack itemStack, FoodProperties foodProperties, CallbackInfoReturnable<ItemStack> cir) {
-        ((FoodStatsBridge) this.getFoodData()).bridge$pushEatStack(itemStack);
+        ((FoodDataBridge) this.getFoodData()).bridge$pushEatStack(itemStack);
     }
 
     protected transient boolean arclight$forceSleep;
@@ -418,7 +418,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerEnt
                 ((TamableAnimal) entity).setOwnerUUID(this.uuid);
             }
             entity.setPos(this.getX(), this.getY() + 0.699999988079071, this.getZ());
-            return ((ServerWorldBridge) this.level()).bridge$addEntitySerialized(entity, CreatureSpawnEvent.SpawnReason.SHOULDER_ENTITY);
+            return ((ServerLevelBridge) this.level()).bridge$addEntitySerialized(entity, CreatureSpawnEvent.SpawnReason.SHOULDER_ENTITY);
         }).orElse(true);
     }
 

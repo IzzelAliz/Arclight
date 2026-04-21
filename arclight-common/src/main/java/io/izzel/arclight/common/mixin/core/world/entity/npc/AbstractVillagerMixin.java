@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity.npc;
 
-import io.izzel.arclight.common.bridge.core.entity.merchant.IMerchantBridge;
-import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.core.world.item.MerchantOfferBridge;
+import io.izzel.arclight.common.bridge.core.world.item.trading.MerchantBridge;
+import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.world.item.trading.MerchantOfferBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.PathfinderMobMixin;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.EntityType;
@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(net.minecraft.world.entity.npc.AbstractVillager.class)
-public abstract class AbstractVillagerMixin extends PathfinderMobMixin implements IMerchantBridge {
+public abstract class AbstractVillagerMixin extends PathfinderMobMixin implements MerchantBridge {
 
     @Shadow @Final private SimpleContainer inventory;
 

@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mod.server.entity;
 
-import io.izzel.arclight.common.bridge.bukkit.EntityTypeBridge;
+import io.izzel.arclight.common.bridge.bukkit.world.entity.EntityTypeBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerPlayer;

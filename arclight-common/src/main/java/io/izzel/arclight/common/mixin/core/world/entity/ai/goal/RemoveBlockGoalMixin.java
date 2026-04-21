@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.ai.goal;
 
-import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.MobBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.RemoveBlockGoal;
@@ -26,7 +26,7 @@ public class RemoveBlockGoalMixin {
     @Inject(method = "tick", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;removeBlock(Lnet/minecraft/core/BlockPos;Z)Z"))
     public void arclight$removeBlock(CallbackInfo ci, Level world, BlockPos pos, BlockPos pos1) {
-        EntityInteractEvent event = new EntityInteractEvent(((MobEntityBridge) this.removerMob).bridge$getBukkitEntity(), CraftBlock.at(world, pos1));
+        EntityInteractEvent event = new EntityInteractEvent(((MobBridge) this.removerMob).bridge$getBukkitEntity(), CraftBlock.at(world, pos1));
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             ci.cancel();

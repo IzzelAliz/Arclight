@@ -1,7 +1,7 @@
 package io.izzel.arclight.neoforge.mixin.optimization.general.activationrange.entity;
 
-import io.izzel.arclight.common.bridge.core.entity.item.ItemEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.item.ItemEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import io.izzel.arclight.neoforge.mixin.core.world.entity.EntityMixin_NeoForge;
 import net.minecraft.world.entity.EntityType;

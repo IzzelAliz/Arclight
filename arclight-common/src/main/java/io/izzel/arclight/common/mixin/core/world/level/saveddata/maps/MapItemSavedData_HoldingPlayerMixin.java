@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.saveddata.maps;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.storage.MapDataBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.level.saveddata.maps.MapItemSavedDataBridge;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundMapItemDataPacket;
 import net.minecraft.world.entity.player.Player;
@@ -44,7 +44,7 @@ public abstract class MapItemSavedData_HoldingPlayerMixin {
     @Overwrite
     @Nullable
     public Packet<?> nextUpdatePacket(MapId id) {
-        RenderData render = ((MapDataBridge) outerThis).bridge$getMapView().render(((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity());
+        RenderData render = ((MapItemSavedDataBridge) outerThis).bridge$getMapView().render(((ServerPlayerBridge) this.player).bridge$getBukkitEntity());
         MapItemSavedData.MapPatch patch;
         if (this.dirtyData) {
             this.dirtyData = false;

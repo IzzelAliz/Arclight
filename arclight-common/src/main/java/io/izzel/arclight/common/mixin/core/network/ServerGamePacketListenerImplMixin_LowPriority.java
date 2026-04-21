@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.network;
 
-import io.izzel.arclight.common.bridge.core.network.play.ServerGamePacketListenerBridge;
+import io.izzel.arclight.common.bridge.core.server.network.ServerGamePacketListenerImplBridge;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.phys.Vec3;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Set;
 
 @Mixin(value = ServerGamePacketListenerImpl.class, priority = 1500)
-public abstract class ServerGamePacketListenerImplMixin_LowPriority implements ServerGamePacketListenerBridge {
+public abstract class ServerGamePacketListenerImplMixin_LowPriority implements ServerGamePacketListenerImplBridge {
 
     @Shadow private Vec3 awaitingPositionFromClient;
 

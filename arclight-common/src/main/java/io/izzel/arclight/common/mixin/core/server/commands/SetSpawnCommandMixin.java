@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server.commands;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.commands.SetSpawnCommand;
@@ -19,7 +19,7 @@ public class SetSpawnCommandMixin {
     @Inject(method = "setSpawn", at = @At("HEAD"))
     private static void arclight$cause(CommandSourceStack p_138650_, Collection<ServerPlayer> players, BlockPos p_138652_, float p_138653_, CallbackInfoReturnable<Integer> cir) {
         for (ServerPlayer player : players) {
-            ((ServerPlayerEntityBridge) player).bridge$pushChangeSpawnCause(PlayerSpawnChangeEvent.Cause.COMMAND);
+            ((ServerPlayerBridge) player).bridge$pushChangeSpawnCause(PlayerSpawnChangeEvent.Cause.COMMAND);
         }
     }
 }

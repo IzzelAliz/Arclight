@@ -1,6 +1,6 @@
 package io.izzel.arclight.forge.mod.event;
 
-import io.izzel.arclight.common.bridge.core.network.common.ServerCommonPacketListenerBridge;
+import io.izzel.arclight.common.bridge.core.server.network.ServerCommonPacketListenerImplBridge;
 import net.minecraft.server.network.ServerCommonPacketListenerImpl;
 import net.minecraftforge.event.network.ChannelRegistrationChangeEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -11,7 +11,7 @@ public class ChannelRegisterHandler {
     public void onRegistrationChange(ChannelRegistrationChangeEvent event) {
         var listener = event.getSource().getPacketListener();
         if (listener instanceof ServerCommonPacketListenerImpl common) {
-            var bridge = (ServerCommonPacketListenerBridge) common;
+            var bridge = (ServerCommonPacketListenerImplBridge) common;
             var server = bridge.bridge$getPlayer().server;
             server.executeIfPossible(() -> {
                 var craftbukkit = bridge.bridge$getCraftPlayer();

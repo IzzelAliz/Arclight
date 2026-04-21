@@ -1,6 +1,6 @@
 package io.izzel.arclight.fabric.mixin.core.world.entity;
 
-import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.vanilla.world.entity.LivingEntityBridge_Vanilla;
 import io.izzel.arclight.fabric.mod.event.LivingDropsEvent;
 import net.minecraft.world.damagesource.DamageSource;

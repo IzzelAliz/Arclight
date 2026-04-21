@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
-import io.izzel.arclight.common.bridge.core.entity.EntityTypeBridge;
-import io.izzel.arclight.common.bridge.core.world.IWorldWriterBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.EntityTypeBridge;
+import io.izzel.arclight.common.bridge.core.world.level.IWorldWriterBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;

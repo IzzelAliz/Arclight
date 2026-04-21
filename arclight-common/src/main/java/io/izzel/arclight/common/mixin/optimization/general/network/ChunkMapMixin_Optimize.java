@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.optimization.general.network;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ChunkMap_TrackedEntityBridge;
 import io.izzel.arclight.common.mod.compat.ModIds;
 import io.izzel.arclight.common.mod.mixins.annotation.LoadIfMod;
@@ -36,7 +36,7 @@ public class ChunkMapMixin_Optimize {
 
     @Redirect(method = "move", at = @At(value = "INVOKE", remap = false, target = "Lit/unimi/dsi/fastutil/ints/Int2ObjectMap;values()Lit/unimi/dsi/fastutil/objects/ObjectCollection;"))
     private ObjectCollection<ChunkMap.TrackedEntity> arclight$markDirty(Int2ObjectMap<ChunkMap.TrackedEntity> instance, ServerPlayer player) {
-        ((ServerPlayerEntityBridge) player).bridge$setTrackerDirty(true);
+        ((ServerPlayerBridge) player).bridge$setTrackerDirty(true);
         return new ObjectArraySet<>();
     }
 
@@ -50,9 +50,9 @@ public class ChunkMapMixin_Optimize {
 
         for (var trackedEntity : this.entityMap.values()) {
             var entity = ((ChunkMap_TrackedEntityBridge) trackedEntity).bridge$getEntity();
-            if (entity instanceof ServerPlayer player && ((ServerPlayerEntityBridge) player).bridge$isTrackerDirty()) {
+            if (entity instanceof ServerPlayer player && ((ServerPlayerBridge) player).bridge$isTrackerDirty()) {
                 list.add(trackedEntity);
-                ((ServerPlayerEntityBridge) player).bridge$setTrackerDirty(false);
+                ((ServerPlayerBridge) player).bridge$setTrackerDirty(false);
             }
             ((ChunkMap_TrackedEntityBridge) trackedEntity).bridge$getServerEntity().sendChanges();
         }

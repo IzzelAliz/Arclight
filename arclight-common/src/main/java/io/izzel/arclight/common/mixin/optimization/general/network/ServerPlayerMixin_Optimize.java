@@ -1,12 +1,12 @@
 package io.izzel.arclight.common.mixin.optimization.general.network;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import net.minecraft.server.level.ServerPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(ServerPlayer.class)
-public abstract class ServerPlayerMixin_Optimize implements ServerPlayerEntityBridge {
+public abstract class ServerPlayerMixin_Optimize implements ServerPlayerBridge {
 
     @Unique private boolean trackerDirty;
 

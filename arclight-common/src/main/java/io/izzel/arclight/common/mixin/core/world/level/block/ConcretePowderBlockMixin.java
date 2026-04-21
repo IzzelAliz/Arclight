@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
-import io.izzel.arclight.common.bridge.core.world.IWorldBridge;
+import io.izzel.arclight.common.bridge.core.world.level.LevelAccessorBridge;
 import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -31,7 +31,7 @@ public abstract class ConcretePowderBlockMixin extends FallingBlockMixin {
 
     @Decorate(method = "onLand", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     public boolean arclight$blockForm(Level world, BlockPos pos, BlockState newState, int flags) throws Throwable {
-        if (IWorldBridge.from(world) instanceof IWorldBridge bridge) {
+        if (LevelAccessorBridge.from(world) instanceof LevelAccessorBridge bridge) {
             final var event = ArclightEventFactory.callBlockFormEvent(bridge.bridge$getMinecraftWorld(), pos, newState, flags, null);
             if (event != null) {
                 if (event.isCancelled()) {

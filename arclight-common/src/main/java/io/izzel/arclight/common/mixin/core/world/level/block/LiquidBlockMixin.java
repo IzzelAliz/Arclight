@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
-import io.izzel.arclight.common.bridge.core.world.IWorldBridge;
+import io.izzel.arclight.common.bridge.core.world.level.LevelAccessorBridge;
 import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -22,7 +22,7 @@ public class LiquidBlockMixin {
 
     @Decorate(method = "shouldSpreadLiquid", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
     public boolean arclight$blockForm(Level world, BlockPos pos, BlockState newState) throws Throwable {
-        if (IWorldBridge.from(world) instanceof IWorldBridge bridge) {
+        if (LevelAccessorBridge.from(world) instanceof LevelAccessorBridge bridge) {
             final var event = ArclightEventFactory.callBlockFormEvent(bridge.bridge$getMinecraftWorld(), pos, newState, 3, null);
             if (event != null) {
                 if (event.isCancelled()) {

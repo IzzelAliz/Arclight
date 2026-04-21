@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
-import io.izzel.arclight.common.bridge.core.world.server.TicketTypeBridge;
+import io.izzel.arclight.common.bridge.core.server.level.TicketTypeBridge;
 import io.izzel.arclight.common.mod.mixins.annotation.TransformAccess;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.util.Unit;

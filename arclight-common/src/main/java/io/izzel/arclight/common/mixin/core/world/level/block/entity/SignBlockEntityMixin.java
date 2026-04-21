@@ -1,10 +1,10 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
-import io.izzel.arclight.common.bridge.core.command.CommandSourceStackBridge;
+import io.izzel.arclight.common.bridge.core.commands.CommandSourceStackBridge;
 import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.tileentity.SignTileEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.level.block.entity.SignBlockEntityBridge;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
@@ -45,7 +45,7 @@ import java.util.UUID;
 import java.util.function.UnaryOperator;
 
 @Mixin(SignBlockEntity.class)
-public abstract class SignBlockEntityMixin extends BlockEntityMixin implements SignTileEntityBridge, CommandSource, CommandSourceBridge {
+public abstract class SignBlockEntityMixin extends BlockEntityMixin implements SignBlockEntityBridge, CommandSource, CommandSourceBridge {
 
     // @formatter:off
     @Shadow public abstract ClientboundBlockEntityDataPacket getUpdatePacket();
@@ -89,7 +89,7 @@ public abstract class SignBlockEntityMixin extends BlockEntityMixin implements S
         }
 
         // CraftBukkit start
-        org.bukkit.entity.Player player = ((ServerPlayerEntityBridge) entityhuman).bridge$getBukkitEntity();
+        org.bukkit.entity.Player player = ((ServerPlayerBridge) entityhuman).bridge$getBukkitEntity();
         String[] lines = new String[4];
 
         for (int j = 0; j < list.size(); ++j) {

@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.storage;
 
-import io.izzel.arclight.common.bridge.core.world.storage.LevelStorageSourceBridge;
+import io.izzel.arclight.common.bridge.core.world.level.storage.LevelStorageSourceBridge;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;

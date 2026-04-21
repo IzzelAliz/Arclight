@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.level;
 
-import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
-import io.izzel.arclight.common.bridge.core.world.spawner.BaseSpawnerBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.MobBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.level.BaseSpawnerBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
@@ -36,7 +36,7 @@ public abstract class BaseSpawnerMixin implements BaseSpawnerBridge {
     @Decorate(method = "serverTick", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/SpawnData;getEquipment()Ljava/util/Optional;"))
     private void arclight$nerf(@Local(ordinal = -1) Mob mob) {
         if (((WorldBridge) mob.level()).bridge$spigotConfig().nerfSpawnerMobs) {
-            ((MobEntityBridge) mob).bridge$setAware(false);
+            ((MobBridge) mob).bridge$setAware(false);
         }
     }
 

@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.passive.AnimalEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.passive.FoxEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.MobBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.animal.AnimalBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.animal.FoxBridge;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -32,7 +32,7 @@ public abstract class Fox_BreedGoalMixin extends BreedGoal {
     protected void breed() {
         ServerLevel serverworld = (ServerLevel) this.level;
         Fox foxentity = (Fox) this.animal.getBreedOffspring(serverworld, this.partner);
-        foxentity = (Fox) ((MobEntityBridge) animal).bridge$forge$onBabyEntitySpawn(partner, foxentity);
+        foxentity = (Fox) ((MobBridge) animal).bridge$forge$onBabyEntitySpawn(partner, foxentity);
         if (foxentity == null) {
             //Reset the "inLove" state for the animals
             this.animal.setAge(6000);
@@ -46,16 +46,16 @@ public abstract class Fox_BreedGoalMixin extends BreedGoal {
             ServerPlayer serverplayerentity1 = this.partner.getLoveCause();
             ServerPlayer serverplayerentity2 = serverplayerentity;
             if (serverplayerentity != null) {
-                ((FoxEntityBridge) foxentity).bridge$addTrustedUUID(serverplayerentity.getUUID());
+                ((FoxBridge) foxentity).bridge$addTrustedUUID(serverplayerentity.getUUID());
             } else {
                 serverplayerentity2 = serverplayerentity1;
             }
 
             if (serverplayerentity1 != null && serverplayerentity != serverplayerentity1) {
-                ((FoxEntityBridge) foxentity).bridge$addTrustedUUID(serverplayerentity1.getUUID());
+                ((FoxBridge) foxentity).bridge$addTrustedUUID(serverplayerentity1.getUUID());
             }
             int experience = this.animal.getRandom().nextInt(7) + 1;
-            final EntityBreedEvent entityBreedEvent = CraftEventFactory.callEntityBreedEvent(foxentity, this.animal, this.partner, serverplayerentity, ((AnimalEntityBridge) this.animal).bridge$getBreedItem(), experience);
+            final EntityBreedEvent entityBreedEvent = CraftEventFactory.callEntityBreedEvent(foxentity, this.animal, this.partner, serverplayerentity, ((AnimalBridge) this.animal).bridge$getBreedItem(), experience);
             if (entityBreedEvent.isCancelled()) {
                 return;
             }

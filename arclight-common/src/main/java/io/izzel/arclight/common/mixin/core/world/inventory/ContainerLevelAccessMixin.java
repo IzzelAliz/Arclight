@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.core.util.IWorldPosCallableBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.ContainerLevelAccessBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.level.Level;
@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 
 @Mixin(ContainerLevelAccess.class)
-public interface ContainerLevelAccessMixin extends IWorldPosCallableBridge {
+public interface ContainerLevelAccessMixin extends ContainerLevelAccessBridge {
 
     default Level getWorld() {
         return bridge$getWorld();
@@ -32,7 +32,7 @@ public interface ContainerLevelAccessMixin extends IWorldPosCallableBridge {
      */
     @Overwrite
     static ContainerLevelAccess create(final Level world, final BlockPos pos) {
-        class Anonymous implements ContainerLevelAccess, IWorldPosCallableBridge {
+        class Anonymous implements ContainerLevelAccess, ContainerLevelAccessBridge {
 
             @Override
             public <T> Optional<T> evaluate(BiFunction<Level, BlockPos, T> worldPosConsumer) {

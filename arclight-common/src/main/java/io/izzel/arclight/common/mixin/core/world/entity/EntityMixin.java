@@ -4,10 +4,10 @@ import com.google.common.collect.ImmutableList;
 import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.InternalEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.network.datasync.SynchedEntityDataBridge;
-import io.izzel.arclight.common.bridge.core.util.DamageSourceBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.network.syncher.SynchedEntityDataBridge;
+import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.level.portal.DimensionTransitionBridge;
 import io.izzel.arclight.common.mod.server.BukkitRegistry;
 import io.izzel.arclight.common.mod.server.entity.ArclightSpawnReason;
@@ -771,7 +771,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Inject(method = "interact", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Leashable;setLeashedTo(Lnet/minecraft/world/entity/Entity;Z)V"))
     private void arclight$leashEvent(Player player, InteractionHand interactionHand, CallbackInfoReturnable<InteractionResult> cir) {
         if (CraftEventFactory.callPlayerLeashEntityEvent((Entity) (Object) this, player, player, interactionHand).isCancelled()) {
-            ((ServerPlayerEntityBridge) player).bridge$resendItemInHands(); // SPIGOT-7615: Resend to fix client desync with used item
+            ((ServerPlayerBridge) player).bridge$resendItemInHands(); // SPIGOT-7615: Resend to fix client desync with used item
             ((ServerPlayer) player).connection.send(new ClientboundSetEntityLinkPacket((Entity) (Object) this, ((Leashable) this).getLeashHolder()));
             cir.setReturnValue(InteractionResult.PASS);
         }
@@ -850,7 +850,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
 
     @Decorate(method = "handlePortal", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;canChangeDimensions(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/Level;)Z"))
     private boolean arclight$changeDimension(Entity instance, Level level, Level level2) throws Throwable {
-        return (boolean) DecorationOps.callsite().invoke(instance, level, level2) || this instanceof ServerPlayerEntityBridge;
+        return (boolean) DecorationOps.callsite().invoke(instance, level, level2) || this instanceof ServerPlayerBridge;
     }
 
     @Inject(method = "setSwimming", cancellable = true, at = @At(value = "HEAD"))

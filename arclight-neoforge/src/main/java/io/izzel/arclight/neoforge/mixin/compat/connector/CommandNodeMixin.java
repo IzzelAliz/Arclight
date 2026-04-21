@@ -46,7 +46,7 @@ public class CommandNodeMixin<S> {
      */
     @Overwrite
     public boolean canUse(final S source) {
-        if (source instanceof final io.izzel.arclight.common.bridge.core.command.CommandSourceStackBridge bridge) {
+        if (source instanceof final io.izzel.arclight.common.bridge.core.commands.CommandSourceStackBridge bridge) {
             try {
                 bridge.bridge$setCurrentCommand((CommandNode<?>) (Object) this);
                 return requirement.test(source);

@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.decoration;
 
-import io.izzel.arclight.common.mixin.core.world.entity.item.BlockAttachedEntityMixin;
+import io.izzel.arclight.common.mixin.core.world.entity.decoration.BlockAttachedEntityMixin;
 import io.izzel.arclight.common.mod.mixins.annotation.TransformAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

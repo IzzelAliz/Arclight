@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.MobBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -39,7 +39,7 @@ public abstract class ZombifiedPiglinMixin extends ZombieMixin {
             if (piglinEntity != (Object) this) {
                 if (piglinEntity.getTarget() == null) {
                     if (!piglinEntity.isAlliedTo(this.getTarget())) {
-                        ((MobEntityBridge) piglinEntity).bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.TARGET_ATTACKED_NEARBY_ENTITY, true);
+                        ((MobBridge) piglinEntity).bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.TARGET_ATTACKED_NEARBY_ENTITY, true);
                         piglinEntity.setTarget(this.getTarget());
                     }
                 }

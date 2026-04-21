@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster.piglin;
 
-import io.izzel.arclight.common.bridge.core.entity.monster.piglin.PiglinBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.monster.piglin.PiglinBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.PathfinderMobMixin;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;

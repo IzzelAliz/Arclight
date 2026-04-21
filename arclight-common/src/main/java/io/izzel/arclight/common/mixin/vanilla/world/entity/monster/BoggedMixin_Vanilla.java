@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.vanilla.world.entity.monster;
 
-import io.izzel.arclight.common.bridge.core.network.datasync.SynchedEntityDataBridge;
+import io.izzel.arclight.common.bridge.core.network.syncher.SynchedEntityDataBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.monster.AbstractSkeletonMixin;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.world.InteractionHand;

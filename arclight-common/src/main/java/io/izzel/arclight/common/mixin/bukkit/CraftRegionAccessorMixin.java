@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
-import io.izzel.arclight.common.bridge.bukkit.EntityTypeBridge;
+import io.izzel.arclight.common.bridge.bukkit.world.entity.EntityTypeBridge;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.CraftRegionAccessor;
 import org.bukkit.entity.Entity;
