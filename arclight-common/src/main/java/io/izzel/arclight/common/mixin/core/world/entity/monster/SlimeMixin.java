@@ -17,7 +17,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.ArrayList;
-import java.util.List;
 
 @Mixin(net.minecraft.world.entity.monster.Slime.class)
 public abstract class SlimeMixin extends MobMixin {
@@ -27,7 +26,7 @@ public abstract class SlimeMixin extends MobMixin {
     @Shadow public abstract EntityType<? extends net.minecraft.world.entity.monster.Slime> getType();
     // @formatter:on
 
-    private transient List<LivingEntity> arclight$slimes;
+    private transient ArrayList<LivingEntity> arclight$slimes;
 
     /**
      * @author IzzelAliz
