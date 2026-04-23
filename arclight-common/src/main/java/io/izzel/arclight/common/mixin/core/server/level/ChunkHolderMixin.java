@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
-import io.izzel.arclight.common.bridge.core.world.chunk.ChunkBridge;
+import io.izzel.arclight.common.bridge.core.world.level.chunk.LevelChunkBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ChunkHolderBridge;
-import io.izzel.arclight.common.bridge.core.world.server.ChunkMapBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ChunkMapBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import net.minecraft.core.BlockPos;
@@ -84,7 +84,7 @@ public abstract class ChunkHolderMixin extends GenerationChunkHolder implements 
                         // lists again inside the chunk once the chunk becomes inaccessible and set the chunk's needsSaving flag.
                         // These actions may however happen deferred, so we manually set the needsSaving flag already here.
                         chunk.setUnsaved(true);
-                        ((ChunkBridge)chunk).bridge$unloadCallback();
+                        ((LevelChunkBridge)chunk).bridge$unloadCallback();
                     });
                 }
             }).exceptionally((throwable) -> {
@@ -121,7 +121,7 @@ public abstract class ChunkHolderMixin extends GenerationChunkHolder implements 
                 LevelChunk chunk = either.orElse(null);
                 if (chunk != null) {
                     ((ChunkMapBridge) chunkManager).bridge$getCallbackExecutor().execute(
-                            ((ChunkBridge) chunk)::bridge$loadCallback
+                            ((LevelChunkBridge) chunk)::bridge$loadCallback
                     );
                 }
             }).exceptionally((throwable) -> {

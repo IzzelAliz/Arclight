@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
-import io.izzel.arclight.common.mixin.core.world.entity.raider.RaiderMixin;
+import io.izzel.arclight.common.mixin.core.world.entity.raid.RaiderMixin;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.world.effect.MobEffectInstance;

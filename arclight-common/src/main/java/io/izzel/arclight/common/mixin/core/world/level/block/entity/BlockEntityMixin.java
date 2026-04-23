@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
-import io.izzel.arclight.common.bridge.core.tileentity.TileEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.level.block.entity.BlockEntityBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentMap;
@@ -29,7 +29,7 @@ import javax.annotation.Nullable;
 import java.util.Set;
 
 @Mixin(BlockEntity.class)
-public abstract class BlockEntityMixin implements TileEntityBridge {
+public abstract class BlockEntityMixin implements BlockEntityBridge {
 
     private static final CraftPersistentDataTypeRegistry DATA_TYPE_REGISTRY = new CraftPersistentDataTypeRegistry();
     public CraftPersistentDataContainer persistentDataContainer;

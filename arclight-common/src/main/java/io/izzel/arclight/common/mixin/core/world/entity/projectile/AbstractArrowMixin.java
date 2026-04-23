@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.PlayerInventoryBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.player.InventoryBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.world.entity.Entity;
@@ -60,9 +60,9 @@ public abstract class AbstractArrowMixin extends ProjectileMixin {
     @Decorate(method = "playerTouch", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/AbstractArrow;tryPickup(Lnet/minecraft/world/entity/player/Player;)Z"))
     private boolean arclight$pickupArrow(net.minecraft.world.entity.projectile.AbstractArrow instance, Player player) throws Throwable {
         ItemStack itemstack = this.getPickupItem();
-        if (this.pickup == net.minecraft.world.entity.projectile.AbstractArrow.Pickup.ALLOWED && !itemstack.isEmpty() && ((PlayerInventoryBridge) player.getInventory()).bridge$canHold(itemstack) > 0) {
+        if (this.pickup == net.minecraft.world.entity.projectile.AbstractArrow.Pickup.ALLOWED && !itemstack.isEmpty() && ((InventoryBridge) player.getInventory()).bridge$canHold(itemstack) > 0) {
             ItemEntity item = new ItemEntity(this.level(), this.getX(), this.getY(), this.getZ(), itemstack);
-            PlayerPickupArrowEvent event = new PlayerPickupArrowEvent(((ServerPlayerEntityBridge) player).bridge$getBukkitEntity(), new CraftItem(((CraftServer) Bukkit.getServer()), item), (AbstractArrow) this.getBukkitEntity());
+            PlayerPickupArrowEvent event = new PlayerPickupArrowEvent(((ServerPlayerBridge) player).bridge$getBukkitEntity(), new CraftItem(((CraftServer) Bukkit.getServer()), item), (AbstractArrow) this.getBukkitEntity());
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
                 return (boolean) DecorationOps.cancel().invoke();

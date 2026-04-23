@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.List;
 
 @Mixin(CrafterBlockEntity.class)
-public abstract class CrafterBlockEntityMixin extends LockableBlockEntityMixin {
+public abstract class CrafterBlockEntityMixin extends BaseContainerBlockEntityMixin {
 
     @Shadow private NonNullList<ItemStack> items;
 

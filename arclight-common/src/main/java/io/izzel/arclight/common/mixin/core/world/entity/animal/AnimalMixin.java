@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.bridge.core.entity.passive.AnimalEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.animal.AnimalBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.AgeableMobMixin;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.server.level.ServerLevel;
@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
 import java.util.Optional;
 
 @Mixin(Animal.class)
-public abstract class AnimalMixin extends AgeableMobMixin implements AnimalEntityBridge {
+public abstract class AnimalMixin extends AgeableMobMixin implements AnimalBridge {
 
     // @formatter:off
     @Shadow public InteractionResult mobInteract(Player playerIn, InteractionHand hand) { return null; }

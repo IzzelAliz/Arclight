@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
 import com.mojang.datafixers.DataFixer;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
-import io.izzel.arclight.common.bridge.core.world.server.ChunkMapBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ChunkMapBridge;
 import io.izzel.arclight.common.mod.util.ArclightCallbackExecutor;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;

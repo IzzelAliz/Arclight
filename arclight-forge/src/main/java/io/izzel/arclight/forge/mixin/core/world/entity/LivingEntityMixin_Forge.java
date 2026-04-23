@@ -1,7 +1,7 @@
 package io.izzel.arclight.forge.mixin.core.world.entity;
 
-import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.ArclightDamageContainer;
 import io.izzel.arclight.mixin.Decorate;
@@ -48,7 +48,7 @@ public abstract class LivingEntityMixin_Forge extends EntityMixin_Forge implemen
 
     @Redirect(method = "dropAllDeathLoot", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Collection;forEach(Ljava/util/function/Consumer;)V"))
     private void arclight$cancelEvent(Collection<ItemEntity> collection, Consumer<ItemEntity> action) {
-        if (this instanceof ServerPlayerEntityBridge) {
+        if (this instanceof ServerPlayerBridge) {
             // recapture for ServerPlayerEntityMixin#onDeath
             this.captureDrops(collection);
         } else {

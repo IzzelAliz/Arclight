@@ -1,6 +1,6 @@
 package io.izzel.arclight.neoforge.mod.permission;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.server.permission.handler.IPermissionHandler;
@@ -36,7 +36,7 @@ public final class ArclightPermissionHandler implements IPermissionHandler {
     @Override
     public <T> T getPermission(ServerPlayer player, PermissionNode<T> node, PermissionDynamicContext<?>... context) {
         if (node.getType() == PermissionTypes.BOOLEAN) {
-            return (T) (Object) ((ServerPlayerEntityBridge) player).bridge$getBukkitEntity().hasPermission(node.getNodeName());
+            return (T) (Object) ((ServerPlayerBridge) player).bridge$getBukkitEntity().hasPermission(node.getNodeName());
         } else {
             return delegate.getPermission(player, node, context);
         }

@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity.raid;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
-import io.izzel.arclight.common.bridge.core.world.raid.RaidBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.raid.RaidBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.advancements.critereon.PlayerTrigger;
@@ -92,7 +92,7 @@ public class RaidMixin implements RaidBridge {
         if (arclight$winners == null) {
             arclight$winners = new ArrayList<>();
         }
-        arclight$winners.add(((ServerPlayerEntityBridge) player).bridge$getBukkitEntity());
+        arclight$winners.add(((ServerPlayerBridge) player).bridge$getBukkitEntity());
     }
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/raid/Raid;setDirty()V"))

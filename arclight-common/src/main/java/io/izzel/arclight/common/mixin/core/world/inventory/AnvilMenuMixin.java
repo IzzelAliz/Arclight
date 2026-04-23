@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.inventory.AnvilMenuBridge;
-import io.izzel.arclight.common.bridge.core.util.IWorldPosCallableBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.AnvilMenuBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.ContainerLevelAccessBridge;
 import io.izzel.arclight.common.mod.server.world.inventory.ArclightAnvilView;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AnvilMenu.class)
-public abstract class AnvilMenuMixin extends ItemCombinerMixin implements AnvilMenuBridge {
+public abstract class AnvilMenuMixin extends ItemCombinerMenuMixin implements AnvilMenuBridge {
 
     // @formatter:off
     @Shadow @Final public DataSlot cost;
@@ -104,8 +104,8 @@ public abstract class AnvilMenuMixin extends ItemCombinerMixin implements AnvilM
         }
 
         var inventory = new CraftInventoryAnvil(
-            ((IWorldPosCallableBridge) this.access).bridge$getLocation(), this.inputSlots, this.resultSlots);
-        bukkitEntity = new ArclightAnvilView(((PlayerEntityBridge) this.player).bridge$getBukkitEntity(), inventory, (AnvilMenu) (Object) this);
+            ((ContainerLevelAccessBridge) this.access).bridge$getLocation(), this.inputSlots, this.resultSlots);
+        bukkitEntity = new ArclightAnvilView(((PlayerBridge) this.player).bridge$getBukkitEntity(), inventory, (AnvilMenu) (Object) this);
         return bukkitEntity;
     }
 }

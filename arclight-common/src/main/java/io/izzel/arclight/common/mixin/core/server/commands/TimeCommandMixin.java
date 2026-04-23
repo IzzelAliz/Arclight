@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server.commands;
 
-import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.commands.TimeCommand;
@@ -28,7 +28,7 @@ public class TimeCommandMixin {
 
     @Redirect(method = "addTime", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setDayTime(J)V"))
     private static void arclight$addTimeEvent(ServerLevel serverWorld, long time) {
-        TimeSkipEvent event = new TimeSkipEvent(((ServerWorldBridge) serverWorld).bridge$getWorld(), TimeSkipEvent.SkipReason.COMMAND, time - serverWorld.getDayTime());
+        TimeSkipEvent event = new TimeSkipEvent(((ServerLevelBridge) serverWorld).bridge$getWorld(), TimeSkipEvent.SkipReason.COMMAND, time - serverWorld.getDayTime());
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
             serverWorld.setDayTime(serverWorld.getDayTime() + event.getSkipAmount());
@@ -37,7 +37,7 @@ public class TimeCommandMixin {
 
     @Redirect(method = "setTime", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setDayTime(J)V"))
     private static void arclight$setTimeEvent(ServerLevel serverWorld, long time) {
-        TimeSkipEvent event = new TimeSkipEvent(((ServerWorldBridge) serverWorld).bridge$getWorld(), TimeSkipEvent.SkipReason.COMMAND, time - serverWorld.getDayTime());
+        TimeSkipEvent event = new TimeSkipEvent(((ServerLevelBridge) serverWorld).bridge$getWorld(), TimeSkipEvent.SkipReason.COMMAND, time - serverWorld.getDayTime());
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
             serverWorld.setDayTime(serverWorld.getDayTime() + event.getSkipAmount());

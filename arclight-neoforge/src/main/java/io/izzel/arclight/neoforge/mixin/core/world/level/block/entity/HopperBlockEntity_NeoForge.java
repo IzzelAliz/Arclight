@@ -19,4 +19,3 @@ public class HopperBlockEntity_NeoForge {
         }
     }
 }
-

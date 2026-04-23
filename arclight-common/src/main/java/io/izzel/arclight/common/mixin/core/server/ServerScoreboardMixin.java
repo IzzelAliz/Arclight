@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.server.ServerScoreboard;
 import net.minecraft.server.level.ServerPlayer;
@@ -34,7 +34,7 @@ public class ServerScoreboardMixin {
 
     private List<ServerPlayer> filterPlayer(List<ServerPlayer> list) {
         return list.stream()
-            .filter(it -> ((ServerPlayerEntityBridge) it).bridge$getBukkitEntity().getScoreboard().getHandle() == (Object) this)
+            .filter(it -> ((ServerPlayerBridge) it).bridge$getBukkitEntity().getScoreboard().getHandle() == (Object) this)
             .collect(Collectors.toList());
     }
 }

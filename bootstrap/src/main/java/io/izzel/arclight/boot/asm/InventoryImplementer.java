@@ -22,7 +22,7 @@ import java.lang.reflect.Modifier;
 public class InventoryImplementer implements Implementer {
 
     private static final Marker MARKER = MarkerManager.getMarker("INVENTORY");
-    private static final String BRIDGE_TYPE = "io/izzel/arclight/common/bridge/core/inventory/IInventoryBridge";
+    private static final String BRIDGE_TYPE = "io/izzel/arclight/common/bridge/core/world/IInventoryBridge";
 
     private final String maxStackSizeMethodName;
 

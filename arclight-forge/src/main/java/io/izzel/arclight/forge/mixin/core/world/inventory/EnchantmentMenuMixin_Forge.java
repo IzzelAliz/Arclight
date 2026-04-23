@@ -1,6 +1,6 @@
 package io.izzel.arclight.forge.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.core.inventory.EnchantmentMenuBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.EnchantmentMenuBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.inventory.EnchantmentMenu;
 import net.minecraft.world.item.ItemStack;

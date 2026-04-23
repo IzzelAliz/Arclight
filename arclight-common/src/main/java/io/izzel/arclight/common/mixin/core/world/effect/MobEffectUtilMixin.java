@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.effect;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.Local;
@@ -19,7 +19,7 @@ public class MobEffectUtilMixin {
         var cause = ArclightCaptures.getEffectCause();
         if (cause != null) {
             for (ServerPlayer player : players) {
-                ((ServerPlayerEntityBridge) player).bridge$pushEffectCause(cause);
+                ((ServerPlayerBridge) player).bridge$pushEffectCause(cause);
             }
         }
     }

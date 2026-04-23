@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.network;
 
 import com.mojang.datafixers.util.Pair;
-import io.izzel.arclight.common.bridge.core.network.datasync.SynchedEntityDataBridge;
+import io.izzel.arclight.common.bridge.core.network.syncher.SynchedEntityDataBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;

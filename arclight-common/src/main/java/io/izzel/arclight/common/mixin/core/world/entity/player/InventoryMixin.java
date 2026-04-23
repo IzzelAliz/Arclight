@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity.player;
 
-import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.PlayerInventoryBridge;
-import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.player.InventoryBridge;
+import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(Inventory.class)
-public abstract class InventoryMixin implements Container, IInventoryBridge, PlayerInventoryBridge {
+public abstract class InventoryMixin implements Container, IInventoryBridge, InventoryBridge {
 
     // @formatter:off
     @Shadow @Final public NonNullList<ItemStack> items;
@@ -90,7 +90,7 @@ public abstract class InventoryMixin implements Container, IInventoryBridge, Pla
 
     @Override
     public InventoryHolder getOwner() {
-        return ((PlayerEntityBridge) this.player).bridge$getBukkitEntity();
+        return ((PlayerBridge) this.player).bridge$getBukkitEntity();
     }
 
     @Override
@@ -111,7 +111,7 @@ public abstract class InventoryMixin implements Container, IInventoryBridge, Pla
 
     @Override
     public Location getLocation() {
-        return ((PlayerEntityBridge) this.player).bridge$getBukkitEntity().getLocation();
+        return ((PlayerBridge) this.player).bridge$getBukkitEntity().getLocation();
     }
 
     @Override

@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
-import io.izzel.arclight.common.bridge.core.entity.monster.EndermanEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.monster.EnderManBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.PathfinderMobMixin;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.resources.ResourceLocation;
@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(EnderMan.class)
-public abstract class EnderManMixin extends PathfinderMobMixin implements EndermanEntityBridge {
+public abstract class EnderManMixin extends PathfinderMobMixin implements EnderManBridge {
 
     // @formatter:off
     @Shadow private int targetChangeTime;

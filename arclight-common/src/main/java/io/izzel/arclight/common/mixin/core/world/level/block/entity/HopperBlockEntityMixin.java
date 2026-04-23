@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
-import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.core.tileentity.TileEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.world.level.block.entity.BlockEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.DistValidate;
@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 
 @Mixin(HopperBlockEntity.class)
-public abstract class HopperBlockEntityMixin extends LockableBlockEntityMixin {
+public abstract class HopperBlockEntityMixin extends BaseContainerBlockEntityMixin {
 
     // @formatter:off
     @Shadow private NonNullList<ItemStack> items;
@@ -83,7 +83,7 @@ public abstract class HopperBlockEntityMixin extends LockableBlockEntityMixin {
                 destinationInventory = ((IInventoryBridge) destination).getOwnerInventory();
             }
 
-            InventoryMoveItemEvent event = new InventoryMoveItemEvent(((TileEntityBridge) entity).bridge$getOwner().getInventory(), original.clone(), destinationInventory, true);
+            InventoryMoveItemEvent event = new InventoryMoveItemEvent(((BlockEntityBridge) entity).bridge$getOwner().getInventory(), original.clone(), destinationInventory, true);
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
                 entity.setCooldown(((WorldBridge) entity.getLevel()).bridge$spigotConfig().hopperTransfer); // Delay hopper checks

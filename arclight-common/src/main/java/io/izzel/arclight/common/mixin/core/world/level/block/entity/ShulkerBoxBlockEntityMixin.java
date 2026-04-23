@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(ShulkerBoxBlockEntity.class)
-public abstract class ShulkerBoxBlockEntityMixin extends LockableBlockEntityMixin {
+public abstract class ShulkerBoxBlockEntityMixin extends BaseContainerBlockEntityMixin {
 
     // @formatter:off
     @Shadow private NonNullList<ItemStack> itemStacks;

@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import io.izzel.arclight.common.bridge.core.entity.passive.TurtleEntityBridge;
-import io.izzel.arclight.common.bridge.core.util.DamageSourceBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.animal.TurtleBridge;
+import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageSources;
@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Turtle.class)
-public abstract class TurtleMixin extends AnimalMixin implements TurtleEntityBridge {
+public abstract class TurtleMixin extends AnimalMixin implements TurtleBridge {
 
     // @formatter:off
     @Accessor("layEggCounter") public abstract int bridge$getDigging();

@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.effect;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
@@ -24,7 +24,7 @@ public class SaturationMobEffectMixin {
         if (!event.isCancelled()) {
             DecorationOps.callsite().invoke(foodStats, event.getFoodLevel() - oldFoodLevel, foodSaturationModifier);
         }
-        ((ServerPlayer) playerEntity).connection.send(new ClientboundSetHealthPacket(((ServerPlayerEntityBridge) playerEntity).bridge$getBukkitEntity().getScaledHealth(),
+        ((ServerPlayer) playerEntity).connection.send(new ClientboundSetHealthPacket(((ServerPlayerBridge) playerEntity).bridge$getBukkitEntity().getScaledHealth(),
             playerEntity.getFoodData().getFoodLevel(), playerEntity.getFoodData().getSaturationLevel()));
     }
 }

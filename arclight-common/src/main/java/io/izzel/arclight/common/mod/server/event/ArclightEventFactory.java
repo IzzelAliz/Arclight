@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mod.server.event;
 
-import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.item.ItemStackBridge;
 import io.izzel.arclight.common.bridge.core.world.level.block.BlockBridge;
 import io.izzel.arclight.common.bridge.inject.InjectEntityBridge;
@@ -73,7 +73,7 @@ public abstract class ArclightEventFactory {
         CraftDamageSource bukkitDamageSource = new CraftDamageSource(damageSource);
         PlayerDeathEvent event = new PlayerDeathEvent(entity, bukkitDamageSource, drops, expReward, 0, deathMessage);
         event.setKeepInventory(keepInventory);
-        event.setKeepLevel(((ServerPlayerEntityBridge) victim).arclight$isKeepLevel());
+        event.setKeepLevel(((ServerPlayerBridge) victim).arclight$isKeepLevel());
         callEvent(event);
         return event;
     }

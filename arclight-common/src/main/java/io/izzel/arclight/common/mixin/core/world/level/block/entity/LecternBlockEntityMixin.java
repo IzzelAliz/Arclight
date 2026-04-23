@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
 import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.core.inventory.container.LecternContainerBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.LecternMenuBridge;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
@@ -51,7 +51,7 @@ public abstract class LecternBlockEntityMixin extends BlockEntityMixin implement
     @Overwrite
     public AbstractContainerMenu createMenu(int i, Inventory playerInventory, Player entity) {
         LecternMenu container = new LecternMenu(i, this.bookAccess, this.dataAccess);
-        ((LecternContainerBridge) container).bridge$setPlayerInventory(playerInventory);
+        ((LecternMenuBridge) container).bridge$setPlayerInventory(playerInventory);
         return container;
     }
 

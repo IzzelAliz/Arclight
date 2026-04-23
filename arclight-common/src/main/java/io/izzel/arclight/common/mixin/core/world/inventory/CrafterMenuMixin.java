@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.CrafterMenu;
 import net.minecraft.world.inventory.CraftingContainer;
@@ -30,7 +30,7 @@ public abstract class CrafterMenuMixin extends AbstractContainerMenuMixin {
         }
 
         CraftInventoryCrafter inventory = new CraftInventoryCrafter(this.container, this.resultContainer);
-        bukkitEntity = new CraftCrafterView(((ServerPlayerEntityBridge) this.player).bridge$getBukkitEntity(), inventory, (CrafterMenu) (Object) this);
+        bukkitEntity = new CraftCrafterView(((ServerPlayerBridge) this.player).bridge$getBukkitEntity(), inventory, (CrafterMenu) (Object) this);
         return bukkitEntity;
     }
 

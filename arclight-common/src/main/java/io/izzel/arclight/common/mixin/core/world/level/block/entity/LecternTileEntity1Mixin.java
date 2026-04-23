@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
-import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.core.tileentity.TileEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.world.level.block.entity.BlockEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -59,7 +59,7 @@ public abstract class LecternTileEntity1Mixin implements IInventoryBridge, Conta
 
     @Override
     public InventoryHolder getOwner() {
-        return ((TileEntityBridge) outerThis).bridge$getOwner();
+        return ((BlockEntityBridge) outerThis).bridge$getOwner();
     }
 
     @Override

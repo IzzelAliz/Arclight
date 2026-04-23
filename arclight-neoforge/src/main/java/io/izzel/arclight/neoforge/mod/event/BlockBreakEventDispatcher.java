@@ -1,6 +1,6 @@
 package io.izzel.arclight.neoforge.mod.event;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -16,7 +16,7 @@ public class BlockBreakEventDispatcher {
     public void onBreakBlock(BlockEvent.BreakEvent event) {
         if (DistValidate.isValid(event.getLevel())) {
             CraftBlock craftBlock = CraftBlock.at(event.getLevel(), event.getPos());
-            BlockBreakEvent breakEvent = new BlockBreakEvent(craftBlock, ((ServerPlayerEntityBridge) event.getPlayer()).bridge$getBukkitEntity());
+            BlockBreakEvent breakEvent = new BlockBreakEvent(craftBlock, ((ServerPlayerBridge) event.getPlayer()).bridge$getBukkitEntity());
             ArclightCaptures.captureBlockBreakPlayer(breakEvent);
             breakEvent.setCancelled(event.isCanceled());
             //breakEvent.setExpToDrop(event.getExpToDrop());

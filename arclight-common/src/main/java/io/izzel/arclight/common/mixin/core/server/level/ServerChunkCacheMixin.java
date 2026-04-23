@@ -1,10 +1,10 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ChunkHolderBridge;
-import io.izzel.arclight.common.bridge.core.world.server.ChunkMapBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ChunkMapBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
-import io.izzel.arclight.common.bridge.core.world.server.TicketManagerBridge;
+import io.izzel.arclight.common.bridge.core.server.level.DistanceManagerBridge;
 import io.izzel.arclight.mixin.Decorate;
 import net.minecraft.server.level.*;
 import net.minecraft.world.level.ChunkPos;
@@ -104,7 +104,7 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
 
     public void purgeUnload() {
         this.level.getProfiler().push("purge");
-        ((TicketManagerBridge) this.distanceManager).bridge$tick();
+        ((DistanceManagerBridge) this.distanceManager).bridge$tick();
         this.bridge$tickDistanceManager();
         this.level.getProfiler().popPush("unload");
         ((ChunkMapBridge) this.chunkMap).bridge$tick(() -> true);

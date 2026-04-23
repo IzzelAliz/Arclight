@@ -1,10 +1,10 @@
 package io.izzel.arclight.common.mixin.bukkit.event;
 
 import com.google.common.base.Function;
-import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.util.DamageSourceBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.DistValidate;
@@ -291,7 +291,7 @@ public abstract class CraftEventFactoryMixin {
             sign = new CraftSign<>(((WorldBridge) tileEntitySign.getLevel()).bridge$getWorld(), tileEntitySign);
         }
         Side side = front ? Side.FRONT : Side.BACK;
-        return callPlayerSignOpenEvent(((ServerPlayerEntityBridge) player).bridge$getBukkitEntity(), sign, side, cause);
+        return callPlayerSignOpenEvent(((ServerPlayerBridge) player).bridge$getBukkitEntity(), sign, side, cause);
     }
 
     /**

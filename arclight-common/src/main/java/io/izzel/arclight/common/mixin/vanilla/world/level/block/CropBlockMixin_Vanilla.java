@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.vanilla.world.level.block;
 
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.level.block.BlockMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;

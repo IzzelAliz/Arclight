@@ -1,6 +1,6 @@
 package io.izzel.arclight.neoforge.mod.plugin.messaging;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.mod.plugin.messaging.ArclightPluginChannel;
 import io.izzel.arclight.common.mod.plugin.messaging.ArclightRawPayload;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -12,7 +12,7 @@ public record ArclightNfPayloadHandler(ArclightPluginChannel<ArclightNfPayloadHa
     @Override
     public void handle(ArclightRawPayload pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
-            var bukkit = ((ServerPlayerEntityBridge)ctx.player()).bridge$getBukkitEntity();
+            var bukkit = ((ServerPlayerBridge)ctx.player()).bridge$getBukkitEntity();
             channel.dispatchMessage(bukkit, pkt.arclight$leak());
         });
     }

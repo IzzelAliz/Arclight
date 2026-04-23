@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
-import io.izzel.arclight.common.bridge.core.world.server.TicketManagerBridge;
+import io.izzel.arclight.common.bridge.core.server.level.DistanceManagerBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.server.level.ChunkHolder;
@@ -20,7 +20,7 @@ public class DistanceManager_ChunkTicketTrackerMixin {
 
     @Decorate(method = "setLevel", at = @At(value = "INVOKE", target = "Ljava/util/Set;add(Ljava/lang/Object;)Z"))
     private boolean arclight$setLevel(Set instance, Object e) throws Throwable {
-        ((TicketManagerBridge) outerThis).arclight$offerUpdate((ChunkHolder) e);
+        ((DistanceManagerBridge) outerThis).arclight$offerUpdate((ChunkHolder) e);
         return (boolean) DecorationOps.callsite().invoke(instance, e);
     }
 }

@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.IWorldBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.level.LevelAccessorBridge;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -48,12 +48,12 @@ public abstract class BlockItemMixin {
         org.bukkit.block.BlockState state = arclight$state;
         arclight$state = null;
         BlockPos pos = context1.getClickedPos();
-        if (IWorldBridge.from(context1.getLevel()) instanceof IWorldBridge bridge && state != null) {
+        if (LevelAccessorBridge.from(context1.getLevel()) instanceof LevelAccessorBridge bridge && state != null) {
             org.bukkit.event.block.BlockPlaceEvent placeEvent = CraftEventFactory.callBlockPlaceEvent(bridge.bridge$getMinecraftWorld(), context1.getPlayer(), context1.getHand(), state, pos.getX(), pos.getY(), pos.getZ());
             if (placeEvent != null && (placeEvent.isCancelled() || !placeEvent.canBuild())) {
                 state.update(true, false);
                 if ((Object) this instanceof SolidBucketItem) {
-                    ((ServerPlayerEntityBridge) context1.getPlayer()).bridge$getBukkitEntity().updateInventory();
+                    ((ServerPlayerBridge) context1.getPlayer()).bridge$getBukkitEntity().updateInventory();
                 }
                 cir.setReturnValue(InteractionResult.FAIL);
             }
@@ -67,7 +67,7 @@ public abstract class BlockItemMixin {
 
     @Inject(method = "canPlace", cancellable = true, at = @At("RETURN"))
     private void arclight$blockCanBuild(BlockPlaceContext context, BlockState state, CallbackInfoReturnable<Boolean> cir) {
-        Player player = (context.getPlayer() instanceof ServerPlayerEntityBridge) ? ((ServerPlayerEntityBridge) context.getPlayer()).bridge$getBukkitEntity() : null;
+        Player player = (context.getPlayer() instanceof ServerPlayerBridge) ? ((ServerPlayerBridge) context.getPlayer()).bridge$getBukkitEntity() : null;
         BlockCanBuildEvent event = new BlockCanBuildEvent(CraftBlock.at(context.getLevel(), context.getClickedPos()), player, CraftBlockData.fromData(state), cir.getReturnValue());
         if (DistValidate.isValid(context)) Bukkit.getPluginManager().callEvent(event);
         cir.setReturnValue(event.isBuildable());

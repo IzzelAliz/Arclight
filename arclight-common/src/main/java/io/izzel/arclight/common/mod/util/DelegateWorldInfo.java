@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mod.util;
 
 import com.mojang.serialization.Lifecycle;
-import io.izzel.arclight.common.bridge.core.world.storage.DerivedWorldInfoBridge;
-import io.izzel.arclight.common.bridge.core.world.storage.WorldInfoBridge;
+import io.izzel.arclight.common.bridge.core.world.level.storage.DerivedLevelDataBridge;
+import io.izzel.arclight.common.bridge.core.world.level.storage.PrimaryLevelDataBridge;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
@@ -222,7 +222,7 @@ public class DelegateWorldInfo extends PrimaryLevelData {
     private static LevelSettings worldSettings(ServerLevelData data) {
         data = resolveDelegate(data);
 
-        if (data instanceof WorldInfoBridge bridged) {
+        if (data instanceof PrimaryLevelDataBridge bridged) {
             return bridged.bridge$getWorldSettings();
         }
 
@@ -260,7 +260,7 @@ public class DelegateWorldInfo extends PrimaryLevelData {
 
     private static Lifecycle lifecycle(ServerLevelData data) {
         data = resolveDelegate(data);
-        if (data instanceof WorldInfoBridge bridged) {
+        if (data instanceof PrimaryLevelDataBridge bridged) {
             return bridged.bridge$getLifecycle();
         }
 
@@ -272,7 +272,7 @@ public class DelegateWorldInfo extends PrimaryLevelData {
     }
 
     private static ServerLevelData resolveDelegate(ServerLevelData data) {
-        if (data instanceof DerivedWorldInfoBridge bridged) {
+        if (data instanceof DerivedLevelDataBridge bridged) {
             return resolveDelegate(bridged.bridge$getDelegate());
         }
 

@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.levelgen.structure.structures;
 
-import io.izzel.arclight.common.bridge.core.world.level.levelgen.StructurePieceBridge;
+import io.izzel.arclight.common.bridge.core.world.level.levelgen.structure.StructurePieceBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.RandomSource;

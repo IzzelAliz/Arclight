@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
-import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(BarrelBlockEntity.class)
-public abstract class BarrelBlockEntityMixin extends LockableBlockEntityMixin implements IInventoryBridge, Container {
+public abstract class BarrelBlockEntityMixin extends BaseContainerBlockEntityMixin implements IInventoryBridge, Container {
 
     // @formatter:off
     @Shadow private NonNullList<ItemStack> items;
