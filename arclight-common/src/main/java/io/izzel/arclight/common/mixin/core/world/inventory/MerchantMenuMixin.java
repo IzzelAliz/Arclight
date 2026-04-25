@@ -23,10 +23,10 @@ import org.spongepowered.asm.mixin.Unique;
 import java.util.ArrayList;
 import java.util.List;
 
-@Mixin(targets = {"net.minecraft.world.inventory.MerchantContainer", "net.minecraft.world.inventory.MerchantMenu"})
+// // This class handles the 'Container' (the item storage)
+@Mixin(targets = "net.minecraft.world.inventory.MerchantContainer")
 public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
-    // // Standard Minecraft shadows for items and the merchant (villager)
     @Shadow @Final private NonNullList<ItemStack> itemStacks;
     @Shadow @Final private Merchant merchant;
 
@@ -45,32 +45,24 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
     }
 
     @Override
-    public List<ItemStack> getContents() {
-        return this.itemStacks;
-    }
+    public List<ItemStack> getContents() { return this.itemStacks; }
 
     @Override
-    public void onOpen(CraftHumanEntity who) {
-        transactions.add(who);
-    }
+    public void onOpen(CraftHumanEntity who) { transactions.add(who); }
 
     @Override
     public void onClose(CraftHumanEntity who) {
         transactions.remove(who);
-        // // Stop the merchant from thinking a player is still trading
         if (this.merchant != null) {
             this.merchant.setTradingPlayer(null);
         }
     }
 
     @Override
-    public List<HumanEntity> getViewers() {
-        return transactions;
-    }
+    public List<HumanEntity> getViewers() { return transactions; }
 
     @Override
     public InventoryHolder getOwner() {
-        // // Convert the Minecraft merchant into a Bukkit villager entity
         return this.merchant instanceof AbstractVillager ? ((CraftAbstractVillager) ((EntityBridge) this.merchant).bridge$getBukkitEntity()) : null;
     }
 
@@ -84,13 +76,10 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
     }
 
     @Override
-    public void setMaxStackSize(int size) {
-        this.maxStack = size;
-    }
+    public void setMaxStackSize(int size) { this.maxStack = size; }
 
     @Override
     public Location getLocation() {
-        // // Link the Bukkit inventory handle to the actual world coordinates
         return this.merchant instanceof AbstractVillager ? ((EntityBridge) this.merchant).bridge$getBukkitEntity().getLocation() : null;
     }
 
@@ -98,6 +87,17 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
     public RecipeHolder<?> getCurrentRecipe() { return null; }
 
     @Override
-    public void setCurrentRecipe(RecipeHolder<?> recipe) {
+    public void setCurrentRecipe(RecipeHolder<?> recipe) { }
+    
+    // // This is the specific part that stops the Tick Loop crash.
+    @Mixin(targets = "net.minecraft.world.inventory.MerchantMenu")
+    public abstract static class MerchantMenuLogicMixin implements IInventoryBridge {
+        @Shadow @Final private net.minecraft.world.inventory.MerchantContainer merchantInventory;
+
+        @Override
+        public InventoryView getBukkitView() {
+            // // Link the Menu directly to its container's Bukkit view.
+            return ((IInventoryBridge) this.merchantInventory).getBukkitView();
+        }
     }
 }
