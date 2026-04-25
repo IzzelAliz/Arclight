@@ -314,7 +314,7 @@
     "world.inventory.LoomContainer1Mixin",
     "world.inventory.LoomContainer2Mixin",
     "world.inventory.LoomMenuMixin",
-    "world.inventory.MerchantMenuMixin",
+    "world.inventory.MerchantContainerMixin",
     "world.inventory.MerchantMenuMixin",
     "world.inventory.InventoryMenuMixin",
     "world.inventory.ShulkerBoxMenuMixin",
