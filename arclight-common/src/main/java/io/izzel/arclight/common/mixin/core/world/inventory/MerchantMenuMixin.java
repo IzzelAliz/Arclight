@@ -11,7 +11,6 @@ import net.minecraft.world.item.trading.Merchant;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftAbstractVillager;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
-import org.bukkit.craftbukkit.v.inventory.view.CraftMerchantView;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.InventoryView;
@@ -23,11 +22,10 @@ import org.spongepowered.asm.mixin.Unique;
 import java.util.ArrayList;
 import java.util.List;
 
-// // We use a string target here to avoid compile-time "symbol not found" errors
-// // regarding the net.minecraft.world.inventory package in arclight-common.
 @Mixin(targets = "net.minecraft.world.inventory.MerchantContainer")
 public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
+    // // Standard Minecraft shadow fields
     @Shadow @Final private NonNullList<ItemStack> itemStacks;
     @Shadow @Final private Merchant merchant;
 
@@ -39,11 +37,6 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
     @Override
     public InventoryView getBukkitView() {
-        if (arclight$bukkitView == null) {
-            // // Using (Object) null bypasses the hard dependency on MerchantMenu 
-            // // while satisfying the CraftMerchantView constructor requirements.
-            arclight$bukkitView = new CraftMerchantView(this.bridge$getBukkitInventory(), (Object) null);
-        }
         return arclight$bukkitView;
     }
 
@@ -60,7 +53,7 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
     @Override
     public void onClose(CraftHumanEntity who) {
         transactions.remove(who);
-        // // Reset the merchant's trading player state to avoid ghost trading
+        // // Important: Reset the trading player so the villager isn't 'locked'
         if (this.merchant != null) {
             this.merchant.setTradingPlayer(null);
         }
@@ -73,7 +66,7 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
     @Override
     public InventoryHolder getOwner() {
-        // // Bridge the internal NMS merchant to the Bukkit entity handle
+        // // Cast to AbstractVillager and bridge to the Bukkit entity
         return this.merchant instanceof AbstractVillager ? ((CraftAbstractVillager) ((EntityBridge) this.merchant).bridge$getBukkitEntity()) : null;
     }
 
@@ -93,13 +86,13 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
     @Override
     public Location getLocation() {
-        // // Link the Bukkit view to the physical world coordinates of the merchant
+        // // Return the physical location of the trader
         return this.merchant instanceof AbstractVillager ? ((EntityBridge) this.merchant).bridge$getBukkitEntity().getLocation() : null;
     }
 
     @Override
-    public RecipeHolder<?> getCurrentRecipe() { 
-        return null; 
+    public RecipeHolder<?> getCurrentRecipe() {
+        return null;
     }
 
     @Override
