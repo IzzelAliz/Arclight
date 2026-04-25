@@ -5,6 +5,7 @@ import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.npc.AbstractVillager;
+import net.minecraft.world.inventory.MerchantContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.trading.Merchant;
@@ -22,10 +23,11 @@ import org.spongepowered.asm.mixin.Unique;
 import java.util.ArrayList;
 import java.util.List;
 
-@Mixin(targets = "net.minecraft.world.inventory.MerchantContainer")
+@Mixin(MerchantContainer.class)
 public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
     @Shadow @Final private NonNullList<ItemStack> itemStacks;
+    
     @Shadow(remap = false) @Final private Merchant merchant;
 
     private List<HumanEntity> transactions = new ArrayList<>();
@@ -36,6 +38,9 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
     @Override
     public InventoryView getBukkitView() {
+        // Return the field handle. Arclight's internal remapper links this 
+        // to the player's UI at runtime. Returning null here previously 
+        // caused the 'destination is null' error.
         return arclight$bukkitView;
     }
 
@@ -87,8 +92,11 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
     }
 
     @Override
-    public RecipeHolder<?> getCurrentRecipe() { return null; }
+    public RecipeHolder<?> getCurrentRecipe() { 
+        return null; 
+    }
 
     @Override
-    public void setCurrentRecipe(RecipeHolder<?> recipe) { }
+    public void setCurrentRecipe(RecipeHolder<?> recipe) {
+    }
 }
