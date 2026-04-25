@@ -5,11 +5,12 @@ import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
-import org.bukkit.craftbukkit.v.inventory.CraftInventory;
+import org.bukkit.craftbukkit.v1_21_R1.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.v1_21_R1.inventory.CraftInventory;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.InventoryView; // Added
 
 import java.util.List;
 
@@ -17,6 +18,10 @@ public interface IInventoryBridge {
 
     int MAX_STACK = 99;
 
+    default InventoryView getBukkitView() {
+        return null;
+    }
+    
     default List<ItemStack> getContents() {
         return new WrappedContents((Container) this);
     }
@@ -49,5 +54,9 @@ public interface IInventoryBridge {
         } else {
             return new CraftInventory((Container) this);
         }
+    }
+
+    default Inventory bridge$getBukkitInventory() {
+        return getOwnerInventory();
     }
 }
