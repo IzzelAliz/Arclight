@@ -41,7 +41,7 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
     @Override
     public InventoryView getBukkitView() {
         if (arclight$bukkitView == null) {
-            arclight$bukkitView = new CraftMerchantView(this.bridge$getBukkitInventory(), (net.minecraft.world.inventory.MerchantMenu) (Object) this);
+            arclight$bukkitView = new CraftMerchantView(this.bridge$getBukkitInventory(), (net.minecraft.world.inventory.MerchantMenu) null);
         }
         return arclight$bukkitView;
     }
