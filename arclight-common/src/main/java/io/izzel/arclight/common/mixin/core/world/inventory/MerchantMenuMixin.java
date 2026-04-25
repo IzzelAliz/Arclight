@@ -27,7 +27,7 @@ import java.util.List;
 @Mixin(MerchantContainer.class)
 public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
-    // // Shadowing internal Minecraft fields for the items and the merchant
+    // // Standard item and merchant shadows
     @Shadow @Final private NonNullList<ItemStack> itemStacks;
     @Shadow @Final private Merchant merchant;
 
@@ -40,7 +40,7 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
     @Override
     public InventoryView getBukkitView() {
         if (arclight$bukkitView == null) {
-            arclight$bukkitView = new CraftMerchantView(this.bridge$getBukkitInventory(), (net.minecraft.world.inventory.MerchantMenu) null);
+            arclight$bukkitView = new CraftMerchantView(this.bridge$getBukkitInventory(), (net.minecraft.world.inventory.MerchantMenu) (Object) null);
         }
         return arclight$bukkitView;
     }
@@ -58,7 +58,7 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
     @Override
     public void onClose(CraftHumanEntity who) {
         transactions.remove(who);
-        // // Stop the trading session properly
+        // // Clean up the trading session on close
         this.merchant.setTradingPlayer(null);
     }
 
@@ -69,7 +69,7 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
     @Override
     public InventoryHolder getOwner() {
-        // // Check if merchant is a villager and return the Bukkit wrapper
+        // // Map the Minecraft villager to its Bukkit entity counterpart
         return this.merchant instanceof AbstractVillager ? ((CraftAbstractVillager) ((EntityBridge) this.merchant).bridge$getBukkitEntity()) : null;
     }
 
@@ -89,7 +89,7 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
     @Override
     public Location getLocation() {
-        // // Return the world location of the merchant entity
+        // // Safe check to get the entity's location for the Bukkit Inventory
         return this.merchant instanceof AbstractVillager ? ((EntityBridge) this.merchant).bridge$getBukkitEntity().getLocation() : null;
     }
 
