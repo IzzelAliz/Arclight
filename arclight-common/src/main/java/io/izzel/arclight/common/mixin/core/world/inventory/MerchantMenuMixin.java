@@ -5,8 +5,6 @@ import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.npc.AbstractVillager;
-import net.minecraft.world.inventory.MerchantContainer;
-import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.trading.Merchant;
@@ -25,7 +23,7 @@ import org.spongepowered.asm.mixin.Unique;
 import java.util.ArrayList;
 import java.util.List;
 
-@Mixin({MerchantContainer.class, MerchantMenu.class})
+@Mixin(targets = {"net.minecraft.world.inventory.MerchantContainer", "net.minecraft.world.inventory.MerchantMenu"})
 public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
     // // Standard Minecraft shadows for items and the merchant (villager)
@@ -41,7 +39,7 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
     @Override
     public InventoryView getBukkitView() {
         if (arclight$bukkitView == null) {
-            arclight$bukkitView = new CraftMerchantView(this.bridge$getBukkitInventory(), (MerchantMenu) (Object) this);
+            arclight$bukkitView = new CraftMerchantView(this.bridge$getBukkitInventory(), (Object) null);
         }
         return arclight$bukkitView;
     }
