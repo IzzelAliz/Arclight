@@ -8,13 +8,16 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-// // This Targets the actual Menu class to solve the NoSuchMethodError crash
 @Mixin(MerchantMenu.class)
 public abstract class ActualMerchantMenuMixin {
 
-    @Shadow @Final private MerchantContainer merchantInventory;
+    @Shadow(remap = false) 
+    @Final 
+    private MerchantContainer tradeContainer;
 
+    // // This satisfies the Spigot API requirement that MerchantMenu has getBukkitView()
     public InventoryView getBukkitView() {
-        return ((IInventoryBridge) this.merchantInventory).getBukkitView();
+        // // Access the container via our bridge to get the Bukkit handle
+        return ((IInventoryBridge) this.tradeContainer).getBukkitView();
     }
 }
