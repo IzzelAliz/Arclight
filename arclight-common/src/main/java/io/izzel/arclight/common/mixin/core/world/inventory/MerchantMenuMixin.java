@@ -28,8 +28,9 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
     // // Standard item stack shadow
     @Shadow @Final private NonNullList<ItemStack> itemStacks;
     
-    // // We shadow merchant as Object to avoid class resolution issues in common
-    @Shadow @Final private Object merchant;
+    // // Added remap = false to prevent the "field was not located" fatal error.
+    // // This forces the Mixin to look for the literal name 'merchant'.
+    @Shadow(remap = false) @Final private Merchant merchant;
 
     private List<HumanEntity> transactions = new ArrayList<>();
     private int maxStack = MAX_STACK;
@@ -56,9 +57,9 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
     @Override
     public void onClose(CraftHumanEntity who) {
         transactions.remove(who);
-        // // Safely handle the merchant player reset using the bridge cast
-        if (this.merchant instanceof Merchant m) {
-            m.setTradingPlayer(null);
+        // // Reset trading player state
+        if (this.merchant != null) {
+            this.merchant.setTradingPlayer(null);
         }
     }
 
