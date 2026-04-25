@@ -10,7 +10,7 @@ import org.bukkit.craftbukkit.v1_21_R1.inventory.CraftInventory;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.InventoryView; // Added
+import org.bukkit.inventory.InventoryView;
 
 import java.util.List;
 
@@ -21,7 +21,7 @@ public interface IInventoryBridge {
     default InventoryView getBukkitView() {
         return null;
     }
-    
+
     default List<ItemStack> getContents() {
         return new WrappedContents((Container) this);
     }
