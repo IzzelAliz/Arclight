@@ -10,12 +10,19 @@ import org.bukkit.craftbukkit.v.inventory.CraftInventory;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.InventoryView;
 
 import java.util.List;
 
 public interface IInventoryBridge {
 
+    // // The standard stack size used across Arclight menus
     int MAX_STACK = 99;
+
+    // // This getter allows the MerchantMenu to retrieve the Bukkit view from the Container
+    default InventoryView getBukkitView() {
+        return null;
+    }
 
     default List<ItemStack> getContents() {
         return new WrappedContents((Container) this);
@@ -35,11 +42,11 @@ public interface IInventoryBridge {
 
     Location getLocation();
 
-    default RecipeHolder<?> getCurrentRecipe() {
-        return null;
+    default RecipeHolder<?> getCurrentRecipe() { 
+        return null; 
     }
 
-    default void setCurrentRecipe(RecipeHolder<?> recipe) {
+    default void setCurrentRecipe(RecipeHolder<?> recipe) { 
     }
 
     default Inventory getOwnerInventory() {
@@ -47,7 +54,13 @@ public interface IInventoryBridge {
         if (owner != null) {
             return owner.getInventory();
         } else {
+            // // Fallback to a wrapper if there's no owner mod/entity
             return new CraftInventory((Container) this);
         }
+    }
+
+    // // Helper method to get the Bukkit-side version of the inventory
+    default Inventory bridge$getBukkitInventory() {
+        return getOwnerInventory();
     }
 }

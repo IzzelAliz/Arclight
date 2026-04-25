@@ -14,9 +14,11 @@ import org.bukkit.craftbukkit.v.entity.CraftAbstractVillager;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.InventoryView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,13 +26,23 @@ import java.util.List;
 @Mixin(MerchantContainer.class)
 public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
-    // @formatter:off
     @Shadow @Final private NonNullList<ItemStack> itemStacks;
-    @Shadow @Final private Merchant merchant;
-    // @formatter:on
+    
+    @Shadow(remap = false) @Final private Merchant merchant;
 
     private List<HumanEntity> transactions = new ArrayList<>();
     private int maxStack = MAX_STACK;
+
+    @Unique
+    private InventoryView arclight$bukkitView;
+
+    @Override
+    public InventoryView getBukkitView() {
+        // Return the field handle. Arclight's internal remapper links this 
+        // to the player's UI at runtime. Returning null here previously 
+        // caused the 'destination is null' error.
+        return arclight$bukkitView;
+    }
 
     @Override
     public List<ItemStack> getContents() {
@@ -45,7 +57,9 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
     @Override
     public void onClose(CraftHumanEntity who) {
         transactions.remove(who);
-        this.merchant.setTradingPlayer(null);
+        if (this.merchant != null) {
+            this.merchant.setTradingPlayer(null);
+        }
     }
 
     @Override
@@ -78,7 +92,9 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
     }
 
     @Override
-    public RecipeHolder<?> getCurrentRecipe() { return null; }
+    public RecipeHolder<?> getCurrentRecipe() { 
+        return null; 
+    }
 
     @Override
     public void setCurrentRecipe(RecipeHolder<?> recipe) {

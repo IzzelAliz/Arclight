@@ -316,6 +316,7 @@
     "world.inventory.LoomMenuMixin",
     "world.inventory.MerchantMenuMixin",
     "world.inventory.MerchantMenuMixin",
+    "world.inventory.ActualMerchantMenuMixin",
     "world.inventory.InventoryMenuMixin",
     "world.inventory.ShulkerBoxMenuMixin",
     "world.inventory.SlotMixin",
