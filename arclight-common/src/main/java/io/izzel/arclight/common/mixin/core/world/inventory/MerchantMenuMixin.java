@@ -6,12 +6,14 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.inventory.MerchantContainer;
+import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.trading.Merchant;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftAbstractVillager;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.v.inventory.view.CraftMerchantView;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.InventoryView;
@@ -23,10 +25,10 @@ import org.spongepowered.asm.mixin.Unique;
 import java.util.ArrayList;
 import java.util.List;
 
-@Mixin(MerchantContainer.class)
+@Mixin({MerchantContainer.class, MerchantMenu.class})
 public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
-    // // Standard shadow fields for items and merchant
+    // // Standard Minecraft shadows for items and the merchant (villager)
     @Shadow @Final private NonNullList<ItemStack> itemStacks;
     @Shadow @Final private Merchant merchant;
 
@@ -38,6 +40,9 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
     @Override
     public InventoryView getBukkitView() {
+        if (arclight$bukkitView == null) {
+            arclight$bukkitView = new CraftMerchantView(this.bridge$getBukkitInventory(), (MerchantMenu) (Object) this);
+        }
         return arclight$bukkitView;
     }
 
@@ -54,8 +59,10 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
     @Override
     public void onClose(CraftHumanEntity who) {
         transactions.remove(who);
-        // // Reset trading player state
-        this.merchant.setTradingPlayer(null);
+        // // Stop the merchant from thinking a player is still trading
+        if (this.merchant != null) {
+            this.merchant.setTradingPlayer(null);
+        }
     }
 
     @Override
@@ -65,6 +72,7 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
     @Override
     public InventoryHolder getOwner() {
+        // // Convert the Minecraft merchant into a Bukkit villager entity
         return this.merchant instanceof AbstractVillager ? ((CraftAbstractVillager) ((EntityBridge) this.merchant).bridge$getBukkitEntity()) : null;
     }
 
@@ -84,6 +92,7 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
     @Override
     public Location getLocation() {
+        // // Link the Bukkit inventory handle to the actual world coordinates
         return this.merchant instanceof AbstractVillager ? ((EntityBridge) this.merchant).bridge$getBukkitEntity().getLocation() : null;
     }
 
