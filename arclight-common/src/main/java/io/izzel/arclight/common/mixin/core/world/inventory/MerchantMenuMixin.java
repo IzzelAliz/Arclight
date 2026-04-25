@@ -10,13 +10,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.trading.Merchant;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.entity.CraftAbstractVillager;
-import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.v1_21_R1.entity.CraftAbstractVillager;
+import org.bukkit.craftbukkit.v1_21_R1.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.v1_21_R1.inventory.view.CraftMerchantView;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.InventoryView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +34,17 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
     private List<HumanEntity> transactions = new ArrayList<>();
     private int maxStack = MAX_STACK;
+
+    @Unique
+    private CraftMerchantView arclight$bukkitView;
+
+    @Override
+    public InventoryView getBukkitView() {
+        if (arclight$bukkitView == null) {
+            arclight$bukkitView = new CraftMerchantView(this.bridge$getBukkitInventory(), null);
+        }
+        return arclight$bukkitView;
+    }
 
     @Override
     public List<ItemStack> getContents() {
