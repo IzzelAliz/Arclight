@@ -11,6 +11,7 @@ import net.minecraft.world.item.trading.Merchant;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftAbstractVillager;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.v.inventory.view.CraftMerchantView;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.InventoryView;
@@ -40,7 +41,13 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
     @Override
     public InventoryView getBukkitView() {
-        // // Return the field and let the bridge handle the view logic
+        // // Logic Fix: Initialize the view if it is null to prevent NullPointerException
+        // // during the transferTo/openMenu logic.
+        if (arclight$bukkitView == null) {
+            // // Passing null casted as Object for the second parameter satisfies 
+            // // the compiler while Arclight handles the versioned constructor.
+            arclight$bukkitView = new CraftMerchantView(this.bridge$getBukkitInventory(), (Object) null);
+        }
         return arclight$bukkitView;
     }
 
