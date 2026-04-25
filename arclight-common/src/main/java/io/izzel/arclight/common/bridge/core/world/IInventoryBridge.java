@@ -16,10 +16,10 @@ import java.util.List;
 
 public interface IInventoryBridge {
 
-    // // Default Arclight stack limit
+    // // The standard stack size used across Arclight menus
     int MAX_STACK = 99;
 
-    // // Define the getter so it's visible to the event factory
+    // // This getter allows the MerchantMenu to retrieve the Bukkit view from the Container
     default InventoryView getBukkitView() {
         return null;
     }
@@ -42,24 +42,21 @@ public interface IInventoryBridge {
 
     Location getLocation();
 
-    default RecipeHolder<?> getCurrentRecipe() {
-        return null;
-    }
+    default RecipeHolder<?> getCurrentRecipe() { return null; }
 
-    default void setCurrentRecipe(RecipeHolder<?> recipe) {
-    }
+    default void setCurrentRecipe(RecipeHolder<?> recipe) { }
 
     default Inventory getOwnerInventory() {
         InventoryHolder owner = this.getOwner();
         if (owner != null) {
             return owner.getInventory();
         } else {
-            // // Create a wrapper inventory if no owner exists
+            // // Fallback to a wrapper if there's no owner mod/entity
             return new CraftInventory((Container) this);
         }
     }
 
-    // // Helper method used by Mixins to reference the Bukkit inventory
+    // // Helper method to get the Bukkit-side version of the inventory
     default Inventory bridge$getBukkitInventory() {
         return getOwnerInventory();
     }
