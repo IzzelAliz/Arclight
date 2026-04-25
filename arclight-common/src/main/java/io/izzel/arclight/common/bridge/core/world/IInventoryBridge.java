@@ -42,9 +42,12 @@ public interface IInventoryBridge {
 
     Location getLocation();
 
-    default RecipeHolder<?> getCurrentRecipe() { return null; }
+    default RecipeHolder<?> getCurrentRecipe() { 
+        return null; 
+    }
 
-    default void setCurrentRecipe(RecipeHolder<?> recipe) { }
+    default void setCurrentRecipe(RecipeHolder<?> recipe) { 
+    }
 
     default Inventory getOwnerInventory() {
         InventoryHolder owner = this.getOwner();
