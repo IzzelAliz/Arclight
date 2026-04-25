@@ -5,7 +5,6 @@ import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.npc.AbstractVillager;
-import net.minecraft.world.inventory.MerchantContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.trading.Merchant;
@@ -18,26 +17,24 @@ import org.bukkit.inventory.InventoryView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Mixin(MerchantContainer.class)
+@Mixin(targets = "net.minecraft.world.inventory.MerchantContainer")
 public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
 
     @Shadow @Final private NonNullList<ItemStack> itemStacks;
+    
     @Shadow(remap = false) @Final private Merchant merchant;
 
     private List<HumanEntity> transactions = new ArrayList<>();
     private int maxStack = MAX_STACK;
 
-    @Unique
-    private InventoryView arclight$bukkitView;
-
     @Override
     public InventoryView getBukkitView() {
-        return arclight$bukkitView;
+        // Return null here; the ActualMerchantMenuMixin handles the UI view
+        return null;
     }
 
     @Override
@@ -91,6 +88,5 @@ public abstract class MerchantMenuMixin implements IInventoryBridge, Container {
     public RecipeHolder<?> getCurrentRecipe() { return null; }
 
     @Override
-    public void setCurrentRecipe(RecipeHolder<?> recipe) {
-    }
+    public void setCurrentRecipe(RecipeHolder<?> recipe) { }
 }
