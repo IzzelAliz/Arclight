@@ -16,11 +16,10 @@ import java.util.List;
 
 public interface IInventoryBridge {
 
-    // // Global Arclight max stack constant
+    // // The standard stack size used across Arclight menus
     int MAX_STACK = 99;
 
-    // // Added to bridge Forge trading events to Bukkit InventoryViews
-    // // Using the base InventoryView interface to avoid version-specific crashes
+    // // This getter allows plugins to access the Bukkit-side view of a Forge inventory
     default InventoryView getBukkitView() {
         return null;
     }
@@ -55,12 +54,12 @@ public interface IInventoryBridge {
         if (owner != null) {
             return owner.getInventory();
         } else {
-            // // Create a generic Bukkit inventory if there's no owner mod/entity
+            // // Fallback to a generic wrap if the inventory has no modded owner
             return new CraftInventory((Container) this);
         }
     }
 
-    // // Helper method to satisfy Mixins calling for a Bukkit inventory handle
+    // // Bridge helper to get the Bukkit inventory instance
     default Inventory bridge$getBukkitInventory() {
         return getOwnerInventory();
     }
