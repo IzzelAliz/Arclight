@@ -285,6 +285,10 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
 
     @Override
     public boolean bridge$addEntity(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
+        if (this.world == null) {
+            return this.addFreshEntity(entity);
+        }
+
         if (getWorld().getHandle() != (Object) this) {
             return ((WorldBridge) getWorld().getHandle()).bridge$addEntity(entity, reason);
         } else {
@@ -295,6 +299,8 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
 
     @Override
     public void bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason reason) {
+        if (this.world == null) return;
+
         if (getWorld().getHandle() != (Object) this) {
             ((WorldBridge) getWorld().getHandle()).bridge$pushAddEntityReason(reason);
         }
@@ -302,6 +308,8 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
 
     @Override
     public CreatureSpawnEvent.SpawnReason bridge$getAddEntityReason() {
+        if (this.world == null) return null;
+
         if (getWorld().getHandle() != (Object) this) {
             return ((WorldBridge) getWorld().getHandle()).bridge$getAddEntityReason();
         }
