@@ -1,6 +1,6 @@
 package io.izzel.arclight.forge.mod.event;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.forge.mod.util.ArclightBlockSnapshot;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.DistValidate;
@@ -27,7 +27,7 @@ public class BlockPlaceEventDispatcher {
     @SubscribeEvent(receiveCanceled = true)
     public void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
         Entity entity = event.getEntity();
-        if (entity instanceof ServerPlayerEntityBridge playerEntity) {
+        if (entity instanceof ServerPlayerBridge playerEntity) {
             Player player = playerEntity.bridge$getBukkitEntity();
             Direction direction = ArclightCaptures.getPlaceEventDirection();
             if (direction != null && DistValidate.isValid(event.getLevel())) {
@@ -62,7 +62,7 @@ public class BlockPlaceEventDispatcher {
     @SubscribeEvent(receiveCanceled = true)
     public void onMultiPlace(BlockEvent.EntityMultiPlaceEvent event) {
         Entity entity = event.getEntity();
-        if (entity instanceof ServerPlayerEntityBridge playerEntity) {
+        if (entity instanceof ServerPlayerBridge playerEntity) {
             Player player = playerEntity.bridge$getBukkitEntity();
             Direction direction = ArclightCaptures.getPlaceEventDirection();
             if (direction != null && DistValidate.isValid(event.getLevel())) {

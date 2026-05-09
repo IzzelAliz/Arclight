@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
-import io.izzel.arclight.common.bridge.core.entity.AgeableEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.AgeableMobBridge;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.AgeableMob;
@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import javax.annotation.Nullable;
 
 @Mixin(AgeableMob.class)
-public abstract class AgeableMobMixin extends PathfinderMobMixin implements AgeableEntityBridge {
+public abstract class AgeableMobMixin extends PathfinderMobMixin implements AgeableMobBridge {
 
     // @formatter:off
     @Shadow public abstract boolean isBaby();

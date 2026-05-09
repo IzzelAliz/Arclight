@@ -2,8 +2,8 @@ package io.izzel.arclight.common.mixin.core.server.level;
 
 import com.google.common.collect.Lists;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.storage.MapDataBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.level.saveddata.maps.MapItemSavedDataBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -37,7 +37,7 @@ public class ServerLevel_EntityCallbacksMixin {
                 for (Object o : worldData.cache.values()) {
                     if (o instanceof MapItemSavedData map) {
                         map.carriedByPlayers.remove(player);
-                        ((MapDataBridge) map).bridge$getCarriedBy().removeIf(holdingPlayer -> holdingPlayer.player == entity);
+                        ((MapItemSavedDataBridge) map).bridge$getCarriedBy().removeIf(holdingPlayer -> holdingPlayer.player == entity);
                     }
                 }
             }
@@ -54,7 +54,7 @@ public class ServerLevel_EntityCallbacksMixin {
         ((EntityBridge) entity).bridge$setValid(false);
         if (!(entity instanceof ServerPlayer)) {
             for (var player : outerThis.players()) {
-                ((ServerPlayerEntityBridge) player).bridge$getBukkitEntity().onEntityRemove(entity);
+                ((ServerPlayerBridge) player).bridge$getBukkitEntity().onEntityRemove(entity);
             }
         }
     }

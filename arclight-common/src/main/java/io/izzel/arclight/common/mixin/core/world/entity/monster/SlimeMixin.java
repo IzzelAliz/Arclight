@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.MobMixin;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
@@ -17,7 +17,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.ArrayList;
-import java.util.List;
 
 @Mixin(net.minecraft.world.entity.monster.Slime.class)
 public abstract class SlimeMixin extends MobMixin {
@@ -27,7 +26,7 @@ public abstract class SlimeMixin extends MobMixin {
     @Shadow public abstract EntityType<? extends net.minecraft.world.entity.monster.Slime> getType();
     // @formatter:on
 
-    private transient List<LivingEntity> arclight$slimes;
+    private transient ArrayList<LivingEntity> arclight$slimes;
 
     /**
      * @author IzzelAliz

@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
-import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.util.DamageSourceBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge;
 import io.izzel.arclight.common.mod.mixins.annotation.TransformAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.damagesource.DamageSource;
@@ -32,7 +32,7 @@ public abstract class ConduitBlockEntityMixin extends BlockEntityMixin {
 
     @Redirect(method = "applyEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;)Z"))
     private static boolean arclight$addEntity(Player player, MobEffectInstance eff) {
-        ((PlayerEntityBridge) player).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.CONDUIT);
+        ((PlayerBridge) player).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.CONDUIT);
         return player.addEffect(eff);
     }
 

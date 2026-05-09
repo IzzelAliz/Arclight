@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.border;
 
-import io.izzel.arclight.common.bridge.core.world.border.WorldBorderBridge;
+import io.izzel.arclight.common.bridge.core.world.level.border.WorldBorderBridge;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.border.BorderChangeListener;
 import net.minecraft.world.level.border.WorldBorder;

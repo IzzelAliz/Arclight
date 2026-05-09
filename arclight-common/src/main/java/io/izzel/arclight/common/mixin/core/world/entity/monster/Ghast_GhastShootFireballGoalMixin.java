@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import io.izzel.arclight.common.bridge.core.entity.projectile.DamagingProjectileEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.projectile.AbstractHurtingProjectileBridge;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.Ghast;
 import net.minecraft.world.level.Level;
@@ -17,7 +17,7 @@ public abstract class Ghast_GhastShootFireballGoalMixin {
 
     @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private boolean arclight$setYaw(Level world, Entity entityIn) {
-        ((DamagingProjectileEntityBridge) entityIn).bridge$setBukkitYield(this.ghast.getExplosionPower());
+        ((AbstractHurtingProjectileBridge) entityIn).bridge$setBukkitYield(this.ghast.getExplosionPower());
         return world.addFreshEntity(entityIn);
     }
 }

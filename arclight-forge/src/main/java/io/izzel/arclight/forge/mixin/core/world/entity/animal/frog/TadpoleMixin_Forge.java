@@ -1,6 +1,6 @@
 package io.izzel.arclight.forge.mixin.core.world.entity.animal.frog;
 
-import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.animal.frog.Frog;
 import net.minecraft.world.entity.animal.frog.Tadpole;

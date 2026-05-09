@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mod.server.world.inventory;
 
-import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.core.inventory.container.PosContainerBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.PosContainerBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
@@ -29,7 +29,7 @@ public class ArclightModdedMenuContainer implements Container, IInventoryBridge 
 
     public ArclightModdedMenuContainer(AbstractContainerMenu container, Player owner) {
         this.container = container;
-        this.owner = ((PlayerEntityBridge) owner).bridge$getBukkitEntity();
+        this.owner = ((PlayerBridge) owner).bridge$getBukkitEntity();
     }
 
     @Override

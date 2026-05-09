@@ -1,10 +1,10 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.inventory.CraftingInventoryBridge;
-import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.core.inventory.container.ContainerBridge;
-import io.izzel.arclight.common.bridge.core.inventory.container.PosContainerBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.TransientCraftingContainerBridge;
+import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.AbstractContainerMenuBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.PosContainerBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -72,14 +72,14 @@ public abstract class CraftingMenuMixin extends AbstractContainerMenuMixin imple
     @Decorate(method = "slotChangedCraftingGrid", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/ResultContainer;setItem(ILnet/minecraft/world/item/ItemStack;)V"))
     private static void arclight$preCraft(ResultContainer instance, int i, ItemStack itemStack, AbstractContainerMenu abstractContainerMenu, Level level, Player player, CraftingContainer craftingContainer, ResultContainer resultContainer, @Nullable RecipeHolder<CraftingRecipe> recipeHolder,
                                           @Local(ordinal = -1) ItemStack stack) throws Throwable {
-        stack = CraftEventFactory.callPreCraftEvent(craftingContainer, instance, itemStack, ((ContainerBridge) abstractContainerMenu).bridge$getBukkitView(), arclight$isRepair);
+        stack = CraftEventFactory.callPreCraftEvent(craftingContainer, instance, itemStack, ((AbstractContainerMenuBridge) abstractContainerMenu).bridge$getBukkitView(), arclight$isRepair);
         DecorationOps.callsite().invoke(instance, i, stack);
     }
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/inventory/ContainerLevelAccess;)V", at = @At("RETURN"))
     public void arclight$init(int i, Inventory playerInventory, ContainerLevelAccess callable, CallbackInfo ci) {
-        ((CraftingInventoryBridge) this.craftSlots).bridge$setOwner(playerInventory.player);
-        ((CraftingInventoryBridge) this.craftSlots).bridge$setResultInventory(this.resultSlots);
+        ((TransientCraftingContainerBridge) this.craftSlots).bridge$setOwner(playerInventory.player);
+        ((TransientCraftingContainerBridge) this.craftSlots).bridge$setResultInventory(this.resultSlots);
         this.playerInventory = playerInventory;
     }
 
@@ -90,7 +90,7 @@ public abstract class CraftingMenuMixin extends AbstractContainerMenuMixin imple
         }
 
         CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftSlots, this.resultSlots);
-        bukkitEntity = new CraftInventoryView<>(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (CraftingMenu) (Object) this);
+        bukkitEntity = new CraftInventoryView<>(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (CraftingMenu) (Object) this);
         return bukkitEntity;
     }
 }

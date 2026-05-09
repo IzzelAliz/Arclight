@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.network;
 
 import com.mojang.authlib.properties.Property;
-import io.izzel.arclight.common.bridge.core.network.NetworkManagerBridge;
+import io.izzel.arclight.common.bridge.core.network.ConnectionBridge;
 import net.minecraft.network.Connection;
 import net.minecraft.network.DisconnectionDetails;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.UUID;
 
 @Mixin(Connection.class)
-public class ConnectionMixin implements NetworkManagerBridge {
+public class ConnectionMixin implements ConnectionBridge {
 
     @Shadow public boolean disconnectionHandled;
     public java.util.UUID spoofedUUID;

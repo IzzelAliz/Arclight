@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.izzel.arclight.api.EnumHelper;
 import io.izzel.arclight.api.Unsafe;
-import io.izzel.arclight.common.bridge.bukkit.EntityTypeBridge;
+import io.izzel.arclight.common.bridge.bukkit.world.entity.EntityTypeBridge;
 import io.izzel.arclight.common.bridge.bukkit.MaterialBridge;
 import io.izzel.arclight.common.bridge.bukkit.SimpleRegistryBridge;
 import io.izzel.arclight.common.mod.server.entity.EntityClassLookup;

@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.decoration;
 
-import io.izzel.arclight.common.mixin.core.world.entity.item.BlockAttachedEntityMixin;
+import io.izzel.arclight.common.mixin.core.world.entity.decoration.BlockAttachedEntityMixin;
 import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;

@@ -1,6 +1,6 @@
 package io.izzel.arclight.forge.mixin.core.world.entity.monster.piglin;
 
-import io.izzel.arclight.common.bridge.core.entity.monster.piglin.PiglinBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.monster.piglin.PiglinBridge;
 import io.izzel.arclight.forge.mixin.core.world.entity.LivingEntityMixin_Forge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;

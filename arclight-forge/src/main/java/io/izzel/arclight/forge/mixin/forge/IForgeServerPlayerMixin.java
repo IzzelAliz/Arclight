@@ -1,6 +1,6 @@
 package io.izzel.arclight.forge.mixin.forge;
 
-import io.izzel.arclight.common.bridge.core.inventory.container.ContainerBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.AbstractContainerMenuBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;
@@ -46,7 +46,7 @@ public interface IForgeServerPlayerMixin {
         if (c == null)
             return;
 
-        ((ContainerBridge) c).bridge$setTitle(containerSupplier.getDisplayName());
+        ((AbstractContainerMenuBridge) c).bridge$setTitle(containerSupplier.getDisplayName());
         try {
             ArclightCaptures.captureContainerOwner(player);
             c = CraftEventFactory.callInventoryOpenEvent(player, c);

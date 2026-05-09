@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
 import io.izzel.arclight.common.bridge.core.world.server.ChunkHolderBridge;
-import io.izzel.arclight.common.bridge.core.world.server.TicketManagerBridge;
+import io.izzel.arclight.common.bridge.core.server.level.DistanceManagerBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
@@ -18,7 +18,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 @Mixin(DistanceManager.class)
-public abstract class DistanceManagerMixin implements TicketManagerBridge {
+public abstract class DistanceManagerMixin implements DistanceManagerBridge {
 
     // @formatter:off
     @Shadow private long ticketTickCounter;

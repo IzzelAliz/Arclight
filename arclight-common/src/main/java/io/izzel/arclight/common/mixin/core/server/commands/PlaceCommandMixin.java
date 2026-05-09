@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server.commands;
 
-import io.izzel.arclight.common.bridge.core.world.level.levelgen.StructureStartBridge;
+import io.izzel.arclight.common.bridge.core.world.level.levelgen.structure.StructureStartBridge;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;

@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.sounds.SoundEvent;
@@ -32,8 +32,8 @@ public abstract class EggItemMixin extends Item {
     @Decorate(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private boolean arclight$updateIfFail(Level world, Entity entityIn, Level worldIn, Player playerIn, @NotNull InteractionHand handIn) throws Throwable {
         if (!(boolean) DecorationOps.callsite().invoke(world, entityIn)) {
-            if (playerIn instanceof ServerPlayerEntityBridge) {
-                ((ServerPlayerEntityBridge) playerIn).bridge$getBukkitEntity().updateInventory();
+            if (playerIn instanceof ServerPlayerBridge) {
+                ((ServerPlayerBridge) playerIn).bridge$getBukkitEntity().updateInventory();
             }
             return (boolean) DecorationOps.cancel().invoke(InteractionResultHolder.fail(playerIn.getItemInHand(handIn)));
         } else {

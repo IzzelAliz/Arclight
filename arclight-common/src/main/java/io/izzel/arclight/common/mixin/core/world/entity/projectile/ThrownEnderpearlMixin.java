@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
-import io.izzel.arclight.common.bridge.core.util.DamageSourceBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.entity.projectile.ThrownEnderpearl;

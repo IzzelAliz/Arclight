@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mod.util;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.network.NetworkManagerBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.network.ConnectionBridge;
 import net.minecraft.network.Connection;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -23,7 +23,7 @@ public class ArclightPingEvent extends ServerListPingEvent {
     private final Object[] players;
 
     public ArclightPingEvent(Connection networkManager, MinecraftServer server) {
-        super(((NetworkManagerBridge) networkManager).bridge$getHostname(), ((InetSocketAddress) networkManager.getRemoteAddress()).getAddress(), server.getMotd(), server.getPlayerList().getMaxPlayers());
+        super(((ConnectionBridge) networkManager).bridge$getHostname(), ((InetSocketAddress) networkManager.getRemoteAddress()).getAddress(), server.getMotd(), server.getPlayerList().getMaxPlayers());
         this.icon = ((CraftServer) Bukkit.getServer()).getServerIcon();
         this.players = server.getPlayerList().players.toArray();
     }
@@ -69,7 +69,7 @@ public class ArclightPingEvent extends ServerListPingEvent {
                 ServerPlayer player = this.player;
                 this.player = null;
                 this.ret = this.i - 1;
-                return ((ServerPlayerEntityBridge) player).bridge$getBukkitEntity();
+                return ((ServerPlayerBridge) player).bridge$getBukkitEntity();
             }
 
             @Override

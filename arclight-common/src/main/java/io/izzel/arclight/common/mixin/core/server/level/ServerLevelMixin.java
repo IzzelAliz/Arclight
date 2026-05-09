@@ -4,17 +4,17 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
-import io.izzel.arclight.common.bridge.core.world.ExplosionBridge;
+import io.izzel.arclight.common.bridge.core.world.level.ExplosionBridge;
 import io.izzel.arclight.common.bridge.core.world.level.levelgen.flat.FlatLevelGeneratorSettingsBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
-import io.izzel.arclight.common.bridge.core.world.server.ServerWorldBridge;
-import io.izzel.arclight.common.bridge.core.world.storage.DerivedWorldInfoBridge;
-import io.izzel.arclight.common.bridge.core.world.storage.LevelStorageSourceBridge;
-import io.izzel.arclight.common.bridge.core.world.storage.MapDataBridge;
-import io.izzel.arclight.common.bridge.core.world.storage.WorldInfoBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge;
+import io.izzel.arclight.common.bridge.core.world.level.storage.DerivedLevelDataBridge;
+import io.izzel.arclight.common.bridge.core.world.level.storage.LevelStorageSourceBridge;
+import io.izzel.arclight.common.bridge.core.world.level.saveddata.maps.MapItemSavedDataBridge;
+import io.izzel.arclight.common.bridge.core.world.level.storage.PrimaryLevelDataBridge;
 import io.izzel.arclight.common.mixin.core.world.level.LevelMixin;
 import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
 import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
@@ -109,7 +109,7 @@ import java.util.UUID;
 import java.util.concurrent.Executor;
 
 @Mixin(ServerLevel.class)
-public abstract class ServerLevelMixin extends LevelMixin implements ServerWorldBridge {
+public abstract class ServerLevelMixin extends LevelMixin implements ServerLevelBridge {
 
     // @formatter:off
     @Shadow public abstract boolean addFreshEntity(Entity entityIn);
@@ -246,7 +246,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
                 this.typeKey = ResourceKey.create(Registries.LEVEL_STEM, dimension.location());
             }
             if (worldInfo instanceof DerivedLevelData data) {
-                ((DerivedWorldInfoBridge) worldInfo).bridge$setDimType(this.getTypeKey());
+                ((DerivedLevelDataBridge) worldInfo).bridge$setDimType(this.getTypeKey());
                 if (ArclightConfig.spec().getCompat().isSymlinkWorld()) {
                     WorldSymlink.create(data, levelSave.getDimensionPath(this.dimension()).toFile());
                 }
@@ -257,7 +257,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         ((ServerChunkProviderBridge) this.chunkSource).bridge$setViewDistance(spigotConfig.viewDistance);
         ((ServerChunkProviderBridge) this.chunkSource).bridge$setSimulationDistance(spigotConfig.simulationDistance);
         if (arclight$isActual()) {
-            ((WorldInfoBridge) this.K).bridge$setWorld((ServerLevel) (Object) this);
+            ((PrimaryLevelDataBridge) this.K).bridge$setWorld((ServerLevel) (Object) this);
             var data = this.getDataStorage().computeIfAbsent(LevelPersistentData.factory(), "bukkit_pdc");
             this.getWorld().readBukkitValues(data.getTag());
             this.getCraftServer().addWorld(this.getWorld());
@@ -289,7 +289,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         ClientboundLevelParticlesPacket packet = new ClientboundLevelParticlesPacket(t0, force, d0, d1, d2, (float) d3, (float) d4, (float) d5, (float) d6, i);
         int j = 0;
         for (ServerPlayer entity : this.players) {
-            if (sender == null || ((ServerPlayerEntityBridge) entity).bridge$getBukkitEntity().canSee(((ServerPlayerEntityBridge) sender).bridge$getBukkitEntity())) {
+            if (sender == null || ((ServerPlayerBridge) entity).bridge$getBukkitEntity().canSee(((ServerPlayerBridge) sender).bridge$getBukkitEntity())) {
                 if (this.sendParticles(entity, force, d0, d1, d2, packet)) {
                     ++j;
                 }
@@ -529,10 +529,10 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     private Iterator<ServerPlayer> arclight$limitBreakVisibility(List<ServerPlayer> instance, @Local(ordinal = 0) int id) throws Throwable {
         final var raw = (Iterator<ServerPlayer>) DecorationOps.callsite().invoke(instance);
         final var actor = getEntity(id);
-        if (!(actor instanceof ServerPlayerEntityBridge player)) {
+        if (!(actor instanceof ServerPlayerBridge player)) {
             return raw;
         }
-        return Iterators.filter(raw, it -> it != null && ((ServerPlayerEntityBridge)it).bridge$getBukkitEntity().canSee(player.bridge$getBukkitEntity()));
+        return Iterators.filter(raw, it -> it != null && ((ServerPlayerBridge)it).bridge$getBukkitEntity().canSee(player.bridge$getBukkitEntity()));
     }
 
     @Decorate(method = "sendBlockUpdated", at = @At(value = "INVOKE", target = "Ljava/util/Iterator;next()Ljava/lang/Object;"))
@@ -558,14 +558,14 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     private void arclight$mapSetId(MapId id, CallbackInfoReturnable<MapItemSavedData> cir) {
         var data = cir.getReturnValue();
         if (data != null) {
-            ((MapDataBridge) data).bridge$setId(id);
+            ((MapItemSavedDataBridge) data).bridge$setId(id);
         }
     }
 
     @Inject(method = "setMapData", at = @At("HEAD"))
     private void arclight$mapSetId(MapId id, MapItemSavedData data, CallbackInfo ci) {
-        ((MapDataBridge) data).bridge$setId(id);
-        MapInitializeEvent event = new MapInitializeEvent(((MapDataBridge) data).bridge$getMapView());
+        ((MapItemSavedDataBridge) data).bridge$setId(id);
+        MapInitializeEvent event = new MapInitializeEvent(((MapItemSavedDataBridge) data).bridge$getMapView());
         Bukkit.getServer().getPluginManager().callEvent(event);
     }
 

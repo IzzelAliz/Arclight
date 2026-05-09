@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.tileentity.AbstractFurnaceTileEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.level.block.entity.AbstractFurnaceBlockEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeHolderBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -42,7 +42,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(AbstractFurnaceBlockEntity.class)
-public abstract class AbstractFurnaceBlockEntityMixin extends LockableBlockEntityMixin implements AbstractFurnaceTileEntityBridge {
+public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlockEntityMixin implements AbstractFurnaceBlockEntityBridge {
 
     // @formatter:off
     @Shadow protected NonNullList<ItemStack> items;
@@ -120,7 +120,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends LockableBlockEntit
     @Redirect(method = "createExperience", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;award(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/phys/Vec3;I)V"))
     private static void arclight$expEvent(ServerLevel level, Vec3 vec3, int amount) {
         if (arclight$capturePlayer != null && arclight$captureAmount != 0) {
-            FurnaceExtractEvent event = new FurnaceExtractEvent(((ServerPlayerEntityBridge) arclight$capturePlayer).bridge$getBukkitEntity(),
+            FurnaceExtractEvent event = new FurnaceExtractEvent(((ServerPlayerBridge) arclight$capturePlayer).bridge$getBukkitEntity(),
                 CraftBlock.at(level, arclight$captureFurnace.getBlockPos()), CraftItemType.minecraftToBukkit(arclight$item.getItem()), arclight$captureAmount, amount);
             Bukkit.getPluginManager().callEvent(event);
             amount = event.getExpToDrop();

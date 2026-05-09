@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(DispenserBlockEntity.class)
-public abstract class DispenserBlockEntityMixin extends LockableBlockEntityMixin {
+public abstract class DispenserBlockEntityMixin extends BaseContainerBlockEntityMixin {
 
     // @formatter:off
     @Shadow private NonNullList<ItemStack> items;

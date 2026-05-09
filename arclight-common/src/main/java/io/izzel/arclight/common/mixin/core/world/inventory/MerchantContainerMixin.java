@@ -1,48 +1,86 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Inventory;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.inventory.MerchantContainer;
-import net.minecraft.world.inventory.MerchantMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.trading.Merchant;
-import org.bukkit.craftbukkit.v.inventory.CraftInventoryMerchant;
-import org.bukkit.craftbukkit.v.inventory.view.CraftMerchantView;
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.v.entity.CraftAbstractVillager;
+import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.inventory.InventoryHolder;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(MerchantMenu.class)
-public abstract class MerchantContainerMixin extends AbstractContainerMenuMixin {
+import java.util.ArrayList;
+import java.util.List;
+
+@Mixin(MerchantContainer.class)
+public abstract class MerchantContainerMixin implements IInventoryBridge, Container {
 
     // @formatter:off
-    @Shadow @Final private Merchant trader;
-    @Shadow @Final private MerchantContainer tradeContainer;
+    @Shadow @Final private NonNullList<ItemStack> itemStacks;
+    @Shadow @Final private Merchant merchant;
     // @formatter:on
 
-    private CraftMerchantView bukkitEntity = null;
-    private Inventory playerInventory;
+    private List<HumanEntity> transactions = new ArrayList<>();
+    private int maxStack = MAX_STACK;
 
-    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/item/trading/Merchant;)V", at = @At("RETURN"))
-    public void arclight$init(int id, Inventory playerInventoryIn, Merchant merchantIn, CallbackInfo ci) {
-        this.playerInventory = playerInventoryIn;
-    }
-
-    @Inject(method = "playTradeSound", cancellable = true, at = @At("HEAD"))
-    public void arclight$returnIfFail(CallbackInfo ci) {
-        if (!(this.trader instanceof Entity)) {
-            ci.cancel();
-        }
+    @Override
+    public List<ItemStack> getContents() {
+        return this.itemStacks;
     }
 
     @Override
-    public CraftMerchantView getBukkitView() {
-        if (bukkitEntity == null) {
-            bukkitEntity = new CraftMerchantView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), new CraftInventoryMerchant(this.trader, this.tradeContainer), (MerchantMenu) (Object) this, trader);
-        }
-        return bukkitEntity;
+    public void onOpen(CraftHumanEntity who) {
+        transactions.add(who);
+    }
+
+    @Override
+    public void onClose(CraftHumanEntity who) {
+        transactions.remove(who);
+        this.merchant.setTradingPlayer(null);
+    }
+
+    @Override
+    public List<HumanEntity> getViewers() {
+        return transactions;
+    }
+
+    @Override
+    public InventoryHolder getOwner() {
+        return this.merchant instanceof AbstractVillager ? ((CraftAbstractVillager) ((EntityBridge) this.merchant).bridge$getBukkitEntity()) : null;
+    }
+
+    @Override
+    public void setOwner(InventoryHolder owner) { }
+
+    @Override
+    public int getMaxStackSize() {
+        if (maxStack == 0) maxStack = MAX_STACK;
+        return this.maxStack;
+    }
+
+    @Override
+    public void setMaxStackSize(int size) {
+        this.maxStack = size;
+    }
+
+    @Override
+    public Location getLocation() {
+        return this.merchant instanceof AbstractVillager ? ((EntityBridge) this.merchant).bridge$getBukkitEntity().getLocation() : null;
+    }
+
+    @Override
+    public RecipeHolder<?> getCurrentRecipe() { return null; }
+
+    @Override
+    public void setCurrentRecipe(RecipeHolder<?> recipe) {
     }
 }

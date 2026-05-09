@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.chunk;
 
-import io.izzel.arclight.common.bridge.core.world.IWorldBridge;
-import io.izzel.arclight.common.bridge.core.world.level.levelgen.ChunkGeneratorBridge;
+import io.izzel.arclight.common.bridge.core.world.level.LevelAccessorBridge;
+import io.izzel.arclight.common.bridge.core.world.level.chunk.ChunkGeneratorBridge;
 import io.izzel.arclight.common.mod.mixins.annotation.InvokeSpecial;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -44,7 +44,7 @@ public abstract class ChunkGeneratorMixin implements ChunkGeneratorBridge {
 
     @Decorate(method = "tryGenerateStructure", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/StructureManager;setStartForStructure(Lnet/minecraft/core/SectionPos;Lnet/minecraft/world/level/levelgen/structure/Structure;Lnet/minecraft/world/level/levelgen/structure/StructureStart;Lnet/minecraft/world/level/chunk/StructureAccess;)V"))
     private void arclight$structureSpawn(@Local(ordinal = -1) StructureManager manager, @Local(ordinal = -1) ChunkPos chunkPos, @Local(ordinal = -1) Structure structure, @Local(ordinal = -1) StructureStart structurestart) throws Throwable {
-        if (IWorldBridge.from(manager.level) instanceof IWorldBridge bridge) {
+        if (LevelAccessorBridge.from(manager.level) instanceof LevelAccessorBridge bridge) {
             var box = structurestart.getBoundingBox();
             var event = new org.bukkit.event.world.AsyncStructureSpawnEvent(bridge.bridge$getMinecraftWorld().bridge$getWorld(), CraftStructure.minecraftToBukkit(structure), new org.bukkit.util.BoundingBox(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ()), chunkPos.x, chunkPos.z);
             Bukkit.getPluginManager().callEvent(event);

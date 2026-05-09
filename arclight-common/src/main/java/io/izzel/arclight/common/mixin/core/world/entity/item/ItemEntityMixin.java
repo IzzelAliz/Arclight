@@ -1,12 +1,12 @@
 package io.izzel.arclight.common.mixin.core.world.entity.item;
 
-import io.izzel.arclight.common.bridge.core.entity.LivingEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.item.ItemEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.PlayerInventoryBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.network.datasync.SynchedEntityDataBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.item.ItemEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.player.InventoryBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.network.syncher.SynchedEntityDataBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.EntityMixin;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -74,19 +74,19 @@ public abstract class ItemEntityMixin extends EntityMixin implements ItemEntityB
     private int arclight$playerPickup(ItemStack instance, Player entity, @Local(ordinal = -1) ItemStack itemstack) throws Throwable {
         var count = (int) DecorationOps.callsite().invoke(instance);
 
-        final int canHold = ((PlayerInventoryBridge) entity.getInventory()).bridge$canHold(itemstack);
+        final int canHold = ((InventoryBridge) entity.getInventory()).bridge$canHold(itemstack);
         final int remaining = count - canHold;
         if (this.pickupDelay <= 0 && canHold > 0) {
             itemstack.setCount(canHold);
-            final PlayerPickupItemEvent playerEvent = new PlayerPickupItemEvent(((ServerPlayerEntityBridge) entity).bridge$getBukkitEntity(), (Item) this.getBukkitEntity(), remaining);
-            playerEvent.setCancelled(!((PlayerEntityBridge) entity).bridge$canPickUpLoot());
+            final PlayerPickupItemEvent playerEvent = new PlayerPickupItemEvent(((ServerPlayerBridge) entity).bridge$getBukkitEntity(), (Item) this.getBukkitEntity(), remaining);
+            playerEvent.setCancelled(!((PlayerBridge) entity).bridge$canPickUpLoot());
             Bukkit.getPluginManager().callEvent(playerEvent);
             if (playerEvent.isCancelled()) {
                 itemstack.setCount(canHold + remaining);
                 return (int) DecorationOps.cancel().invoke();
             }
             final EntityPickupItemEvent entityEvent = new EntityPickupItemEvent(((LivingEntityBridge) entity).bridge$getBukkitEntity(), (Item) this.getBukkitEntity(), remaining);
-            entityEvent.setCancelled(!((PlayerEntityBridge) entity).bridge$canPickUpLoot());
+            entityEvent.setCancelled(!((PlayerBridge) entity).bridge$canPickUpLoot());
             Bukkit.getPluginManager().callEvent(entityEvent);
             if (entityEvent.isCancelled()) {
                 itemstack.setCount(canHold + remaining);

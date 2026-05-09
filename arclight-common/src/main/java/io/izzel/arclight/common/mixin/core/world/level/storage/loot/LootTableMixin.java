@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.storage.loot;
 
-import io.izzel.arclight.common.bridge.core.world.storage.loot.LootTableBridge;
+import io.izzel.arclight.common.bridge.core.world.level.storage.loot.LootTableBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;

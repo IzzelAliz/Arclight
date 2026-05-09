@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
-import io.izzel.arclight.common.bridge.core.entity.monster.CreeperEntityBridge;
-import io.izzel.arclight.common.bridge.core.util.DamageSourceBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.monster.CreeperBridge;
+import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.PathfinderMobMixin;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -41,7 +41,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.Collection;
 
 @Mixin(Creeper.class)
-public abstract class CreeperMixin extends PathfinderMobMixin implements CreeperEntityBridge {
+public abstract class CreeperMixin extends PathfinderMobMixin implements CreeperBridge {
 
     // @formatter:off
     @Shadow @Final private static EntityDataAccessor<Boolean> DATA_IS_POWERED;

@@ -1,10 +1,10 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.inventory.EnchantmentMenuBridge;
-import io.izzel.arclight.common.bridge.core.inventory.container.PosContainerBridge;
-import io.izzel.arclight.common.bridge.core.util.IWorldPosCallableBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.EnchantmentMenuBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.PosContainerBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.ContainerLevelAccessBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
@@ -96,7 +96,7 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
             offers[j] = (enchantment != null) ? new EnchantmentOffer(enchantment, this.levelClue[j], this.costs[j]) : null;
         }
 
-        PrepareItemEnchantEvent event = new PrepareItemEnchantEvent(((ServerPlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), (EnchantmentView) this.getBukkitView(), ((IWorldPosCallableBridge) this.access).bridge$getLocation().getBlock(), item, offers, arclight$power);
+        PrepareItemEnchantEvent event = new PrepareItemEnchantEvent(((ServerPlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), (EnchantmentView) this.getBukkitView(), ((ContainerLevelAccessBridge) this.access).bridge$getLocation().getBlock(), item, offers, arclight$power);
         event.setCancelled(!arclight$enchantable);
         Bukkit.getPluginManager().callEvent(event);
 
@@ -140,7 +140,7 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
 
         var hintedEnchantment = CraftEnchantment.minecraftHolderToBukkit(registry.byId(enchantClue[i]));
         int hintedEnchantmentLevel = levelClue[i];
-        EnchantItemEvent event = new EnchantItemEvent(((Player) ((PlayerEntityBridge) playerIn).bridge$getBukkitEntity()), this.getBukkitView(), ((IWorldPosCallableBridge) this.access).bridge$getLocation().getBlock(), item, this.costs[i], enchants, hintedEnchantment, hintedEnchantmentLevel, i);
+        EnchantItemEvent event = new EnchantItemEvent(((Player) ((PlayerBridge) playerIn).bridge$getBukkitEntity()), this.getBukkitView(), ((ContainerLevelAccessBridge) this.access).bridge$getLocation().getBlock(), item, this.costs[i], enchants, hintedEnchantment, hintedEnchantmentLevel, i);
         Bukkit.getPluginManager().callEvent(event);
 
         int levelCost = event.getExpLevelCost();
@@ -167,7 +167,7 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
         }
 
         CraftInventoryEnchanting inventory = new CraftInventoryEnchanting(this.enchantSlots);
-        bukkitEntity = new CraftEnchantmentView(((PlayerEntityBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (EnchantmentMenu) (Object) this);
+        bukkitEntity = new CraftEnchantmentView(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (EnchantmentMenu) (Object) this);
         return bukkitEntity;
     }
 

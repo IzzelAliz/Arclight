@@ -1,6 +1,6 @@
 package io.izzel.arclight.forge.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.core.inventory.AnvilMenuBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.AnvilMenuBridge;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AnvilMenu;

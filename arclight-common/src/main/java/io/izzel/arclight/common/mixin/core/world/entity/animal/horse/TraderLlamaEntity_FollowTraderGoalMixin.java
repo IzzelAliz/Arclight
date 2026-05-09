@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal.horse;
 
-import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
-import io.izzel.arclight.common.mixin.core.world.entity.ai.goal.TargetGoalMixin;
+import io.izzel.arclight.common.bridge.core.world.entity.MobBridge;
+import io.izzel.arclight.common.mixin.core.world.entity.ai.goal.target.TargetGoalMixin;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,6 +14,6 @@ public class TraderLlamaEntity_FollowTraderGoalMixin extends TargetGoalMixin {
 
     @Inject(method = "start", at = @At("HEAD"))
     private void arclight$reason(CallbackInfo ci) {
-        ((MobEntityBridge) this.mob).bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.TARGET_ATTACKED_OWNER, true);
+        ((MobBridge) this.mob).bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.TARGET_ATTACKED_OWNER, true);
     }
 }

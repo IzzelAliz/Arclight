@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.optimization.general.network;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerPlayer;
@@ -19,9 +19,9 @@ public class ServerGamePacketListenerImplMixin_Optimize {
     private void arclight$markTrackerDirty(ServerChunkCache instance, ServerPlayer player, ServerboundMovePlayerPacket packet) {
         if (!packet.hasPosition()) {
             // do not update tracker when no position is updated
-            var old = ((ServerPlayerEntityBridge) this.player).bridge$isTrackerDirty();
+            var old = ((ServerPlayerBridge) this.player).bridge$isTrackerDirty();
             instance.move(player);
-            ((ServerPlayerEntityBridge) this.player).bridge$setTrackerDirty(old);
+            ((ServerPlayerBridge) this.player).bridge$setTrackerDirty(old);
         } else {
             instance.move(player);
         }

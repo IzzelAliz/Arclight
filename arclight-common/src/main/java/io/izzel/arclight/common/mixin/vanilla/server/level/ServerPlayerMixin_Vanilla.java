@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.vanilla.server.level;
 
 import com.mojang.datafixers.util.Either;
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.mixin.vanilla.world.entity.player.PlayerMixin_Vanilla;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ServerPlayer.class)
-public abstract class ServerPlayerMixin_Vanilla extends PlayerMixin_Vanilla implements ServerPlayerEntityBridge {
+public abstract class ServerPlayerMixin_Vanilla extends PlayerMixin_Vanilla implements ServerPlayerBridge {
 
     @Decorate(method = "drop(Lnet/minecraft/world/item/ItemStack;ZZ)Lnet/minecraft/world/entity/item/ItemEntity;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private boolean arclight$capturePlayerDrop(Level instance, Entity entity) throws Throwable {

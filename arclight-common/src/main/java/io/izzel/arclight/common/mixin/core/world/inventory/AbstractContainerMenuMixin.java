@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.core.inventory.container.ContainerBridge;
+import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.AbstractContainerMenuBridge;
 import io.izzel.arclight.common.mod.server.world.inventory.ArclightInventoryView;
 import io.izzel.arclight.common.mod.util.Blackhole;
 import io.izzel.arclight.mixin.Decorate;
@@ -41,7 +41,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 @Mixin(AbstractContainerMenu.class)
-public abstract class AbstractContainerMenuMixin implements ContainerBridge {
+public abstract class AbstractContainerMenuMixin implements AbstractContainerMenuBridge {
 
     // @formatter:off
     @Shadow private int quickcraftType;
@@ -69,7 +69,7 @@ public abstract class AbstractContainerMenuMixin implements ContainerBridge {
 
     public void transferTo(AbstractContainerMenu other, CraftHumanEntity player) {
         InventoryView source = this.getBukkitView();
-        InventoryView destination = ((ContainerBridge) other).bridge$getBukkitView();
+        InventoryView destination = ((AbstractContainerMenuBridge) other).bridge$getBukkitView();
         ((IInventoryBridge) ((CraftInventory) source.getTopInventory()).getInventory()).onClose(player);
         ((IInventoryBridge) ((CraftInventory) source.getBottomInventory()).getInventory()).onClose(player);
         ((IInventoryBridge) ((CraftInventory) destination.getTopInventory()).getInventory()).onOpen(player);

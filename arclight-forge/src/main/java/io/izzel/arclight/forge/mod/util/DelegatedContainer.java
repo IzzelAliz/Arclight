@@ -1,8 +1,8 @@
 package io.izzel.arclight.forge.mod.util;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.core.tileentity.TileEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.world.level.block.entity.BlockEntityBridge;
 import io.izzel.arclight.common.mixin.bukkit.CraftBlockEntityStateAccessor;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.forge.mixin.forge.items.CombinedInvWrapperAccessor;
@@ -243,7 +243,7 @@ public class DelegatedContainer implements Container, IInventoryBridge {
             return ((IInventoryBridge) original).getOwner();
         } else if (nmsOwner != null) {
             if (nmsOwner instanceof BlockEntity be) {
-                return ((TileEntityBridge) be).bridge$getOwner(); // BlockEntity
+                return ((BlockEntityBridge) be).bridge$getOwner(); // BlockEntity
             } else if (nmsOwner instanceof EntityBridge entity) {
                 return entity.bridge$getBukkitEntity() instanceof InventoryHolder result ? result : null; // Entity
             }

@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster.piglin;
 
-import io.izzel.arclight.common.bridge.core.entity.MobEntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.monster.piglin.PiglinBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.MobBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.monster.piglin.PiglinBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
@@ -73,7 +73,7 @@ public abstract class PiglinAiMixin {
         } else if (isFood(itemstack) && !hasEatenRecently(piglinEntity)) {
             eat(piglinEntity);
         } else {
-            ((MobEntityBridge) piglinEntity).bridge$captureItemDrop(itemEntity);
+            ((MobBridge) piglinEntity).bridge$captureItemDrop(itemEntity);
             boolean flag = !piglinEntity.equipItemIfPossible(itemstack).equals(ItemStack.EMPTY);
             if (!flag) {
                 putInInventory(piglinEntity, itemstack);

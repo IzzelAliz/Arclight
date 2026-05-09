@@ -2,7 +2,7 @@ package io.izzel.arclight.neoforge.mixin.neoforge;
 
 import com.google.common.collect.ImmutableMap;
 import io.izzel.arclight.common.bridge.bukkit.MessengerBridge;
-import io.izzel.arclight.common.bridge.core.network.common.ServerCommonPacketListenerBridge;
+import io.izzel.arclight.common.bridge.core.server.network.ServerCommonPacketListenerImplBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.plugin.messaging.PacketRecorder;
@@ -78,7 +78,7 @@ public abstract class NetworkRegistryMixin {
     @Inject(method = "onMinecraftRegister", at = @At("RETURN"))
     private static void arclight$syncChannelRegister(Connection connection, Set<ResourceLocation> channels, CallbackInfo ci) {
         if (connection.getPacketListener() instanceof ServerCommonPacketListener listener) {
-            var bridge = (ServerCommonPacketListenerBridge) listener;
+            var bridge = (ServerCommonPacketListenerImplBridge) listener;
             var mcserver = (MinecraftServerBridge) bridge.bridge$getCraftServer().getServer();
             listener.getMainThreadEventLoop().executeIfPossible(() -> {
                 if (mcserver.bridge$hasStopped() || bridge.bridge$processedDisconnect()) {
@@ -94,7 +94,7 @@ public abstract class NetworkRegistryMixin {
     @Inject(method = "onMinecraftUnregister", at = @At("RETURN"))
     private static void arclight$syncChannelUnregister(Connection connection, Set<ResourceLocation> channels, CallbackInfo ci) {
         if (connection.getPacketListener() instanceof ServerCommonPacketListener listener) {
-            var bridge = (ServerCommonPacketListenerBridge) listener;
+            var bridge = (ServerCommonPacketListenerImplBridge) listener;
             var mcserver = (MinecraftServerBridge) bridge.bridge$getCraftServer().getServer();
             listener.getMainThreadEventLoop().executeIfPossible(() -> {
                 if (mcserver.bridge$hasStopped() || bridge.bridge$processedDisconnect()) {
@@ -110,7 +110,7 @@ public abstract class NetworkRegistryMixin {
     @Decorate(method = "onConfigurationFinished", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/neoforged/neoforge/common/extensions/ICommonPacketListener;send(Lnet/minecraft/network/protocol/common/custom/CustomPacketPayload;)V"))
     private static void arclight$syncChannel(ICommonPacketListener listener, CustomPacketPayload payload, @Local(ordinal = 0) NetworkPayloadSetup setup) throws Throwable {
         DecorationOps.callsite().invoke(listener, payload);
-        var bridge = (ServerCommonPacketListenerBridge) listener;
+        var bridge = (ServerCommonPacketListenerImplBridge) listener;
         var mcserver = (MinecraftServerBridge) bridge.bridge$getCraftServer().getServer();
         listener.getMainThreadEventLoop().executeIfPossible(() -> {
             if (mcserver.bridge$hasStopped() || bridge.bridge$processedDisconnect()) {

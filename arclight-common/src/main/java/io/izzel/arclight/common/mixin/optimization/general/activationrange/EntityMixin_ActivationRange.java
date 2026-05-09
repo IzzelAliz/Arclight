@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.optimization.general.activationrange;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.core.world.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.optimization.EntityBridge_ActivationRange;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.util.DistValidate;

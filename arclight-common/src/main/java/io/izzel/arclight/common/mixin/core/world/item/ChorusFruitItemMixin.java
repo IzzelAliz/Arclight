@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
-import io.izzel.arclight.common.bridge.core.network.play.ServerGamePacketListenerBridge;
+import io.izzel.arclight.common.bridge.core.server.network.ServerGamePacketListenerImplBridge;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ChorusFruitItem;
@@ -18,7 +18,7 @@ public class ChorusFruitItemMixin extends ItemMixin {
     @Inject(method = "finishUsingItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;randomTeleport(DDDZ)Z"))
     private void arclight$teleportCause(ItemStack itemStack, Level level, LivingEntity livingEntity, CallbackInfoReturnable<ItemStack> cir) {
         if (livingEntity instanceof ServerPlayer p) {
-            ((ServerGamePacketListenerBridge) p.connection).bridge$pushTeleportCause(PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT);
+            ((ServerGamePacketListenerImplBridge) p.connection).bridge$pushTeleportCause(PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT);
         }
     }
 }

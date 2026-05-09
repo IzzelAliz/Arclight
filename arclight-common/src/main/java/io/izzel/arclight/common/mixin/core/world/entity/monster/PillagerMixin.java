@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
-import io.izzel.arclight.common.mixin.core.world.entity.raider.RaiderMixin;
+import io.izzel.arclight.common.mixin.core.world.entity.raid.RaiderMixin;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Pillager;
 import org.bukkit.event.entity.EntityRemoveEvent;

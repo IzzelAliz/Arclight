@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.chunk;
 
-import io.izzel.arclight.common.bridge.core.world.chunk.LevelChunkSectionBridge;
+import io.izzel.arclight.common.bridge.core.world.level.chunk.LevelChunkSectionBridge;
 import net.minecraft.core.Holder;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.chunk.LevelChunkSection;

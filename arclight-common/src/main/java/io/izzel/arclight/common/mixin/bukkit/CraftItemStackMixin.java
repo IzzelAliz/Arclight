@@ -59,7 +59,7 @@ public abstract class CraftItemStackMixin extends org.bukkit.inventory.ItemStack
 
     @Override
     public ItemEntity arclight$getItemEntity() {
-        if (arclight$itemEntity != null) {
+        if (arclight$itemEntity != null && this.handle != null && !this.handle.isEmpty()) {
             arclight$itemEntity.setItem(this.handle);
         }
         return arclight$itemEntity;

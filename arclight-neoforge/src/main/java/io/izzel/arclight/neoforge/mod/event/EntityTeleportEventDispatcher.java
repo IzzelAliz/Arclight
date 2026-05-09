@@ -1,6 +1,6 @@
 package io.izzel.arclight.neoforge.mod.event;
 
-import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import org.bukkit.Bukkit;
@@ -16,7 +16,7 @@ public class EntityTeleportEventDispatcher {
     @SubscribeEvent(receiveCanceled = true)
     public void onTeleport(net.neoforged.neoforge.event.entity.EntityTeleportEvent.EnderEntity event) {
         if (event.getEntity() instanceof ServerPlayer) {
-            CraftPlayer player = ((ServerPlayerEntityBridge) event.getEntity()).bridge$getBukkitEntity();
+            CraftPlayer player = ((ServerPlayerBridge) event.getEntity()).bridge$getBukkitEntity();
             PlayerTeleportEvent bukkitEvent = new PlayerTeleportEvent(player, player.getLocation(), new Location(player.getWorld(), event.getTargetX(), event.getTargetY(), event.getTargetZ()), PlayerTeleportEvent.TeleportCause.ENDER_PEARL);
             Bukkit.getPluginManager().callEvent(bukkitEvent);
             event.setCanceled(bukkitEvent.isCancelled());

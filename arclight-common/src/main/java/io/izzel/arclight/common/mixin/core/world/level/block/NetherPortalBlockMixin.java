@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import io.izzel.arclight.common.bridge.core.entity.EntityTypeBridge;
-import io.izzel.arclight.common.bridge.core.world.TeleporterBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.EntityTypeBridge;
+import io.izzel.arclight.common.bridge.core.world.level.portal.PortalForcerBridge;
 import io.izzel.arclight.common.bridge.core.world.level.portal.DimensionTransitionBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -57,11 +57,11 @@ public class NetherPortalBlockMixin {
         serverLevel = ((CraftWorld) event.getTo().getWorld()).getHandle();
         worldBorder = serverLevel.getWorldBorder();
         blockPos2 = worldBorder.clampToBounds(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
-        ((TeleporterBridge) serverLevel.getPortalForcer()).bridge$pushSearchRadius(event.getSearchRadius());
-        ((TeleporterBridge) serverLevel.getPortalForcer()).bridge$pushPortalCreate(entity, event.getCreationRadius());
+        ((PortalForcerBridge) serverLevel.getPortalForcer()).bridge$pushSearchRadius(event.getSearchRadius());
+        ((PortalForcerBridge) serverLevel.getPortalForcer()).bridge$pushPortalCreate(entity, event.getCreationRadius());
         var result = (DimensionTransition) DecorationOps.callsite().invoke(instance, serverLevel, entity, blockPos, blockPos2, bl, worldBorder);
-        ((TeleporterBridge) serverLevel.getPortalForcer()).bridge$pushSearchRadius(-1);
-        ((TeleporterBridge) serverLevel.getPortalForcer()).bridge$pushPortalCreate(null, -1);
+        ((PortalForcerBridge) serverLevel.getPortalForcer()).bridge$pushSearchRadius(-1);
+        ((PortalForcerBridge) serverLevel.getPortalForcer()).bridge$pushPortalCreate(null, -1);
         return result;
     }
 

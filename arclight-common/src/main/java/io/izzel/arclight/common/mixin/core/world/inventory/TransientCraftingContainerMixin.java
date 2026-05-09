@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
-import io.izzel.arclight.common.bridge.core.entity.player.PlayerEntityBridge;
-import io.izzel.arclight.common.bridge.core.inventory.CraftingInventoryBridge;
-import io.izzel.arclight.common.bridge.core.inventory.IInventoryBridge;
-import io.izzel.arclight.common.bridge.core.inventory.container.PosContainerBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.TransientCraftingContainerBridge;
+import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.PosContainerBridge;
 import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
 import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
 import net.minecraft.core.NonNullList;
@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(TransientCraftingContainer.class)
-public abstract class TransientCraftingContainerMixin implements CraftingInventoryBridge, Container {
+public abstract class TransientCraftingContainerMixin implements TransientCraftingContainerBridge, Container {
 
     // @formatter:off
     @Shadow @Final private NonNullList<ItemStack> items;
@@ -88,7 +88,7 @@ public abstract class TransientCraftingContainerMixin implements CraftingInvento
     @Override
     public InventoryHolder getOwner() {
         if (bukkitOwner == null) {
-            bukkitOwner = owner == null ? null : ((PlayerEntityBridge) owner).bridge$getBukkitEntity();
+            bukkitOwner = owner == null ? null : ((PlayerBridge) owner).bridge$getBukkitEntity();
         }
         return bukkitOwner;
     }
@@ -114,7 +114,7 @@ public abstract class TransientCraftingContainerMixin implements CraftingInvento
     public Location getLocation() {
         return this.menu instanceof PosContainerBridge
             ? ((PosContainerBridge) menu).bridge$getWorldLocation()
-            : ((PlayerEntityBridge) owner).bridge$getBukkitEntity().getLocation();
+            : ((PlayerBridge) owner).bridge$getBukkitEntity().getLocation();
     }
 
     @Override

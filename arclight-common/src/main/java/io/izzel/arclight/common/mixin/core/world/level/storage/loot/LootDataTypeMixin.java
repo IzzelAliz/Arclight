@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.storage.loot;
 
-import io.izzel.arclight.common.bridge.core.world.storage.loot.LootTableBridge;
+import io.izzel.arclight.common.bridge.core.world.level.storage.loot.LootTableBridge;
 import net.minecraft.world.level.storage.loot.LootDataType;
 import net.minecraft.world.level.storage.loot.LootTable;
 import org.bukkit.craftbukkit.v.CraftLootTable;

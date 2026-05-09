@@ -1,6 +1,6 @@
 package io.izzel.arclight.fabric.mod.event;
 
-import io.izzel.arclight.common.bridge.core.network.common.ServerCommonPacketListenerBridge;
+import io.izzel.arclight.common.bridge.core.server.network.ServerCommonPacketListenerImplBridge;
 import net.fabricmc.fabric.api.networking.v1.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -22,7 +22,7 @@ public class S2CPlayNConfigChannelHandler implements S2CPlayChannelEvents.Regist
 
     private void register(MinecraftServer server, ServerCommonPacketListenerImpl listener, List<ResourceLocation> channels) {
         server.executeIfPossible(() -> {
-            var craftbukkit = ((ServerCommonPacketListenerBridge) listener).bridge$getCraftPlayer();
+            var craftbukkit = ((ServerCommonPacketListenerImplBridge) listener).bridge$getCraftPlayer();
             for (var location : channels) {
                 craftbukkit.addChannel(location.toString());
             }
@@ -31,7 +31,7 @@ public class S2CPlayNConfigChannelHandler implements S2CPlayChannelEvents.Regist
 
     private void unregister(MinecraftServer server, ServerCommonPacketListenerImpl listener, List<ResourceLocation> channels) {
         server.executeIfPossible(() -> {
-            var craftbukkit = ((ServerCommonPacketListenerBridge) listener).bridge$getCraftPlayer();
+            var craftbukkit = ((ServerCommonPacketListenerImplBridge) listener).bridge$getCraftPlayer();
             for (var location : channels) {
                 craftbukkit.removeChannel(location.toString());
             }
