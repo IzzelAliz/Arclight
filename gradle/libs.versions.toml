@@ -1,6 +1,6 @@
 [versions]
 # plugins
-architectury-loom = '1.9-SNAPSHOT'
+architectury-loom = '1.14-SNAPSHOT'
 # architectury-plugin, gradleup-shadow version: ../build.gradle
 
 # common

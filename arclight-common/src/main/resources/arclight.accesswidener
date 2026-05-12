@@ -1,5 +1,5 @@
 accessWidener v2 named
-# Arclight 1.21.1
+# Arclight 1.21.11
 accessible method net/minecraft/world/level/GameRules$BooleanValue deserialize (Ljava/lang/String;)V
 accessible method net/minecraft/world/level/GameRules$IntegerValue deserialize (Ljava/lang/String;)V
 accessible method net/minecraft/world/entity/decoration/ItemFrame setDirection (Lnet/minecraft/core/Direction;)V # For ItemsAdder
