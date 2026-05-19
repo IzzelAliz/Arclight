@@ -24,8 +24,11 @@ public class ArclightSpecialIngredient implements RecipeChoice {
     @NotNull
     @Override
     public ItemStack getItemStack() {
-        net.minecraft.world.item.ItemStack[] items = ingredient.getItems();
-        return items.length > 0 ? CraftItemStack.asCraftMirror(items[0]) : new ItemStack(Material.AIR, 0);
+        return ingredient.items()
+            .map(net.minecraft.world.item.ItemStack::new)
+            .findFirst()
+            .map(itemStack -> (ItemStack) CraftItemStack.asCraftMirror(itemStack))
+            .orElseGet(() -> new ItemStack(Material.AIR, 0));
     }
 
     @NotNull

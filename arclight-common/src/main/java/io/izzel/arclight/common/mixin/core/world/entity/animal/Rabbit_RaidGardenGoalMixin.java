@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.entity.animal.Rabbit;
+import net.minecraft.world.entity.animal.rabbit.Rabbit;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-@Mixin(targets = "net.minecraft.world.entity.animal.Rabbit$RaidGardenGoal")
+@Mixin(targets = "net.minecraft.world.entity.animal.rabbit.Rabbit$RaidGardenGoal")
 public class Rabbit_RaidGardenGoalMixin {
 
     @Shadow @Final private Rabbit rabbit;

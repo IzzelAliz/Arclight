@@ -1,14 +1,11 @@
 package io.izzel.arclight.common.mixin.core.world.entity.vehicle;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import io.izzel.arclight.mixin.Decorate;
-import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.vehicle.Boat;
+import net.minecraft.world.entity.vehicle.boat.AbstractBoat;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Vehicle;
-import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.event.vehicle.VehicleEntityCollisionEvent;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
 import org.bukkit.event.vehicle.VehicleUpdateEvent;
@@ -17,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(Boat.class)
+@Mixin(AbstractBoat.class)
 public abstract class BoatMixin extends VehicleEntityMixin {
 
     public double maxSpeed = 0.4D;
@@ -38,7 +35,7 @@ public abstract class BoatMixin extends VehicleEntityMixin {
         }
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/Boat;tickBubbleColumn()V"))
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/boat/AbstractBoat;tickBubbleColumn()V"))
     private void arclight$updateVehicle(CallbackInfo ci) {
         final org.bukkit.World bworld = this.level().bridge$getWorld();
         final Location to = new Location(bworld, this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
@@ -51,15 +48,4 @@ public abstract class BoatMixin extends VehicleEntityMixin {
         this.lastLocation = vehicle.getLocation();
     }
 
-    @Decorate(method = "checkFallDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/Boat;isRemoved()Z"))
-    private boolean arclight$breakVehicle(Boat boatEntity) throws Throwable {
-        if (!(boolean) DecorationOps.callsite().invoke(boatEntity)) {
-            final Vehicle vehicle = (Vehicle) this.getBukkitEntity();
-            final VehicleDestroyEvent event = new VehicleDestroyEvent(vehicle, null);
-            Bukkit.getPluginManager().callEvent(event);
-            return event.isCancelled();
-        } else {
-            return true;
-        }
-    }
 }

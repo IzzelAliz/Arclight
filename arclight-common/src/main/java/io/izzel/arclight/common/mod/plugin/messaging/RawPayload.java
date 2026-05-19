@@ -7,7 +7,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.DiscardedPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * Read from channel: native/heap retained buffer;
@@ -67,7 +67,7 @@ public interface RawPayload extends CustomPacketPayload {
         );
     }
 
-    static <B extends FriendlyByteBuf> StreamCodec<B, CustomPacketPayload> discardedCodec(ResourceLocation location, int max) {
+    static <B extends FriendlyByteBuf> StreamCodec<B, CustomPacketPayload> discardedCodec(Identifier location, int max) {
         return new StreamCodec<>() {
             @Override
             public DiscardedPayload decode(B buf) {

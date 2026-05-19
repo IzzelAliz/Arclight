@@ -23,12 +23,12 @@ public abstract class TadpoleMixin extends PathfinderMobMixin {
     @Shadow protected abstract void setAge(int i);
     // @formatter:on
 
-    @Inject(method = "ageUp()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/frog/Tadpole;discard()V"))
+    @Inject(method = "ageUp()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/frog/Tadpole;convertTo(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/entity/ConversionParams;Lnet/minecraft/world/entity/ConversionParams$AfterConversion;)Lnet/minecraft/world/entity/Mob;"))
     private void arclight$ageUp(CallbackInfo ci) {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.TRANSFORMATION);
     }
 
-    @Decorate(method = "ageUp()V", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/frog/Tadpole;playSound(Lnet/minecraft/sounds/SoundEvent;FF)V"))
+    @Decorate(method = "method_63651(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/animal/frog/Frog;)V", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/frog/Tadpole;playSound(Lnet/minecraft/sounds/SoundEvent;FF)V"))
     private void arclight$transform(@Local(ordinal = -1) Frog frog) throws Throwable {
         if (CraftEventFactory.callEntityTransformEvent((Tadpole) (Object) this, frog, org.bukkit.event.entity.EntityTransformEvent.TransformReason.METAMORPHOSIS).isCancelled()) {
             this.setAge(0); // Sets the age to 0 for avoid a loop if the event is canceled

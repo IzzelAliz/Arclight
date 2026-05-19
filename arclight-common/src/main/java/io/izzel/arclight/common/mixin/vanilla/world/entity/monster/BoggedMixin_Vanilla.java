@@ -6,7 +6,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.monster.Bogged;
+import net.minecraft.world.entity.monster.skeleton.Bogged;
 import net.minecraft.world.entity.player.Player;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Final;

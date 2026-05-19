@@ -17,7 +17,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.FullChunkStatus;
 import net.minecraft.util.RandomSource;
-import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
@@ -58,7 +57,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 @Mixin(Level.class)
 public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWriter {
@@ -66,8 +64,6 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
     // @formatter:off
     @Shadow @Nullable public BlockEntity getBlockEntity(BlockPos pos) { return null; }
     @Shadow public abstract BlockState getBlockState(BlockPos pos);
-    @Shadow public abstract WorldBorder getWorldBorder();
-    @Shadow @Final private WorldBorder worldBorder;
     @Shadow public abstract long getDayTime();
     @Shadow public abstract MinecraftServer getServer();
     @Shadow public abstract LevelData getLevelData();
@@ -77,7 +73,8 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
     @Shadow @Final public boolean isClientSide;
     @Shadow public abstract void sendBlockUpdated(BlockPos arg, BlockState arg2, BlockState arg3, int i);
     @Shadow public abstract void updateNeighbourForOutputSignal(BlockPos arg, Block arg2);
-    @Shadow public abstract void onBlockStateChange(BlockPos arg, BlockState arg2, BlockState arg3);
+    @Shadow public abstract void neighborChanged(BlockState state, BlockPos pos, Block block, net.minecraft.world.level.redstone.Orientation orientation, boolean movedByPiston);
+    @Shadow public abstract void updatePOIOnBlockStateChange(BlockPos arg, BlockState arg2, BlockState arg3);
     @Shadow public abstract RegistryAccess registryAccess();
     @Accessor("thread") public abstract Thread arclight$getMainThread();
     // @formatter:on
@@ -99,13 +96,13 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
     @Unique private boolean arclight$isActual;
 
     @ShadowConstructor
-    public void arclight$constructor(WritableLevelData worldInfo, ResourceKey<Level> dimension, RegistryAccess registryAccess, final Holder<DimensionType> dimensionType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed, int maxNeighborUpdate) {
+    public void arclight$constructor(WritableLevelData worldInfo, ResourceKey<Level> dimension, RegistryAccess registryAccess, final Holder<DimensionType> dimensionType, boolean isRemote, boolean isDebug, long seed, int maxNeighborUpdate) {
         throw new RuntimeException();
     }
 
     @CreateConstructor
-    public void arclight$constructor(WritableLevelData worldInfo, ResourceKey<Level> dimension, RegistryAccess registryAccess, final Holder<DimensionType> dimensionType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed, int maxNeighborUpdate, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider, org.bukkit.World.Environment env) {
-        arclight$constructor(worldInfo, dimension, registryAccess, dimensionType, profiler, isRemote, isDebug, seed, maxNeighborUpdate);
+    public void arclight$constructor(WritableLevelData worldInfo, ResourceKey<Level> dimension, RegistryAccess registryAccess, final Holder<DimensionType> dimensionType, boolean isRemote, boolean isDebug, long seed, int maxNeighborUpdate, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider, org.bukkit.World.Environment env) {
+        arclight$constructor(worldInfo, dimension, registryAccess, dimensionType, isRemote, isDebug, seed, maxNeighborUpdate);
         this.generator = gen;
         this.environment = env;
         this.biomeProvider = biomeProvider;
@@ -114,19 +111,8 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
     @SuppressWarnings({"DefaultAnnotationParam", "UnnecessaryUnsafe"})
     // InitAuther97: unsafe = true can't be removed because unsafe is default to false on Forge
     @Inject(method = "<init>", at = @At(value = "CTOR_HEAD", unsafe = true))
-    private void arclight$preInit(WritableLevelData writableLevelData, ResourceKey resourceKey, RegistryAccess registryAccess, Holder holder, Supplier supplier, boolean bl, boolean bl2, long l, int i, CallbackInfo ci) {
+    private void arclight$preInit(WritableLevelData writableLevelData, ResourceKey resourceKey, RegistryAccess registryAccess, Holder holder, boolean bl, boolean bl2, long l, int i, CallbackInfo ci) {
         this.arclight$isActual = DistValidate.isValid((LevelAccessor) (Object) this);
-    }
-
-    // InitAuther97: inject later than ironsspellbooks, see their LevelMixin
-    @Inject(method = "<init>", at = @At("RETURN"), order = 1001)
-    private void arclight$init(WritableLevelData info, ResourceKey<Level> dimension, RegistryAccess registryAccess, Holder<DimensionType> dimType, Supplier<ProfilerFiller> profiler, boolean isRemote, boolean isDebug, long seed, int maxNeighborUpdates, CallbackInfo ci) {
-        ((WorldBorderBridge) this.worldBorder).bridge$setWorld((Level) (Object) this);
-        for (SpawnCategory spawnCategory : SpawnCategory.values()) {
-            if (CraftSpawnCategory.isValidForLimits(spawnCategory)) {
-                this.ticksPerSpawnCategory.put(spawnCategory, this.getCraftServer().getTicksPerSpawns(spawnCategory));
-            }
-        }
     }
 
     @Override
@@ -203,7 +189,7 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
             }
 
             if ((j & 1) != 0) {
-                this.blockUpdated(pos, oldBlock.getBlock());
+                this.neighborChanged(blockstate1, pos, oldBlock.getBlock(), null, false);
                 if (!this.isClientSide && newBlock.hasAnalogOutputSignal()) {
                     this.updateNeighbourForOutputSignal(pos, block);
                 }
@@ -228,7 +214,7 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
             }
 
             if (!this.preventPoiUpdated) {
-                this.onBlockStateChange(pos, oldBlock, blockstate1);
+                this.updatePOIOnBlockStateChange(pos, oldBlock, blockstate1);
             }
         }
     }
@@ -239,7 +225,7 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
 
     public CraftWorld getWorld() {
         if (this.world == null) {
-            throw new UnsupportedOperationException(String.format("World %s does not have a CraftWorld. This method should not be invoked on this world for any reason.", dimension().location()));
+            throw new UnsupportedOperationException(String.format("World %s does not have a CraftWorld. This method should not be invoked on this world for any reason.", dimension().registry()));
         }
         return this.world;
     }
@@ -318,10 +304,10 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
         this.preventPoiUpdated = b;
     }
 
-    private transient Explosion.BlockInteraction arclight$blockInteractionOverride;
+    protected transient Explosion.BlockInteraction arclight$blockInteractionOverride;
 
-    @ModifyVariable(method = "explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;ZLnet/minecraft/core/particles/ParticleOptions;Lnet/minecraft/core/particles/ParticleOptions;Lnet/minecraft/core/Holder;)Lnet/minecraft/world/level/Explosion;",
-        ordinal = 0, at = @At("HEAD"), argsOnly = true)
+    @ModifyVariable(method = "explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;)V",
+        index = 12, at = @At("HEAD"), argsOnly = true)
     private Level.ExplosionInteraction arclight$standardExplodePre(Level.ExplosionInteraction interaction) {
         if (interaction == ArclightConstants.STANDARD) {
             arclight$blockInteractionOverride = Explosion.BlockInteraction.DESTROY;
@@ -330,9 +316,7 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
         return interaction;
     }
 
-    @ModifyVariable(method = "explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;ZLnet/minecraft/core/particles/ParticleOptions;Lnet/minecraft/core/particles/ParticleOptions;Lnet/minecraft/core/Holder;)Lnet/minecraft/world/level/Explosion;",
-        at = @At(value = "LOAD", ordinal = 0))
-    private Explosion.BlockInteraction arclight$standardExplodePost(Explosion.BlockInteraction interaction) {
+    protected Explosion.BlockInteraction arclight$getStandardExplodeBlockInteraction(Explosion.BlockInteraction interaction) {
         try {
             if (arclight$blockInteractionOverride != null) {
                 return arclight$blockInteractionOverride;

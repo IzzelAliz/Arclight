@@ -2,13 +2,12 @@ package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.projectile.LargeFireball;
-import net.minecraft.world.level.Explosion;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -25,35 +24,36 @@ public abstract class LargeFireballMixin extends AbstractHurtingProjectileMixin 
 
     @Inject(method = "<init>(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/level/Level;)V", at = @At("RETURN"))
     private void arclight$init(EntityType<? extends LargeFireball> p_i50163_1_, Level worldIn, CallbackInfo ci) {
-        this.isIncendiary = worldIn.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
+        this.isIncendiary = worldIn instanceof net.minecraft.server.level.ServerLevel serverLevel ? serverLevel.getGameRules().get(GameRules.MOB_GRIEFING) : false;
     }
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/phys/Vec3;I)V", at = @At("RETURN"))
     private void arclight$init(Level level, LivingEntity livingEntity, Vec3 vec3, int i, CallbackInfo ci) {
-        this.isIncendiary = level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
+        this.isIncendiary = level instanceof net.minecraft.server.level.ServerLevel serverLevel ? serverLevel.getGameRules().get(GameRules.MOB_GRIEFING) : false;
     }
 
-    @Inject(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/LargeFireball;discard()V"))
+    @Inject(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/hurtingprojectile/LargeFireball;discard()V"))
     private void arclight$explode(HitResult hitResult, CallbackInfo ci) {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.HIT);
     }
 
-    @Decorate(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;)Lnet/minecraft/world/level/Explosion;"))
-    private Explosion arclight$explodePrime(Level world, Entity entityIn, double xIn, double yIn, double zIn, float explosionRadius, boolean causesFire, Level.ExplosionInteraction interaction) throws Throwable {
+    @Decorate(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;)V"))
+    private void arclight$explodePrime(Level world, Entity entityIn, double xIn, double yIn, double zIn, float explosionRadius, boolean causesFire, Level.ExplosionInteraction interaction) throws Throwable {
         ExplosionPrimeEvent event = new ExplosionPrimeEvent((org.bukkit.entity.Explosive) this.getBukkitEntity());
         event.setRadius(explosionRadius);
         event.setFire(causesFire);
         Bukkit.getPluginManager().callEvent(event);
 
         if (!event.isCancelled()) {
-            return (Explosion) DecorationOps.callsite().invoke(world, entityIn, xIn, yIn, zIn, event.getRadius(), event.getFire(), interaction);
+            DecorationOps.callsite().invoke(world, entityIn, xIn, yIn, zIn, event.getRadius(), event.getFire(), interaction);
+            return;
         } else {
-            return null;
+            return;
         }
     }
 
-    @Inject(method = "readAdditionalSaveData", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundTag;getByte(Ljava/lang/String;)B"))
-    private void arclight$setYield(CompoundTag compound, CallbackInfo ci) {
-        this.bukkitYield = compound.getInt("ExplosionPower");
+    @Inject(method = "readAdditionalSaveData", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/ValueInput;getByteOr(Ljava/lang/String;B)B"))
+    private void arclight$setYield(ValueInput input, CallbackInfo ci) {
+        this.bukkitYield = input.getIntOr("ExplosionPower", (int) this.bukkitYield);
     }
 }

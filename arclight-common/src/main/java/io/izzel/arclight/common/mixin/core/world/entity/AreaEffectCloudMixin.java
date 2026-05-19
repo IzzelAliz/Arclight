@@ -36,7 +36,7 @@ public abstract class AreaEffectCloudMixin extends EntityMixin implements AreaEf
     // @formatter:on
 
     @SuppressWarnings("unchecked")
-    @Decorate(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getEntitiesOfClass(Ljava/lang/Class;Lnet/minecraft/world/phys/AABB;)Ljava/util/List;"))
+    @Decorate(method = "serverTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getEntitiesOfClass(Ljava/lang/Class;Lnet/minecraft/world/phys/AABB;)Ljava/util/List;"))
     private List<LivingEntity> arclight$effectApply(Level instance, Class<LivingEntity> cl, AABB aabb,
                                                     @Local(ordinal = 0) float radius,
                                                     @Local(ordinal = -1) List<MobEffectInstance> effects) throws Throwable {
@@ -76,13 +76,13 @@ public abstract class AreaEffectCloudMixin extends EntityMixin implements AreaEf
         return result;
     }
 
-    @Decorate(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)Z"))
+    @Decorate(method = "serverTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)Z"))
     private boolean arclight$effectCause(LivingEntity instance, MobEffectInstance mobEffectInstance, Entity entity) throws Throwable {
         ((LivingEntityBridge) instance).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.AREA_EFFECT_CLOUD);
         return (boolean) DecorationOps.callsite().invoke(instance, mobEffectInstance, entity);
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/AreaEffectCloud;discard()V"))
+    @Inject(method = "serverTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/AreaEffectCloud;discard()V"))
     private void arclight$discard(CallbackInfo ci) {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
     }

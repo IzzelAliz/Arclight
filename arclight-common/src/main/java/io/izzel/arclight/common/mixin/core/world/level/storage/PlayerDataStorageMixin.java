@@ -8,17 +8,17 @@ import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.storage.FileNameDateFormatter;
 import net.minecraft.world.level.storage.PlayerDataStorage;
+import net.minecraft.world.level.storage.TagValueInput;
 import org.slf4j.Logger;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,7 +27,6 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 @Mixin(PlayerDataStorage.class)
@@ -36,23 +35,9 @@ public class PlayerDataStorageMixin implements PlayerDataStorageBridge {
     // @formatter:off
     @Shadow @Final private File playerDir;
     @Shadow @Final private static Logger LOGGER;
-    @Shadow @Final private static DateTimeFormatter FORMATTER;
     @Shadow @Final protected DataFixer fixerUpper;
     // @formatter:on
 
-    @Inject(method = "load(Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;)Ljava/util/Optional;", at = @At("RETURN"))
-    private void arclight$lastSeenTime(Player player, String string, CallbackInfoReturnable<Optional<CompoundTag>> cir) {
-        cir.getReturnValue().ifPresent((tag) -> {
-            if (player instanceof ServerPlayer) {
-                CraftPlayer craftPlayer = ((ServerPlayerBridge) player).bridge$getBukkitEntity();
-                // Only update first played if it is older than the one we have
-                long modified = new File(this.playerDir, player.getUUID() + ".dat").lastModified();
-                if (modified < craftPlayer.getFirstPlayed()) {
-                    craftPlayer.setFirstPlayed(modified);
-                }
-            }
-        });
-    }
 
     public File getPlayerDir() {
         return this.playerDir;
@@ -76,7 +61,7 @@ public class PlayerDataStorageMixin implements PlayerDataStorageBridge {
         Path path1 = path.resolve(s1 + s);
 
         // s1 = entityhuman.getStringUUID(); // CraftBukkit - used above
-        Path path2 = path.resolve(s1 + "_corrupted_" + LocalDateTime.now().format(FORMATTER) + s);
+        Path path2 = path.resolve(s1 + "_corrupted_" + LocalDateTime.now().format(FileNameDateFormatter.FORMATTER) + s);
 
         if (Files.isRegularFile(path1, new LinkOption[0])) {
             try {
@@ -134,7 +119,7 @@ public class PlayerDataStorageMixin implements PlayerDataStorageBridge {
                 }
             }
 
-            entityhuman.load(nbttagcompound); // From below
+            entityhuman.load(TagValueInput.create(ProblemReporter.DISCARDING, entityhuman.registryAccess(), nbttagcompound)); // From below
             return nbttagcompound;
         });
     }

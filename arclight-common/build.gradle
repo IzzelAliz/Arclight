@@ -8,6 +8,15 @@ architectury {
 
 loom {
     accessWidenerPath = file('src/main/resources/arclight.accesswidener')
+    mixin {
+        useLegacyMixinAp = true
+        defaultRefmapName = 'arclight-common-refmap.json'
+        add sourceSets.main, 'arclight-common-refmap.json'
+    }
+}
+
+configurations {
+    mixinProcessorSupport
 }
 
 dependencies {
@@ -18,7 +27,11 @@ dependencies {
     implementation libs.izzel.tools
     implementation libs.arclight.api
     implementation libs.mixin.tools
-    annotationProcessor(libs.mixin.tools) { transitive = false }
+    annotationProcessor libs.mixin.tools
+    mixinProcessorSupport libs.gson
+    mixinProcessorSupport 'com.google.guava:guava:33.5.0-jre'
+    mixinProcessorSupport libs.asm.util
+    mixinProcessorSupport libs.asm.tree
 
     // spigot
     implementation libs.spigot.api
@@ -35,5 +48,6 @@ dependencies {
 
 compileJava {
     options.compilerArgs << '-XDignore.symbol.file' << '-XDenableSunApiLintControl'
+    options.annotationProcessorPath = configurations.annotationProcessor + configurations.mixinProcessorSupport
     options.encoding = 'UTF-8'
 }

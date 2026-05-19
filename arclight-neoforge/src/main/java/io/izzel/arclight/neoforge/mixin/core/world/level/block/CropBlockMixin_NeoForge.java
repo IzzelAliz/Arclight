@@ -2,6 +2,7 @@ package io.izzel.arclight.neoforge.mixin.core.world.level.block;
 
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -21,7 +22,7 @@ public abstract class CropBlockMixin_NeoForge {
 
     @Redirect(method = "entityInside", at = @At(value = "INVOKE", remap = false, target = "Lnet/neoforged/neoforge/event/EventHooks;canEntityGrief(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/Entity;)Z"))
     public boolean arclight$entityChangeBlock(Level world, Entity entity, BlockState state, Level worldIn, BlockPos pos) {
-        boolean result = EventHooks.canEntityGrief(world, entity);
+        boolean result = EventHooks.canEntityGrief((ServerLevel) world, entity);
         return !CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state, result);
     }
 

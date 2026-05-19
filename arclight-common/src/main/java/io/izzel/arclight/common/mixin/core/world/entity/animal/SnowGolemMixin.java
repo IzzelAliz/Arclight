@@ -5,8 +5,12 @@ import io.izzel.arclight.common.bridge.core.world.level.LevelAccessorBridge;
 import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSources;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.LootTable;
 import org.bukkit.craftbukkit.v.block.CraftBlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,10 +19,12 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import io.izzel.arclight.common.mixin.core.world.entity.PathfinderMobMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.animal.SnowGolem;
+import net.minecraft.world.entity.animal.golem.SnowGolem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.function.BiConsumer;
 
 @Mixin(SnowGolem.class)
 public abstract class SnowGolemMixin extends PathfinderMobMixin {
@@ -42,13 +48,13 @@ public abstract class SnowGolemMixin extends PathfinderMobMixin {
         return (boolean) DecorationOps.callsite().invoke(world, pos, newState);
     }
 
-    @Inject(method = "shear", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/SnowGolem;spawnAtLocation(Lnet/minecraft/world/item/ItemStack;F)Lnet/minecraft/world/entity/item/ItemEntity;"))
-    private void arclight$forceDropOn(SoundSource pCategory, CallbackInfo ci) {
+    @Inject(method = "shear", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/golem/SnowGolem;dropFromShearingLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/item/ItemStack;Ljava/util/function/BiConsumer;)V"))
+    private void arclight$forceDropOn(ServerLevel level, SoundSource pCategory, ItemStack stack, CallbackInfo ci) {
         this.forceDrops = true;
     }
 
-    @Inject(method = "shear", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/animal/SnowGolem;spawnAtLocation(Lnet/minecraft/world/item/ItemStack;F)Lnet/minecraft/world/entity/item/ItemEntity;"))
-    private void arclight$forceDropOff(SoundSource pCategory, CallbackInfo ci) {
+    @Inject(method = "shear", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/animal/golem/SnowGolem;dropFromShearingLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/item/ItemStack;Ljava/util/function/BiConsumer;)V"))
+    private void arclight$forceDropOff(ServerLevel level, SoundSource pCategory, ItemStack stack, CallbackInfo ci) {
         this.forceDrops = false;
     }
 }

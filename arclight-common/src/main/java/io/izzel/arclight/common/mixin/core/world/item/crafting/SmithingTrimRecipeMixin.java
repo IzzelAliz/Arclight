@@ -1,11 +1,14 @@
 package io.izzel.arclight.common.mixin.core.world.item.crafting;
 
 import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeBridge;
+import net.minecraft.core.Holder;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.SmithingTrimRecipe;
+import net.minecraft.world.item.equipment.trim.TrimPattern;
 import org.bukkit.NamespacedKey;
 import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
 import org.bukkit.craftbukkit.v.inventory.CraftSmithingTrimRecipe;
+import org.bukkit.craftbukkit.v.inventory.trim.CraftTrimPattern;
 import org.bukkit.inventory.Recipe;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,10 +21,11 @@ public class SmithingTrimRecipeMixin implements RecipeBridge {
     @Shadow @Final Ingredient template;
     @Shadow @Final Ingredient base;
     @Shadow @Final Ingredient addition;
+    @Shadow @Final private Holder<TrimPattern> pattern;
     // @formatter:on
 
     @Override
     public Recipe bridge$toBukkitRecipe(NamespacedKey id) {
-        return new CraftSmithingTrimRecipe(id, CraftRecipe.toBukkit(this.template), CraftRecipe.toBukkit(this.base), CraftRecipe.toBukkit(this.addition));
+        return new CraftSmithingTrimRecipe(id, CraftRecipe.toBukkit(this.template), CraftRecipe.toBukkit(this.base), CraftRecipe.toBukkit(this.addition), CraftTrimPattern.minecraftHolderToBukkit(this.pattern));
     }
 }

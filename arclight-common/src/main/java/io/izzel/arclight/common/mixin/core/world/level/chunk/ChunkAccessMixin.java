@@ -8,18 +8,14 @@ import net.minecraft.ReportedException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.QuartPos;
-import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
-import net.minecraft.world.level.chunk.UpgradeData;
-import net.minecraft.world.level.levelgen.blending.BlendingData;
 import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataTypeRegistry;
 import org.bukkit.craftbukkit.v.persistence.DirtyCraftPersistentDataContainer;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -28,7 +24,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Map;
@@ -37,8 +32,7 @@ import java.util.Map;
 public abstract class ChunkAccessMixin implements BlockGetter, BiomeManager.NoiseBiomeSource, ChunkAccessBridge {
 
     // @formatter:off
-    @Shadow public abstract void setUnsaved(boolean p_62094_);
-    @Shadow public abstract int getMinBuildHeight();
+    @Shadow public abstract int getMinY();
     @Shadow public abstract int getHeight();
     @Shadow public boolean isUnsaved() { return false; }
     @Shadow @Final protected LevelChunkSection[] sections;
@@ -49,17 +43,12 @@ public abstract class ChunkAccessMixin implements BlockGetter, BiomeManager.Nois
 
     private static final CraftPersistentDataTypeRegistry DATA_TYPE_REGISTRY = new CraftPersistentDataTypeRegistry();
     public DirtyCraftPersistentDataContainer persistentDataContainer = new DirtyCraftPersistentDataContainer(DATA_TYPE_REGISTRY);
-    public Registry<Biome> biomeRegistry;
 
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void arclight$init(ChunkPos p_187621_, UpgradeData p_187622_, LevelHeightAccessor p_187623_, Registry<Biome> registry, long p_187625_, LevelChunkSection[] p_187626_, BlendingData p_187627_, CallbackInfo ci) {
-        this.biomeRegistry = registry;
-    }
-
-    @Inject(method = "setUnsaved", at = @At("HEAD"))
-    private void arclight$dirty(boolean flag, CallbackInfo ci) {
-        if (!flag) {
+    @Inject(method = "tryMarkSaved", cancellable = true, at = @At("RETURN"))
+    private void arclight$tryMarkSaved(CallbackInfoReturnable<Boolean> cir) {
+        if (this.persistentDataContainer.dirty()) {
             this.persistentDataContainer.dirty(false);
+            cir.setReturnValue(true);
         }
     }
 
@@ -75,7 +64,7 @@ public abstract class ChunkAccessMixin implements BlockGetter, BiomeManager.Nois
 
     public void setBiome(int i, int j, int k, Holder<Biome> biome) {
         try {
-            int l = QuartPos.fromBlock(this.getMinBuildHeight());
+            int l = QuartPos.fromBlock(this.getMinY());
             int i1 = l + QuartPos.fromBlock(this.getHeight()) - 1;
             int j1 = Mth.clamp(j, l, i1);
             int k1 = this.getSectionIndex(QuartPos.toBlock(j1));

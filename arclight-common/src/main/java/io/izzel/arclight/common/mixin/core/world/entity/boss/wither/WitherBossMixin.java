@@ -4,10 +4,10 @@ import io.izzel.arclight.common.mixin.core.world.entity.PathfinderMobMixin;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
-import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import org.bukkit.Bukkit;
@@ -29,14 +29,13 @@ public abstract class WitherBossMixin extends PathfinderMobMixin {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
     }
 
-    @Decorate(method = "customServerAiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;)Lnet/minecraft/world/level/Explosion;"))
-    private Explosion arclight$explodeEvent(Level instance, Entity arg, double d, double e, double f, float radius, boolean fire, Level.ExplosionInteraction arg2) throws Throwable {
+    @Decorate(method = "customServerAiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;explode(Lnet/minecraft/world/entity/Entity;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;)V"))
+    private void arclight$explodeEvent(ServerLevel instance, Entity arg, double d, double e, double f, float radius, boolean fire, Level.ExplosionInteraction arg2) throws Throwable {
         ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), radius, fire);
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
-            return (Explosion) DecorationOps.callsite().invoke(instance, arg, d, e, f, event.getRadius(), event.getFire(), arg2);
+            DecorationOps.callsite().invoke(instance, arg, d, e, f, event.getRadius(), event.getFire(), arg2);
         }
-        return null;
     }
 
     @Decorate(method = "customServerAiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/boss/wither/WitherBoss;setAlternativeTarget(II)V"))
@@ -49,8 +48,8 @@ public abstract class WitherBossMixin extends PathfinderMobMixin {
         DecorationOps.callsite().invoke(instance, i, entityId);
     }
 
-    @Decorate(method = "customServerAiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;destroyBlock(Lnet/minecraft/core/BlockPos;ZLnet/minecraft/world/entity/Entity;)Z"))
-    private boolean arclight$damageBlock(Level instance, BlockPos blockPos, boolean b, Entity entity) throws Throwable {
+    @Decorate(method = "customServerAiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;destroyBlock(Lnet/minecraft/core/BlockPos;ZLnet/minecraft/world/entity/Entity;)Z"))
+    private boolean arclight$damageBlock(ServerLevel instance, BlockPos blockPos, boolean b, Entity entity) throws Throwable {
         if (!CraftEventFactory.callEntityChangeBlockEvent((WitherBoss) (Object) this, blockPos, Blocks.AIR.defaultBlockState())) {
             return false;
         }

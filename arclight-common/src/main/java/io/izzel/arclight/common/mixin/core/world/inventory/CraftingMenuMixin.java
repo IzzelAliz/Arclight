@@ -21,15 +21,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RepairItemRecipe;
-import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryCrafting;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
 import org.jetbrains.annotations.Nullable;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Mutable;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -39,11 +36,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Optional;
 
 @Mixin(CraftingMenu.class)
-public abstract class CraftingMenuMixin extends AbstractContainerMenuMixin implements PosContainerBridge {
+public abstract class CraftingMenuMixin extends AbstractCraftingMenuMixin implements PosContainerBridge {
 
     // @formatter:off
-    @Mutable @Shadow @Final private CraftingContainer craftSlots;
-    @Shadow @Final private ResultContainer resultSlots;
     @Accessor("access") public abstract ContainerLevelAccess bridge$getWorldPos();
     // @formatter:on
 
@@ -63,16 +58,16 @@ public abstract class CraftingMenuMixin extends AbstractContainerMenuMixin imple
     private static boolean arclight$isRepair;
 
     @Decorate(method = "slotChangedCraftingGrid", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Optional;isPresent()Z"))
-    private static boolean arclight$testRepair(Optional<RecipeHolder<CraftingRecipe>> optional, AbstractContainerMenu menu, Level level, Player player, CraftingContainer craftingContainer) throws Throwable {
+    private static boolean arclight$testRepair(Optional<RecipeHolder<CraftingRecipe>> optional, AbstractContainerMenu menu, ServerLevel level, Player player, CraftingContainer craftingContainer) throws Throwable {
         ((IInventoryBridge) craftingContainer).setCurrentRecipe(optional.orElse(null));
         arclight$isRepair = optional.map(RecipeHolder::value).orElse(null) instanceof RepairItemRecipe;
         return (boolean) DecorationOps.callsite().invoke(optional);
     }
 
     @Decorate(method = "slotChangedCraftingGrid", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/ResultContainer;setItem(ILnet/minecraft/world/item/ItemStack;)V"))
-    private static void arclight$preCraft(ResultContainer instance, int i, ItemStack itemStack, AbstractContainerMenu abstractContainerMenu, Level level, Player player, CraftingContainer craftingContainer, ResultContainer resultContainer, @Nullable RecipeHolder<CraftingRecipe> recipeHolder,
+    private static void arclight$preCraft(ResultContainer instance, int i, ItemStack itemStack, AbstractContainerMenu abstractContainerMenu, ServerLevel level, Player player, CraftingContainer craftingContainer, ResultContainer resultContainer, @Nullable RecipeHolder<CraftingRecipe> recipeHolder,
                                           @Local(ordinal = -1) ItemStack stack) throws Throwable {
-        stack = CraftEventFactory.callPreCraftEvent(craftingContainer, instance, itemStack, ((AbstractContainerMenuBridge) abstractContainerMenu).bridge$getBukkitView(), arclight$isRepair);
+        stack = CraftEventFactory.callPreCraftEvent(craftingContainer, instance, itemStack, ((AbstractContainerMenuBridge) abstractContainerMenu).bridge$getBukkitView(), Optional.ofNullable(recipeHolder));
         DecorationOps.callsite().invoke(instance, i, stack);
     }
 

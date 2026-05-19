@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.entity.monster;
 import io.izzel.arclight.common.bridge.core.world.entity.monster.EnderManBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.PathfinderMobMixin;
 import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -25,7 +25,7 @@ public abstract class EnderManMixin extends PathfinderMobMixin implements EnderM
     @Shadow @Final private static EntityDataAccessor<Boolean> DATA_CREEPY;
     @Shadow @Final private static EntityDataAccessor<Boolean> DATA_STARED_AT;
     @Shadow @Final private static AttributeModifier SPEED_MODIFIER_ATTACKING;
-    @Shadow @Final private static ResourceLocation SPEED_MODIFIER_ATTACKING_ID;
+    @Shadow @Final private static Identifier SPEED_MODIFIER_ATTACKING_ID;
     // @formatter:on
 
     @Override

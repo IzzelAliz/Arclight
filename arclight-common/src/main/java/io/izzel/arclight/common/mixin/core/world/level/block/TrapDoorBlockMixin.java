@@ -5,6 +5,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.redstone.Orientation;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.event.block.BlockRedstoneEvent;
@@ -16,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class TrapDoorBlockMixin {
 
     @Redirect(method = "neighborChanged", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;hasNeighborSignal(Lnet/minecraft/core/BlockPos;)Z"))
-    public boolean arclight$blockRedstone(Level world, BlockPos pos, BlockState state, Level worldIn, BlockPos blockPos, Block blockIn, BlockPos fromPos, boolean isMoving) {
+    public boolean arclight$blockRedstone(Level world, BlockPos pos, BlockState state, Level worldIn, BlockPos blockPos, Block blockIn, Orientation orientation, boolean isMoving) {
         boolean flag = world.hasNeighborSignal(pos);
         if (flag != state.getValue(TrapDoorBlock.POWERED)) {
             org.bukkit.block.Block craftBlock = CraftBlock.at(world, pos);

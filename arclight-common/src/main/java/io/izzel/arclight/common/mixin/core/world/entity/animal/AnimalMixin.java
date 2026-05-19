@@ -15,7 +15,7 @@ import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityEnterLoveModeEvent;
@@ -46,8 +46,8 @@ public abstract class AnimalMixin extends AgeableMobMixin implements AnimalBridg
      * @reason
      */
     @Overwrite
-    protected void actuallyHurt(DamageSource arg, float f) {
-        super.actuallyHurt(arg, f);
+    protected void actuallyHurt(ServerLevel serverLevel, DamageSource arg, float f) {
+        super.actuallyHurt(serverLevel, arg, f);
         if (!arclight$damageResult) {
             return;
         }
@@ -70,7 +70,7 @@ public abstract class AnimalMixin extends AgeableMobMixin implements AnimalBridg
     private void arclight$inLove(Player player, CallbackInfo ci) {
         this.inLove = arclight$loveTime;
         if (player != null) {
-            this.breedItem = player.getInventory().getSelected();
+            this.breedItem = player.getInventory().getSelectedItem();
         }
     }
 
@@ -112,7 +112,7 @@ public abstract class AnimalMixin extends AgeableMobMixin implements AnimalBridg
         this.resetLove();
         entityanimal.resetLove();
         worldserver.broadcastEntityEvent((Animal) (Object) this, (byte) 18);
-        if (worldserver.getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT)) {
+        if (worldserver.getGameRules().get(GameRules.MOB_DROPS)) {
             // CraftBukkit start - use event experience
             if (experience > 0) {
                 worldserver.addFreshEntity(new ExperienceOrb(worldserver, this.getX(), this.getY(), this.getZ(), experience));

@@ -5,7 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.VineBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -36,7 +36,7 @@ public abstract class VineBlockMixin extends BlockMixin {
     @SuppressWarnings("ConstantConditions")
     @Overwrite
     public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random) {
-        if (!worldIn.getGameRules().getBoolean(GameRules.RULE_DO_VINES_SPREAD)) {
+        if (!worldIn.getGameRules().get(GameRules.SPREAD_VINES)) {
             return;
         }
         if (worldIn.random.nextInt(4) == 0 && worldIn.isLoaded(pos)) {
@@ -73,7 +73,7 @@ public abstract class VineBlockMixin extends BlockMixin {
 
                 }
             } else {
-                if (direction == Direction.UP && pos.getY() < worldIn.getMaxBuildHeight() - 1) {
+                if (direction == Direction.UP && pos.getY() < worldIn.getMaxY() - 1) {
                     if (this.canSupportAtFace(worldIn, pos, direction)) {
                         CraftEventFactory.handleBlockGrowEvent(worldIn, pos, state.setValue(UP, Boolean.TRUE), 2);
                         return;
@@ -100,7 +100,7 @@ public abstract class VineBlockMixin extends BlockMixin {
                     }
                 }
 
-                if (pos.getY() > worldIn.getMinBuildHeight()) {
+                if (pos.getY() > worldIn.getMinY()) {
                     BlockPos blockpos1 = pos.below();
                     BlockState blockstate = worldIn.getBlockState(blockpos1);
                     boolean isAir = blockstate.isAir();

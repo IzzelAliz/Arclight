@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
 import net.minecraft.core.NonNullList;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.ContainerUser;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
@@ -28,12 +28,12 @@ public abstract class ShulkerBoxBlockEntityMixin extends BaseContainerBlockEntit
     public boolean opened;
 
     @Inject(method = "startOpen", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;blockEvent(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;II)V"))
-    private void arclight$sound1(Player player, CallbackInfo ci) {
+    private void arclight$sound1(ContainerUser opener, CallbackInfo ci) {
         if (opened) ci.cancel();
     }
 
     @Inject(method = "stopOpen", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;blockEvent(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;II)V"))
-    private void arclight$sound2(Player player, CallbackInfo ci) {
+    private void arclight$sound2(ContainerUser opener, CallbackInfo ci) {
         if (opened) ci.cancel();
     }
 

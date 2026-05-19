@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.common.bridge.bukkit.MessengerBridge;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
@@ -36,7 +36,7 @@ public abstract class CraftPlayerMixin extends CraftEntityMixin {
      * @reason Use PSI and enhanced check.
      */
     @Overwrite
-    private void sendCustomPayload(ResourceLocation location, byte[] data) {
+    private void sendCustomPayload(Identifier location, byte[] data) {
         var messenger = (MessengerBridge) server.getMessenger();
         var craft = (CraftPlayer)(Object) this;
         messenger.arclight$sendCustomPayload(null, craft, location, data);
@@ -52,7 +52,7 @@ public abstract class CraftPlayerMixin extends CraftEntityMixin {
         StandardMessenger.validatePluginMessage(server.getMessenger(), source, channel, data);
         if (this.getHandle().connection != null) {
             if (this.channels.contains(channel)) {
-                ResourceLocation location = ResourceLocation.tryParse(StandardMessenger.validateAndCorrectChannel(channel));
+                Identifier location = Identifier.tryParse(StandardMessenger.validateAndCorrectChannel(channel));
                 var craft = (CraftPlayer)(Object) this;
                 messenger.arclight$sendCustomPayload(source, craft, location, data);
             }

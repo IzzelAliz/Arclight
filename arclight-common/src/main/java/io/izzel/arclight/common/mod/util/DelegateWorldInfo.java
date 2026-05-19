@@ -8,7 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.level.*;
-import net.minecraft.world.level.border.WorldBorder;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.storage.*;
 import net.minecraft.world.level.timers.TimerQueue;
@@ -28,9 +28,8 @@ public class DelegateWorldInfo extends PrimaryLevelData {
         this.serverLevelData = serverLevelData;
     }
 
-    @Override
     public float getSpawnAngle() {
-        return serverLevelData.getSpawnAngle();
+        return serverLevelData.getRespawnData().yaw();
     }
 
     @Override
@@ -94,8 +93,8 @@ public class DelegateWorldInfo extends PrimaryLevelData {
     }
 
     @Override
-    public void setSpawn(BlockPos spawnPoint, float angle) {
-        serverLevelData.setSpawn(spawnPoint, angle);
+    public void setSpawn(RespawnData respawnData) {
+        serverLevelData.setSpawn(respawnData);
     }
 
     @Override
@@ -149,13 +148,13 @@ public class DelegateWorldInfo extends PrimaryLevelData {
     }
 
     @Override
-    public WorldBorder.Settings getWorldBorder() {
-        return serverLevelData.getWorldBorder();
+    public java.util.Optional<net.minecraft.world.level.border.WorldBorder.Settings> getLegacyWorldBorderSettings() {
+        return serverLevelData.getLegacyWorldBorderSettings();
     }
 
     @Override
-    public void setWorldBorder(WorldBorder.Settings serializer) {
-        serverLevelData.setWorldBorder(serializer);
+    public void setLegacyWorldBorderSettings(java.util.Optional<net.minecraft.world.level.border.WorldBorder.Settings> settings) {
+        serverLevelData.setLegacyWorldBorderSettings(settings);
     }
 
     @Override
@@ -209,9 +208,8 @@ public class DelegateWorldInfo extends PrimaryLevelData {
         serverLevelData.fillCrashReportCategory(crashReportCategory, levelHeightAccessor);
     }
 
-    @Override
     public BlockPos getSpawnPos() {
-        return serverLevelData.getSpawnPos();
+        return serverLevelData.getRespawnData().pos();
     }
 
 

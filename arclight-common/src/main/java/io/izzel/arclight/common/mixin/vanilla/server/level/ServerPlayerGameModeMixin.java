@@ -37,10 +37,11 @@ public abstract class ServerPlayerGameModeMixin {
         Block block;
         BlockState blockState2;
         boolean bl;
-        BlockState blockState = this.level.getBlockState(blockPos);
-        if (!ArclightEventFactory.onBlockBreak((ServerPlayerGameMode) (Object) this, this.level, this.player, blockPos, blockState, !this.player.getMainHandItem().getItem().canAttackBlock(blockState, this.level, blockPos, this.player))) {
-            return false;
-        } else {
+        {
+            BlockState blockState = this.level.getBlockState(blockPos);
+            if (!ArclightEventFactory.onBlockBreak((ServerPlayerGameMode) (Object) this, this.level, this.player, blockPos, blockState, !this.player.getMainHandItem().canDestroyBlock(blockState, this.level, blockPos, this.player))) {
+                return false;
+            }
             blockEntity = this.level.getBlockEntity(blockPos);
             block = blockState.getBlock();
             if (block instanceof GameMasterBlock && !this.player.canUseGameMasterBlocks()) {
@@ -48,26 +49,25 @@ public abstract class ServerPlayerGameModeMixin {
                 return false;
             } else if (this.player.blockActionRestricted(this.level, blockPos, this.gameModeForPlayer)) {
                 return false;
-            } else {
-                blockState2 = block.playerWillDestroy(this.level, blockPos, blockState, this.player);
-                bl = this.level.removeBlock(blockPos, false);
-                if (bl) {
-                    block.destroy(this.level, blockPos, blockState2);
-                }
-
-                if (this.isCreative()) {
-                    return true;
-                } else {
-                    ItemStack itemStack = this.player.getMainHandItem();
-                    ItemStack itemStack2 = itemStack.copy();
-                    boolean bl2 = this.player.hasCorrectToolForDrops(blockState2);
-                    itemStack.mineBlock(this.level, blockState2, blockPos, this.player);
-                    if (bl && bl2 && ArclightCaptures.getBlockBreakDropItems()) {
-                        block.playerDestroy(this.level, this.player, blockPos, blockState2, blockEntity, itemStack2);
-                    }
-                    return true;
-                }
             }
+            blockState2 = block.playerWillDestroy(this.level, blockPos, blockState, this.player);
+        }
+        bl = this.level.removeBlock(blockPos, false);
+        if (bl) {
+            block.destroy(this.level, blockPos, blockState2);
+        }
+
+        if (this.isCreative()) {
+            return true;
+        } else {
+            ItemStack itemStack = this.player.getMainHandItem();
+            ItemStack itemStack2 = itemStack.copy();
+            boolean bl2 = this.player.hasCorrectToolForDrops(blockState2);
+            itemStack.mineBlock(this.level, blockState2, blockPos, this.player);
+            if (bl && bl2 && ArclightCaptures.getBlockBreakDropItems()) {
+                block.playerDestroy(this.level, this.player, blockPos, blockState2, blockEntity, itemStack2);
+            }
+            return true;
         }
     }
 }

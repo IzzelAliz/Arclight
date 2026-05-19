@@ -33,7 +33,7 @@ public abstract class ItemEntityMixin_ActivationRange extends EntityMixin_Activa
 
     @Override
     public void bridge$forge$optimization$discardItemEntity() {
-        if (!this.level().isClientSide && this.age >= ((WorldBridge) this.level()).bridge$spigotConfig().itemDespawnRate) {
+        if (!this.level().isClientSide() && this.age >= ((WorldBridge) this.level()).bridge$spigotConfig().itemDespawnRate) {
             this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DEATH);
             this.discard();
         }

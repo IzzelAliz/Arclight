@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-@Mixin(net.minecraft.world.entity.animal.Sheep.class)
+@Mixin(net.minecraft.world.entity.animal.sheep.Sheep.class)
 public abstract class SheepMixin extends AnimalMixin {
 
     //Force drop handler moved to PSI

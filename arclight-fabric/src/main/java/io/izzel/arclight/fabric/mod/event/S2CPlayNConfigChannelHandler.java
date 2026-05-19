@@ -2,7 +2,7 @@ package io.izzel.arclight.fabric.mod.event;
 
 import io.izzel.arclight.common.bridge.core.server.network.ServerCommonPacketListenerImplBridge;
 import net.fabricmc.fabric.api.networking.v1.*;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerCommonPacketListenerImpl;
 import net.minecraft.server.network.ServerConfigurationPacketListenerImpl;
@@ -20,7 +20,7 @@ public class S2CPlayNConfigChannelHandler implements S2CPlayChannelEvents.Regist
         S2CConfigurationChannelEvents.UNREGISTER.register(handler);
     }
 
-    private void register(MinecraftServer server, ServerCommonPacketListenerImpl listener, List<ResourceLocation> channels) {
+    private void register(MinecraftServer server, ServerCommonPacketListenerImpl listener, List<Identifier> channels) {
         server.executeIfPossible(() -> {
             var craftbukkit = ((ServerCommonPacketListenerImplBridge) listener).bridge$getCraftPlayer();
             for (var location : channels) {
@@ -29,7 +29,7 @@ public class S2CPlayNConfigChannelHandler implements S2CPlayChannelEvents.Regist
         });
     }
 
-    private void unregister(MinecraftServer server, ServerCommonPacketListenerImpl listener, List<ResourceLocation> channels) {
+    private void unregister(MinecraftServer server, ServerCommonPacketListenerImpl listener, List<Identifier> channels) {
         server.executeIfPossible(() -> {
             var craftbukkit = ((ServerCommonPacketListenerImplBridge) listener).bridge$getCraftPlayer();
             for (var location : channels) {
@@ -39,22 +39,22 @@ public class S2CPlayNConfigChannelHandler implements S2CPlayChannelEvents.Regist
     }
 
     @Override
-    public void onChannelRegister(ServerGamePacketListenerImpl handler, PacketSender sender, MinecraftServer server, List<ResourceLocation> channels) {
+    public void onChannelRegister(ServerGamePacketListenerImpl handler, PacketSender sender, MinecraftServer server, List<Identifier> channels) {
         register(server, handler, channels);
     }
 
     @Override
-    public void onChannelUnregister(ServerGamePacketListenerImpl handler, PacketSender sender, MinecraftServer server, List<ResourceLocation> channels) {
+    public void onChannelUnregister(ServerGamePacketListenerImpl handler, PacketSender sender, MinecraftServer server, List<Identifier> channels) {
         unregister(server, handler, channels);
     }
 
     @Override
-    public void onChannelRegister(ServerConfigurationPacketListenerImpl handler, PacketSender sender, MinecraftServer server, List<ResourceLocation> channels) {
+    public void onChannelRegister(ServerConfigurationPacketListenerImpl handler, PacketSender sender, MinecraftServer server, List<Identifier> channels) {
         register(server, handler, channels);
     }
 
     @Override
-    public void onChannelUnregister(ServerConfigurationPacketListenerImpl handler, PacketSender sender, MinecraftServer server, List<ResourceLocation> channels) {
+    public void onChannelUnregister(ServerConfigurationPacketListenerImpl handler, PacketSender sender, MinecraftServer server, List<Identifier> channels) {
         unregister(server, handler, channels);
     }
 }

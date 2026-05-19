@@ -6,18 +6,19 @@ import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeHolderBrid
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.level.block.entity.FuelValues;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
@@ -46,9 +47,12 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
 
     // @formatter:off
     @Shadow protected NonNullList<ItemStack> items;
-    @Shadow protected abstract int getBurnDuration(ItemStack stack);
+    @Shadow protected abstract int getBurnDuration(FuelValues fuelValues, ItemStack stack);
     @Shadow protected abstract boolean isLit();
-    @Shadow @Final private Object2IntOpenHashMap<ResourceLocation> recipesUsed;
+    @Shadow int litTimeRemaining;
+    @Shadow int cookingTimer;
+    @Shadow int cookingTotalTime;
+    @Shadow @Final private Reference2IntOpenHashMap<ResourceKey<Recipe<?>>> recipesUsed;
     @Shadow public abstract List<RecipeHolder<?>> getRecipesToAwardAndPopExperience(ServerLevel p_154996_, Vec3 p_154997_);
     // @formatter:on
 
@@ -63,28 +67,30 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
     // private static <E> E arclight$furnaceSmelt(NonNullList<E> instance, int i, @Local(ordinal = 0) AbstractFurnaceBlockEntity blockEntity, @Local(ordinal = -1) ItemStack itemStack2, @Local(ordinal = -2) ItemStack itemStack1) throws Throwable
 
     @Decorate(method = "serverTick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;isLit()Z"),
-        slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;litDuration:I")))
+        slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;litTotalTime:I")))
     private static boolean arclight$setBurnTime(AbstractFurnaceBlockEntity furnace) throws Throwable {
         ItemStack itemStack = furnace.getItem(1);
         CraftItemStack fuel = CraftItemStack.asCraftMirror(itemStack);
-        FurnaceBurnEvent furnaceBurnEvent = new FurnaceBurnEvent(CraftBlock.at(furnace.level, furnace.getBlockPos()), fuel, furnace.litTime);
+        AbstractFurnaceBlockEntityMixin furnaceMixin = (AbstractFurnaceBlockEntityMixin) (Object) furnace;
+        FurnaceBurnEvent furnaceBurnEvent = new FurnaceBurnEvent(CraftBlock.at(furnace.level, furnace.getBlockPos()), fuel, furnaceMixin.litTimeRemaining);
         Bukkit.getPluginManager().callEvent(furnaceBurnEvent);
         if (furnaceBurnEvent.isCancelled()) {
             return (boolean) DecorationOps.cancel().invoke();
         }
-        furnace.litTime = furnaceBurnEvent.getBurnTime();
+        furnaceMixin.litTimeRemaining = furnaceBurnEvent.getBurnTime();
         return (boolean) DecorationOps.callsite().invoke(furnace) && furnaceBurnEvent.isBurning();
     }
 
-    @Decorate(method = "serverTick", inject = true, at = @At(value = "FIELD", ordinal = 0, target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;cookingProgress:I"))
-    private static void arclight$startSmelt(Level level, BlockPos pos, BlockState state, AbstractFurnaceBlockEntity furnace,
+    @Decorate(method = "serverTick", inject = true, at = @At(value = "FIELD", ordinal = 0, target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;cookingTimer:I"))
+    private static void arclight$startSmelt(ServerLevel level, BlockPos pos, BlockState state, AbstractFurnaceBlockEntity furnace,
                                             @Local(ordinal = -1) RecipeHolder<?> recipe) {
-        if (recipe != null && furnace.cookingProgress == 0) {
+        AbstractFurnaceBlockEntityMixin furnaceMixin = (AbstractFurnaceBlockEntityMixin) (Object) furnace;
+        if (recipe != null && furnaceMixin.cookingTimer == 0) {
             CraftItemStack source = CraftItemStack.asCraftMirror(furnace.getItem(0));
             if (((RecipeHolderBridge) (Object) recipe).bridge$toBukkitRecipe() instanceof CookingRecipe<?> cookingRecipe) {
                 FurnaceStartSmeltEvent event = new FurnaceStartSmeltEvent(CraftBlock.at(level, pos), source, cookingRecipe);
                 Bukkit.getPluginManager().callEvent(event);
-                furnace.cookingTotalTime = event.getTotalCookTime();
+                furnaceMixin.cookingTotalTime = event.getTotalCookTime();
             }
         }
     }
@@ -114,7 +120,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
 
     @Override
     public List<RecipeHolder<?>> bridge$dropExp(ServerPlayer entity, ItemStack itemStack, int amount) {
-        return getRecipesToAwardAndPopExperience(entity.serverLevel(), entity.position(), this.worldPosition, entity, itemStack, amount);
+        return getRecipesToAwardAndPopExperience(entity.level(), entity.position(), this.worldPosition, entity, itemStack, amount);
     }
 
     @Redirect(method = "createExperience", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;award(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/phys/Vec3;I)V"))
@@ -165,7 +171,10 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
 
     @Override
     public int bridge$getBurnDuration(ItemStack stack) {
-        return this.getBurnDuration(stack);
+        if (this.level instanceof ServerLevel serverLevel) {
+            return this.getBurnDuration(serverLevel.fuelValues(), stack);
+        }
+        return 0;
     }
 
     @Override
@@ -173,7 +182,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
         return this.isLit();
     }
 
-    public Object2IntOpenHashMap<ResourceLocation> getRecipesUsed() {
+    public Reference2IntOpenHashMap<ResourceKey<Recipe<?>>> getRecipesUsed() {
         return this.recipesUsed;
     }
 }

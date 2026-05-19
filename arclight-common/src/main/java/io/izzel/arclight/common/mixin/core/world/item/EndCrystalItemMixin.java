@@ -18,7 +18,7 @@ public class EndCrystalItemMixin {
     @Decorate(method = "useOn", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private void arclight$entityPlace(UseOnContext context, @Local(ordinal = -1) EndCrystal enderCrystalEntity) throws Throwable {
         if (DistValidate.isValid(context) && CraftEventFactory.callEntityPlaceEvent(context, enderCrystalEntity).isCancelled()) {
-            DecorationOps.cancel().invoke(InteractionResult.FAIL);
+            DecorationOps.cancel().invoke((InteractionResult) InteractionResult.FAIL);
             return;
         }
         DecorationOps.blackhole().invoke();

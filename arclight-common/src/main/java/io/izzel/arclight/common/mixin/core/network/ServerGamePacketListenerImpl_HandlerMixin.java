@@ -54,22 +54,22 @@ public class ServerGamePacketListenerImpl_HandlerMixin {
         }
         ItemStack itemInHand = player.getItemInHand(interactionHand);
         boolean triggerLeashUpdate = itemInHand != null && itemInHand.getItem() == Items.LEAD && entity instanceof Mob;
-        Item origItem = player.getInventory().getSelected() == null ? null : player.getInventory().getSelected().getItem();
+        Item origItem = player.getInventory().getSelectedItem() == null ? null : player.getInventory().getSelectedItem().getItem();
 
         Bukkit.getPluginManager().callEvent(event);
 
         // Fish bucket - SPIGOT-4048
-        if ((entity instanceof Bucketable && entity instanceof LivingEntity && origItem != null && origItem.asItem() == Items.WATER_BUCKET) && (event.isCancelled() || player.getInventory().getSelected() == null || player.getInventory().getSelected().getItem() != origItem)) {
+        if ((entity instanceof Bucketable && entity instanceof LivingEntity && origItem != null && origItem.asItem() == Items.WATER_BUCKET) && (event.isCancelled() || player.getInventory().getSelectedItem() == null || player.getInventory().getSelectedItem().getItem() != origItem)) {
             entity.bridge$getBukkitEntity().update(player);
             player.containerMenu.sendAllDataToRemote();
         }
 
-        if (triggerLeashUpdate && (event.isCancelled() || player.getInventory().getSelected() == null || player.getInventory().getSelected().getItem() != origItem)) {
+        if (triggerLeashUpdate && (event.isCancelled() || player.getInventory().getSelectedItem() == null || player.getInventory().getSelectedItem().getItem() != origItem)) {
             // Refresh the current leash state
             player.connection.send(new ClientboundSetEntityLinkPacket(entity, ((Mob) entity).getLeashHolder()));
         }
 
-        if (event.isCancelled() || player.getInventory().getSelected() == null || player.getInventory().getSelected().getItem() != origItem) {
+        if (event.isCancelled() || player.getInventory().getSelectedItem() == null || player.getInventory().getSelectedItem().getItem() != origItem) {
             // Refresh the current entity metadata
             ((SynchedEntityDataBridge) entity.getEntityData()).bridge$refresh(player);
             if (entity instanceof Allay) {

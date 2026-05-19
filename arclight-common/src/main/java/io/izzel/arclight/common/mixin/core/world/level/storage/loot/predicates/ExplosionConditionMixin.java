@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.storage.loot.predicates;
 
 import net.minecraft.util.RandomSource;
+import net.minecraft.util.context.ContextKey;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.level.storage.loot.predicates.ExplosionCondition;
@@ -16,7 +17,7 @@ public class ExplosionConditionMixin {
      */
     @Overwrite
     public boolean test(LootContext context) {
-        Float f = context.getParamOrNull(LootContextParams.EXPLOSION_RADIUS);
+        Float f = context.getOptionalParameter((ContextKey<Float>) (ContextKey<?>) LootContextParams.EXPLOSION_RADIUS);
         if (f != null) {
             RandomSource random = context.getRandom();
             float f1 = 1.0F / f;

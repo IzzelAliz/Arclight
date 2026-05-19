@@ -1,7 +1,7 @@
 package io.izzel.arclight.neoforge.mod.permission;
 
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.server.permission.handler.IPermissionHandler;
 import net.neoforged.neoforge.server.permission.nodes.PermissionDynamicContext;
@@ -23,8 +23,8 @@ public final class ArclightPermissionHandler implements IPermissionHandler {
     }
 
     @Override
-    public ResourceLocation getIdentifier() {
-        return ResourceLocation.parse("arclight:permission");
+    public Identifier getIdentifier() {
+        return Identifier.parse("arclight:permission");
     }
 
     @Override

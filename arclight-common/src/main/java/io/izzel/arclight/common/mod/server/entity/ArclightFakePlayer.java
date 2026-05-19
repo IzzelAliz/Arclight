@@ -14,7 +14,7 @@ public class ArclightFakePlayer extends CraftPlayer {
     @Override
     public boolean isOp() {
         GameProfile profile = this.getHandle().getGameProfile();
-        return profile != null && profile.getId() != null && super.isOp();
+        return profile != null && profile.id() != null && super.isOp();
     }
 
     @Override

@@ -8,6 +8,18 @@ architectury {
     fabric()
 }
 
+loom {
+    mixin {
+        useLegacyMixinAp = true
+        defaultRefmapName = 'arclight-fabric-refmap.json'
+        add sourceSets.main, 'arclight-fabric-refmap.json'
+    }
+}
+
+configurations {
+    mixinProcessorSupport
+}
+
 dependencies {
     modImplementation libs.fabric.loader
     modImplementation libs.fabric.api
@@ -15,7 +27,11 @@ dependencies {
     implementation libs.izzel.tools
     implementation libs.arclight.api
     implementation libs.mixin.tools
-    annotationProcessor(libs.mixin.tools) { transitive = false }
+    annotationProcessor libs.mixin.tools
+    mixinProcessorSupport libs.gson
+    mixinProcessorSupport 'com.google.guava:guava:33.5.0-jre'
+    mixinProcessorSupport libs.asm.util
+    mixinProcessorSupport libs.asm.tree
 
     implementation(libs.bundles.spigot.shade) { transitive = false }
     shadowBundle(libs.bundles.spigot.shade) { transitive = false }
@@ -51,6 +67,10 @@ tasks.register('fabricMappings', Copy) {
 
 project.sourceSets.main.output.dir file('build/fabric_mappings'), builtBy: tasks.fabricMappings
 
+compileJava {
+    options.annotationProcessorPath = configurations.annotationProcessor + configurations.mixinProcessorSupport
+}
+
 processResources {
     def ver = "${project.version}+$gitHash"
     inputs.property 'version', ver
@@ -64,6 +84,7 @@ shadowJar {
     exclude 'architectury.common.json'
 
     configurations = [project.configurations.shadowBundle]
+    from(rootProject.layout.projectDirectory.dir('.gradle/arclight/arclight_cache/buildtools/Spigot/Spigot-API/target/classes'))
     archiveClassifier = 'dev-shadow'
 }
 

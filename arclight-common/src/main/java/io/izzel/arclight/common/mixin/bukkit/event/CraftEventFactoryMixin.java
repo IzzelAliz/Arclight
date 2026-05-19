@@ -79,7 +79,7 @@ public abstract class CraftEventFactoryMixin {
             if (source.is(DamageTypes.CACTUS)
                     || source.is(DamageTypes.SWEET_BERRY_BUSH)
                     || source.is(DamageTypes.HOT_FLOOR)) {
-                source = ((DamageSourceBridge) source).bridge$directBlock(CraftBlock.at(entity.getCommandSenderWorld(), damageEventBlock));
+                source = ((DamageSourceBridge) source).bridge$directBlock(CraftBlock.at(entity.level(), damageEventBlock));
             }
         }
         return source;

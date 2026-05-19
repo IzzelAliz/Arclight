@@ -26,13 +26,13 @@ public class DyeItemMixin {
     @Shadow @Final private DyeColor dyeColor;
     // @formatter:on
 
-    @Decorate(method = "interactLivingEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/Sheep;setColor(Lnet/minecraft/world/item/DyeColor;)V"))
-    private void arclight$sheepDyeWool(net.minecraft.world.entity.animal.Sheep sheepEntity, DyeColor color, ItemStack stack, Player playerIn, LivingEntity target, InteractionHand hand) throws Throwable {
+    @Decorate(method = "interactLivingEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/sheep/Sheep;setColor(Lnet/minecraft/world/item/DyeColor;)V"))
+    private void arclight$sheepDyeWool(net.minecraft.world.entity.animal.sheep.Sheep sheepEntity, DyeColor color, ItemStack stack, Player playerIn, LivingEntity target, InteractionHand hand) throws Throwable {
         byte bColor = (byte) this.dyeColor.getId();
         SheepDyeWoolEvent event = new SheepDyeWoolEvent((Sheep) ((LivingEntityBridge) target).bridge$getBukkitEntity(), org.bukkit.DyeColor.getByWoolData(bColor), ((ServerPlayerBridge) playerIn).bridge$getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
-            DecorationOps.cancel().invoke(InteractionResult.PASS);
+            DecorationOps.cancel().invoke((InteractionResult) InteractionResult.PASS);
             return;
         } else {
             DecorationOps.callsite().invoke(sheepEntity, DyeColor.byId(event.getColor().getWoolData()));

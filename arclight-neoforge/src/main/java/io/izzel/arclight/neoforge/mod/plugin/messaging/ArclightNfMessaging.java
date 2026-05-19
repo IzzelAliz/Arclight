@@ -5,7 +5,7 @@ import io.izzel.arclight.common.mod.plugin.messaging.ChannelDirection;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.neoforge.mixin.neoforge.NetworkRegistryAccessor;
 import net.minecraft.network.protocol.PacketFlow;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.registration.PayloadRegistration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.messaging.Messenger;
@@ -24,7 +24,7 @@ public class ArclightNfMessaging {
     @SuppressWarnings("StringOperationCanBeSimplified")
     public static String ARCLIGHT_CUSTOM_CHANNEL_VERSION = new String("arclight:custom/bukkit");
 
-    public static ArclightPluginChannel<? extends NeoforgePayloadHandler> setupChannel(Messenger messenger, ResourceLocation location, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
+    public static ArclightPluginChannel<? extends NeoforgePayloadHandler> setupChannel(Messenger messenger, Identifier location, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
         if (verifyChannel(location, incoming, outgoing)) {
             return new ArclightPluginChannel<>(messenger, ArclightNfPayloadHandler::new, location, incoming, outgoing);
         } else {
@@ -32,7 +32,7 @@ public class ArclightNfMessaging {
         }
     }
 
-    public static boolean verifyChannel(ResourceLocation location, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
+    public static boolean verifyChannel(Identifier location, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
         for (var protocol : ArclightPluginChannel.PROTOCOLS) {
             var known = NetworkRegistryAccessor.getRegistration().get(protocol).get(location);
             var builtin = NetworkRegistryAccessor.getBuiltinPayload().get(location);
@@ -95,6 +95,6 @@ public class ArclightNfMessaging {
         var flow = channel.getDirection().flow;
         var version = ArclightNfMessaging.ARCLIGHT_CUSTOM_CHANNEL_VERSION;
 
-        return new PayloadRegistration<>(type, codec, handler, ArclightPluginChannel.PROTOCOLS, Optional.ofNullable(flow), version, true);
+        return new PayloadRegistration<>(type, codec, ArclightPluginChannel.PROTOCOLS, Optional.ofNullable(flow), version, true);
     }
 }

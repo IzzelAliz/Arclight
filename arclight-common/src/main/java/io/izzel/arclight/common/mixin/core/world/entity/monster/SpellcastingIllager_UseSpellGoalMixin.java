@@ -1,26 +1,51 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
-import net.minecraft.world.entity.monster.SpellcasterIllager;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import net.minecraft.world.entity.monster.illager.SpellcasterIllager;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Spellcaster;
+import org.bukkit.event.entity.EntitySpellCastEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(SpellcasterIllager.SpellcasterUseSpellGoal.class)
+@Mixin(targets = "net/minecraft/world/entity/monster/illager/SpellcasterIllager$SpellcasterUseSpellGoal")
 public abstract class SpellcastingIllager_UseSpellGoalMixin {
     @SuppressWarnings("target")
     @Shadow(aliases = {"this$0", "f_33776_", "field_7386"}, remap = false)
     private SpellcasterIllager outerThis;
 
-    @Shadow
-    protected abstract SpellcasterIllager.IllagerSpell getSpell();
-
-    @Inject(method = "tick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/SpellcasterIllager$SpellcasterUseSpellGoal;performSpellCasting()V"))
+    @Inject(method = "tick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/illager/SpellcasterIllager$SpellcasterUseSpellGoal;performSpellCasting()V"))
     private void arclight$castSpell(CallbackInfo ci) {
-        if (!CraftEventFactory.handleEntitySpellCastEvent(outerThis, this.getSpell())) {
+        if (!arclight$handleEntitySpellCastEvent(outerThis, arclight$getSpell())) {
             ci.cancel();
         }
+    }
+
+    @Unique
+    private Enum<?> arclight$getSpell() {
+        for (var method : this.getClass().getSuperclass().getDeclaredMethods()) {
+            if (method.getParameterCount() == 0 && method.getReturnType().isEnum()) {
+                try {
+                    method.setAccessible(true);
+                    return (Enum<?>) method.invoke(this);
+                } catch (ReflectiveOperationException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        throw new IllegalStateException("Cannot find spell getter");
+    }
+
+    private static boolean arclight$handleEntitySpellCastEvent(SpellcasterIllager caster, Enum<?> spell) {
+        EntitySpellCastEvent event = new EntitySpellCastEvent((Spellcaster) ((io.izzel.arclight.common.bridge.core.entity.EntityBridge) caster).bridge$getBukkitEntity(), arclight$toBukkitSpell(spell));
+        Bukkit.getPluginManager().callEvent(event);
+        return !event.isCancelled();
+    }
+
+    private static Spellcaster.Spell arclight$toBukkitSpell(Enum<?> spell) {
+        return Spellcaster.Spell.valueOf(spell.name());
     }
 }

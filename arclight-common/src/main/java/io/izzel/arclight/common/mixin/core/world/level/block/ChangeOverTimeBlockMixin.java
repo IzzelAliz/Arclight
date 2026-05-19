@@ -17,7 +17,8 @@ public interface ChangeOverTimeBlockMixin<T extends Enum<T>> {
 
     // @formatter:off
     @Shadow T getAge();
-    @Shadow Optional<BlockState> getNextState(BlockState p_311503_, ServerLevel p_311331_, BlockPos p_309459_, RandomSource p_312041_);
+    @Shadow Optional<BlockState> getNext(BlockState state);
+    @Shadow float getChanceModifier();
     // @formatter:on
 
     /**
@@ -25,13 +26,53 @@ public interface ChangeOverTimeBlockMixin<T extends Enum<T>> {
      * @reason
      */
     @Overwrite
-    default void changeOverTime(BlockState p_311790_, ServerLevel p_309416_, BlockPos p_310092_, RandomSource p_310572_) {
+    default void changeOverTime(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         float f = 0.05688889F;
-        if (p_310572_.nextFloat() < 0.05688889F) {
-            this.getNextState(p_311790_, p_309416_, p_310092_, p_310572_).ifPresent((p_153039_) -> {
-                CraftEventFactory.handleBlockFormEvent(p_309416_, p_310092_, p_153039_);
+
+        if (random.nextFloat() < f) {
+            this.arclight$getNextState(state, level, pos, random).ifPresent((nextState) -> {
+                CraftEventFactory.handleBlockFormEvent(level, pos, nextState);
             });
         }
 
+    }
+
+    private Optional<BlockState> arclight$getNextState(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        int i = this.getAge().ordinal();
+        int j = 0;
+        int k = 0;
+
+        for (BlockPos blockpos1 : BlockPos.withinManhattan(pos, 4, 4, 4)) {
+            int l = blockpos1.distManhattan(pos);
+
+            if (l > 4) {
+                break;
+            }
+
+            if (!blockpos1.equals(pos)) {
+                if (level.getBlockState(blockpos1).getBlock() instanceof ChangeOverTimeBlock<?> changeovertimeblock) {
+                    Enum<?> oenum = changeovertimeblock.getAge();
+
+                    if (this.getAge().getClass() == oenum.getClass()) {
+                        int i1 = oenum.ordinal();
+
+                        if (i1 < i) {
+                            return Optional.empty();
+                        }
+
+                        if (i1 > i) {
+                            ++k;
+                        } else {
+                            ++j;
+                        }
+                    }
+                }
+            }
+        }
+
+        float f = (float) (k + 1) / (float) (k + j + 1);
+        float f1 = f * f * this.getChanceModifier();
+
+        return random.nextFloat() < f1 ? this.getNext(state) : Optional.empty();
     }
 }

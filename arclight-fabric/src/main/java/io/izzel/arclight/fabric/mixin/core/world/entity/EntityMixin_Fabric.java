@@ -17,7 +17,7 @@ public abstract class EntityMixin_Fabric implements EntityBridge {
     @Shadow private float yRot;
     @Shadow private float xRot;
     @Shadow public abstract float getXRot();
-    @Shadow public abstract void moveTo(double d, double e, double f, float g, float h);
+    @Shadow public abstract void absSnapTo(double x, double y, double z, float yRot, float xRot);
     @Shadow public abstract void setDeltaMovement(Vec3 vec3);
     @Shadow public abstract void unRide();
     @Shadow public abstract float getYRot();

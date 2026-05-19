@@ -5,6 +5,8 @@ import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.InsideBlockEffectApplier;
+import net.minecraft.world.entity.InsideBlockEffectType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.Blocks;
@@ -24,13 +26,16 @@ public class BaseFireBlockMixin {
 
     // fireExtinguished implemented per class
 
-    @Decorate(method = "entityInside", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;igniteForSeconds(F)V"))
-    private void arclight$onFire(Entity instance, float f, BlockState blockState, Level level, BlockPos blockPos) throws Throwable {
-        var event = new EntityCombustByBlockEvent(CraftBlock.at(level, blockPos), instance.bridge$getBukkitEntity(), f);
+    @Decorate(method = "entityInside(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/InsideBlockEffectApplier;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/InsideBlockEffectApplier;apply(Lnet/minecraft/world/entity/InsideBlockEffectType;)V", ordinal = 1))
+    private void arclight$onFire(InsideBlockEffectApplier applier, InsideBlockEffectType effect, BlockState blockState, Level level, BlockPos blockPos, Entity entity, InsideBlockEffectApplier originalApplier, boolean steppingCarefully) throws Throwable {
+        var event = new EntityCombustByBlockEvent(CraftBlock.at(level, blockPos), entity.bridge$getBukkitEntity(), 8.0F);
         Bukkit.getPluginManager().callEvent(event);
 
         if (!event.isCancelled()) {
-            DecorationOps.callsite().invoke(instance, event.getDuration());
+            if (event.getDuration() != 8.0F) {
+                applier.runBefore(effect, e -> e.igniteForSeconds(event.getDuration()));
+            }
+            DecorationOps.callsite().invoke(applier, effect);
         }
     }
 

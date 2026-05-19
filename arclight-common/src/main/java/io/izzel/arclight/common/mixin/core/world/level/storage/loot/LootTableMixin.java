@@ -4,13 +4,14 @@ import io.izzel.arclight.common.bridge.core.world.level.storage.loot.LootTableBr
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.util.context.ContextKey;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import org.bukkit.craftbukkit.v.CraftLootTable;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -31,7 +32,7 @@ import java.util.Optional;
 public abstract class LootTableMixin implements LootTableBridge {
 
     // @formatter:off
-    @Shadow @Final @Nullable private Optional<ResourceLocation> randomSequence;
+    @Shadow @Final @Nullable private Optional<Identifier> randomSequence;
     @Shadow @Final private static Logger LOGGER;
     @Shadow protected abstract ObjectArrayList<ItemStack> getRandomItems(LootContext p_230923_);
     @Shadow protected abstract List<Integer> getAvailableSlots(Container p_230920_, RandomSource p_230921_);
@@ -54,7 +55,7 @@ public abstract class LootTableMixin implements LootTableBridge {
     @Decorate(method = "fill", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/loot/LootTable;getRandomItems(Lnet/minecraft/world/level/storage/loot/LootContext;)Lit/unimi/dsi/fastutil/objects/ObjectArrayList;"))
     private ObjectArrayList<ItemStack> arclight$nonPluginEvent(LootTable lootTable, LootContext context, Container inv) throws Throwable {
         ObjectArrayList<ItemStack> list = (ObjectArrayList<ItemStack>) DecorationOps.callsite().invoke(lootTable, context);
-        if (!context.hasParam(LootContextParams.ORIGIN) && !context.hasParam(LootContextParams.THIS_ENTITY)) {
+        if (!context.hasParameter((ContextKey<?>) LootContextParams.ORIGIN) && !context.hasParameter((ContextKey<?>) LootContextParams.THIS_ENTITY)) {
             return list;
         }
         if (((LootTableBridge) this).bridge$getCraftLootTable() == null) {

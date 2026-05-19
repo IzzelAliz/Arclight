@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mod.server.entity;
 
-import net.minecraft.world.entity.animal.horse.AbstractChestedHorse;
+import net.minecraft.world.entity.animal.equine.AbstractChestedHorse;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftChestedHorse;
 import org.bukkit.entity.EntityCategory;

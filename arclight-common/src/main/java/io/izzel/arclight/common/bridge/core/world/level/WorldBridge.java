@@ -6,10 +6,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -59,7 +60,7 @@ public interface WorldBridge extends IWorldWriterBridge, LevelAccessorBridge, In
     }
 
     default boolean bridge$forge$mobGriefing(Entity entity) {
-        return ((Level) this).getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
+        return this instanceof ServerLevel level && level.getGameRules().get(GameRules.MOB_GRIEFING);
     }
 
     default void bridge$forge$onPotionBrewed(NonNullList<ItemStack> stacks) {}

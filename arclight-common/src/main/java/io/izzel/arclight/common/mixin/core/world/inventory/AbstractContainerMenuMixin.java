@@ -18,6 +18,7 @@ import net.minecraft.world.inventory.ClickAction;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.ContainerSynchronizer;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.RemoteSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.bukkit.Bukkit;
@@ -46,7 +47,7 @@ public abstract class AbstractContainerMenuMixin implements AbstractContainerMen
     // @formatter:off
     @Shadow private int quickcraftType;
     @Shadow @Final @javax.annotation.Nullable private MenuType<?> menuType;
-    @Shadow private ItemStack remoteCarried;
+    @Shadow private RemoteSlot remoteCarried;
     @Shadow public abstract ItemStack getCarried();
     @Shadow @javax.annotation.Nullable private ContainerSynchronizer synchronizer;
     @Shadow public abstract void setCarried(ItemStack p_150439_);
@@ -101,9 +102,10 @@ public abstract class AbstractContainerMenuMixin implements AbstractContainerMen
     }
 
     public void broadcastCarriedItem() {
-        this.remoteCarried = this.getCarried().copy();
+        ItemStack carried = this.getCarried().copy();
+        this.remoteCarried.force(carried);
         if (this.synchronizer != null) {
-            this.synchronizer.sendCarriedChange((AbstractContainerMenu) (Object) this, this.remoteCarried);
+            this.synchronizer.sendCarriedChange((AbstractContainerMenu) (Object) this, carried);
         }
     }
 

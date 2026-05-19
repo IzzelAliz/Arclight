@@ -4,8 +4,10 @@ import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.level.block.BlockMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRule;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -21,8 +23,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(CropBlock.class)
 public abstract class CropBlockMixin_Vanilla extends BlockMixin {
 
-    @Redirect(method = "entityInside", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/GameRules;getBoolean(Lnet/minecraft/world/level/GameRules$Key;)Z"))
-    public boolean arclight$entityChangeBlock(GameRules instance, GameRules.Key<GameRules.BooleanValue> arg, BlockState state, Level world, BlockPos pos, Entity entity) {
+    @Redirect(method = "entityInside", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/gamerules/GameRules;get(Lnet/minecraft/world/level/gamerules/GameRule;)Ljava/lang/Object;"))
+    public Object arclight$entityChangeBlock(GameRules instance, GameRule<Boolean> arg, BlockState state, Level world, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier, boolean steppingCarefully) {
         boolean result = ((WorldBridge) world).bridge$forge$mobGriefing(entity);
         return !CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state, result);
     }

@@ -21,6 +21,6 @@ public abstract class MaterialMixin_NeoForge implements MaterialBridge {
 
     @Override
     public int bridge$forge$getBurnTime(Item item) {
-        return new ItemStack(item).getBurnTime(null);
+        return new ItemStack(item).getBurnTime(null, null);
     }
 }

@@ -4,6 +4,7 @@ import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.EntityMixin;
 import io.izzel.arclight.common.mod.mixins.annotation.TransformAccess;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -59,7 +60,7 @@ public abstract class FallingBlockEntityMixin extends EntityMixin {
     }
 
     @Inject(method = "tick", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
-    private void arclight$entityChangeBlock(CallbackInfo ci, Block block, BlockPos pos) {
+    private void arclight$entityChangeBlock(CallbackInfo ci, Block block, ServerLevel serverLevel, BlockPos pos) {
         if (!CraftEventFactory.callEntityChangeBlockEvent((FallingBlockEntity) (Object) this, pos, this.blockState)) {
             this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
             this.discard();

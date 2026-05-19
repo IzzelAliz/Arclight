@@ -13,7 +13,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.ItemStack;
@@ -39,30 +39,30 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class BucketItemMixin implements BucketItemBridge {
 
     // @formatter:off
-    @Shadow public abstract boolean emptyContents(@Nullable Player player, Level worldIn, BlockPos posIn, @javax.annotation.Nullable BlockHitResult rayTrace);
+    @Shadow public abstract boolean emptyContents(@Nullable LivingEntity player, Level worldIn, BlockPos posIn, @javax.annotation.Nullable BlockHitResult rayTrace);
     // @formatter:on
 
     // Using @Local doesn't work for Forge since they don't have MixinExtras :(
     // Use Decorate to capture
-    @Decorate(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/BucketPickup;pickupBlock(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Lnet/minecraft/world/item/ItemStack;"))
-    private ItemStack arclight$bucketFill(BucketPickup pickup, Player playerIn, LevelAccessor worldIn, BlockPos pos, BlockState state,
+    @Decorate(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/BucketPickup;pickupBlock(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Lnet/minecraft/world/item/ItemStack;"))
+    private ItemStack arclight$bucketFill(BucketPickup pickup, LivingEntity entity, LevelAccessor worldIn, BlockPos pos, BlockState state,
                                           @Local(ordinal = 0) InteractionHand handIn, @Local(ordinal = 0) ItemStack stack, @Local(ordinal = 0) BlockHitResult result) throws Throwable {
-        if (LevelAccessorBridge.from(worldIn) instanceof LevelAccessorBridge bridge) {
+        if (entity instanceof Player playerIn && LevelAccessorBridge.from(worldIn) instanceof LevelAccessorBridge bridge) {
             ItemStack dummyFluid = pickup.pickupBlock(playerIn, DummyGeneratorAccess.INSTANCE, pos, state);
             PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent(bridge.bridge$getMinecraftWorld(), playerIn, pos, pos, result.getDirection(), stack, dummyFluid.getItem(), handIn);
             if (event.isCancelled()) {
                 ((ServerPlayer) playerIn).connection.send(new ClientboundBlockUpdatePacket(worldIn, pos));
                 ((ServerPlayerBridge) playerIn).bridge$getBukkitEntity().updateInventory();
-                return (ItemStack) DecorationOps.cancel().invoke(new InteractionResultHolder<>(InteractionResult.FAIL, stack));
+                return (ItemStack) DecorationOps.cancel().invoke((InteractionResult) InteractionResult.FAIL);
             } else {
                 arclight$setCaptureItem(event.getItemStack());
             }
         }
-        return (ItemStack) DecorationOps.callsite().invoke(pickup, playerIn, worldIn, pos, state);
+        return (ItemStack) DecorationOps.callsite().invoke(pickup, entity, worldIn, pos, state);
     }
 
     @Inject(method = "use", at = @At("RETURN"))
-    private void arclight$clean(Level worldIn, Player playerIn, InteractionHand handIn, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {
+    private void arclight$clean(Level worldIn, Player playerIn, InteractionHand handIn, CallbackInfoReturnable<InteractionResult> cir) {
         arclight$setDirection(null);
         arclight$setClick(null);
         arclight$setHand(null);

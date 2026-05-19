@@ -2,6 +2,8 @@ package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.common.bridge.core.world.item.crafting.IngredientBridge;
 import io.izzel.arclight.common.mod.inventory.ArclightSpecialIngredient;
+import net.minecraft.core.Holder;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.Ingredient;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
@@ -25,15 +27,11 @@ public interface CraftRecipeMixin {
     default Ingredient toNMS(RecipeChoice bukkit, boolean requireNotEmpty) {
         Ingredient stack;
         if (bukkit == null) {
-            stack = Ingredient.EMPTY;
+            stack = Ingredient.of();
         } else if (bukkit instanceof RecipeChoice.MaterialChoice) {
-            stack = new Ingredient(((RecipeChoice.MaterialChoice) bukkit).getChoices().stream().map((mat) -> {
-                return new Ingredient.ItemValue(CraftItemStack.asNMSCopy(new ItemStack(mat)));
-            }));
+            stack = Ingredient.of(((RecipeChoice.MaterialChoice) bukkit).getChoices().stream().map(CraftMagicNumbers::getItem));
         } else if (bukkit instanceof RecipeChoice.ExactChoice) {
-            stack = new Ingredient(((RecipeChoice.ExactChoice) bukkit).getChoices().stream().map((mat) -> {
-                return new Ingredient.ItemValue(CraftItemStack.asNMSCopy(mat));
-            }));
+            stack = Ingredient.of(((RecipeChoice.ExactChoice) bukkit).getChoices().stream().map(CraftItemStack::asNMSCopy).map(net.minecraft.world.item.ItemStack::getItem));
             ((IngredientBridge) (Object) stack).bridge$setExact(true);
         } else if (bukkit instanceof ArclightSpecialIngredient) {
             stack = ((ArclightSpecialIngredient) bukkit).getIngredient();
@@ -41,8 +39,7 @@ public interface CraftRecipeMixin {
             throw new IllegalArgumentException("Unknown recipe stack instance " + bukkit);
         }
 
-        stack.getItems();
-        if (stack.getClass() == Ingredient.class && requireNotEmpty && stack.getItems().length == 0) {
+        if (stack.getClass() == Ingredient.class && requireNotEmpty && stack.isEmpty()) {
             throw new IllegalArgumentException("Recipe requires at least one non-air choice!");
         } else {
             return stack;
@@ -55,24 +52,23 @@ public interface CraftRecipeMixin {
      */
     @Overwrite
     static RecipeChoice toBukkit(Ingredient list) {
-        list.getItems();
         if (list.getClass() != Ingredient.class) {
             return new ArclightSpecialIngredient(list);
         }
-        net.minecraft.world.item.ItemStack[] items = list.getItems();
-        if (items.length == 0) {
+        List<Holder<Item>> items = list.items().toList();
+        if (items.isEmpty()) {
             return null;
         } else {
             if (((IngredientBridge) (Object) list).bridge$isExact()) {
-                List<ItemStack> choices = new ArrayList<>(items.length);
-                for (net.minecraft.world.item.ItemStack i : items) {
-                    choices.add(CraftItemStack.asBukkitCopy(i));
+                List<ItemStack> choices = new ArrayList<>(items.size());
+                for (Holder<Item> i : items) {
+                    choices.add(CraftItemStack.asBukkitCopy(new net.minecraft.world.item.ItemStack(i)));
                 }
                 return new RecipeChoice.ExactChoice(choices);
             } else {
-                List<org.bukkit.Material> choices = new ArrayList<>(items.length);
-                for (net.minecraft.world.item.ItemStack i : items) {
-                    choices.add(CraftMagicNumbers.getMaterial(i.getItem()));
+                List<org.bukkit.Material> choices = new ArrayList<>(items.size());
+                for (Holder<Item> i : items) {
+                    choices.add(CraftMagicNumbers.getMaterial(i.value()));
                 }
                 return new RecipeChoice.MaterialChoice(choices);
             }

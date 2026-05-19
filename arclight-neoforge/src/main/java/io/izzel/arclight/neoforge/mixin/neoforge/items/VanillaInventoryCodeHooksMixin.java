@@ -15,7 +15,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.Hopper;
 import net.minecraft.world.level.block.entity.HopperBlockEntity;
 import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.VanillaInventoryCodeHooks;
+import net.neoforged.neoforge.transfer.item.VanillaInventoryCodeHooks;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;

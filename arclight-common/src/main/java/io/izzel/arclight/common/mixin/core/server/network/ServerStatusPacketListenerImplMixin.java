@@ -33,13 +33,13 @@ public class ServerStatusPacketListenerImplMixin implements ServerStatusPacketLi
         Object[] players = server.getPlayerList().players.toArray();
         ArclightPingEvent event = new ArclightPingEvent(networkManager, server);
         Bukkit.getPluginManager().callEvent(event);
-        List<GameProfile> profiles = new ArrayList<>(players.length);
+        List<net.minecraft.server.players.NameAndId> profiles = new ArrayList<>(players.length);
         Object[] array;
         for (int length = (array = players).length, i = 0; i < length; ++i) {
             ServerPlayer player = (ServerPlayer) array[i];
             if (player != null) {
                 if (player.allowsListing()) {
-                    profiles.add(player.getGameProfile());
+                    profiles.add(new net.minecraft.server.players.NameAndId(player.getGameProfile()));
                 } else {
                     profiles.add(MinecraftServer.ANONYMOUS_PLAYER_PROFILE);
                 }
@@ -53,7 +53,7 @@ public class ServerStatusPacketListenerImplMixin implements ServerStatusPacketLi
         ServerStatus ping = bridge$platform$createServerStatus(
             CraftChatMessage.fromString(event.getMotd(), true)[0],
             Optional.of(playerSample),
-            Optional.of(new ServerStatus.Version(server.getServerModName() + " " + server.getServerVersion(), SharedConstants.getCurrentVersion().getProtocolVersion())),
+            Optional.of(new ServerStatus.Version(server.getServerModName() + " " + server.getServerVersion(), SharedConstants.getCurrentVersion().protocolVersion())),
             (event.icon.value != null) ? Optional.of(new ServerStatus.Favicon(event.icon.value)) : Optional.empty(),
             server.enforceSecureProfile()
         );

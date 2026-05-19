@@ -24,10 +24,9 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.LayeredRegistryAccess;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
@@ -39,20 +38,16 @@ import net.minecraft.server.Services;
 import net.minecraft.server.TickTask;
 import net.minecraft.server.WorldLoader;
 import net.minecraft.server.WorldStem;
-import net.minecraft.server.level.ServerChunkCache;
+import net.minecraft.server.level.ChunkLoadCounter;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.progress.ChunkProgressListener;
-import net.minecraft.server.level.progress.ChunkProgressListenerFactory;
+import net.minecraft.server.level.progress.LevelLoadListener;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.server.players.PlayerList;
-import net.minecraft.util.Mth;
 import net.minecraft.util.TimeSource;
 import net.minecraft.util.thread.ReentrantBlockableEventLoop;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.ForcedChunksSavedData;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.TicketStorage;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.border.BorderChangeListener;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.WorldOptions;
@@ -77,6 +72,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -100,19 +96,18 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Shadow protected long nextTickTimeNanos;
     @Shadow @Final static Logger LOGGER;
     @Shadow public abstract Commands getCommands();
-    @Shadow protected abstract void updateMobSpawningFlags();
     @Shadow public abstract ServerLevel overworld();
     @Shadow private Map<ResourceKey<Level>, ServerLevel> levels;
     @Shadow protected abstract void setupDebugLevel(WorldData p_240778_1_);
     @Shadow protected WorldData worldData;
-    @Shadow private static void setInitialSpawn(ServerLevel p_177897_, ServerLevelData p_177898_, boolean p_177899_, boolean p_177900_) { }
-    @Shadow public abstract boolean isSpawningMonsters();
-    @Shadow public abstract boolean isSpawningAnimals();
+    @Shadow private static void setInitialSpawn(ServerLevel p_177897_, ServerLevelData p_177898_, boolean p_177899_, boolean p_177900_, LevelLoadListener listener) { }
     @Shadow @Final public Executor executor;
     @Shadow public abstract RegistryAccess.Frozen registryAccess();
     @Shadow public MinecraftServer.ReloadableResources resources;
     @Shadow public abstract LayeredRegistryAccess<RegistryLayer> registries();
     @Shadow public abstract Iterable<ServerLevel> getAllLevels();
+    @Shadow @Final public LevelLoadListener levelLoadListener;
+    @Shadow private void updateEffectiveRespawnData() { }
     // @formatter:on
 
     @Shadow private PlayerList playerList;
@@ -139,6 +134,10 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
     private static int currentTick = (int) (System.currentTimeMillis() / 50);
     public final double[] recentTps = new double[3];
+    @Unique
+    private long arclight$tpsTickSection;
+    @Unique
+    private long arclight$tpsTickCount;
 
     public boolean hasStopped() {
         synchronized (stopLock) {
@@ -152,7 +151,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    public void arclight$loadOptions(Thread p_236723_, LevelStorageSource.LevelStorageAccess p_236724_, PackRepository p_236725_, WorldStem worldStem, Proxy p_236727_, DataFixer p_236728_, Services p_236729_, ChunkProgressListenerFactory p_236730_, CallbackInfo ci) {
+    public void arclight$loadOptions(Thread p_236723_, LevelStorageSource.LevelStorageAccess p_236724_, PackRepository p_236725_, WorldStem worldStem, Proxy p_236727_, DataFixer p_236728_, Services p_236729_, LevelLoadListener p_236730_, CallbackInfo ci) {
         String[] arguments = ManagementFactory.getRuntimeMXBean().getInputArguments().toArray(new String[0]);
         OptionParser parser = new BukkitOptionParser();
         try {
@@ -166,28 +165,25 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     }
 
     @Decorate(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;buildServerStatus()Lnet/minecraft/network/protocol/status/ServerStatus;"))
-    private ServerStatus arclight$initTickParam(MinecraftServer instance, @Local(allocate = "tickSection") long tickSection, @Local(allocate = "tickCount") long tickCount) throws Throwable {
+    private ServerStatus arclight$initTickParam(MinecraftServer instance) throws Throwable {
         var serverStatus = (ServerStatus) DecorationOps.callsite().invoke(instance);
         Arrays.fill(recentTps, 20);
-        tickSection = Util.getMillis();
-        tickCount = 1;
-        DecorationOps.blackhole().invoke(tickSection, tickCount);
+        this.arclight$tpsTickSection = Util.getMillis();
+        this.arclight$tpsTickCount = 1;
         return serverStatus;
     }
 
-    @Decorate(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;startMetricsRecordingTick()V"))
-    private void arclight$updateTickParam(MinecraftServer instance, @Local(allocate = "tickSection") long tickSection, @Local(allocate = "tickCount") long tickCount) throws Throwable {
-        if (tickCount++ % SAMPLE_INTERVAL == 0) {
+    @Inject(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;waitUntilNextTick()V"))
+    private void arclight$updateTickParam(CallbackInfo ci) {
+        if (this.arclight$tpsTickCount++ % SAMPLE_INTERVAL == 0) {
             long curTime = Util.getMillis();
-            double currentTps = 1E3 / (curTime - tickSection) * SAMPLE_INTERVAL;
+            double currentTps = 1E3 / (curTime - this.arclight$tpsTickSection) * SAMPLE_INTERVAL;
             recentTps[0] = calcTps(recentTps[0], 0.92, currentTps); // 1/exp(5sec/1min)
             recentTps[1] = calcTps(recentTps[1], 0.9835, currentTps); // 1/exp(5sec/5min)
             recentTps[2] = calcTps(recentTps[2], 0.9945, currentTps); // 1/exp(5sec/15min)
-            tickSection = curTime;
+            this.arclight$tpsTickSection = curTime;
         }
-        DecorationOps.blackhole().invoke(tickSection, tickCount);
         currentTick = (int) (System.currentTimeMillis() / 50);
-        DecorationOps.callsite().invoke(instance);
     }
 
     @Decorate(method = "runServer", at = @At(value = "INVOKE", remap = false, target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V"))
@@ -229,7 +225,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         final var iterator = (Iterator<Map.Entry<ResourceKey<LevelStem>, LevelStem>>) DecorationOps.callsite().invoke(instance);
         if (ArclightConfig.spec().getExperimental().canOverrideWorldgen()) {
             return IteratorUtil.filter(iterator, it -> {
-                final var location = it.getKey().location();
+                final var location = it.getKey().identifier();
                 if (location.getNamespace().equals("bukkit")) {
                     ArclightServer.LOGGER.info("Deferred {} custom dimension creation", location);
                     return false;
@@ -243,7 +239,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     }
 
     @Inject(method = "createLevels", at = @At("RETURN"))
-    public void arclight$enablePlugins(ChunkProgressListener p_240787_1_, CallbackInfo ci) {
+    public void arclight$enablePlugins(CallbackInfo ci) {
         this.bridge$forge$unlockRegistries();
         this.server.enablePlugins(PluginLoadOrder.POSTWORLD);
         this.bridge$forge$lockRegistries();
@@ -268,19 +264,21 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         if (this.forceTicks) cir.setReturnValue(true);
     }
 
-    @Inject(method = "createLevels", at = @At(value = "NEW", ordinal = 0, target = "(Lnet/minecraft/server/MinecraftServer;Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/world/level/storage/ServerLevelData;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/dimension/LevelStem;Lnet/minecraft/server/level/progress/ChunkProgressListener;ZJLjava/util/List;ZLnet/minecraft/world/RandomSequences;)Lnet/minecraft/server/level/ServerLevel;"))
-    private void arclight$registerEnv(ChunkProgressListener p_240787_1_, CallbackInfo ci) {
-        BukkitRegistry.registerEnvironments(this.registryAccess().registryOrThrow(Registries.LEVEL_STEM));
+    @Inject(method = "createLevels", at = @At(value = "NEW", ordinal = 0, target = "(Lnet/minecraft/server/MinecraftServer;Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/world/level/storage/ServerLevelData;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/dimension/LevelStem;ZJLjava/util/List;ZLnet/minecraft/world/RandomSequences;)Lnet/minecraft/server/level/ServerLevel;"))
+    private void arclight$registerEnv(CallbackInfo ci) {
+        BukkitRegistry.registerEnvironments(this.registryAccess().lookupOrThrow(Registries.LEVEL_STEM));
     }
 
-    @Decorate(method = "createLevels", at = @At(value = "NEW", target = "(Lnet/minecraft/world/level/border/WorldBorder;)Lnet/minecraft/world/level/border/BorderChangeListener$DelegateBorderChangeListener;"))
-    private BorderChangeListener.DelegateBorderChangeListener arclight$configurableDelegatedListener(WorldBorder arg) throws Throwable {
+    @Decorate(method = "createLevels", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;addWorldborderListener(Lnet/minecraft/server/level/ServerLevel;)V"))
+    private void arclight$configurableDelegatedListener(PlayerList instance, ServerLevel level) throws Throwable {
         // Arclight: move world border listener initialization to world registration
-        return new ArclightDelegatedBorderListener(arg, (BorderChangeListener.DelegateBorderChangeListener) DecorationOps.callsite().invoke(arg));
+        if (ArclightDelegatedBorderListener.isEnabled()) {
+            DecorationOps.callsite().invoke(instance, level);
+        }
     }
 
     @Decorate(method = "createLevels", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
-    private Object arclight$worldInit(Map<Object, Object> instance, Object k, Object v, ChunkProgressListener chunkProgressListener) throws Throwable {
+    private Object arclight$worldInit(Map<Object, Object> instance, Object k, Object v) throws Throwable {
         if (v instanceof ServerLevel level) {
             if (((CraftServer) Bukkit.getServer()).scoreboardManager == null) {
                 ((CraftServer) Bukkit.getServer()).scoreboardManager = new CraftScoreboardManager((MinecraftServer) (Object) this, level.getScoreboard());
@@ -305,47 +303,12 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
      * @reason
      */
     @Overwrite
-    public final void prepareLevels(ChunkProgressListener listener) {
-        ServerLevel serverworld = this.overworld();
-        this.forceTicks = true;
-        LOGGER.info("Preparing start region for dimension {}", serverworld.dimension().location());
-        BlockPos blockpos = serverworld.getSharedSpawnPos();
-        listener.updateSpawnPos(new ChunkPos(blockpos));
-        ServerChunkCache serverchunkprovider = serverworld.getChunkSource();
-        this.nextTickTimeNanos = Util.getNanos();
-        serverworld.setDefaultSpawnPos(blockpos, serverworld.getSharedSpawnAngle());
-        int i = serverworld.getGameRules().getInt(GameRules.RULE_SPAWN_CHUNK_RADIUS); // CraftBukkit - per-world
-        int j = i > 0 ? Mth.square(ChunkProgressListener.calculateDiameter(i)) : 0;
-
-        while (serverchunkprovider.getTickingGenerated() < j) {
-            // CraftBukkit start
-            // this.nextTickTimeNanos = SystemUtils.getNanos() + MinecraftServer.PREPARE_LEVELS_DEFAULT_DELAY_NANOS;
-            this.executeModerately();
-        }
-
-        this.executeModerately();
-
+    public final void prepareLevels() {
         for (ServerLevel serverWorld : this.levels.values()) {
-            if (serverWorld.bridge$getWorld().getKeepSpawnInMemory()) {
-                ForcedChunksSavedData forcedchunkssavedata = serverWorld.getDataStorage().get(ForcedChunksSavedData.factory(), "chunks");
-                if (forcedchunkssavedata != null) {
-                    LongIterator longiterator = forcedchunkssavedata.getChunks().iterator();
-
-                    while (longiterator.hasNext()) {
-                        long k = longiterator.nextLong();
-                        ChunkPos chunkpos = new ChunkPos(k);
-                        serverWorld.getChunkSource().updateChunkForced(chunkpos, true);
-                    }
-                    this.bridge$forge$reinstatePersistentChunks(serverWorld, forcedchunkssavedata);
-                }
-            }
+            this.prepareLevels(serverWorld);
             Bukkit.getPluginManager().callEvent(new WorldLoadEvent(serverWorld.bridge$getWorld()));
         }
-
-        this.executeModerately();
-        listener.stop();
-        this.updateMobSpawningFlags();
-        this.forceTicks = false;
+        this.updateEffectiveRespawnData();
     }
 
     // bukkit methods
@@ -357,7 +320,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
                     serverWorld.bridge$getWorld()));
         }
         WorldBorder worldborder = serverWorld.getWorldBorder();
-        worldborder.applySettings(worldInfo.getWorldBorder());
+        worldborder.applyInitialSettings(0L);
 
         // Arclight: move world border listener initialization to world registration
         playerList.addWorldborderListener(serverWorld);
@@ -373,7 +336,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
 
         if (!worldInfo.isInitialized()) {
             try {
-                setInitialSpawn(serverWorld, worldInfo, worldOptions.generateBonusChest(), flag);
+                setInitialSpawn(serverWorld, worldInfo, worldOptions.generateBonusChest(), flag, this.levelLoadListener);
                 worldInfo.setInitialized(true);
                 if (flag) {
                     this.setupDebugLevel(this.worldData);
@@ -392,44 +355,35 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     }
 
     // bukkit methods
-    public void prepareLevels(ChunkProgressListener listener, ServerLevel serverWorld) {
+    public void prepareLevels(ServerLevel serverWorld) {
         this.bridge$forge$markLevelsDirty();
         if (!serverWorld.bridge$getWorld().getKeepSpawnInMemory()) {
             return;
         }
         this.forceTicks = true;
-        LOGGER.info("Preparing start region for dimension {}", serverWorld.dimension().location());
-        BlockPos blockpos = serverWorld.getSharedSpawnPos();
-        listener.updateSpawnPos(new ChunkPos(blockpos));
-        ServerChunkCache serverchunkprovider = serverWorld.getChunkSource();
-        this.nextTickTimeNanos = Util.getNanos();
-        serverWorld.setDefaultSpawnPos(blockpos, serverWorld.getSharedSpawnAngle());
-        int i = serverWorld.getGameRules().getInt(GameRules.RULE_SPAWN_CHUNK_RADIUS); // CraftBukkit - per-world
-        int j = i > 0 ? Mth.square(ChunkProgressListener.calculateDiameter(i)) : 0;
+        ChunkLoadCounter chunkLoadCounter = new ChunkLoadCounter();
+        chunkLoadCounter.track(serverWorld, () -> {
+            TicketStorage forcedchunkssavedata = serverWorld.getDataStorage().get(TicketStorage.TYPE);
+            if (forcedchunkssavedata != null) {
+                LongIterator longiterator = forcedchunkssavedata.getForceLoadedChunks().iterator();
 
-        while (serverchunkprovider.getTickingGenerated() < j) {
-            // CraftBukkit start
-            // this.nextTickTimeNanos = SystemUtils.getNanos() + MinecraftServer.PREPARE_LEVELS_DEFAULT_DELAY_NANOS;
-            this.executeModerately();
-        }
-
-        this.executeModerately();
-
-        ForcedChunksSavedData forcedchunkssavedata = serverWorld.getDataStorage().get(ForcedChunksSavedData.factory(), "chunks");
-        if (forcedchunkssavedata != null) {
-            LongIterator longiterator = forcedchunkssavedata.getChunks().iterator();
-
-            while (longiterator.hasNext()) {
-                long k = longiterator.nextLong();
-                ChunkPos chunkpos = new ChunkPos(k);
-                serverWorld.getChunkSource().updateChunkForced(chunkpos, true);
+                while (longiterator.hasNext()) {
+                    long k = longiterator.nextLong();
+                    ChunkPos chunkpos = new ChunkPos(k);
+                    serverWorld.getChunkSource().updateChunkForced(chunkpos, true);
+                }
+                this.bridge$forge$reinstatePersistentChunks(serverWorld, forcedchunkssavedata);
             }
-            this.bridge$forge$reinstatePersistentChunks(serverWorld, forcedchunkssavedata);
-        }
-        this.executeModerately();
-        listener.stop();
-        // this.updateMobSpawningFlags();
-        serverWorld.setSpawnSettings(this.isSpawningMonsters(), this.isSpawningAnimals());
+        });
+
+        this.levelLoadListener.start(LevelLoadListener.Stage.LOAD_INITIAL_CHUNKS, chunkLoadCounter.totalChunks());
+
+        do {
+            this.levelLoadListener.update(LevelLoadListener.Stage.LOAD_INITIAL_CHUNKS, chunkLoadCounter.readyChunks(), chunkLoadCounter.totalChunks());
+            this.executeModerately();
+        } while (chunkLoadCounter.pendingChunks() > 0);
+
+        this.levelLoadListener.finish(LevelLoadListener.Stage.LOAD_INITIAL_CHUNKS);
         this.forceTicks = false;
     }
 
@@ -450,7 +404,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Inject(method = "tickChildren", at = @At("HEAD"))
     public void arclight$runScheduler(BooleanSupplier hasTimeLeft, CallbackInfo ci) {
         ArclightConstants.currentTick = (int) (System.currentTimeMillis() / 50);
-        this.server.getScheduler().mainThreadHeartbeat(this.tickCount);
+        this.server.getScheduler().mainThreadHeartbeat();
         this.bridge$drainQueuedTasks();
     }
 

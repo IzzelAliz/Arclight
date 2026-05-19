@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -68,7 +69,7 @@ public abstract class LevelMixin_NeoForge implements WorldBridge {
 
     @Override
     public boolean bridge$forge$mobGriefing(Entity entity) {
-        return EventHooks.canEntityGrief((Level) (Object) this, entity);
+        return EventHooks.canEntityGrief((ServerLevel) (Object) this, entity);
     }
 
     @Override

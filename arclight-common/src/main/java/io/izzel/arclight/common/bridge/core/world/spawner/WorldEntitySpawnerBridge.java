@@ -16,5 +16,7 @@ public interface WorldEntitySpawnerBridge {
         boolean bridge$canSpawn(MobCategory classification, ChunkPos pos, int limit);
 
         boolean bridge$canSpawn(EntityType<?> entityType, BlockPos pos, ChunkAccess chunk);
+
+        boolean bridge$canSpawnLocal(MobCategory classification, ChunkPos pos);
     }
 }

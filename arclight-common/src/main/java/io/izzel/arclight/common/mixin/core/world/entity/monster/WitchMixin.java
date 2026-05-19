@@ -15,12 +15,12 @@ import java.util.function.Consumer;
 @Mixin(Witch.class)
 public abstract class WitchMixin extends RaiderMixin {
 
-    @Decorate(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/alchemy/PotionContents;forEachEffect(Ljava/util/function/Consumer;)V"))
-    private void arclight$reason(PotionContents instance, Consumer<MobEffectInstance> consumer) throws Throwable {
+    @Decorate(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/alchemy/PotionContents;forEachEffect(Ljava/util/function/Consumer;F)V"))
+    private void arclight$reason(PotionContents instance, Consumer<MobEffectInstance> consumer, float durationScale) throws Throwable {
         Consumer<MobEffectInstance> wrapped = effect -> {
             bridge$pushEffectCause(EntityPotionEffectEvent.Cause.ATTACK);
             consumer.accept(effect);
         };
-        DecorationOps.callsite().invoke(instance, wrapped);
+        DecorationOps.callsite().invoke(instance, wrapped, durationScale);
     }
 }

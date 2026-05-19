@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.ai.goal;
 
-import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.TemptGoal;
 import net.minecraft.world.entity.player.Player;
 import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
@@ -20,7 +20,7 @@ public abstract class TemptGoalMixin {
 
     // @formatter:off
     @Shadow protected Player player;
-    @Shadow @Final protected PathfinderMob mob;
+    @Shadow @Final protected Mob mob;
     // @formatter:on
 
     @Inject(method = "canUse", cancellable = true, at = @At(value = "FIELD", shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/entity/ai/goal/TemptGoal;player:Lnet/minecraft/world/entity/player/Player;"))

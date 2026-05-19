@@ -4,7 +4,6 @@ import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -21,7 +20,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -32,8 +30,7 @@ public abstract class ExperienceOrbMixin extends EntityMixin {
 
     // @formatter:off
     @Shadow private Player followingPlayer;
-    @Shadow public abstract boolean hurt(DamageSource source, float amount);
-    @Shadow public int value;
+    @Shadow public abstract void setValue(int value);
     // @formatter:on
 
     private transient Player arclight$lastPlayer;
@@ -63,30 +60,28 @@ public abstract class ExperienceOrbMixin extends EntityMixin {
         arclight$lastPlayer = null;
     }
 
-    @Redirect(method = "tick", at = @At(value = "FIELD", ordinal = 4, target = "Lnet/minecraft/world/entity/ExperienceOrb;followingPlayer:Lnet/minecraft/world/entity/player/Player;"))
-    private Player arclight$targetPlayer(ExperienceOrb entity) {
+    @Inject(method = "followNearbyPlayer", at = @At("RETURN"))
+    private void arclight$targetPlayer(CallbackInfo ci) {
         if (this.followingPlayer != arclight$lastPlayer) {
             EntityTargetLivingEntityEvent event = CraftEventFactory.callEntityTargetLivingEvent((ExperienceOrb) (Object) this, this.followingPlayer, (this.followingPlayer != null) ? EntityTargetEvent.TargetReason.CLOSEST_PLAYER : EntityTargetEvent.TargetReason.FORGOT_TARGET);
             LivingEntity target = (event.getTarget() == null) ? null : ((CraftLivingEntity) event.getTarget()).getHandle();
 
             if (event.isCancelled()) {
                 this.followingPlayer = arclight$lastPlayer;
-                return null;
             } else {
                 this.followingPlayer = (target instanceof Player) ? (Player) target : null;
             }
         }
-        return this.followingPlayer;
     }
 
     @Decorate(method = "playerTouch", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;giveExperiencePoints(I)V"))
     private void arclight$expChange(Player player, int amount) throws Throwable {
-        DecorationOps.callsite().invoke(player, CraftEventFactory.callPlayerExpChangeEvent(player, amount).getAmount());
+        DecorationOps.callsite().invoke(player, CraftEventFactory.callPlayerExpChangeEvent((ServerPlayer) player, amount).getAmount());
     }
 
     @Decorate(method = "playerTouch", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/entity/player/Player;takeXpDelay:I"))
     private void arclight$cooldown(Player instance, int value) throws Throwable {
-        DecorationOps.callsite().invoke(instance, CraftEventFactory.callPlayerXpCooldownEvent(instance, value, PlayerExpCooldownChangeEvent.ChangeReason.PICKUP_ORB).getNewCooldown());
+        DecorationOps.callsite().invoke(instance, CraftEventFactory.callPlayerXpCooldownEvent((ServerPlayer) instance, value, PlayerExpCooldownChangeEvent.ChangeReason.PICKUP_ORB).getNewCooldown());
     }
 
     @Decorate(method = "repairPlayerItems", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;setDamageValue(I)V"))
@@ -103,7 +98,7 @@ public abstract class ExperienceOrbMixin extends EntityMixin {
 
     @Decorate(method = "repairPlayerItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;repairPlayerItems(Lnet/minecraft/server/level/ServerPlayer;I)I"))
     private int arclight$updateXp(ExperienceOrb instance, ServerPlayer serverPlayer, int i) throws Throwable {
-        this.value = i;
+        this.setValue(i);
         return (int) DecorationOps.callsite().invoke(instance, serverPlayer, i);
     }
 

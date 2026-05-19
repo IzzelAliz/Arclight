@@ -3,7 +3,6 @@ package io.izzel.arclight.common.mixin.core.world.entity.boss.enderdragon;
 import io.izzel.arclight.common.mixin.core.world.entity.MobMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
@@ -14,11 +13,13 @@ import net.minecraft.world.entity.boss.enderdragon.phases.DragonPhaseInstance;
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Explosion;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.dimension.end.EndDragonFight;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.AABB;
@@ -44,7 +45,7 @@ public abstract class EnderDragonMixin extends MobMixin {
 
     @Shadow @Nullable private EndDragonFight dragonFight;
 
-    private final Explosion explosionSource = new Explosion(this.level(), (EnderDragon) (Object) this, null, null, Double.NaN, Double.NaN, Double.NaN, Float.NaN, true, Explosion.BlockInteraction.DESTROY, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER, SoundEvents.GENERIC_EXPLODE);
+    private final Explosion explosionSource = null;
 
     @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/boss/enderdragon/phases/DragonPhaseInstance;getFlyTargetLocation()Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 arclight$noMoveHovering(DragonPhaseInstance phase) {
@@ -77,7 +78,7 @@ public abstract class EnderDragonMixin extends MobMixin {
      * @reason
      */
     @Overwrite
-    private boolean checkWalls(final AABB axisalignedbb) {
+    private boolean checkWalls(final ServerLevel serverLevel, final AABB axisalignedbb) {
         final int i = Mth.floor(axisalignedbb.minX);
         final int j = Mth.floor(axisalignedbb.minY);
         final int k = Mth.floor(axisalignedbb.minZ);
@@ -132,7 +133,7 @@ public abstract class EnderDragonMixin extends MobMixin {
                     craftBlock.getNMS().spawnAfterBreak((ServerLevel) this.level(), blockposition2, ItemStack.EMPTY, false);
                     // net.minecraft.block.Block.spawnDrops(craftBlock.getNMS(), loottableinfo_builder);
                 }
-                nmsBlock.wasExploded(this.level(), blockposition2, this.explosionSource);
+                nmsBlock.wasExploded(serverLevel, blockposition2, this.explosionSource);
                 this.level().removeBlock(blockposition2, false);
             }
         }
@@ -148,7 +149,7 @@ public abstract class EnderDragonMixin extends MobMixin {
     @Override
     public int getExpReward(Entity entity) {
         // CraftBukkit - Moved from #tickDeath method
-        boolean flag = this.level().getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT);
+        boolean flag = this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel ? serverLevel.getGameRules().get(GameRules.MOB_DROPS) : true;
         short short0 = 500;
 
         if (this.dragonFight != null && !this.dragonFight.hasPreviouslyKilledDragon()) {
@@ -164,14 +165,12 @@ public abstract class EnderDragonMixin extends MobMixin {
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("RETURN"))
-    private void arclight$storeExpToDrop(CompoundTag compound, CallbackInfo ci) {
-        compound.putInt("Bukkit.expToDrop", this.expToDrop);
+    private void arclight$storeExpToDrop(ValueOutput output, CallbackInfo ci) {
+        output.putInt("Bukkit.expToDrop", this.expToDrop);
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("RETURN"))
-    private void arclight$readExpToDrop(CompoundTag compound, CallbackInfo ci) {
-        if (compound.contains("Bukkit.expToDrop")) {
-            this.expToDrop = compound.getInt("Bukkit.expToDrop");
-        }
+    private void arclight$readExpToDrop(ValueInput input, CallbackInfo ci) {
+        this.expToDrop = input.getIntOr("Bukkit.expToDrop", this.expToDrop);
     }
 }

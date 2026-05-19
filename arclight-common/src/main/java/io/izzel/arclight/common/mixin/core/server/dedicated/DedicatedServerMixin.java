@@ -1,32 +1,26 @@
 package io.izzel.arclight.common.mixin.core.server.dedicated;
 
 import io.izzel.arclight.common.bridge.core.server.dedicated.DedicatedServerBridge;
+import io.izzel.arclight.common.bridge.core.commands.CommandSourceStackBridge;
 import io.izzel.arclight.common.mixin.core.server.MinecraftServerMixin;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.server.ConsoleInput;
 import net.minecraft.server.WorldLoader;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.rcon.RconConsoleSource;
 import net.minecraft.util.datafix.DataFixers;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.PrimaryLevelData;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.command.CraftRemoteConsoleCommandSender;
 import org.bukkit.event.server.RemoteServerCommandEvent;
-import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.plugin.PluginLoadOrder;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -35,10 +29,6 @@ import java.util.List;
 
 @Mixin(DedicatedServer.class)
 public abstract class DedicatedServerMixin extends MinecraftServerMixin implements DedicatedServerBridge {
-
-    // @formatter:off
-    @Shadow @Final public RconConsoleSource rconConsoleSource;
-    // @formatter:on
 
     public DedicatedServerMixin(String name) {
         super(name);
@@ -52,27 +42,10 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin implemen
         this.bridge$forge$lockRegistries();
     }
 
-    @Inject(method = "initServer", at = @At(value = "FIELD", target = "Lnet/minecraft/server/dedicated/DedicatedServerProperties;enableRcon:Z"))
-    public void arclight$setRcon(CallbackInfoReturnable<Boolean> cir) {
-        this.remoteConsole = new CraftRemoteConsoleCommandSender(this.rconConsoleSource);
-    }
-
     @Inject(method = "initServer", at = @At("RETURN"))
     private void arclight$tickWatchdogIfLaunch(CallbackInfoReturnable<Boolean> cir) {
         if (cir.getReturnValueZ()) {
             arclight$tickSpigotWatchdogInternal();
-        }
-    }
-
-    @Redirect(method = "handleConsoleInputs", at = @At(value = "INVOKE", target = "Lnet/minecraft/commands/Commands;performPrefixedCommand(Lnet/minecraft/commands/CommandSourceStack;Ljava/lang/String;)V"))
-    private void arclight$serverCommandEvent(Commands commands, CommandSourceStack source, String command) {
-        if (command.isEmpty()) {
-            return;
-        }
-        ServerCommandEvent event = new ServerCommandEvent(console, command);
-        Bukkit.getPluginManager().callEvent(event);
-        if (!event.isCancelled()) {
-            server.dispatchServerCommand(console, new ConsoleInput(event.getCommand(), source));
         }
     }
 
@@ -82,16 +55,22 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin implemen
      */
     @Overwrite
     public String runCommand(String command) {
-        this.rconConsoleSource.prepareForCommand();
-        this.executeBlocking(() -> {
-            RemoteServerCommandEvent event = new RemoteServerCommandEvent(remoteConsole, command);
-            Bukkit.getPluginManager().callEvent(event);
-            if (event.isCancelled()) {
-                return;
-            }
-            this.server.dispatchServerCommand(remoteConsole, new ConsoleInput(event.getCommand(), this.rconConsoleSource.createCommandSourceStack()));
-        });
-        return this.rconConsoleSource.getCommandResponse();
+        throw new UnsupportedOperationException("Not supported - remote source required.");
+    }
+
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    public void handleConsoleInput(String command, CommandSourceStack source) {
+        var sender = ((CommandSourceStackBridge) source).bridge$getBukkitSender();
+        RemoteServerCommandEvent event = new RemoteServerCommandEvent(sender, command);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return;
+        }
+        this.server.dispatchServerCommand(event.getSender(), new ConsoleInput(event.getCommand(), source));
     }
 
     @Inject(method = "onServerExit", at = @At("RETURN"))
@@ -159,16 +138,16 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin implemen
     @Override
     public void arclight$forceUpgradeIfNeeded(LevelStorageSource.LevelStorageAccess worldSession, RegistryAccess.Frozen dimensions) {
         if (this.options.has("forceUpgrade")) {
-            net.minecraft.server.Main.forceUpgrade(worldSession, DataFixers.getDataFixer(), this.options.has("eraseCache"), () -> true, dimensions, this.options.has("recreateRegionFiles"));
+            // TODO 1.21.11: Main.forceUpgrade is private; reintroduce force-upgrade support via invoker or copied upstream body.
         }
     }
 
     @Override
     public void arclight$prepareAndAddLevel(ServerLevel internal, PrimaryLevelData levelData) {
         this.initWorld(internal, levelData, levelData, levelData.worldGenOptions());
-        internal.setSpawnSettings(true, true);
+        internal.setSpawnSettings(true);
         this.addLevel(internal);
-        this.prepareLevels(internal.getChunkSource().chunkMap.progressListener, internal);
+        this.prepareLevels(internal);
         internal.entityManager.tick();
     }
 }

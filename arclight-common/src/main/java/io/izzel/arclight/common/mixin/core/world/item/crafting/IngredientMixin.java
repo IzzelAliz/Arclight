@@ -1,36 +1,41 @@
 package io.izzel.arclight.common.mixin.core.world.item.crafting;
 
 import io.izzel.arclight.common.bridge.core.world.item.crafting.IngredientBridge;
-import io.izzel.arclight.mixin.Decorate;
-import io.izzel.arclight.mixin.DecorationOps;
+import net.minecraft.core.HolderSet;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
 
 @Mixin(Ingredient.class)
 public abstract class IngredientMixin implements IngredientBridge {
 
-    // @formatter:off
-    @Shadow public abstract boolean isEmpty();
-    @Shadow public abstract ItemStack[] getItems();
-    // @formatter:on
+    @Shadow @Final private HolderSet<Item> values;
 
     public boolean exact;
 
-    @Decorate(method = "test(Lnet/minecraft/world/item/ItemStack;)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;is(Lnet/minecraft/world/item/Item;)Z"))
-    private boolean arclight$exactMatch(ItemStack instance, Item arg, @Nullable ItemStack itemstack) throws Throwable {
+    @Inject(method = "test(Lnet/minecraft/world/item/ItemStack;)Z", cancellable = true, at = @At("HEAD"))
+    private void arclight$exactMatch(@Nullable ItemStack itemStack, CallbackInfoReturnable<Boolean> cir) {
         if (exact) {
-            if (ItemStack.isSameItemSameComponents(itemstack, instance)) {
-                return (boolean) DecorationOps.cancel().invoke(true);
+            if (itemStack == null) {
+                cir.setReturnValue(false);
+                return;
             }
-            return false;
+            for (var item : this.values) {
+                if (itemStack.is(item) && ItemStack.isSameItemSameComponents(itemStack, item.value().getDefaultInstance())) {
+                    cir.setReturnValue(true);
+                    return;
+                }
+            }
+            cir.setReturnValue(false);
         }
-        return (boolean) DecorationOps.callsite().invoke(instance, arg);
     }
 
     @Override

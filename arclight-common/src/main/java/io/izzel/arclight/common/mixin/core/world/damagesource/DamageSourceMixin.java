@@ -197,6 +197,7 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
         br.bridge$setDirectBlock(this.bridge$directBlock());
         br.bridge$setDirectBlockState(this.bridge$directBlockState());
         br.bridge$setCustomCausingEntity(this.customEntityDamager);
+        br.bridge$setCustomCausingEntityDamager(this.customCausingEntityDamager);
         if (this.withSweep) {
             br.bridge$sweep();
         }

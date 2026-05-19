@@ -41,7 +41,8 @@ public class EnumDefinalizer implements Implementer {
                 }
             }
             if (!find) {
-                throw new IllegalStateException("No static final field found for " + node.name);
+                Implementer.LOGGER.debug("Skip definalizing {} because it has no enum values field", node.name);
+                return false;
             }
             return true;
         }

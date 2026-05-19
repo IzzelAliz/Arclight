@@ -5,8 +5,8 @@ import io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LightningBolt;
-import net.minecraft.world.entity.animal.horse.SkeletonHorse;
-import net.minecraft.world.entity.animal.horse.SkeletonTrapGoal;
+import net.minecraft.world.entity.animal.equine.SkeletonHorse;
+import net.minecraft.world.entity.animal.equine.SkeletonTrapGoal;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.spongepowered.asm.mixin.Final;
@@ -26,7 +26,7 @@ public class SkeletonTrapGoalMixin {
     // @formatter:on
 
     @Inject(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V"),
-        slice = @Slice(to = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/horse/SkeletonTrapGoal;createHorse(Lnet/minecraft/world/DifficultyInstance;)Lnet/minecraft/world/entity/animal/horse/AbstractHorse;")))
+        slice = @Slice(to = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/equine/SkeletonTrapGoal;createHorse(Lnet/minecraft/world/DifficultyInstance;)Lnet/minecraft/world/entity/animal/equine/AbstractHorse;")))
     private void arclight$thunder(CallbackInfo ci) {
         ((WorldBridge) this.horse.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.TRAP);
     }
@@ -38,7 +38,7 @@ public class SkeletonTrapGoalMixin {
     }
 
     @Inject(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V"),
-        slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/horse/SkeletonTrapGoal;createHorse(Lnet/minecraft/world/DifficultyInstance;)Lnet/minecraft/world/entity/animal/horse/AbstractHorse;")))
+        slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/equine/SkeletonTrapGoal;createHorse(Lnet/minecraft/world/DifficultyInstance;)Lnet/minecraft/world/entity/animal/equine/AbstractHorse;")))
     private void arclight$jockey(CallbackInfo ci) {
         ((WorldBridge) this.horse.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.JOCKEY);
     }

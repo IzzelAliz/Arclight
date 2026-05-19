@@ -5,13 +5,18 @@ import io.izzel.arclight.common.bridge.core.world.server.ChunkHolderBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ChunkMapBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.bridge.core.server.level.DistanceManagerBridge;
+import io.izzel.arclight.common.bridge.core.world.spawner.WorldEntitySpawnerBridge;
 import io.izzel.arclight.mixin.Decorate;
 import net.minecraft.server.level.*;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.level.NaturalSpawner;
+import net.minecraft.world.level.gamerules.GameRule;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.storage.LevelData;
 import org.bukkit.entity.SpawnCategory;
+import org.bukkit.craftbukkit.v.util.CraftSpawnCategory;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -21,6 +26,8 @@ import org.spongepowered.asm.mixin.injection.*;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Mixin(ServerChunkCache.class)
 public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge {
@@ -82,16 +89,43 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
         }
     }
 
-    @Redirect(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/GameRules;getBoolean(Lnet/minecraft/world/level/GameRules$Key;)Z"))
-    private boolean arclight$noPlayer(GameRules gameRules, GameRules.Key<GameRules.BooleanValue> key) {
-        return gameRules.getBoolean(key) && !this.level.players().isEmpty();
+    @Redirect(method = "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;J)V", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/level/gamerules/GameRules;get(Lnet/minecraft/world/level/gamerules/GameRule;)Ljava/lang/Object;"))
+    private Object arclight$noPlayer(GameRules gameRules, GameRule<Boolean> key) {
+        return gameRules.get(key) && !this.level.players().isEmpty();
     }
 
-    @Redirect(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/LevelData;getGameTime()J"))
-    private long arclight$ticksPer(LevelData worldInfo) {
-        long gameTime = worldInfo.getGameTime();
-        long ticksPer = ((WorldBridge) this.level).bridge$ticksPerSpawnCategory().getLong(SpawnCategory.ANIMAL);
+    @Redirect(method = "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;J)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;getGameTime()J"))
+    private long arclight$ticksPer(ServerLevel level) {
+        long gameTime = level.getGameTime();
+        long ticksPer = ((WorldBridge) level).bridge$ticksPerSpawnCategory().getLong(SpawnCategory.ANIMAL);
         return (ticksPer != 0L && gameTime % ticksPer == 0) ? 0 : 1;
+    }
+
+    @Redirect(method = "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;J)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/NaturalSpawner;getFilteredSpawningCategories(Lnet/minecraft/world/level/NaturalSpawner$SpawnState;ZZZ)Ljava/util/List;"))
+    private List<MobCategory> arclight$filteredSpawningCategories(NaturalSpawner.SpawnState state, boolean spawnFriendlies, boolean spawnEnemies, boolean spawnPersistent) {
+        LevelData levelData = this.level.getLevelData();
+        List<MobCategory> list = new ArrayList<>();
+        for (MobCategory mobCategory : MobCategory.values()) {
+            if (mobCategory == MobCategory.MISC) {
+                continue;
+            }
+            boolean spawnThisTick = true;
+            int limit = mobCategory.getMaxInstancesPerChunk();
+            SpawnCategory spawnCategory = CraftSpawnCategory.toBukkit(mobCategory);
+            if (CraftSpawnCategory.isValidForLimits(spawnCategory)) {
+                long ticksPerSpawn = ((WorldBridge) this.level).bridge$ticksPerSpawnCategory().getLong(spawnCategory);
+                spawnThisTick = ticksPerSpawn != 0 && levelData.getGameTime() % ticksPerSpawn == 0;
+                limit = ((WorldBridge) this.level).bridge$getWorld().getSpawnLimit(spawnCategory);
+            }
+            if (!spawnThisTick || limit == 0) {
+                continue;
+            }
+            if ((spawnFriendlies || !mobCategory.isFriendly()) && (spawnEnemies || mobCategory.isFriendly()) && (spawnPersistent || !mobCategory.isPersistent())
+                && ((WorldEntitySpawnerBridge.EntityDensityManagerBridge) state).bridge$canSpawn(mobCategory, null, limit)) {
+                list.add(mobCategory);
+            }
+        }
+        return list;
     }
 
     public void close(boolean save) throws IOException {
@@ -103,12 +137,12 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
     }
 
     public void purgeUnload() {
-        this.level.getProfiler().push("purge");
+        
         ((DistanceManagerBridge) this.distanceManager).bridge$tick();
         this.bridge$tickDistanceManager();
-        this.level.getProfiler().popPush("unload");
+        
         ((ChunkMapBridge) this.chunkMap).bridge$tick(() -> true);
-        this.level.getProfiler().pop();
+        
         this.clearCache();
     }
 

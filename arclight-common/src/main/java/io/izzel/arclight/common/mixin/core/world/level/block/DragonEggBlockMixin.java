@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(DragonEggBlock.class)
 public class DragonEggBlockMixin {
 
-    @Decorate(method = "teleport", inject = true, at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/Level;isClientSide:Z"))
+    @Decorate(method = "teleport", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;isClientSide()Z"))
     private void arclight$blockFromTo(BlockState blockState, Level world, BlockPos blockPos,
                                      @Local(ordinal = -1) BlockPos pos) throws Throwable {
         org.bukkit.block.Block from = CraftBlock.at(world, blockPos);

@@ -4,6 +4,7 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.StringReader;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.server.level.ServerLevel;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.CommandEvent;
 import org.bukkit.Bukkit;
@@ -21,7 +22,8 @@ public abstract class CraftServerMixin_NeoForge {
     private String arclight$forge$forgeCommandEvent(String commandLine, CommandSender sender) {
         CommandSourceStack commandSource;
         if (sender instanceof CraftEntity) {
-            commandSource = ((CraftEntity) sender).getHandle().createCommandSourceStack();
+            var entity = ((CraftEntity) sender).getHandle();
+            commandSource = entity.createCommandSourceStackForNameResolution((ServerLevel) entity.level());
         } else if (sender == Bukkit.getConsoleSender()) {
             commandSource = ArclightServer.getMinecraftServer().createCommandSourceStack();
         } else if (sender instanceof CraftBlockCommandSender) {

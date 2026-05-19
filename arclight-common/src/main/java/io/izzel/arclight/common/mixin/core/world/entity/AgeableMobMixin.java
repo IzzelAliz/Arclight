@@ -1,10 +1,11 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
 import io.izzel.arclight.common.bridge.core.world.entity.AgeableMobBridge;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,18 +27,18 @@ public abstract class AgeableMobMixin extends PathfinderMobMixin implements Agea
     public boolean ageLocked;
 
     @Inject(method = "addAdditionalSaveData", at = @At("RETURN"))
-    private void arclight$writeAgeLocked(CompoundTag compound, CallbackInfo ci) {
-        compound.putBoolean("AgeLocked", ageLocked);
+    private void arclight$writeAgeLocked(ValueOutput output, CallbackInfo ci) {
+        output.putBoolean("AgeLocked", ageLocked);
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("RETURN"))
-    private void arclight$readAgeLocked(CompoundTag compound, CallbackInfo ci) {
-        ageLocked = compound.getBoolean("AgeLocked");
+    private void arclight$readAgeLocked(ValueInput input, CallbackInfo ci) {
+        ageLocked = input.getBooleanOr("AgeLocked", false);
     }
 
-    @Redirect(method = "aiStep", at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/Level;isClientSide:Z"))
+    @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;isClientSide()Z"))
     private boolean arclight$tickIfNotLocked(Level world) {
-        return world.isClientSide || ageLocked;
+        return world.isClientSide() || ageLocked;
     }
 
     @Override

@@ -20,6 +20,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -83,7 +84,7 @@ public abstract class ChunkHolderMixin extends GenerationChunkHolder implements 
                         // Minecraft will apply the chunks tick lists to the world once the chunk got loaded, and then store the tick
                         // lists again inside the chunk once the chunk becomes inaccessible and set the chunk's needsSaving flag.
                         // These actions may however happen deferred, so we manually set the needsSaving flag already here.
-                        chunk.setUnsaved(true);
+                        chunk.markUnsaved();
                         ((LevelChunkBridge)chunk).bridge$unloadCallback();
                     });
                 }
@@ -102,10 +103,10 @@ public abstract class ChunkHolderMixin extends GenerationChunkHolder implements 
 
     @Inject(method = "blockChanged", cancellable = true,
             at = @At(value = "FIELD", ordinal = 0, target = "Lnet/minecraft/server/level/ChunkHolder;changedBlocksPerSection:[Lit/unimi/dsi/fastutil/shorts/ShortSet;"))
-    private void arclight$outOfBound(BlockPos pos, CallbackInfo ci) {
+    private void arclight$outOfBound(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
         int i = this.levelHeightAccessor.getSectionIndex(pos.getY());
         if (i < 0 || i >= this.changedBlocksPerSection.length) {
-            ci.cancel();
+            cir.setReturnValue(false);
         }
     }
 

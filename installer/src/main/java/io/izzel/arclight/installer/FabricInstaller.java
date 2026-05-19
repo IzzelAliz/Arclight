@@ -39,6 +39,7 @@ public class FabricInstaller {
             MinecraftProvider.handleFutures(System.out::println, array);
             pool.shutdownNow();
         }
+        FabricApiPatcher.patchFabricApi(installInfo);
         return classpath(installInfo, path);
     }
 

@@ -5,6 +5,7 @@ import io.izzel.arclight.common.mod.mixins.annotation.TransformAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -30,8 +31,8 @@ public abstract class ItemFrameMixin extends BlockAttachedEntityMixin {
     @Shadow protected abstract void onItemChanged(ItemStack p_218866_);
     // @formatter:on
 
-    @Inject(method = "hurt", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/ItemFrame;dropItem(Lnet/minecraft/world/entity/Entity;Z)V"))
-    private void arclight$damageNonLiving(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "hurtServer", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/ItemFrame;dropItem(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;Z)V"))
+    private void arclight$damageNonLiving(ServerLevel level, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (CraftEventFactory.handleNonLivingEntityDamageEvent((ItemFrame) (Object) this, source, amount, false) || this.isRemoved()) {
             cir.setReturnValue(true);
         }

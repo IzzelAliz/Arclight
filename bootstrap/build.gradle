@@ -7,14 +7,6 @@ apply plugin: 'maven-publish'
 
 sourceSets {
     applaunch {}
-    forge {
-        java {
-            compileClasspath += main.output
-            compileClasspath += main.compileClasspath
-            runtimeClasspath += main.output
-            runtimeClasspath += main.runtimeClasspath
-        }
-    }
     neoforge {
         java {
             compileClasspath += main.output
@@ -77,12 +69,6 @@ dependencies {
     implementation 'org.spongepowered:mixin:0.8.5'
     implementation 'org.apache.logging.log4j:log4j-jul:2.22.1'
 
-    forgeImplementation "net.minecraftforge:fmlloader:${libs.versions.full.forge.get()}"
-    forgeImplementation 'net.minecraftforge:securemodules:2.2.7'
-    forgeImplementation 'net.minecraftforge:forgespi:7.1.0'
-    forgeImplementation 'net.minecraftforge:bootstrap:2.1.0'
-    forgeImplementation 'net.minecraftforge:bootstrap-api:2.1.0'
-
     neoforgeImplementation 'net.neoforged.fancymodloader:loader:4.0.1'
     neoforgeImplementation 'cpw.mods:securejarhandler:2.1.24'
 
@@ -116,38 +102,6 @@ jar {
         exclude 'META-INF/services/**'
         exclude 'org/apache/commons/lang/enum/**'
     }
-}
-
-tasks.register('forgeJar', Jar) {
-    archiveBaseName.set "arclight-forge-${libs.versions.minecraft.get()}"
-    manifest.attributes 'Main-Class': 'io.izzel.arclight.server.Launcher'
-    manifest.attributes 'Implementation-Title': 'Arclight'
-    manifest.attributes 'Implementation-Version': "arclight-${libs.versions.minecraft.get()}-${project.version}-$gitHash"
-    manifest.attributes 'Implementation-Vendor': 'Arclight Team'
-    manifest.attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd HH:mm:ss")
-    manifest.attributes 'Automatic-Module-Name': 'arclight.boot'
-    from(configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }) {
-        exclude 'META-INF/MANIFEST.MF'
-        exclude 'META-INF/*.SF'
-        exclude 'META-INF/*.DSA'
-        exclude 'META-INF/*.RSA'
-        exclude 'LICENSE.txt'
-        exclude 'META-INF/services/**'
-        exclude 'org/apache/commons/lang/enum/**'
-    }
-    into('/') {
-        it.from(project(':arclight-forge').tasks.relocateCraftBukkit.outputs.files.collect())
-        it.rename { name -> 'common.jar' }
-    }
-    into('/') {
-        it.from(configurations.gson.collect())
-        it.rename { name -> 'gson.jar' }
-    }
-    from sourceSets.applaunch.output
-    from sourceSets.main.output
-    from sourceSets.forge.output
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    dependsOn(project(':arclight-forge').tasks.build)
 }
 
 tasks.register('neoforgeJar', Jar) {
@@ -219,12 +173,6 @@ tasks.register('generateInstallerInfo', GenerateInstallerInfo) {
 project.sourceSets.main.output.dir file('build/arclight_installer'), builtBy: tasks.generateInstallerInfo
 project.sourceSets.fabric.output.dir file('build/arclight_installer'), builtBy: tasks.generateInstallerInfo
 
-project.sourceSets.forge.output.dir file('build/forge_async_catcher'), builtBy: tasks.register('forgeAsyncCatcher', RenameAsyncCatcherTask) {
-    inputFile.set project.file('async_catcher.json')
-    mapping.set 'srg'
-    outputs.file('build/forge_async_catcher/async_catcher.json')
-}
-
 project.sourceSets.neoforge.output.dir file('build/neoforge_async_catcher'), builtBy: tasks.register('neoforgeAsyncCatcher', RenameAsyncCatcherTask) {
     inputFile.set project.file('async_catcher.json')
     mapping.set 'named'
@@ -245,26 +193,6 @@ compileJava {
 
 compileApplaunchJava {
     sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
-}
-
-tasks.register('runProdForge', JavaExec) {
-    classpath = files(tasks.forgeJar)
-    // systemProperties 'bsl.debug': 'true'
-    systemProperties 'terminal.ansi': 'true'
-    systemProperties 'mixin.debug.export': 'true'
-    systemProperties 'mixin.dumpTargetOnFailure': 'true'
-    systemProperties 'arclight.alwaysExtract': 'true'
-    systemProperties 'arclight.remapper.dump': './.mixin.out/plugin_classes'
-    systemProperties 'sun.stdout.encoding': 'UTF-8'
-    systemProperties 'sun.stderr.encoding': 'UTF-8'
-    workingDir System.env.ARCLIGHT_PROD_DIR ?: file('run_prod/forge')
-    maxHeapSize '4G'
-    args 'nogui'
-    standardInput System.in
-    javaLauncher.convention(javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(21)
-    })
-    dependsOn project.tasks.forgeJar
 }
 
 tasks.register('runProdNeoforge', JavaExec) {

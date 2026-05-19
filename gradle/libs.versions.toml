@@ -38,10 +38,10 @@ fabric-permissions-api = '0.3.1'
 
 # spigot dependencies (CHECK when migrating Spigot Versions)
 spigot-reversion = '4598'
-bukkit-api = 'v1_21_R1'
+bukkit-api = 'v1_21_R7'
 spigot-api = '1.21.11-R0.1-SNAPSHOT'
 bungeecord-chat-api = '1.20-R0.2'
-jline = '2.12.1'
+jline = '3.30.4'
 terminal-console-appender = '1.2.0'
 log4j = '2.22.1'
 snakeyaml = '2.0'
@@ -74,7 +74,7 @@ spigot-api = { module = 'org.spigotmc:spigot-api', version.ref = 'spigot-api' }
 bungeecord-chat = { module = 'net.md-5:bungeecord-chat', version.ref = 'bungeecord-chat-api' }
 snakeyaml = { module = 'org.yaml:snakeyaml', version.ref = 'snakeyaml' }
 mysql-connectorj = { module = 'com.mysql:mysql-connector-j', version.ref = 'mysql-connector-j' }
-jline = { module = 'jline:jline', version.ref = 'jline' }
+jline = { module = 'org.jline:jline', version.ref = 'jline' }
 terminalconsoleappender = { module = 'net.minecrell:terminalconsoleappender', version.ref = 'terminal-console-appender' }
 log4j-api = { module = 'org.apache.logging.log4j:log4j-api', version.ref = 'log4j' }
 log4j-core = { module = 'org.apache.logging.log4j:log4j-core', version.ref = 'log4j' }
@@ -104,5 +104,5 @@ sponge-mixin = { module = 'org.spongepowered:mixin', version.ref = 'mixin' }
 asm = ['asm-commons', 'asm-tree', 'asm-util']
 lorenz = ['lorenz-core', 'lorenz-proguard', 'lorenz-tiny']
 log4j = ['log4j-api', 'log4j-core', 'log4j-jul']
-spigot-shade = ['spigot-api', 'bungeecord-chat']
-spigot-runtime = ['spigot-api', 'snakeyaml', 'mysql-connectorj', 'bungeecord-chat']
+spigot-shade = ['spigot-api', 'bungeecord-chat', 'jline']
+spigot-runtime = ['spigot-api', 'snakeyaml', 'mysql-connectorj', 'bungeecord-chat', 'jline']

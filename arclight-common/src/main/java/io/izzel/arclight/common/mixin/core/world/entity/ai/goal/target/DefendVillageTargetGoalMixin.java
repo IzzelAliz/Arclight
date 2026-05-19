@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.entity.ai.goal.target;
 
 import io.izzel.arclight.common.bridge.core.world.entity.MobBridge;
 import net.minecraft.world.entity.ai.goal.target.DefendVillageTargetGoal;
-import net.minecraft.world.entity.animal.IronGolem;
+import net.minecraft.world.entity.animal.golem.IronGolem;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

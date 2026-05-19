@@ -2,31 +2,24 @@ package io.izzel.arclight.common.mixin.core.world.entity.animal.horse;
 
 import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.animal.AnimalMixin;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.entity.animal.equine.AbstractHorse;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.ticks.ContainerSingleItem;
-import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.util.Arrays;
-import java.util.List;
 
 @Mixin(AbstractHorse.class)
 public abstract class AbstractHorseMixin extends AnimalMixin {
@@ -45,26 +38,24 @@ public abstract class AbstractHorseMixin extends AnimalMixin {
         return inventory;
     }
 
-    @Inject(method = "handleEating", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/horse/AbstractHorse;heal(F)V"))
+    @Inject(method = "handleEating", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/equine/AbstractHorse;heal(F)V"))
     private void arclight$healByEating(Player player, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
         bridge$pushHealReason(EntityRegainHealthEvent.RegainReason.EATING);
     }
 
-    @Inject(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/horse/AbstractHorse;heal(F)V"))
+    @Inject(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/equine/AbstractHorse;heal(F)V"))
     private void arclight$healByRegen(CallbackInfo ci) {
         bridge$pushHealReason(EntityRegainHealthEvent.RegainReason.REGEN);
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("RETURN"))
-    private void arclight$writeTemper(CompoundTag compound, CallbackInfo ci) {
-        compound.putInt("Bukkit.MaxDomestication", this.maxDomestication);
+    private void arclight$writeTemper(ValueOutput output, CallbackInfo ci) {
+        output.putInt("Bukkit.MaxDomestication", this.maxDomestication);
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("RETURN"))
-    private void arclight$readTemper(CompoundTag compound, CallbackInfo ci) {
-        if (compound.contains("Bukkit.MaxDomestication")) {
-            this.maxDomestication = compound.getInt("Bukkit.MaxDomestication");
-        }
+    private void arclight$readTemper(ValueInput input, CallbackInfo ci) {
+        this.maxDomestication = input.getIntOr("Bukkit.MaxDomestication", this.maxDomestication);
     }
 
     @Inject(method = "handleStartJump", cancellable = true, at = @At("HEAD"))
@@ -89,52 +80,4 @@ public abstract class AbstractHorseMixin extends AnimalMixin {
         return maxDomestication;
     }
 
-    @Mixin(targets = "net/minecraft/world/entity/animal/horse/AbstractHorse$1")
-    public abstract static class ContainerMixin implements IInventoryBridge, ContainerSingleItem {
-
-        @Shadow(aliases = {"field_48831", "this$0"}) private AbstractHorse outerThis;
-
-        public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
-        private int maxStack = MAX_STACK;
-
-        @Override
-        public List<ItemStack> getContents() {
-            return Arrays.asList(this.getTheItem());
-        }
-
-        @Override
-        public void onOpen(CraftHumanEntity who) {
-            transaction.add(who);
-        }
-
-        @Override
-        public void onClose(CraftHumanEntity who) {
-            transaction.remove(who);
-        }
-
-        @Override
-        public List<HumanEntity> getViewers() {
-            return transaction;
-        }
-
-        @Override
-        public int getMaxStackSize() {
-            return maxStack;
-        }
-
-        @Override
-        public void setMaxStackSize(int size) {
-            maxStack = size;
-        }
-
-        @Override
-        public InventoryHolder getOwner() {
-            return (org.bukkit.entity.AbstractHorse) outerThis.bridge$getBukkitEntity();
-        }
-
-        @Override
-        public Location getLocation() {
-            return outerThis.bridge$getBukkitEntity().getLocation();
-        }
-    }
 }

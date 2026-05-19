@@ -2,8 +2,10 @@ package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.projectile.ArrowBridge;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.entity.projectile.arrow.Arrow;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,8 +15,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Arrow.class)
 public abstract class ArrowMixin extends AbstractArrowMixin implements ArrowBridge {
 
-    @Inject(method = "doPostHurtEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)Z"))
-    private void arclight$arrowHit(LivingEntity living, CallbackInfo ci) {
+    @Inject(method = "method_48574", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)Z"))
+    private static void arclight$arrowHit(LivingEntity living, Entity source, MobEffectInstance effect, CallbackInfo ci) {
         ((LivingEntityBridge) living).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.ARROW);
     }
 }

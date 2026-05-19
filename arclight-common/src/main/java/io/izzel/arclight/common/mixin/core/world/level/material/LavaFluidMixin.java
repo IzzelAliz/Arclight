@@ -8,9 +8,8 @@ import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.GameRules;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Blocks;
@@ -37,8 +36,8 @@ public abstract class LavaFluidMixin implements LavaFluidBridge {
      * @reason
      */
     @Overwrite
-    public void randomTick(Level world, BlockPos pos, FluidState state, RandomSource random) {
-        if (world.getGameRules().getBoolean(GameRules.RULE_DOFIRETICK)) {
+    public void randomTick(ServerLevel world, BlockPos pos, FluidState state, RandomSource random) {
+        if (world.canSpreadFireAround(pos)) {
             int i = random.nextInt(3);
             if (i > 0) {
                 BlockPos blockpos = pos;

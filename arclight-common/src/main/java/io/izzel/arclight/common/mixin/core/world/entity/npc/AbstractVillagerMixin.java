@@ -25,13 +25,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(net.minecraft.world.entity.npc.AbstractVillager.class)
+@Mixin(net.minecraft.world.entity.npc.villager.AbstractVillager.class)
 public abstract class AbstractVillagerMixin extends PathfinderMobMixin implements MerchantBridge {
 
     @Shadow @Final private SimpleContainer inventory;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void arclight$init(EntityType<? extends net.minecraft.world.entity.npc.AbstractVillager> type, Level worldIn, CallbackInfo ci) {
+    private void arclight$init(EntityType<? extends net.minecraft.world.entity.npc.villager.AbstractVillager> type, Level worldIn, CallbackInfo ci) {
         ((IInventoryBridge) this.inventory).setOwner((InventoryHolder) this.getBukkitEntity());
     }
 
@@ -39,7 +39,7 @@ public abstract class AbstractVillagerMixin extends PathfinderMobMixin implement
 
     @Override
     public CraftMerchant bridge$getCraftMerchant() {
-        return (craftMerchant == null) ? craftMerchant = new CraftAbstractVillager(((CraftServer) Bukkit.getServer()), (net.minecraft.world.entity.npc.AbstractVillager) (Object) this) : craftMerchant;
+        return (craftMerchant == null) ? craftMerchant = new CraftAbstractVillager(((CraftServer) Bukkit.getServer()), (net.minecraft.world.entity.npc.villager.AbstractVillager) (Object) this) : craftMerchant;
     }
 
     @Redirect(method = "addOffersFromItemListings", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/trading/MerchantOffers;add(Ljava/lang/Object;)Z"))

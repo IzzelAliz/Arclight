@@ -9,6 +9,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.redstone.NeighborUpdater;
+import net.minecraft.world.level.redstone.Orientation;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
@@ -19,11 +20,11 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(NeighborUpdater.class)
 public interface NeighborUpdaterMixin {
 
-    @Decorate(method = "executeUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;handleNeighborChanged(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;Lnet/minecraft/core/BlockPos;Z)V"))
-    private static void arclight$blockPhysicsEvent(BlockState instance, Level level, BlockPos pos, Block block, BlockPos source, boolean b) throws Throwable {
+    @Decorate(method = "executeUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;handleNeighborChanged(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;Lnet/minecraft/world/level/redstone/Orientation;Z)V"))
+    private static void arclight$blockPhysicsEvent(BlockState instance, Level level, BlockPos pos, Block block, Orientation orientation, boolean movedByPiston) throws Throwable {
         var cworld = level.bridge$getWorld();
         if (cworld != null) {
-            BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at(level, pos), CraftBlockData.fromData(instance), CraftBlock.at(level, source));
+            BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at(level, pos), CraftBlockData.fromData(instance));
             Bukkit.getPluginManager().callEvent(event);
 
             if (event.isCancelled()) {
@@ -31,7 +32,7 @@ public interface NeighborUpdaterMixin {
                 return;
             }
         }
-        DecorationOps.callsite().invoke(instance, level, pos, block, source, b);
+        DecorationOps.callsite().invoke(instance, level, pos, block, orientation, movedByPiston);
     }
 
     @Decorate(method = "executeUpdate", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/CrashReport;forThrowable(Ljava/lang/Throwable;Ljava/lang/String;)Lnet/minecraft/CrashReport;"))

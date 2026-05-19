@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @SuppressWarnings("public-target")
-@Mixin(targets = "net.minecraft.world.entity.animal.horse.TraderLlama$TraderLlamaDefendWanderingTraderGoal")
+@Mixin(targets = "net.minecraft.world.entity.animal.equine.TraderLlama$TraderLlamaDefendWanderingTraderGoal")
 public class TraderLlamaEntity_FollowTraderGoalMixin extends TargetGoalMixin {
 
     @Inject(method = "start", at = @At("HEAD"))

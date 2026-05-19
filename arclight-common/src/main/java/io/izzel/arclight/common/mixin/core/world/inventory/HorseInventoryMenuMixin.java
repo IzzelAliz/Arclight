@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.inventory;
 import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
 import net.minecraft.world.Container;
-import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.entity.animal.equine.AbstractHorse;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.HorseInventoryMenu;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;

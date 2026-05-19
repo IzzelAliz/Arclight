@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ExperienceOrb;
-import net.minecraft.world.entity.projectile.ThrownExperienceBottle;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownExperienceBottle;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.phys.HitResult;
@@ -22,12 +22,12 @@ public abstract class ThrownExperienceBottleMixin extends ThrowableItemProjectil
     @Overwrite
     protected void onHit(HitResult result) {
         super.onHit(result);
-        if (!this.level().isClientSide) {
+        if (!this.level().isClientSide()) {
             int i = 3 + this.level().random.nextInt(5) + this.level().random.nextInt(5);
             ExpBottleEvent event = CraftEventFactory.callExpBottleEvent((ThrownExperienceBottle) (Object) this, result, i);
             i = event.getExperience();
             if (event.getShowEffect()) {
-                this.level().levelEvent(2002, this.blockPosition(), PotionContents.getColor(Potions.WATER));
+                this.level().levelEvent(2002, this.blockPosition(), new PotionContents(Potions.WATER).getColor());
             }
             ExperienceOrb.award((ServerLevel) this.level(), this.position(), i);
             this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.HIT);

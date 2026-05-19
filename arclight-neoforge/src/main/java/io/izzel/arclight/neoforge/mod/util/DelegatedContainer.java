@@ -204,7 +204,7 @@ public class DelegatedContainer implements Container, IInventoryBridge {
             if (nmsOwner instanceof BlockEntity be) {
                 return Container.stillValidBlockEntity(be, arg);
             } else if (nmsOwner instanceof Entity entity) {
-                return arg.canInteractWithEntity(entity, 4.0F);
+                return entity.distanceToSqr(arg) <= 16.0D;
             }
         }
         return true;

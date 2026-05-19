@@ -1,8 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.monster.Husk;
+import net.minecraft.world.entity.monster.zombie.Husk;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class HuskMixin extends ZombieMixin {
 
     @Inject(method = "doHurtTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)Z"))
-    private void arclight$reason(Entity entityIn, CallbackInfoReturnable<Boolean> cir) {
+    private void arclight$reason(ServerLevel level, Entity entityIn, CallbackInfoReturnable<Boolean> cir) {
         ((LivingEntityBridge) entityIn).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.ATTACK);
     }
 }

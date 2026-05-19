@@ -7,6 +7,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import net.minecraft.world.item.enchantment.LevelBasedValue;
 import net.minecraft.world.item.enchantment.effects.Ignite;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.event.entity.EntityCombustByEntityEvent;
 import org.bukkit.event.entity.EntityCombustEvent;
@@ -21,7 +22,7 @@ public class IgniteMixin {
     @Shadow @Final private LevelBasedValue duration;
 
     @Decorate(method = "apply", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;igniteForSeconds(F)V"))
-    private void arclight$combustEvent(Entity instance, float f, ServerLevel serverLevel, int i, EnchantedItemInUse enchantedItemInUse) throws Throwable {
+    private void arclight$combustEvent(Entity instance, float f, ServerLevel serverLevel, int i, EnchantedItemInUse enchantedItemInUse, Entity entity, Vec3 vec3) throws Throwable {
         EntityCombustEvent entityCombustEvent;
         if (enchantedItemInUse.owner() != null) {
             entityCombustEvent = new EntityCombustByEntityEvent(enchantedItemInUse.owner().bridge$getBukkitEntity(), instance.bridge$getBukkitEntity(), this.duration.calculate(i));
@@ -34,6 +35,6 @@ public class IgniteMixin {
             return;
         }
 
-        DecorationOps.callsite().invoke(instance, f);
+        DecorationOps.callsite().invoke(instance, (float) entityCombustEvent.getDuration());
     }
 }

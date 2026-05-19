@@ -17,9 +17,9 @@ import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stat;
@@ -31,21 +31,17 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.food.FoodData;
-import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.PlayerEnderChestContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.scores.Scoreboard;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
@@ -59,26 +55,24 @@ import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityExhaustionEvent;
 import org.bukkit.event.entity.EntityKnockbackEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
-import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.player.PlayerBedLeaveEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerVelocityEvent;
 import org.bukkit.scoreboard.Team;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.FrameNode;
-import org.spigotmc.SpigotWorldConfig;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
+
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -93,29 +87,25 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     @Shadow public abstract void resetAttackStrengthTicker();
     @Shadow public abstract SoundSource getSoundSource();
     @Shadow public abstract float getSpeed();
-    @Shadow public abstract void sweepAttack();
     @Shadow public abstract void crit(Entity entityHit);
     @Shadow public abstract void magicCrit(Entity entityHit);
-    @Shadow public abstract void awardStat(ResourceLocation p_195067_1_, int p_195067_2_);
+    @Shadow public abstract void awardStat(Identifier p_195067_1_, int p_195067_2_);
     @Shadow public abstract void causeFoodExhaustion(float exhaustion);
-    @Shadow private long timeEntitySatOnShoulder;
-    @Shadow public abstract void setShoulderEntityRight(CompoundTag tag);
-    @Shadow public abstract void setShoulderEntityLeft(CompoundTag tag);
-    @Shadow public abstract CompoundTag getShoulderEntityRight();
-    @Shadow public abstract CompoundTag getShoulderEntityLeft();
+    @Shadow public abstract Optional<net.minecraft.world.entity.animal.parrot.Parrot.Variant> getShoulderParrotRight();
+    @Shadow public abstract Optional<net.minecraft.world.entity.animal.parrot.Parrot.Variant> getShoulderParrotLeft();
+    @Shadow public abstract void setShoulderParrotRight(Optional<net.minecraft.world.entity.animal.parrot.Parrot.Variant> optional);
+    @Shadow public abstract void setShoulderParrotLeft(Optional<net.minecraft.world.entity.animal.parrot.Parrot.Variant> optional);
     @Shadow public int experienceLevel;
     @Shadow @Final private Inventory inventory;
     @Shadow public AbstractContainerMenu containerMenu;
     @Shadow @Final public InventoryMenu inventoryMenu;
     @Shadow public abstract void awardStat(Stat<?> stat);
-    @Shadow public abstract void awardStat(ResourceLocation stat);
+    @Shadow public abstract void awardStat(Identifier stat);
     @Shadow public abstract Component getDisplayName();
-    @Shadow public abstract HumanoidArm getMainArm();
     @Shadow public float experienceProgress;
     @Shadow public int totalExperience;
     @Shadow protected FoodData foodData;
     @Shadow protected boolean isImmobile() { return false; }
-    @Shadow public abstract Scoreboard getScoreboard();
     @Shadow protected PlayerEnderChestContainer enderChestInventory;
     @Shadow public abstract Either<net.minecraft.world.entity.player.Player.BedSleepingProblem, Unit> startSleepInBed(BlockPos at);
     @Shadow public int sleepCounter;
@@ -127,7 +117,8 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     @Shadow public abstract void setRemainingFireTicks(int p_36353_);
     @Shadow public abstract boolean isCreative();
     @Shadow public abstract FoodData getFoodData();
-    @Shadow @Nullable public abstract ItemEntity drop(ItemStack arg, boolean bl, boolean bl2);
+    @Shadow @Nullable public abstract ItemEntity drop(ItemStack arg, boolean bl);
+    @Shadow public abstract boolean tryToStartFallFlying();
     // @formatter:on
 
     public boolean fauxSleeping;
@@ -150,26 +141,22 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
         bridge$pushEffectCause(EntityPotionEffectEvent.Cause.TURTLE_HELMET);
     }
 
-    @Inject(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;heal(F)V"))
-    private void arclight$healByRegen(CallbackInfo ci) {
-        bridge$pushHealReason(EntityRegainHealthEvent.RegainReason.REGEN);
-    }
-
     private transient boolean arclight$skipDropItemEvent;
 
     public ItemEntity drop(ItemStack itemstack, boolean flag, boolean flag1, boolean callEvent) {
         try {
             arclight$skipDropItemEvent = !callEvent;
-            return this.drop(itemstack, flag, flag1);
+            return this.drop(itemstack, flag1);
         } finally {
             arclight$skipDropItemEvent = false;
         }
     }
 
-    @Inject(method = "drop(Lnet/minecraft/world/item/ItemStack;ZZ)Lnet/minecraft/world/entity/item/ItemEntity;",
-        cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "RETURN", ordinal = 1))
-    private void arclight$playerDropItem(ItemStack droppedItem, boolean dropAround, boolean traceItem, CallbackInfoReturnable<ItemEntity> cir, double d0, ItemEntity itemEntity) {
-        if (arclight$skipDropItemEvent) {
+    @Inject(method = "drop(Lnet/minecraft/world/item/ItemStack;Z)Lnet/minecraft/world/entity/item/ItemEntity;",
+        cancellable = true, at = @At("RETURN"))
+    private void arclight$playerDropItem(ItemStack droppedItem, boolean traceItem, CallbackInfoReturnable<ItemEntity> cir) {
+        ItemEntity itemEntity = cir.getReturnValue();
+        if (arclight$skipDropItemEvent || itemEntity == null) {
             return;
         }
         Player player = (Player) this.getBukkitEntity();
@@ -200,8 +187,8 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
      * @reason
      */
     @Overwrite
-    public boolean hurt(DamageSource source, float amount) {
-        if (this.isInvulnerableTo(source)) {
+    public boolean hurtServer(ServerLevel serverLevel, DamageSource source, float amount) {
+        if (this.isInvulnerableTo(serverLevel, source)) {
             return false;
         } else if (this.abilities.invulnerable && !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
             return false;
@@ -225,7 +212,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
                     }
                 }
 
-                boolean damaged = super.hurt(source, amount);
+                boolean damaged = super.hurtServer(serverLevel, source, amount);
                 if (damaged) {
                     this.removeEntitiesOnShoulder();
                 }
@@ -261,11 +248,11 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
         return !team.hasPlayer(Bukkit.getOfflinePlayer(this.getScoreboardName()));
     }
 
-    @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;resetAttackStrengthTicker()V"))
+    @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;onAttack()V"))
     private void arclight$skipResetAttackStrength(net.minecraft.world.entity.player.Player instance) {
     }
 
-    @Decorate(method = "attack", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/Projectile;deflect(Lnet/minecraft/world/entity/projectile/ProjectileDeflection;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity;Z)Z"))
+    @Decorate(method = "attack", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;deflectProjectile(Lnet/minecraft/world/entity/Entity;)Z"))
     private void arclight$nonLivingDamage(Entity entity, @Local(ordinal = -1) DamageSource damageSource, @Local(ordinal = 1) float enchantDamage) throws Throwable {
         if (CraftEventFactory.handleNonLivingEntityDamageEvent(entity, damageSource, enchantDamage, false)) {
             DecorationOps.cancel().invoke();
@@ -274,14 +261,14 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
         DecorationOps.blackhole().invoke();
     }
 
-    @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDD)V"),
-        slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/ai/attributes/Attributes;SWEEPING_DAMAGE_RATIO:Lnet/minecraft/core/Holder;")))
+    @Redirect(method = "doSweepAttack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDD)V"),
+        slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z")))
     private void arclight$skipKnockback(LivingEntity instance, double d, double e, double f) {
     }
 
-    @Decorate(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
-    private boolean arclight$applyKnockback(LivingEntity instance, DamageSource damageSource, float f) throws Throwable {
-        var result = (boolean) DecorationOps.callsite().invoke(instance, damageSource, f);
+    @Decorate(method = "doSweepAttack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
+    private boolean arclight$applyKnockback(LivingEntity instance, ServerLevel serverLevel, DamageSource damageSource, float f) throws Throwable {
+        var result = (boolean) DecorationOps.callsite().invoke(instance, serverLevel, damageSource, f);
         if (!result) {
             throw DecorationOps.jumpToLoopStart();
         }
@@ -290,7 +277,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
         return result;
     }
 
-    @Decorate(method = "attack", at = @At(value = "FIELD", opcode = Opcodes.GETFIELD, target = "Lnet/minecraft/world/entity/Entity;hurtMarked:Z"))
+    @Decorate(method = "causeExtraKnockback", at = @At(value = "FIELD", opcode = Opcodes.GETFIELD, target = "Lnet/minecraft/world/entity/Entity;hurtMarked:Z"))
     private boolean arclight$velocityEvent(Entity entity, @Local(ordinal = -1) Vec3 deltaMovement) throws Throwable {
         boolean result = (boolean) DecorationOps.callsite().invoke(entity);
         if (result) {
@@ -314,17 +301,12 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
         bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.ATTACK);
     }
 
-    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;playSound(Lnet/minecraft/world/entity/player/Player;DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V"),
+    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;playServerSideSound(Lnet/minecraft/sounds/SoundEvent;)V"),
         slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/sounds/SoundEvents;PLAYER_ATTACK_NODAMAGE:Lnet/minecraft/sounds/SoundEvent;")))
     private void arclight$updateInv(Entity entity, CallbackInfo ci) {
         if (this instanceof ServerPlayerBridge b) {
             b.bridge$getBukkitEntity().updateInventory();
         }
-    }
-
-    @Inject(method = "eat", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/food/FoodData;eat(Lnet/minecraft/world/food/FoodProperties;)V"))
-    private void arclight$eatStack(Level level, ItemStack itemStack, FoodProperties foodProperties, CallbackInfoReturnable<ItemStack> cir) {
-        ((FoodDataBridge) this.getFoodData()).bridge$pushEatStack(itemStack);
     }
 
     protected transient boolean arclight$forceSleep;
@@ -358,41 +340,19 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
         }
     }
 
-    @ModifyArg(method = "jumpFromGround", index = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;causeFoodExhaustion(F)V"))
-    private float arclight$exhaustInfo(float f) {
-        SpigotWorldConfig config = ((WorldBridge) level()).bridge$spigotConfig();
-        if (config != null) {
-            if (this.isSprinting()) {
-                f = config.jumpSprintExhaustion;
-                bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.JUMP_SPRINT);
-            } else {
-                f = config.jumpWalkExhaustion;
-                bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.JUMP);
-            }
-        }
-        return f;
-    }
-
-    @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;setSharedFlag(IZ)V"))
-    private void arclight$toggleGlide(net.minecraft.world.entity.player.Player playerEntity, int flag, boolean set) {
-        if (playerEntity.getSharedFlag(flag) != set && !CraftEventFactory.callToggleGlideEvent((net.minecraft.world.entity.player.Player) (Object) this, set).isCancelled()) {
-            playerEntity.setSharedFlag(flag, set);
-        }
-    }
-
-    @Inject(method = "startFallFlying", cancellable = true, at = @At("HEAD"))
-    private void arclight$startGlidingEvent(CallbackInfo ci) {
+    @Inject(method = "tryToStartFallFlying", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;startFallFlying()V"))
+    private void arclight$startGlidingEvent(CallbackInfoReturnable<Boolean> cir) {
         if (CraftEventFactory.callToggleGlideEvent((net.minecraft.world.entity.player.Player) (Object) this, true).isCancelled()) {
             this.setSharedFlag(7, true);
             this.setSharedFlag(7, false);
-            ci.cancel();
+            cir.setReturnValue(false);
         }
     }
 
-    @Inject(method = "stopFallFlying", cancellable = true, at = @At("HEAD"))
-    private void arclight$stopGlidingEvent(CallbackInfo ci) {
-        if (CraftEventFactory.callToggleGlideEvent((net.minecraft.world.entity.player.Player) (Object) this, false).isCancelled()) {
-            ci.cancel();
+    @Override
+    public void stopFallFlying() {
+        if (!CraftEventFactory.callToggleGlideEvent((net.minecraft.world.entity.player.Player) (Object) this, false).isCancelled()) {
+            super.stopFallFlying();
         }
     }
 
@@ -402,24 +362,17 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
      */
     @Overwrite
     protected void removeEntitiesOnShoulder() {
-        if (this.timeEntitySatOnShoulder + 20L < this.level().getGameTime()) {
-            if (this.respawnEntityOnShoulder(this.getShoulderEntityLeft())) {
-                this.setShoulderEntityLeft(new CompoundTag());
-            }
-            if (this.respawnEntityOnShoulder(this.getShoulderEntityRight())) {
-                this.setShoulderEntityRight(new CompoundTag());
-            }
-        }
     }
 
-    private boolean respawnEntityOnShoulder(final CompoundTag nbttagcompound) {
-        return this.level().isClientSide || nbttagcompound.isEmpty() || EntityType.create(nbttagcompound, this.level()).map(entity -> {
-            if (entity instanceof TamableAnimal) {
-                ((TamableAnimal) entity).setOwnerUUID(this.uuid);
-            }
-            entity.setPos(this.getX(), this.getY() + 0.699999988079071, this.getZ());
-            return ((ServerLevelBridge) this.level()).bridge$addEntitySerialized(entity, CreatureSpawnEvent.SpawnReason.SHOULDER_ENTITY);
-        }).orElse(true);
+    protected boolean respawnEntityOnShoulder(final Optional<net.minecraft.world.entity.animal.parrot.Parrot.Variant> parrotVariant) {
+        if (this.level().isClientSide() || parrotVariant.isEmpty()) {
+            return true;
+        }
+        var parrot = new net.minecraft.world.entity.animal.parrot.Parrot(EntityType.PARROT, this.level());
+        parrot.setComponent(net.minecraft.core.component.DataComponents.PARROT_VARIANT, parrotVariant.get());
+        parrot.setOwner((net.minecraft.world.entity.player.Player) (Object) this);
+        parrot.setPos(this.getX(), this.getY() + 0.699999988079071, this.getZ());
+        return ((ServerLevelBridge) this.level()).bridge$addEntitySerialized(parrot, CreatureSpawnEvent.SpawnReason.SHOULDER_ENTITY);
     }
 
     public CraftHumanEntity getBukkitEntity() {
@@ -433,13 +386,12 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
 
     @Override
     public void setItemSlot(EquipmentSlot slot, ItemStack stack, boolean silent) {
-        this.verifyEquippedItem(stack);
         if (slot == EquipmentSlot.MAINHAND) {
-            this.equipEventAndSound(slot, this.inventory.items.set(this.inventory.selected, stack), stack, silent);
+            this.equipEventAndSound(slot, this.inventory.setSelectedItem(stack), stack, silent);
         } else if (slot == EquipmentSlot.OFFHAND) {
-            this.equipEventAndSound(slot, this.inventory.offhand.set(0, stack), stack, silent);
+            { ItemStack old = this.inventory.getItem(net.minecraft.world.entity.player.Inventory.SLOT_OFFHAND); this.inventory.setItem(net.minecraft.world.entity.player.Inventory.SLOT_OFFHAND, stack); this.equipEventAndSound(slot, old, stack, silent); }
         } else if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR) {
-            this.equipEventAndSound(slot, this.inventory.armor.set(slot.getIndex(), stack), stack, silent);
+            { int index = slot.getIndex() + 36; ItemStack old = this.inventory.getItem(index); this.inventory.setItem(index, stack); this.equipEventAndSound(slot, old, stack, silent); }
         }
     }
 

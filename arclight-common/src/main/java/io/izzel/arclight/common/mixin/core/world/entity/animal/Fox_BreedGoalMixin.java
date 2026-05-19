@@ -10,14 +10,14 @@ import net.minecraft.stats.Stats;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.ai.goal.BreedGoal;
 import net.minecraft.world.entity.animal.Animal;
-import net.minecraft.world.entity.animal.Fox;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.entity.animal.fox.Fox;
+import net.minecraft.world.level.gamerules.GameRules;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityBreedEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-@Mixin(targets = "net.minecraft.world.entity.animal.Fox$FoxBreedGoal")
+@Mixin(targets = "net.minecraft.world.entity.animal.fox.Fox$FoxBreedGoal")
 public abstract class Fox_BreedGoalMixin extends BreedGoal {
 
     public Fox_BreedGoalMixin(Animal animal, double speedIn) {
@@ -46,13 +46,13 @@ public abstract class Fox_BreedGoalMixin extends BreedGoal {
             ServerPlayer serverplayerentity1 = this.partner.getLoveCause();
             ServerPlayer serverplayerentity2 = serverplayerentity;
             if (serverplayerentity != null) {
-                ((FoxBridge) foxentity).bridge$addTrustedUUID(serverplayerentity.getUUID());
+                ((FoxBridge) foxentity).bridge$addTrustedEntity(serverplayerentity);
             } else {
                 serverplayerentity2 = serverplayerentity1;
             }
 
             if (serverplayerentity1 != null && serverplayerentity != serverplayerentity1) {
-                ((FoxBridge) foxentity).bridge$addTrustedUUID(serverplayerentity1.getUUID());
+                ((FoxBridge) foxentity).bridge$addTrustedEntity(serverplayerentity1);
             }
             int experience = this.animal.getRandom().nextInt(7) + 1;
             final EntityBreedEvent entityBreedEvent = CraftEventFactory.callEntityBreedEvent(foxentity, this.animal, this.partner, serverplayerentity, ((AnimalBridge) this.animal).bridge$getBreedItem(), experience);
@@ -70,10 +70,10 @@ public abstract class Fox_BreedGoalMixin extends BreedGoal {
             this.animal.resetLove();
             this.partner.resetLove();
             foxentity.setAge(-24000);
-            foxentity.moveTo(this.animal.getX(), this.animal.getY(), this.animal.getZ(), 0.0F, 0.0F);
+            foxentity.snapTo(this.animal.getX(), this.animal.getY(), this.animal.getZ(), 0.0F, 0.0F);
             serverworld.addFreshEntityWithPassengers(foxentity);
             this.level.broadcastEntityEvent(this.animal, (byte) 18);
-            if (this.level.getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT)) {
+            if (this.level.getGameRules().get(GameRules.MOB_DROPS)) {
                 if (experience > 0) {
                     this.level.addFreshEntity(new ExperienceOrb(this.level, this.animal.getX(), this.animal.getY(), this.animal.getZ(), experience));
                 }

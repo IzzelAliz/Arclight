@@ -12,6 +12,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataContainer;
 import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataTypeRegistry;
@@ -48,19 +50,16 @@ public abstract class BlockEntityMixin implements BlockEntityBridge {
     public abstract void applyComponents(DataComponentMap dataComponentMap, DataComponentPatch dataComponentPatch);
 
     @Inject(method = "loadAdditional", at = @At("RETURN"))
-    public void arclight$loadPersistent(CompoundTag compound, HolderLookup.Provider provider, CallbackInfo ci) {
+    public void arclight$loadPersistent(ValueInput input, CallbackInfo ci) {
         this.persistentDataContainer = new CraftPersistentDataContainer(DATA_TYPE_REGISTRY);
 
-        CompoundTag persistentDataTag = compound.getCompound("PublicBukkitValues");
-        if (persistentDataTag != null) {
-            this.persistentDataContainer.putAll(persistentDataTag);
-        }
+        input.read("PublicBukkitValues", CompoundTag.CODEC).ifPresent(this.persistentDataContainer::putAll);
     }
 
-    @Inject(method = "saveWithoutMetadata", at = @At("RETURN"))
-    private void arclight$savePersistent(CallbackInfoReturnable<CompoundTag> cir) {
+    @Inject(method = "saveWithoutMetadata(Lnet/minecraft/world/level/storage/ValueOutput;)V", at = @At("RETURN"))
+    private void arclight$savePersistent(ValueOutput output, CallbackInfo ci) {
         if (this.persistentDataContainer != null && !this.persistentDataContainer.isEmpty()) {
-            cir.getReturnValue().put("PublicBukkitValues", this.persistentDataContainer.toTagCompound());
+            output.store("PublicBukkitValues", CompoundTag.CODEC, this.persistentDataContainer.toTagCompound());
         }
     }
 

@@ -2,9 +2,10 @@ package io.izzel.arclight.common.bridge.bukkit;
 
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.item.ItemStack;
 import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.inventory.CraftMetaItem;
@@ -15,13 +16,13 @@ import java.util.function.Function;
 
 public interface MaterialBridge {
 
-    ResourceLocation AIR = ResourceLocation.parse("air");
+    Identifier AIR = Identifier.parse("air");
 
-    void bridge$setupBlock(ResourceLocation key, MaterialPropertySpec spec);
+    void bridge$setupBlock(Identifier key, MaterialPropertySpec spec);
 
     void bridge$setupVanillaBlock(MaterialPropertySpec spec);
 
-    void bridge$setupItem(ResourceLocation key, MaterialPropertySpec spec);
+    void bridge$setupItem(Identifier key, MaterialPropertySpec spec);
 
     void bridge$setBlock();
 
@@ -43,7 +44,8 @@ public interface MaterialBridge {
     boolean bridge$shouldApplyStateFactory();
 
     default Item bridge$getCraftRemainingItem(Item item) {
-        return item.getCraftingRemainingItem();
+        ItemStack remaining = item.getCraftingRemainder();
+        return remaining.isEmpty() ? null : remaining.getItem();
     }
 
     default int bridge$forge$getMaxStackSize(Item item) {
@@ -55,7 +57,7 @@ public interface MaterialBridge {
     }
 
     default int bridge$forge$getBurnTime(Item item) {
-        var result = AbstractFurnaceBlockEntity.getFuel().get(item);
-        return result != null ? result : 0;
+        MinecraftServer server = io.izzel.arclight.common.mod.server.ArclightServer.getMinecraftServer();
+        return server == null ? 0 : server.fuelValues().burnDuration(new ItemStack(item));
     }
 }

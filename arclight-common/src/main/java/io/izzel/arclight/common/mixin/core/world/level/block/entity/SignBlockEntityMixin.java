@@ -11,6 +11,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.FilteredText;
 import net.minecraft.world.entity.player.Player;
@@ -49,7 +50,7 @@ public abstract class SignBlockEntityMixin extends BlockEntityMixin implements S
 
     // @formatter:off
     @Shadow public abstract ClientboundBlockEntityDataPacket getUpdatePacket();
-    @Shadow private static CommandSourceStack createCommandSourceStack(@Nullable Player p_279428_, Level p_279359_, BlockPos p_279430_) { return null; }
+    @Shadow private static CommandSourceStack createCommandSourceStack(@Nullable Player p_279428_, ServerLevel p_279359_, BlockPos p_279430_) { return null; }
     @Shadow public abstract boolean isWaxed();
     @Shadow @javax.annotation.Nullable public abstract UUID getPlayerWhoMayEdit();
     @Shadow public abstract boolean updateText(UnaryOperator<SignText> p_277877_, boolean p_277426_);
@@ -114,8 +115,8 @@ public abstract class SignBlockEntityMixin extends BlockEntityMixin implements S
         return signtext;
     }
 
-    @Redirect(method = "executeClickCommandsIfPresent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/SignBlockEntity;createCommandSourceStack(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/commands/CommandSourceStack;"))
-    private CommandSourceStack arclight$setSource(Player p_279428_, Level p_279359_, BlockPos p_279430_) {
+    @Redirect(method = "executeClickCommandsIfPresent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/SignBlockEntity;createCommandSourceStack(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/commands/CommandSourceStack;"))
+    private CommandSourceStack arclight$setSource(Player p_279428_, ServerLevel p_279359_, BlockPos p_279430_) {
         var stack = createCommandSourceStack(p_279428_, p_279359_, p_279430_);
         ((CommandSourceStackBridge) stack).bridge$setSource(this);
         return stack;

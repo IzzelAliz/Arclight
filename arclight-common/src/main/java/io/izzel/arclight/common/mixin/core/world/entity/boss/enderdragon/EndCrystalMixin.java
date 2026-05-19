@@ -1,10 +1,10 @@
 package io.izzel.arclight.common.mixin.core.world.entity.boss.enderdragon;
 
 import io.izzel.arclight.common.mixin.core.world.entity.EntityMixin;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
-import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.Level;
 import org.bukkit.Bukkit;
@@ -28,23 +28,22 @@ public abstract class EndCrystalMixin extends EntityMixin {
         }
     }
 
-    @Inject(method = "hurt", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/boss/enderdragon/EndCrystal;remove(Lnet/minecraft/world/entity/Entity$RemovalReason;)V"))
-    private void arclight$entityDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "hurtServer", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/boss/enderdragon/EndCrystal;remove(Lnet/minecraft/world/entity/Entity$RemovalReason;)V"))
+    private void arclight$entityDamage(ServerLevel level, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DEATH);
         if (CraftEventFactory.handleNonLivingEntityDamageEvent((EndCrystal) (Object) this, source, amount)) {
             cir.setReturnValue(false);
         }
     }
 
-    @Redirect(method = "hurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;)Lnet/minecraft/world/level/Explosion;"))
-    private Explosion arclight$blockPrime(Level world, Entity entityIn, DamageSource damageSource, ExplosionDamageCalculator calculator, double xIn, double yIn, double zIn, float explosionRadius, boolean fire, Level.ExplosionInteraction interaction) {
+    @Redirect(method = "hurtServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;)V"))
+    private void arclight$blockPrime(ServerLevel world, Entity entityIn, DamageSource damageSource, ExplosionDamageCalculator calculator, double xIn, double yIn, double zIn, float explosionRadius, boolean fire, Level.ExplosionInteraction interaction) {
         ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), explosionRadius, fire);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             this.unsetRemoved();
-            return null;
         } else {
-            return world.explode(entityIn, damageSource, calculator, xIn, yIn, zIn, event.getRadius(), event.getFire(), interaction);
+            world.explode(entityIn, damageSource, calculator, xIn, yIn, zIn, event.getRadius(), event.getFire(), interaction);
         }
     }
 }

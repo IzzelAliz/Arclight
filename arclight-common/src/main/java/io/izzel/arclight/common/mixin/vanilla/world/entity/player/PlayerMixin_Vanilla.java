@@ -6,6 +6,7 @@ import io.izzel.arclight.common.mod.util.ArclightDamageContainer;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Abilities;
@@ -21,13 +22,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class PlayerMixin_Vanilla extends LivingEntityMixin_Vanilla {
 
     @Decorate(method = "actuallyHurt", inject = true, at = @At("HEAD"))
-    private void arclight$vanilla$getEntityDamageEvent(DamageSource damageSource, float f, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer container) throws Throwable {
+    private void arclight$vanilla$getEntityDamageEvent(ServerLevel level, DamageSource damageSource, float f, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer container) throws Throwable {
         container = ArclightCaptures.getDamageContainer();
         DecorationOps.blackhole().invoke(container);
     }
 
     @Decorate(method = "actuallyHurt", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getDamageAfterMagicAbsorb(Lnet/minecraft/world/damagesource/DamageSource;F)F"))
-    private void arclight$vanilla$postApplyArmor(DamageSource source, float original, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer container) throws Throwable {
+    private void arclight$vanilla$postApplyArmor(ServerLevel level, DamageSource source, float original, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer container) throws Throwable {
         original = container.calculateStage(EntityDamageEvent.DamageModifier.ARMOR, original);
         DecorationOps.blackhole().invoke(original);
     }
@@ -46,7 +47,7 @@ public abstract class PlayerMixin_Vanilla extends LivingEntityMixin_Vanilla {
     }
 
     @Inject(method = "actuallyHurt", at = @At("RETURN"))
-    private void arclight$vanilla$popEntityDamageEvent(DamageSource arg, float g, CallbackInfo ci) {
+    private void arclight$vanilla$popEntityDamageEvent(ServerLevel level, DamageSource arg, float g, CallbackInfo ci) {
         ArclightCaptures.popDamageContainer();
     }
 }

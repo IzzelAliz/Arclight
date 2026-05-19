@@ -3,8 +3,8 @@ package io.izzel.arclight.common.mixin.core.world.item;
 import io.izzel.arclight.common.bridge.core.server.network.ServerGamePacketListenerImplBridge;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.ChorusFruitItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.consume_effects.TeleportRandomlyConsumeEffect;
 import net.minecraft.world.level.Level;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,11 +12,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(ChorusFruitItem.class)
-public class ChorusFruitItemMixin extends ItemMixin {
+@Mixin(TeleportRandomlyConsumeEffect.class)
+public class ChorusFruitItemMixin {
 
-    @Inject(method = "finishUsingItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;randomTeleport(DDDZ)Z"))
-    private void arclight$teleportCause(ItemStack itemStack, Level level, LivingEntity livingEntity, CallbackInfoReturnable<ItemStack> cir) {
+    @Inject(method = "apply", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;randomTeleport(DDDZ)Z"))
+    private void arclight$teleportCause(Level level, ItemStack itemStack, LivingEntity livingEntity, CallbackInfoReturnable<Boolean> cir) {
         if (livingEntity instanceof ServerPlayer p) {
             ((ServerGamePacketListenerImplBridge) p.connection).bridge$pushTeleportCause(PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT);
         }

@@ -13,6 +13,6 @@ import org.spongepowered.asm.mixin.Shadow;
 public abstract class BlockMixin_Vanilla implements BlockBridge {
 
     // @formatter:off
-    @Shadow public void fallOn(Level level, BlockState blockState, BlockPos blockPos, Entity entity, float f) {}
+    @Shadow public void fallOn(Level level, BlockState blockState, BlockPos blockPos, Entity entity, double d) {}
     // @formatter:on
 }

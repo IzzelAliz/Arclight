@@ -1,6 +1,7 @@
 package io.izzel.arclight.neoforge.mixin.core.server.network;
 
 import io.izzel.arclight.common.mod.server.ArclightServer;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.server.MinecraftServer;
@@ -13,26 +14,30 @@ import org.bukkit.event.player.PlayerLinksSendEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerConfigurationPacketListenerImpl.class)
 public abstract class ServerConfigurationPacketListenerImplMixin_NeoForge extends ServerCommonPacketListenerImplMixin_NeoForge {
 
     // @formatter:off
-    @Shadow protected abstract void runConfiguration();
+    @Shadow protected abstract void startConfiguration();
     // @formatter:on
 
-    @Decorate(method = "runConfiguration", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;serverLinks()Lnet/minecraft/server/ServerLinks;"))
+    @Decorate(method = "startConfiguration", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;serverLinks()Lnet/minecraft/server/ServerLinks;"))
     private ServerLinks arclight$sendLinksEvent(MinecraftServer instance) throws Throwable {
         var links = (ServerLinks) DecorationOps.callsite().invoke(instance);
         var wrapper = new CraftServerLinks(links);
-        var event = new PlayerLinksSendEvent((Player) bridge$getPlayer().bridge$getBukkitEntity(), wrapper);
+        var event = new PlayerLinksSendEvent((Player) ((ServerPlayerBridge) bridge$getPlayer()).bridge$getBukkitEntity(), wrapper);
         Bukkit.getPluginManager().callEvent(event);
         return wrapper.getServerLinks();
     }
 
-    @Redirect(method = "handlePong", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerConfigurationPacketListenerImpl;runConfiguration()V"))
-    private void arclight$runConfigurationMainThread(ServerConfigurationPacketListenerImpl instance) {
-        ArclightServer.executeOnMainThread(() -> this.runConfiguration());
+    @Inject(method = "startConfiguration", cancellable = true, at = @At("HEAD"))
+    private void arclight$runConfigurationMainThread(CallbackInfo ci) {
+        if (!ArclightServer.isPrimaryThread()) {
+            ArclightServer.executeOnMainThread(this::startConfiguration);
+            ci.cancel();
+        }
     }
 }

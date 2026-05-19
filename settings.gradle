@@ -14,7 +14,6 @@ include 'i18n-config'
 
 include 'arclight-common'
 
-include 'arclight-forge'
 include 'arclight-neoforge'
 include 'arclight-fabric'
 

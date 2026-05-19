@@ -4,7 +4,7 @@ import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.vehicle.AbstractMinecartContainer;
+import net.minecraft.world.entity.vehicle.minecart.AbstractMinecartContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
@@ -28,13 +28,6 @@ public abstract class AbstractMinecartContainerMixin extends AbstractMinecartMix
 
     @Inject(method = "<init>(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/level/Level;)V", at = @At("RETURN"))
     private void arclight$init(EntityType<?> type, Level world, CallbackInfo ci) {
-        this.itemStacks = NonNullList.withSize(getContainerSize(), ItemStack.EMPTY);
-        maxStack = MAX_STACK;
-        transaction = new ArrayList<>();
-    }
-
-    @Inject(method = "<init>(Lnet/minecraft/world/entity/EntityType;DDDLnet/minecraft/world/level/Level;)V", at = @At("RETURN"))
-    private void arclight$init(EntityType<?> type, double x, double y, double z, Level world, CallbackInfo ci) {
         this.itemStacks = NonNullList.withSize(getContainerSize(), ItemStack.EMPTY);
         maxStack = MAX_STACK;
         transaction = new ArrayList<>();

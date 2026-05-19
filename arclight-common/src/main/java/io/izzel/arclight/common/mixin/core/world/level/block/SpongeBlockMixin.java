@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.BlockPos.TraversalNodeStatus;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
@@ -47,7 +48,7 @@ public class SpongeBlockMixin {
 
         }, (blockposition1) -> {
             if (blockposition1.equals(blockposition)) {
-                return true;
+                return TraversalNodeStatus.ACCEPT;
             } else {
                 // CraftBukkit start
                 BlockState iblockdata = blockList.getBlockState(blockposition1);
@@ -55,7 +56,7 @@ public class SpongeBlockMixin {
                 // CraftBukkit end
 
                 if (!fluid.is(FluidTags.WATER)) {
-                    return false;
+                    return TraversalNodeStatus.SKIP;
                 } else {
                     Block block = iblockdata.getBlock();
 
@@ -63,7 +64,7 @@ public class SpongeBlockMixin {
                         BucketPickup ifluidsource = (BucketPickup) block;
 
                         if (!ifluidsource.pickupBlock(null, blockList, blockposition1, iblockdata).isEmpty()) { // CraftBukkit
-                            return true;
+                            return TraversalNodeStatus.ACCEPT;
                         }
                     }
 
@@ -71,7 +72,7 @@ public class SpongeBlockMixin {
                         blockList.setBlock(blockposition1, Blocks.AIR.defaultBlockState(), 3); // CraftBukkit
                     } else {
                         if (!iblockdata.is(Blocks.KELP) && !iblockdata.is(Blocks.KELP_PLANT) && !iblockdata.is(Blocks.SEAGRASS) && !iblockdata.is(Blocks.TALL_SEAGRASS)) {
-                            return false;
+                            return TraversalNodeStatus.SKIP;
                         }
 
                         // CraftBukkit start
@@ -82,7 +83,7 @@ public class SpongeBlockMixin {
                         // CraftBukkit end
                     }
 
-                    return true;
+                    return TraversalNodeStatus.ACCEPT;
                 }
             }
         });

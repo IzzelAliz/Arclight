@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
 import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -10,6 +11,7 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.RecipeBookType;
 import net.minecraft.world.item.crafting.AbstractCookingRecipe;
+import net.minecraft.world.item.crafting.RecipePropertySet;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import org.bukkit.craftbukkit.v.inventory.CraftInventoryFurnace;
@@ -33,8 +35,8 @@ public abstract class AbstractFurnaceMenuMixin extends AbstractContainerMenuMixi
     private CraftFurnaceView bukkitEntity = null;
     private Inventory playerInventory;
 
-    @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;Lnet/minecraft/world/item/crafting/RecipeType;Lnet/minecraft/world/inventory/RecipeBookType;ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;Lnet/minecraft/world/inventory/ContainerData;)V", at = @At("RETURN"))
-    public void arclight$init(MenuType<?> p_i241922_1_, RecipeType<? extends AbstractCookingRecipe> p_i241922_2_, RecipeBookType p_i241922_3_, int p_i241922_4_, Inventory playerInventoryIn, Container p_i241922_6_, ContainerData p_i241922_7_, CallbackInfo ci) {
+    @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;Lnet/minecraft/world/item/crafting/RecipeType;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/inventory/RecipeBookType;ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;Lnet/minecraft/world/inventory/ContainerData;)V", at = @At("RETURN"))
+    public void arclight$init(MenuType<?> menuType, RecipeType<? extends AbstractCookingRecipe> recipeType, ResourceKey<RecipePropertySet> recipePropertySet, RecipeBookType recipeBookType, int containerId, Inventory playerInventoryIn, Container container, ContainerData data, CallbackInfo ci) {
         this.playerInventory = playerInventoryIn;
     }
 

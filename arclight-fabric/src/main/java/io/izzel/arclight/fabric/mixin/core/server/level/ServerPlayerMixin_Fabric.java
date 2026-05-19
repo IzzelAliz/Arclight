@@ -17,7 +17,6 @@ import org.spongepowered.asm.mixin.Shadow;
 public abstract class ServerPlayerMixin_Fabric extends io.izzel.arclight.fabric.mixin.core.world.entity.player.PlayerMixin_Fabric implements ServerPlayerBridge {
 
     // @formatter:off
-    @Shadow public abstract ServerLevel serverLevel();
     @Shadow public boolean isChangingDimension;
     @Shadow public boolean wonGame;
     @Shadow public ServerGamePacketListenerImpl connection;

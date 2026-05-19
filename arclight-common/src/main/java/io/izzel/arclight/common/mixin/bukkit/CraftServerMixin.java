@@ -8,18 +8,16 @@ import com.mojang.serialization.Lifecycle;
 import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.server.dedicated.DedicatedServerBridge;
-import io.izzel.arclight.common.bridge.core.world.level.GameRules_ValueBridge;
 import io.izzel.arclight.common.bridge.core.world.level.storage.LevelStorageSourceBridge;
 import io.izzel.arclight.common.bridge.core.world.level.storage.PrimaryLevelDataBridge;
 import io.izzel.arclight.i18n.ArclightConfig;
-import jline.console.ConsoleReader;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.NbtException;
 import net.minecraft.nbt.ReportedNbtException;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.RegistryLayer;
 import net.minecraft.server.WorldLoader;
@@ -32,9 +30,10 @@ import net.minecraft.util.GsonHelper;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.ai.village.VillageSiege;
 import net.minecraft.world.entity.npc.CatSpawner;
-import net.minecraft.world.entity.npc.WanderingTraderSpawner;
+import net.minecraft.world.entity.npc.wanderingtrader.WanderingTraderSpawner;
 import net.minecraft.world.level.CustomSpawner;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.biome.BiomeManager;
@@ -157,15 +156,6 @@ public abstract class CraftServerMixin implements CraftServerBridge {
         this.playerView = Collections.unmodifiableList(Lists.transform(playerList.players, player ->
                 ((ServerPlayerBridge)player).bridge$getBukkitEntity()
                 ));
-    }
-
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite(remap = false)
-    public ConsoleReader getReader() {
-        return null;
     }
 
     @Inject(method = "dispatchCommand", remap = false, cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lorg/spigotmc/AsyncCatcher;catchOp(Ljava/lang/String;)V"))
@@ -320,7 +310,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
                 case CUSTOM -> {
                     if (ArclightConfig.spec().getExperimental().canOverrideWorldgen()) {
                         isCustom = true;
-                        final var location = ResourceLocation.tryBuild("bukkit", name);
+                        final var location = Identifier.tryBuild("bukkit", name);
                         if (location == null) {
                             throw new IllegalArgumentException("Illegal world name: " + name);
                         }
@@ -379,7 +369,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
             boolean hardcore = creator.hardcore();
             WorldLoader.DataLoadContext context = ((DedicatedServerBridge) this.console).arclight$dataLoadContext();
             RegistryAccess.Frozen datapackDimensions = context.datapackDimensions();
-            Registry<LevelStem> datapackStems = datapackDimensions.registryOrThrow(Registries.LEVEL_STEM);
+            Registry<LevelStem> datapackStems = datapackDimensions.lookupOrThrow(Registries.LEVEL_STEM);
             RegistryAccess.Frozen dimensions;
             PrimaryLevelData levelData;
             if (dynamic != null) {
@@ -394,7 +384,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
                 // Arclight end
             } else {
                 WorldOptions options = new WorldOptions(creator.seed(), creator.generateStructures(), false);
-                LevelSettings settings = new LevelSettings(name, GameType.byId(this.getDefaultGameMode().getValue()), hardcore, Difficulty.EASY, false, new GameRules(), context.dataConfiguration());
+                LevelSettings settings = new LevelSettings(name, GameType.byId(this.getDefaultGameMode().getValue()), hardcore, Difficulty.EASY, false, new GameRules(FeatureFlags.DEFAULT_FLAGS), context.dataConfiguration());
                 // Arclight start: handle base generator
                 if (isCustom) {
                     DedicatedServerProperties.WorldDimensionData properties = new DedicatedServerProperties.WorldDimensionData(GsonHelper.parse(creator.generatorSettings().isEmpty() ? "{}" : creator.generatorSettings()), creator.type().name().toLowerCase(Locale.ROOT));
@@ -419,8 +409,8 @@ public abstract class CraftServerMixin implements CraftServerBridge {
                 // Arclight end
             }
 
-            Registry<LevelStem> stems = dimensions.registryOrThrow(Registries.LEVEL_STEM);
-            LevelStem stem = stems.get(actualDimension);
+            Registry<LevelStem> stems = dimensions.lookupOrThrow(Registries.LEVEL_STEM);
+            LevelStem stem = stems.getValue(actualDimension);
             if (stem == null) {
                 throw new IllegalArgumentException("Unknown level stem: " + actualDimension);
             }
@@ -446,17 +436,17 @@ public abstract class CraftServerMixin implements CraftServerBridge {
             } else if (name.equals(levelName + "_the_end")) {
                 worldKey = net.minecraft.world.level.Level.END;
             } else {
-                worldKey = ResourceKey.create(Registries.DIMENSION, ResourceLocation.withDefaultNamespace(name.toLowerCase(Locale.ROOT)));
+                worldKey = ResourceKey.create(Registries.DIMENSION, Identifier.withDefaultNamespace(name.toLowerCase(Locale.ROOT)));
             }
 
             if (!creator.keepSpawnInMemory()) {
-                ((GameRules_ValueBridge<GameRules.IntegerValue>)levelData.getGameRules().getRule(GameRules.RULE_SPAWN_CHUNK_RADIUS)).arclight$set(0, null);
+                levelData.getGameRules().set(GameRules.RESPAWN_RADIUS, 0, null);
             }
 
             this.bridge$offerBiomeProviderCache(name, biomeProvider);
             this.bridge$offerGeneratorCache(name, generator);
             this.bridge$offerEnvironmentCache(name, creator.environment());
-            ServerLevel internal = new ServerLevel(this.console, this.console.executor, worldSession, levelData, worldKey, stem, this.getServer().progressListenerFactory.create(levelData.getGameRules().getInt(GameRules.RULE_SPAWN_CHUNK_RADIUS)), levelData.isDebugWorld(), j, (List)(creator.environment() == World.Environment.NORMAL ? list : ImmutableList.of()), true, this.console.overworld().getRandomSequences());
+            ServerLevel internal = new ServerLevel(this.console, this.console.executor, worldSession, levelData, worldKey, stem, levelData.isDebugWorld(), j, (List)(creator.environment() == World.Environment.NORMAL ? list : ImmutableList.of()), true, this.console.overworld().getRandomSequences());
             if (!this.worlds.containsKey(name.toLowerCase(Locale.ROOT))) {
                 return null;
             } else {

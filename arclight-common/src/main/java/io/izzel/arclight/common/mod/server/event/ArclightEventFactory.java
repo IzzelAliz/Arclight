@@ -226,7 +226,7 @@ public abstract class ArclightEventFactory {
                 var blockData = world.getBlockState(position);
 
                 if (blockData.getBlock() instanceof BedBlock) {
-                    world.blockUpdated(position, Blocks.AIR);
+                    world.updateNeighborsAt(position, Blocks.AIR);
                     blockData.updateNeighbourShapes(world, position, 3);
                 }
             }

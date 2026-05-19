@@ -45,11 +45,11 @@ public abstract class MapItemSavedDataMixin implements MapItemSavedDataBridge {
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    @Redirect(method = "load", at = @At(value = "INVOKE", target = "Ljava/util/Optional;orElseThrow(Ljava/util/function/Supplier;)Ljava/lang/Object;"))
+    @Redirect(method = "load", require = 0, at = @At(value = "INVOKE", target = "Ljava/util/Optional;orElseThrow(Ljava/util/function/Supplier;)Ljava/lang/Object;"))
     private static Object arclight$customDimension(Optional<ResourceKey<Level>> optional, Supplier<?> exceptionSupplier, CompoundTag nbt) {
         return optional.orElseGet(() -> {
-            long least = nbt.getLong("UUIDLeast");
-            long most = nbt.getLong("UUIDMost");
+            long least = nbt.getLong("UUIDLeast").orElse(0L);
+            long most = nbt.getLong("UUIDMost").orElse(0L);
             if (least != 0L && most != 0L) {
                 UUID uniqueId = new UUID(most, least);
                 CraftWorld world = (CraftWorld) Bukkit.getWorld(uniqueId);
@@ -61,7 +61,7 @@ public abstract class MapItemSavedDataMixin implements MapItemSavedDataBridge {
         });
     }
 
-    @Inject(method = "save", at = @At("HEAD"))
+    @Inject(method = "save", require = 0, at = @At("HEAD"))
     public void arclight$storeDimension(CompoundTag compound, HolderLookup.Provider provider, CallbackInfoReturnable<CompoundTag> cir) {
         if (this.uniqueId == null) {
             for (org.bukkit.World world : this.server.getWorlds()) {

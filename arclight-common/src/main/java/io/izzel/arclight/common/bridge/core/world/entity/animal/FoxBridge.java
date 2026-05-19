@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.bridge.core.world.entity.animal;
 
-import java.util.UUID;
+import net.minecraft.world.entity.LivingEntity;
 
 public interface FoxBridge extends AnimalBridge {
 
-    void bridge$addTrustedUUID(UUID uuidIn);
+    void bridge$addTrustedEntity(LivingEntity entity);
 }

@@ -18,7 +18,7 @@ public abstract class TamableAnimalMixin extends AnimalMixin {
     @Shadow public abstract boolean isTame();
     // @formatter:on
 
-    @Decorate(method = "maybeTeleportTo", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/TamableAnimal;moveTo(DDDFF)V"))
+    @Decorate(method = "maybeTeleportTo", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/TamableAnimal;snapTo(DDDFF)V"))
     private void arclight$teleportEvent(TamableAnimal instance, double x, double y, double z, float yaw, float pitch) throws Throwable {
         EntityTeleportEvent event = CraftEventFactory.callEntityTeleportEvent(instance, x, y, z);
         if (event.isCancelled()) {

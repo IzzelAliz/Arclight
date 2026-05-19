@@ -3,15 +3,13 @@ package io.izzel.arclight.common.mixin.core.world.entity.vehicle;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.vehicle.AbstractMinecartBridge;
 import io.izzel.arclight.mixin.Decorate;
-import io.izzel.arclight.mixin.DecorationOps;
-import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MoverType;
-import net.minecraft.world.entity.vehicle.AbstractMinecart;
+import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -22,29 +20,13 @@ import org.bukkit.event.vehicle.VehicleUpdateEvent;
 import org.bukkit.util.Vector;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(AbstractMinecart.class)
 public abstract class AbstractMinecartMixin extends VehicleEntityMixin implements AbstractMinecartBridge {
-
-    // @formatter:off
-    @Shadow private int lerpSteps;
-    @Shadow private double lerpX;
-    @Shadow private double lerpY;
-    @Shadow private double lerpZ;
-    @Shadow private double lerpYRot;
-    @Shadow private double lerpXRot;
-    @Shadow protected abstract void moveAlongTrack(BlockPos pos, BlockState state);
-    @Shadow public abstract void activateMinecart(int x, int y, int z, boolean receivingPower);
-    @Shadow private boolean flipped;
-    @Shadow public abstract AbstractMinecart.Type getMinecartType();
-    @Shadow private boolean onRails;
-    // @formatter:on
 
     public boolean slowWhenEmpty = true;
     private double derailedX = 0.5;
@@ -75,7 +57,7 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin implement
         this.arclight$prevLocation = new Location(null, this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/vehicle/AbstractMinecart;setRot(FF)V"))
+    @Inject(method = "tick", at = @At("RETURN"))
     private void arclight$vehicleUpdateEvent(CallbackInfo ci) {
         org.bukkit.World bworld = this.level().bridge$getWorld();
         Location to = new Location(bworld, this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
@@ -90,44 +72,12 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin implement
         }
     }
 
-    @Decorate(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;startRiding(Lnet/minecraft/world/entity/Entity;)Z"))
-    private boolean arclight$ridingCollide(Entity instance, Entity entity) throws Throwable {
-        VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), instance.bridge$getBukkitEntity());
-        Bukkit.getPluginManager().callEvent(collisionEvent);
-        if (collisionEvent.isCancelled()) {
-            return false;
-        }
-        return (boolean) DecorationOps.callsite().invoke(instance, entity);
-    }
-
-    @Decorate(method = "tick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/Entity;push(Lnet/minecraft/world/entity/Entity;)V"))
-    private void arclight$pushCollide(Entity instance, Entity entity) throws Throwable {
-        if (!this.isPassengerOfSameVehicle(instance)) {
-            VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), instance.bridge$getBukkitEntity());
-            Bukkit.getPluginManager().callEvent(collisionEvent);
-            if (collisionEvent.isCancelled()) {
-                return;
-            }
-        }
-        DecorationOps.callsite().invoke(instance, entity);
-    }
-
-    @Decorate(method = "tick", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/entity/Entity;push(Lnet/minecraft/world/entity/Entity;)V"))
-    private void arclight$pushCollide2(Entity instance, Entity entity) throws Throwable {
-        VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), instance.bridge$getBukkitEntity());
-        Bukkit.getPluginManager().callEvent(collisionEvent);
-        if (collisionEvent.isCancelled()) {
-            return;
-        }
-        DecorationOps.callsite().invoke(instance, entity);
-    }
-
     /**
      * @author IzzelAliz
      * @reason
      */
     @Overwrite
-    protected double getMaxSpeed() {
+    protected double getMaxSpeed(ServerLevel level) {
         return (this.isInWater() ? this.maxSpeed / 2.0D : this.maxSpeed);
     }
 
@@ -136,8 +86,8 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin implement
      * @reason
      */
     @Overwrite
-    protected void comeOffTrack() {
-        final double d0 = this.getMaxSpeed();
+    protected void comeOffTrack(ServerLevel level) {
+        final double d0 = this.getMaxSpeed(level);
         final Vec3 vec3d = this.getDeltaMovement();
         this.setDeltaMovement(Mth.clamp(vec3d.x, -d0, d0), vec3d.y, Mth.clamp(vec3d.z, -d0, d0));
         if (this.onGround) {
@@ -149,12 +99,21 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin implement
         }
     }
 
-    @Redirect(method = "applyNaturalSlowdown", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/AbstractMinecart;isVehicle()Z"))
-    private boolean arclight$slowWhenEmpty(AbstractMinecart abstractMinecartEntity) {
-        return this.isVehicle() || !this.slowWhenEmpty;
+    /**
+     * @author IzzelAliz
+     * @reason
+     */
+    @Overwrite
+    protected Vec3 applyNaturalSlowdown(Vec3 movement) {
+        double slowdown = this.slowWhenEmpty ? 0.96D : 0.997D;
+        Vec3 vec3 = movement.multiply(slowdown, 0.0D, slowdown);
+        if (this.isInWater()) {
+            vec3 = vec3.scale(0.949999988079071D);
+        }
+        return vec3;
     }
 
-    @Inject(method = "push", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/AbstractMinecart;hasPassenger(Lnet/minecraft/world/entity/Entity;)Z"))
+    @Inject(method = "push", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/minecart/AbstractMinecart;hasPassenger(Lnet/minecraft/world/entity/Entity;)Z"))
     private void arclight$vehicleCollide(Entity entityIn, CallbackInfo ci) {
         if (!this.hasPassenger(entityIn)) {
             VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), ((EntityBridge) entityIn).bridge$getBukkitEntity());

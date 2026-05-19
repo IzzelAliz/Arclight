@@ -2,12 +2,9 @@ package io.izzel.arclight.neoforge.mod;
 
 import com.google.common.graph.Graph;
 import com.google.common.graph.Graphs;
-import cpw.mods.modlauncher.ClassTransformer;
-import cpw.mods.modlauncher.TransformingClassLoader;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.ArclightCommon;
 import net.neoforged.fml.ModList;
-import net.neoforged.fml.loading.FMLLoader;
 import org.objectweb.asm.ClassReader;
 
 import java.lang.invoke.MethodHandle;
@@ -22,9 +19,10 @@ public class NeoForgeCommonImpl implements ArclightCommon.Api {
     static {
         try {
             ClassLoader classLoader = NeoForgeCommonImpl.class.getClassLoader();
-            Field classTransformer = TransformingClassLoader.class.getDeclaredField("classTransformer");
+            Class<?> transformingClassLoader = Class.forName("cpw.mods.modlauncher.TransformingClassLoader");
+            Field classTransformer = transformingClassLoader.getDeclaredField("classTransformer");
             classTransformer.setAccessible(true);
-            ClassTransformer transformer = (ClassTransformer) classTransformer.get(classLoader);
+            Object transformer = classTransformer.get(classLoader);
             Method transform = transformer.getClass().getDeclaredMethod("transform", byte[].class, String.class, String.class);
             MH_TRANSFORM = Unsafe.lookup().unreflect(transform).bindTo(transformer);
         } catch (Throwable t) {
@@ -44,7 +42,7 @@ public class NeoForgeCommonImpl implements ArclightCommon.Api {
 
     @Override
     public boolean isModLoaded(String modid) {
-        return ModList.get() != null ? ModList.get().isLoaded(modid) : FMLLoader.getLoadingModList().getModFileById(modid) != null;
+        return ModList.get() != null && ModList.get().isLoaded(modid);
     }
 
     @Override

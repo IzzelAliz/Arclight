@@ -3,11 +3,12 @@ package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.projectile.SmallFireball;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.entity.projectile.hurtingprojectile.SmallFireball;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -28,7 +29,7 @@ public abstract class SmallFireballMixin extends AbstractHurtingProjectileMixin 
     @Inject(method = "<init>(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/phys/Vec3;)V", at = @At("RETURN"))
     private void arclight$init(Level level, LivingEntity livingEntity, Vec3 vec3, CallbackInfo ci) {
         if (this.getOwner() != null && this.getOwner() instanceof Mob) {
-            this.isIncendiary = this.level().getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
+            this.isIncendiary = this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel ? serverLevel.getGameRules().get(GameRules.MOB_GRIEFING) : false;
         }
     }
 
@@ -44,13 +45,13 @@ public abstract class SmallFireballMixin extends AbstractHurtingProjectileMixin 
 
     @Inject(method = "onHitBlock", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
-    private void arclight$burnBlock(BlockHitResult result, CallbackInfo ci, Entity entity, BlockPos pos) {
+    private void arclight$burnBlock(BlockHitResult result, CallbackInfo ci, ServerLevel level, Entity entity, BlockPos pos) {
         if (!this.isIncendiary || CraftEventFactory.callBlockIgniteEvent(this.level(), pos, (SmallFireball) (Object) this).isCancelled()) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/SmallFireball;discard()V"))
+    @Inject(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/hurtingprojectile/SmallFireball;discard()V"))
     private void arclight$hitCause(HitResult hitResult, CallbackInfo ci) {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.HIT);
     }

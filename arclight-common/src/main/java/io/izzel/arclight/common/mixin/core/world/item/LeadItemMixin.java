@@ -11,6 +11,7 @@ import net.minecraft.world.entity.decoration.LeashFenceKnotEntity;
 import net.minecraft.world.item.LeadItem;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v.CraftEquipmentSlot;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
@@ -42,16 +43,16 @@ public class LeadItemMixin {
     }
 
     @SuppressWarnings("unchecked")
-    @Decorate(method = "bindPlayerMobs", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/LeadItem;leashableInArea(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Ljava/util/function/Predicate;)Ljava/util/List;"))
-    private static List<Leashable> arclight$leashEvent(Level level, BlockPos blockPos, Predicate<Leashable> predicate, net.minecraft.world.entity.player.Player player) throws Throwable {
-        var leashableList = (List<Leashable>) DecorationOps.callsite().invoke(level, blockPos, predicate);
-        var leashFenceKnotEntity = LeashFenceKnotEntity.getOrCreateKnot(level, blockPos);
+    @Decorate(method = "bindPlayerMobs", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Leashable;leashableInArea(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/phys/Vec3;Ljava/util/function/Predicate;)Ljava/util/List;"))
+    private static List<Leashable> arclight$leashEvent(Level level, Vec3 pos, Predicate<Leashable> predicate, net.minecraft.world.entity.player.Player player, Level level1, BlockPos blockPos) throws Throwable {
+        var leashableList = (List<Leashable>) DecorationOps.callsite().invoke(level, pos, predicate);
+        var leashFenceKnotEntity = LeashFenceKnotEntity.getOrCreateKnot(level1, blockPos);
         var hand = CraftEquipmentSlot.getHand(arclight$hand);
-        var event = new HangingPlaceEvent((org.bukkit.entity.Hanging) leashFenceKnotEntity.bridge$getBukkitEntity(), player != null ? (org.bukkit.entity.Player) player.bridge$getBukkitEntity() : null, CraftBlock.at(level, blockPos), org.bukkit.block.BlockFace.SELF, hand);
+        var event = new HangingPlaceEvent((org.bukkit.entity.Hanging) leashFenceKnotEntity.bridge$getBukkitEntity(), player != null ? (org.bukkit.entity.Player) player.bridge$getBukkitEntity() : null, CraftBlock.at(level1, blockPos), org.bukkit.block.BlockFace.SELF, hand);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             leashFenceKnotEntity.discard();
-            return (List<Leashable>) DecorationOps.cancel().invoke(InteractionResult.PASS);
+            return (List<Leashable>) DecorationOps.cancel().invoke((InteractionResult) InteractionResult.PASS);
         }
         var newList = leashableList.stream().filter(it -> {
             if (it instanceof Entity leashed) {

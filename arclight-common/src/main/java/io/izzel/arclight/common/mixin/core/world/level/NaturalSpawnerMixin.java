@@ -15,9 +15,6 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.storage.LevelData;
-import org.bukkit.craftbukkit.v.util.CraftSpawnCategory;
-import org.bukkit.entity.SpawnCategory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,6 +24,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Mixin(NaturalSpawner.class)
 public abstract class NaturalSpawnerMixin {
@@ -38,31 +38,17 @@ public abstract class NaturalSpawnerMixin {
 
     /**
      * @author IzzelAliz
-     * @reason
+     * @reason Spigot mob spawn timings while preserving new filtered category flow
      */
     @Overwrite
-    public static void spawnForChunk(ServerLevel world, LevelChunk chunk, NaturalSpawner.SpawnState manager, boolean flag, boolean flag1, boolean flag2) {
-        world.getProfiler().push("spawner");
-        MobCategory[] classifications = SPAWNING_CATEGORIES;
-        LevelData worldInfo = world.getLevelData();
-        for (MobCategory classification : classifications) {
-            boolean spawnThisTick = true;
-            int limit = classification.getMaxInstancesPerChunk();
-            SpawnCategory spawnCategory = CraftSpawnCategory.toBukkit(classification);
-            if (CraftSpawnCategory.isValidForLimits(spawnCategory)) {
-                spawnThisTick = ((WorldBridge) world).bridge$ticksPerSpawnCategory().getLong(spawnCategory) != 0 && worldInfo.getGameTime() % ((WorldBridge) world).bridge$ticksPerSpawnCategory().getLong(spawnCategory) == 0;
-                limit = world.bridge$getWorld().getSpawnLimit(spawnCategory);
-            }
-            if (spawnThisTick) {
-                if (limit != 0) {
-                    if ((flag || !classification.isFriendly()) && (flag1 || classification.isFriendly()) && (flag2 || !classification.isPersistent())
-                        && ((WorldEntitySpawnerBridge.EntityDensityManagerBridge) manager).bridge$canSpawn(classification, chunk.getPos(), limit)) {
-                        spawnCategoryForChunk(classification, world, chunk, ((WorldEntitySpawnerBridge.EntityDensityManagerBridge) manager)::bridge$canSpawn, ((WorldEntitySpawnerBridge.EntityDensityManagerBridge) manager)::bridge$updateDensity);
-                    }
-                }
+    public static void spawnForChunk(ServerLevel level, LevelChunk chunk, NaturalSpawner.SpawnState state, List<MobCategory> spawningCategories) {
+        for (MobCategory mobCategory : spawningCategories) {
+            if (((WorldEntitySpawnerBridge.EntityDensityManagerBridge) state).bridge$canSpawnLocal(mobCategory, chunk.getPos())) {
+                spawnCategoryForChunk(mobCategory, level, chunk,
+                    ((WorldEntitySpawnerBridge.EntityDensityManagerBridge) state)::bridge$canSpawn,
+                    ((WorldEntitySpawnerBridge.EntityDensityManagerBridge) state)::bridge$updateDensity);
             }
         }
-        world.getProfiler().pop();
     }
 
     @Inject(method = "spawnCategoryForPosition(Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkAccess;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/NaturalSpawner$SpawnPredicate;Lnet/minecraft/world/level/NaturalSpawner$AfterSpawnCallback;)V",

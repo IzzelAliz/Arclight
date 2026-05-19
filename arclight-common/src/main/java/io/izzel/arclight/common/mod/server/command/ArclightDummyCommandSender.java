@@ -5,6 +5,7 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
@@ -43,11 +44,7 @@ public class ArclightDummyCommandSender extends ArclightDummyPermissible impleme
 
         @Override
         public void sendMessage(@NotNull BaseComponent component) {
-            var json = ComponentSerializer.toJson(component);
-            var result = Component.Serializer.fromJson(json, stack.getServer().registryAccess());
-            if (result != null) {
-                stack.sendSystemMessage(result);
-            }
+            stack.sendSystemMessage(Component.literal(component.toPlainText()));
         }
     }
 

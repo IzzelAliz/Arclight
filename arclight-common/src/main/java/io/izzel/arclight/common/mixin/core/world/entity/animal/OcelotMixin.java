@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.animal.Ocelot;
+import net.minecraft.world.entity.animal.feline.Ocelot;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

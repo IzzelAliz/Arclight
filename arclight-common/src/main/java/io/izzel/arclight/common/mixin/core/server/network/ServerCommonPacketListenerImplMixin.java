@@ -9,12 +9,12 @@ import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
+import io.netty.channel.ChannelFutureListener;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.Connection;
 import net.minecraft.network.ConnectionProtocol;
 import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.network.PacketListener;
-import net.minecraft.network.PacketSendListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketUtils;
@@ -23,7 +23,7 @@ import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket;
 import net.minecraft.network.protocol.cookie.ServerboundCookieResponsePacket;
 import net.minecraft.network.protocol.game.ClientboundSetDefaultSpawnPositionPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
@@ -138,8 +138,8 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
         disconnect(s);
     }
 
-    @Decorate(method = "disconnect(Lnet/minecraft/network/DisconnectionDetails;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Connection;send(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketSendListener;)V"))
-    private void arclight$kickEvent(Connection instance, Packet<?> packet, PacketSendListener packetSendListener, DisconnectionDetails disconnectionDetails) throws Throwable {
+    @Decorate(method = "disconnect(Lnet/minecraft/network/DisconnectionDetails;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Connection;send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;)V"))
+    private void arclight$kickEvent(Connection instance, Packet<?> packet, ChannelFutureListener listener, DisconnectionDetails disconnectionDetails) throws Throwable {
         if (this.processedDisconnect) {
             DecorationOps.cancel().invoke();
             return;
@@ -177,18 +177,19 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
         ArclightCaptures.captureQuitMessage(event.getLeaveMessage());
         Component textComponent = CraftChatMessage.fromString(event.getReason(), true)[0];
         Packet<?> newPacket = new ClientboundDisconnectPacket(textComponent);
-        DecorationOps.callsite().invoke(instance, newPacket, packetSendListener);
+        DecorationOps.callsite().invoke(instance, newPacket, listener);
         this.onDisconnect(disconnectionDetails);
     }
 
-    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketSendListener;)V", cancellable = true, at = @At("HEAD"))
-    private void arclight$updateCompassTarget(Packet<?> packetIn, PacketSendListener futureListeners, CallbackInfo ci) {
+    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;)V", cancellable = true, at = @At("HEAD"))
+    private void arclight$updateCompassTarget(Packet<?> packetIn, ChannelFutureListener listener, CallbackInfo ci) {
         if (packetIn == null || processedDisconnect) {
             ci.cancel();
             return;
         }
         if (packetIn instanceof ClientboundSetDefaultSpawnPositionPacket packet6) {
-            ((ServerPlayerBridge) this.player).bridge$setCompassTarget(new Location(this.getCraftPlayer().getWorld(), packet6.pos.getX(), packet6.pos.getY(), packet6.pos.getZ()));
+            var pos = packet6.respawnData().pos();
+            ((ServerPlayerBridge) this.player).bridge$setCompassTarget(new Location(this.getCraftPlayer().getWorld(), pos.getX(), pos.getY(), pos.getZ()));
         }
     }
 
@@ -199,7 +200,7 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
 
     @Inject(method = "handleCookieResponse", cancellable = true, at = @At("HEAD"))
     private void arclight$handleCookie(ServerboundCookieResponsePacket serverboundCookieResponsePacket, CallbackInfo ci) {
-        PacketUtils.ensureRunningOnSameThread(serverboundCookieResponsePacket, (ServerCommonPacketListenerImpl) (Object) this, this.server);
+        PacketUtils.ensureRunningOnSameThread(serverboundCookieResponsePacket, (ServerCommonPacketListenerImpl) (Object) this, this.server.packetProcessor());
         if (((CraftPlayer) this.player.bridge$getBukkitEntity()).handleCookieResponse(serverboundCookieResponsePacket)) {
             ci.cancel();
         }

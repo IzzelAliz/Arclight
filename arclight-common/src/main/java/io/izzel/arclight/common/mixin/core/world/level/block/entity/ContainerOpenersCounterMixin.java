@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.ContainerOpenersCounter;
 import net.minecraft.world.level.block.state.BlockState;
@@ -38,7 +38,7 @@ public abstract class ContainerOpenersCounterMixin {
     }
 
     @Inject(method = "incrementOpeners", at = @At("HEAD"))
-    private void arclight$increase(Player p_155453_, Level level, BlockPos pos, BlockState p_155456_, CallbackInfo ci) {
+    private void arclight$increase(LivingEntity p_155453_, Level level, BlockPos pos, BlockState p_155456_, double distance, CallbackInfo ci) {
         int oldPower = Math.max(0, Math.min(15, this.openCount++));
         if (level.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.TRAPPED_CHEST)) {
             int newPower = Math.max(0, Math.min(15, this.openCount));
@@ -50,7 +50,7 @@ public abstract class ContainerOpenersCounterMixin {
     }
 
     @Inject(method = "decrementOpeners", at = @At("HEAD"))
-    private void arclight$decrease(Player p_155453_, Level level, BlockPos pos, BlockState p_155456_, CallbackInfo ci) {
+    private void arclight$decrease(LivingEntity p_155453_, Level level, BlockPos pos, BlockState p_155456_, CallbackInfo ci) {
         int oldPower = Math.max(0, Math.min(15, this.openCount--));
         if (level.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.TRAPPED_CHEST)) {
             int newPower = Math.max(0, Math.min(15, this.openCount));

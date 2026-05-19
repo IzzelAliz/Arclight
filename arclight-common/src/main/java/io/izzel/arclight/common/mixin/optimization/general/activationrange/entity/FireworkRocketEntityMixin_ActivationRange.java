@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.optimization.general.activationrange.entity;
 
 import io.izzel.arclight.common.mixin.optimization.general.activationrange.EntityMixin_ActivationRange;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,16 +13,16 @@ public abstract class FireworkRocketEntityMixin_ActivationRange extends EntityMi
     // @formatter:off
     @Shadow private int life;
     @Shadow public int lifetime;
-    @Shadow protected abstract void explode();
+    @Shadow protected abstract void explode(ServerLevel level);
     // @formatter:on
 
     @Override
     public void inactiveTick() {
         super.inactiveTick();
         ++this.life;
-        if (!this.level().isClientSide && this.life > this.lifetime) {
+        if (this.level() instanceof ServerLevel serverLevel && this.life > this.lifetime) {
             if (!CraftEventFactory.callFireworkExplodeEvent((FireworkRocketEntity)(Object) this).isCancelled()) {
-                this.explode();
+                this.explode(serverLevel);
             }
         }
     }

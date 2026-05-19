@@ -2,11 +2,11 @@ package io.izzel.arclight.common.mixin.core.world.item.crafting;
 
 import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeBridge;
 import io.izzel.arclight.common.mod.util.ArclightSpecialRecipe;
-import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.ShapedRecipe;
+import net.minecraft.world.item.crafting.ShapedRecipePattern;
 import org.bukkit.NamespacedKey;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
@@ -17,16 +17,18 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
+import java.util.Optional;
+
 @Mixin(ShapedRecipe.class)
 public abstract class ShapedRecipeMixin implements RecipeBridge {
 
     // @formatter:off
+    @Shadow @Final ShapedRecipePattern pattern;
     @Shadow @Final ItemStack result;
     @Shadow @Final String group;
     @Shadow public abstract int getHeight();
     @Shadow public abstract int getWidth();
     @Shadow public abstract CraftingBookCategory category();
-    @Shadow public abstract NonNullList<Ingredient> getIngredients();
     // @formatter:on
 
     @Override
@@ -81,10 +83,12 @@ public abstract class ShapedRecipeMixin implements RecipeBridge {
                 break;
         }
         char c = 'a';
-        for (Ingredient list : this.getIngredients()) {
-            RecipeChoice choice = CraftRecipe.toBukkit(list);
-            if (choice != null) {
-                recipe.setIngredient(c, choice);
+        for (Optional<Ingredient> optional : this.pattern.ingredients()) {
+            if (optional.isPresent()) {
+                RecipeChoice choice = CraftRecipe.toBukkit(optional.get());
+                if (choice != null) {
+                    recipe.setIngredient(c, choice);
+                }
             }
 
             c++;

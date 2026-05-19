@@ -17,37 +17,37 @@ public class ArclightBorderChangeListener implements BorderChangeListener {
     }
 
     @Override
-    public void onBorderSizeSet(WorldBorder border, double d) {
+    public void onSetSize(WorldBorder border, double newSize) {
         arclight$broadcastToDimension(border, ClientboundSetBorderSizePacket::new);
     }
 
     @Override
-    public void onBorderSizeLerping(WorldBorder border, double d, double e, long l) {
+    public void onLerpSize(WorldBorder border, double fromSize, double targetSize, long ticks, long gameTime) {
         arclight$broadcastToDimension(border, ClientboundSetBorderLerpSizePacket::new);
     }
 
     @Override
-    public void onBorderCenterSet(WorldBorder border, double d, double e) {
+    public void onSetCenter(WorldBorder border, double x, double z) {
         arclight$broadcastToDimension(border, ClientboundSetBorderCenterPacket::new);
     }
 
     @Override
-    public void onBorderSetWarningTime(WorldBorder border, int i) {
+    public void onSetWarningTime(WorldBorder border, int time) {
         arclight$broadcastToDimension(border, ClientboundSetBorderWarningDelayPacket::new);
     }
 
     @Override
-    public void onBorderSetWarningBlocks(WorldBorder border, int i) {
+    public void onSetWarningBlocks(WorldBorder border, int blocks) {
         arclight$broadcastToDimension(border, ClientboundSetBorderWarningDistancePacket::new);
     }
 
     @Override
-    public void onBorderSetDamagePerBlock(WorldBorder border, double d) {
+    public void onSetDamagePerBlock(WorldBorder border, double damagePerBlock) {
 
     }
 
     @Override
-    public void onBorderSetDamageSafeZOne(WorldBorder border, double d) {
+    public void onSetSafeZone(WorldBorder border, double safeZone) {
 
     }
 

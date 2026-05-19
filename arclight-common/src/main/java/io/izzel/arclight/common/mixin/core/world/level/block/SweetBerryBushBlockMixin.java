@@ -7,14 +7,17 @@ import io.izzel.arclight.mixin.Eject;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageSources;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.SweetBerryBushBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.storage.loot.LootTable;
 import org.bukkit.craftbukkit.v.block.CraftBlock;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
@@ -24,7 +27,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.function.BiConsumer;
 
 @Mixin(SweetBerryBushBlock.class)
 public class SweetBerryBushBlockMixin {
@@ -42,18 +46,19 @@ public class SweetBerryBushBlockMixin {
         return ((DamageSourceBridge) instance.sweetBerryBush()).bridge$directBlock(CraftBlock.at(level, blockPos));
     }
 
-    @Decorate(method = "useWithoutItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/SweetBerryBushBlock;popResource(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/item/ItemStack;)V"))
-    private void arclight$playerHarvest(Level worldIn, BlockPos pos, ItemStack stack,
-                                        BlockState state, Level worldIn1, BlockPos pos1, Player player) throws Throwable {
-        PlayerHarvestBlockEvent event = CraftEventFactory.callPlayerHarvestBlockEvent(worldIn, pos, player, InteractionHand.MAIN_HAND, Collections.singletonList(stack));
+    @Decorate(method = "useWithoutItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;dropFromBlockInteractLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/entity/BlockEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/Entity;Ljava/util/function/BiConsumer;)Z"))
+    private boolean arclight$playerHarvest(ServerLevel serverLevel, ResourceKey<LootTable> lootTable, BlockState lootState, BlockEntity blockEntity, ItemStack tool, Entity entity, BiConsumer<ServerLevel, ItemStack> dropper,
+                                           BlockState state, Level level, BlockPos pos, Player player) throws Throwable {
+        var drops = new ArrayList<ItemStack>();
+        boolean result = (boolean) DecorationOps.callsite().invoke(serverLevel, lootTable, lootState, blockEntity, tool, entity, (BiConsumer<ServerLevel, ItemStack>) (dropLevel, stack) -> drops.add(stack));
+        PlayerHarvestBlockEvent event = CraftEventFactory.callPlayerHarvestBlockEvent(level, pos, player, InteractionHand.MAIN_HAND, drops);
         if (!event.isCancelled()) {
             for (org.bukkit.inventory.ItemStack itemStack : event.getItemsHarvested()) {
-                DecorationOps.callsite().invoke(worldIn, pos, CraftItemStack.asNMSCopy(itemStack));
+                dropper.accept(serverLevel, CraftItemStack.asNMSCopy(itemStack));
             }
         } else {
-            DecorationOps.cancel().invoke(InteractionResult.SUCCESS);
-            return;
+            return result;
         }
-        DecorationOps.blackhole().invoke();
+        return result;
     }
 }

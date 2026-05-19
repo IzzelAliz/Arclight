@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.Set;
 
-@Mixin(DistanceManager.ChunkTicketTracker.class)
+@Mixin(targets = "net.minecraft.server.level.DistanceManager$ChunkTicketTracker")
 public class DistanceManager_ChunkTicketTrackerMixin {
     // @formatter:off
     @Shadow(aliases = {"this$0", "f_140874_", "field_18255"}, remap = false) @Final private DistanceManager outerThis;

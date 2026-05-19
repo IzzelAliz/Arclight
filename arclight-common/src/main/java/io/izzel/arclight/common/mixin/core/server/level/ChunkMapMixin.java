@@ -4,12 +4,12 @@ import com.mojang.datafixers.DataFixer;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ChunkMapBridge;
 import io.izzel.arclight.common.mod.util.ArclightCallbackExecutor;
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.util.thread.BlockableEventLoop;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
@@ -43,7 +43,7 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
 
     // @formatter:off
     @Shadow @Nullable protected abstract ChunkHolder getUpdatingChunkIfPresent(long chunkPosIn);
-    @Shadow protected abstract Iterable<ChunkHolder> getChunks();
+    @Shadow @Final private Long2ObjectLinkedOpenHashMap<ChunkHolder> visibleChunkMap;
     @Shadow protected abstract void tick();
     @Shadow @Final public ServerLevel level;
     @Shadow @Final @Mutable private RandomState randomState;
@@ -54,7 +54,7 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
     // @formatter:on
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void arclight$updateRandom(ServerLevel p_214836_, LevelStorageSource.LevelStorageAccess p_214837_, DataFixer p_214838_, StructureTemplateManager p_214839_, Executor p_214840_, BlockableEventLoop p_214841_, LightChunkGetter p_214842_, ChunkGenerator chunkGenerator, ChunkProgressListener p_214844_, ChunkStatusUpdateListener p_214845_, Supplier p_214846_, int p_214847_, boolean p_214848_, CallbackInfo ci) {
+    private void arclight$updateRandom(ServerLevel p_214836_, LevelStorageSource.LevelStorageAccess p_214837_, DataFixer p_214838_, StructureTemplateManager p_214839_, Executor p_214840_, BlockableEventLoop p_214841_, LightChunkGetter p_214842_, ChunkGenerator chunkGenerator, ChunkStatusUpdateListener p_214845_, Supplier p_214846_, net.minecraft.world.level.TicketStorage ticketStorage, int p_214847_, boolean p_214848_, CallbackInfo ci) {
         this.bridge$setChunkGenerator(chunkGenerator);
     }
 
@@ -77,7 +77,7 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
 
     @Override
     public Iterable<ChunkHolder> bridge$getLoadedChunksIterable() {
-        return this.getChunks();
+        return this.visibleChunkMap.values();
     }
 
     @Override
@@ -98,6 +98,6 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
         }
         this.chunkGeneratorState = generator.createState(level.registryAccess().lookupOrThrow(Registries.STRUCTURE_SET), this.randomState, level.getSeed());
         var old = this.worldGenContext;
-        this.worldGenContext = new WorldGenContext(old.level(), generator, old.structureManager(), old.lightEngine(), old.mainThreadMailBox());
+        this.worldGenContext = new WorldGenContext(old.level(), generator, old.structureManager(), old.lightEngine(), old.mainThreadExecutor(), old.unsavedListener());
     }
 }

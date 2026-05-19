@@ -60,7 +60,7 @@ public abstract class ItemStackMixin_Vanilla {
             }
             interactionResult = item.useOn(useOnContext);
             ((WorldBridge) useOnContext.getLevel()).bridge$platform$endCaptureBlockBreak();
-            if (player != null && interactionResult.indicateItemUse()) {
+            if (player != null && interactionResult.consumesAction()) {
                 interactionResult = ArclightEventFactory.onBlockPlace(useOnContext, player, oldStack, (ItemStack) (Object) this, interactionResult);
                 if (interactionResult != InteractionResult.FAIL) {
                     player.awardStat(Stats.ITEM_USED.get(item));

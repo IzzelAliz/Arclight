@@ -10,7 +10,7 @@ import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.core.server.players.PlayerListBridge;
 import io.izzel.arclight.common.mod.util.VelocitySupport;
 import net.minecraft.DefaultUncaughtExceptionHandler;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.Connection;
 import net.minecraft.network.ConnectionProtocol;
@@ -114,7 +114,7 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
         Validate.validState(StringUtil.isValidPlayerName(packetIn.name()), "Invalid characters in username");
         this.requestedUsername = packetIn.name();
         GameProfile gameprofile = this.server.getSingleplayerProfile();
-        if (gameprofile != null && this.requestedUsername.equalsIgnoreCase(gameprofile.getName())) {
+        if (gameprofile != null && this.requestedUsername.equalsIgnoreCase(gameprofile.name())) {
             this.startClientVerification(gameprofile);
         } else {
             if (this.server.usesAuthentication() && !this.connection.isMemoryConnection()) {
@@ -158,7 +158,7 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
             for (int length = (spoofedProfile = ((ConnectionBridge) connection).bridge$getSpoofedProfile()).length, i = 0; i < length; ++i) {
                 final Property property = spoofedProfile[i];
                 if (!PROP_PATTERN.matcher(property.name()).matches()) continue;
-                gameProfile.getProperties().put(property.name(), property);
+                gameProfile.properties().put(property.name(), property);
             }
         }
         return gameProfile;
@@ -190,7 +190,7 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
 
     @Inject(method = "handleLoginAcknowledgement", at = @At("HEAD"))
     private void arclight$mainThreadConfiguration(ServerboundLoginAcknowledgedPacket serverboundLoginAcknowledgedPacket, CallbackInfo ci) {
-        PacketUtils.ensureRunningOnSameThread(serverboundLoginAcknowledgedPacket, (ServerLoginPacketListenerImpl) (Object) this, this.server);
+        PacketUtils.ensureRunningOnSameThread(serverboundLoginAcknowledgedPacket, (ServerLoginPacketListenerImpl) (Object) this, this.server.packetProcessor());
     }
 
     @Inject(method = "handleLoginAcknowledgement", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Connection;setupInboundProtocol(Lnet/minecraft/network/ProtocolInfo;Lnet/minecraft/network/PacketListener;)V"))
@@ -200,7 +200,7 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
 
     @Inject(method = "handleCookieResponse", cancellable = true, at = @At("HEAD"))
     private void arclight$cookieResponse(ServerboundCookieResponsePacket packet, CallbackInfo ci) {
-        PacketUtils.ensureRunningOnSameThread(packet, (ServerLoginPacketListenerImpl) (Object) this, this.server);
+        PacketUtils.ensureRunningOnSameThread(packet, (ServerLoginPacketListenerImpl) (Object) this, this.server.packetProcessor());
         if (this.player != null && ((CraftPlayer) this.player.bridge$getBukkitEntity()).handleCookieResponse(packet)) {
             ci.cancel();
         }
@@ -238,7 +238,7 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
                 SocketAddress socketaddress = connection.getRemoteAddress();
                 var address = server.getPreventProxyConnections() && socketaddress instanceof InetSocketAddress ? ((InetSocketAddress) socketaddress).getAddress() : null;
 
-                var profileResult = server.getSessionService().hasJoinedServer(name, s, address);
+                var profileResult = server.services().sessionService().hasJoinedServer(name, s, address);
                 if (profileResult != null) {
                     var gameProfile = profileResult.profile();
                     if (!connection.isConnected()) {
@@ -276,14 +276,14 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
             return;
         }
         callPlayerPreLoginEvents(gameProfile);
-        LOGGER.info("UUID of player {} is {}", gameProfile.getName(), gameProfile.getId());
+        LOGGER.info("UUID of player {} is {}", gameProfile.name(), gameProfile.id());
         this.startClientVerification(gameProfile);
     }
 
     private void callPlayerPreLoginEvents(GameProfile profile) throws Exception {
-        String playerName = profile.getName();
+        String playerName = profile.name();
         InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
-        UUID uniqueId = profile.getId();
+        UUID uniqueId = profile.id();
         CraftServer craftServer = (CraftServer) Bukkit.getServer();
         AsyncPlayerPreLoginEvent asyncEvent = new AsyncPlayerPreLoginEvent(playerName, address, uniqueId);
         craftServer.getPluginManager().callEvent(asyncEvent);
@@ -371,7 +371,7 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
                     this.bridge$preLogin(this.authenticatedProfile);
                 } catch (Exception ex) {
                     disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
-                    LOGGER.warn("Exception verifying {} ", this.authenticatedProfile.getName(), ex);
+                    LOGGER.warn("Exception verifying {} ", this.authenticatedProfile.name(), ex);
                 }
             });
             this.arclight$platform$onCustomQA(packet);

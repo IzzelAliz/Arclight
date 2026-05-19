@@ -25,12 +25,11 @@ allprojects {
     ext {
         versionName = 'feudal-kings'
         gitHash = getGitHash()
-        supportedPlatforms = ['forge', 'neoforge', 'fabric']
+        supportedPlatforms = ['neoforge', 'fabric']
         commonProject = project(':arclight-common')
-        forgeProject = project(':arclight-forge')
         fabricProject = project(':arclight-fabric')
         neoForgeProject = project(':arclight-neoforge')
-        platformProjects = [ext.forgeProject, ext.fabricProject, ext.neoForgeProject]
+        platformProjects = [ext.fabricProject, ext.neoForgeProject]
         subProjects = ext.platformProjects + [ext.commonProject]
         generatedSpigot = "io.izzel.arclight.generated:spigot:${libs.versions.minecraft.get()}:deobf"
     }
@@ -151,7 +150,6 @@ jar.enabled = false
 
 tasks.register('collect', Copy) {
     destinationDir = file('build/libs')
-    from project(':bootstrap').tasks.forgeJar.outputs
     from project(':bootstrap').tasks.neoforgeJar.outputs
     from project(':bootstrap').tasks.fabricJar.outputs
 }

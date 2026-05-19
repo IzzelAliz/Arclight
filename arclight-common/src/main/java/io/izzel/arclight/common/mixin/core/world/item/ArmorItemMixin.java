@@ -4,11 +4,11 @@ import io.izzel.arclight.common.mod.server.block.DispenserBlockHooks;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
+import net.minecraft.core.dispenser.EquipmentDispenseItemBehavior;
 import net.minecraft.core.dispenser.BlockSource;
 import net.minecraft.core.dispenser.DispenseItemBehavior;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.DispenserBlock;
@@ -20,10 +20,10 @@ import org.bukkit.event.block.BlockDispenseArmorEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-@Mixin(ArmorItem.class)
+@Mixin(EquipmentDispenseItemBehavior.class)
 public class ArmorItemMixin {
 
-    @Decorate(method = "dispenseArmor", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;setItemSlot(Lnet/minecraft/world/entity/EquipmentSlot;Lnet/minecraft/world/item/ItemStack;)V"))
+    @Decorate(method = "dispenseEquipment", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;setItemSlot(Lnet/minecraft/world/entity/EquipmentSlot;Lnet/minecraft/world/item/ItemStack;)V"))
     private static void arclight$dispense(LivingEntity instance, EquipmentSlot equipmentSlot, ItemStack stack, BlockSource blockSource, ItemStack itemStack, @Local(ordinal = -1) ItemStack itemstack1) throws Throwable {
         Level world = blockSource.level();
         org.bukkit.block.Block block = CraftBlock.at(world, blockSource.pos());
@@ -45,7 +45,7 @@ public class ArmorItemMixin {
             // Chain to handler for new item
             ItemStack eventStack = CraftItemStack.asNMSCopy(event.getItem());
             DispenseItemBehavior idispensebehavior = DispenserBlock.DISPENSER_REGISTRY.get(eventStack.getItem());
-            if (idispensebehavior != DispenseItemBehavior.NOOP && idispensebehavior != ArmorItem.DISPENSE_ITEM_BEHAVIOR) {
+            if (idispensebehavior != DispenseItemBehavior.NOOP && idispensebehavior != EquipmentDispenseItemBehavior.INSTANCE) {
                 idispensebehavior.dispense(blockSource, eventStack);
                 DecorationOps.cancel().invoke(true);
                 return;

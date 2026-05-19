@@ -5,8 +5,8 @@ import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.Fluid;
@@ -30,11 +30,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class FlowingFluidMixin {
 
     // @formatter:off
-    @Shadow protected abstract boolean canSpreadTo(BlockGetter worldIn, BlockPos fromPos, BlockState fromBlockState, Direction direction, BlockPos toPos, BlockState toBlockState, FluidState toFluidState, Fluid fluidIn);
+    @Shadow protected abstract boolean canMaybePassThrough(BlockGetter level, BlockPos fromPos, BlockState fromBlockState, Direction direction, BlockPos toPos, BlockState toBlockState, FluidState toFluidState);
+    @Shadow protected abstract FluidState getNewLiquid(ServerLevel level, BlockPos pos, BlockState state);
+    @Shadow protected static boolean canHoldSpecificFluid(BlockGetter level, BlockPos pos, BlockState state, Fluid fluid) { throw new AssertionError(); }
     // @formatter:on
 
     @Inject(method = "spread", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FlowingFluid;spreadTo(Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/Direction;Lnet/minecraft/world/level/material/FluidState;)V"))
-    public void arclight$flowInto(Level worldIn, BlockPos pos, FluidState stateIn, CallbackInfo ci) {
+    public void arclight$flowInto(ServerLevel worldIn, BlockPos pos, BlockState blockState, FluidState stateIn, CallbackInfo ci) {
         if (!DistValidate.isValid(worldIn)) return;
         Block source = CraftBlock.at(worldIn, pos);
         BlockFromToEvent event = new BlockFromToEvent(source, BlockFace.DOWN);
@@ -44,11 +46,14 @@ public abstract class FlowingFluidMixin {
         }
     }
 
-    @Redirect(method = "spreadToSides", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FlowingFluid;canSpreadTo(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/Direction;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/material/FluidState;Lnet/minecraft/world/level/material/Fluid;)Z"))
-    public boolean arclight$flowInto(FlowingFluid flowingFluid, BlockGetter worldIn, BlockPos fromPos, BlockState fromBlockState, Direction direction, BlockPos toPos, BlockState toBlockState, FluidState toFluidState, Fluid fluidIn) {
-        if (this.canSpreadTo(worldIn, fromPos, fromBlockState, direction, toPos, toBlockState, toFluidState, fluidIn)) {
-            if (!DistValidate.isValid(worldIn)) return true;
-            Block source = CraftBlock.at(((Level) worldIn), fromPos);
+    @Redirect(method = "getSpread", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FlowingFluid;canMaybePassThrough(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/Direction;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/material/FluidState;)Z"))
+    public boolean arclight$flowInto(FlowingFluid flowingFluid, BlockGetter level, BlockPos fromPos, BlockState fromBlockState, Direction direction, BlockPos toPos, BlockState toBlockState, FluidState toFluidState) {
+        ServerLevel serverLevel = (ServerLevel) level;
+        if (this.canMaybePassThrough(serverLevel, fromPos, fromBlockState, direction, toPos, toBlockState, toFluidState)) {
+            FluidState newFluidState = this.getNewLiquid(serverLevel, toPos, toBlockState);
+            if (!canHoldSpecificFluid(serverLevel, toPos, toBlockState, newFluidState.getType())) return false;
+            if (!DistValidate.isValid(serverLevel)) return true;
+            Block source = CraftBlock.at(serverLevel, fromPos);
             BlockFromToEvent event = new BlockFromToEvent(source, CraftBlock.notchToBlockFace(direction));
             Bukkit.getPluginManager().callEvent(event);
             return !event.isCancelled();
@@ -57,8 +62,8 @@ public abstract class FlowingFluidMixin {
         }
     }
 
-    @Decorate(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
-    private boolean arclight$fluidLevelChange(Level world, BlockPos pos, BlockState newState, int flags) throws Throwable {
+    @Decorate(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
+    private boolean arclight$fluidLevelChange(ServerLevel world, BlockPos pos, BlockState newState, int flags) throws Throwable {
         if (DistValidate.isValid(world)) {
             FluidLevelChangeEvent event = CraftEventFactory.callFluidLevelChangeEvent(world, pos, newState);
             if (event.isCancelled()) {

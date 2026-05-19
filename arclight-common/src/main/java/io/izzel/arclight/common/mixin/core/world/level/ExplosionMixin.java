@@ -19,6 +19,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerExplosion;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.TntBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -41,7 +42,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-@Mixin(Explosion.class)
+@Mixin(ServerExplosion.class)
 public abstract class ExplosionMixin implements ExplosionBridge {
 
     // @formatter:off
@@ -108,7 +109,8 @@ public abstract class ExplosionMixin implements ExplosionBridge {
             for (var part : parts) {
                 // Calculate damage separately for each part
                 if (list.contains(part)) {
-                    result |= part.hurt(damageSource, f);
+                    part.hurt(damageSource, f);
+                    result = true;
                 }
             }
         } else {

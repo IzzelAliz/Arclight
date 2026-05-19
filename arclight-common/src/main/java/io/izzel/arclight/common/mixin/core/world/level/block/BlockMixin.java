@@ -43,6 +43,7 @@ public abstract class BlockMixin extends BlockBehaviourMixin implements BlockBri
     @Shadow @Nullable public BlockState getStateForPlacement(BlockPlaceContext context) { return null; }
     // @formatter:on
 
+
     @Redirect(method = "popResource(Lnet/minecraft/world/level/Level;Ljava/util/function/Supplier;Lnet/minecraft/world/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private static boolean arclight$captureDrops(Level level, Entity entity) {
         List<ItemEntity> blockDrops = ArclightCaptures.getBlockDrops();

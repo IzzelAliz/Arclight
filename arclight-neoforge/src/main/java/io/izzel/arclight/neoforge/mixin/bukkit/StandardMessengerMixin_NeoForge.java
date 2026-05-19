@@ -3,7 +3,7 @@ package io.izzel.arclight.neoforge.mixin.bukkit;
 import io.izzel.arclight.common.bridge.bukkit.MessengerBridge;
 import io.izzel.arclight.common.mod.plugin.messaging.ArclightPluginChannel;
 import io.izzel.arclight.neoforge.mod.plugin.messaging.ArclightNfMessaging;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.plugin.messaging.PluginMessageListenerRegistration;
@@ -16,7 +16,7 @@ import java.util.Set;
 public abstract class StandardMessengerMixin_NeoForge implements Messenger, MessengerBridge {
 
     @Override
-    public ArclightPluginChannel<?> arclight$setupChannel(ResourceLocation channel, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
+    public ArclightPluginChannel<?> arclight$setupChannel(Identifier channel, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
         return ArclightNfMessaging.setupChannel(this, channel, incoming, outgoing);
     }
 }

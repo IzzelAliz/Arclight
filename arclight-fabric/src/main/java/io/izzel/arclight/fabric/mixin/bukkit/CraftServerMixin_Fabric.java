@@ -5,6 +5,9 @@ import com.mojang.brigadier.StringReader;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import net.minecraft.commands.CommandResultCallback;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v.CraftServer;
@@ -20,7 +23,14 @@ public abstract class CraftServerMixin_Fabric {
     private String arclight$forge$forgeCommandEvent(String commandLine, CommandSender sender) {
         CommandSourceStack commandSource;
         if (sender instanceof CraftEntity) {
-            commandSource = ((CraftEntity) sender).getHandle().createCommandSourceStack();
+            Entity entity = ((CraftEntity) sender).getHandle();
+            if (entity instanceof ServerPlayer player) {
+                commandSource = player.createCommandSourceStack();
+            } else if (entity.level() instanceof ServerLevel level) {
+                commandSource = entity.createCommandSourceStackForNameResolution(level);
+            } else {
+                return commandLine;
+            }
         } else if (sender == Bukkit.getConsoleSender()) {
             commandSource = ArclightServer.getMinecraftServer().createCommandSourceStack();
         } else if (sender instanceof CraftBlockCommandSender) {

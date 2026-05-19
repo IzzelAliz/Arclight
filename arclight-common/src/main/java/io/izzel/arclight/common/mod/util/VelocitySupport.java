@@ -7,7 +7,7 @@ import io.izzel.arclight.i18n.ArclightConfig;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.login.custom.CustomQueryPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.ProfilePublicKey;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,12 +33,12 @@ public class VelocitySupport {
     public static final int MODERN_FORWARDING_WITH_KEY_V2 = 3;
     public static final int MODERN_LAZY_SESSION = 4;
     public static final byte MAX_SUPPORTED_FORWARDING_VERSION = MODERN_LAZY_SESSION;
-    public static final ResourceLocation PLAYER_INFO_CHANNEL = ResourceLocation.parse("velocity:player_info");
+    public static final Identifier PLAYER_INFO_CHANNEL = Identifier.parse("velocity:player_info");
 
     private record VelocityForwardQuery(FriendlyByteBuf data) implements CustomQueryPayload {
 
         @Override
-        public @NotNull ResourceLocation id() {
+        public @NotNull Identifier id() {
             return PLAYER_INFO_CHANNEL;
         }
 
@@ -91,7 +91,7 @@ public class VelocitySupport {
             final String name = buf.readUtf(Short.MAX_VALUE);
             final String value = buf.readUtf(Short.MAX_VALUE);
             final String signature = buf.readBoolean() ? buf.readUtf(Short.MAX_VALUE) : null;
-            profile.getProperties().put(name, new Property(name, value, signature));
+            profile.properties().put(name, new Property(name, value, signature));
         }
     }
 

@@ -18,7 +18,7 @@ public class LootDataTypeMixin {
         var validator = cir.getReturnValue();
         cir.setReturnValue((validationContext, resourceKey, object) -> {
             validator.run(validationContext, resourceKey, object);
-            ((LootTableBridge) object).bridge$setCraftLootTable(new CraftLootTable(CraftNamespacedKey.fromMinecraft(resourceKey.location()), object));
+            ((LootTableBridge) object).bridge$setCraftLootTable(new CraftLootTable(CraftNamespacedKey.fromMinecraft(resourceKey.identifier()), object));
         });
     }
 }

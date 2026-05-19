@@ -10,8 +10,8 @@ import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ExperienceOrb;
-import net.minecraft.world.entity.FlyingMob;
-import net.minecraft.world.entity.GlowSquid;
+import net.minecraft.world.entity.animal.FlyingAnimal;
+import net.minecraft.world.entity.animal.squid.GlowSquid;
 import net.minecraft.world.entity.Interaction;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
@@ -22,51 +22,58 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ambient.AmbientCreature;
 import net.minecraft.world.entity.ambient.Bat;
-import net.minecraft.world.entity.animal.AbstractFish;
-import net.minecraft.world.entity.animal.AbstractGolem;
+import net.minecraft.world.entity.animal.fish.AbstractFish;
+import net.minecraft.world.entity.animal.golem.AbstractGolem;
+import net.minecraft.world.entity.animal.golem.CopperGolem;
 import net.minecraft.world.entity.animal.Animal;
-import net.minecraft.world.entity.animal.Bee;
-import net.minecraft.world.entity.animal.Cat;
-import net.minecraft.world.entity.animal.Chicken;
-import net.minecraft.world.entity.animal.Cod;
-import net.minecraft.world.entity.animal.Cow;
-import net.minecraft.world.entity.animal.Dolphin;
-import net.minecraft.world.entity.animal.Fox;
-import net.minecraft.world.entity.animal.IronGolem;
-import net.minecraft.world.entity.animal.MushroomCow;
-import net.minecraft.world.entity.animal.Ocelot;
-import net.minecraft.world.entity.animal.Panda;
-import net.minecraft.world.entity.animal.Parrot;
-import net.minecraft.world.entity.animal.Pig;
-import net.minecraft.world.entity.animal.PolarBear;
-import net.minecraft.world.entity.animal.Pufferfish;
-import net.minecraft.world.entity.animal.Rabbit;
-import net.minecraft.world.entity.animal.Salmon;
-import net.minecraft.world.entity.animal.Sheep;
-import net.minecraft.world.entity.animal.SnowGolem;
-import net.minecraft.world.entity.animal.Squid;
-import net.minecraft.world.entity.animal.TropicalFish;
-import net.minecraft.world.entity.animal.Turtle;
-import net.minecraft.world.entity.animal.WaterAnimal;
-import net.minecraft.world.entity.animal.Wolf;
+import net.minecraft.world.entity.animal.bee.Bee;
+import net.minecraft.world.entity.animal.feline.Cat;
+import net.minecraft.world.entity.animal.chicken.Chicken;
+import net.minecraft.world.entity.animal.fish.Cod;
+import net.minecraft.world.entity.animal.cow.Cow;
+import net.minecraft.world.entity.animal.cow.AbstractCow;
+import net.minecraft.world.entity.animal.dolphin.Dolphin;
+import net.minecraft.world.entity.animal.fox.Fox;
+import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.world.entity.animal.happyghast.HappyGhast;
+import net.minecraft.world.entity.animal.cow.MushroomCow;
+import net.minecraft.world.entity.animal.feline.Ocelot;
+import net.minecraft.world.entity.animal.panda.Panda;
+import net.minecraft.world.entity.animal.parrot.Parrot;
+import net.minecraft.world.entity.animal.pig.Pig;
+import net.minecraft.world.entity.animal.polarbear.PolarBear;
+import net.minecraft.world.entity.animal.fish.Pufferfish;
+import net.minecraft.world.entity.animal.rabbit.Rabbit;
+import net.minecraft.world.entity.animal.fish.Salmon;
+import net.minecraft.world.entity.animal.sheep.Sheep;
+import net.minecraft.world.entity.animal.golem.SnowGolem;
+import net.minecraft.world.entity.animal.squid.Squid;
+import net.minecraft.world.entity.animal.fish.TropicalFish;
+import net.minecraft.world.entity.animal.turtle.Turtle;
+import net.minecraft.world.entity.animal.fish.WaterAnimal;
+import net.minecraft.world.entity.animal.wolf.Wolf;
 import net.minecraft.world.entity.animal.allay.Allay;
 import net.minecraft.world.entity.animal.armadillo.Armadillo;
 import net.minecraft.world.entity.animal.axolotl.Axolotl;
 import net.minecraft.world.entity.animal.camel.Camel;
+import net.minecraft.world.entity.animal.camel.CamelHusk;
 import net.minecraft.world.entity.animal.frog.Frog;
 import net.minecraft.world.entity.animal.frog.Tadpole;
 import net.minecraft.world.entity.animal.goat.Goat;
-import net.minecraft.world.entity.animal.horse.AbstractChestedHorse;
-import net.minecraft.world.entity.animal.horse.AbstractHorse;
-import net.minecraft.world.entity.animal.horse.Donkey;
-import net.minecraft.world.entity.animal.horse.Horse;
-import net.minecraft.world.entity.animal.horse.Llama;
-import net.minecraft.world.entity.animal.horse.Mule;
-import net.minecraft.world.entity.animal.horse.SkeletonHorse;
-import net.minecraft.world.entity.animal.horse.TraderLlama;
-import net.minecraft.world.entity.animal.horse.ZombieHorse;
+import net.minecraft.world.entity.animal.nautilus.AbstractNautilus;
+import net.minecraft.world.entity.animal.nautilus.Nautilus;
+import net.minecraft.world.entity.animal.nautilus.ZombieNautilus;
+import net.minecraft.world.entity.animal.equine.AbstractChestedHorse;
+import net.minecraft.world.entity.animal.equine.AbstractHorse;
+import net.minecraft.world.entity.animal.equine.Donkey;
+import net.minecraft.world.entity.animal.equine.Horse;
+import net.minecraft.world.entity.animal.equine.Llama;
+import net.minecraft.world.entity.animal.equine.Mule;
+import net.minecraft.world.entity.animal.equine.SkeletonHorse;
+import net.minecraft.world.entity.animal.equine.TraderLlama;
+import net.minecraft.world.entity.animal.equine.ZombieHorse;
 import net.minecraft.world.entity.animal.sniffer.Sniffer;
-import net.minecraft.world.entity.boss.EnderDragonPart;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
@@ -75,95 +82,97 @@ import net.minecraft.world.entity.decoration.GlowItemFrame;
 import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.decoration.LeashFenceKnotEntity;
-import net.minecraft.world.entity.decoration.Painting;
+import net.minecraft.world.entity.decoration.Mannequin;
+import net.minecraft.world.entity.decoration.painting.Painting;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.item.PrimedTnt;
-import net.minecraft.world.entity.monster.AbstractIllager;
-import net.minecraft.world.entity.monster.AbstractSkeleton;
+import net.minecraft.world.entity.monster.illager.AbstractIllager;
+import net.minecraft.world.entity.monster.skeleton.AbstractSkeleton;
 import net.minecraft.world.entity.monster.Blaze;
-import net.minecraft.world.entity.monster.Bogged;
-import net.minecraft.world.entity.monster.CaveSpider;
+import net.minecraft.world.entity.monster.skeleton.Bogged;
+import net.minecraft.world.entity.monster.spider.CaveSpider;
 import net.minecraft.world.entity.monster.Creeper;
-import net.minecraft.world.entity.monster.Drowned;
+import net.minecraft.world.entity.monster.zombie.Drowned;
 import net.minecraft.world.entity.monster.ElderGuardian;
 import net.minecraft.world.entity.monster.EnderMan;
 import net.minecraft.world.entity.monster.Endermite;
-import net.minecraft.world.entity.monster.Evoker;
+import net.minecraft.world.entity.monster.illager.Evoker;
 import net.minecraft.world.entity.monster.Ghast;
 import net.minecraft.world.entity.monster.Giant;
 import net.minecraft.world.entity.monster.Guardian;
-import net.minecraft.world.entity.monster.Husk;
-import net.minecraft.world.entity.monster.Illusioner;
+import net.minecraft.world.entity.monster.zombie.Husk;
+import net.minecraft.world.entity.monster.illager.Illusioner;
 import net.minecraft.world.entity.monster.MagmaCube;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.Phantom;
-import net.minecraft.world.entity.monster.Pillager;
+import net.minecraft.world.entity.monster.illager.Pillager;
 import net.minecraft.world.entity.monster.Ravager;
 import net.minecraft.world.entity.monster.Shulker;
 import net.minecraft.world.entity.monster.Silverfish;
-import net.minecraft.world.entity.monster.Skeleton;
+import net.minecraft.world.entity.monster.skeleton.Skeleton;
+import net.minecraft.world.entity.monster.skeleton.Parched;
 import net.minecraft.world.entity.monster.Slime;
-import net.minecraft.world.entity.monster.SpellcasterIllager;
-import net.minecraft.world.entity.monster.Spider;
-import net.minecraft.world.entity.monster.Stray;
+import net.minecraft.world.entity.monster.illager.SpellcasterIllager;
+import net.minecraft.world.entity.monster.spider.Spider;
+import net.minecraft.world.entity.monster.skeleton.Stray;
 import net.minecraft.world.entity.monster.Strider;
 import net.minecraft.world.entity.monster.Vex;
-import net.minecraft.world.entity.monster.Vindicator;
+import net.minecraft.world.entity.monster.illager.Vindicator;
 import net.minecraft.world.entity.monster.Witch;
-import net.minecraft.world.entity.monster.WitherSkeleton;
+import net.minecraft.world.entity.monster.skeleton.WitherSkeleton;
 import net.minecraft.world.entity.monster.Zoglin;
-import net.minecraft.world.entity.monster.Zombie;
-import net.minecraft.world.entity.monster.ZombieVillager;
-import net.minecraft.world.entity.monster.ZombifiedPiglin;
+import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.monster.zombie.ZombieVillager;
+import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
 import net.minecraft.world.entity.monster.breeze.Breeze;
+import net.minecraft.world.entity.monster.creaking.Creaking;
 import net.minecraft.world.entity.monster.hoglin.Hoglin;
 import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import net.minecraft.world.entity.monster.piglin.Piglin;
 import net.minecraft.world.entity.monster.piglin.PiglinBrute;
 import net.minecraft.world.entity.monster.warden.Warden;
-import net.minecraft.world.entity.npc.AbstractVillager;
-import net.minecraft.world.entity.npc.Villager;
-import net.minecraft.world.entity.npc.WanderingTrader;
+import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.npc.wanderingtrader.WanderingTrader;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.AbstractArrow;
-import net.minecraft.world.entity.projectile.AbstractHurtingProjectile;
-import net.minecraft.world.entity.projectile.Arrow;
-import net.minecraft.world.entity.projectile.DragonFireball;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.projectile.hurtingprojectile.AbstractHurtingProjectile;
+import net.minecraft.world.entity.projectile.arrow.Arrow;
+import net.minecraft.world.entity.projectile.hurtingprojectile.DragonFireball;
 import net.minecraft.world.entity.projectile.EvokerFangs;
 import net.minecraft.world.entity.projectile.EyeOfEnder;
-import net.minecraft.world.entity.projectile.Fireball;
+import net.minecraft.world.entity.projectile.hurtingprojectile.Fireball;
 import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.entity.projectile.FishingHook;
-import net.minecraft.world.entity.projectile.LargeFireball;
+import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball;
 import net.minecraft.world.entity.projectile.LlamaSpit;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ShulkerBullet;
-import net.minecraft.world.entity.projectile.SmallFireball;
-import net.minecraft.world.entity.projectile.Snowball;
-import net.minecraft.world.entity.projectile.SpectralArrow;
-import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
-import net.minecraft.world.entity.projectile.ThrownEgg;
-import net.minecraft.world.entity.projectile.ThrownEnderpearl;
-import net.minecraft.world.entity.projectile.ThrownExperienceBottle;
-import net.minecraft.world.entity.projectile.ThrownPotion;
-import net.minecraft.world.entity.projectile.ThrownTrident;
-import net.minecraft.world.entity.projectile.WitherSkull;
-import net.minecraft.world.entity.projectile.windcharge.AbstractWindCharge;
-import net.minecraft.world.entity.projectile.windcharge.BreezeWindCharge;
-import net.minecraft.world.entity.projectile.windcharge.WindCharge;
+import net.minecraft.world.entity.projectile.hurtingprojectile.SmallFireball;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball;
+import net.minecraft.world.entity.projectile.arrow.SpectralArrow;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrowableItemProjectile;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.AbstractThrownPotion;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEgg;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownExperienceBottle;
+import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
+import net.minecraft.world.entity.projectile.hurtingprojectile.WitherSkull;
+import net.minecraft.world.entity.projectile.hurtingprojectile.windcharge.AbstractWindCharge;
+import net.minecraft.world.entity.projectile.hurtingprojectile.windcharge.BreezeWindCharge;
+import net.minecraft.world.entity.projectile.hurtingprojectile.windcharge.WindCharge;
 import net.minecraft.world.entity.raid.Raider;
-import net.minecraft.world.entity.vehicle.AbstractMinecart;
-import net.minecraft.world.entity.vehicle.AbstractMinecartContainer;
-import net.minecraft.world.entity.vehicle.Boat;
-import net.minecraft.world.entity.vehicle.ChestBoat;
-import net.minecraft.world.entity.vehicle.Minecart;
-import net.minecraft.world.entity.vehicle.MinecartChest;
-import net.minecraft.world.entity.vehicle.MinecartCommandBlock;
-import net.minecraft.world.entity.vehicle.MinecartFurnace;
-import net.minecraft.world.entity.vehicle.MinecartHopper;
-import net.minecraft.world.entity.vehicle.MinecartSpawner;
-import net.minecraft.world.entity.vehicle.MinecartTNT;
+import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart;
+import net.minecraft.world.entity.vehicle.minecart.AbstractMinecartContainer;
+
+import net.minecraft.world.entity.vehicle.minecart.Minecart;
+import net.minecraft.world.entity.vehicle.minecart.MinecartChest;
+import net.minecraft.world.entity.vehicle.minecart.MinecartCommandBlock;
+import net.minecraft.world.entity.vehicle.minecart.MinecartFurnace;
+import net.minecraft.world.entity.vehicle.minecart.MinecartHopper;
+import net.minecraft.world.entity.vehicle.minecart.MinecartSpawner;
+import net.minecraft.world.entity.vehicle.minecart.MinecartTNT;
 import net.minecraft.world.entity.vehicle.VehicleEntity;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.craftbukkit.v.CraftServer;
@@ -252,7 +261,31 @@ public class EntityClassLookup {
             org.bukkit.entity.Breedable.class,
             org.bukkit.entity.Steerable.class,
             org.bukkit.entity.Enemy.class,
-            org.bukkit.entity.ComplexLivingEntity.class
+            org.bukkit.entity.ComplexLivingEntity.class,
+            org.bukkit.entity.AbstractCow.class,
+            org.bukkit.entity.AbstractNautilus.class,
+            org.bukkit.entity.boat.OakBoat.class,
+            org.bukkit.entity.boat.SpruceBoat.class,
+            org.bukkit.entity.boat.BirchBoat.class,
+            org.bukkit.entity.boat.JungleBoat.class,
+            org.bukkit.entity.boat.AcaciaBoat.class,
+            org.bukkit.entity.boat.DarkOakBoat.class,
+            org.bukkit.entity.boat.MangroveBoat.class,
+            org.bukkit.entity.boat.CherryBoat.class,
+            org.bukkit.entity.boat.PaleOakBoat.class,
+            org.bukkit.entity.boat.BambooRaft.class,
+            org.bukkit.entity.boat.OakChestBoat.class,
+            org.bukkit.entity.boat.SpruceChestBoat.class,
+            org.bukkit.entity.boat.BirchChestBoat.class,
+            org.bukkit.entity.boat.JungleChestBoat.class,
+            org.bukkit.entity.boat.AcaciaChestBoat.class,
+            org.bukkit.entity.boat.DarkOakChestBoat.class,
+            org.bukkit.entity.boat.MangroveChestBoat.class,
+            org.bukkit.entity.boat.CherryChestBoat.class,
+            org.bukkit.entity.boat.PaleOakChestBoat.class,
+            org.bukkit.entity.boat.BambooChestRaft.class,
+            org.bukkit.entity.SplashPotion.class,
+            org.bukkit.entity.LingeringPotion.class
         );
         boolean error = false;
         for (Class<?> entityClass : allEntityClasses) {
@@ -295,10 +328,6 @@ public class EntityClassLookup {
         var entity = ((EntityTypeBridge) (Object) bukkitType).bridge$entityFactory().apply(spawnData.location());
         if (entity == null) {
             return null;
-        }
-        if (entity instanceof AbstractHurtingProjectile) {
-            Vector direction = spawnData.location().getDirection();
-            ((AbstractHurtingProjectile) entity).assignDirectionalMovement(new Vec3(direction.getX(), direction.getY(), direction.getZ()), 1.0);
         }
         if (entity instanceof HangingEntity) {
             createHanging((Class<org.bukkit.entity.Entity>) entityClass.bukkitClass, (a, direction) -> {
@@ -365,7 +394,7 @@ public class EntityClassLookup {
         add(AmbientCreature.class, new EntityClass<>(org.bukkit.entity.Ambient.class, org.bukkit.craftbukkit.v.entity.CraftAmbient.class, org.bukkit.craftbukkit.v.entity.CraftAmbient::new));
         add(TamableAnimal.class, new EntityClass<>(org.bukkit.entity.Tameable.class, org.bukkit.craftbukkit.v.entity.CraftTameableAnimal.class, org.bukkit.craftbukkit.v.entity.CraftTameableAnimal::new));
         add(AbstractPiglin.class, new EntityClass<>(org.bukkit.entity.PiglinAbstract.class, org.bukkit.craftbukkit.v.entity.CraftPiglinAbstract.class, org.bukkit.craftbukkit.v.entity.CraftPiglinAbstract::new));
-        add(FlyingMob.class, new EntityClass<>(org.bukkit.entity.Flying.class, org.bukkit.craftbukkit.v.entity.CraftFlying.class, org.bukkit.craftbukkit.v.entity.CraftFlying::new));
+        add(FlyingAnimal.class, new EntityClass<>(org.bukkit.entity.Flying.class, ArclightModFlying.class, ArclightModFlying::new));
         add(WaterAnimal.class, new EntityClass<>(org.bukkit.entity.WaterMob.class, org.bukkit.craftbukkit.v.entity.CraftWaterMob.class, org.bukkit.craftbukkit.v.entity.CraftWaterMob::new));
         add(AbstractGolem.class, new EntityClass<>(org.bukkit.entity.Golem.class, org.bukkit.craftbukkit.v.entity.CraftGolem.class, org.bukkit.craftbukkit.v.entity.CraftGolem::new));
         add(Player.class, new EntityClass<>(org.bukkit.entity.HumanEntity.class, org.bukkit.craftbukkit.v.entity.CraftHumanEntity.class, org.bukkit.craftbukkit.v.entity.CraftHumanEntity::new));
@@ -416,11 +445,14 @@ public class EntityClassLookup {
         add(SnowGolem.class, new EntityClass<>(org.bukkit.entity.Snowman.class, org.bukkit.craftbukkit.v.entity.CraftSnowman.class, org.bukkit.craftbukkit.v.entity.CraftSnowman::new));
         add(Ocelot.class, new EntityClass<>(org.bukkit.entity.Ocelot.class, org.bukkit.craftbukkit.v.entity.CraftOcelot.class, org.bukkit.craftbukkit.v.entity.CraftOcelot::new));
         add(IronGolem.class, new EntityClass<>(org.bukkit.entity.IronGolem.class, org.bukkit.craftbukkit.v.entity.CraftIronGolem.class, org.bukkit.craftbukkit.v.entity.CraftIronGolem::new));
+        add(CopperGolem.class, new EntityClass<>(org.bukkit.entity.CopperGolem.class, org.bukkit.craftbukkit.v.entity.CraftCopperGolem.class, org.bukkit.craftbukkit.v.entity.CraftCopperGolem::new));
         add(Horse.class, new EntityClass<>(org.bukkit.entity.Horse.class, org.bukkit.craftbukkit.v.entity.CraftHorse.class, org.bukkit.craftbukkit.v.entity.CraftHorse::new));
         add(Rabbit.class, new EntityClass<>(org.bukkit.entity.Rabbit.class, org.bukkit.craftbukkit.v.entity.CraftRabbit.class, org.bukkit.craftbukkit.v.entity.CraftRabbit::new));
         add(PolarBear.class, new EntityClass<>(org.bukkit.entity.PolarBear.class, org.bukkit.craftbukkit.v.entity.CraftPolarBear.class, org.bukkit.craftbukkit.v.entity.CraftPolarBear::new));
         add(Llama.class, new EntityClass<>(org.bukkit.entity.Llama.class, org.bukkit.craftbukkit.v.entity.CraftLlama.class, org.bukkit.craftbukkit.v.entity.CraftLlama::new));
         add(Parrot.class, new EntityClass<>(org.bukkit.entity.Parrot.class, org.bukkit.craftbukkit.v.entity.CraftParrot.class, org.bukkit.craftbukkit.v.entity.CraftParrot::new));
+        add(Nautilus.class, new EntityClass<>(org.bukkit.entity.Nautilus.class, org.bukkit.craftbukkit.v.entity.CraftNautilus.class, org.bukkit.craftbukkit.v.entity.CraftNautilus::new));
+        add(ZombieNautilus.class, new EntityClass<>(org.bukkit.entity.ZombieNautilus.class, org.bukkit.craftbukkit.v.entity.CraftZombieNautilus.class, org.bukkit.craftbukkit.v.entity.CraftZombieNautilus::new));
         add(Villager.class, new EntityClass<>(org.bukkit.entity.Villager.class, org.bukkit.craftbukkit.v.entity.CraftVillager.class, org.bukkit.craftbukkit.v.entity.CraftVillager::new));
         add(Turtle.class, new EntityClass<>(org.bukkit.entity.Turtle.class, org.bukkit.craftbukkit.v.entity.CraftTurtle.class, org.bukkit.craftbukkit.v.entity.CraftTurtle::new));
         add(Phantom.class, new EntityClass<>(org.bukkit.entity.Phantom.class, org.bukkit.craftbukkit.v.entity.CraftPhantom.class, org.bukkit.craftbukkit.v.entity.CraftPhantom::new));
@@ -431,6 +463,7 @@ public class EntityClassLookup {
         add(Drowned.class, new EntityClass<>(org.bukkit.entity.Drowned.class, org.bukkit.craftbukkit.v.entity.CraftDrowned.class, org.bukkit.craftbukkit.v.entity.CraftDrowned::new));
         add(Dolphin.class, new EntityClass<>(org.bukkit.entity.Dolphin.class, org.bukkit.craftbukkit.v.entity.CraftDolphin.class, org.bukkit.craftbukkit.v.entity.CraftDolphin::new));
         add(Cat.class, new EntityClass<>(org.bukkit.entity.Cat.class, org.bukkit.craftbukkit.v.entity.CraftCat.class, org.bukkit.craftbukkit.v.entity.CraftCat::new));
+        add(HappyGhast.class, new EntityClass<>(org.bukkit.entity.HappyGhast.class, org.bukkit.craftbukkit.v.entity.CraftHappyGhast.class, org.bukkit.craftbukkit.v.entity.CraftHappyGhast::new));
         add(Panda.class, new EntityClass<>(org.bukkit.entity.Panda.class, org.bukkit.craftbukkit.v.entity.CraftPanda.class, org.bukkit.craftbukkit.v.entity.CraftPanda::new));
         add(Pillager.class, new EntityClass<>(org.bukkit.entity.Pillager.class, org.bukkit.craftbukkit.v.entity.CraftPillager.class, org.bukkit.craftbukkit.v.entity.CraftPillager::new));
         add(Ravager.class, new EntityClass<>(org.bukkit.entity.Ravager.class, org.bukkit.craftbukkit.v.entity.CraftRavager.class, org.bukkit.craftbukkit.v.entity.CraftRavager::new));
@@ -451,8 +484,10 @@ public class EntityClassLookup {
         add(Tadpole.class, new EntityClass<>(org.bukkit.entity.Tadpole.class, org.bukkit.craftbukkit.v.entity.CraftTadpole.class, org.bukkit.craftbukkit.v.entity.CraftTadpole::new));
         add(Warden.class, new EntityClass<>(org.bukkit.entity.Warden.class, org.bukkit.craftbukkit.v.entity.CraftWarden.class, org.bukkit.craftbukkit.v.entity.CraftWarden::new));
         add(Camel.class, new EntityClass<>(org.bukkit.entity.Camel.class, org.bukkit.craftbukkit.v.entity.CraftCamel.class, org.bukkit.craftbukkit.v.entity.CraftCamel::new));
+        add(CamelHusk.class, new EntityClass<>(org.bukkit.entity.CamelHusk.class, org.bukkit.craftbukkit.v.entity.CraftCamelHusk.class, org.bukkit.craftbukkit.v.entity.CraftCamelHusk::new));
         add(Sniffer.class, new EntityClass<>(org.bukkit.entity.Sniffer.class, org.bukkit.craftbukkit.v.entity.CraftSniffer.class, org.bukkit.craftbukkit.v.entity.CraftSniffer::new));
         add(Breeze.class, new EntityClass<>(org.bukkit.entity.Breeze.class, org.bukkit.craftbukkit.v.entity.CraftBreeze.class, org.bukkit.craftbukkit.v.entity.CraftBreeze::new));
+        add(Creaking.class, new EntityClass<>(org.bukkit.entity.Creaking.class, org.bukkit.craftbukkit.v.entity.CraftCreaking.class, org.bukkit.craftbukkit.v.entity.CraftCreaking::new));
         add(EnderDragon.class, new EntityClass<>(org.bukkit.entity.EnderDragon.class, org.bukkit.craftbukkit.v.entity.CraftEnderDragon.class, org.bukkit.craftbukkit.v.entity.CraftEnderDragon::new));
         add(LargeFireball.class, new EntityClass<>(org.bukkit.entity.LargeFireball.class, org.bukkit.craftbukkit.v.entity.CraftLargeFireball.class, org.bukkit.craftbukkit.v.entity.CraftLargeFireball::new));
         add(SmallFireball.class, new EntityClass<>(org.bukkit.entity.SmallFireball.class, org.bukkit.craftbukkit.v.entity.CraftSmallFireball.class, org.bukkit.craftbukkit.v.entity.CraftSmallFireball::new));
@@ -467,12 +502,13 @@ public class EntityClassLookup {
         add(ThrownExperienceBottle.class, new EntityClass<>(org.bukkit.entity.ThrownExpBottle.class, org.bukkit.craftbukkit.v.entity.CraftThrownExpBottle.class, org.bukkit.craftbukkit.v.entity.CraftThrownExpBottle::new));
         add(SpectralArrow.class, new EntityClass<>(org.bukkit.entity.SpectralArrow.class, org.bukkit.craftbukkit.v.entity.CraftSpectralArrow.class, org.bukkit.craftbukkit.v.entity.CraftSpectralArrow::new));
         add(EndCrystal.class, new EntityClass<>(org.bukkit.entity.EnderCrystal.class, org.bukkit.craftbukkit.v.entity.CraftEnderCrystal.class, org.bukkit.craftbukkit.v.entity.CraftEnderCrystal::new));
+        add(Mannequin.class, new EntityClass<>(org.bukkit.entity.Mannequin.class, org.bukkit.craftbukkit.v.entity.CraftMannequin.class, org.bukkit.craftbukkit.v.entity.CraftMannequin::new));
         add(ThrownTrident.class, new EntityClass<>(org.bukkit.entity.Trident.class, org.bukkit.craftbukkit.v.entity.CraftTrident.class, org.bukkit.craftbukkit.v.entity.CraftTrident::new));
         add(LightningBolt.class, new EntityClass<>(org.bukkit.entity.LightningStrike.class, org.bukkit.craftbukkit.v.entity.CraftLightningStrike.class, org.bukkit.craftbukkit.v.entity.CraftLightningStrike::new));
         add(ShulkerBullet.class, new EntityClass<>(org.bukkit.entity.ShulkerBullet.class, org.bukkit.craftbukkit.v.entity.CraftShulkerBullet.class, org.bukkit.craftbukkit.v.entity.CraftShulkerBullet::new));
-        add(Boat.class, new EntityClass<>(org.bukkit.entity.Boat.class, org.bukkit.craftbukkit.v.entity.CraftBoat.class, org.bukkit.craftbukkit.v.entity.CraftBoat::new));
+        add(net.minecraft.world.entity.vehicle.boat.Boat.class, new EntityClass<>(org.bukkit.entity.Boat.class, org.bukkit.craftbukkit.v.entity.CraftBoat.class, CraftEntityTypes.getEntityTypeData(org.bukkit.entity.boat.OakBoat.class).convertFunction()::apply));
         add(LlamaSpit.class, new EntityClass<>(org.bukkit.entity.LlamaSpit.class, org.bukkit.craftbukkit.v.entity.CraftLlamaSpit.class, org.bukkit.craftbukkit.v.entity.CraftLlamaSpit::new));
-        add(ChestBoat.class, new EntityClass<>(org.bukkit.entity.ChestBoat.class, org.bukkit.craftbukkit.v.entity.CraftChestBoat.class, org.bukkit.craftbukkit.v.entity.CraftChestBoat::new));
+        add(net.minecraft.world.entity.vehicle.boat.ChestBoat.class, new EntityClass<>(org.bukkit.entity.ChestBoat.class, org.bukkit.craftbukkit.v.entity.CraftChestBoat.class, CraftEntityTypes.getEntityTypeData(org.bukkit.entity.boat.OakChestBoat.class).convertFunction()::apply));
         add(Marker.class, new EntityClass<>(org.bukkit.entity.Marker.class, org.bukkit.craftbukkit.v.entity.CraftMarker.class, org.bukkit.craftbukkit.v.entity.CraftMarker::new));
         add(Display.BlockDisplay.class, new EntityClass<>(org.bukkit.entity.BlockDisplay.class, org.bukkit.craftbukkit.v.entity.CraftBlockDisplay.class, org.bukkit.craftbukkit.v.entity.CraftBlockDisplay::new));
         add(Interaction.class, new EntityClass<>(org.bukkit.entity.Interaction.class, org.bukkit.craftbukkit.v.entity.CraftInteraction.class, org.bukkit.craftbukkit.v.entity.CraftInteraction::new));
@@ -485,7 +521,7 @@ public class EntityClassLookup {
         add(LeashFenceKnotEntity.class, new EntityClass<>(org.bukkit.entity.LeashHitch.class, org.bukkit.craftbukkit.v.entity.CraftLeash.class, org.bukkit.craftbukkit.v.entity.CraftLeash::new));
         add(Snowball.class, new EntityClass<>(org.bukkit.entity.Snowball.class, org.bukkit.craftbukkit.v.entity.CraftSnowball.class, org.bukkit.craftbukkit.v.entity.CraftSnowball::new));
         add(EyeOfEnder.class, new EntityClass<>(org.bukkit.entity.EnderSignal.class, org.bukkit.craftbukkit.v.entity.CraftEnderSignal.class, org.bukkit.craftbukkit.v.entity.CraftEnderSignal::new));
-        add(ThrownPotion.class, new EntityClass<>(org.bukkit.entity.ThrownPotion.class, org.bukkit.craftbukkit.v.entity.CraftThrownPotion.class, org.bukkit.craftbukkit.v.entity.CraftThrownPotion::new));
+        add(AbstractThrownPotion.class, new EntityClass<>(org.bukkit.entity.ThrownPotion.class, org.bukkit.craftbukkit.v.entity.CraftThrownPotion.class, CraftEntityTypes.getEntityTypeData(org.bukkit.entity.SplashPotion.class).convertFunction()::apply));
         add(PrimedTnt.class, new EntityClass<>(org.bukkit.entity.TNTPrimed.class, org.bukkit.craftbukkit.v.entity.CraftTNTPrimed.class, org.bukkit.craftbukkit.v.entity.CraftTNTPrimed::new));
         add(FallingBlockEntity.class, new EntityClass<>(org.bukkit.entity.FallingBlock.class, org.bukkit.craftbukkit.v.entity.CraftFallingBlock.class, org.bukkit.craftbukkit.v.entity.CraftFallingBlock::new));
         add(FireworkRocketEntity.class, new EntityClass<>(org.bukkit.entity.Firework.class, org.bukkit.craftbukkit.v.entity.CraftFirework.class, org.bukkit.craftbukkit.v.entity.CraftFirework::new));
@@ -500,6 +536,7 @@ public class EntityClassLookup {
         add(FishingHook.class, new EntityClass<>(org.bukkit.entity.FishHook.class, org.bukkit.craftbukkit.v.entity.CraftFishHook.class, org.bukkit.craftbukkit.v.entity.CraftFishHook::new));
         add(ServerPlayer.class, new EntityClass<>(org.bukkit.entity.Player.class, org.bukkit.craftbukkit.v.entity.CraftPlayer.class, org.bukkit.craftbukkit.v.entity.CraftPlayer::new));
         add(Bogged.class, new EntityClass<>(org.bukkit.entity.Bogged.class, org.bukkit.craftbukkit.v.entity.CraftBogged.class, org.bukkit.craftbukkit.v.entity.CraftBogged::new));
+        add(Parched.class, new EntityClass<>(org.bukkit.entity.Parched.class, org.bukkit.craftbukkit.v.entity.CraftParched.class, org.bukkit.craftbukkit.v.entity.CraftParched::new));
         add(OminousItemSpawner.class, new EntityClass<>(org.bukkit.entity.OminousItemSpawner.class, org.bukkit.craftbukkit.v.entity.CraftOminousItemSpawner.class, org.bukkit.craftbukkit.v.entity.CraftOminousItemSpawner::new));
         add(Armadillo.class, new EntityClass<>(org.bukkit.entity.Armadillo.class, org.bukkit.craftbukkit.v.entity.CraftArmadillo.class, org.bukkit.craftbukkit.v.entity.CraftArmadillo::new));
         add(BreezeWindCharge.class, new EntityClass<>(org.bukkit.entity.BreezeWindCharge.class, org.bukkit.craftbukkit.v.entity.CraftBreezeWindCharge.class, org.bukkit.craftbukkit.v.entity.CraftBreezeWindCharge::new));

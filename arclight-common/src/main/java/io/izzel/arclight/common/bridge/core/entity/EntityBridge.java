@@ -7,7 +7,7 @@ import io.izzel.tools.product.Product;
 import io.izzel.tools.product.Product4;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.boss.EnderDragonPart;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
@@ -84,7 +84,7 @@ public interface EntityBridge extends CommandSourceBridge, InjectEntityBridge {
     }
 
     default Entity[] bridge$forge$getParts() {
-        return this instanceof EnderDragon dragon ? dragon.subEntities : null;
+        return this instanceof EnderDragon dragon ? dragon.getSubEntities() : null;
     }
 
     default Product4<Boolean /* Cancelled */, Double /* X */, Double /* Y */, Double /* Z */>

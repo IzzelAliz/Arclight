@@ -90,7 +90,7 @@ public abstract class StructurePieceMixin implements StructurePieceBridge {
         boolean result = worldAccess.setBlock(position, craftBlockEntityState.getHandle(), i);
         var tileEntity = worldAccess.getBlockEntity(position);
         if (tileEntity != null) {
-            tileEntity.loadWithComponents(craftBlockEntityState.getSnapshotNBT(), worldAccess.registryAccess());
+            tileEntity.loadWithComponents(craftBlockEntityState.getSnapshotInput());
         }
         return result;
     }

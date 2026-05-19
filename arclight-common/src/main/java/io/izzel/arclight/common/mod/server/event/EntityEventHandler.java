@@ -9,6 +9,7 @@ import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.EntityEquipment;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -37,7 +38,7 @@ public class EntityEventHandler {
             Inventory beforeDeath = ArclightCaptures.getDeathPlayerInv();
             Inventory original;
             if (beforeDeath != null) { // not keeping inventory, from game rule
-                original = new Inventory(player);
+                original = new Inventory(player, new EntityEquipment());
                 original.replaceWith(player.getInventory());
                 player.getInventory().replaceWith(beforeDeath);
             } else {

@@ -4,7 +4,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.animal.Cow;
+import net.minecraft.world.entity.animal.cow.AbstractCow;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUtils;
@@ -14,7 +14,7 @@ import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-@Mixin(Cow.class)
+@Mixin(AbstractCow.class)
 public abstract class CowMixin extends AnimalMixin {
 
     /**
@@ -33,7 +33,7 @@ public abstract class CowMixin extends AnimalMixin {
             }
             ItemStack itemstack1 = ItemUtils.createFilledResult(itemstack, playerEntity, CraftItemStack.asNMSCopy(event.getItemStack()));
             playerEntity.setItemInHand(hand, itemstack1);
-            return InteractionResult.sidedSuccess(this.level().isClientSide);
+            return InteractionResult.SUCCESS;
         } else {
             return super.mobInteract(playerEntity, hand);
         }

@@ -4,7 +4,7 @@ import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridg
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageSources;
-import net.minecraft.world.entity.projectile.ThrownEnderpearl;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl;
 import net.minecraft.world.phys.HitResult;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
@@ -17,12 +17,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ThrownEnderpearl.class)
 public abstract class ThrownEnderpearlMixin extends ThrowableProjectileMixin {
 
-    @Inject(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/ThrownEnderpearl;discard()V"))
+    @Inject(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/throwableitemprojectile/ThrownEnderpearl;discard()V"))
     private void arclight$hit(HitResult hitResult, CallbackInfo ci) {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.HIT);
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/ThrownEnderpearl;discard()V"))
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/throwableitemprojectile/ThrownEnderpearl;discard()V"))
     private void arclight$despawn(CallbackInfo ci) {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
     }
@@ -32,8 +32,8 @@ public abstract class ThrownEnderpearlMixin extends ThrowableProjectileMixin {
         ((WorldBridge) this.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.ENDER_PEARL);
     }
 
-    @Redirect(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/damagesource/DamageSources;fall()Lnet/minecraft/world/damagesource/DamageSource;"))
+    @Redirect(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/damagesource/DamageSources;enderPearl()Lnet/minecraft/world/damagesource/DamageSource;"))
     private DamageSource arclight$entityDamage(DamageSources instance) {
-        return ((DamageSourceBridge) instance.fall()).bridge$customCausingEntity((ThrownEnderpearl) (Object) this);
+        return ((DamageSourceBridge) instance.enderPearl()).bridge$customCausingEntity((ThrownEnderpearl) (Object) this);
     }
 }

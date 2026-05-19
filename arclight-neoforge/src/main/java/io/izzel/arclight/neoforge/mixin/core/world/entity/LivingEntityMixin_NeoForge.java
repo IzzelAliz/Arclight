@@ -169,6 +169,6 @@ public abstract class LivingEntityMixin_NeoForge extends EntityMixin_NeoForge im
 
     @Override
     public boolean bridge$forge$canEntityDestroy(Level level, BlockPos pos, LivingEntity entity) {
-        return CommonHooks.canEntityDestroy(level, pos, entity);
+        return CommonHooks.canEntityDestroy((ServerLevel) level, pos, entity);
     }
 }

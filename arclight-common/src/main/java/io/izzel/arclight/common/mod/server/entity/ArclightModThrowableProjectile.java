@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mod.server.entity;
 
-import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrowableItemProjectile;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftThrowableProjectile;
 

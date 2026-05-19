@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity.ai.behavior;
 
 import net.minecraft.world.entity.ai.behavior.AssignProfessionFromJobSite;
-import net.minecraft.world.entity.npc.Villager;
-import net.minecraft.world.entity.npc.VillagerData;
+import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.npc.villager.VillagerData;
 import org.bukkit.craftbukkit.v.entity.CraftVillager;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.VillagerCareerChangeEvent;
@@ -15,9 +15,9 @@ public class AssignProfessionFromJobSiteMixin {
 
     @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/npc/Villager;setVillagerData(Lnet/minecraft/world/entity/npc/VillagerData;)V"))
     private static void arclight$jobChange(Villager instance, VillagerData villagerData) {
-        VillagerCareerChangeEvent event = CraftEventFactory.callVillagerCareerChangeEvent(instance, CraftVillager.CraftProfession.minecraftToBukkit(villagerData.getProfession()), VillagerCareerChangeEvent.ChangeReason.EMPLOYED);
+        VillagerCareerChangeEvent event = CraftEventFactory.callVillagerCareerChangeEvent(instance, CraftVillager.CraftProfession.minecraftHolderToBukkit(villagerData.profession()), VillagerCareerChangeEvent.ChangeReason.EMPLOYED);
         if (!event.isCancelled()) {
-            VillagerData newData = villagerData.setProfession(CraftVillager.CraftProfession.bukkitToMinecraft(event.getProfession()));
+            VillagerData newData = villagerData.withProfession(CraftVillager.CraftProfession.bukkitToMinecraftHolder(event.getProfession()));
             instance.setVillagerData(newData);
         }
     }

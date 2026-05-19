@@ -7,7 +7,7 @@ import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.i18n.LocalizedException;
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -88,7 +88,7 @@ public abstract class MaterialMixin implements MaterialBridge {
 
     private MaterialPropertySpec.MaterialType arclight$type = MaterialPropertySpec.MaterialType.VANILLA;
     private MaterialPropertySpec arclight$spec;
-    private ResourceLocation arclight$location;
+    private Identifier arclight$location;
     private boolean arclight$block = false, arclight$item = false;
 
     @Override
@@ -274,7 +274,7 @@ public abstract class MaterialMixin implements MaterialBridge {
                 arclight$setupCommon();
             }
             if (arclight$spec.craftingRemainingItem != null) {
-                cir.setReturnValue(CraftMagicNumbers.getMaterial(BuiltInRegistries.ITEM.get(ResourceLocation.parse(arclight$spec.craftingRemainingItem))));
+                cir.setReturnValue(CraftMagicNumbers.getMaterial(BuiltInRegistries.ITEM.getValue(Identifier.parse(arclight$spec.craftingRemainingItem))));
             }
         }
     }
@@ -320,7 +320,7 @@ public abstract class MaterialMixin implements MaterialBridge {
     }
 
     @Override
-    public void bridge$setupBlock(ResourceLocation key, MaterialPropertySpec spec) {
+    public void bridge$setupBlock(Identifier key, MaterialPropertySpec spec) {
         this.arclight$spec = spec.clone();
         arclight$type = MaterialPropertySpec.MaterialType.FORGE;
         arclight$block = true;
@@ -336,7 +336,7 @@ public abstract class MaterialMixin implements MaterialBridge {
     }
 
     @Override
-    public void bridge$setupItem(ResourceLocation key, MaterialPropertySpec spec) {
+    public void bridge$setupItem(Identifier key, MaterialPropertySpec spec) {
         this.arclight$spec = spec.clone();
         arclight$type = MaterialPropertySpec.MaterialType.FORGE;
         arclight$item = true;
@@ -350,7 +350,7 @@ public abstract class MaterialMixin implements MaterialBridge {
     }
 
     @SuppressWarnings("unchecked")
-    private void arclight$setupCommonLazy(ResourceLocation key) {
+    private void arclight$setupCommonLazy(Identifier key) {
         this.key = CraftNamespacedKey.fromMinecraft(key);
         if (arclight$spec.materialDataClass != null) {
             try {
@@ -368,8 +368,8 @@ public abstract class MaterialMixin implements MaterialBridge {
     }
 
     private void arclight$setupCommon() {
-        Block block = BuiltInRegistries.BLOCK.get(arclight$location);
-        Item item = BuiltInRegistries.ITEM.get(arclight$location);
+        Block block = BuiltInRegistries.BLOCK.getValue(arclight$location);
+        Item item = BuiltInRegistries.ITEM.getValue(arclight$location);
 
         // Block properties
         if (arclight$location.equals(MaterialBridge.AIR) || block != Blocks.AIR) {

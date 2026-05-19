@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.entity;
 
 import io.izzel.arclight.common.bridge.core.world.entity.MobBridge;
 import io.izzel.arclight.mixin.Decorate;
+import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.NeutralMob;
 import org.bukkit.event.entity.EntityTargetEvent;
@@ -11,16 +12,14 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
-import java.util.UUID;
-
 @Mixin(NeutralMob.class)
 public interface NeutralMobMixin extends MobBridge {
 
     // @formatter:off
     @Shadow void setLastHurtByMob(@Nullable LivingEntity livingBase);
-    @Shadow void setPersistentAngerTarget(@Nullable UUID target);
+    @Shadow void setPersistentAngerTarget(@Nullable EntityReference<LivingEntity> target);
     @Shadow void setTarget(@Nullable LivingEntity entitylivingbaseIn);
-    @Shadow void setRemainingPersistentAngerTime(int time);
+    @Shadow void setPersistentAngerEndTime(long time);
     // @formatter:on
 
     /**
@@ -33,7 +32,7 @@ public interface NeutralMobMixin extends MobBridge {
         this.setPersistentAngerTarget(null);
         this.bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.FORGOT_TARGET, true);
         this.setTarget(null);
-        this.setRemainingPersistentAngerTime(0);
+        this.setPersistentAngerEndTime(-1L);
     }
 
     @Decorate(method = "readPersistentAngerSaveData", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/NeutralMob;setTarget(Lnet/minecraft/world/entity/LivingEntity;)V"))

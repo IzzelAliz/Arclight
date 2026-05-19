@@ -49,13 +49,12 @@ public interface BucketableMixin {
             ItemStack itemstack2 = ItemUtils.createFilledResult(itemstack, player, itemstack1, false);
             player.setItemInHand(hand, itemstack2);
             Level level = entity.level();
-            if (!level.isClientSide) {
+            if (!level.isClientSide()) {
                 CriteriaTriggers.FILLED_BUCKET.trigger((ServerPlayer) player, itemstack1);
             }
 
-            entity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
             entity.discard();
-            return Optional.of(InteractionResult.sidedSuccess(level.isClientSide));
+            return Optional.of(InteractionResult.SUCCESS);
         } else {
             return Optional.empty();
         }

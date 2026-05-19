@@ -38,6 +38,11 @@ public abstract class NaturalSpawner_SpawnStateMixin implements WorldEntitySpawn
     @Override
     public boolean bridge$canSpawn(MobCategory classification, ChunkPos pos, int limit) {
         int i = limit * this.spawnableChunkCount / 289;
-        return this.mobCategoryCounts.getInt(classification) >= i ? false : this.localMobCapCalculator.canSpawn(classification, pos);
+        return this.mobCategoryCounts.getInt(classification) < i;
+    }
+
+    @Override
+    public boolean bridge$canSpawnLocal(MobCategory classification, ChunkPos pos) {
+        return this.localMobCapCalculator.canSpawn(classification, pos);
     }
 }

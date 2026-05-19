@@ -74,7 +74,7 @@ public abstract class PiglinAiMixin {
             eat(piglinEntity);
         } else {
             ((MobBridge) piglinEntity).bridge$captureItemDrop(itemEntity);
-            boolean flag = !piglinEntity.equipItemIfPossible(itemstack).equals(ItemStack.EMPTY);
+            boolean flag = !piglinEntity.equipItemIfPossible((net.minecraft.server.level.ServerLevel) piglinEntity.level(), itemstack).equals(ItemStack.EMPTY);
             if (!flag) {
                 putInInventory(piglinEntity, itemstack);
             }
