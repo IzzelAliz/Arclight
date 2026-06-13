@@ -1,4 +1,0 @@
-dependencies {
-    implementation libs.gson
-    implementation libs.arclight.api
-}
