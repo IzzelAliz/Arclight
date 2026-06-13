@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.decoration;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.EntityMixin;
 import io.izzel.arclight.common.mod.mixins.annotation.TransformAccess;
 import net.minecraft.core.BlockPos;
@@ -63,7 +64,7 @@ public abstract class BlockAttachedEntityMixin extends EntityMixin {
         Entity damager = (source.isDirect()) ? source.getDirectEntity() : source.getEntity();
         HangingBreakEvent event;
         if (damager != null) {
-            event = new HangingBreakByEntityEvent((Hanging) this.getBukkitEntity(), damager.bridge$getBukkitEntity(), source.is(DamageTypeTags.IS_EXPLOSION) ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.ENTITY);
+            event = new HangingBreakByEntityEvent((Hanging) this.getBukkitEntity(), ((EntityBridge) damager).bridge$getBukkitEntity(), source.is(DamageTypeTags.IS_EXPLOSION) ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.ENTITY);
         } else {
             event = new HangingBreakEvent((Hanging) this.getBukkitEntity(), source.is(DamageTypeTags.IS_EXPLOSION) ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.DEFAULT);
         }

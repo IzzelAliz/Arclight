@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.network.syncher.SynchedEntityDataBridge;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.server.level.ServerPlayer;
@@ -12,8 +13,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.player.PlayerBucketEntityEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -41,7 +42,7 @@ public interface BucketableMixin {
             itemstack1 = CraftItemStack.asNMSCopy(event.getEntityBucket());
             if (event.isCancelled()) {
                 player.containerMenu.sendAllDataToRemote(); // We need to update inventory to resync client's bucket
-                entity.bridge$getBukkitEntity().update((ServerPlayer) player); // We need to play out these packets as the client assumes the fish is gone
+                ((EntityBridge) entity).bridge$getBukkitEntity().update((ServerPlayer) player); // We need to play out these packets as the client assumes the fish is gone
                 ((SynchedEntityDataBridge) livingEntity.getEntityData()).bridge$refresh((ServerPlayer) player); // Need to send data such as the display name to client
                 return Optional.of(InteractionResult.FAIL);
             }
@@ -49,13 +50,13 @@ public interface BucketableMixin {
             ItemStack itemstack2 = ItemUtils.createFilledResult(itemstack, player, itemstack1, false);
             player.setItemInHand(hand, itemstack2);
             Level level = entity.level();
-            if (!level.isClientSide) {
+            if (!level.isClientSide()) {
                 CriteriaTriggers.FILLED_BUCKET.trigger((ServerPlayer) player, itemstack1);
             }
 
-            entity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
+            ((EntityBridge) entity).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
             entity.discard();
-            return Optional.of(InteractionResult.sidedSuccess(level.isClientSide));
+            return Optional.of(level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER);
         } else {
             return Optional.empty();
         }

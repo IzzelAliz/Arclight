@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.level.block.entity.AbstractFurnaceBlockEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeHolderBridge;
@@ -9,7 +10,7 @@ import io.izzel.arclight.mixin.Local;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ExperienceOrb;
@@ -21,10 +22,10 @@ import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v.inventory.CraftItemType;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.inventory.CraftItemType;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.FurnaceBurnEvent;
 import org.bukkit.event.inventory.FurnaceExtractEvent;
@@ -48,7 +49,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
     @Shadow protected NonNullList<ItemStack> items;
     @Shadow protected abstract int getBurnDuration(ItemStack stack);
     @Shadow protected abstract boolean isLit();
-    @Shadow @Final private Object2IntOpenHashMap<ResourceLocation> recipesUsed;
+    @Shadow @Final private Object2IntOpenHashMap<Identifier> recipesUsed;
     @Shadow public abstract List<RecipeHolder<?>> getRecipesToAwardAndPopExperience(ServerLevel p_154996_, Vec3 p_154997_);
     // @formatter:on
 
@@ -67,19 +68,19 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
     private static boolean arclight$setBurnTime(AbstractFurnaceBlockEntity furnace) throws Throwable {
         ItemStack itemStack = furnace.getItem(1);
         CraftItemStack fuel = CraftItemStack.asCraftMirror(itemStack);
-        FurnaceBurnEvent furnaceBurnEvent = new FurnaceBurnEvent(CraftBlock.at(furnace.level, furnace.getBlockPos()), fuel, furnace.litTime);
+        FurnaceBurnEvent furnaceBurnEvent = new FurnaceBurnEvent(CraftBlock.at(furnace.level, furnace.getBlockPos()), fuel, furnace.litTimeRemaining);
         Bukkit.getPluginManager().callEvent(furnaceBurnEvent);
         if (furnaceBurnEvent.isCancelled()) {
             return (boolean) DecorationOps.cancel().invoke();
         }
-        furnace.litTime = furnaceBurnEvent.getBurnTime();
+        furnace.litTimeRemaining = furnaceBurnEvent.getBurnTime();
         return (boolean) DecorationOps.callsite().invoke(furnace) && furnaceBurnEvent.isBurning();
     }
 
     @Decorate(method = "serverTick", inject = true, at = @At(value = "FIELD", ordinal = 0, target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;cookingProgress:I"))
     private static void arclight$startSmelt(Level level, BlockPos pos, BlockState state, AbstractFurnaceBlockEntity furnace,
                                             @Local(ordinal = -1) RecipeHolder<?> recipe) {
-        if (recipe != null && furnace.cookingProgress == 0) {
+        if (recipe != null && furnace.cookingTimer == 0) {
             CraftItemStack source = CraftItemStack.asCraftMirror(furnace.getItem(0));
             if (((RecipeHolderBridge) (Object) recipe).bridge$toBukkitRecipe() instanceof CookingRecipe<?> cookingRecipe) {
                 FurnaceStartSmeltEvent event = new FurnaceStartSmeltEvent(CraftBlock.at(level, pos), source, cookingRecipe);
@@ -114,7 +115,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
 
     @Override
     public List<RecipeHolder<?>> bridge$dropExp(ServerPlayer entity, ItemStack itemStack, int amount) {
-        return getRecipesToAwardAndPopExperience(entity.serverLevel(), entity.position(), this.worldPosition, entity, itemStack, amount);
+        return getRecipesToAwardAndPopExperience(entity.level(), entity.position(), this.worldPosition, entity, itemStack, amount);
     }
 
     @Redirect(method = "createExperience", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;award(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/phys/Vec3;I)V"))
@@ -173,7 +174,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
         return this.isLit();
     }
 
-    public Object2IntOpenHashMap<ResourceLocation> getRecipesUsed() {
+    public Object2IntOpenHashMap<Identifier> getRecipesUsed() {
         return this.recipesUsed;
     }
 }

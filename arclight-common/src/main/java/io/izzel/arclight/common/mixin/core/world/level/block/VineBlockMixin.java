@@ -5,12 +5,12 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.VineBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -36,10 +36,10 @@ public abstract class VineBlockMixin extends BlockMixin {
     @SuppressWarnings("ConstantConditions")
     @Overwrite
     public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random) {
-        if (!worldIn.getGameRules().getBoolean(GameRules.RULE_DO_VINES_SPREAD)) {
+        if (!worldIn.getGameRules().get(GameRules.SPREAD_VINES)) {
             return;
         }
-        if (worldIn.random.nextInt(4) == 0 && worldIn.isLoaded(pos)) {
+        if (random.nextInt(4) == 0 && worldIn.isLoaded(pos)) {
             Direction direction = Direction.getRandom(random);
             BlockPos blockpos = pos.above();
             if (direction.getAxis().isHorizontal() && !state.getValue(getPropertyForFace(direction))) {
@@ -63,7 +63,7 @@ public abstract class VineBlockMixin extends BlockMixin {
                                 CraftEventFactory.handleBlockSpreadEvent(worldIn, pos, blockpos2, this.defaultBlockState().setValue(getPropertyForFace(direction1), Boolean.TRUE), 2);
                             } else if (flag1 && worldIn.isEmptyBlock(blockpos3) && isAcceptableNeighbour(worldIn, pos.relative(direction4), direction1)) {
                                 CraftEventFactory.handleBlockSpreadEvent(worldIn, pos, blockpos3, this.defaultBlockState().setValue(getPropertyForFace(direction1), Boolean.TRUE), 2);
-                            } else if ((double) worldIn.random.nextFloat() < 0.05D && isAcceptableNeighbour(worldIn, blockpos4.above(), Direction.UP)) {
+                            } else if ((double) random.nextFloat() < 0.05D && isAcceptableNeighbour(worldIn, blockpos4.above(), Direction.UP)) {
                                 CraftEventFactory.handleBlockSpreadEvent(worldIn, pos, blockpos4, this.defaultBlockState().setValue(UP, Boolean.TRUE), 2);
                             }
                         }
@@ -73,7 +73,7 @@ public abstract class VineBlockMixin extends BlockMixin {
 
                 }
             } else {
-                if (direction == Direction.UP && pos.getY() < worldIn.getMaxBuildHeight() - 1) {
+                if (direction == Direction.UP && pos.getY() < worldIn.dimensionType().minY() + worldIn.dimensionType().height() - 1) {
                     if (this.canSupportAtFace(worldIn, pos, direction)) {
                         CraftEventFactory.handleBlockGrowEvent(worldIn, pos, state.setValue(UP, Boolean.TRUE), 2);
                         return;
@@ -100,7 +100,7 @@ public abstract class VineBlockMixin extends BlockMixin {
                     }
                 }
 
-                if (pos.getY() > worldIn.getMinBuildHeight()) {
+                if (pos.getY() > worldIn.dimensionType().minY()) {
                     BlockPos blockpos1 = pos.below();
                     BlockState blockstate = worldIn.getBlockState(blockpos1);
                     boolean isAir = blockstate.isAir();

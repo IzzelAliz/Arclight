@@ -1,7 +1,7 @@
 package io.izzel.arclight.forge.mixin.core.world.entity.animal;
 
 import io.izzel.arclight.common.mixin.core.world.entity.TamableAnimalMixin;
-import net.minecraft.world.entity.animal.Wolf;
+import net.minecraft.world.entity.animal.wolf.Wolf;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(Wolf.class)

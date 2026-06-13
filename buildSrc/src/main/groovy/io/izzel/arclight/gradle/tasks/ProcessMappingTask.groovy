@@ -1,5 +1,6 @@
 package io.izzel.arclight.gradle.tasks
 
+import io.izzel.arclight.gradle.Utils
 import io.izzel.arclight.gradle.util.AwWriter
 import net.fabricmc.loom.LoomGradleExtension
 import net.fabricmc.loom.configuration.providers.mappings.MappingConfiguration
@@ -26,6 +27,11 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.FieldVisitor
+import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 
 import java.util.jar.JarFile
@@ -45,8 +51,104 @@ class ProcessMappingTask implements Runnable {
     private String bukkitVersion
     private File outDir
 
+    private void runDeobfuscated() {
+        if (!outDir.isDirectory()) {
+            outDir.mkdirs()
+        }
+
+        def classes = [] as ArrayList<String>
+        def jarFile = new JarFile(this.inJar)
+        for (entry in jarFile.entries()) {
+            def name = entry.name
+            if (name.startsWith('net') && name.endsWith('.class')) {
+                classes.add(name.substring(0, name.lastIndexOf('.')))
+            }
+        }
+
+        def identitySrg = new StringBuilder()
+        for (def cl : classes) {
+            identitySrg.append(cl).append(' ').append(cl).append('\n')
+            def entry = jarFile.getEntry(cl + '.class')
+            if (entry == null) {
+                continue
+            }
+            def bytes = jarFile.getInputStream(entry).bytes
+            new ClassReader(bytes).accept(new ClassVisitor(Opcodes.ASM9) {
+                @Override
+                FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
+                    if (name != null) {
+                        identitySrg.append('    ').append(Type.getType(descriptor).className).append(' ').append(name).append(' -> ').append(name).append('\n')
+                    }
+                    return null
+                }
+
+                @Override
+                MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+                    if (name != null && !name.startsWith('<')) {
+                        identitySrg.append('    ').append(Type.getReturnType(descriptor).className).append(' ').append(name).append(descriptor).append(' -> ').append(name).append('\n')
+                    }
+                    return null
+                }
+            }, ClassReader.SKIP_CODE)
+        }
+        jarFile.close()
+
+        def srgContent = identitySrg.toString()
+        new File(outDir, 'bukkit_srg.srg').text = srgContent
+        new File(outDir, 'bukkit_moj.srg').text = srgContent
+        new File(outDir, 'bukkit_intermediary.srg').text = srgContent
+        new File(outDir, 'srg_to_named.srg').text = ''
+        new File(outDir, 'reobf_bukkit.srg').text = ''
+
+        def im = new InheritanceMap()
+        im.generate(new JarProvider(Jar.init(this.inJar)), classes)
+        new File(outDir, 'inheritanceMap.txt').withWriter { w ->
+            for (def className : classes) {
+                def parents = im.getParents(className)
+                if (parents != null && !parents.isEmpty()) {
+                    w.print(className)
+                    w.print(' ')
+                    w.println(parents.join(' '))
+                }
+            }
+        }
+        new File(outDir, 'inheritanceMap_intermediary.txt').text = new File(outDir, 'inheritanceMap.txt').text
+
+        def atFile = new File(buildData, 'mappings/bukkit.at')
+        if (atFile.exists()) {
+            new File(outDir, 'bukkit_at.at').withWriter { w ->
+                atFile.eachLine { l ->
+                    if (l.trim().isEmpty() || l.startsWith('#')) {
+                        w.writeLine(l)
+                        return
+                    }
+                    def split = l.split(' ', 2)
+                    w.writeLine("${split[0].replace('inal', '')} ${split[1].replace('/', '.')}")
+                }
+            }
+            new File(outDir, 'bukkit_at.at').withReader { r ->
+                def at = AccessTransformSet.create()
+                AccessTransformFormats.FML.read(r, at)
+                new File(outDir, 'bukkit_aw.aw').withWriter { aw ->
+                    new AwWriter(aw, this.inJar).write(at)
+                }
+            }
+        }
+    }
+
     @Override
     void run() {
+        if (Utils.isDeobfuscatedMc(mcVersion)) {
+            runDeobfuscated()
+            return
+        }
+
+        def csrg = MappingSet.create()
+        def clFile = new File(buildData, "mappings/bukkit-$mcVersion-cl.csrg")
+        clFile.withReader {
+            new CSrgReader(it).read(csrg)
+        }
+
         def tree = new MemoryMappingTree()
         MappingReader.read(LoomGradleExtension.get(project).mappingConfiguration.tinyMappingsWithSrg, tree)
         def mcp = new TinyMappingsReader(tree, "named", "srg").read()
@@ -56,6 +158,12 @@ class ProcessMappingTask implements Runnable {
         MappingReader.read(MappingConfiguration.getMojmapSrgFileIfPossible(project), mojmapTree)
         def official = new TinyMappingsReader(mojmapTree, "official", "named").read()
         def officialRev = official.reverse()
+
+        def srg = MappingSet.create()
+        LoomGradleExtension.get(project).srgProvider.mergedMojangRaw.toFile().withReader {
+            def data = it.lines().filter { String s -> !(s.startsWith('\t\t') || s.startsWith('tsrg2')) }.collect(Collectors.joining('\n'))
+            new TSrgReader(new StringReader(data.toString())).read(srg)
+        }
 
         if (!outDir.isDirectory()) {
             outDir.mkdirs()
@@ -81,17 +189,6 @@ class ProcessMappingTask implements Runnable {
             }.write(mcp.reverse())
         }
 
-        def srg = MappingSet.create()
-        LoomGradleExtension.get(project).srgProvider.mergedMojangRaw.toFile().withReader {
-            def data = it.lines().filter { String s -> !(s.startsWith('\t\t') || s.startsWith('tsrg2')) }.collect(Collectors.joining('\n'))
-            new TSrgReader(new StringReader(data.toString())).read(srg)
-        }
-
-        def csrg = MappingSet.create()
-        def clFile = new File(buildData, "mappings/bukkit-$mcVersion-cl.csrg")
-        clFile.withReader {
-            new CSrgReader(it).read(csrg)
-        }
         def srgRev = srg.reverse()
         def finalMap = srgRev.merge(csrg).reverse()
         def neoforgeMap = officialRev.merge(csrg).reverse()
@@ -289,7 +386,9 @@ class ProcessMappingTask implements Runnable {
             def srgToIntermediate = new TinyMappingsReader(tree, "srg", "named").read()
             def remapped = at.remap(srgToIntermediate)
             new File(outDir, 'bukkit_aw.aw').withWriter { w ->
-                new AwWriter(w, LoomGradleExtension.get(project).namedMinecraftProvider).write(remapped)
+                def mcProvider = LoomGradleExtension.get(project).namedMinecraftProvider
+                        ?: LoomGradleExtension.get(project).minecraftProvider
+                new AwWriter(w, mcProvider).write(remapped)
             }
         }
         new File(outDir, 'reobf_bukkit.srg').text = "PK: org/bukkit/craftbukkit/v org/bukkit/craftbukkit/$bukkitVersion"

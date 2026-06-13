@@ -8,7 +8,7 @@ import net.minecraftforge.server.permission.nodes.PermissionDynamicContextKey;
 import net.minecraftforge.server.permission.nodes.PermissionNode;
 import net.minecraftforge.server.permission.nodes.PermissionType;
 import net.minecraftforge.server.permission.nodes.PermissionTypes;
-import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 import org.bukkit.permissions.PermissibleBase;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.ServerOperator;

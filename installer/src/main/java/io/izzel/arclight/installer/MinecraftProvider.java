@@ -56,13 +56,19 @@ public class MinecraftProvider {
                                 var server = downloads.getAsJsonObject("server");
                                 var serverUrl = server.get("url").getAsString();
                                 var serverHash = server.get("sha1").getAsString();
-                                var mapping = downloads.getAsJsonObject("server_mappings");
-                                var mappingUrl = mapping.get("url").getAsString();
-                                var mappingHash = mapping.get("sha1").getAsString();
-                                logger.accept("Minecraft version: %s, server: %s, mappings: %s".formatted(info.installer.minecraft, serverHash, mappingHash));
+                                String mappingUrl = null;
+                                String mappingHash = null;
+                                if (downloads.has("server_mappings") && !downloads.get("server_mappings").isJsonNull()) {
+                                    var mapping = downloads.getAsJsonObject("server_mappings");
+                                    mappingUrl = mapping.get("url").getAsString();
+                                    mappingHash = mapping.get("sha1").getAsString();
+                                    mappingUrl = Mirrors.mapMojangMirror(mappingUrl, entry.getKey());
+                                }
+                                logger.accept("Minecraft version: %s, server: %s, mappings: %s".formatted(
+                                        info.installer.minecraft, serverHash, mappingHash != null ? mappingHash : "none"));
                                 return new MinecraftProvider.MinecraftData(entry.getKey(),
                                         Mirrors.mapMojangMirror(serverUrl, entry.getKey()), serverHash,
-                                        Mirrors.mapMojangMirror(mappingUrl, entry.getKey()), mappingHash);
+                                        mappingUrl, mappingHash);
                             }
                         }
                     }

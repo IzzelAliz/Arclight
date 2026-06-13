@@ -35,7 +35,7 @@ public class DerivedLevelDataMixin implements DerivedLevelDataBridge {
                 } else if (typeKey == LevelStem.END) {
                     suffix = "the_end";
                 } else {
-                    suffix = (typeKey.location().getNamespace() + "_" + typeKey.location().getPath()).replace('/', '_');
+                    suffix = (typeKey.identifier().getNamespace() + "_" + typeKey.identifier().getPath()).replace('/', '_');
                 }
                 return worldName + suffix;
             } else {
@@ -46,7 +46,7 @@ public class DerivedLevelDataMixin implements DerivedLevelDataBridge {
                 } else if (typeKey == LevelStem.NETHER) {
                     suffix = "DIM-1";
                 } else {
-                    suffix = typeKey.location().getNamespace() + "/" + typeKey.location().getPath();
+                    suffix = typeKey.identifier().getNamespace() + "/" + typeKey.identifier().getPath();
                 }
                 return worldName + suffix;
             }

@@ -2,10 +2,11 @@ package io.izzel.arclight.common.mixin.core.world.entity.boss.enderdragon;
 
 import io.izzel.arclight.common.mixin.core.world.entity.MobMixin;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.nbt.CompoundTag;
+import io.izzel.arclight.common.mod.util.ArclightNbtHelper;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.level.ServerExplosion;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -14,18 +15,18 @@ import net.minecraft.world.entity.boss.enderdragon.phases.DragonPhaseInstance;
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Explosion;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.dimension.end.EndDragonFight;
+import net.minecraft.world.level.dimension.end.EnderDragonFight;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
@@ -42,9 +43,16 @@ import java.util.List;
 @Mixin(EnderDragon.class)
 public abstract class EnderDragonMixin extends MobMixin {
 
-    @Shadow @Nullable private EndDragonFight dragonFight;
+    @Shadow @Nullable private EnderDragonFight dragonFight;
 
-    private final Explosion explosionSource = new Explosion(this.level(), (EnderDragon) (Object) this, null, null, Double.NaN, Double.NaN, Double.NaN, Float.NaN, true, Explosion.BlockInteraction.DESTROY, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER, SoundEvents.GENERIC_EXPLODE);
+    private transient Explosion explosionSource;
+
+    private Explosion arclight$getExplosionSource() {
+        if (this.explosionSource == null && this.level() instanceof ServerLevel serverLevel) {
+            this.explosionSource = new ServerExplosion(serverLevel, (EnderDragon) (Object) this, null, null, Vec3.ZERO, 0.0F, true, Explosion.BlockInteraction.DESTROY);
+        }
+        return this.explosionSource;
+    }
 
     @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/boss/enderdragon/phases/DragonPhaseInstance;getFlyTargetLocation()Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 arclight$noMoveHovering(DragonPhaseInstance phase) {
@@ -106,7 +114,8 @@ public abstract class EnderDragonMixin extends MobMixin {
         if (!flag2) {
             return flag;
         }
-        final EntityExplodeEvent event = CraftEventFactory.callEntityExplodeEvent((EnderDragon) (Object) this, destroyedBlocks, 0.0f, explosionSource.getBlockInteraction());
+        final Explosion explosion = this.arclight$getExplosionSource();
+        final EntityExplodeEvent event = CraftEventFactory.callEntityExplodeEvent((EnderDragon) (Object) this, destroyedBlocks, 0.0f, explosion.getBlockInteraction());
         if (event.isCancelled()) {
             return flag;
         }
@@ -123,7 +132,7 @@ public abstract class EnderDragonMixin extends MobMixin {
                 final CraftBlock craftBlock = (CraftBlock) block2;
                 final BlockPos blockposition2 = craftBlock.getPosition();
                 final net.minecraft.world.level.block.Block nmsBlock = craftBlock.getNMS().getBlock();
-                if (nmsBlock.dropFromExplosion(this.explosionSource)) {
+                if (nmsBlock.dropFromExplosion(explosion)) {
                     BlockEntity tileentity = craftBlock.getNMS().hasBlockEntity() ? this.level().getBlockEntity(blockposition2) : null;
                     LootParams.Builder loottableinfo_builder = new LootParams.Builder((ServerLevel) this.level()).withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(blockposition2)).withParameter(LootContextParams.TOOL, ItemStack.EMPTY).withParameter(LootContextParams.EXPLOSION_RADIUS, 1.0f / event.getYield()).withOptionalParameter(LootContextParams.BLOCK_ENTITY, tileentity);
                     for (ItemStack stack : craftBlock.getNMS().getDrops(loottableinfo_builder)) {
@@ -132,7 +141,7 @@ public abstract class EnderDragonMixin extends MobMixin {
                     craftBlock.getNMS().spawnAfterBreak((ServerLevel) this.level(), blockposition2, ItemStack.EMPTY, false);
                     // net.minecraft.block.Block.spawnDrops(craftBlock.getNMS(), loottableinfo_builder);
                 }
-                nmsBlock.wasExploded(this.level(), blockposition2, this.explosionSource);
+                nmsBlock.wasExploded((ServerLevel) this.level(), blockposition2, explosion);
                 this.level().removeBlock(blockposition2, false);
             }
         }
@@ -148,7 +157,7 @@ public abstract class EnderDragonMixin extends MobMixin {
     @Override
     public int getExpReward(Entity entity) {
         // CraftBukkit - Moved from #tickDeath method
-        boolean flag = this.level().getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT);
+        boolean flag = ((ServerLevel) this.level()).getGameRules().get(GameRules.MOB_DROPS);
         short short0 = 500;
 
         if (this.dragonFight != null && !this.dragonFight.hasPreviouslyKilledDragon()) {
@@ -164,14 +173,14 @@ public abstract class EnderDragonMixin extends MobMixin {
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("RETURN"))
-    private void arclight$storeExpToDrop(CompoundTag compound, CallbackInfo ci) {
-        compound.putInt("Bukkit.expToDrop", this.expToDrop);
+    private void arclight$storeExpToDrop(ValueOutput output, CallbackInfo ci) {
+        output.putInt("Bukkit.expToDrop", this.expToDrop);
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("RETURN"))
-    private void arclight$readExpToDrop(CompoundTag compound, CallbackInfo ci) {
-        if (compound.contains("Bukkit.expToDrop")) {
-            this.expToDrop = compound.getInt("Bukkit.expToDrop");
+    private void arclight$readExpToDrop(ValueInput input, CallbackInfo ci) {
+        if (ArclightNbtHelper.contains(input, "Bukkit.expToDrop")) {
+            this.expToDrop = ArclightNbtHelper.getInt(input, "Bukkit.expToDrop");
         }
     }
 }

@@ -1,62 +1,38 @@
 package io.izzel.arclight.common.mixin.core.stats;
 
-import com.google.common.collect.Lists;
-import net.minecraft.advancements.CriteriaTriggers;
-import net.minecraft.network.protocol.game.ClientboundRecipePacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.RecipeBook;
 import net.minecraft.stats.ServerRecipeBook;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Mixin(ServerRecipeBook.class)
 public abstract class ServerRecipeBookMixin extends RecipeBook {
 
     // @formatter:off
-    @Shadow protected abstract void sendRecipes(ClientboundRecipePacket.State p_12802_, ServerPlayer p_12803_, List<ResourceLocation> p_12804_);
+    @Shadow protected Set<ResourceKey<Recipe<?>>> known;
     // @formatter:on
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    public int addRecipes(Collection<RecipeHolder<?>> p_12792_, ServerPlayer p_12793_) {
-        List<ResourceLocation> list = Lists.newArrayList();
-        int i = 0;
-
-        for (RecipeHolder<?> recipeholder : p_12792_) {
-            ResourceLocation resourcelocation = recipeholder.id();
-            if (!this.known.contains(resourcelocation) && !recipeholder.value().isSpecial() && CraftEventFactory.handlePlayerRecipeListUpdateEvent(p_12793_, resourcelocation)) {
-                this.add(resourcelocation);
-                this.addHighlight(resourcelocation);
-                list.add(resourcelocation);
-                CriteriaTriggers.RECIPE_UNLOCKED.trigger(p_12793_, recipeholder);
-                ++i;
+    @ModifyVariable(method = "addRecipes", at = @At("HEAD"), argsOnly = true, index = 0)
+    private Collection<RecipeHolder<?>> arclight$filterRecipes(Collection<RecipeHolder<?>> recipes, ServerPlayer player) {
+        return recipes.stream().filter(holder -> {
+            if (holder.value().isSpecial() || this.known.contains(holder.id())) {
+                return true;
             }
-        }
-
-        if (list.size() > 0) {
-            this.sendRecipes(ClientboundRecipePacket.State.ADD, p_12793_, list);
-        }
-
-        return i;
-    }
-
-    @Inject(method = "sendRecipes", cancellable = true, at = @At("HEAD"))
-    public void arclight$returnIfFail(ClientboundRecipePacket.State state, ServerPlayer player, List<ResourceLocation> recipesIn, CallbackInfo ci) {
-        if (player.connection == null) {
-            ci.cancel();
-        }
+            Identifier id = holder.id().identifier();
+            return CraftEventFactory.handlePlayerRecipeListUpdateEvent(player, id);
+        }).collect(Collectors.toList());
     }
 }

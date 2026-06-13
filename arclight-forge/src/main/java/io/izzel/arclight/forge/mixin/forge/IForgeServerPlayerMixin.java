@@ -11,7 +11,7 @@ import net.minecraftforge.common.extensions.IForgeServerPlayer;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.network.NetworkInitialization;
 import net.minecraftforge.network.packets.OpenContainer;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 

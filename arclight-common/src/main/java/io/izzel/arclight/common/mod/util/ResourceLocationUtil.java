@@ -5,12 +5,12 @@ import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.Contract;
 
 import java.util.Locale;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class ResourceLocationUtil {
 
     @Contract("null -> fail")
-    public static String standardize(ResourceLocation location) {
+    public static String standardize(Identifier location) {
         Preconditions.checkNotNull(location, "location");
         return (location.getNamespace().equals(NamespacedKey.MINECRAFT) ? location.getPath() : location.toString())
             .replace(':', '_')
@@ -19,7 +19,7 @@ public class ResourceLocationUtil {
             .toUpperCase(Locale.ENGLISH);
     }
 
-    public static String standardizeLower(ResourceLocation location) {
+    public static String standardizeLower(Identifier location) {
         return (location.getNamespace().equals(NamespacedKey.MINECRAFT) ? location.getPath() : location.toString())
             .replace(':', '_')
             .replaceAll("\\s+", "_")

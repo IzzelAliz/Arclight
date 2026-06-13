@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
 import io.izzel.arclight.mixin.Decorate;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponentGetter;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.level.block.entity.BannerBlockEntity;
 import net.minecraft.world.level.block.entity.BannerPatternLayers;
@@ -30,8 +31,8 @@ public abstract class BannerBlockEntityMixin extends BlockEntity {
     }
 
     @Decorate(method = "applyImplicitComponents", inject = true, at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/block/entity/BannerBlockEntity;patterns:Lnet/minecraft/world/level/block/entity/BannerPatternLayers;", opcode = Opcodes.PUTFIELD))
-    private void arclight$applyLimits(BlockEntity.DataComponentInput dataComponentInput) {
-        this.setPatterns((BannerPatternLayers) dataComponentInput.getOrDefault(DataComponents.BANNER_PATTERNS, BannerPatternLayers.EMPTY)); // CraftBukkit - apply limits
+    private void arclight$applyLimits(DataComponentGetter dataComponentGetter) {
+        this.setPatterns((BannerPatternLayers) dataComponentGetter.getOrDefault(DataComponents.BANNER_PATTERNS, BannerPatternLayers.EMPTY)); // CraftBukkit - apply limits
     }
 
     // CraftBukkit start

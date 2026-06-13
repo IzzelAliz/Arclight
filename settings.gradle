@@ -7,6 +7,10 @@ pluginManagement {
     }
 }
 
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
+
 rootProject.name = 'arclight'
 
 include 'installer'
@@ -14,8 +18,12 @@ include 'i18n-config'
 
 include 'arclight-common'
 
-include 'arclight-forge'
 include 'arclight-neoforge'
 include 'arclight-fabric'
+
+// Forge 26.1: Architectury Loom McpExecutor NPE (B-04) — re-enable when loom fixes unobfuscated Forge setup
+if (gradle.startParameter.projectProperties.getOrDefault('enableForge', 'false') == 'true') {
+    include 'arclight-forge'
+}
 
 include 'bootstrap'

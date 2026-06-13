@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.bukkit.craftbukkit.v.scheduler.CraftScheduler;
+import org.bukkit.craftbukkit.scheduler.CraftScheduler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;

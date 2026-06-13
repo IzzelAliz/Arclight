@@ -1,13 +1,17 @@
 package io.izzel.arclight.common.bridge.bukkit;
 
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.FuelValues;
 import org.bukkit.block.BlockState;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaItem;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.inventory.CraftMetaItem;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import javax.annotation.Nullable;
@@ -15,13 +19,13 @@ import java.util.function.Function;
 
 public interface MaterialBridge {
 
-    ResourceLocation AIR = ResourceLocation.parse("air");
+    Identifier AIR = Identifier.parse("air");
 
-    void bridge$setupBlock(ResourceLocation key, MaterialPropertySpec spec);
+    void bridge$setupBlock(Identifier key, MaterialPropertySpec spec);
 
     void bridge$setupVanillaBlock(MaterialPropertySpec spec);
 
-    void bridge$setupItem(ResourceLocation key, MaterialPropertySpec spec);
+    void bridge$setupItem(Identifier key, MaterialPropertySpec spec);
 
     void bridge$setBlock();
 
@@ -43,7 +47,8 @@ public interface MaterialBridge {
     boolean bridge$shouldApplyStateFactory();
 
     default Item bridge$getCraftRemainingItem(Item item) {
-        return item.getCraftingRemainingItem();
+        var remainder = item.getCraftingRemainder();
+        return remainder == null ? null : remainder.item().value();
     }
 
     default int bridge$forge$getMaxStackSize(Item item) {
@@ -55,7 +60,7 @@ public interface MaterialBridge {
     }
 
     default int bridge$forge$getBurnTime(Item item) {
-        var result = AbstractFurnaceBlockEntity.getFuel().get(item);
-        return result != null ? result : 0;
+        return FuelValues.vanillaBurnTimes(RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY), FeatureFlags.DEFAULT_FLAGS)
+            .burnDuration(new ItemStack(item));
     }
 }

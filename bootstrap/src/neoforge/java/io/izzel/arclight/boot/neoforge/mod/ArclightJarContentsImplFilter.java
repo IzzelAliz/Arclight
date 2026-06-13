@@ -1,61 +1,51 @@
 package io.izzel.arclight.boot.neoforge.mod;
 
-import cpw.mods.jarhandling.impl.JarContentsImpl;
 import io.izzel.arclight.api.Unsafe;
+import net.neoforged.fml.jarcontents.JarContents;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Filter out packages already provided by Arclight.
- * For duplicate modules, the packages will be removed
- * before modules are removed.
- * For duplicate packages in non-duplicate library modules,
- * only the packages will be removed.
- * For duplicate packages in non-duplicate mod modules,
- * the packages won't be removed
- * Duplicated shaded mods are like modules, and are removed
- * later by JarInJarFilter.
+ * FML 26.1 uses {@link net.neoforged.fml.jarcontents.JarContents}; legacy securejarhandler
+ * filtering is optional and loaded reflectively when present.
  */
 public class ArclightJarContentsImplFilter {
-    // Use unsafe to bypass JPMS accessibility check
     private static final MethodHandles.Lookup LOOKUP = Unsafe.lookup();
+    private static final String LEGACY_IMPL = "cpw.mods.jarhandling.impl.JarContentsImpl";
+    private static Class<?> legacyImplClass;
     private static VarHandle PACKAGES;
     private static Set<String> serviceLayerPackages;
     private static final Logger LOGGER = LogManager.getLogger("Arclight");
 
     static {
         try {
-            PACKAGES = LOOKUP.findVarHandle(JarContentsImpl.class, "packages", Set.class);
+            legacyImplClass = Class.forName(LEGACY_IMPL);
+            PACKAGES = LOOKUP.findVarHandle(legacyImplClass, "packages", Set.class);
         } catch (ReflectiveOperationException e) {
-            LOGGER.error("Arclight failed to filter JarContents. This may cause dependency conflicts with some mods!", e);
+            LOGGER.debug("SecureJar JarContentsImpl package filter unavailable (expected on FML 26.1+)");
         }
-        serviceLayerPackages = ArclightJarContentsImplFilter.class
-                .getModule()
-                .getLayer()
-                .modules()
-                .stream()
-                .flatMap(it -> it.getPackages().stream())
-                .collect(Collectors.toSet());
+        // getLayer() is null during early FML discovery; module packages are sufficient for JiJ dedup.
+        serviceLayerPackages = ArclightJarContentsImplFilter.class.getModule().getPackages();
     }
 
-    /*
-     * The result of getPackages() is cached
-     * Through modifying the cache, we modify the result of getPackages()
-     * Note: ModJarMetadata use getPackagesExcluding(String...),
-     * which bypass the cache. This won't work for ModJarMetadata.
-     */
-    public static void filter(JarContentsImpl impl) {
+    public static void filter(JarContents jar) {
+        if (legacyImplClass != null && legacyImplClass.isInstance(jar)) {
+            filterLegacy(jar);
+        }
+        // FML 26.1 JarContents has no mutable package cache; JiJ dedup handles shaded mods.
+    }
+
+    private static void filterLegacy(JarContents impl) {
         if (PACKAGES != null) {
-            impl.getPackages();
-            Set<String> raw = (Set<String>)PACKAGES.get(impl);
+            Set<String> raw = (Set<String>) PACKAGES.get(impl);
             Set<String> result = raw.stream()
                     .filter(ArclightJarContentsImplFilter::test)
-                    .collect(Collectors.toSet());
+                    .collect(java.util.stream.Collectors.toSet());
             PACKAGES.set(impl, result);
         }
     }

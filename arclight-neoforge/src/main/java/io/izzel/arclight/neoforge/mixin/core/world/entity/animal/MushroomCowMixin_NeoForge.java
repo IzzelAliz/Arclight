@@ -1,14 +1,15 @@
 package io.izzel.arclight.neoforge.mixin.core.world.entity.animal;
 
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
+import io.izzel.arclight.common.mod.util.ArclightBridges;
 import io.izzel.arclight.neoforge.mixin.core.world.entity.MobMixin_NeoForge;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.animal.Cow;
-import net.minecraft.world.entity.animal.MushroomCow;
+import net.minecraft.world.entity.animal.cow.Cow;
+import net.minecraft.world.entity.animal.cow.MushroomCow;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDropItemEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
@@ -44,7 +45,7 @@ public abstract class MushroomCowMixin_NeoForge extends MobMixin_NeoForge {
     @Redirect(method = "shear", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/MushroomCow;spawnAtLocation(Lnet/minecraft/world/item/ItemStack;F)Lnet/minecraft/world/entity/item/ItemEntity;"))
     private ItemEntity arclight$onShearDrop(MushroomCow cow, ItemStack stack, float v) {
         var itemEntity = new ItemEntity(this.level(), this.getX(), this.getY(1.0D), this.getZ(), stack);
-        EntityDropItemEvent event = new EntityDropItemEvent(this.bridge$getBukkitEntity(), (org.bukkit.entity.Item) itemEntity.bridge$getBukkitEntity());
+        EntityDropItemEvent event = new EntityDropItemEvent(this.bridge$getBukkitEntity(), (org.bukkit.entity.Item) ArclightBridges.toBukkit(itemEntity));
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             return null;

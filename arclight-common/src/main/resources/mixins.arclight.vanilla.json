@@ -2,7 +2,6 @@
   "required": true,
   "minVersion": "0.8",
   "package": "io.izzel.arclight.common.mixin.vanilla",
-  "target": "@env(DEFAULT)",
   "setSourceFile": true,
   "plugin": "io.izzel.arclight.common.mod.ArclightMixinPlugin",
   "injectors": {
@@ -35,7 +34,7 @@
     "world.entity.player.PlayerMixin_Vanilla",
     "world.item.BucketItemMixin_Vanilla",
     "world.item.ItemStackMixin_Vanilla",
-    "world.item.MilkBucketItemMixin_Vanilla",
+    "world.item.consume_effects.ClearAllStatusEffectsConsumeEffectMixin_Vanilla",
     "world.level.LevelMixin_Vanilla",
     "world.level.block.BlockMixin_Vanilla",
     "world.level.block.CropBlockMixin_Vanilla",

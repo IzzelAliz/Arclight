@@ -7,7 +7,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.gson.JsonElement;
 import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeManagerBridge;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.item.crafting.Recipe;
@@ -38,13 +39,13 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
     // @formatter:off
     @Shadow private boolean hasErrors;
     @Shadow @Final private static Logger LOGGER;
-    @Shadow private Map<ResourceLocation, RecipeHolder<?>> byName;
+    @Shadow private Map<ResourceKey<Recipe<?>>, RecipeHolder<?>> byName;
     @Shadow public Multimap<RecipeType<?>, RecipeHolder<?>> byType;
     @Shadow protected abstract <I extends RecipeInput, T extends Recipe<I>> Collection<RecipeHolder<T>> byType(RecipeType<T> recipeType);
     // @formatter:on
 
     @Inject(method = "apply(Ljava/util/Map;Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)V", at = @At("RETURN"))
-    private void arclight$makeMutable(Map<ResourceLocation, JsonElement> map, ResourceManager resourceManager, ProfilerFiller profilerFiller, CallbackInfo ci) {
+    private void arclight$makeMutable(Map<Identifier, JsonElement> map, ResourceManager resourceManager, ProfilerFiller profilerFiller, CallbackInfo ci) {
         this.byName = new HashMap<>(this.byName);
         this.byType = LinkedHashMultimap.create(this.byType);
     }
@@ -92,9 +93,9 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
         addRecipe(recipe);
     }
 
-    public boolean removeRecipe(ResourceLocation mcKey) {
-        byType.values().removeIf(recipe -> recipe.id().equals(mcKey));
-        return byName.remove(mcKey) != null;
+    public boolean removeRecipe(Identifier mcKey) {
+        byType.values().removeIf(recipe -> recipe.id().identifier().equals(mcKey));
+        return byName.entrySet().removeIf(entry -> entry.getKey().identifier().equals(mcKey));
     }
 
     public void clearRecipes() {

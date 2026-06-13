@@ -1,10 +1,11 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -13,8 +14,8 @@ import net.minecraft.world.level.block.RedStoneOreBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -48,7 +49,7 @@ public abstract class RedStoneOreBlockMixin {
                 return;
             }
         } else {
-            EntityInteractEvent event = new EntityInteractEvent(entityIn.bridge$getBukkitEntity(), CraftBlock.at(worldIn, pos));
+            EntityInteractEvent event = new EntityInteractEvent(((EntityBridge) entityIn).bridge$getBukkitEntity(), CraftBlock.at(worldIn, pos));
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
                 ci.cancel();
@@ -59,7 +60,7 @@ public abstract class RedStoneOreBlockMixin {
     }
 
     @Inject(method = "useItemOn", at = @At(value = "HEAD"))
-    public void arclight$interact3(ItemStack itemStack, BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult, CallbackInfoReturnable<ItemInteractionResult> cir) {
+    public void arclight$interact3(ItemStack itemStack, BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult, CallbackInfoReturnable<InteractionResult> cir) {
         arclight$entity = player;
     }
 

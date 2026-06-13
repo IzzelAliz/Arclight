@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.entity.vehicle;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.vehicle.AbstractMinecartBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.BlockPos;
@@ -9,7 +10,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MoverType;
-import net.minecraft.world.entity.vehicle.AbstractMinecart;
+import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -42,7 +43,6 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin implement
     @Shadow protected abstract void moveAlongTrack(BlockPos pos, BlockState state);
     @Shadow public abstract void activateMinecart(int x, int y, int z, boolean receivingPower);
     @Shadow private boolean flipped;
-    @Shadow public abstract AbstractMinecart.Type getMinecartType();
     @Shadow private boolean onRails;
     // @formatter:on
 
@@ -77,7 +77,7 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin implement
 
     @Inject(method = "tick", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/vehicle/AbstractMinecart;setRot(FF)V"))
     private void arclight$vehicleUpdateEvent(CallbackInfo ci) {
-        org.bukkit.World bworld = this.level().bridge$getWorld();
+        org.bukkit.World bworld = ((WorldBridge) this.level()).bridge$getWorld();
         Location to = new Location(bworld, this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
         Vehicle vehicle = (Vehicle) this.getBukkitEntity();
         Bukkit.getPluginManager().callEvent(new VehicleUpdateEvent(vehicle));
@@ -92,7 +92,7 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin implement
 
     @Decorate(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;startRiding(Lnet/minecraft/world/entity/Entity;)Z"))
     private boolean arclight$ridingCollide(Entity instance, Entity entity) throws Throwable {
-        VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), instance.bridge$getBukkitEntity());
+        VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), ((EntityBridge) instance).bridge$getBukkitEntity());
         Bukkit.getPluginManager().callEvent(collisionEvent);
         if (collisionEvent.isCancelled()) {
             return false;
@@ -103,7 +103,7 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin implement
     @Decorate(method = "tick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/Entity;push(Lnet/minecraft/world/entity/Entity;)V"))
     private void arclight$pushCollide(Entity instance, Entity entity) throws Throwable {
         if (!this.isPassengerOfSameVehicle(instance)) {
-            VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), instance.bridge$getBukkitEntity());
+            VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), ((EntityBridge) instance).bridge$getBukkitEntity());
             Bukkit.getPluginManager().callEvent(collisionEvent);
             if (collisionEvent.isCancelled()) {
                 return;
@@ -114,7 +114,7 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin implement
 
     @Decorate(method = "tick", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/entity/Entity;push(Lnet/minecraft/world/entity/Entity;)V"))
     private void arclight$pushCollide2(Entity instance, Entity entity) throws Throwable {
-        VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), instance.bridge$getBukkitEntity());
+        VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), ((EntityBridge) instance).bridge$getBukkitEntity());
         Bukkit.getPluginManager().callEvent(collisionEvent);
         if (collisionEvent.isCancelled()) {
             return;

@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "package": "net.fabricmc.fabric.mixin.event.lifecycle.client",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "ClientChunkCacheMixin",
+    "ClientPacketListenerMixin",
+    "ClientConfigurationPacketListenerImplMixin",
+    "ClientLevelMixin",
+    "ClientLevelEntityCallbacksMixin",
+    "MinecraftMixin",
+    "LevelChunkMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1,
+    "maxShiftBy": 3
+  }
+}

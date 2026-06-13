@@ -7,7 +7,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.EggItem;
@@ -35,7 +35,7 @@ public abstract class EggItemMixin extends Item {
             if (playerIn instanceof ServerPlayerBridge) {
                 ((ServerPlayerBridge) playerIn).bridge$getBukkitEntity().updateInventory();
             }
-            return (boolean) DecorationOps.cancel().invoke(InteractionResultHolder.fail(playerIn.getItemInHand(handIn)));
+            return (boolean) DecorationOps.cancel().invoke(InteractionResult.FAIL);
         } else {
             worldIn.playSound(null, playerIn.getX(), playerIn.getY(), playerIn.getZ(), SoundEvents.EGG_THROW, SoundSource.PLAYERS, 0.5F, 0.4F / (world.getRandom().nextFloat() * 0.4F + 0.8F));
             return true;

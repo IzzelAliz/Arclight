@@ -9,8 +9,8 @@ import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.DropperBlock;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.inventory.CraftInventoryDoubleChest;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.inventory.CraftInventory;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.inventory.Inventory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,7 +25,7 @@ public abstract class DropperBlockMixin extends BlockMixin {
         Inventory destinationInventory;
         // Have to special case large chests as they work oddly
         if (to instanceof CompoundContainer) {
-            destinationInventory = new CraftInventoryDoubleChest((CompoundContainer) to);
+            destinationInventory = new CraftInventory((CompoundContainer) to);
         } else {
             destinationInventory = ((IInventoryBridge) to).getOwnerInventory();
         }

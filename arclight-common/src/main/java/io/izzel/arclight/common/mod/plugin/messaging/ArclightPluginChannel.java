@@ -6,8 +6,8 @@ import net.minecraft.network.ConnectionProtocol;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
+import net.minecraft.resources.Identifier;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.messaging.Messenger;
@@ -34,7 +34,7 @@ public class ArclightPluginChannel<T extends PluginChannelHandler> {
     private final Set<Plugin> outgoing;
     // Views end
 
-    public ArclightPluginChannel(Messenger messenger, Function<ArclightPluginChannel<T>, T> factory, ResourceLocation channel, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
+    public ArclightPluginChannel(Messenger messenger, Function<ArclightPluginChannel<T>, T> factory, Identifier channel, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
         this.messenger = messenger;
         this.type = ArclightRawPayload.getType(channel);
         this.streamCodec = RawPayload.channelCodec(this.type, ArclightConstants.MAX_C2S_CUSTOM_PAYLOAD_SIZE);
@@ -67,7 +67,7 @@ public class ArclightPluginChannel<T extends PluginChannelHandler> {
         return outgoing;
     }
 
-    public ResourceLocation getChannel() {
+    public Identifier getChannel() {
         return type.id();
     }
 

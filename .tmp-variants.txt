@@ -1,0 +1,203 @@
+﻿.\gradlew : WARNING: A restricted method in java.lang.System has been called
+発生場所 C:\Users\SPLIGAN\AppData\Local\Temp\ps-script-7e086d98-aa67-4f14-9508-34df5e95909c.ps1:84 文字:50
++ ... \Arclight"; .\gradlew :arclight-common:outgoingVariants --no-daemon 2 ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (WARNING: A rest...has been called:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnam
+ed module (file:/C:/Users/SPLIGAN/.gradle/wrapper/dists/gradle-9.2.1-all/2lbhfocpgk6niea1fja7mj8kz/gradle-9.2.1/lib/nat
+ive-platform-0.22-milestone-29.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :buildSrc:compileJava UP-TO-DATE
+> Task :buildSrc:compileGroovy UP-TO-DATE
+> Task :buildSrc:processResources NO-SOURCE
+> Task :buildSrc:classes UP-TO-DATE
+> Task :buildSrc:jar UP-TO-DATE
+
+> Configure project :
+Architect Plugin: 3.5.167
+Architectury Loom: 1.14.476
+This version of Architectury Loom is in beta! Please report any issues you encounter: https://github.com/architectury/architectury-loom/issues
+
+> Configure project :arclight-common
+Setup for Spigot 26.1.2(4628)
+:spigot build cache valid, using it
+
+> Configure project :arclight-fabric
+Setup for Spigot 26.1.2(4628)
+:spigot build cache valid, using it
+
+> Configure project :arclight-neoforge
+Setup for Spigot 26.1.2(4628)
+:spigot build cache valid, using it
+
+> Task :arclight-common:outgoingVariants
+--------------------------------------------------
+Variant apiElements
+--------------------------------------------------
+API elements for the 'main' feature.
+
+Capabilities
+    - io.izzel.arclight:arclight-common:1.0.2-SNAPSHOT (default capability)
+Attributes
+    - org.gradle.category            = library
+    - org.gradle.dependency.bundling = external
+    - org.gradle.jvm.version         = 25
+    - org.gradle.libraryelements     = jar
+    - org.gradle.usage               = java-api
+Artifacts
+    - build\libs\arclight-common-1.0.2-SNAPSHOT-dev.jar (artifactType = jar, classifier = dev)
+
+Secondary Variants (*)
+
+    --------------------------------------------------
+    Secondary Variant classes
+    --------------------------------------------------
+    Directories containing compiled class files for main.
+
+    Attributes
+        - org.gradle.category            = library
+        - org.gradle.dependency.bundling = external
+        - org.gradle.jvm.version         = 25
+        - org.gradle.libraryelements     = classes
+        - org.gradle.usage               = java-api
+    Artifacts
+        - build\classes\java\main (artifactType = java-classes-directory)
+
+--------------------------------------------------
+Variant archives
+--------------------------------------------------
+Configuration for archive artifacts.
+
+Capabilities
+    - io.izzel.arclight:arclight-common:1.0.2-SNAPSHOT (default capability)
+Artifacts
+    - build\libs\arclight-common-1.0.2-SNAPSHOT-dev.jar (artifactType = jar, classifier = dev)
+
+--------------------------------------------------
+Variant default
+--------------------------------------------------
+Configuration for default artifacts.
+
+Capabilities
+    - io.izzel.arclight:arclight-common:1.0.2-SNAPSHOT (default capability)
+Artifacts
+    - build\libs\arclight-common-1.0.2-SNAPSHOT-dev.jar (artifactType = jar, classifier = dev)
+
+--------------------------------------------------
+Variant loomExportedClasspath
+--------------------------------------------------
+
+Capabilities
+    - io.izzel.arclight:arclight-common:1.0.2-SNAPSHOT (default capability)
+Artifacts
+    - build\export_classpath.json (artifactType = json)
+
+--------------------------------------------------
+Variant mainSourceElements (i)
+--------------------------------------------------
+List of source directories contained in the Main SourceSet.
+
+Capabilities
+    - io.izzel.arclight:arclight-common:1.0.2-SNAPSHOT (default capability)
+Attributes
+    - org.gradle.category            = verification
+    - org.gradle.dependency.bundling = external
+    - org.gradle.verificationtype    = main-sources
+Artifacts
+    - src\main\java (artifactType = directory)
+    - src\main\resources (artifactType = directory)
+
+--------------------------------------------------
+Variant runtimeElements
+--------------------------------------------------
+Runtime elements for the 'main' feature.
+
+Capabilities
+    - io.izzel.arclight:arclight-common:1.0.2-SNAPSHOT (default capability)
+Attributes
+    - org.gradle.category            = library
+    - org.gradle.dependency.bundling = external
+    - org.gradle.jvm.version         = 25
+    - org.gradle.libraryelements     = jar
+    - org.gradle.usage               = java-runtime
+Artifacts
+    - build\libs\arclight-common-1.0.2-SNAPSHOT-dev.jar (artifactType = jar, classifier = dev)
+
+Secondary Variants (*)
+
+    --------------------------------------------------
+    Secondary Variant classes
+    --------------------------------------------------
+    Directories containing compiled class files for main.
+
+    Attributes
+        - org.gradle.category            = library
+        - org.gradle.dependency.bundling = external
+        - org.gradle.jvm.version         = 25
+        - org.gradle.libraryelements     = classes
+        - org.gradle.usage               = java-runtime
+    Artifacts
+        - build\classes\java\main (artifactType = java-classes-directory)
+
+    --------------------------------------------------
+    Secondary Variant resources
+    --------------------------------------------------
+    Directories containing assembled resource files for main.
+
+    Attributes
+        - org.gradle.category            = library
+        - org.gradle.dependency.bundling = external
+        - org.gradle.jvm.version         = 25
+        - org.gradle.libraryelements     = resources
+        - org.gradle.usage               = java-runtime
+    Artifacts
+        - build\resources\main (artifactType = java-resources-directory)
+
+--------------------------------------------------
+Variant sourcesElements
+--------------------------------------------------
+sources elements for main.
+
+Capabilities
+    - io.izzel.arclight:arclight-common:1.0.2-SNAPSHOT (default capability)
+Attributes
+    - org.gradle.category            = documentation
+    - org.gradle.dependency.bundling = external
+    - org.gradle.docstype            = sources
+    - org.gradle.usage               = java-runtime
+Artifacts
+    - build\libs\arclight-common-1.0.2-SNAPSHOT-sources.jar (artifactType = jar, classifier = sources)
+
+--------------------------------------------------
+Variant testResultsElementsForTest (i)
+--------------------------------------------------
+Binary results obtained from running all targets in the 'test' Test Suite.
+
+Capabilities
+    - io.izzel.arclight:arclight-common:1.0.2-SNAPSHOT (default capability)
+Attributes
+    - org.gradle.category         = verification
+    - org.gradle.testsuite.name   = test
+    - org.gradle.verificationtype = test-results
+Artifacts
+    - build\test-results\test\binary (artifactType = directory)
+
+(i) Configuration uses incubating attributes such as Category.VERIFICATION.
+(*) Secondary variants are variants created via the Configuration#getOutgoing(): ConfigurationPublications API which also participate in selection, in addition to the configuration itself.
+
+[Incubating] Problems report is available at: file:///C:/Users/SPLIGAN/Documents/GitHub/Arclight/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 11s
+4 actionable tasks: 1 executed, 3 up-to-date

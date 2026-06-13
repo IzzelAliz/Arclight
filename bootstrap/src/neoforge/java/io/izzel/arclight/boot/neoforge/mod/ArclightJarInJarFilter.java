@@ -8,6 +8,7 @@ import net.neoforged.neoforgespi.locating.IOrderedProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.ModuleLayer;
 import java.util.List;
 
 public class ArclightJarInJarFilter implements IDependencyLocator, IOrderedProvider {
@@ -22,14 +23,30 @@ public class ArclightJarInJarFilter implements IDependencyLocator, IOrderedProvi
             field.setAccessible(true);
             var loadedFiles = (List<ModFile>) field.get(pipeline);
             loadedFiles.removeIf(it -> {
-                var optional = getClass().getModule().getLayer().findModule(it.getModFileInfo().moduleName());
-                optional.ifPresent(module -> LOGGER.info("Skip jij dependency {}@{} because Arclight has {}",
-                    it.getModFileInfo().moduleName(), it.getModFileInfo().versionString(), module.getDescriptor().toNameAndVersion()));
-                return optional.isPresent();
+                var moduleName = it.getId();
+                if (!isBundledInArclight(moduleName)) {
+                    return false;
+                }
+                LOGGER.info("Skip jij dependency {}@{} because Arclight bundles it",
+                        moduleName, it.getModFileInfo().versionString());
+                return true;
             });
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static boolean isBundledInArclight(String moduleName) {
+        var layer = ArclightJarInJarFilter.class.getModule().getLayer();
+        if (layer != null && layer.findModule(moduleName).isPresent()) {
+            return true;
+        }
+        for (var module : ModuleLayer.boot().modules()) {
+            if (module.getName().equals(moduleName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

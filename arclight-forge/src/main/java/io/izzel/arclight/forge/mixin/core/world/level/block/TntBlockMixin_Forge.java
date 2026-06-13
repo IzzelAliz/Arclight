@@ -3,7 +3,7 @@ package io.izzel.arclight.forge.mixin.core.world.level.block;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
@@ -13,7 +13,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.TntBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.block.TNTPrimeEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -34,9 +34,9 @@ public abstract class TntBlockMixin_Forge extends BlockMixin_Forge {
     }
 
     @Inject(method = "useItemOn", cancellable = true, at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraft/world/level/block/TntBlock;onCaughtFire(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Direction;Lnet/minecraft/world/entity/LivingEntity;)V"))
-    private void arclight$player(ItemStack arg, BlockState arg2, Level level, BlockPos pos, Player player, InteractionHand arg6, BlockHitResult arg7, CallbackInfoReturnable<ItemInteractionResult> cir) {
+    private void arclight$player(ItemStack arg, BlockState arg2, Level level, BlockPos pos, Player player, InteractionHand arg6, BlockHitResult arg7, CallbackInfoReturnable<InteractionResult> cir) {
         if (!CraftEventFactory.callTNTPrimeEvent(level, pos, TNTPrimeEvent.PrimeCause.PLAYER, player, null)) {
-            cir.setReturnValue(ItemInteractionResult.CONSUME);
+            cir.setReturnValue(InteractionResult.CONSUME);
         }
     }
 

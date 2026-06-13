@@ -1,11 +1,12 @@
 package io.izzel.arclight.common.mixin.core.world.entity.boss.enderdragon.phases;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.enderdragon.phases.DragonPhaseInstance;
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhaseManager;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.entity.CraftEnderDragon;
+import org.bukkit.craftbukkit.entity.CraftEnderDragon;
 import org.bukkit.event.entity.EnderDragonChangePhaseEvent;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
@@ -35,7 +36,7 @@ public abstract class EnderDragonPhaseManagerMixin {
             }
 
             EnderDragonChangePhaseEvent event = new EnderDragonChangePhaseEvent(
-                (CraftEnderDragon) this.dragon.bridge$getBukkitEntity(),
+                (CraftEnderDragon) ((EntityBridge) this.dragon).bridge$getBukkitEntity(),
                 (this.currentPhase == null) ? null : CraftEnderDragon.getBukkitPhase(this.currentPhase.getPhase()),
                 CraftEnderDragon.getBukkitPhase(phaseIn)
             );
@@ -46,11 +47,11 @@ public abstract class EnderDragonPhaseManagerMixin {
             phaseIn = CraftEnderDragon.getMinecraftPhase(event.getNewPhase());
 
             this.currentPhase = this.getPhase(phaseIn);
-            if (!this.dragon.level().isClientSide) {
+            if (!this.dragon.level().isClientSide()) {
                 this.dragon.getEntityData().set(EnderDragon.DATA_PHASE, phaseIn.getId());
             }
 
-            LOGGER.debug("Dragon is now in phase {} on the {}", phaseIn, this.dragon.level().isClientSide ? "client" : "server");
+            LOGGER.debug("Dragon is now in phase {} on the {}", phaseIn, this.dragon.level().isClientSide() ? "client" : "server");
             this.currentPhase.begin();
         }
     }

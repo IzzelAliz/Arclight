@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mod.plugin.messaging;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,9 +11,9 @@ import java.util.Objects;
 
 public class ArclightRawPayload implements RawPayload {
 
-    public static final Map<ResourceLocation, CustomPacketPayload.Type<ArclightRawPayload>> REGISTRY = new HashMap<>();
+    public static final Map<Identifier, CustomPacketPayload.Type<ArclightRawPayload>> REGISTRY = new HashMap<>();
 
-    public static CustomPacketPayload.Type<ArclightRawPayload> getType(ResourceLocation channel) {
+    public static CustomPacketPayload.Type<ArclightRawPayload> getType(Identifier channel) {
         return REGISTRY.computeIfAbsent(channel, CustomPacketPayload.Type::new);
     }
 

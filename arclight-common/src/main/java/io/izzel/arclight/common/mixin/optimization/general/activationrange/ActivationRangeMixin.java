@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.optimization.general.activationrange;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.optimization.EntityBridge_ActivationRange;
 import net.minecraft.world.entity.Entity;
 import org.spigotmc.ActivationRange;

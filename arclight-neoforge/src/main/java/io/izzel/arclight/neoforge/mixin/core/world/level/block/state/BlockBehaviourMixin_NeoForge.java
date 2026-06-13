@@ -4,6 +4,7 @@ import io.izzel.arclight.common.bridge.core.world.level.block.state.BlockBehavio
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Explosion;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
@@ -19,6 +20,8 @@ public abstract class BlockBehaviourMixin_NeoForge implements BlockBehaviourBrid
 
     @Override
     public void bridge$forge$onBlockExploded(BlockState state, Level level, BlockPos pos, Explosion explosion) {
-        state.getBlock().onBlockExploded(state, level, pos, explosion);
+        if (level instanceof ServerLevel serverLevel) {
+            state.getBlock().onBlockExploded(state, serverLevel, pos, explosion);
+        }
     }
 }

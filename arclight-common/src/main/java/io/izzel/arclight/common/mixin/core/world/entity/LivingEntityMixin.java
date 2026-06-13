@@ -4,8 +4,11 @@ import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Either;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
+import io.izzel.arclight.common.mod.util.ArclightBridges;
 import io.izzel.arclight.common.bridge.core.server.network.ServerGamePacketListenerImplBridge;
 import io.izzel.arclight.common.bridge.core.world.level.LevelAccessorBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
@@ -38,6 +41,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityEquipment;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
@@ -48,24 +52,25 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.food.FoodProperties;
-import net.minecraft.world.item.Equipable;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.CraftEquipmentSlot;
-import org.bukkit.craftbukkit.v.attribute.CraftAttributeMap;
-import org.bukkit.craftbukkit.v.block.CraftBlockState;
-import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.CraftEquipmentSlot;
+import org.bukkit.craftbukkit.attribute.CraftAttributeMap;
+import org.bukkit.craftbukkit.block.CraftBlockState;
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
@@ -109,6 +114,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow @Final public static EntityDataAccessor<Float> DATA_HEALTH_ID;
     @Shadow public abstract boolean isSleeping();
     @Shadow protected int noActionTime;
+    @Shadow @Final public EntityEquipment equipment;
     @Shadow public abstract net.minecraft.world.item.ItemStack getItemBySlot(EquipmentSlot slotIn);
     @Shadow @Nullable protected abstract SoundEvent getDeathSound();
     @Shadow public abstract net.minecraft.world.item.ItemStack getItemInHand(InteractionHand hand);
@@ -389,7 +395,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     }
 
     public int getExpReward(Entity entity) {
-        if (this.level() instanceof ServerLevel serverLevel && !this.wasExperienceConsumed() && (this.isAlwaysExperienceDropper() || this.lastHurtByPlayerTime > 0 && this.shouldDropExperience() && this.level().getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT))) {
+        if (this.level() instanceof ServerLevel serverLevel && !this.wasExperienceConsumed() && (this.isAlwaysExperienceDropper() || this.lastHurtByPlayerTime > 0 && this.shouldDropExperience() && serverLevel.getGameRules().get(GameRules.MOB_DROPS))) {
             int exp = this.getExperienceReward(serverLevel, entity);
             return this.bridge$forge$getExperienceDrop((LivingEntity) (Object) this, this.lastHurtByPlayer, exp);
         } else {
@@ -417,9 +423,9 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         if (compound.contains("Bukkit.MaxHealth")) {
             Tag nbtbase = compound.get("Bukkit.MaxHealth");
             if (nbtbase.getId() == 5) {
-                this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(((FloatTag) nbtbase).getAsDouble());
+                this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(((FloatTag) nbtbase).doubleValue());
             } else if (nbtbase.getId() == 3) {
-                this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(((IntTag) nbtbase).getAsDouble());
+                this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(((IntTag) nbtbase).doubleValue());
             }
         }
     }
@@ -519,7 +525,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         damage += blockingModifier;
 
         Function<Double, Double> freezing = f -> {
-            if (source.is(DamageTypeTags.IS_FREEZING) && this.getType().is(EntityTypeTags.FREEZE_HURTS_EXTRA_TYPES)) {
+            if (source.is(DamageTypeTags.IS_FREEZING) && this.getType().builtInRegistryHolder().is(EntityTypeTags.FREEZE_HURTS_EXTRA_TYPES)) {
                 return -(f - (f * 5.0F));
             }
             return -0.0;
@@ -556,8 +562,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         damage += armorModifier;
 
         Function<Double, Double> resistance = f -> {
-            if (!source.is(DamageTypeTags.BYPASSES_EFFECTS) && this.hasEffect(MobEffects.DAMAGE_RESISTANCE) && !source.is(DamageTypeTags.BYPASSES_RESISTANCE)) {
-                int i = (this.getEffect(MobEffects.DAMAGE_RESISTANCE).getAmplifier() + 1) * 5;
+            if (!source.is(DamageTypeTags.BYPASSES_EFFECTS) && this.hasEffect(MobEffects.RESISTANCE) && !source.is(DamageTypeTags.BYPASSES_RESISTANCE)) {
+                int i = (this.getEffect(MobEffects.RESISTANCE).getAmplifier() + 1) * 5;
                 int j = 25 - i;
                 float f1 = f.floatValue() * (float) j;
                 return -(f - (f1 / 25.0F));
@@ -688,7 +694,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Inject(method = "createWitherRose", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private void arclight$witherRoseDrop(LivingEntity livingEntity, CallbackInfo ci, boolean flag, ItemEntity
         itemEntity) {
-        org.bukkit.event.entity.EntityDropItemEvent event = new org.bukkit.event.entity.EntityDropItemEvent(this.getBukkitEntity(), (org.bukkit.entity.Item) (itemEntity.bridge$getBukkitEntity()));
+        org.bukkit.event.entity.EntityDropItemEvent event = new org.bukkit.event.entity.EntityDropItemEvent(this.getBukkitEntity(), (org.bukkit.entity.Item) ArclightBridges.toBukkit(itemEntity));
         CraftEventFactory.callEvent(event);
         if (event.isCancelled()) {
             ci.cancel();
@@ -753,14 +759,15 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Decorate(method = "randomTeleport", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/LivingEntity;teleportTo(DDD)V"))
     private void arclight$entityTeleport(LivingEntity entity, double x, double y, double z) throws Throwable {
         if ((Object) this instanceof ServerPlayer) {
-            (((ServerPlayer) (Object) this).connection).teleport(x, y, z, this.getYRot(), this.getXRot(), java.util.Collections.emptySet());
+            var move = new net.minecraft.world.entity.PositionMoveRotation(new net.minecraft.world.phys.Vec3(x, y, z), net.minecraft.world.phys.Vec3.ZERO, this.getYRot(), this.getXRot());
+            ((ServerPlayer) (Object) this).connection.teleport(move, java.util.Collections.emptySet());
             if (!((ServerGamePacketListenerImplBridge) ((ServerPlayer) (Object) this).connection).bridge$teleportCancelled()) {
                 DecorationOps.cancel().invoke(false);
                 return;
             }
         } else {
-            EntityTeleportEvent event = new EntityTeleportEvent(getBukkitEntity(), new Location(this.level().bridge$getWorld(), this.getX(), this.getY(), this.getZ()),
-                new Location(this.level().bridge$getWorld(), x, y, z));
+            EntityTeleportEvent event = new EntityTeleportEvent(getBukkitEntity(), new Location(((WorldBridge) this.level()).bridge$getWorld(), this.getX(), this.getY(), this.getZ()),
+                new Location(((WorldBridge) this.level()).bridge$getWorld(), x, y, z));
             Bukkit.getPluginManager().callEvent(event);
             if (!event.isCancelled()) {
                 x = event.getTo().getX();
@@ -848,10 +855,10 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     protected void equipEventAndSound(EquipmentSlot slot, ItemStack oldItem, ItemStack newItem, boolean silent) {
         boolean flag = newItem.isEmpty() && oldItem.isEmpty();
         if (!flag && !ItemStack.isSameItemSameComponents(oldItem, newItem) && !this.firstTick) {
-            Equipable equipable = Equipable.get(newItem);
+            Equippable equipable = newItem.get(DataComponents.EQUIPPABLE);
             if (!this.level().isClientSide() && !this.isSpectator()) {
-                if (!this.isSilent() && equipable != null && equipable.getEquipmentSlot() == slot && !silent) {
-                    this.level().playSeededSound(null, this.getX(), this.getY(), this.getZ(), equipable.getEquipSound(), this.getSoundSource(), 1.0F, 1.0F, this.random.nextLong());
+                if (!this.isSilent() && equipable != null && equipable.slot() == slot && !silent) {
+                    this.level().playSeededSound(null, this.getX(), this.getY(), this.getZ(), equipable.equipSound().value(), this.getSoundSource(), 1.0F, 1.0F, this.random.nextLong());
                 }
 
                 if (this.doesEmitEquipEvent(slot)) {

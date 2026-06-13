@@ -10,14 +10,14 @@ import net.minecraft.stats.Stats;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.ai.goal.BreedGoal;
 import net.minecraft.world.entity.animal.Animal;
-import net.minecraft.world.entity.animal.Fox;
-import net.minecraft.world.level.GameRules;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import net.minecraft.world.entity.animal.fox.Fox;
+import net.minecraft.world.level.gamerules.GameRules;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityBreedEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-@Mixin(targets = "net.minecraft.world.entity.animal.Fox$FoxBreedGoal")
+@Mixin(targets = "net.minecraft.world.entity.animal.fox.Fox$FoxBreedGoal")
 public abstract class Fox_BreedGoalMixin extends BreedGoal {
 
     public Fox_BreedGoalMixin(Animal animal, double speedIn) {
@@ -70,10 +70,12 @@ public abstract class Fox_BreedGoalMixin extends BreedGoal {
             this.animal.resetLove();
             this.partner.resetLove();
             foxentity.setAge(-24000);
-            foxentity.moveTo(this.animal.getX(), this.animal.getY(), this.animal.getZ(), 0.0F, 0.0F);
+            foxentity.setPos(this.animal.getX(), this.animal.getY(), this.animal.getZ());
+            foxentity.setYRot(0.0F);
+            foxentity.setXRot(0.0F);
             serverworld.addFreshEntityWithPassengers(foxentity);
             this.level.broadcastEntityEvent(this.animal, (byte) 18);
-            if (this.level.getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT)) {
+            if (this.level.getGameRules().get(GameRules.MOB_DROPS)) {
                 if (experience > 0) {
                     this.level.addFreshEntity(new ExperienceOrb(this.level, this.animal.getX(), this.animal.getY(), this.animal.getZ(), experience));
                 }

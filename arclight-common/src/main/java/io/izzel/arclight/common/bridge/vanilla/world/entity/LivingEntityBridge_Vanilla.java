@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.bridge.vanilla.world.entity;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.item.ItemEntity;
 

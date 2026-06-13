@@ -26,6 +26,10 @@ abstract class RenameAsyncCatcherTask extends DefaultTask {
     void run() {
         def input = inputFile.get().asFile
         def output = outputs.files.singleFile
+        if (mapping.get() in ['official', 'none']) {
+            output.text = input.text
+            return
+        }
         def tree = new MemoryMappingTree()
         MappingReader.read(LoomGradleExtension.get(project.project(":arclight-common")).mappingConfiguration.tinyMappingsWithSrg, tree)
         def set = new TinyMappingsReader(tree, "named", mapping.get()).read()

@@ -6,7 +6,7 @@ import io.izzel.arclight.common.mod.util.DistValidate;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
+import org.bukkit.craftbukkit.block.CraftBlock;
 import org.bukkit.event.block.BlockBreakEvent;
 
 public class BlockBreakEventDispatcher {

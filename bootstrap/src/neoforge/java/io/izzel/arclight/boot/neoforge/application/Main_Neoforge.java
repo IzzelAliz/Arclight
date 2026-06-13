@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 public class Main_Neoforge {
 
     public static void main(String[] args) throws Throwable {
+        System.setProperty("log4j.configurationFile", "arclight-log4j2.xml");
         try {
             Map.Entry<String, List<String>> install = forgeInstall();
             var cl = Class.forName(install.getKey());

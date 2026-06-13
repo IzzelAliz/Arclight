@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerEntityBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
@@ -25,8 +26,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.decoration.ItemFrame;
-import net.minecraft.world.entity.projectile.AbstractArrow;
-import net.minecraft.world.entity.projectile.AbstractHurtingProjectile;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.projectile.hurtingprojectile.AbstractHurtingProjectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.MapItem;
 import net.minecraft.world.level.saveddata.maps.MapId;
@@ -136,7 +137,7 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
                 if (mapdata != null) {
                     for (ServerPlayerConnection connection : this.trackedPlayers) {
                         var serverplayerentity = connection.getPlayer();
-                        mapdata.tickCarriedBy(serverplayerentity, itemstack);
+                        mapdata.tickCarriedBy(serverplayerentity, itemstack, itemFrame);
                         Packet<?> ipacket = mapdata.getUpdatePacket(mapId, serverplayerentity);
                         if (ipacket != null) {
                             serverplayerentity.connection.send(ipacket);
@@ -146,7 +147,7 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
             }
             this.sendDirtyEntityData();
         }
-        if (this.tickCount / this.updateInterval != this.lastUpdate || this.entity.hasImpulse || this.entity.getEntityData().isDirty()) {
+        if (this.tickCount / this.updateInterval != this.lastUpdate || this.entity.needsSync || this.entity.getEntityData().isDirty()) {
             if (this.entity.isPassenger()) {
                 int i1 = Mth.floor(this.entity.getYRot() * 256.0F / 360.0F);
                 int l1 = Mth.floor(this.entity.getXRot() * 256.0F / 360.0F);
@@ -190,10 +191,10 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
                 } else {
                     this.wasOnGround = this.entity.onGround();
                     this.teleportDelay = 0;
-                    ipacket1 = new ClientboundTeleportEntityPacket(this.entity);
+                    ipacket1 = ClientboundTeleportEntityPacket.teleport(this.entity.getId(), net.minecraft.world.entity.PositionMoveRotation.of(this.entity), java.util.Set.of(), this.entity.onGround());
                     pos = rot = true;
                 }
-                if ((this.trackDelta || this.entity.hasImpulse || this.entity instanceof LivingEntity && ((LivingEntity) this.entity).isFallFlying()) && this.tickCount > 0) {
+                if ((this.trackDelta || this.entity.needsSync || this.entity instanceof LivingEntity && ((LivingEntity) this.entity).isFallFlying()) && this.tickCount > 0) {
                     Vec3 vector3d1 = this.entity.getDeltaMovement();
                     double d0 = vector3d1.distanceToSqr(this.lastSentMovement);
                     if (d0 > 1.0E-7D || d0 > 0.0D && vector3d1.lengthSqr() == 0.0D) {
@@ -223,7 +224,7 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
                 this.broadcast.accept(new ClientboundRotateHeadPacket(this.entity, (byte) j1));
                 this.lastSentYHeadRot = j1;
             }
-            this.entity.hasImpulse = false;
+            this.entity.needsSync = false;
         }
         this.lastUpdate = this.tickCount / this.updateInterval;
         this.lastPosUpdate = this.tickCount / 60;
@@ -253,7 +254,7 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
     @Inject(method = "sendDirtyEntityData", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/server/level/ServerEntity;broadcastAndSend(Lnet/minecraft/network/protocol/Packet;)V"))
     private void arclight$sendScaledHealth(CallbackInfo ci, SynchedEntityData entitydatamanager, List<SynchedEntityData.DataValue<?>> list, Set<AttributeInstance> set) {
         if (this.entity instanceof ServerPlayerBridge player) {
-            player.bridge$getBukkitEntity().injectScaledMaxHealth(set, false);
+            ((ServerPlayerBridge) player).bridge$getBukkitEntity().injectScaledMaxHealth(set, false);
         }
     }
 

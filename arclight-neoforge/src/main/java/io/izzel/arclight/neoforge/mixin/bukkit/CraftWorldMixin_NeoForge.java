@@ -1,7 +1,7 @@
 package io.izzel.arclight.neoforge.mixin.bukkit;
 
 import net.minecraft.world.level.biome.Biome;
-import org.bukkit.craftbukkit.v.CraftWorld;
+import org.bukkit.craftbukkit.CraftWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;

@@ -3,14 +3,14 @@ package io.izzel.arclight.common.mixin.core.world.item.crafting;
 import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeBridge;
 import io.izzel.arclight.common.mod.util.ArclightSpecialRecipe;
 import net.minecraft.core.NonNullList;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import org.bukkit.NamespacedKey;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
-import org.bukkit.craftbukkit.v.inventory.CraftShapedRecipe;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.inventory.CraftRecipe;
+import org.bukkit.craftbukkit.inventory.CraftShapedRecipe;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.RecipeChoice;
 import org.spongepowered.asm.mixin.Final;
@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.Shadow;
 public abstract class ShapedRecipeMixin implements RecipeBridge {
 
     // @formatter:off
-    @Shadow @Final ItemStack result;
+    @Shadow @Final ItemStackTemplate result;
     @Shadow @Final String group;
     @Shadow public abstract int getHeight();
     @Shadow public abstract int getWidth();
@@ -31,10 +31,10 @@ public abstract class ShapedRecipeMixin implements RecipeBridge {
 
     @Override
     public Recipe bridge$toBukkitRecipe(NamespacedKey id) {
-        if (this.getWidth() < 1 || this.getWidth() > 3 || this.getHeight() < 1 || this.getHeight() > 3 || this.result.isEmpty()) {
+        if (this.getWidth() < 1 || this.getWidth() > 3 || this.getHeight() < 1 || this.getHeight() > 3 || this.result.count() == 0) {
             return new ArclightSpecialRecipe(id, (net.minecraft.world.item.crafting.Recipe<?>) this);
         }
-        CraftItemStack result = CraftItemStack.asCraftMirror(this.result);
+        CraftItemStack result = CraftItemStack.asCraftMirror(this.result.create());
         CraftShapedRecipe recipe = new CraftShapedRecipe(id, result, (ShapedRecipe) (Object) this);
         recipe.setGroup(this.group);
         recipe.setCategory(CraftRecipe.getCategory(this.category()));

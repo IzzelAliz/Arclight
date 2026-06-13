@@ -8,11 +8,8 @@ import java.util.Properties;
 
 public class Launcher {
 
-    private static final int MIN_CLASS_VERSION = 65;
-    private static final int MIN_JAVA_VERSION = 21;
-
-    private static final int MAX_CLASS_VERSION = 66;
-    private static final int MAX_JAVA_VERSION = 22;
+    private static final int MIN_CLASS_VERSION = 69;
+    private static final int MIN_JAVA_VERSION = 25;
 
     public static void main(String[] args) throws Throwable {
         int javaVersion = (int) Float.parseFloat(System.getProperty("java.class.version"));
@@ -23,12 +20,10 @@ public class Launcher {
             return;
         }
 
-        if (javaVersion > MAX_CLASS_VERSION) {
-            System.err.println("Warning: Arclight is known to be compatible with up to Java " + MAX_JAVA_VERSION + " and may not run on later versions");
-            System.err.println("Current: " + System.getProperty("java.version"));
-            System.err.flush();
-            Thread.sleep(3000);
-        }
+        // Production launch (Main_Neoforge → FML Server) skips ApplicationBootstrap; set logging early.
+        System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
+        System.setProperty("log4j.jul.LoggerAdapter", "io.izzel.arclight.boot.log.ArclightLoggerAdapter");
+        System.setProperty("log4j.configurationFile", "arclight-log4j2.xml");
 
         try (InputStream input = Launcher.class.getResourceAsStream("/arclight-server-launch.properties")) {
             Properties properties = new Properties();

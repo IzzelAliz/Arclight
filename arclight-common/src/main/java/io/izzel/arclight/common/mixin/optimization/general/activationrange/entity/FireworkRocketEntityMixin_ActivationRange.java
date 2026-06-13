@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.optimization.general.activationrange.enti
 
 import io.izzel.arclight.common.mixin.optimization.general.activationrange.EntityMixin_ActivationRange;
 import net.minecraft.world.entity.projectile.FireworkRocketEntity;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
@@ -19,7 +19,7 @@ public abstract class FireworkRocketEntityMixin_ActivationRange extends EntityMi
     public void inactiveTick() {
         super.inactiveTick();
         ++this.life;
-        if (!this.level().isClientSide && this.life > this.lifetime) {
+        if (!this.level().isClientSide() && this.life > this.lifetime) {
             if (!CraftEventFactory.callFireworkExplodeEvent((FireworkRocketEntity)(Object) this).isCancelled()) {
                 this.explode();
             }

@@ -1,0 +1,355 @@
+﻿.\gradlew : WARNING: A restricted method in java.lang.System has been called
+発生場所 C:\Users\SPLIGAN\AppData\Local\Temp\ps-script-ab7db151-e43e-4336-975b-50b976153b91.ps1:84 文字:50
++ ... \Arclight"; .\gradlew :arclight-neoforge:validateAccessWidener --no-d ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (WARNING: A rest...has been called:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnam
+ed module (file:/C:/Users/SPLIGAN/.gradle/wrapper/dists/gradle-9.2.1-all/2lbhfocpgk6niea1fja7mj8kz/gradle-9.2.1/lib/nat
+ive-platform-0.22-milestone-29.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :buildSrc:compileJava UP-TO-DATE
+> Task :buildSrc:compileGroovy UP-TO-DATE
+> Task :buildSrc:processResources NO-SOURCE
+> Task :buildSrc:classes UP-TO-DATE
+> Task :buildSrc:jar UP-TO-DATE
+
+> Configure project :
+Architect Plugin: 3.5.167
+Architectury Loom: 1.14.476
+This version of Architectury Loom is in beta! Please report any issues you encounter: https://github.com/architectury/architectury-loom/issues
+
+> Configure project :arclight-common
+Setup for Spigot 26.1.2(4628)
+:spigot build cache valid, using it
+
+> Configure project :arclight-fabric
+Setup for Spigot 26.1.2(4628)
+:spigot build cache valid, using it
+
+> Configure project :arclight-neoforge
+Setup for Spigot 26.1.2(4628)
+:spigot build cache valid, using it
+
+> Task :arclight-neoforge:validateAccessWidener FAILED
+Could not find method (deserialize(Ljava/lang/String;)V) in class (net/minecraft/world/level/GameRules$BooleanValue) on
+ line 3
+Could not find method (deserialize(Ljava/lang/String;)V) in class (net/minecraft/world/level/GameRules$IntegerValue) on
+ line 4
+Could not find field (targetCooldownLength:I) in class (net/minecraft/world/level/block/entity/trialspawner/TrialSpawne
+r) on line 7
+Could not find field (normalConfig:Lnet/minecraft/world/level/block/entity/trialspawner/TrialSpawnerConfig;) in class (
+net/minecraft/world/level/block/entity/trialspawner/TrialSpawner) on line 8
+Could not find field (requiredPlayerRange:I) in class (net/minecraft/world/level/block/entity/trialspawner/TrialSpawner
+) on line 9
+Could not find field (ominousConfig:Lnet/minecraft/world/level/block/entity/trialspawner/TrialSpawnerConfig;) in class 
+(net/minecraft/world/level/block/entity/trialspawner/TrialSpawner) on line 10
+Could not find class (net/minecraft/world/item/crafting/Ingredient$ItemValue) on line 12
+Could not find class (net/minecraft/world/item/crafting/Ingredient$Value) on line 23
+Could not find class (net/minecraft/world/entity/monster/SpellcasterIllager$IllagerSpell) on line 29
+Could not find field (normalConfig:Lnet/minecraft/world/level/block/entity/trialspawner/TrialSpawnerConfig;) in class (
+net/minecraft/world/level/block/entity/trialspawner/TrialSpawner) on line 37
+Could not find field (ominousConfig:Lnet/minecraft/world/level/block/entity/trialspawner/TrialSpawnerConfig;) in class 
+(net/minecraft/world/level/block/entity/trialspawner/TrialSpawner) on line 38
+Could not find field (requiredPlayerRange:I) in class (net/minecraft/world/level/block/entity/trialspawner/TrialSpawner
+) on line 39
+Could not find field (targetCooldownLength:I) in class (net/minecraft/world/level/block/entity/trialspawner/TrialSpawne
+r) on line 40
+Could not find field (destroyTarget:Lnet/minecraft/world/entity/LivingEntity;) in class (net/minecraft/world/level/bloc
+k/entity/ConduitBlockEntity) on line 54
+Could not find field (destroyTargetUUID:Ljava/util/UUID;) in class (net/minecraft/world/level/block/entity/ConduitBlock
+Entity) on line 55
+Could not find field (BLOCK_STATE_CODEC:Lcom/mojang/serialization/Codec;) in class (net/minecraft/world/level/chunk/sto
+rage/ChunkSerializer) on line 57
+Could not find field (raidMap:Ljava/util/Map;) in class (net/minecraft/world/entity/raid/Raids) on line 60
+Could not find method (loadAndReplaceLayer(Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/core/La
+yeredRegistryAccess;Lnet/minecraft/server/RegistryLayer;Ljava/util/List;)Lnet/minecraft/core/LayeredRegistryAccess;) in
+ class (net/minecraft/server/WorldLoader) on line 62
+Could not find field (DATA_ID_COMMAND_NAME:Lnet/minecraft/network/syncher/EntityDataAccessor;) in class (net/minecraft/
+world/entity/vehicle/MinecartCommandBlock) on line 65
+Could not find method (<init>(Lnet/minecraft/network/chat/TextColor;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Bo
+olean;Ljava/lang/Boolean;Ljava/lang/Boolean;Lnet/minecraft/network/chat/ClickEvent;Lnet/minecraft/network/chat/HoverEve
+nt;Ljava/lang/String;Lnet/minecraft/resources/ResourceLocation;)V) in class (net/minecraft/network/chat/Style) on line 
+85
+Could not find class (net/minecraft/server/commands/TeleportCommand$LookAt) on line 118
+Could not find field (trapTime:I) in class (net/minecraft/world/entity/animal/horse/SkeletonHorse) on line 125
+Could not find method (<init>(Ljava/util/OptionalLong;ZZZZDZZIIILnet/minecraft/tags/TagKey;Lnet/minecraft/resources/Res
+ourceLocation;FLnet/minecraft/world/level/dimension/DimensionType$MonsterSettings;)V) in class (net/minecraft/world/lev
+el/dimension/DimensionType) on line 127
+Could not find class (net/minecraft/world/item/crafting/Ingredient$ItemValue) on line 132
+Could not find method (<init>(Lnet/minecraft/world/item/ItemStack;)V) in class (net/minecraft/world/item/crafting/Ingre
+dient$ItemValue) on line 133
+Could not find method (<init>(Ljava/util/List;B)V) in class (net/minecraft/nbt/ListTag) on line 142
+Could not find field (steering:Lnet/minecraft/world/entity/ItemBasedSteering;) in class (net/minecraft/world/entity/ani
+mal/Pig) on line 143
+Could not find method (getTemperature(Lnet/minecraft/core/BlockPos;)F) in class (net/minecraft/world/level/biome/Biome)
+ on line 145
+Could not find field (inGround:Z) in class (net/minecraft/world/entity/projectile/AbstractArrow) on line 148
+Could not find field (pickupItemStack:Lnet/minecraft/world/item/ItemStack;) in class (net/minecraft/world/entity/projec
+tile/AbstractArrow) on line 149
+Could not find field (life:I) in class (net/minecraft/world/entity/projectile/AbstractArrow) on line 150
+Could not find field (tx:D) in class (net/minecraft/world/entity/projectile/EyeOfEnder) on line 157
+Could not find field (ty:D) in class (net/minecraft/world/entity/projectile/EyeOfEnder) on line 158
+Could not find field (tz:D) in class (net/minecraft/world/entity/projectile/EyeOfEnder) on line 159
+Could not find method (handleInteraction(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/block/sta
+te/BlockState;Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;ZLnet/minecraft/world/item/ItemStac
+k;)Z) in class (net/minecraft/world/item/DebugStickItem) on line 162
+Could not find field (fuel:I) in class (net/minecraft/world/entity/vehicle/MinecartFurnace) on line 169
+Could not find field (inventory:Lnet/minecraft/world/SimpleContainer;) in class (net/minecraft/world/entity/animal/hors
+e/AbstractHorse) on line 170
+Could not find method (createInventory()V) in class (net/minecraft/world/entity/animal/horse/AbstractHorse) on line 171
+Could not find method (readArrayTag()Lnet/minecraft/nbt/Tag;) in class (net/minecraft/nbt/TagParser) on line 182
+Could not find method (type(Ljava/lang/String;)Lnet/minecraft/nbt/Tag;) in class (net/minecraft/nbt/TagParser) on line 
+183
+Could not find field (loveCause:Ljava/util/UUID;) in class (net/minecraft/world/entity/animal/Animal) on line 185
+Could not find method (getPackedVariant()I) in class (net/minecraft/world/entity/animal/TropicalFish) on line 186
+Could not find method (setPackedVariant(I)V) in class (net/minecraft/world/entity/animal/TropicalFish) on line 187
+Could not find class (net/minecraft/server/level/DistanceManager$ChunkTicketTracker) on line 193
+Could not find field (DATA_TRUSTED_ID_0:Lnet/minecraft/network/syncher/EntityDataAccessor;) in class (net/minecraft/wor
+ld/entity/animal/Fox) on line 194
+Could not find field (DATA_TRUSTED_ID_1:Lnet/minecraft/network/syncher/EntityDataAccessor;) in class (net/minecraft/wor
+ld/entity/animal/Fox) on line 195
+Could not find method (setVariant(Lnet/minecraft/world/entity/animal/Fox$Type;)V) in class (net/minecraft/world/entity/
+animal/Fox) on line 196
+Could not find method (setSleeping(Z)V) in class (net/minecraft/world/entity/animal/Fox) on line 197
+Could not find method (loadFromGenerated(Lnet/minecraft/resources/ResourceLocation;)Ljava/util/Optional;) in class (net
+/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplateManager) on line 200
+Could not find method (loadFromResource(Lnet/minecraft/resources/ResourceLocation;)Ljava/util/Optional;) in class (net/
+minecraft/world/level/levelgen/structure/templatesystem/StructureTemplateManager) on line 201
+Could not find method (readStructure(Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/world/level/levelgen/structure/temp
+latesystem/StructureTemplate;) in class (net/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplateM
+anager) on line 202
+Could not find method (setVariantAndMarkings(Lnet/minecraft/world/entity/animal/horse/Variant;Lnet/minecraft/world/enti
+ty/animal/horse/Markings;)V) in class (net/minecraft/world/entity/animal/horse/Horse) on line 203
+Could not find field (status:Lnet/minecraft/world/entity/vehicle/Boat$Status;) in class (net/minecraft/world/entity/veh
+icle/Boat) on line 216
+Could not find method (onChanged(Lnet/minecraft/server/MinecraftServer;)V) in class (net/minecraft/world/level/GameRule
+s$Value) on line 217
+Could not find method (deserialize(Ljava/lang/String;)V) in class (net/minecraft/world/level/GameRules$Value) on line 2
+18
+Could not find field (source:Lnet/minecraft/world/entity/Entity;) in class (net/minecraft/world/level/Explosion) on lin
+e 235
+Could not find field (key:Ljava/lang/Object;) in class (net/minecraft/server/level/Ticket) on line 244
+Could not find method (<init>(Lnet/minecraft/server/level/TicketType;ILjava/lang/Object;)V) in class (net/minecraft/ser
+ver/level/Ticket) on line 245
+Could not find method (setCreatedTick(J)V) in class (net/minecraft/server/level/Ticket) on line 246
+Could not find field (key:Ljava/lang/String;) in class (net/minecraft/world/LockCode) on line 249
+Could not find field (cache:Ljava/util/Map;) in class (net/minecraft/world/level/storage/DimensionDataStorage) on line 
+251
+Could not find field (owner:Lnet/minecraft/world/entity/LivingEntity;) in class (net/minecraft/world/entity/item/Primed
+Tnt) on line 258
+Could not find field (duration:I) in class (net/minecraft/world/entity/projectile/SpectralArrow) on line 266
+Could not find field (craftSlots:Lnet/minecraft/world/inventory/CraftingContainer;) in class (net/minecraft/world/inven
+tory/CraftingMenu) on line 274
+Could not find field (resultSlots:Lnet/minecraft/world/inventory/ResultContainer;) in class (net/minecraft/world/invent
+ory/CraftingMenu) on line 276
+Could not find field (tickets:Lit/unimi/dsi/fastutil/longs/Long2ObjectOpenHashMap;) in class (net/minecraft/server/leve
+l/DistanceManager) on line 281
+Could not find field (leftArmPose:Lnet/minecraft/core/Rotations;) in class (net/minecraft/world/entity/decoration/Armor
+Stand) on line 285
+Could not find field (bodyPose:Lnet/minecraft/core/Rotations;) in class (net/minecraft/world/entity/decoration/ArmorSta
+nd) on line 286
+Could not find field (rightLegPose:Lnet/minecraft/core/Rotations;) in class (net/minecraft/world/entity/decoration/Armo
+rStand) on line 287
+Could not find field (headPose:Lnet/minecraft/core/Rotations;) in class (net/minecraft/world/entity/decoration/ArmorSta
+nd) on line 288
+Could not find field (leftLegPose:Lnet/minecraft/core/Rotations;) in class (net/minecraft/world/entity/decoration/Armor
+Stand) on line 289
+Could not find field (rightArmPose:Lnet/minecraft/core/Rotations;) in class (net/minecraft/world/entity/decoration/Armo
+rStand) on line 290
+Could not find class (net/minecraft/server/network/ServerGamePacketListenerImpl$EntityInteraction) on line 307
+Could not find field (value:I) in class (net/minecraft/world/entity/ExperienceOrb) on line 308
+Could not find method (updateColor()V) in class (net/minecraft/world/entity/projectile/Arrow) on line 333
+Could not find method (increaseMerchantCareer()V) in class (net/minecraft/world/entity/npc/Villager) on line 336
+Could not find method (releaseAllPois()V) in class (net/minecraft/world/entity/npc/Villager) on line 337
+Could not find method (setUnhappy()V) in class (net/minecraft/world/entity/npc/Villager) on line 338
+Could not find method (getOverworldRespawnPos(Lnet/minecraft/server/level/ServerLevel;II)Lnet/minecraft/core/BlockPos;)
+ in class (net/minecraft/server/level/PlayerRespawnLogic) on line 360
+Could not find field (portalLocation:Lnet/minecraft/core/BlockPos;) in class (net/minecraft/world/level/dimension/end/E
+ndDragonFight) on line 366
+Could not find field (dragonUUID:Ljava/util/UUID;) in class (net/minecraft/world/level/dimension/end/EndDragonFight) on
+ line 367
+Could not find field (level:Lnet/minecraft/server/level/ServerLevel;) in class (net/minecraft/world/level/dimension/end
+/EndDragonFight) on line 368
+Could not find field (previouslyKilled:Z) in class (net/minecraft/world/level/dimension/end/EndDragonFight) on line 369
+Could not find field (dragonEvent:Lnet/minecraft/server/level/ServerBossEvent;) in class (net/minecraft/world/level/dim
+ension/end/EndDragonFight) on line 370
+Could not find field (respawnStage:Lnet/minecraft/world/level/dimension/end/DragonRespawnAnimation;) in class (net/mine
+craft/world/level/dimension/end/EndDragonFight) on line 371
+Could not find method (respawnDragon(Ljava/util/List;)V) in class (net/minecraft/world/level/dimension/end/EndDragonFig
+ht) on line 372
+Could not find method (setRespawnStage(Lnet/minecraft/world/level/dimension/end/DragonRespawnAnimation;)V) in class (ne
+t/minecraft/world/level/dimension/end/EndDragonFight) on line 373
+Could not find method (findExitPortal()Lnet/minecraft/world/level/block/state/pattern/BlockPattern$BlockPatternMatch;) 
+in class (net/minecraft/world/level/dimension/end/EndDragonFight) on line 374
+Could not find method (spawnExitPortal(Z)V) in class (net/minecraft/world/level/dimension/end/EndDragonFight) on line 3
+75
+Could not find class (net/minecraft/world/entity/monster/SpellcasterIllager$SpellcasterUseSpellGoal) on line 377
+Could not find method (setTrusting(Z)V) in class (net/minecraft/world/entity/animal/Ocelot) on line 378
+Could not find method (isTrusting()Z) in class (net/minecraft/world/entity/animal/Ocelot) on line 379
+Could not find field (hardcore:Z) in class (net/minecraft/world/level/LevelSettings) on line 394
+Could not find field (hardcore:Z) in class (net/minecraft/world/level/LevelSettings) on line 395
+Could not find method (isLingering()Z) in class (net/minecraft/world/entity/projectile/ThrownPotion) on line 402
+Could not find method (updateColor()V) in class (net/minecraft/world/entity/AreaEffectCloud) on line 410
+Could not find field (thrower:Ljava/util/UUID;) in class (net/minecraft/world/entity/item/ItemEntity) on line 412
+Could not find method (setDarkTicks(I)V) in class (net/minecraft/world/entity/GlowSquid) on line 420
+Could not find field (recipesUsed:Lit/unimi/dsi/fastutil/objects/Object2IntOpenHashMap;) in class (net/minecraft/world/
+level/block/entity/AbstractFurnaceBlockEntity) on line 425
+Could not find field (handDropChances:[F) in class (net/minecraft/world/entity/Mob) on line 449
+Could not find field (armorDropChances:[F) in class (net/minecraft/world/entity/Mob) on line 450
+Could not find field (DATA_DROWNED_CONVERSION_ID:Lnet/minecraft/network/syncher/EntityDataAccessor;) in class (net/mine
+craft/world/entity/monster/Zombie) on line 457
+Could not find field (conversionTime:I) in class (net/minecraft/world/entity/monster/Zombie) on line 458
+Could not find method (startUnderWaterConversion(I)V) in class (net/minecraft/world/entity/monster/Zombie) on line 459
+Could not find class (net/minecraft/world/item/crafting/Ingredient$Value) on line 460
+Could not find field (GSON:Lcom/google/gson/Gson;) in class (net/minecraft/server/ServerAdvancementManager) on line 471
+Could not find field (spawnInvulnerableTime:I) in class (net/minecraft/server/level/ServerPlayer) on line 481
+Could not find field (stayOutOfHiveCountdown:I) in class (net/minecraft/world/entity/animal/Bee) on line 489
+Could not find field (hivePos:Lnet/minecraft/core/BlockPos;) in class (net/minecraft/world/entity/animal/Bee) on line 4
+90
+Could not find method (setHasNectar(Z)V) in class (net/minecraft/world/entity/animal/Bee) on line 491
+Could not find method (setHasStung(Z)V) in class (net/minecraft/world/entity/animal/Bee) on line 492
+Could not find field (spawnFriendlies:Z) in class (net/minecraft/server/level/ServerChunkCache) on line 494
+Could not find field (inventory:Lnet/minecraft/world/SimpleContainer;) in class (net/minecraft/world/entity/monster/Pil
+lager) on line 502
+Could not find method (getCurrentSpell()Lnet/minecraft/world/entity/monster/SpellcasterIllager$IllagerSpell;) in class 
+(net/minecraft/world/entity/monster/SpellcasterIllager) on line 505
+Could not find field (isJohnny:Z) in class (net/minecraft/world/entity/monster/Vindicator) on line 509
+Could not find field (fuse:I) in class (net/minecraft/world/entity/vehicle/MinecartTNT) on line 523
+Could not find method (explode(D)V) in class (net/minecraft/world/entity/vehicle/MinecartTNT) on line 524
+Could not find field (noteBlockSound:Lnet/minecraft/resources/ResourceLocation;) in class (net/minecraft/world/level/bl
+ock/entity/SkullBlockEntity) on line 526
+Could not find method (<init>(Lnet/minecraft/world/item/crafting/Ingredient;Lnet/minecraft/world/item/crafting/Ingredie
+nt;Lnet/minecraft/world/item/crafting/Ingredient;)V) in class (net/minecraft/world/item/crafting/SmithingTrimRecipe) on
+ line 531
+Could not find field (entityDeserializerQueue:Lnet/minecraft/util/thread/ProcessorMailbox;) in class (net/minecraft/wor
+ld/level/chunk/storage/EntityStorage) on line 566
+Could not find field (progressListenerFactory:Lnet/minecraft/server/level/progress/ChunkProgressListenerFactory;) in cl
+ass (net/minecraft/server/MinecraftServer) on line 576
+Could not find method (prepareLevels(Lnet/minecraft/server/level/progress/ChunkProgressListener;)V) in class (net/minec
+raft/server/MinecraftServer) on line 587
+Could not find method (setShoulderEntityRight(Lnet/minecraft/nbt/CompoundTag;)V) in class (net/minecraft/world/entity/p
+layer/Player) on line 595
+Could not find method (setShoulderEntityLeft(Lnet/minecraft/nbt/CompoundTag;)V) in class (net/minecraft/world/entity/pl
+ayer/Player) on line 599
+Could not find field (lastHurtByMob:Lnet/minecraft/world/entity/LivingEntity;) in class (net/minecraft/world/entity/Liv
+ingEntity) on line 600
+Could not find field (invulnerableDuration:I) in class (net/minecraft/world/entity/LivingEntity) on line 603
+Could not find field (invulnerableDuration:I) in class (net/minecraft/world/entity/LivingEntity) on line 604
+Could not find field (lastHurtByPlayer:Lnet/minecraft/world/entity/player/Player;) in class (net/minecraft/world/entity
+/LivingEntity) on line 610
+Could not find field (DATA_STRAY_CONVERSION_ID:Lnet/minecraft/network/syncher/EntityDataAccessor;) in class (net/minecr
+aft/world/entity/monster/Skeleton) on line 620
+Could not find field (conversionTime:I) in class (net/minecraft/world/entity/monster/Skeleton) on line 621
+Could not find method (startFreezeConversion(I)V) in class (net/minecraft/world/entity/monster/Skeleton) on line 622
+Could not find field (itemStacks:[Lnet/minecraft/world/item/ItemStack;) in class (net/minecraft/world/item/crafting/Ing
+redient) on line 623
+Could not find method (<init>([Lnet/minecraft/world/item/crafting/Ingredient$Value;)V) in class (net/minecraft/world/it
+em/crafting/Ingredient) on line 625
+Could not find method (<init>(Ljava/util/stream/Stream;)V) in class (net/minecraft/world/item/crafting/Ingredient) on l
+ine 626
+Could not find field (subEntities:[Lnet/minecraft/world/entity/boss/EnderDragonPart;) in class (net/minecraft/world/ent
+ity/boss/enderdragon/EnderDragon) on line 644
+Could not find field (progressListener:Lnet/minecraft/server/level/progress/ChunkProgressListener;) in class (net/minec
+raft/server/level/ChunkMap) on line 648
+Could not find field (DATA_CONVERTING_ID:Lnet/minecraft/network/syncher/EntityDataAccessor;) in class (net/minecraft/wo
+rld/entity/monster/ZombieVillager) on line 677
+Could not find field (conversionStarter:Ljava/util/UUID;) in class (net/minecraft/world/entity/monster/ZombieVillager) 
+on line 678
+Could not find field (villagerConversionTime:I) in class (net/minecraft/world/entity/monster/ZombieVillager) on line 67
+9
+Could not find method (startConverting(Ljava/util/UUID;I)V) in class (net/minecraft/world/entity/monster/ZombieVillager
+) on line 680
+Could not find field (known:Ljava/util/Set;) in class (net/minecraft/stats/RecipeBook) on line 682
+Could not find field (waterNavigation:Lnet/minecraft/world/entity/ai/navigation/WaterBoundPathNavigation;) in class (ne
+t/minecraft/world/entity/monster/Drowned) on line 683
+Could not find field (groundNavigation:Lnet/minecraft/world/entity/ai/navigation/GroundPathNavigation;) in class (net/m
+inecraft/world/entity/monster/Drowned) on line 684
+Could not find field (maxPlayers:I) in class (net/minecraft/server/players/PlayerList) on line 685
+Could not find field (maxPlayers:I) in class (net/minecraft/server/players/PlayerList) on line 686
+Could not find class (net/minecraft/world/entity/monster/SpellcasterIllager$IllagerSpell) on line 704
+Could not find field (pos:Lnet/minecraft/core/BlockPos;) in class (net/minecraft/network/protocol/game/ClientboundSetDe
+faultSpawnPositionPacket) on line 705
+Could not find field (lootTableSeed:J) in class (net/minecraft/world/entity/vehicle/AbstractMinecartContainer) on line 
+706
+Could not find field (registry:Lnet/minecraft/core/IdMap;) in class (net/minecraft/world/level/chunk/PalettedContainer)
+ on line 708
+Could not find field (explosionPower:I) in class (net/minecraft/world/entity/projectile/LargeFireball) on line 709
+Could not find field (PROPERTY_ENTRY_TO_STRING_FUNCTION:Ljava/util/function/Function;) in class (net/minecraft/world/le
+vel/block/state/StateHolder) on line 715
+Could not find field (detectedPlayers:Ljava/util/Set;) in class (net/minecraft/world/level/block/entity/trialspawner/Tr
+ialSpawnerData) on line 718
+Could not find field (currentMobs:Ljava/util/Set;) in class (net/minecraft/world/level/block/entity/trialspawner/TrialS
+pawnerData) on line 719
+Could not find field (nextSpawnData:Ljava/util/Optional;) in class (net/minecraft/world/level/block/entity/trialspawner
+/TrialSpawnerData) on line 720
+Could not find field (byType:Lcom/google/common/collect/Multimap;) in class (net/minecraft/world/item/crafting/RecipeMa
+nager) on line 728
+Could not find field (byType:Lcom/google/common/collect/Multimap;) in class (net/minecraft/world/item/crafting/RecipeMa
+nager) on line 729
+Could not find method (setCollarColor(Lnet/minecraft/world/item/DyeColor;)V) in class (net/minecraft/world/entity/anima
+l/Wolf) on line 730
+Could not find field (showInTooltip:Z) in class (net/minecraft/world/item/armortrim/ArmorTrim) on line 732
+Could not find field (firedFromWeapon:Lnet/minecraft/world/item/ItemStack;) in class (net/minecraft/world/entity/projec
+tile/AbstractArrow) on line 733
+Could not find method (setPierceLevel(B)V) in class (net/minecraft/world/entity/projectile/AbstractArrow) on line 734
+Could not find method (getHitSlot(Lnet/minecraft/world/phys/BlockHitResult;Lnet/minecraft/world/level/block/state/Block
+State;)Ljava/util/OptionalInt;) in class (net/minecraft/world/level/block/ChiseledBookShelfBlock) on line 736
+Could not find method (getSection(F)I) in class (net/minecraft/world/level/block/ChiseledBookShelfBlock) on line 737
+Could not find method (getPotionContents()Lnet/minecraft/world/item/alchemy/PotionContents;) in class (net/minecraft/wo
+rld/entity/projectile/Arrow) on line 744
+Could not find method (setPotionContents(Lnet/minecraft/world/item/alchemy/PotionContents;)V) in class (net/minecraft/w
+orld/entity/projectile/Arrow) on line 745
+Could not find method (explode(Lnet/minecraft/world/phys/Vec3;)V) in class (net/minecraft/world/entity/projectile/windc
+harge/AbstractWindCharge) on line 748
+Could not find field (stewEffects:Lnet/minecraft/world/item/component/SuspiciousStewEffects;) in class (net/minecraft/w
+orld/entity/animal/MushroomCow) on line 749
+Could not find field (lootTable:Lnet/minecraft/resources/ResourceKey;) in class (net/minecraft/world/entity/Mob) on lin
+e 753
+Could not find method (findRespawnAndUseSpawnBlock(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos
+;FZZ)Ljava/util/Optional;) in class (net/minecraft/server/level/ServerPlayer) on line 759
+Could not find method (createNewSavedData(Lnet/minecraft/world/level/Level;IIIZZLnet/minecraft/resources/ResourceKey;)L
+net/minecraft/world/level/saveddata/maps/MapId;) in class (net/minecraft/world/item/MapItem) on line 761
+Could not find field (item:Lnet/minecraft/world/item/Item;) in class (net/minecraft/world/item/ItemStack) on line 762
+Could not find method (register(ILjava/lang/String;[Ljava/lang/String;)V) in class (net/minecraft/util/datafix/fixes/Bl
+ockStateData) on line 764
+Could not find method (explode(Lnet/minecraft/world/damagesource/DamageSource;D)V) in class (net/minecraft/world/entity
+/vehicle/MinecartTNT) on line 765
+Could not find method (setCollarColor(Lnet/minecraft/world/item/DyeColor;)V) in class (net/minecraft/world/entity/anima
+l/Cat) on line 767
+Could not find field (showInTooltip:Z) in class (net/minecraft/world/item/enchantment/ItemEnchantments$Mutable) on line
+ 769
+Could not find field (showInTooltip:Z) in class (net/minecraft/world/item/enchantment/ItemEnchantments$Mutable) on line
+ 770
+Could not find field (showInTooltip:Z) in class (net/minecraft/world/item/enchantment/ItemEnchantments) on line 771
+Could not find field (lootTable:Lnet/minecraft/resources/ResourceKey;) in class (net/minecraft/world/entity/vehicle/Abs
+tractMinecartContainer) on line 774
+access-widener validation failed for arclight.accesswidener
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':arclight-neoforge:validateAccessWidener'.
+> access-widener validation failed for arclight.accesswidener
+
+* Try:
+
+[Incubating] Problems report is available at: file:///C:/Users/SPLIGAN/Documents/GitHub/Arclight/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+4 actionable tasks: 1 executed, 3 up-to-date
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 11s

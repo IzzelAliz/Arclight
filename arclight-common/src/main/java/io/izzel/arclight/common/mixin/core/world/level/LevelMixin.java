@@ -34,13 +34,13 @@ import net.minecraft.world.level.levelgen.BitRandomSource;
 import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.level.storage.WritableLevelData;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.CraftWorld;
-import org.bukkit.craftbukkit.v.block.CapturedBlockState;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.util.CraftSpawnCategory;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.block.CapturedBlockState;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.block.data.CraftBlockData;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.util.CraftSpawnCategory;
 import org.bukkit.entity.SpawnCategory;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -68,7 +68,7 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
     @Shadow public abstract BlockState getBlockState(BlockPos pos);
     @Shadow public abstract WorldBorder getWorldBorder();
     @Shadow @Final private WorldBorder worldBorder;
-    @Shadow public abstract long getDayTime();
+    @Shadow public abstract long getDefaultClockTime();
     @Shadow public abstract MinecraftServer getServer();
     @Shadow public abstract LevelData getLevelData();
     @Shadow public abstract ResourceKey<Level> dimension();
@@ -77,6 +77,7 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
     @Shadow @Final public boolean isClientSide;
     @Shadow public abstract void sendBlockUpdated(BlockPos arg, BlockState arg2, BlockState arg3, int i);
     @Shadow public abstract void updateNeighbourForOutputSignal(BlockPos arg, Block arg2);
+    @Shadow public abstract void neighborChanged(BlockPos pos, Block block, @Nullable net.minecraft.world.level.redstone.Orientation orientation);
     @Shadow public abstract void onBlockStateChange(BlockPos arg, BlockState arg2, BlockState arg3);
     @Shadow public abstract RegistryAccess registryAccess();
     @Accessor("thread") public abstract Thread arclight$getMainThread();
@@ -198,13 +199,13 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
                 this.setBlocksDirty(pos, oldBlock, blockstate1);
             }
 
-            if ((j & 2) != 0 && (!this.isClientSide || (j & 4) == 0) && (this.isClientSide || levelchunk == null || levelchunk.getFullStatus() != null && levelchunk.getFullStatus().isOrAfter(FullChunkStatus.BLOCK_TICKING))) {
+            if ((j & 2) != 0 && (!this.isClientSide() || (j & 4) == 0) && (this.isClientSide() || levelchunk == null || levelchunk.getFullStatus() != null && levelchunk.getFullStatus().isOrAfter(FullChunkStatus.BLOCK_TICKING))) {
                 this.sendBlockUpdated(pos, oldBlock, newBlock, j);
             }
 
             if ((j & 1) != 0) {
-                this.blockUpdated(pos, oldBlock.getBlock());
-                if (!this.isClientSide && newBlock.hasAnalogOutputSignal()) {
+                this.neighborChanged(pos, oldBlock.getBlock(), net.minecraft.world.level.redstone.Orientation.fromIndex(0));
+                if (!this.isClientSide() && newBlock.hasAnalogOutputSignal()) {
                     this.updateNeighbourForOutputSignal(pos, block);
                 }
             }
@@ -239,7 +240,7 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
 
     public CraftWorld getWorld() {
         if (this.world == null) {
-            throw new UnsupportedOperationException(String.format("World %s does not have a CraftWorld. This method should not be invoked on this world for any reason.", dimension().location()));
+            throw new UnsupportedOperationException(String.format("World %s does not have a CraftWorld. This method should not be invoked on this world for any reason.", dimension().identifier()));
         }
         return this.world;
     }
@@ -320,7 +321,7 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
 
     private transient Explosion.BlockInteraction arclight$blockInteractionOverride;
 
-    @ModifyVariable(method = "explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;ZLnet/minecraft/core/particles/ParticleOptions;Lnet/minecraft/core/particles/ParticleOptions;Lnet/minecraft/core/Holder;)Lnet/minecraft/world/level/Explosion;",
+    @ModifyVariable(method = "explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;ZLnet/minecraft/core/particles/ParticleOptions;Lnet/minecraft/core/particles/ParticleOptions;Lnet/minecraft/core/Holder;)V",
         ordinal = 0, at = @At("HEAD"), argsOnly = true)
     private Level.ExplosionInteraction arclight$standardExplodePre(Level.ExplosionInteraction interaction) {
         if (interaction == ArclightConstants.STANDARD) {
@@ -330,7 +331,7 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
         return interaction;
     }
 
-    @ModifyVariable(method = "explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;ZLnet/minecraft/core/particles/ParticleOptions;Lnet/minecraft/core/particles/ParticleOptions;Lnet/minecraft/core/Holder;)Lnet/minecraft/world/level/Explosion;",
+    @ModifyVariable(method = "explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;ZLnet/minecraft/core/particles/ParticleOptions;Lnet/minecraft/core/particles/ParticleOptions;Lnet/minecraft/core/Holder;)V",
         at = @At(value = "LOAD", ordinal = 0))
     private Explosion.BlockInteraction arclight$standardExplodePost(Explosion.BlockInteraction interaction) {
         try {

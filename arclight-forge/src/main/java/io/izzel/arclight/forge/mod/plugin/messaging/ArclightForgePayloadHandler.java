@@ -9,7 +9,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.event.network.CustomPayloadEvent;
 import net.minecraftforge.network.EventNetworkChannel;
 import net.minecraftforge.network.PacketDistributor;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.plugin.Plugin;
 
 public class ArclightForgePayloadHandler implements ForgePayloadHandler {

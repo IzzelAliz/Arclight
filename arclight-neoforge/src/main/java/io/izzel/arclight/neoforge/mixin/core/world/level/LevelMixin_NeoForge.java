@@ -15,8 +15,8 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.neoforged.neoforge.common.util.BlockSnapshot;
 import net.neoforged.neoforge.event.EventHooks;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.block.data.CraftBlockData;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -68,7 +68,11 @@ public abstract class LevelMixin_NeoForge implements WorldBridge {
 
     @Override
     public boolean bridge$forge$mobGriefing(Entity entity) {
-        return EventHooks.canEntityGrief((Level) (Object) this, entity);
+        Level level = (Level) (Object) this;
+        if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+            return EventHooks.canEntityGrief(serverLevel, entity);
+        }
+        return true;
     }
 
     @Override

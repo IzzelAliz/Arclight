@@ -1,0 +1,2 @@
+net.neoforged.fml.javafmlmod.FMLJavaModLanguageProvider
+net.neoforged.fml.mclanguageprovider.MinecraftModLanguageProvider

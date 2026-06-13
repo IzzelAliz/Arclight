@@ -8,7 +8,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.item.ArmorStandItem;
 import net.minecraft.world.item.context.UseOnContext;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -20,7 +20,9 @@ public class ArmorStandItemMixin {
 
     @Redirect(method = "useOn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/ArmorStand;moveTo(DDDFF)V"))
     public void arclight$captureEntity(ArmorStand armorStandEntity, double x, double y, double z, float yaw, float pitch) {
-        armorStandEntity.moveTo(x, y, z, yaw, pitch);
+        armorStandEntity.setPos(x, y, z);
+        armorStandEntity.setYRot(yaw);
+        armorStandEntity.setXRot(pitch);
         arclight$entity = armorStandEntity;
     }
 

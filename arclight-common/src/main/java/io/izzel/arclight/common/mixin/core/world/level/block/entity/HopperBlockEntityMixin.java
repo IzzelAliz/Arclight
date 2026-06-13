@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.world.level.block.entity.BlockEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
@@ -20,11 +21,11 @@ import net.minecraft.world.level.block.entity.Hopper;
 import net.minecraft.world.level.block.entity.HopperBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
-import org.bukkit.craftbukkit.v.inventory.CraftInventory;
-import org.bukkit.craftbukkit.v.inventory.CraftInventoryDoubleChest;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.inventory.CraftInventory;
+import org.bukkit.craftbukkit.inventory.CraftInventory;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.event.entity.EntityRemoveEvent;
@@ -77,7 +78,7 @@ public abstract class HopperBlockEntityMixin extends BaseContainerBlockEntityMix
             Inventory destinationInventory;
             // Have to special case large chests as they work oddly
             if (destination instanceof CompoundContainer) {
-                destinationInventory = new CraftInventoryDoubleChest(((CompoundContainer) destination));
+                destinationInventory = new CraftInventory(((CompoundContainer) destination));
             } else {
                 // Arclight: Owner nullity check already done inside getOwnerInventory
                 destinationInventory = ((IInventoryBridge) destination).getOwnerInventory();
@@ -105,7 +106,7 @@ public abstract class HopperBlockEntityMixin extends BaseContainerBlockEntityMix
             Inventory sourceInventory;
             // Have to special case large chests as they work oddly
             if (source instanceof CompoundContainer) {
-                sourceInventory = new CraftInventoryDoubleChest(((CompoundContainer) source));
+                sourceInventory = new CraftInventory(((CompoundContainer) source));
             } else {
                 // Arclight: Owner nullity check already done inside getOwnerInventory
                 sourceInventory = ((IInventoryBridge) source).getOwnerInventory();
@@ -127,7 +128,7 @@ public abstract class HopperBlockEntityMixin extends BaseContainerBlockEntityMix
 
     @Inject(method = "addItem(Lnet/minecraft/world/Container;Lnet/minecraft/world/entity/item/ItemEntity;)Z", cancellable = true, at = @At("HEAD"))
     private static void arclight$pickupItem(Container inventory, ItemEntity itemEntity, CallbackInfoReturnable<Boolean> cir) {
-        InventoryPickupItemEvent event = new InventoryPickupItemEvent(((IInventoryBridge) inventory).getOwnerInventory(), (Item) itemEntity.bridge$getBukkitEntity());
+        InventoryPickupItemEvent event = new InventoryPickupItemEvent(((IInventoryBridge) inventory).getOwnerInventory(), (Item) ((EntityBridge) itemEntity).bridge$getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             cir.setReturnValue(false);
@@ -136,7 +137,7 @@ public abstract class HopperBlockEntityMixin extends BaseContainerBlockEntityMix
 
     @Inject(method = "addItem(Lnet/minecraft/world/Container;Lnet/minecraft/world/entity/item/ItemEntity;)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V"))
     private static void arclight$pickupCause(Container container, ItemEntity itemEntity, CallbackInfoReturnable<Boolean> cir) {
-        itemEntity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
+        ((EntityBridge) itemEntity).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
     }
 
     private static Container runHopperInventorySearchEvent(Container inventory, CraftBlock hopper, CraftBlock searchLocation, HopperInventorySearchEvent.ContainerType containerType) {

@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.bridge.core.world.entity;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;

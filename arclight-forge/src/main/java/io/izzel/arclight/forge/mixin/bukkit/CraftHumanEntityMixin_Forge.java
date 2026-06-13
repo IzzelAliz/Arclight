@@ -2,7 +2,7 @@ package io.izzel.arclight.forge.mixin.bukkit;
 
 import io.izzel.arclight.forge.mod.permission.ArclightForgePermissible;
 import io.izzel.arclight.i18n.ArclightConfig;
-import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 import org.bukkit.permissions.PermissibleBase;
 import org.bukkit.permissions.ServerOperator;
 import org.spongepowered.asm.mixin.Mixin;

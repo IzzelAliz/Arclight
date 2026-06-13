@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server.commands;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.Holder;

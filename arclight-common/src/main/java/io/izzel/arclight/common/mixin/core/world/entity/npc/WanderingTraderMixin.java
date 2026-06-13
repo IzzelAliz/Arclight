@@ -1,11 +1,11 @@
 package io.izzel.arclight.common.mixin.core.world.entity.npc;
 
 import io.izzel.arclight.common.bridge.core.world.item.trading.MerchantOfferBridge;
-import net.minecraft.world.entity.npc.WanderingTrader;
+import net.minecraft.world.entity.npc.wanderingtrader.WanderingTrader;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.inventory.CraftMerchantRecipe;
+import org.bukkit.craftbukkit.inventory.CraftMerchantRecipe;
 import org.bukkit.entity.AbstractVillager;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.VillagerAcquireTradeEvent;

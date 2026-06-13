@@ -2,7 +2,10 @@ package io.izzel.arclight.common.mixin.core.world.entity.player;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Either;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.InternalEntityBridge;
+import io.izzel.arclight.common.mod.util.ArclightBridges;
+import io.izzel.arclight.common.mod.util.ArclightNbtHelper;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
@@ -19,7 +22,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stat;
@@ -29,7 +33,10 @@ import net.minecraft.util.Unit;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityReference;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
@@ -49,10 +56,10 @@ import net.minecraft.world.scores.Scoreboard;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.util.CraftVector;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.util.CraftVector;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -96,7 +103,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     @Shadow public abstract void sweepAttack();
     @Shadow public abstract void crit(Entity entityHit);
     @Shadow public abstract void magicCrit(Entity entityHit);
-    @Shadow public abstract void awardStat(ResourceLocation p_195067_1_, int p_195067_2_);
+    @Shadow public abstract void awardStat(Identifier p_195067_1_, int p_195067_2_);
     @Shadow public abstract void causeFoodExhaustion(float exhaustion);
     @Shadow private long timeEntitySatOnShoulder;
     @Shadow public abstract void setShoulderEntityRight(CompoundTag tag);
@@ -108,7 +115,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     @Shadow public AbstractContainerMenu containerMenu;
     @Shadow @Final public InventoryMenu inventoryMenu;
     @Shadow public abstract void awardStat(Stat<?> stat);
-    @Shadow public abstract void awardStat(ResourceLocation stat);
+    @Shadow public abstract void awardStat(Identifier stat);
     @Shadow public abstract Component getDisplayName();
     @Shadow public abstract HumanoidArm getMainArm();
     @Shadow public float experienceProgress;
@@ -173,7 +180,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
             return;
         }
         Player player = (Player) this.getBukkitEntity();
-        Item drop = (Item) itemEntity.bridge$getBukkitEntity();
+        Item drop = (Item) ArclightBridges.toBukkit(itemEntity);
 
         PlayerDropItemEvent event = new PlayerDropItemEvent(player, drop);
         Bukkit.getPluginManager().callEvent(event);
@@ -294,7 +301,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     private boolean arclight$velocityEvent(Entity entity, @Local(ordinal = -1) Vec3 deltaMovement) throws Throwable {
         boolean result = (boolean) DecorationOps.callsite().invoke(entity);
         if (result) {
-            org.bukkit.entity.Player player = (org.bukkit.entity.Player) entity.bridge$getBukkitEntity();
+            org.bukkit.entity.Player player = (org.bukkit.entity.Player) ((EntityBridge) entity).bridge$getBukkitEntity();
             org.bukkit.util.Vector velocity = CraftVector.toBukkit(deltaMovement);
 
             PlayerVelocityEvent event = new PlayerVelocityEvent(player, velocity.clone());
@@ -318,7 +325,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
         slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/sounds/SoundEvents;PLAYER_ATTACK_NODAMAGE:Lnet/minecraft/sounds/SoundEvent;")))
     private void arclight$updateInv(Entity entity, CallbackInfo ci) {
         if (this instanceof ServerPlayerBridge b) {
-            b.bridge$getBukkitEntity().updateInventory();
+            ((ServerPlayerBridge) b).bridge$getBukkitEntity().updateInventory();
         }
     }
 
@@ -346,12 +353,12 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     @Inject(method = "stopSleepInBed", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/player/Player;sleepCounter:I"))
     private void arclight$wakeup(boolean flag, boolean flag1, CallbackInfo ci) {
         BlockPos blockPos = this.getSleepingPos().orElse(null);
-        if (this.bridge$getBukkitEntity() instanceof Player player) {
+        if (((EntityBridge) this).bridge$getBukkitEntity() instanceof Player player) {
             Block bed;
             if (blockPos != null) {
                 bed = CraftBlock.at(this.level(), blockPos);
             } else {
-                bed = this.level().bridge$getWorld().getBlockAt(player.getLocation());
+                bed = ((WorldBridge) this.level()).bridge$getWorld().getBlockAt(player.getLocation());
             }
             PlayerBedLeaveEvent event = new PlayerBedLeaveEvent(player, bed, true);
             Bukkit.getPluginManager().callEvent(event);
@@ -413,9 +420,16 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     }
 
     private boolean respawnEntityOnShoulder(final CompoundTag nbttagcompound) {
-        return this.level().isClientSide || nbttagcompound.isEmpty() || EntityType.create(nbttagcompound, this.level()).map(entity -> {
-            if (entity instanceof TamableAnimal) {
-                ((TamableAnimal) entity).setOwnerUUID(this.uuid);
+        if (!(this.level() instanceof ServerLevel) || nbttagcompound.isEmpty()) {
+            return false;
+        }
+        return EntityType.create(
+            ArclightNbtHelper.wrapInput(nbttagcompound, this.level().registryAccess()),
+            this.level(),
+            EntitySpawnReason.LOAD
+        ).map(entity -> {
+            if (entity instanceof TamableAnimal tamable) {
+                tamable.setOwnerReference(EntityReference.of((LivingEntity) (Object) this));
             }
             entity.setPos(this.getX(), this.getY() + 0.699999988079071, this.getZ());
             return ((ServerLevelBridge) this.level()).bridge$addEntitySerialized(entity, CreatureSpawnEvent.SpawnReason.SHOULDER_ENTITY);
@@ -435,11 +449,13 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     public void setItemSlot(EquipmentSlot slot, ItemStack stack, boolean silent) {
         this.verifyEquippedItem(stack);
         if (slot == EquipmentSlot.MAINHAND) {
-            this.equipEventAndSound(slot, this.inventory.items.set(this.inventory.selected, stack), stack, silent);
+            this.equipEventAndSound(slot, this.inventory.setSelectedItem(stack), stack, silent);
         } else if (slot == EquipmentSlot.OFFHAND) {
-            this.equipEventAndSound(slot, this.inventory.offhand.set(0, stack), stack, silent);
+            ItemStack old = this.inventory.getItem(Inventory.SLOT_OFFHAND);
+            this.inventory.setItem(Inventory.SLOT_OFFHAND, stack);
+            this.equipEventAndSound(slot, old, stack, silent);
         } else if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR) {
-            this.equipEventAndSound(slot, this.inventory.armor.set(slot.getIndex(), stack), stack, silent);
+            this.equipEventAndSound(slot, this.equipment.set(slot, stack), stack, silent);
         }
     }
 

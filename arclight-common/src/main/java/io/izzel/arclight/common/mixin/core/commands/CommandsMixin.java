@@ -19,6 +19,7 @@ import net.minecraft.commands.ExecutionCommandSource;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.synchronization.SuggestionProviders;
 import net.minecraft.network.protocol.game.ClientboundCommandsPacket;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.event.player.PlayerCommandSendEvent;
@@ -43,6 +44,7 @@ public abstract class CommandsMixin implements CommandsBridge {
     @Shadow public abstract void performPrefixedCommand(CommandSourceStack p_230958_, String p_230959_);
     @Mutable @Shadow @Final private CommandDispatcher<CommandSourceStack> dispatcher;
     @Shadow protected abstract void fillUsableCommands(CommandNode<CommandSourceStack> rootCommandSource, CommandNode<SharedSuggestionProvider> rootSuggestion, CommandSourceStack source, Map<CommandNode<CommandSourceStack>, CommandNode<SharedSuggestionProvider>> commandNodeToSuggestionNode);
+    @Shadow static ClientboundCommandsPacket.NodeInspector<SharedSuggestionProvider> COMMAND_NODE_INSPECTOR;
     // @formatter:on
 
     @CreateConstructor
@@ -69,15 +71,15 @@ public abstract class CommandsMixin implements CommandsBridge {
         Map<CommandNode<CommandSourceStack>, CommandNode<SharedSuggestionProvider>> map = Maps.newIdentityHashMap();
 
         RootCommandNode<SharedSuggestionProvider> vanillaRoot = new RootCommandNode<>();
-        Commands vanillaCommands = ((MinecraftServerBridge) player.server).bridge$getVanillaCommands();
+        Commands vanillaCommands = ((MinecraftServerBridge) arclight$getServer(player)).bridge$getVanillaCommands();
         map.put(vanillaCommands.getDispatcher().getRoot(), vanillaRoot);
 
-        // FORGE: Use our own command node merging method to handle redirect nodes properly, see issue #7551
-        bridge$forge$mergeNode(vanillaCommands.getDispatcher().getRoot(), vanillaRoot, map, player.createCommandSourceStack(), ctx -> 0, suggest -> SuggestionProviders.safelySwap((com.mojang.brigadier.suggestion.SuggestionProvider<SharedSuggestionProvider>) (com.mojang.brigadier.suggestion.SuggestionProvider<?>) suggest));
+        var source = player.createCommandSourceStack();
+        bridge$forge$mergeNode(vanillaCommands.getDispatcher().getRoot(), vanillaRoot, map, source, ctx -> 0, provider -> (com.mojang.brigadier.suggestion.SuggestionProvider<net.minecraft.commands.SharedSuggestionProvider>) (Object) provider);
 
         RootCommandNode<SharedSuggestionProvider> node = new RootCommandNode<>();
         map.put(this.dispatcher.getRoot(), node);
-        bridge$forge$mergeNode(this.dispatcher.getRoot(), node, map, player.createCommandSourceStack(), ctx -> 0, suggest -> SuggestionProviders.safelySwap((com.mojang.brigadier.suggestion.SuggestionProvider<SharedSuggestionProvider>) (com.mojang.brigadier.suggestion.SuggestionProvider<?>) suggest));
+        bridge$forge$mergeNode(this.dispatcher.getRoot(), node, map, source, ctx -> 0, provider -> (com.mojang.brigadier.suggestion.SuggestionProvider<net.minecraft.commands.SharedSuggestionProvider>) (Object) provider);
 
         LinkedHashSet<String> set = new LinkedHashSet<>();
         for (CommandNode<SharedSuggestionProvider> child : node.getChildren()) {
@@ -90,12 +92,16 @@ public abstract class CommandsMixin implements CommandsBridge {
                 CommandNodeHooks.removeCommand(node, s);
             }
         }
-        player.connection.send(new ClientboundCommandsPacket(node));
+        player.connection.send(new ClientboundCommandsPacket(node, COMMAND_NODE_INSPECTOR));
     }
 
     @Redirect(method = "fillUsableCommands", at = @At(value = "INVOKE", remap = false, target = "Lcom/mojang/brigadier/tree/CommandNode;canUse(Ljava/lang/Object;)Z"))
     private <S> boolean arclight$canUse(CommandNode<S> commandNode, S source) {
         return CommandNodeHooks.canUse(commandNode, source);
+    }
+
+    private static MinecraftServer arclight$getServer(ServerPlayer player) {
+        return player.level().getServer();
     }
 
     @Override

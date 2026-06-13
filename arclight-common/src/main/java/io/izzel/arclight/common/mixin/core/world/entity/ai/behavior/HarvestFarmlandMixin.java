@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.behavior.HarvestFarmland;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.villager.Villager;
 
 @Mixin(HarvestFarmland.class)
 public abstract class HarvestFarmlandMixin {

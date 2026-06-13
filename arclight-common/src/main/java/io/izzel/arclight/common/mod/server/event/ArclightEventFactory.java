@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mod.server.event;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
@@ -26,13 +27,13 @@ import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.block.CraftBlockState;
-import org.bukkit.craftbukkit.v.block.CraftBlockStates;
-import org.bukkit.craftbukkit.v.damage.CraftDamageSource;
-import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.block.CraftBlockState;
+import org.bukkit.craftbukkit.block.CraftBlockStates;
+import org.bukkit.craftbukkit.damage.CraftDamageSource;
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -69,7 +70,7 @@ public abstract class ArclightEventFactory {
      * @see CraftEventFactory#callPlayerDeathEvent(ServerPlayer, DamageSource, List, String, boolean)
      */
     public static PlayerDeathEvent callPlayerDeathEvent(ServerPlayer victim, DamageSource damageSource, List<ItemStack> drops, int expReward, String deathMessage, boolean keepInventory) {
-        CraftPlayer entity = (CraftPlayer) victim.bridge$getBukkitEntity();
+        CraftPlayer entity = (CraftPlayer) ((EntityBridge) victim).bridge$getBukkitEntity();
         CraftDamageSource bukkitDamageSource = new CraftDamageSource(damageSource);
         PlayerDeathEvent event = new PlayerDeathEvent(entity, bukkitDamageSource, drops, expReward, 0, deathMessage);
         event.setKeepInventory(keepInventory);
@@ -90,7 +91,7 @@ public abstract class ArclightEventFactory {
 
         CraftBlockState blockState = CraftBlockStates.getBlockState(world, pos, flag);
         blockState.setData(block);
-        BlockFormEvent event = entity == null ? new BlockFormEvent(blockState.getBlock(), blockState) : new EntityBlockFormEvent(entity.bridge$getBukkitEntity(), blockState.getBlock(), blockState);
+        BlockFormEvent event = entity == null ? new BlockFormEvent(blockState.getBlock(), blockState) : new EntityBlockFormEvent(((EntityBridge) entity).bridge$getBukkitEntity(), blockState.getBlock(), blockState);
         return callEvent(event);
     }
 
@@ -98,7 +99,7 @@ public abstract class ArclightEventFactory {
      * @return if we can drop the item
      */
     public static<T extends ItemEntity & InjectEntityBridge> boolean callEntityDropItemEvent(InjectEntityBridge entity, T drop) {
-        EntityDropItemEvent bukkitEvent = new EntityDropItemEvent(entity.bridge$getBukkitEntity(), (Item) drop.bridge$getBukkitEntity());
+        EntityDropItemEvent bukkitEvent = new EntityDropItemEvent(((EntityBridge) entity).bridge$getBukkitEntity(), (Item) ((EntityBridge) drop).bridge$getBukkitEntity());
         callEvent(bukkitEvent);
         return !bukkitEvent.isCancelled();
     }
@@ -112,7 +113,7 @@ public abstract class ArclightEventFactory {
         }
 
         var bblock = CraftBlock.at(level, pos);
-        var event = new BlockBreakEvent(bblock, (Player) player.bridge$getBukkitEntity());
+        var event = new BlockBreakEvent(bblock, (Player) ((ServerPlayerBridge) player).bridge$getBukkitEntity());
         ArclightCaptures.captureBlockBreakPlayer(event);
 
         // Sword + Creative mode pre-cancel
@@ -226,7 +227,7 @@ public abstract class ArclightEventFactory {
                 var blockData = world.getBlockState(position);
 
                 if (blockData.getBlock() instanceof BedBlock) {
-                    world.blockUpdated(position, Blocks.AIR);
+                    world.sendBlockUpdated(position, Blocks.AIR.defaultBlockState(), world.getBlockState(position), 3);
                     blockData.updateNeighbourShapes(world, position, 3);
                 }
             }

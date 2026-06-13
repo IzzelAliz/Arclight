@@ -37,7 +37,7 @@ public class EntityEventHandler {
             Inventory beforeDeath = ArclightCaptures.getDeathPlayerInv();
             Inventory original;
             if (beforeDeath != null) { // not keeping inventory, from game rule
-                original = new Inventory(player);
+                original = new Inventory(player, ((LivingEntity) player).equipment);
                 original.replaceWith(player.getInventory());
                 player.getInventory().replaceWith(beforeDeath);
             } else {

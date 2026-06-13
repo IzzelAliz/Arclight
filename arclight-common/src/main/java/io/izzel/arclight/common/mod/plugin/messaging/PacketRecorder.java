@@ -3,20 +3,20 @@ package io.izzel.arclight.common.mod.plugin.messaging;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
-import net.minecraft.Util;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Util;
+import net.minecraft.resources.Identifier;
 
 import java.util.stream.Collectors;
 
 public class PacketRecorder {
-    private final Object2IntArrayMap<ResourceLocation> unknown = new Object2IntArrayMap<>();
+    private final Object2IntArrayMap<Identifier> unknown = new Object2IntArrayMap<>();
     private long lastUpdate = Util.getMillis();
 
     public PacketRecorder() {
         unknown.defaultReturnValue(0);
     }
 
-    public void recordUnknown(ResourceLocation id) {
+    public void recordUnknown(Identifier id) {
         if (id == null) {
             ArclightServer.LOGGER.debug("Received packet with null id. This should never happen.");
             return;

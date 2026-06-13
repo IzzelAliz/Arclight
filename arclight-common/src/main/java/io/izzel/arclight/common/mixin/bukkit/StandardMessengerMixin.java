@@ -6,8 +6,8 @@ import io.izzel.arclight.common.bridge.bukkit.MessengerBridge;
 import io.izzel.arclight.common.mod.plugin.messaging.PacketRecorder;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.plugin.messaging.ArclightPluginChannel;
-import net.minecraft.resources.ResourceLocation;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
+import net.minecraft.resources.Identifier;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.plugin.messaging.PluginMessageListenerRegistration;
@@ -30,10 +30,10 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
     @Shadow @Final private Map<String, Set<PluginMessageListenerRegistration>> incomingByChannel;
 
     @Unique
-    private Map<ResourceLocation, ArclightPluginChannel<?>> arclight$registry;
+    private Map<Identifier, ArclightPluginChannel<?>> arclight$registry;
 
     @Unique
-    private SetMultimap<Plugin, ResourceLocation> arclight$crossSend;
+    private SetMultimap<Plugin, Identifier> arclight$crossSend;
 
     @Unique
     private PacketRecorder arclight$recorder;
@@ -47,7 +47,7 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
     }
 
     @Override
-    public ArclightPluginChannel<?> arclight$getAndCheckCrossSend(Plugin src, ResourceLocation channel) {
+    public ArclightPluginChannel<?> arclight$getAndCheckCrossSend(Plugin src, Identifier channel) {
         var arclight = this.arclight$registry.get(channel);
         if (src == null) {
             ArclightServer.LOGGER.warn("Sending anonymous packet on channel {}", channel);
@@ -66,7 +66,7 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
     }
 
     @Override
-    public void arclight$checkUnsafeSend(Plugin src, ResourceLocation channel) {
+    public void arclight$checkUnsafeSend(Plugin src, Identifier channel) {
         var arclight = arclight$registry.get(channel);
         if (arclight != null && !arclight.getOutgoing().isEmpty()) {
             return;
@@ -81,14 +81,14 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
     }
 
     @Override
-    public void arclight$sendCustomPayload(Plugin src, CraftPlayer dst, ResourceLocation location, byte[] data) {
+    public void arclight$sendCustomPayload(Plugin src, CraftPlayer dst, Identifier location, byte[] data) {
         arclight$checkUnsafeSend(src, location);
         var channel = arclight$getAndCheckCrossSend(src, location);
         channel.sendCustomPayload(src, dst, data);
     }
 
     @Override
-    public void arclight$registerAnonymousOutgoing(ResourceLocation location) {
+    public void arclight$registerAnonymousOutgoing(Identifier location) {
         arclight$updateChannel(location, true);
     }
 
@@ -98,7 +98,7 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
     }
 
     @Unique
-    private void arclight$updateChannel(ResourceLocation location, boolean create) {
+    private void arclight$updateChannel(Identifier location, boolean create) {
         if (location != null) {
             var id = location.toString();
             var channel = arclight$registry.computeIfAbsent(location, it -> {
@@ -117,7 +117,7 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
 
     @Unique
     private void arclight$updateChannel(String location, boolean create) {
-        arclight$updateChannel(ResourceLocation.tryParse(location), create);
+        arclight$updateChannel(Identifier.tryParse(location), create);
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))
@@ -158,7 +158,7 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
             var corrected = cir.getReturnValue();
             var namespace = corrected.substring(0, corrected.indexOf(':'));
             var path = corrected.substring(corrected.indexOf(':') + 1);
-            if (!ResourceLocation.isValidNamespace(namespace) || !ResourceLocation.isValidPath(path)) {
+            if (!Identifier.isValidNamespace(namespace) || !Identifier.isValidPath(path)) {
                 ArclightServer.LOGGER.warn("Channel name is malformed and impossible to use: {}", corrected);
                 ArclightServer.LOGGER.warn("Related functionality cannot be guaranteed!");
                 ArclightServer.LOGGER.warn("This message will only be displayed once for this channel!");

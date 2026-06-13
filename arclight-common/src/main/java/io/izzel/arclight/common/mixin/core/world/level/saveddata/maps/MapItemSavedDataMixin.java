@@ -8,9 +8,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.CraftWorld;
-import org.bukkit.craftbukkit.v.map.CraftMapView;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.map.CraftMapView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -48,8 +48,8 @@ public abstract class MapItemSavedDataMixin implements MapItemSavedDataBridge {
     @Redirect(method = "load", at = @At(value = "INVOKE", target = "Ljava/util/Optional;orElseThrow(Ljava/util/function/Supplier;)Ljava/lang/Object;"))
     private static Object arclight$customDimension(Optional<ResourceKey<Level>> optional, Supplier<?> exceptionSupplier, CompoundTag nbt) {
         return optional.orElseGet(() -> {
-            long least = nbt.getLong("UUIDLeast");
-            long most = nbt.getLong("UUIDMost");
+            long least = nbt.getLongOr("UUIDLeast", 0L);
+            long most = nbt.getLongOr("UUIDMost", 0L);
             if (least != 0L && most != 0L) {
                 UUID uniqueId = new UUID(most, least);
                 CraftWorld world = (CraftWorld) Bukkit.getWorld(uniqueId);

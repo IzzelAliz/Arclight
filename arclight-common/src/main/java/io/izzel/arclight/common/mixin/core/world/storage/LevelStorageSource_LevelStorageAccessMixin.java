@@ -28,6 +28,6 @@ public class LevelStorageSource_LevelStorageAccessMixin implements LevelStorageS
     @ModifyVariable(method = "getDimensionPath", argsOnly = true, ordinal = 0, at = @At("HEAD"))
     private ResourceKey<Level> arclight$useActualType(ResourceKey<Level> value) {
         final var type = dimensionType;
-        return type == null ? value : ResourceKey.create(Registries.DIMENSION, type.location());
+        return type == null ? value : ResourceKey.create(Registries.DIMENSION, type.identifier());
     }
 }

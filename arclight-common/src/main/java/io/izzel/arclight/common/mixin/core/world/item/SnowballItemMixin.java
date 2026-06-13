@@ -7,9 +7,8 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.Snowball;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SnowballItem;
@@ -30,10 +29,10 @@ public class SnowballItemMixin extends Item {
      * @reason
      */
     @Overwrite
-    public @NotNull InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, @NotNull InteractionHand handIn) {
+    public @NotNull InteractionResult use(Level worldIn, Player playerIn, @NotNull InteractionHand handIn) {
         ItemStack itemstack = playerIn.getItemInHand(handIn);
-        if (!worldIn.isClientSide) {
-            Snowball snowballentity = new Snowball(worldIn, playerIn);
+        if (!worldIn.isClientSide()) {
+            Snowball snowballentity = new Snowball(worldIn, playerIn, itemstack);
             snowballentity.setItem(itemstack);
             snowballentity.shootFromRotation(playerIn, playerIn.getXRot(), playerIn.getYRot(), 0.0F, 1.5F, 1.0F);
             if (worldIn.addFreshEntity(snowballentity)) {
@@ -45,6 +44,6 @@ public class SnowballItemMixin extends Item {
         }
 
         playerIn.awardStat(Stats.ITEM_USED.get(this));
-        return new InteractionResultHolder<>(InteractionResult.SUCCESS, itemstack);
+        return InteractionResult.SUCCESS;
     }
 }

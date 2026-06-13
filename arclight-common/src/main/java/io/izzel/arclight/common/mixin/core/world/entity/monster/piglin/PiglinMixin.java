@@ -7,7 +7,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.monster.piglin.Piglin;
 import net.minecraft.world.entity.monster.piglin.PiglinAi;
 import net.minecraft.world.item.Item;
@@ -19,6 +19,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -41,17 +42,17 @@ public abstract class PiglinMixin extends PathfinderMobMixin implements PiglinBr
     @Inject(method = "addAdditionalSaveData", at = @At("RETURN"))
     private void arclight$writeAdditional(CompoundTag compound, CallbackInfo ci) {
         ListTag barterList = new ListTag();
-        allowedBarterItems.stream().map(BuiltInRegistries.ITEM::getKey).map(ResourceLocation::toString).map(StringTag::valueOf).forEach(barterList::add);
+        allowedBarterItems.stream().map(BuiltInRegistries.ITEM::getKey).map(Identifier::toString).map(StringTag::valueOf).forEach(barterList::add);
         compound.put("Bukkit.BarterList", barterList);
         ListTag interestList = new ListTag();
-        interestItems.stream().map(BuiltInRegistries.ITEM::getKey).map(ResourceLocation::toString).map(StringTag::valueOf).forEach(interestList::add);
+        interestItems.stream().map(BuiltInRegistries.ITEM::getKey).map(Identifier::toString).map(StringTag::valueOf).forEach(interestList::add);
         compound.put("Bukkit.InterestList", interestList);
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("RETURN"))
     private void arclight$readAdditional(CompoundTag compound, CallbackInfo ci) {
-        this.allowedBarterItems = compound.getList("Bukkit.BarterList", 8).stream().map(Tag::getAsString).map(ResourceLocation::tryParse).map(BuiltInRegistries.ITEM::get).collect(Collectors.toCollection(HashSet::new));
-        this.interestItems = compound.getList("Bukkit.InterestList", 8).stream().map(Tag::getAsString).map(ResourceLocation::tryParse).map(BuiltInRegistries.ITEM::get).collect(Collectors.toCollection(HashSet::new));
+        this.allowedBarterItems = compound.getListOrEmpty("Bukkit.BarterList").stream().map(tag -> tag.asString().orElse("")).map(Identifier::tryParse).filter(Objects::nonNull).map(BuiltInRegistries.ITEM::getValue).collect(Collectors.toCollection(HashSet::new));
+        this.interestItems = compound.getListOrEmpty("Bukkit.InterestList").stream().map(tag -> tag.asString().orElse("")).map(Identifier::tryParse).filter(Objects::nonNull).map(BuiltInRegistries.ITEM::getValue).collect(Collectors.toCollection(HashSet::new));
     }
 
     @Redirect(method = "holdInOffHand", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;is(Lnet/minecraft/world/item/Item;)Z"))

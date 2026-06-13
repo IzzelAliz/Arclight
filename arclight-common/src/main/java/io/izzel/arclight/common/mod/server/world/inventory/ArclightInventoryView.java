@@ -5,8 +5,8 @@ import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import org.bukkit.craftbukkit.v.inventory.CraftInventory;
-import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
+import org.bukkit.craftbukkit.inventory.CraftInventory;
+import org.bukkit.craftbukkit.inventory.CraftInventoryView;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 

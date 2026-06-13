@@ -83,7 +83,7 @@ public abstract class ChunkHolderMixin extends GenerationChunkHolder implements 
                         // Minecraft will apply the chunks tick lists to the world once the chunk got loaded, and then store the tick
                         // lists again inside the chunk once the chunk becomes inaccessible and set the chunk's needsSaving flag.
                         // These actions may however happen deferred, so we manually set the needsSaving flag already here.
-                        chunk.setUnsaved(true);
+                        chunk.markUnsaved();
                         ((LevelChunkBridge)chunk).bridge$unloadCallback();
                     });
                 }

@@ -1,5 +1,6 @@
 package io.izzel.arclight.gradle.util
 
+import net.fabricmc.loom.configuration.providers.minecraft.MinecraftProvider
 import net.fabricmc.loom.configuration.providers.minecraft.mapped.NamedMinecraftProvider
 import net.md_5.specialsource.Jar
 import org.cadixdev.at.AccessChange
@@ -11,17 +12,23 @@ import org.cadixdev.bombe.type.signature.MethodSignature
 class AwWriter {
 
     private final BufferedWriter writer
-    private final NamedMinecraftProvider<?> mc
     private final Jar jar
 
     AwWriter(BufferedWriter writer, NamedMinecraftProvider<?> mc) {
+        this(writer, mc.minecraftJarPaths.get(0).toFile())
+    }
+
+    AwWriter(BufferedWriter writer, MinecraftProvider mc) {
+        this(writer, mc.minecraftJarPaths.get(0).toFile())
+    }
+
+    AwWriter(BufferedWriter writer, File minecraftJar) {
         this.writer = writer
-        this.mc = mc
-        this.jar = Jar.init(mc.minecraftJarPaths.get(0).toFile())
+        this.jar = Jar.init(minecraftJar)
     }
 
     void write(AccessTransformSet set) throws IOException {
-        this.writer.writeLine("accessWidener v2 named")
+        this.writer.writeLine("accessWidener v2 official")
         set.getClasses().forEach((originalClassName, classSet) -> {
             def className = originalClassName.replace('/', '.')
             writeClass(className, classSet.get())

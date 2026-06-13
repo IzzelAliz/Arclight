@@ -1,12 +1,12 @@
 package io.izzel.arclight.common.bridge.core.server;
 
+import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.commands.Commands;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.TimeSource;
-import net.minecraft.world.level.ForcedChunksSavedData;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.RemoteConsoleCommandSender;
-import org.bukkit.craftbukkit.v.CraftServer;
+import org.bukkit.craftbukkit.CraftServer;
 
 public interface MinecraftServerBridge {
 
@@ -32,7 +32,7 @@ public interface MinecraftServerBridge {
 
     default void bridge$forge$markLevelsDirty() {}
 
-    default void bridge$forge$reinstatePersistentChunks(ServerLevel level, ForcedChunksSavedData savedData) {}
+    default void bridge$forge$reinstatePersistentChunks(ServerLevel level, LongSet forcedChunks) {}
 
     default void bridge$forge$lockRegistries() {}
 

@@ -1,13 +1,15 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.level.block.entity.BeaconBlockEntityBridge;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
+import io.izzel.arclight.common.mod.util.ArclightNbtHelper;
+import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
-import org.bukkit.craftbukkit.v.potion.CraftPotionUtil;
+import org.bukkit.craftbukkit.potion.CraftPotionUtil;
 import org.bukkit.potion.PotionEffect;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,8 +28,8 @@ public abstract class BeaconBlockEntityMixin implements BeaconBlockEntityBridge 
     // @formatter:on
 
     @Inject(method = "loadAdditional", at = @At("RETURN"))
-    public void arclight$level(CompoundTag compoundTag, HolderLookup.Provider provider, CallbackInfo ci) {
-        this.levels = compoundTag.getInt("Levels");
+    public void arclight$level(ValueInput input, CallbackInfo ci) {
+        this.levels = ArclightNbtHelper.getInt(input, "Levels");
     }
 
     public PotionEffect getPrimaryEffect() {

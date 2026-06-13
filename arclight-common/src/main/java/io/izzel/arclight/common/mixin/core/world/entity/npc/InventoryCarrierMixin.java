@@ -1,12 +1,13 @@
 package io.izzel.arclight.common.mixin.core.world.entity.npc;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.mod.server.world.inventory.ArclightInventoryView;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.npc.InventoryCarrier;
 import net.minecraft.world.item.ItemStack;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -26,7 +27,7 @@ public interface InventoryCarrierMixin {
     @Overwrite
     static void pickUpItem(Mob mob, InventoryCarrier carrier, ItemEntity itemEntity) {
         ItemStack itemstack = itemEntity.getItem();
-        if (mob.wantsToPickUp(itemstack)) {
+        if (mob.wantsToPickUp((net.minecraft.server.level.ServerLevel) mob.level(), itemstack)) {
             SimpleContainer simplecontainer = carrier.getInventory();
             boolean flag = simplecontainer.canAddItem(itemstack);
             if (!flag) {
@@ -42,7 +43,7 @@ public interface InventoryCarrierMixin {
             ItemStack itemstack1 = simplecontainer.addItem(itemstack);
             mob.take(itemEntity, i - itemstack1.getCount());
             if (itemstack1.isEmpty()) {
-                itemEntity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
+                ((EntityBridge) itemEntity).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
                 itemEntity.discard();
             } else {
                 itemstack.setCount(itemstack1.getCount());

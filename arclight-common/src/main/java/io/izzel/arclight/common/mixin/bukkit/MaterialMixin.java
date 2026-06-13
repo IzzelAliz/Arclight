@@ -7,7 +7,7 @@ import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.i18n.LocalizedException;
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -15,29 +15,29 @@ import net.minecraft.world.level.block.FallingBlock;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.BlockState;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.block.CraftBlockState;
-import org.bukkit.craftbukkit.v.block.CraftBlockStates;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaArmorStand;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaBanner;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaBlockState;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaBook;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaBookSigned;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaCharge;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaCrossbow;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaEnchantedBook;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaFirework;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaItem;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaKnowledgeBook;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaLeatherArmor;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaMap;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaPotion;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaSkull;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaSpawnEgg;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaSuspiciousStew;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaTropicalFishBucket;
-import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
-import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.block.CraftBlockState;
+import org.bukkit.craftbukkit.block.CraftBlockStates;
+import org.bukkit.craftbukkit.inventory.CraftMetaArmorStand;
+import org.bukkit.craftbukkit.inventory.CraftMetaBanner;
+import org.bukkit.craftbukkit.inventory.CraftMetaBlockState;
+import org.bukkit.craftbukkit.inventory.CraftMetaBook;
+import org.bukkit.craftbukkit.inventory.CraftMetaBookSigned;
+import org.bukkit.craftbukkit.inventory.CraftMetaCharge;
+import org.bukkit.craftbukkit.inventory.CraftMetaCrossbow;
+import org.bukkit.craftbukkit.inventory.CraftMetaEnchantedBook;
+import org.bukkit.craftbukkit.inventory.CraftMetaFirework;
+import org.bukkit.craftbukkit.inventory.CraftMetaItem;
+import org.bukkit.craftbukkit.inventory.CraftMetaKnowledgeBook;
+import org.bukkit.craftbukkit.inventory.CraftMetaLeatherArmor;
+import org.bukkit.craftbukkit.inventory.CraftMetaMap;
+import org.bukkit.craftbukkit.inventory.CraftMetaPotion;
+import org.bukkit.craftbukkit.inventory.CraftMetaSkull;
+import org.bukkit.craftbukkit.inventory.CraftMetaSpawnEgg;
+import org.bukkit.craftbukkit.inventory.CraftMetaSuspiciousStew;
+import org.bukkit.craftbukkit.inventory.CraftMetaTropicalFishBucket;
+import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+import org.bukkit.craftbukkit.util.CraftNamespacedKey;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
 import org.spongepowered.asm.mixin.Final;
@@ -88,7 +88,7 @@ public abstract class MaterialMixin implements MaterialBridge {
 
     private MaterialPropertySpec.MaterialType arclight$type = MaterialPropertySpec.MaterialType.VANILLA;
     private MaterialPropertySpec arclight$spec;
-    private ResourceLocation arclight$location;
+    private Identifier arclight$location;
     private boolean arclight$block = false, arclight$item = false;
 
     @Override
@@ -274,7 +274,7 @@ public abstract class MaterialMixin implements MaterialBridge {
                 arclight$setupCommon();
             }
             if (arclight$spec.craftingRemainingItem != null) {
-                cir.setReturnValue(CraftMagicNumbers.getMaterial(BuiltInRegistries.ITEM.get(ResourceLocation.parse(arclight$spec.craftingRemainingItem))));
+                cir.setReturnValue(CraftMagicNumbers.getMaterial(BuiltInRegistries.ITEM.getValue(Identifier.parse(arclight$spec.craftingRemainingItem))));
             }
         }
     }
@@ -320,7 +320,7 @@ public abstract class MaterialMixin implements MaterialBridge {
     }
 
     @Override
-    public void bridge$setupBlock(ResourceLocation key, MaterialPropertySpec spec) {
+    public void bridge$setupBlock(Identifier key, MaterialPropertySpec spec) {
         this.arclight$spec = spec.clone();
         arclight$type = MaterialPropertySpec.MaterialType.FORGE;
         arclight$block = true;
@@ -336,7 +336,7 @@ public abstract class MaterialMixin implements MaterialBridge {
     }
 
     @Override
-    public void bridge$setupItem(ResourceLocation key, MaterialPropertySpec spec) {
+    public void bridge$setupItem(Identifier key, MaterialPropertySpec spec) {
         this.arclight$spec = spec.clone();
         arclight$type = MaterialPropertySpec.MaterialType.FORGE;
         arclight$item = true;
@@ -350,7 +350,7 @@ public abstract class MaterialMixin implements MaterialBridge {
     }
 
     @SuppressWarnings("unchecked")
-    private void arclight$setupCommonLazy(ResourceLocation key) {
+    private void arclight$setupCommonLazy(Identifier key) {
         this.key = CraftNamespacedKey.fromMinecraft(key);
         if (arclight$spec.materialDataClass != null) {
             try {
@@ -368,8 +368,8 @@ public abstract class MaterialMixin implements MaterialBridge {
     }
 
     private void arclight$setupCommon() {
-        Block block = BuiltInRegistries.BLOCK.get(arclight$location);
-        Item item = BuiltInRegistries.ITEM.get(arclight$location);
+        Block block = BuiltInRegistries.BLOCK.getValue(arclight$location);
+        Item item = BuiltInRegistries.ITEM.getValue(arclight$location);
 
         // Block properties
         if (arclight$location.equals(MaterialBridge.AIR) || block != Blocks.AIR) {

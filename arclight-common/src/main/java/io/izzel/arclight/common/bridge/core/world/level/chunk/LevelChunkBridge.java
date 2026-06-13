@@ -3,7 +3,7 @@ package io.izzel.arclight.common.bridge.core.world.level.chunk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.Chunk;
-import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataContainer;
+import org.bukkit.craftbukkit.persistence.CraftPersistentDataContainer;
 
 public interface LevelChunkBridge {
 

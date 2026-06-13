@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.storage;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import com.mojang.datafixers.DataFixer;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.level.storage.PlayerDataStorageBridge;
@@ -12,7 +13,7 @@ import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.storage.PlayerDataStorage;
 import org.slf4j.Logger;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -126,7 +127,7 @@ public class PlayerDataStorageMixin implements PlayerDataStorageBridge {
         // CraftBukkit start
         return load(entityhuman.getName().getString(), entityhuman.getStringUUID()).map((nbttagcompound) -> {
             if (entityhuman instanceof ServerPlayer) {
-                CraftPlayer player = (CraftPlayer) entityhuman.bridge$getBukkitEntity();
+                CraftPlayer player = (CraftPlayer) ((EntityBridge) entityhuman).bridge$getBukkitEntity();
                 // Only update first played if it is older than the one we have
                 long modified = new File(this.playerDir, entityhuman.getStringUUID() + ".dat").lastModified();
                 if (modified < player.getFirstPlayed()) {
@@ -134,7 +135,7 @@ public class PlayerDataStorageMixin implements PlayerDataStorageBridge {
                 }
             }
 
-            entityhuman.load(nbttagcompound); // From below
+            entityhuman.load(io.izzel.arclight.common.mod.util.ArclightNbtHelper.wrapInput(nbttagcompound, entityhuman.registryAccess())); // From below
             return nbttagcompound;
         });
     }

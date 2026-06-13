@@ -10,9 +10,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CapturedBlockState;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
+import org.bukkit.craftbukkit.block.CapturedBlockState;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.block.data.CraftBlockData;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -35,6 +35,7 @@ public abstract class LevelMixin_Vanilla implements LevelAccessor, WorldBridge {
     @Shadow public abstract void sendBlockUpdated(BlockPos blockPos, BlockState blockState, BlockState blockState2, int i);
     @Shadow public abstract void updateNeighbourForOutputSignal(BlockPos blockPos, Block block);
     @Shadow public abstract void onBlockStateChange(BlockPos blockPos, BlockState blockState, BlockState blockState2);
+    @Shadow public abstract void neighborChanged(BlockPos pos, Block block, net.minecraft.world.level.redstone.Orientation orientation);
     // @formatter:on
 
     public boolean captureBlockStates = false;
@@ -77,7 +78,7 @@ public abstract class LevelMixin_Vanilla implements LevelAccessor, WorldBridge {
     public boolean setBlock(BlockPos blockPos, BlockState blockState, int i, int j) {
         if (this.isOutsideBuildHeight(blockPos)) {
             return false;
-        } else if (!this.isClientSide && this.isDebug()) {
+        } else if (!this.isClientSide() && this.isDebug()) {
             return false;
         } else {
             LevelChunk levelChunk = this.getChunkAt(blockPos);
@@ -90,7 +91,7 @@ public abstract class LevelMixin_Vanilla implements LevelAccessor, WorldBridge {
             }
             // CraftBukkit end
 
-            BlockState blockState2 = levelChunk.setBlockState(blockPos, blockState, (i & 64) != 0);
+            BlockState blockState2 = levelChunk.setBlockState(blockPos, blockState, i & 64);
             if (blockState2 == null) {
                 // CraftBukkit start - remove blockstate if failed (or the same)
                 if (this.captureBlockStates) {
@@ -109,13 +110,13 @@ public abstract class LevelMixin_Vanilla implements LevelAccessor, WorldBridge {
                         this.setBlocksDirty(blockPos, blockState2, blockState3);
                     }
 
-                    if ((i & 2) != 0 && (!this.isClientSide || (i & 4) == 0) && (this.isClientSide || levelChunk.getFullStatus() != null && levelChunk.getFullStatus().isOrAfter(FullChunkStatus.BLOCK_TICKING))) {
+                    if ((i & 2) != 0 && (!this.isClientSide() || (i & 4) == 0) && (this.isClientSide() || levelChunk.getFullStatus() != null && levelChunk.getFullStatus().isOrAfter(FullChunkStatus.BLOCK_TICKING))) {
                         this.sendBlockUpdated(blockPos, blockState2, blockState, i);
                     }
 
                     if ((i & 1) != 0) {
-                        this.blockUpdated(blockPos, blockState2.getBlock());
-                        if (!this.isClientSide && blockState.hasAnalogOutputSignal()) {
+                        this.neighborChanged(blockPos, blockState2.getBlock(), net.minecraft.world.level.redstone.Orientation.fromIndex(0));
+                        if (!this.isClientSide() && blockState.hasAnalogOutputSignal()) {
                             this.updateNeighbourForOutputSignal(blockPos, block);
                         }
                     }
@@ -138,7 +139,7 @@ public abstract class LevelMixin_Vanilla implements LevelAccessor, WorldBridge {
     @Inject(method = "setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;II)Z", require = 0, cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;updateNeighbourShapes(Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;II)V"))
     private void arclight$callBlockPhysics(BlockPos pos, BlockState state, int i, int j, CallbackInfoReturnable<Boolean> cir) {
         try {
-            if (this.bridge$getWorld() != null) {
+            if (((WorldBridge) this).bridge$getWorld() != null) {
                 BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at(this, pos), CraftBlockData.fromData(state));
                 Bukkit.getPluginManager().callEvent(event);
                 if (event.isCancelled()) {

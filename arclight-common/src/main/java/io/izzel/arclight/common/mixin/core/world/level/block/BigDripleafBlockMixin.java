@@ -13,8 +13,8 @@ import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.Tilt;
 import net.minecraft.world.phys.BlockHitResult;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -42,7 +42,7 @@ public class BigDripleafBlockMixin {
         if (entity instanceof Player) {
             cancellable = CraftEventFactory.callPlayerInteractEvent((Player) entity, org.bukkit.event.block.Action.PHYSICAL, pos, null, null, null);
         } else {
-            cancellable = new EntityInteractEvent(entity.bridge$getBukkitEntity(), CraftBlock.at(level, pos));
+            cancellable = new EntityInteractEvent(((EntityBridge) entity).bridge$getBukkitEntity(), CraftBlock.at(level, pos));
             Bukkit.getPluginManager().callEvent((EntityInteractEvent) cancellable);
         }
 

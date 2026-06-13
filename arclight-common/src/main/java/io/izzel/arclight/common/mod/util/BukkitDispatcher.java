@@ -6,9 +6,9 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.command.BukkitCommandWrapper;
-import org.bukkit.craftbukkit.v.command.VanillaCommandWrapper;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.command.BukkitCommandWrapper;
+import org.bukkit.craftbukkit.command.VanillaCommandWrapper;
 
 public class BukkitDispatcher extends CommandDispatcher<CommandSourceStack> {
 

@@ -19,7 +19,7 @@ public abstract class ServerChunkCache_MainThreadExecutorMixin extends Blockable
     // @formatter:on
 
     protected ServerChunkCache_MainThreadExecutorMixin(String nameIn) {
-        super(nameIn);
+        super(nameIn, true);
     }
 
     /**

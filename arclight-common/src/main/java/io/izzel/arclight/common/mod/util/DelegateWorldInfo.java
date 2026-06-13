@@ -4,33 +4,32 @@ import com.mojang.serialization.Lifecycle;
 import io.izzel.arclight.common.bridge.core.world.level.storage.DerivedLevelDataBridge;
 import io.izzel.arclight.common.bridge.core.world.level.storage.PrimaryLevelDataBridge;
 import net.minecraft.CrashReportCategory;
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.level.*;
-import net.minecraft.world.level.border.WorldBorder;
-import net.minecraft.world.level.levelgen.WorldOptions;
-import net.minecraft.world.level.storage.*;
-import net.minecraft.world.level.timers.TimerQueue;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.UUID;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.LevelSettings;
+import net.minecraft.world.level.WorldDataConfiguration;
+import net.minecraft.world.level.storage.LevelData;
+import net.minecraft.world.level.storage.PrimaryLevelData;
+import net.minecraft.world.level.storage.ServerLevelData;
+import net.minecraft.world.level.storage.PrimaryLevelData.SpecialWorldProperty;
+import net.minecraft.world.level.storage.WorldData;
 
 @SuppressWarnings("all")
 public class DelegateWorldInfo extends PrimaryLevelData {
 
     private final ServerLevelData serverLevelData;
 
-    public DelegateWorldInfo(LevelSettings levelSettings, WorldOptions worldOptions,
-                             SpecialWorldProperty specialWorldProperty, Lifecycle lifecycle,
+    public DelegateWorldInfo(LevelSettings levelSettings,
+                             SpecialWorldProperty specialWorldProperty,
+                             Lifecycle lifecycle,
                              ServerLevelData serverLevelData) {
-        super(levelSettings, worldOptions, specialWorldProperty, lifecycle);
+        super(levelSettings, specialWorldProperty, lifecycle);
         this.serverLevelData = serverLevelData;
     }
 
     @Override
-    public float getSpawnAngle() {
-        return serverLevelData.getSpawnAngle();
+    public LevelData.RespawnData getRespawnData() {
+        return serverLevelData.getRespawnData();
     }
 
     @Override
@@ -39,8 +38,13 @@ public class DelegateWorldInfo extends PrimaryLevelData {
     }
 
     @Override
-    public long getDayTime() {
-        return serverLevelData.getDayTime();
+    public void setGameTime(long time) {
+        serverLevelData.setGameTime(time);
+    }
+
+    @Override
+    public void setSpawn(LevelData.RespawnData respawnData) {
+        serverLevelData.setSpawn(respawnData);
     }
 
     @Override
@@ -49,73 +53,8 @@ public class DelegateWorldInfo extends PrimaryLevelData {
     }
 
     @Override
-    public int getClearWeatherTime() {
-        return serverLevelData.getClearWeatherTime();
-    }
-
-    @Override
-    public void setClearWeatherTime(int time) {
-        serverLevelData.setClearWeatherTime(time);
-    }
-
-    @Override
-    public boolean isThundering() {
-        return serverLevelData.isThundering();
-    }
-
-    @Override
-    public int getThunderTime() {
-        return serverLevelData.getThunderTime();
-    }
-
-    @Override
-    public boolean isRaining() {
-        return serverLevelData.isRaining();
-    }
-
-    @Override
-    public int getRainTime() {
-        return serverLevelData.getRainTime();
-    }
-
-    @Override
     public GameType getGameType() {
         return serverLevelData.getGameType();
-    }
-
-    @Override
-    public void setGameTime(long time) {
-        serverLevelData.setGameTime(time);
-    }
-
-    @Override
-    public void setDayTime(long time) {
-        serverLevelData.setDayTime(time);
-    }
-
-    @Override
-    public void setSpawn(BlockPos spawnPoint, float angle) {
-        serverLevelData.setSpawn(spawnPoint, angle);
-    }
-
-    @Override
-    public void setThundering(boolean thunderingIn) {
-        serverLevelData.setThundering(thunderingIn);
-    }
-
-    @Override
-    public void setThunderTime(int time) {
-        serverLevelData.setThunderTime(time);
-    }
-
-    @Override
-    public void setRaining(boolean isRaining) {
-        serverLevelData.setRaining(isRaining);
-    }
-
-    @Override
-    public void setRainTime(int time) {
-        serverLevelData.setRainTime(time);
     }
 
     @Override
@@ -144,21 +83,6 @@ public class DelegateWorldInfo extends PrimaryLevelData {
     }
 
     @Override
-    public GameRules getGameRules() {
-        return serverLevelData.getGameRules();
-    }
-
-    @Override
-    public WorldBorder.Settings getWorldBorder() {
-        return serverLevelData.getWorldBorder();
-    }
-
-    @Override
-    public void setWorldBorder(WorldBorder.Settings serializer) {
-        serverLevelData.setWorldBorder(serializer);
-    }
-
-    @Override
     public Difficulty getDifficulty() {
         return serverLevelData.getDifficulty();
     }
@@ -169,54 +93,12 @@ public class DelegateWorldInfo extends PrimaryLevelData {
     }
 
     @Override
-    public TimerQueue<MinecraftServer> getScheduledEvents() {
-        return serverLevelData.getScheduledEvents();
-    }
-
-    @Override
-    public int getWanderingTraderSpawnDelay() {
-        return serverLevelData.getWanderingTraderSpawnDelay();
-    }
-
-    @Override
-    public void setWanderingTraderSpawnDelay(int delay) {
-        serverLevelData.setWanderingTraderSpawnDelay(delay);
-    }
-
-    @Override
-    public int getWanderingTraderSpawnChance() {
-        return serverLevelData.getWanderingTraderSpawnChance();
-    }
-
-    @Override
-    public void setWanderingTraderSpawnChance(int chance) {
-        serverLevelData.setWanderingTraderSpawnChance(chance);
-    }
-
-    @Nullable
-    @Override
-    public UUID getWanderingTraderId() {
-        return serverLevelData.getWanderingTraderId();
-    }
-
-    @Override
-    public void setWanderingTraderId(UUID id) {
-        serverLevelData.setWanderingTraderId(id);
-    }
-
-    @Override
-    public void fillCrashReportCategory(CrashReportCategory crashReportCategory, LevelHeightAccessor levelHeightAccessor) {
+    public void fillCrashReportCategory(CrashReportCategory crashReportCategory, net.minecraft.world.level.LevelHeightAccessor levelHeightAccessor) {
         serverLevelData.fillCrashReportCategory(crashReportCategory, levelHeightAccessor);
     }
 
-    @Override
-    public BlockPos getSpawnPos() {
-        return serverLevelData.getSpawnPos();
-    }
-
-
     public static DelegateWorldInfo wrap(ServerLevelData data) {
-        return new DelegateWorldInfo(worldSettings(data), generatorSettings(data), specialWorldProperty(data), lifecycle(data), data);
+        return new DelegateWorldInfo(worldSettings(data), specialWorldProperty(data), lifecycle(data), data);
     }
 
     private static LevelSettings worldSettings(ServerLevelData data) {
@@ -226,33 +108,26 @@ public class DelegateWorldInfo extends PrimaryLevelData {
             return bridged.bridge$getWorldSettings();
         }
 
-        if (data instanceof WorldData p) {
-            return p.getLevelSettings();
+        if (data instanceof WorldData worldData) {
+            return worldData.getLevelSettings();
         }
 
-        return new LevelSettings(data.getLevelName(), data.getGameType(), data.isHardcore(), data.getDifficulty(),
-                data.isAllowCommands(), data.getGameRules(), WorldDataConfiguration.DEFAULT);
-    }
-
-    private static WorldOptions generatorSettings(ServerLevelData data) {
-        data = resolveDelegate(data);
-
-        if (data instanceof WorldData p) {
-            return p.worldGenOptions();
-        }
-
-        return WorldOptions.defaultWithRandomSeed();
+        return new LevelSettings(
+            data.getLevelName(),
+            data.getGameType(),
+            new LevelSettings.DifficultySettings(data.getDifficulty(), data.isHardcore(), data.isDifficultyLocked()),
+            data.isAllowCommands(),
+            WorldDataConfiguration.DEFAULT
+        );
     }
 
     private static SpecialWorldProperty specialWorldProperty(ServerLevelData data) {
         data = resolveDelegate(data);
 
-        if (data instanceof WorldData d) {
-            return (d.isFlatWorld() ?
-                    SpecialWorldProperty.FLAT :
-                    (d.isDebugWorld() ?
-                            SpecialWorldProperty.DEBUG :
-                            SpecialWorldProperty.NONE));
+        if (data instanceof WorldData worldData) {
+            return worldData.isFlatWorld()
+                ? SpecialWorldProperty.FLAT
+                : (worldData.isDebugWorld() ? SpecialWorldProperty.DEBUG : SpecialWorldProperty.NONE);
         }
 
         return SpecialWorldProperty.NONE;
@@ -264,8 +139,8 @@ public class DelegateWorldInfo extends PrimaryLevelData {
             return bridged.bridge$getLifecycle();
         }
 
-        if (data instanceof WorldData p) {
-            return p.worldGenSettingsLifecycle();
+        if (data instanceof WorldData worldData) {
+            return worldData.worldGenSettingsLifecycle();
         }
 
         return Lifecycle.stable();

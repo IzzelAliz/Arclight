@@ -8,9 +8,10 @@ import com.mojang.serialization.Lifecycle;
 import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.server.dedicated.DedicatedServerBridge;
-import io.izzel.arclight.common.bridge.core.world.level.GameRules_ValueBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.level.storage.LevelStorageSourceBridge;
 import io.izzel.arclight.common.bridge.core.world.level.storage.PrimaryLevelDataBridge;
+import io.izzel.arclight.common.mod.server.ArclightServerLevels;
 import io.izzel.arclight.i18n.ArclightConfig;
 import jline.console.ConsoleReader;
 import net.minecraft.core.Registry;
@@ -19,7 +20,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.NbtException;
 import net.minecraft.nbt.ReportedNbtException;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.RegistryLayer;
 import net.minecraft.server.WorldLoader;
@@ -32,12 +33,17 @@ import net.minecraft.util.GsonHelper;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.ai.village.VillageSiege;
 import net.minecraft.world.entity.npc.CatSpawner;
-import net.minecraft.world.entity.npc.WanderingTraderSpawner;
+import net.minecraft.world.entity.npc.wanderingtrader.WanderingTraderSpawner;
 import net.minecraft.world.level.CustomSpawner;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.biome.BiomeManager;
+import net.minecraft.util.datafix.DataFixers;
+import net.minecraft.util.worldupdate.UpgradeProgress;
+import net.minecraft.world.level.storage.LevelResource;
+import net.minecraft.world.level.levelgen.WorldGenSettings;
+import net.minecraft.world.level.storage.SavedDataStorage;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.PatrolSpawner;
@@ -51,12 +57,12 @@ import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.CraftWorld;
-import org.bukkit.craftbukkit.v.command.CraftCommandMap;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v.generator.CraftWorldInfo;
-import org.bukkit.craftbukkit.v.scheduler.CraftScheduler;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.command.CraftCommandMap;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.generator.CraftWorldInfo;
+import org.bukkit.craftbukkit.scheduler.CraftScheduler;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.generator.BiomeProvider;
@@ -180,7 +186,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
         if (world == null) {
             return;
         }
-        this.worlds.remove(world.bridge$getWorld().getName().toLowerCase(Locale.ROOT));
+        this.worlds.remove(((WorldBridge) world).bridge$getWorld().getName().toLowerCase(Locale.ROOT));
     }
 
     /**
@@ -320,7 +326,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
                 case CUSTOM -> {
                     if (ArclightConfig.spec().getExperimental().canOverrideWorldgen()) {
                         isCustom = true;
-                        final var location = ResourceLocation.tryBuild("bukkit", name);
+                        final var location = Identifier.tryBuild("bukkit", name);
                         if (location == null) {
                             throw new IllegalArgumentException("Illegal world name: " + name);
                         }
@@ -342,27 +348,15 @@ public abstract class CraftServerMixin implements CraftServerBridge {
 
             Dynamic<?> dynamic;
             if (worldSession.hasWorldData()) {
-                LevelSummary worldinfo;
+                Dynamic<?> unfixed;
                 try {
-                    dynamic = worldSession.getDataTag();
-                    worldinfo = worldSession.getSummary(dynamic);
+                    unfixed = worldSession.getUnfixedDataTagWithFallback();
                 } catch (ReportedNbtException | IOException | NbtException ioexception) {
-                    LevelStorageSource.LevelDirectory convertable_b = worldSession.getLevelDirectory();
-                    MinecraftServer.LOGGER.warn("Failed to load world data from {}", convertable_b.dataFile(), ioexception);
-                    MinecraftServer.LOGGER.info("Attempting to use fallback");
-
-                    try {
-                        dynamic = worldSession.getDataTagFallback();
-                        worldinfo = worldSession.getSummary(dynamic);
-                    } catch (ReportedNbtException | IOException | NbtException ioexception1) {
-                        MinecraftServer.LOGGER.error("Failed to load world data from {}", convertable_b.oldDataFile(), ioexception1);
-                        MinecraftServer.LOGGER.error("Failed to load world data from {} and {}. World files may be corrupted. Shutting down.", convertable_b.dataFile(), convertable_b.oldDataFile());
-                        return null;
-                    }
-
-                    worldSession.restoreLevelDataFromOld();
+                    MinecraftServer.LOGGER.error("Failed to load world data. World files may be corrupted. Shutting down.", ioexception);
+                    return null;
                 }
 
+                LevelSummary worldinfo = worldSession.fixAndGetSummaryFromTag(unfixed);
                 if (worldinfo.requiresManualConversion()) {
                     MinecraftServer.LOGGER.info("This world must be opened in an older version (like 1.6.4) to be safely converted");
                     return null;
@@ -372,40 +366,44 @@ public abstract class CraftServerMixin implements CraftServerBridge {
                     MinecraftServer.LOGGER.info("This world was created by an incompatible version.");
                     return null;
                 }
+
+                dynamic = DataFixers.getFileFixer().fix(worldSession, unfixed, new UpgradeProgress());
             } else {
                 dynamic = null;
             }
 
             boolean hardcore = creator.hardcore();
             WorldLoader.DataLoadContext context = ((DedicatedServerBridge) this.console).arclight$dataLoadContext();
-            RegistryAccess.Frozen datapackDimensions = context.datapackDimensions();
-            Registry<LevelStem> datapackStems = datapackDimensions.registryOrThrow(Registries.LEVEL_STEM);
-            RegistryAccess.Frozen dimensions;
-            PrimaryLevelData levelData;
+            RegistryAccess.Frozen registryaccess = context.datapackDimensions();
+            Registry<LevelStem> registry = registryaccess.lookupOrThrow(Registries.LEVEL_STEM);
+            LevelDataAndDimensions.WorldDataAndGenSettings dataAndSettings;
             if (dynamic != null) {
-                LevelDataAndDimensions levelDataAndDimensions = LevelStorageSource.getLevelDataAndDimensions(dynamic, context.dataConfiguration(), datapackStems, context.datapackWorldgen());
-                levelData = (PrimaryLevelData)levelDataAndDimensions.worldData();
-                // Arclight start: handle base generator
+                LevelDataAndDimensions levelDataAndDimensions = LevelStorageSource.getLevelDataAndDimensions(worldSession, dynamic, context.dataConfiguration(), registry, context.datapackWorldgen());
+                dataAndSettings = levelDataAndDimensions.worldDataAndGenSettings();
                 if (!isCustom) {
-                    dimensions = levelDataAndDimensions.dimensions().dimensionsRegistryAccess();
+                    registryaccess = levelDataAndDimensions.dimensions().dimensionsRegistryAccess();
                 } else {
-                    dimensions = this.console.registries().getLayer(RegistryLayer.DIMENSIONS);
+                    registryaccess = this.console.registries().getLayer(RegistryLayer.DIMENSIONS);
                 }
-                // Arclight end
             } else {
-                WorldOptions options = new WorldOptions(creator.seed(), creator.generateStructures(), false);
-                LevelSettings settings = new LevelSettings(name, GameType.byId(this.getDefaultGameMode().getValue()), hardcore, Difficulty.EASY, false, new GameRules(), context.dataConfiguration());
-                // Arclight start: handle base generator
+                WorldOptions worldoptions = new WorldOptions(creator.seed(), creator.generateStructures(), false);
+                LevelSettings settings = new LevelSettings(name, GameType.byId(this.getDefaultGameMode().getValue()), new LevelSettings.DifficultySettings(Difficulty.EASY, hardcore, false), false, context.dataConfiguration());
+                WorldDimensions worldDimensions;
                 if (isCustom) {
                     DedicatedServerProperties.WorldDimensionData properties = new DedicatedServerProperties.WorldDimensionData(GsonHelper.parse(creator.generatorSettings().isEmpty() ? "{}" : creator.generatorSettings()), creator.type().name().toLowerCase(Locale.ROOT));
-                    WorldDimensions worldDimensions = properties.create(context.datapackWorldgen());
-                    WorldDimensions.Complete baked = worldDimensions.bake(datapackStems);
-                    Lifecycle lifecycle = baked.lifecycle().add(context.datapackWorldgen().allRegistriesLifecycle());
-                    levelData = new PrimaryLevelData(settings, options, baked.specialWorldProperty(), lifecycle);
-                    dimensions = baked.dimensionsRegistryAccess();
+                    worldDimensions = properties.create(context.datapackWorldgen());
+                } else {
+                    worldDimensions = new WorldDimensions(registry);
+                }
+                WorldDimensions.Complete baked = worldDimensions.bake(registry);
+                PrimaryLevelData.SpecialWorldProperty property;
+                Lifecycle lifecycle;
+                if (isCustom) {
+                    property = baked.specialWorldProperty();
+                    lifecycle = baked.lifecycle().add(context.datapackWorldgen().allRegistriesLifecycle());
+                    registryaccess = baked.dimensionsRegistryAccess();
                 } else {
                     WorldData template = this.console.getWorldData();
-                    final PrimaryLevelData.SpecialWorldProperty property;
                     if (template.isDebugWorld()) {
                         property = PrimaryLevelData.SpecialWorldProperty.DEBUG;
                     } else if (template.isFlatWorld()) {
@@ -413,28 +411,31 @@ public abstract class CraftServerMixin implements CraftServerBridge {
                     } else {
                         property = PrimaryLevelData.SpecialWorldProperty.NONE;
                     }
-                    levelData = new PrimaryLevelData(settings, options, property, template.worldGenSettingsLifecycle());
-                    dimensions = this.console.registries().getLayer(RegistryLayer.DIMENSIONS);
+                    lifecycle = template.worldGenSettingsLifecycle();
+                    registryaccess = this.console.registries().getLayer(RegistryLayer.DIMENSIONS);
                 }
-                // Arclight end
+                PrimaryLevelData primaryLevelData = new PrimaryLevelData(settings, property, lifecycle);
+                dataAndSettings = new LevelDataAndDimensions.WorldDataAndGenSettings(primaryLevelData, new WorldGenSettings(worldoptions, worldDimensions));
             }
 
-            Registry<LevelStem> stems = dimensions.registryOrThrow(Registries.LEVEL_STEM);
-            LevelStem stem = stems.get(actualDimension);
-            if (stem == null) {
-                throw new IllegalArgumentException("Unknown level stem: " + actualDimension);
-            }
-            if (actualDimension != null) {
-                ((PrimaryLevelDataBridge) levelData).arclight$offerCustomDimensions(stems);
-            }
+            registry = registryaccess.lookupOrThrow(Registries.LEVEL_STEM);
+            PrimaryLevelData levelData = (PrimaryLevelData) dataAndSettings.data();
+            ((PrimaryLevelDataBridge) levelData).arclight$offerCustomDimensions(registry);
             ((PrimaryLevelDataBridge) levelData).arclight$checkName(name);
             levelData.setModdedInfo(this.console.getServerModName(), this.console.getModdedStatus().shouldReportAsModified());
 
-            ((DedicatedServerBridge) this.console).arclight$forceUpgradeIfNeeded(worldSession, dimensions); // Arclight
+            ((DedicatedServerBridge) this.console).arclight$forceUpgradeIfNeeded(worldSession, registryaccess);
 
+            SavedDataStorage dimensionDataStorage = new SavedDataStorage(worldSession.getLevelPath(LevelResource.DATA), this.console.getFixerUpper(), this.console.registryAccess());
+            WorldOptions worldoptions = dataAndSettings.genSettings().options();
             long j = BiomeManager.obfuscateSeed(creator.seed());
-            List<CustomSpawner> list = ImmutableList.of(new PhantomSpawner(), new PatrolSpawner(), new CatSpawner(), new VillageSiege(), new WanderingTraderSpawner(levelData));
-            WorldInfo worldInfo = new CraftWorldInfo(levelData, worldSession, creator.environment(), (DimensionType)stem.type().value());
+            List<CustomSpawner> list = ImmutableList.of(new PhantomSpawner(), new PatrolSpawner(), new CatSpawner(), new VillageSiege(), new WanderingTraderSpawner(dimensionDataStorage));
+            LevelStem stem = registry.getValue(actualDimension);
+            if (stem == null) {
+                throw new IllegalArgumentException("Unknown level stem: " + actualDimension);
+            }
+
+            WorldInfo worldInfo = new CraftWorldInfo(levelData, worldoptions, worldSession, creator.environment(), stem.type().value());
             if (biomeProvider == null && generator != null) {
                 biomeProvider = generator.getDefaultBiomeProvider(worldInfo);
             }
@@ -446,22 +447,21 @@ public abstract class CraftServerMixin implements CraftServerBridge {
             } else if (name.equals(levelName + "_the_end")) {
                 worldKey = net.minecraft.world.level.Level.END;
             } else {
-                worldKey = ResourceKey.create(Registries.DIMENSION, ResourceLocation.withDefaultNamespace(name.toLowerCase(Locale.ROOT)));
-            }
-
-            if (!creator.keepSpawnInMemory()) {
-                ((GameRules_ValueBridge<GameRules.IntegerValue>)levelData.getGameRules().getRule(GameRules.RULE_SPAWN_CHUNK_RADIUS)).arclight$set(0, null);
+                worldKey = ResourceKey.create(Registries.DIMENSION, Identifier.withDefaultNamespace(name.toLowerCase(Locale.ROOT)));
             }
 
             this.bridge$offerBiomeProviderCache(name, biomeProvider);
             this.bridge$offerGeneratorCache(name, generator);
             this.bridge$offerEnvironmentCache(name, creator.environment());
-            ServerLevel internal = new ServerLevel(this.console, this.console.executor, worldSession, levelData, worldKey, stem, this.getServer().progressListenerFactory.create(levelData.getGameRules().getInt(GameRules.RULE_SPAWN_CHUNK_RADIUS)), levelData.isDebugWorld(), j, (List)(creator.environment() == World.Environment.NORMAL ? list : ImmutableList.of()), true, this.console.overworld().getRandomSequences());
+            ServerLevel internal = ArclightServerLevels.create(this.console, this.console.executor, worldSession, levelData, worldKey, stem, levelData.isDebugWorld(), j, creator.environment() == World.Environment.NORMAL ? list : ImmutableList.of(), true, dimensionDataStorage, dataAndSettings.genSettings(), creator.environment(), generator, biomeProvider);
             if (!this.worlds.containsKey(name.toLowerCase(Locale.ROOT))) {
                 return null;
             } else {
-                ((DedicatedServerBridge) this.console).arclight$prepareAndAddLevel(internal, levelData);
-                CraftWorld bukkit = internal.bridge$getWorld();
+                if (!creator.keepSpawnInMemory()) {
+                    internal.getGameRules().set(GameRules.RESPAWN_RADIUS, 0, this.console);
+                }
+                ((DedicatedServerBridge) this.console).arclight$prepareAndAddLevel(internal, levelData, worldoptions);
+                CraftWorld bukkit = ((WorldBridge) internal).bridge$getWorld();
                 this.pluginManager.callEvent(new WorldLoadEvent(bukkit));
                 return bukkit;
             }

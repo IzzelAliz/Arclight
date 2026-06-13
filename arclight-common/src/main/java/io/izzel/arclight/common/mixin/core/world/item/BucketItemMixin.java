@@ -13,7 +13,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.ItemStack;
@@ -22,9 +22,9 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.BucketPickup;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v.util.DummyGeneratorAccess;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.util.DummyGeneratorAccess;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -53,7 +53,7 @@ public abstract class BucketItemMixin implements BucketItemBridge {
             if (event.isCancelled()) {
                 ((ServerPlayer) playerIn).connection.send(new ClientboundBlockUpdatePacket(worldIn, pos));
                 ((ServerPlayerBridge) playerIn).bridge$getBukkitEntity().updateInventory();
-                return (ItemStack) DecorationOps.cancel().invoke(new InteractionResultHolder<>(InteractionResult.FAIL, stack));
+                return (ItemStack) DecorationOps.cancel().invoke(InteractionResult.FAIL);
             } else {
                 arclight$setCaptureItem(event.getItemStack());
             }
@@ -62,7 +62,7 @@ public abstract class BucketItemMixin implements BucketItemBridge {
     }
 
     @Inject(method = "use", at = @At("RETURN"))
-    private void arclight$clean(Level worldIn, Player playerIn, InteractionHand handIn, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {
+    private void arclight$clean(Level worldIn, Player playerIn, InteractionHand handIn, CallbackInfoReturnable<InteractionResult> cir) {
         arclight$setDirection(null);
         arclight$setClick(null);
         arclight$setHand(null);

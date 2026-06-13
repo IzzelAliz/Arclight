@@ -1,15 +1,16 @@
 package io.izzel.arclight.common.mixin.vanilla.world.entity.animal;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mixin.vanilla.world.entity.EntityMixin_Vanilla;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.animal.Cow;
-import net.minecraft.world.entity.animal.MushroomCow;
+import net.minecraft.world.entity.animal.cow.Cow;
+import net.minecraft.world.entity.animal.cow.MushroomCow;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.Level;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDropItemEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
@@ -42,7 +43,7 @@ public abstract class MushroomCowMixin_Vanilla extends EntityMixin_Vanilla {
     @Redirect(method = "shear", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private boolean arclight$shearDrop(Level instance, Entity entity) {
         var itemEntity = (ItemEntity) entity;
-        EntityDropItemEvent event = new EntityDropItemEvent(this.bridge$getBukkitEntity(), (org.bukkit.entity.Item) itemEntity.bridge$getBukkitEntity());
+        EntityDropItemEvent event = new EntityDropItemEvent(((EntityBridge) this).bridge$getBukkitEntity(), (org.bukkit.entity.Item) ((EntityBridge) itemEntity).bridge$getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             return false;

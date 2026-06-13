@@ -18,7 +18,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.stats.StatType;
 import net.minecraft.stats.Stats;
@@ -29,17 +29,17 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CookingBookCategory;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.dimension.LevelStem;
 import org.bukkit.*;
 import org.bukkit.block.Biome;
-import org.bukkit.craftbukkit.v.CraftStatistic;
-import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
-import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
-import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
-import org.bukkit.craftbukkit.v.util.CraftSpawnCategory;
+import org.bukkit.craftbukkit.CraftStatistic;
+import org.bukkit.craftbukkit.inventory.CraftRecipe;
+import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+import org.bukkit.craftbukkit.util.CraftNamespacedKey;
+import org.bukkit.craftbukkit.util.CraftSpawnCategory;
 import org.bukkit.enchantments.EnchantmentTarget;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
@@ -75,7 +75,7 @@ public class BukkitRegistry {
             .build());
     private static final Map<String, Art> ART_BY_NAME = Unsafe.getStatic(Art.class, "BY_NAME");
     private static final Map<Integer, Art> ART_BY_ID = Unsafe.getStatic(Art.class, "BY_ID");
-    private static final BiMap<ResourceLocation, Statistic> STATS = HashBiMap.create(Unsafe.getStatic(CraftStatistic.class, "statistics"));
+    private static final BiMap<Identifier, Statistic> STATS = HashBiMap.create(Unsafe.getStatic(CraftStatistic.class, "statistics"));
 
     public static void registerAll(DedicatedServer console) {
         loadMaterials();
@@ -116,24 +116,17 @@ public class BukkitRegistry {
             ArclightServer.LOGGER.warn("This is a bug, and will cause commands like mvgamerule not working properly. Please report this!");
             return;
         }
-        GameRules.visitGameRuleTypes(new GameRules.GameRuleTypeVisitor() {
+        new net.minecraft.world.level.gamerules.GameRules(net.minecraft.world.flag.FeatureFlags.DEFAULT_FLAGS).visitGameRuleTypes(new net.minecraft.world.level.gamerules.GameRuleTypeVisitor() {
             @Override
-            public <T extends GameRules.Value<T>> void visit(GameRules.Key<T> key, GameRules.Type<T> type) {
-                if (!gameRules.containsKey(key.getId())) {
-                    Class<?> clazz;
-                    var argType = type.createRule();
-                    if (argType instanceof GameRules.BooleanValue) {
-                        clazz = Boolean.class;
-                    } else if (argType instanceof GameRules.IntegerValue) {
-                        clazz = Integer.class;
-                    } else {
-                        clazz = String.class;
-                    }
+            public <T> void visit(net.minecraft.world.level.gamerules.GameRule<T> rule) {
+                String id = rule.id();
+                if (!gameRules.containsKey(id)) {
+                    Class<?> clazz = rule.valueClass();
                     try {
-                        var instance = constructor.newInstance(key.getId(), clazz);
-                        gameRules.put(key.getId(), instance);
+                        var instance = constructor.newInstance(id, clazz);
+                        gameRules.put(id, instance);
                     } catch (ReflectiveOperationException e) {
-                        ArclightServer.LOGGER.warn("Cannot register custom game rule {} for bukkit!", key.getId(), e);
+                        ArclightServer.LOGGER.warn("Cannot register custom game rule {} for bukkit!", id, e);
                     }
                 }
             }
@@ -271,7 +264,7 @@ public class BukkitRegistry {
                 i++;
             }
         }
-        for (ResourceLocation location : BuiltInRegistries.CUSTOM_STAT) {
+        for (Identifier location : BuiltInRegistries.CUSTOM_STAT) {
             Statistic statistic = STATS.get(location);
             if (statistic == null) {
                 String standardName = ResourceLocationUtil.standardize(location);
@@ -292,7 +285,7 @@ public class BukkitRegistry {
         List<Art> newTypes = new ArrayList<>();
         Field key = Arrays.stream(Art.class.getDeclaredFields()).filter(it -> it.getName().equals("key")).findAny().orElse(null);
         long keyOffset = Unsafe.objectFieldOffset(key);
-        var reg = console.registryAccess().registryOrThrow(Registries.PAINTING_VARIANT);
+        var reg = console.registryAccess().lookupOrThrow(Registries.PAINTING_VARIANT);
         for (var paintingType : reg) {
             var location = reg.getKey(paintingType);
             String lookupName = location.getPath().toLowerCase(Locale.ROOT);
@@ -316,7 +309,7 @@ public class BukkitRegistry {
         List<Biome> newTypes = new ArrayList<>();
         Field key = Arrays.stream(Biome.class.getDeclaredFields()).filter(it -> it.getName().equals("key")).findAny().orElse(null);
         long keyOffset = Unsafe.objectFieldOffset(key);
-        var registry = console.registryAccess().registryOrThrow(Registries.BIOME);
+        var registry = console.registryAccess().lookupOrThrow(Registries.BIOME);
         for (net.minecraft.world.level.biome.Biome biome : registry) {
             var location = registry.getKey(biome);
             String name = ResourceLocationUtil.standardize(location);
@@ -344,12 +337,12 @@ public class BukkitRegistry {
             ResourceKey<LevelStem> key = entry.getKey();
             World.Environment environment = DIM_MAP.get(key);
             if (environment == null) {
-                String name = ResourceLocationUtil.standardize(key.location());
+                String name = ResourceLocationUtil.standardize(key.identifier());
                 environment = EnumHelper.makeEnum(World.Environment.class, name, i, ENV_CTOR, ImmutableList.of(i - 1));
                 newTypes.add(environment);
                 ENVIRONMENT_MAP.put(i - 1, environment);
                 DIM_MAP.put(key, environment);
-                ArclightServer.LOGGER.debug("Registered {} as environment {}", key.location(), environment);
+                ArclightServer.LOGGER.debug("Registered {} as environment {}", key.identifier(), environment);
                 i++;
             }
         }
@@ -362,7 +355,7 @@ public class BukkitRegistry {
         int i = origin;
         List<EntityType> newTypes = new ArrayList<>(BuiltInRegistries.ENTITY_TYPE.entrySet().size() - origin + 1); // UNKNOWN
         for (net.minecraft.world.entity.EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
-            ResourceLocation location = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+            Identifier location = BuiltInRegistries.ENTITY_TYPE.getKey(type);
             EntityType entityType = null;
             boolean found = false;
             if (location.getNamespace().equals(NamespacedKey.MINECRAFT)) {
@@ -417,7 +410,7 @@ public class BukkitRegistry {
         int origin = i;
         List<Material> list = new ArrayList<>();
         for (Block block : BuiltInRegistries.BLOCK) {
-            ResourceLocation location = BuiltInRegistries.BLOCK.getKey(block);
+            Identifier location = BuiltInRegistries.BLOCK.getKey(block);
             String name = ResourceLocationUtil.standardize(location);
             Material material = BY_NAME.get(name);
             if (material == null) {
@@ -433,7 +426,7 @@ public class BukkitRegistry {
             }
             BLOCK_MATERIAL.put(block, material);
             MATERIAL_BLOCK.put(material, block);
-            Item value = BuiltInRegistries.ITEM.get(location);
+            Item value = BuiltInRegistries.ITEM.getValue(location);
             if (value != null && value != Items.AIR) {
                 ((MaterialBridge) (Object) material).bridge$setItem();
                 ITEM_MATERIAL.put(value, material);
@@ -441,7 +434,7 @@ public class BukkitRegistry {
             }
         }
         for (Item item : BuiltInRegistries.ITEM) {
-            ResourceLocation location = BuiltInRegistries.ITEM.getKey(item);
+            Identifier location = BuiltInRegistries.ITEM.getKey(item);
             String name = ResourceLocationUtil.standardize(location);
             Material material = BY_NAME.get(name);
             if (material == null) {
@@ -455,7 +448,7 @@ public class BukkitRegistry {
             }
             ITEM_MATERIAL.put(item, material);
             MATERIAL_ITEM.put(material, item);
-            Block value = BuiltInRegistries.BLOCK.get(location);
+            Block value = BuiltInRegistries.BLOCK.getValue(location);
             if (value != null && value != Blocks.AIR) {
                 ((MaterialBridge) (Object) material).bridge$setBlock();
                 BLOCK_MATERIAL.put(value, material);
@@ -466,11 +459,11 @@ public class BukkitRegistry {
         ArclightServer.LOGGER.info("registry.material", i - origin, blocks, items);
     }
 
-    private static MaterialPropertySpec matSpec(ResourceLocation location) {
+    private static MaterialPropertySpec matSpec(Identifier location) {
         return ArclightConfig.spec().getCompat().getMaterial(location.toString()).orElse(MaterialPropertySpec.EMPTY);
     }
 
-    private static EntityPropertySpec entitySpec(ResourceLocation location) {
+    private static EntityPropertySpec entitySpec(Identifier location) {
         return ArclightConfig.spec().getCompat().getEntity(location.toString()).orElse(EntityPropertySpec.EMPTY);
     }
 

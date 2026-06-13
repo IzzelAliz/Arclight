@@ -1,5 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.BlockPos;
@@ -12,9 +14,9 @@ import net.minecraft.world.item.LeadItem;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.CraftEquipmentSlot;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.CraftEquipmentSlot;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -47,7 +49,7 @@ public class LeadItemMixin {
         var leashableList = (List<Leashable>) DecorationOps.callsite().invoke(level, blockPos, predicate);
         var leashFenceKnotEntity = LeashFenceKnotEntity.getOrCreateKnot(level, blockPos);
         var hand = CraftEquipmentSlot.getHand(arclight$hand);
-        var event = new HangingPlaceEvent((org.bukkit.entity.Hanging) leashFenceKnotEntity.bridge$getBukkitEntity(), player != null ? (org.bukkit.entity.Player) player.bridge$getBukkitEntity() : null, CraftBlock.at(level, blockPos), org.bukkit.block.BlockFace.SELF, hand);
+        var event = new HangingPlaceEvent((org.bukkit.entity.Hanging) ((EntityBridge) leashFenceKnotEntity).bridge$getBukkitEntity(), player != null ? (org.bukkit.entity.Player) ((ServerPlayerBridge) player).bridge$getBukkitEntity() : null, CraftBlock.at(level, blockPos), org.bukkit.block.BlockFace.SELF, hand);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             leashFenceKnotEntity.discard();

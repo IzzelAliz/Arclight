@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mod.server.entity;
 
-import net.minecraft.world.entity.monster.AbstractSkeleton;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.entity.CraftAbstractSkeleton;
+import net.minecraft.world.entity.monster.skeleton.AbstractSkeleton;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.entity.CraftAbstractSkeleton;
 import org.bukkit.entity.Skeleton;
 import org.jetbrains.annotations.NotNull;
 

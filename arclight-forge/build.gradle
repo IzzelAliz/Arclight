@@ -31,7 +31,7 @@ dependencies {
 
     implementation(project(':i18n-config')) { transitive = false }
 
-    common(project(path: ":arclight-common", configuration: "namedElements")) { transitive false }
+    common(project(path: ":arclight-common")) { transitive false }
     shadowBundle(project(path: ":arclight-common", configuration: "transformProductionForge")) { transitive = false }
 }
 
@@ -54,17 +54,20 @@ processResources {
     }
 }
 
+jar {
+    archiveClassifier = 'raw'
+}
+
 shadowJar {
+    dependsOn jar
+    mainSpec.sourcePaths.clear()
+    from(zipTree(jar.archiveFile))
+
     exclude 'fabric.mod.json'
     exclude 'architectury.common.json'
 
     configurations = [project.configurations.shadowBundle]
-    archiveClassifier = 'dev-shadow'
-}
-
-remapJar {
-    inputFile.set shadowJar.archiveFile
-    dependsOn shadowJar
+    archiveClassifier = null
 }
 
 tasks.register('srgJar', Jar) {

@@ -16,8 +16,8 @@ import net.minecraft.world.level.dimension.LevelStem;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.command.ColouredConsoleSender;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.command.ColouredConsoleSender;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.SimplePluginManager;
 import org.jetbrains.annotations.NotNull;
@@ -80,6 +80,7 @@ public class ArclightServer {
 
     @SuppressWarnings("ConstantConditions")
     public static CraftServer createOrLoad(DedicatedServer console, PlayerList playerList) {
+        setMinecraftServer(console);
         if (server == null) {
             try {
                 server = new CraftServer(console, playerList);
@@ -116,11 +117,13 @@ public class ArclightServer {
     }
 
     public static boolean isPrimaryThread() {
-        if (server == null) {
-            return Thread.currentThread().equals(getMinecraftServer().getRunningThread());
-        } else {
+        if (server != null) {
             return server.isPrimaryThread();
         }
+        if (vanillaServer != null) {
+            return Thread.currentThread().equals(vanillaServer.getRunningThread());
+        }
+        return true;
     }
 
     private static MinecraftServer vanillaServer;

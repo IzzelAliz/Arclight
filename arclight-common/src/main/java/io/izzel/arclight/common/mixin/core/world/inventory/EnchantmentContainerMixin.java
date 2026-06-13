@@ -21,11 +21,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.level.Level;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.enchantments.CraftEnchantment;
-import org.bukkit.craftbukkit.v.inventory.CraftInventoryEnchanting;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v.inventory.view.CraftEnchantmentView;
-import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
+import org.bukkit.craftbukkit.enchantments.CraftEnchantment;
+import org.bukkit.craftbukkit.inventory.CraftInventoryEnchanting;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.inventory.view.CraftEnchantmentView;
+import org.bukkit.craftbukkit.util.CraftNamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.enchantments.EnchantmentOffer;
 import org.bukkit.entity.Player;
@@ -88,7 +88,7 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
     @Decorate(method = "*", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/EnchantmentMenu;broadcastChanges()V"))
     private void arclight$prepareEnchantEvent(@Local(ordinal = 0) ItemStack itemstack,
                                               @Local(ordinal = 0) Level level) {
-        var registry = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
+        var registry = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
         CraftItemStack item = CraftItemStack.asCraftMirror(itemstack);
         var offers = new EnchantmentOffer[3];
         for (int j = 0; j < 3; ++j) {
@@ -113,7 +113,7 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
             EnchantmentOffer offer = event.getOffers()[j];
             if (offer != null) {
                 this.costs[j] = offer.getCost();
-                this.enchantClue[j] = registry.getId(registry.get(CraftNamespacedKey.toMinecraft(offer.getEnchantment().getKey())));
+                this.enchantClue[j] = registry.getId(registry.getValue(CraftNamespacedKey.toMinecraft(offer.getEnchantment().getKey())));
                 this.levelClue[j] = offer.getEnchantmentLevel();
             } else {
                 this.costs[j] = 0;
@@ -130,11 +130,11 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
                                                               @Local(ordinal = -1) Level level,
                                                               @Local(ordinal = -1) net.minecraft.world.entity.player.Player playerIn) throws Throwable {
         var list = (List<EnchantmentInstance>) DecorationOps.callsite().invoke(instance, registryAccess, itemStack, i, j);
-        IdMap<Holder<net.minecraft.world.item.enchantment.Enchantment>> registry = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).asHolderIdMap();
+        IdMap<Holder<net.minecraft.world.item.enchantment.Enchantment>> registry = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).asHolderIdMap();
 
         Map<Enchantment, Integer> enchants = new java.util.HashMap<>();
         for (EnchantmentInstance enchantmentInstance : list) {
-            enchants.put(CraftEnchantment.minecraftHolderToBukkit(enchantmentInstance.enchantment), enchantmentInstance.level);
+            enchants.put(CraftEnchantment.minecraftHolderToBukkit(enchantmentInstance.enchantment()), enchantmentInstance.level());
         }
         CraftItemStack item = CraftItemStack.asCraftMirror(itemStack);
 

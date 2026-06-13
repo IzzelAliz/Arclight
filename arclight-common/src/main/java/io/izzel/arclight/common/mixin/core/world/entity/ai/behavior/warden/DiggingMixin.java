@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.ai.behavior.warden;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.behavior.warden.Digging;
 import net.minecraft.world.entity.monster.warden.Warden;
@@ -14,6 +15,6 @@ public class DiggingMixin<E extends Warden> {
 
     @Inject(method = "stop(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/monster/warden/Warden;J)V", at = @At("HEAD"))
     private void arclight$despawn(ServerLevel serverLevel, E warden, long l, CallbackInfo ci) {
-        warden.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
+        ((EntityBridge) warden).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
     }
 }

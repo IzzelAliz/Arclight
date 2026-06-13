@@ -6,7 +6,7 @@ import io.izzel.arclight.common.mod.plugin.messaging.ArclightPluginChannel;
 import io.izzel.arclight.common.mod.plugin.messaging.ArclightRawPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerConfigurationNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.plugin.Plugin;
 
 public record ArclightFabricPayloadHandler(ArclightPluginChannel<ArclightFabricPayloadHandler> channel) implements FabricPayloadHandler {
@@ -26,7 +26,7 @@ public record ArclightFabricPayloadHandler(ArclightPluginChannel<ArclightFabricP
     @Override
     public void receive(ArclightRawPayload pkt, ServerConfigurationNetworking.Context ctx) {
         ctx.server().executeIfPossible(() -> {
-            var bukkit = ((ServerCommonPacketListenerImplBridge)ctx.networkHandler()).bridge$getCraftPlayer();
+            var bukkit = ((ServerCommonPacketListenerImplBridge)ctx.packetListener()).bridge$getCraftPlayer();
             channel.dispatchMessage(bukkit, pkt.arclight$leak());
         });
     }

@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.mod.server.entity;
 
-import net.minecraft.world.entity.vehicle.AbstractMinecartContainer;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.entity.CraftMinecartContainer;
+import net.minecraft.world.entity.vehicle.minecart.AbstractMinecartContainer;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.entity.CraftMinecartContainer;
 
 public class ArclightModMinecartContainer extends CraftMinecartContainer {
 

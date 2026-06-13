@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.AreaEffectCloudBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import io.izzel.arclight.mixin.Decorate;
@@ -11,8 +12,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
-import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Final;
@@ -62,7 +63,7 @@ public abstract class AreaEffectCloudMixin extends EntityMixin implements AreaEf
             if (d5 > (double) (radius * radius)) {
                 continue;
             }
-            affected.add((org.bukkit.entity.LivingEntity) entity.bridge$getBukkitEntity());
+            affected.add((org.bukkit.entity.LivingEntity) ((EntityBridge) entity).bridge$getBukkitEntity());
         }
         var event = CraftEventFactory.callAreaEffectCloudApplyEvent((AreaEffectCloud) (Object) this, affected);
         if (event.isCancelled()) {

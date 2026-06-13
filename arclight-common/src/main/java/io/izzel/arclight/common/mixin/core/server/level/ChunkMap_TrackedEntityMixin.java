@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ChunkMap_TrackedEntityBridge;
@@ -37,7 +38,7 @@ public abstract class ChunkMap_TrackedEntityMixin implements ChunkMap_TrackedEnt
 
     @Decorate(method = "updatePlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;broadcastToPlayer(Lnet/minecraft/server/level/ServerPlayer;)Z"))
     private boolean arclight$implementVanishing(Entity instance, ServerPlayer serverPlayer) throws Throwable {
-        boolean canSee =  ((ServerPlayerBridge)serverPlayer).bridge$getBukkitEntity().canSee(instance.bridge$getBukkitEntity());
+        boolean canSee =  ((ServerPlayerBridge)serverPlayer).bridge$getBukkitEntity().canSee(((io.izzel.arclight.common.bridge.core.entity.EntityBridge) instance).bridge$getBukkitEntity());
         boolean canBroadcast = (boolean) DecorationOps.callsite().invoke(instance, serverPlayer);
         return canSee && canBroadcast;
     }

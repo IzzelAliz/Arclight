@@ -11,13 +11,17 @@ loom {
 }
 
 dependencies {
-    modImplementation libs.fabric.loader
+    implementation libs.fabric.loader
 
-    compileOnly rootProject.ext.generatedSpigot
+    compileOnly rootProject.ext.generatedSpigotCompile
 
     implementation libs.izzel.tools
     implementation libs.arclight.api
     implementation libs.mixin.tools
+    compileOnly("net.fabricmc:sponge-mixin:0.17.3+mixin.0.8.7")
+    compileOnly libs.gson
+    annotationProcessor("net.fabricmc:sponge-mixin:0.17.3+mixin.0.8.7")
+    annotationProcessor(libs.gson)
     annotationProcessor(libs.mixin.tools) { transitive = false }
 
     // spigot
@@ -33,7 +37,29 @@ dependencies {
     implementation project(':i18n-config')
 }
 
+def commonMappingsDir = file('build/common_mappings')
+tasks.register('commonMappings', Copy) {
+    destinationDir = commonMappingsDir
+    from(arclight.mappingsConfiguration.bukkitToNeoForge) {
+        rename { 'bukkit_srg.srg' }
+    }
+    from(arclight.mappingsConfiguration.bukkitToForgeInheritance) {
+        rename { 'inheritanceMap.txt' }
+    }
+}
+sourceSets.main.output.dir commonMappingsDir, builtBy: tasks.named('commonMappings')
+
 compileJava {
+    dependsOn tasks.named('commonMappings')
+    options.compilerArgs.removeAll { it == '-proc:full' }
     options.compilerArgs << '-XDignore.symbol.file' << '-XDenableSunApiLintControl'
     options.encoding = 'UTF-8'
+    // 26.1+ unobfuscated: skip Mixin AP until refmap validation supports official mappings (use -PenableMixinAp to opt in)
+    if (!project.hasProperty('enableMixinAp')) {
+        options.compilerArgs << '-proc:none'
+    }
+    doFirst {
+        options.compilerArgs << "-Amixin.env.refMapRemappingFile=${arclight.mappingsConfiguration.bukkitToForge.canonicalPath}"
+        options.compilerArgs << "-Amixin.env.inheritanceMap=${arclight.mappingsConfiguration.bukkitToForgeInheritance.canonicalPath}"
+    }
 }

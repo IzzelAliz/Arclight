@@ -2,6 +2,8 @@ package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.attribute.EnvironmentAttributes;
+import net.minecraft.world.attribute.BedRule;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -34,7 +36,7 @@ public abstract class BedBlockMixin {
      */
     @Overwrite
     public InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
             return InteractionResult.CONSUME;
         } else {
             if (state.getValue(PART) != BedPart.HEAD) {
@@ -57,15 +59,16 @@ public abstract class BedBlockMixin {
             } else */
             if (state.getValue(OCCUPIED)) {
                 if (!this.kickVillagerOutOfBed(level, pos)) {
-                    player.displayClientMessage(Component.translatable("block.minecraft.bed.occupied"), true);
+                    player.sendOverlayMessage(Component.translatable("block.minecraft.bed.occupied"));
                 }
 
                 return InteractionResult.SUCCESS;
             } else {
+                BedRule bedRule = level.environmentAttributes().getValue(EnvironmentAttributes.BED_RULE, pos);
                 var maybeLeft = player.startSleepInBed(pos).left();
                 if (maybeLeft.isPresent()) {
                     final var problem = maybeLeft.get();
-                    if (!level.dimensionType().bedWorks()) {
+                    if (bedRule.explodes()) {
                         level.removeBlock(pos, false);
                         BlockPos blockpos = pos.relative(state.getValue(FACING).getOpposite());
                         if (level.getBlockState(blockpos).is((BedBlock) (Object) this)) {
@@ -74,8 +77,8 @@ public abstract class BedBlockMixin {
 
                         Vec3 vec3d = pos.getCenter();
                         level.explode(null, level.damageSources().badRespawnPointExplosion(vec3d), null, vec3d, 5.0F, true, Level.ExplosionInteraction.BLOCK);
-                    } else if (problem.getMessage() != null) {
-                        player.displayClientMessage(problem.getMessage(), true);
+                    } else if (problem.message() != null) {
+                        player.sendOverlayMessage(problem.message());
                     }
                 }
                 return InteractionResult.SUCCESS;

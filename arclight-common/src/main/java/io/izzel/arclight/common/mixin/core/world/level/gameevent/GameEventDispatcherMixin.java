@@ -1,5 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.gameevent;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
@@ -10,7 +12,7 @@ import net.minecraft.world.level.gameevent.GameEventDispatcher;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.CraftGameEvent;
+import org.bukkit.craftbukkit.CraftGameEvent;
 import org.bukkit.event.world.GenericGameEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,7 +28,7 @@ public class GameEventDispatcherMixin {
     private void arclight$gameEvent(Holder<GameEvent> holder, Vec3 vec3, GameEvent.Context context, @Local(ordinal = 0) int i) throws Throwable {
         var entity = context.sourceEntity();
         GenericGameEvent event = new GenericGameEvent(CraftGameEvent.minecraftToBukkit(holder.value()),
-            new Location(this.level.bridge$getWorld(), vec3.x(), vec3.y(), vec3.z()), (entity == null) ? null : entity.bridge$getBukkitEntity(), i, !Bukkit.isPrimaryThread());
+            new Location(((WorldBridge) this.level).bridge$getWorld(), vec3.x(), vec3.y(), vec3.z()), (entity == null) ? null : ((EntityBridge) entity).bridge$getBukkitEntity(), i, !Bukkit.isPrimaryThread());
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             DecorationOps.cancel().invoke();

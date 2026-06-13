@@ -8,9 +8,9 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.CommandEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.command.CraftBlockCommandSender;
-import org.bukkit.craftbukkit.v.entity.CraftEntity;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.command.CraftBlockCommandSender;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -20,8 +20,8 @@ public abstract class CraftServerMixin_NeoForge {
     @ModifyVariable(method = "dispatchCommand", remap = false, index = 2, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lorg/spigotmc/AsyncCatcher;catchOp(Ljava/lang/String;)V"))
     private String arclight$forge$forgeCommandEvent(String commandLine, CommandSender sender) {
         CommandSourceStack commandSource;
-        if (sender instanceof CraftEntity) {
-            commandSource = ((CraftEntity) sender).getHandle().createCommandSourceStack();
+        if (sender instanceof CraftPlayer craftPlayer) {
+            commandSource = craftPlayer.getHandle().createCommandSourceStack();
         } else if (sender == Bukkit.getConsoleSender()) {
             commandSource = ArclightServer.getMinecraftServer().createCommandSourceStack();
         } else if (sender instanceof CraftBlockCommandSender) {

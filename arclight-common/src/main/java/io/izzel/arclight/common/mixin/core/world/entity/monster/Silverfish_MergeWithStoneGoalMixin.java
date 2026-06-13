@@ -1,12 +1,13 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.InfestedBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -30,6 +31,6 @@ public abstract class Silverfish_MergeWithStoneGoalMixin extends RandomStrollGoa
 
     @Inject(method = "start", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/PathfinderMob;discard()V"))
     private void arclight$enterBlock(CallbackInfo ci) {
-        this.mob.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.ENTER_BLOCK);
+        ((EntityBridge) this.mob).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.ENTER_BLOCK);
     }
 }

@@ -1,13 +1,14 @@
 package io.izzel.arclight.neoforge.mixin.core.server.network;
 
 import io.izzel.arclight.common.mod.server.ArclightServer;
+import io.izzel.arclight.common.mod.util.ArclightBridges;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerLinks;
 import net.minecraft.server.network.ServerConfigurationPacketListenerImpl;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.CraftServerLinks;
+import org.bukkit.craftbukkit.CraftServerLinks;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerLinksSendEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,7 +27,7 @@ public abstract class ServerConfigurationPacketListenerImplMixin_NeoForge extend
     private ServerLinks arclight$sendLinksEvent(MinecraftServer instance) throws Throwable {
         var links = (ServerLinks) DecorationOps.callsite().invoke(instance);
         var wrapper = new CraftServerLinks(links);
-        var event = new PlayerLinksSendEvent((Player) bridge$getPlayer().bridge$getBukkitEntity(), wrapper);
+        var event = new PlayerLinksSendEvent(ArclightBridges.toBukkit(bridge$getPlayer()), wrapper);
         Bukkit.getPluginManager().callEvent(event);
         return wrapper.getServerLinks();
     }

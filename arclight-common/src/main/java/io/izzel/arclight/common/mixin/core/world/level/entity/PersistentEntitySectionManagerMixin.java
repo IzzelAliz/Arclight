@@ -13,7 +13,7 @@ import net.minecraft.world.level.entity.EntityPersistentStorage;
 import net.minecraft.world.level.entity.EntitySection;
 import net.minecraft.world.level.entity.EntitySectionStorage;
 import net.minecraft.world.level.entity.PersistentEntitySectionManager;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -49,7 +49,7 @@ public abstract class PersistentEntitySectionManagerMixin<T extends EntityAccess
     }
 
     public List<Entity> getEntities(ChunkPos chunkCoordIntPair) {
-        return sectionStorage.getExistingSectionsInChunk(chunkCoordIntPair.toLong())
+        return sectionStorage.getExistingSectionsInChunk(ChunkPos.pack(chunkCoordIntPair.x(), chunkCoordIntPair.z()))
             .flatMap(EntitySection::getEntities).map(o -> (Entity) o).collect(Collectors.toList());
     }
 
@@ -63,7 +63,7 @@ public abstract class PersistentEntitySectionManagerMixin<T extends EntityAccess
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/entity/EntityPersistentStorage;storeEntities(Lnet/minecraft/world/level/entity/ChunkEntities;)V"))
     private void arclight$fireUnload(long pos, @Local(ordinal = -1) List<T> list) {
         if (arclight$fireEvent) {
-            CraftEventFactory.callEntitiesUnloadEvent(((EntityStorage) permanentStorage).level, new ChunkPos(pos),
+            CraftEventFactory.callEntitiesUnloadEvent(((EntityStorage) permanentStorage).level, ChunkPos.unpack(pos),
                 list.stream().map(entity -> (Entity) entity).collect(Collectors.toList()));
         }
     }

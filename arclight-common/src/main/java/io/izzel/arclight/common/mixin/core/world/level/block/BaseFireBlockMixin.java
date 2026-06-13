@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -11,8 +12,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.dimension.LevelStem;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityCombustByBlockEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -26,7 +27,7 @@ public class BaseFireBlockMixin {
 
     @Decorate(method = "entityInside", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;igniteForSeconds(F)V"))
     private void arclight$onFire(Entity instance, float f, BlockState blockState, Level level, BlockPos blockPos) throws Throwable {
-        var event = new EntityCombustByBlockEvent(CraftBlock.at(level, blockPos), instance.bridge$getBukkitEntity(), f);
+        var event = new EntityCombustByBlockEvent(CraftBlock.at(level, blockPos), ((EntityBridge) instance).bridge$getBukkitEntity(), f);
         Bukkit.getPluginManager().callEvent(event);
 
         if (!event.isCancelled()) {

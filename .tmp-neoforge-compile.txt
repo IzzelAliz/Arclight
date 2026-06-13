@@ -1,0 +1,161 @@
+﻿.\gradlew : WARNING: A restricted method in java.lang.System has been called
+発生場所 C:\Users\SPLIGAN\AppData\Local\Temp\ps-script-a0d65d21-77e0-41ae-9aa6-a51272397c12.ps1:84 文字:50
++ ... \Arclight"; .\gradlew :arclight-neoforge:compileJava --no-daemon 2>&1 ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (WARNING: A rest...has been called:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnam
+ed module (file:/C:/Users/SPLIGAN/.gradle/wrapper/dists/gradle-9.2.1-all/2lbhfocpgk6niea1fja7mj8kz/gradle-9.2.1/lib/nat
+ive-platform-0.22-milestone-29.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :buildSrc:compileJava UP-TO-DATE
+> Task :buildSrc:compileGroovy
+> Task :buildSrc:processResources NO-SOURCE
+> Task :buildSrc:classes
+> Task :buildSrc:jar UP-TO-DATE
+
+> Configure project :
+Architect Plugin: 3.5.167
+Architectury Loom: 1.14.476
+This version of Architectury Loom is in beta! Please report any issues you encounter: https://github.com/architectury/architectury-loom/issues
+
+> Configure project :arclight-common
+Setup for Spigot 26.1.2(4628)
+:spigot build cache valid, using it
+
+> Configure project :arclight-fabric
+Setup for Spigot 26.1.2(4628)
+:spigot build cache valid, using it
+
+> Configure project :arclight-neoforge
+Setup for Spigot 26.1.2(4628)
+:spigot build cache valid, using it
+
+> Task :arclight-common:commonMappings UP-TO-DATE
+> Task :i18n-config:compileJava UP-TO-DATE
+> Task :i18n-config:processResources UP-TO-DATE
+> Task :i18n-config:classes UP-TO-DATE
+> Task :i18n-config:jar UP-TO-DATE
+> Task :arclight-common:compileJava UP-TO-DATE
+
+> Task :arclight-neoforge:compileJava
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\core\world\
+item\ItemMixin_NeoForge.java:7: 繧ｨ繝ｩ繝ｼ: 繧ｷ繝ｳ繝懊Ν繧定ｦ九▽縺代ｉ繧後∪縺帙ｓ
+import net.minecraft.world.entity.projectile.AbstractArrow;
+                                            ^
+  繧ｷ繝ｳ繝懊Ν:   繧ｯ繝ｩ繧ｹ AbstractArrow
+  蝣ｴ謇: 繝代ャ繧ｱ繝ｼ繧ｸ net.minecraft.world.entity.projectile
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\core\world\
+item\ItemMixin_NeoForge.java:21: 繧ｨ繝ｩ繝ｼ: 繧ｷ繝ｳ繝懊Ν繧定ｦ九▽縺代ｉ繧後∪縺帙ｓ
+    public AbstractArrow bridge$forge$customArrow(BowItem bowItem, ItemStack weapon, ItemStack projectile, AbstractArro
+w arrow) {
+                                                                                                           ^
+  繧ｷ繝ｳ繝懊Ν:   繧ｯ繝ｩ繧ｹ AbstractArrow
+  蝣ｴ謇: 繧ｯ繝ｩ繧ｹ ItemMixin_NeoForge
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\core\world\
+item\ItemMixin_NeoForge.java:21: 繧ｨ繝ｩ繝ｼ: 繧ｷ繝ｳ繝懊Ν繧定ｦ九▽縺代ｉ繧後∪縺帙ｓ
+    public AbstractArrow bridge$forge$customArrow(BowItem bowItem, ItemStack weapon, ItemStack projectile, AbstractArro
+w arrow) {
+           ^
+  繧ｷ繝ｳ繝懊Ν:   繧ｯ繝ｩ繧ｹ AbstractArrow
+  蝣ｴ謇: 繧ｯ繝ｩ繧ｹ ItemMixin_NeoForge
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\VanillaInventoryCodeHooksMixin.java:18: 繧ｨ繝ｩ繝ｼ: 繧ｷ繝ｳ繝懊Ν繧定ｦ九▽縺代ｉ繧後∪縺帙ｓ
+import net.neoforged.neoforge.items.VanillaInventoryCodeHooks;
+                                   ^
+  繧ｷ繝ｳ繝懊Ν:   繧ｯ繝ｩ繧ｹ VanillaInventoryCodeHooks
+  蝣ｴ謇: 繝代ャ繧ｱ繝ｼ繧ｸ net.neoforged.neoforge.items
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\event\BlockBr
+eakEventDispatcher.java:16: 繧ｨ繝ｩ繝ｼ: 繧ｷ繝ｳ繝懊Ν繧定ｦ九▽縺代ｉ繧後∪縺帙ｓ
+    public void onBreakBlock(BlockEvent.BreakEvent event) {
+                                       ^
+  繧ｷ繝ｳ繝懊Ν:   繧ｯ繝ｩ繧ｹ BreakEvent
+  蝣ｴ謇: 繧ｯ繝ｩ繧ｹ BlockEvent
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\NeoForgeCommo
+nImpl.java:5: 繧ｨ繝ｩ繝ｼ: 繝代ャ繧ｱ繝ｼ繧ｸcpw.mods.modlauncher縺ｯ蟄伜惠縺励∪縺帙ｓ
+import cpw.mods.modlauncher.ClassTransformer;
+                           ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\NeoForgeCommo
+nImpl.java:6: 繧ｨ繝ｩ繝ｼ: 繝代ャ繧ｱ繝ｼ繧ｸcpw.mods.modlauncher縺ｯ蟄伜惠縺励∪縺帙ｓ
+import cpw.mods.modlauncher.TransformingClassLoader;
+                           ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\VanillaInventoryCodeHooksMixin.java:34: 繧ｨ繝ｩ繝ｼ: 繧ｷ繝ｳ繝懊Ν繧定ｦ九▽縺代ｉ繧後∪縺帙ｓ
+@Mixin(VanillaInventoryCodeHooks.class)
+       ^
+  繧ｷ繝ｳ繝懊Ν: 繧ｯ繝ｩ繧ｹ VanillaInventoryCodeHooks
+繧ｨ繝ｩ繝ｼ8蛟・
+
+> Task :arclight-neoforge:compileJava FAILED
+
+[Incubating] Problems report is available at: file:///C:/Users/SPLIGAN/Documents/GitHub/Arclight/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':arclight-neoforge:compileJava'.
+> Compilation failed; see the compiler output below.
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\core\worl
+d\item\ItemMixin_NeoForge.java:7: 繧ｨ繝ｩ繝ｼ: 繧ｷ繝ｳ繝懊Ν繧定ｦ九▽縺代ｉ繧後∪縺帙ｓ
+  import net.minecraft.world.entity.projectile.AbstractArrow;
+                                              ^
+    繧ｷ繝ｳ繝懊Ν:   繧ｯ繝ｩ繧ｹ AbstractArrow
+    蝣ｴ謇: 繝代ャ繧ｱ繝ｼ繧ｸ net.minecraft.world.entity.projectile
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\core\worl
+d\item\ItemMixin_NeoForge.java:21: 繧ｨ繝ｩ繝ｼ: 繧ｷ繝ｳ繝懊Ν繧定ｦ九▽縺代ｉ繧後∪縺帙ｓ
+      public AbstractArrow bridge$forge$customArrow(BowItem bowItem, ItemStack weapon, ItemStack projectile, AbstractAr
+row arrow) {
+                                                                                                             ^
+    繧ｷ繝ｳ繝懊Ν:   繧ｯ繝ｩ繧ｹ AbstractArrow
+    蝣ｴ謇: 繧ｯ繝ｩ繧ｹ ItemMixin_NeoForge
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\core\worl
+d\item\ItemMixin_NeoForge.java:21: 繧ｨ繝ｩ繝ｼ: 繧ｷ繝ｳ繝懊Ν繧定ｦ九▽縺代ｉ繧後∪縺帙ｓ
+      public AbstractArrow bridge$forge$customArrow(BowItem bowItem, ItemStack weapon, ItemStack projectile, AbstractAr
+row arrow) {
+             ^
+    繧ｷ繝ｳ繝懊Ν:   繧ｯ繝ｩ繧ｹ AbstractArrow
+    蝣ｴ謇: 繧ｯ繝ｩ繧ｹ ItemMixin_NeoForge
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\
+items\VanillaInventoryCodeHooksMixin.java:18: 繧ｨ繝ｩ繝ｼ: 繧ｷ繝ｳ繝懊Ν繧定ｦ九▽縺代ｉ繧後∪縺帙ｓ
+  import net.neoforged.neoforge.items.VanillaInventoryCodeHooks;
+                                     ^
+    繧ｷ繝ｳ繝懊Ν:   繧ｯ繝ｩ繧ｹ VanillaInventoryCodeHooks
+    蝣ｴ謇: 繝代ャ繧ｱ繝ｼ繧ｸ net.neoforged.neoforge.items
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\event\Block
+BreakEventDispatcher.java:16: 繧ｨ繝ｩ繝ｼ: 繧ｷ繝ｳ繝懊Ν繧定ｦ九▽縺代ｉ繧後∪縺帙ｓ
+      public void onBreakBlock(BlockEvent.BreakEvent event) {
+                                         ^
+    繧ｷ繝ｳ繝懊Ν:   繧ｯ繝ｩ繧ｹ BreakEvent
+    蝣ｴ謇: 繧ｯ繝ｩ繧ｹ BlockEvent
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\
+items\VanillaInventoryCodeHooksMixin.java:34: 繧ｨ繝ｩ繝ｼ: 繧ｷ繝ｳ繝懊Ν繧定ｦ九▽縺代ｉ繧後∪縺帙ｓ
+  @Mixin(VanillaInventoryCodeHooks.class)
+         ^
+    繧ｷ繝ｳ繝懊Ν: 繧ｯ繝ｩ繧ｹ VanillaInventoryCodeHooks
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\NeoForgeCom
+monImpl.java:5: 繧ｨ繝ｩ繝ｼ: 繝代ャ繧ｱ繝ｼ繧ｸcpw.mods.modlauncher縺ｯ蟄伜惠縺励∪縺帙ｓ
+  import cpw.mods.modlauncher.ClassTransformer;
+                             ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\NeoForgeCom
+monImpl.java:6: 繧ｨ繝ｩ繝ｼ: 繝代ャ繧ｱ繝ｼ繧ｸcpw.mods.modlauncher縺ｯ蟄伜惠縺励∪縺帙ｓ
+  import cpw.mods.modlauncher.TransformingClassLoader;
+                             ^
+  繧ｨ繝ｩ繝ｼ8蛟・
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to generate a Build Scan (powered by Develocity).
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 19s
+9 actionable tasks: 2 executed, 7 up-to-date

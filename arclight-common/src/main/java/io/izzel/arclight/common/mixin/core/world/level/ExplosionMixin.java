@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.level;
 
 import com.mojang.datafixers.util.Pair;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge;
 import io.izzel.arclight.common.bridge.core.world.level.ExplosionBridge;
 import io.izzel.arclight.mixin.Decorate;
@@ -24,8 +25,8 @@ import net.minecraft.world.level.block.TntBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.TNTPrimeEvent;
@@ -108,7 +109,8 @@ public abstract class ExplosionMixin implements ExplosionBridge {
             for (var part : parts) {
                 // Calculate damage separately for each part
                 if (list.contains(part)) {
-                    result |= part.hurt(damageSource, f);
+                    part.hurt(damageSource, f);
+                    result = true;
                 }
             }
         } else {
@@ -131,7 +133,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
         var force = dx * dx + dy * dy + dz * dz;
         if (entity instanceof LivingEntity) {
             var result = entity.getDeltaMovement().add(vec3);
-            var event = CraftEventFactory.callEntityKnockbackEvent((CraftLivingEntity) entity.bridge$getBukkitEntity(), source, EntityKnockbackEvent.KnockbackCause.EXPLOSION, force, vec3, result.x, result.y, result.z);
+            var event = CraftEventFactory.callEntityKnockbackEvent((CraftLivingEntity) ((EntityBridge) entity).bridge$getBukkitEntity(), source, EntityKnockbackEvent.KnockbackCause.EXPLOSION, force, vec3, result.x, result.y, result.z);
             vec3 = (event.isCancelled()) ? Vec3.ZERO : new Vec3(event.getFinalKnockback().getX(), event.getFinalKnockback().getY(), event.getFinalKnockback().getZ()).subtract(entity.getDeltaMovement());
         }
         return vec3;
@@ -181,7 +183,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
     private boolean arclight$callBlockExplodeEvent() {
         boolean wasCancelled;
 
-        org.bukkit.World world = this.level.bridge$getWorld();
+        org.bukkit.World world = ((WorldBridge) this.level).bridge$getWorld();
         Location location = new Location(world, this.x, this.y, this.z);
         List<org.bukkit.block.Block> blockList = new ObjectArrayList<>();
         for (int i = this.toBlow.size() - 1; i >= 0; i--) {

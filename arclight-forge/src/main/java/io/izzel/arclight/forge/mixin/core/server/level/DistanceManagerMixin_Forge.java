@@ -13,23 +13,23 @@ import org.spongepowered.asm.mixin.Shadow;
 public abstract class DistanceManagerMixin_Forge implements DistanceManagerBridge {
 
     // @formatter:off
-    @Shadow(remap = false) @Final private Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> forcedTickets;
+    @Shadow(remap = false) @Final private Long2ObjectOpenHashMap<SortedArraySet<Ticket>> forcedTickets;
     // @formatter:on
 
     @Override
-    public boolean bridge$platform$isTicketForceTick(Ticket<?> ticket) {
+    public boolean bridge$platform$isTicketForceTick(Ticket ticket) {
         return ticket.isForceTicks();
     }
 
     @Override
-    public void bridge$forge$addForcedTicket(long chunkPosIn, Ticket<?> ticketIn) {
-        SortedArraySet<Ticket<?>> tickets = this.forcedTickets.computeIfAbsent(chunkPosIn, e -> SortedArraySet.create(4));
+    public void bridge$forge$addForcedTicket(long chunkPosIn, Ticket ticketIn) {
+        SortedArraySet<Ticket> tickets = this.forcedTickets.computeIfAbsent(chunkPosIn, e -> SortedArraySet.create(4));
         tickets.addOrGet(ticketIn);
     }
 
     @Override
-    public void bridge$forge$removeForcedTicket(long chunkPosIn, Ticket<?> ticketIn) {
-        SortedArraySet<Ticket<?>> tickets = this.forcedTickets.get(chunkPosIn);
+    public void bridge$forge$removeForcedTicket(long chunkPosIn, Ticket ticketIn) {
+        SortedArraySet<Ticket> tickets = this.forcedTickets.get(chunkPosIn);
         if (tickets != null) {
             tickets.remove(ticketIn);
         }

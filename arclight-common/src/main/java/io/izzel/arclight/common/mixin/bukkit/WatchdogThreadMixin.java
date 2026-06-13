@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import org.spigotmc.WatchdogThread;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;

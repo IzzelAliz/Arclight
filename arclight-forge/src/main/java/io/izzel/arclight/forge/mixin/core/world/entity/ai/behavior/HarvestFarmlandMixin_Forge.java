@@ -3,7 +3,7 @@ package io.izzel.arclight.forge.mixin.core.world.entity.ai.behavior;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.behavior.HarvestFarmland;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.villager.Villager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

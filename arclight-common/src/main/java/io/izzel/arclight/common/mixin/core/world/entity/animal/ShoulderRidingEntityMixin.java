@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
 import io.izzel.arclight.common.mixin.core.world.entity.TamableAnimalMixin;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.animal.ShoulderRidingEntity;
+import net.minecraft.world.entity.animal.parrot.ShoulderRidingEntity;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

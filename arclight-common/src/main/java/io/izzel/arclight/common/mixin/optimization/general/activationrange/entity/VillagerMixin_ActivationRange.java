@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.optimization.general.activationrange.enti
 
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mixin.optimization.general.activationrange.EntityMixin_ActivationRange;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.villager.Villager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 

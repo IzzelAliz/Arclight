@@ -48,7 +48,7 @@ public abstract class PrimaryLevelDataMixin implements PrimaryLevelDataBridge {
 
     @Redirect(method = "setTagData", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/WorldGenSettings;encode(Lcom/mojang/serialization/DynamicOps;Lnet/minecraft/world/level/levelgen/WorldOptions;Lnet/minecraft/core/RegistryAccess;)Lcom/mojang/serialization/DataResult;"))
     private <T extends Tag> DataResult<T> arclight$customDim(DynamicOps<T> ops, WorldOptions options, RegistryAccess registry) {
-        return WorldGenSettings.encode(ops, options, new WorldDimensions(this.customDimensions != null ? this.customDimensions : registry.registryOrThrow(Registries.LEVEL_STEM)));
+        return WorldGenSettings.CODEC.encodeStart(ops, new WorldGenSettings(options, new WorldDimensions(this.customDimensions != null ? this.customDimensions : registry.lookupOrThrow(Registries.LEVEL_STEM))));
     }
 
     @Inject(method = "setThundering", cancellable = true, at = @At("HEAD"))

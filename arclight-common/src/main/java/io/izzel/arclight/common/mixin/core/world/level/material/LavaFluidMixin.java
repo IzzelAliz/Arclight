@@ -9,7 +9,7 @@ import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
@@ -17,8 +17,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.LavaFluid;
-import org.bukkit.craftbukkit.v.block.CraftBlockState;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.block.CraftBlockState;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -38,7 +38,7 @@ public abstract class LavaFluidMixin implements LavaFluidBridge {
      */
     @Overwrite
     public void randomTick(Level world, BlockPos pos, FluidState state, RandomSource random) {
-        if (world.getGameRules().getBoolean(GameRules.RULE_DOFIRETICK)) {
+        if (world instanceof net.minecraft.server.level.ServerLevel serverLevel && serverLevel.getGameRules().get(GameRules.RANDOM_TICK_SPEED) > 0) {
             int i = random.nextInt(3);
             if (i > 0) {
                 BlockPos blockpos = pos;

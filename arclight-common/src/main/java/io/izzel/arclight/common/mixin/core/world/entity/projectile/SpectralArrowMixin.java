@@ -1,8 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.projectile.SpectralArrow;
+import net.minecraft.world.entity.projectile.arrow.SpectralArrow;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import net.minecraft.world.entity.player.Player;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
@@ -9,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(targets = "net.minecraft.world.entity.animal.Dolphin$DolphinSwimWithPlayerGoal")
+@Mixin(targets = "net.minecraft.world.entity.animal.dolphin.Dolphin$DolphinSwimWithPlayerGoal")
 public class DolphinEntity_SwimWithPlayerGoalMixin {
 
     // @formatter:off

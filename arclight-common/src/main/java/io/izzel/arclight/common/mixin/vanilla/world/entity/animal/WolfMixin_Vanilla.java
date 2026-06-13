@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.vanilla.world.entity.animal;
 import io.izzel.arclight.common.mixin.core.world.entity.TamableAnimalMixin;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.animal.Wolf;
+import net.minecraft.world.entity.animal.wolf.Wolf;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

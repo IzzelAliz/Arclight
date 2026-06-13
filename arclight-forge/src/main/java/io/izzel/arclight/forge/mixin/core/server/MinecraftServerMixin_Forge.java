@@ -2,9 +2,9 @@ package io.izzel.arclight.forge.mixin.core.server;
 
 import com.google.common.collect.ImmutableSet;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.ForcedChunksSavedData;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.world.ForgeChunkManager;
 import net.minecraftforge.event.level.LevelEvent;
@@ -39,8 +39,8 @@ public abstract class MinecraftServerMixin_Forge implements MinecraftServerBridg
     }
 
     @Override
-    public void bridge$forge$reinstatePersistentChunks(ServerLevel level, ForcedChunksSavedData savedData) {
-        ForgeChunkManager.reinstatePersistentChunks(level, savedData);
+    public void bridge$forge$reinstatePersistentChunks(ServerLevel level, LongSet forcedChunks) {
+        ForgeChunkManager.reinstatePersistentChunks(level, forcedChunks);
     }
 
     private static Set<IForgeRegistry<?>> arclight$registries() {

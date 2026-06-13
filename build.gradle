@@ -2,43 +2,58 @@ import io.izzel.arclight.gradle.ArclightGradlePlugin
 import io.izzel.arclight.gradle.tasks.UploadFilesTask
 
 plugins {
-    id 'architectury-plugin' version '3.4-SNAPSHOT' apply false
-    id 'dev.architectury.loom' apply false  // version: gradle/libs.versions.toml
+    id 'architectury-plugin' version '3.5-SNAPSHOT' apply false
+    id 'dev.architectury.loom-no-remap' apply false  // version: buildSrc libs.loom-no-remap
     id 'com.gradleup.shadow' version '8.3.+' apply false
 }
 
 allprojects {
     apply plugin: 'java'
 
+    configurations.configureEach {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'org.ow2.asm') {
+                details.useVersion libs.versions.asm.get()
+            }
+        }
+    }
+
     group 'io.izzel.arclight'
     version '1.0.2-SNAPSHOT'
 
     def getGitHash = { ->
-        def stdout = new ByteArrayOutputStream()
-        exec {
-            commandLine 'git', 'rev-parse', '--short', 'HEAD'
-            standardOutput = stdout
-        }
-        return stdout.toString().trim()
+        def proc = new ProcessBuilder('git', 'rev-parse', '--short', 'HEAD')
+            .directory(rootProject.projectDir)
+            .redirectErrorStream(true)
+            .start()
+        return proc.inputStream.text.trim()
     }
 
     ext {
         versionName = 'feudal-kings'
         gitHash = getGitHash()
-        supportedPlatforms = ['forge', 'neoforge', 'fabric']
+        def enableForge = gradle.startParameter.projectProperties.getOrDefault('enableForge', 'false') == 'true'
+        supportedPlatforms = enableForge ? ['forge', 'neoforge', 'fabric'] : ['neoforge', 'fabric']
         commonProject = project(':arclight-common')
-        forgeProject = project(':arclight-forge')
         fabricProject = project(':arclight-fabric')
         neoForgeProject = project(':arclight-neoforge')
-        platformProjects = [ext.forgeProject, ext.fabricProject, ext.neoForgeProject]
+        forgeProject = enableForge ? project(':arclight-forge') : null
+        platformProjects = enableForge
+                ? [forgeProject, fabricProject, neoForgeProject]
+                : [fabricProject, neoForgeProject]
         subProjects = ext.platformProjects + [ext.commonProject]
+        generatedSpigotCompile = "io.izzel.arclight.generated:spigot:${libs.versions.minecraft.get()}:deobf"
         generatedSpigot = "io.izzel.arclight.generated:spigot:${libs.versions.minecraft.get()}:deobf"
     }
 
     java {
         toolchain {
-            languageVersion = JavaLanguageVersion.of(21)
+            languageVersion = JavaLanguageVersion.of(25)
         }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.compilerArgs.add('-proc:full')
     }
 
     repositories {
@@ -68,7 +83,7 @@ allprojects {
 rootProject.ext.subProjects.each { Project p ->
     configure(p) {
         apply plugin: 'architectury-plugin'
-        apply plugin: 'dev.architectury.loom'
+        apply plugin: 'dev.architectury.loom-no-remap'
         apply plugin: ArclightGradlePlugin
 
         architectury {
@@ -107,10 +122,7 @@ rootProject.ext.subProjects.each { Project p ->
 
         dependencies {
             minecraft libs.minecraft
-            mappings loom.layered() {
-                officialMojangMappings()
-                parchment("org.parchmentmc.data:parchment-${libs.versions.minecraft.get()}:${libs.versions.parchment.get()}@zip")
-            }
+            // 26.1+: unobfuscated; no mappings layer (B-04/B-05)
         }
 
         java {
@@ -121,7 +133,7 @@ rootProject.ext.subProjects.each { Project p ->
 
 rootProject.ext.platformProjects.each { Project p ->
     configure(p) {
-        apply plugin: 'dev.architectury.loom'
+        apply plugin: 'dev.architectury.loom-no-remap'
         apply plugin: 'com.gradleup.shadow'
 
         loom {
@@ -148,18 +160,19 @@ jar.enabled = false
 
 tasks.register('collect', Copy) {
     destinationDir = file('build/libs')
-    from project(':bootstrap').tasks.forgeJar.outputs
+    if (gradle.startParameter.projectProperties.getOrDefault('enableForge', 'false') == 'true') {
+        from project(':bootstrap').tasks.forgeJar.outputs
+    }
     from project(':bootstrap').tasks.neoforgeJar.outputs
     from project(':bootstrap').tasks.fabricJar.outputs
 }
 
 def gitBranch() {
-    def stdout = new ByteArrayOutputStream()
-    exec {
-        commandLine 'git', 'rev-parse', '--abbrev-ref', 'HEAD'
-        standardOutput = stdout
-    }
-    return stdout.toString().trim()
+    def proc = new ProcessBuilder('git', 'rev-parse', '--abbrev-ref', 'HEAD')
+        .directory(rootProject.projectDir)
+        .redirectErrorStream(true)
+        .start()
+    return proc.inputStream.text.trim()
 }
 
 tasks.register('uploadFiles', UploadFilesTask) {

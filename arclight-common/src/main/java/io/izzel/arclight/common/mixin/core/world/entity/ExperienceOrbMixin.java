@@ -10,8 +10,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantedItemInUse;
-import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
@@ -81,12 +81,12 @@ public abstract class ExperienceOrbMixin extends EntityMixin {
 
     @Decorate(method = "playerTouch", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;giveExperiencePoints(I)V"))
     private void arclight$expChange(Player player, int amount) throws Throwable {
-        DecorationOps.callsite().invoke(player, CraftEventFactory.callPlayerExpChangeEvent(player, amount).getAmount());
+        DecorationOps.callsite().invoke(player, CraftEventFactory.callPlayerExpChangeEvent((ServerPlayer) player, amount).getAmount());
     }
 
     @Decorate(method = "playerTouch", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/entity/player/Player;takeXpDelay:I"))
     private void arclight$cooldown(Player instance, int value) throws Throwable {
-        DecorationOps.callsite().invoke(instance, CraftEventFactory.callPlayerXpCooldownEvent(instance, value, PlayerExpCooldownChangeEvent.ChangeReason.PICKUP_ORB).getNewCooldown());
+        DecorationOps.callsite().invoke(instance, CraftEventFactory.callPlayerXpCooldownEvent((ServerPlayer) instance, value, PlayerExpCooldownChangeEvent.ChangeReason.PICKUP_ORB).getNewCooldown());
     }
 
     @Decorate(method = "repairPlayerItems", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;setDamageValue(I)V"))

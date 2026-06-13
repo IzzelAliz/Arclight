@@ -21,7 +21,7 @@ public abstract class ShulkerMixin extends PathfinderMobMixin {
 
     @Decorate(method = "teleportSomewhere", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/Shulker;unRide()V"))
     private void arclight$teleportEvent(Shulker instance, @Local(ordinal = -1) BlockPos pos) throws Throwable {
-        EntityTeleportEvent teleport = new EntityTeleportEvent(this.getBukkitEntity(), this.getBukkitEntity().getLocation(), new Location(this.level().bridge$getWorld(), pos.getX(), pos.getY(), pos.getZ()));
+        EntityTeleportEvent teleport = new EntityTeleportEvent(this.getBukkitEntity(), this.getBukkitEntity().getLocation(), new Location(((WorldBridge) this.level()).bridge$getWorld(), pos.getX(), pos.getY(), pos.getZ()));
         Bukkit.getPluginManager().callEvent(teleport);
         if (!teleport.isCancelled()) {
             Location to = teleport.getTo();

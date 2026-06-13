@@ -1,10 +1,11 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.animal.FoxBridge;
-import net.minecraft.world.entity.animal.Fox;
+import net.minecraft.world.entity.animal.fox.Fox;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
@@ -29,6 +30,6 @@ public abstract class FoxMixin extends AnimalMixin implements FoxBridge {
 
     @Inject(method = "pickUpItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V"))
     private void arclight$pickCause(ItemEntity itemEntity, CallbackInfo ci) {
-        itemEntity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
+        ((EntityBridge) itemEntity).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
     }
 }

@@ -2,35 +2,32 @@ package io.izzel.arclight.common.mixin.core.world.item.crafting;
 
 import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeBridge;
 import io.izzel.arclight.common.mod.util.ArclightSpecialRecipe;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.AbstractCookingRecipe;
+import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.crafting.BlastingRecipe;
-import net.minecraft.world.item.crafting.CookingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.RecipeType;
 import org.bukkit.NamespacedKey;
-import org.bukkit.craftbukkit.v.inventory.CraftBlastingRecipe;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
+import org.bukkit.craftbukkit.inventory.CraftBlastingRecipe;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.inventory.CraftRecipe;
 import org.bukkit.inventory.Recipe;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(BlastingRecipe.class)
-public abstract class BlastingRecipeMixin extends AbstractCookingRecipe implements RecipeBridge {
+public abstract class BlastingRecipeMixin implements RecipeBridge {
 
-    public BlastingRecipeMixin(RecipeType<?> p_250197_, String p_249518_, CookingBookCategory p_250891_, Ingredient p_251354_, ItemStack p_252185_, float p_252165_, int p_250256_) {
-        super(p_250197_, p_249518_, p_250891_, p_251354_, p_252185_, p_252165_, p_250256_);
-    }
+    @Shadow protected abstract ItemStackTemplate result();
+    @Shadow public abstract Ingredient input();
 
     @Override
     public Recipe bridge$toBukkitRecipe(NamespacedKey id) {
-        if (this.result.isEmpty()) {
-            return new ArclightSpecialRecipe(id, this);
+        if (this.result().count() == 0) {
+            return new ArclightSpecialRecipe(id, (BlastingRecipe) (Object) this);
         }
-        CraftItemStack result = CraftItemStack.asCraftMirror(this.result);
-        CraftBlastingRecipe recipe = new CraftBlastingRecipe(id, result, CraftRecipe.toBukkit(this.ingredient), this.experience, this.cookingTime);
-        recipe.setGroup(this.group);
-        recipe.setCategory(CraftRecipe.getCategory(this.category()));
-        return recipe;
+        BlastingRecipe recipe = (BlastingRecipe) (Object) this;
+        CraftBlastingRecipe bukkit = new CraftBlastingRecipe(id, CraftItemStack.asCraftMirror(this.result().create()), CraftRecipe.toBukkit(this.input()), recipe.experience(), recipe.cookingTime());
+        bukkit.setGroup(recipe.group());
+        bukkit.setCategory(CraftRecipe.getCategory(recipe.category()));
+        return bukkit;
     }
 }

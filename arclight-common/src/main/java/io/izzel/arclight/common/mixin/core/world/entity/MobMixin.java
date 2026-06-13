@@ -1,12 +1,15 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.MobBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
-import net.minecraft.nbt.CompoundTag;
+import io.izzel.arclight.common.mod.util.ArclightNbtHelper;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -17,8 +20,8 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityKnockbackEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
@@ -162,14 +165,14 @@ public abstract class MobMixin extends LivingEntityMixin implements MobBridge {
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("HEAD"))
-    private void arclight$setAware(CompoundTag compound, CallbackInfo ci) {
-        compound.putBoolean("Bukkit.Aware", this.aware);
+    private void arclight$setAware(ValueOutput output, CallbackInfo ci) {
+        output.putBoolean("Bukkit.Aware", this.aware);
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("HEAD"))
-    private void arclight$readAware(CompoundTag compound, CallbackInfo ci) {
-        if (compound.contains("Bukkit.Aware")) {
-            this.aware = compound.getBoolean("Bukkit.Aware");
+    private void arclight$readAware(ValueInput input, CallbackInfo ci) {
+        if (ArclightNbtHelper.contains(input, "Bukkit.Aware")) {
+            this.aware = ArclightNbtHelper.getBoolean(input, "Bukkit.Aware");
         }
     }
 
@@ -193,7 +196,7 @@ public abstract class MobMixin extends LivingEntityMixin implements MobBridge {
 
     @Inject(method = "pickUpItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V"))
     private void arclight$pickupCause(ItemEntity itemEntity, CallbackInfo ci) {
-        itemEntity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
+        ((EntityBridge) itemEntity).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
     }
 
     @Override

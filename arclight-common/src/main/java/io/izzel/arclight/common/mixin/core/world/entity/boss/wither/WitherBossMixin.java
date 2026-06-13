@@ -11,7 +11,7 @@ import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
@@ -29,14 +29,13 @@ public abstract class WitherBossMixin extends PathfinderMobMixin {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
     }
 
-    @Decorate(method = "customServerAiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;)Lnet/minecraft/world/level/Explosion;"))
-    private Explosion arclight$explodeEvent(Level instance, Entity arg, double d, double e, double f, float radius, boolean fire, Level.ExplosionInteraction arg2) throws Throwable {
+    @Decorate(method = "customServerAiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;)V"))
+    private void arclight$explodeEvent(Level instance, Entity arg, double d, double e, double f, float radius, boolean fire, Level.ExplosionInteraction arg2) throws Throwable {
         ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), radius, fire);
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
-            return (Explosion) DecorationOps.callsite().invoke(instance, arg, d, e, f, event.getRadius(), event.getFire(), arg2);
+            DecorationOps.callsite().invoke(instance, arg, d, e, f, event.getRadius(), event.getFire(), arg2);
         }
-        return null;
     }
 
     @Decorate(method = "customServerAiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/boss/wither/WitherBoss;setAlternativeTarget(II)V"))

@@ -1,7 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.level.portal;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.level.portal.PortalForcerBridge;
-import net.minecraft.BlockUtil;
+import net.minecraft.util.BlockUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -9,8 +11,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.portal.PortalForcer;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.CraftWorld;
-import org.bukkit.craftbukkit.v.util.BlockStateListPopulator;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.util.BlockStateListPopulator;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -70,14 +72,14 @@ public abstract class PortalForcerMixin implements PortalForcerBridge {
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Inject(method = "createPortal", cancellable = true, at = @At("RETURN"))
     private void arclight$portalCreate(BlockPos pos, Direction.Axis axis, CallbackInfoReturnable<Optional<BlockUtil.FoundRectangle>> cir) {
-        CraftWorld craftWorld = this.level.bridge$getWorld();
+        CraftWorld craftWorld = ((WorldBridge) this.level).bridge$getWorld();
         List<org.bukkit.block.BlockState> blockStates;
         if (this.arclight$populator == null) {
             blockStates = new ArrayList<>();
         } else {
             blockStates = (List) this.arclight$populator.getList();
         }
-        PortalCreateEvent event = new PortalCreateEvent(blockStates, craftWorld, (this.arclight$entity == null) ? null : this.arclight$entity.bridge$getBukkitEntity(), PortalCreateEvent.CreateReason.NETHER_PAIR);
+        PortalCreateEvent event = new PortalCreateEvent(blockStates, craftWorld, (this.arclight$entity == null) ? null : ((EntityBridge) this.arclight$entity).bridge$getBukkitEntity(), PortalCreateEvent.CreateReason.NETHER_PAIR);
 
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {

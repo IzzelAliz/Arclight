@@ -9,6 +9,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
@@ -88,7 +89,11 @@ public abstract class EntityMixin_NeoForge implements EntityBridge, IEntityExten
 
     @Override
     public Product4<Boolean, Double, Double, Double> bridge$onEntityTeleportCommand(double x, double y, double z) {
-        var event = EventHooks.onEntityTeleportCommand((Entity) (Object) this, x, y, z);
+        Entity self = (Entity) (Object) this;
+        if (!(self.level() instanceof ServerLevel serverLevel)) {
+            return Product.of(false, x, y, z);
+        }
+        var event = EventHooks.onEntityTeleportCommand(self, serverLevel, x, y, z);
         return Product.of(event.isCanceled(), event.getTargetX(), event.getTargetY(), event.getTargetZ());
     }
 }

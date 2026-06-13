@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.bukkit.event;
 
 import com.google.common.base.Function;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge;
@@ -24,15 +25,15 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.block.sign.Side;
-import org.bukkit.craftbukkit.v.CraftWorld;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.block.CraftBlockState;
-import org.bukkit.craftbukkit.v.block.CraftBlockStates;
-import org.bukkit.craftbukkit.v.block.CraftSign;
-import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
-import org.bukkit.craftbukkit.v.damage.CraftDamageSource;
-import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.block.CraftBlockState;
+import org.bukkit.craftbukkit.block.CraftBlockStates;
+import org.bukkit.craftbukkit.block.CraftSign;
+import org.bukkit.craftbukkit.block.data.CraftBlockData;
+import org.bukkit.craftbukkit.damage.CraftDamageSource;
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
@@ -79,7 +80,7 @@ public abstract class CraftEventFactoryMixin {
             if (source.is(DamageTypes.CACTUS)
                     || source.is(DamageTypes.SWEET_BERRY_BUSH)
                     || source.is(DamageTypes.HOT_FLOOR)) {
-                source = ((DamageSourceBridge) source).bridge$directBlock(CraftBlock.at(entity.getCommandSenderWorld(), damageEventBlock));
+                source = ((DamageSourceBridge) source).bridge$directBlock(CraftBlock.at(entity.level(), damageEventBlock));
             }
         }
         return source;
@@ -156,7 +157,7 @@ public abstract class CraftEventFactoryMixin {
             world.setBlock(pos, newData, flag);
             return true;
         }
-        Block block = world.bridge$getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+        Block block = ((WorldBridge) world).bridge$getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
         CraftBlockState state = (CraftBlockState) block.getState();
         state.setData(newData);
 
@@ -230,7 +231,7 @@ public abstract class CraftEventFactoryMixin {
     @Overwrite
     public static boolean callEntityChangeBlockEvent(Entity entity, BlockPos position, net.minecraft.world.level.block.state.BlockState newBlock, boolean cancelled) {
         Block block = CraftBlock.at(entity.level(), position);
-        EntityChangeBlockEvent event = new EntityChangeBlockEvent(entity.bridge$getBukkitEntity(), block, CraftBlockData.fromData(newBlock));
+        EntityChangeBlockEvent event = new EntityChangeBlockEvent(((EntityBridge) entity).bridge$getBukkitEntity(), block, CraftBlockData.fromData(newBlock));
         event.setCancelled(cancelled);
         // Suppress during worldgen
         if (DistValidate.isValid(entity.level())) {
@@ -270,7 +271,7 @@ public abstract class CraftEventFactoryMixin {
     @Inject(method = "callItemSpawnEvent", cancellable = true, at = @At("HEAD"))
     private static void arclight$noAirDrops(ItemEntity itemEntity, CallbackInfoReturnable<ItemSpawnEvent> cir) {
         if (itemEntity.getItem().isEmpty()) {
-            Item entity = (Item) itemEntity.bridge$getBukkitEntity();
+            Item entity = (Item) ((EntityBridge) itemEntity).bridge$getBukkitEntity();
             ItemSpawnEvent event = new ItemSpawnEvent(entity);
             event.setCancelled(true);
             cir.setReturnValue(event);

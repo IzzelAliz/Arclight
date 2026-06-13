@@ -1,16 +1,16 @@
 package io.izzel.arclight.common.mixin.core.network;
 
 import com.mojang.datafixers.util.Pair;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.network.syncher.SynchedEntityDataBridge;
-import io.izzel.arclight.mixin.Decorate;
-import io.izzel.arclight.mixin.DecorationOps;
-import io.izzel.arclight.mixin.Local;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.mod.util.ArclightInventoryHelper;
 import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -27,81 +27,76 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-@Mixin(targets = "net/minecraft/server/network/ServerGamePacketListenerImpl$1")
+@Mixin(ServerGamePacketListenerImpl.class)
 public class ServerGamePacketListenerImpl_HandlerMixin {
 
-    @Shadow(aliases = {"field_28963", "f_143671_", "this$0"}) private ServerGamePacketListenerImpl outerThis;
+    @Shadow public ServerPlayer player;
 
-    @Unique private transient Vec3 arclight$interactVec;
-
-    @Decorate(method = "performInteraction", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl$EntityInteraction;run(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"))
-    private InteractionResult arclight$playerInteractEvent(ServerGamePacketListenerImpl.EntityInteraction instance, ServerPlayer player, Entity entity, InteractionHand interactionHand) throws Throwable {
-        PlayerInteractEntityEvent event;
-        if (arclight$interactVec != null) {
-            event = new PlayerInteractAtEntityEvent((Player) player.bridge$getBukkitEntity(), entity.bridge$getBukkitEntity(),
-                new org.bukkit.util.Vector(arclight$interactVec.x, arclight$interactVec.y, arclight$interactVec.z), (interactionHand == InteractionHand.OFF_HAND) ? EquipmentSlot.OFF_HAND : EquipmentSlot.HAND);
-        } else {
-            event = new PlayerInteractEntityEvent((Player) player.bridge$getBukkitEntity(), entity.bridge$getBukkitEntity(),
-                (interactionHand == InteractionHand.OFF_HAND) ? EquipmentSlot.OFF_HAND : EquipmentSlot.HAND);
+    @Inject(method = "handleInteract", at = @At("HEAD"), cancellable = true)
+    private void arclight$playerInteractEvent(ServerboundInteractPacket packet, CallbackInfo ci) {
+        Entity entity = this.player.level().getEntity(packet.entityId());
+        if (entity == null) {
+            return;
         }
-        ItemStack itemInHand = player.getItemInHand(interactionHand);
-        boolean triggerLeashUpdate = itemInHand != null && itemInHand.getItem() == Items.LEAD && entity instanceof Mob;
-        Item origItem = player.getInventory().getSelected() == null ? null : player.getInventory().getSelected().getItem();
+        InteractionHand hand = packet.hand();
+        Vec3 interactVec = packet.location();
+        PlayerInteractEntityEvent event;
+        if (interactVec != null) {
+            event = new PlayerInteractAtEntityEvent((Player) ((ServerPlayerBridge) this.player).bridge$getBukkitEntity(),
+                ((EntityBridge) entity).bridge$getBukkitEntity(),
+                new org.bukkit.util.Vector(interactVec.x, interactVec.y, interactVec.z),
+                hand == InteractionHand.OFF_HAND ? EquipmentSlot.OFF_HAND : EquipmentSlot.HAND);
+        } else {
+            event = new PlayerInteractEntityEvent((Player) ((ServerPlayerBridge) this.player).bridge$getBukkitEntity(),
+                ((EntityBridge) entity).bridge$getBukkitEntity(),
+                hand == InteractionHand.OFF_HAND ? EquipmentSlot.OFF_HAND : EquipmentSlot.HAND);
+        }
+        ItemStack itemInHand = this.player.getItemInHand(hand);
+        boolean triggerLeashUpdate = !itemInHand.isEmpty() && itemInHand.getItem() == Items.LEAD && entity instanceof Mob;
+        Item origItem = ArclightInventoryHelper.getSelectedItemType(this.player.getInventory());
 
         Bukkit.getPluginManager().callEvent(event);
 
-        // Fish bucket - SPIGOT-4048
-        if ((entity instanceof Bucketable && entity instanceof LivingEntity && origItem != null && origItem.asItem() == Items.WATER_BUCKET) && (event.isCancelled() || player.getInventory().getSelected() == null || player.getInventory().getSelected().getItem() != origItem)) {
-            entity.bridge$getBukkitEntity().update(player);
-            player.containerMenu.sendAllDataToRemote();
+        if ((entity instanceof Bucketable && entity instanceof LivingEntity && origItem != null && origItem.asItem() == Items.WATER_BUCKET)
+            && (event.isCancelled() || ArclightInventoryHelper.getSelectedItem(this.player.getInventory()).isEmpty()
+            || ArclightInventoryHelper.getSelectedItem(this.player.getInventory()).getItem() != origItem)) {
+            ((EntityBridge) entity).bridge$getBukkitEntity().update(this.player);
+            this.player.containerMenu.sendAllDataToRemote();
         }
 
-        if (triggerLeashUpdate && (event.isCancelled() || player.getInventory().getSelected() == null || player.getInventory().getSelected().getItem() != origItem)) {
-            // Refresh the current leash state
-            player.connection.send(new ClientboundSetEntityLinkPacket(entity, ((Mob) entity).getLeashHolder()));
+        if (triggerLeashUpdate && (event.isCancelled() || ArclightInventoryHelper.getSelectedItem(this.player.getInventory()).isEmpty()
+            || ArclightInventoryHelper.getSelectedItem(this.player.getInventory()).getItem() != origItem)) {
+            this.player.connection.send(new ClientboundSetEntityLinkPacket(entity, ((Mob) entity).getLeashHolder()));
         }
 
-        if (event.isCancelled() || player.getInventory().getSelected() == null || player.getInventory().getSelected().getItem() != origItem) {
-            // Refresh the current entity metadata
-            ((SynchedEntityDataBridge) entity.getEntityData()).bridge$refresh(player);
+        if (event.isCancelled() || ArclightInventoryHelper.getSelectedItem(this.player.getInventory()).isEmpty()
+            || ArclightInventoryHelper.getSelectedItem(this.player.getInventory()).getItem() != origItem) {
+            ((SynchedEntityDataBridge) entity.getEntityData()).bridge$refresh(this.player);
             if (entity instanceof Allay) {
-                player.connection.send(new ClientboundSetEquipmentPacket(entity.getId(), Arrays.stream(net.minecraft.world.entity.EquipmentSlot.values()).map((slot) -> Pair.of(slot, ((LivingEntity) entity).getItemBySlot(slot).copy())).collect(Collectors.toList())));
-                player.containerMenu.sendAllDataToRemote();
+                this.player.connection.send(new ClientboundSetEquipmentPacket(entity.getId(), Arrays.stream(net.minecraft.world.entity.EquipmentSlot.values())
+                    .map(slot -> Pair.of(slot, ((LivingEntity) entity).getItemBySlot(slot).copy())).collect(Collectors.toList())));
+                this.player.containerMenu.sendAllDataToRemote();
             }
         }
 
         if (event.isCancelled()) {
-            return (InteractionResult) DecorationOps.cancel().invoke();
+            ci.cancel();
         }
-        var result = (InteractionResult) DecorationOps.callsite().invoke(instance, player, entity, interactionHand);
-        if (!itemInHand.isEmpty() && itemInHand.getCount() <= -1) {
-            player.containerMenu.sendAllDataToRemote();
-        }
-        return result;
     }
 
-    @Inject(method = "onInteraction(Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/Vec3;)V", at = @At("HEAD"))
-    private void arclight$setInteractVec(InteractionHand interactionHand, Vec3 vec3, CallbackInfo ci) {
-        this.arclight$interactVec = vec3;
-    }
-
-    @Inject(method = "onInteraction(Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/Vec3;)V", at = @At("RETURN"))
-    private void arclight$resetInteractVec(InteractionHand interactionHand, Vec3 vec3, CallbackInfo ci) {
-        this.arclight$interactVec = null;
-    }
-
-    @Decorate(method = "onAttack", inject = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/level/ServerPlayer;attack(Lnet/minecraft/world/entity/Entity;)V"))
-    private void arclight$sendDirty(@Local(ordinal = -1) ItemStack itemstack) {
+    @Inject(method = "handleAttack", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/level/ServerPlayer;attack(Lnet/minecraft/world/entity/Entity;)V"))
+    private void arclight$sendDirty(CallbackInfo ci) {
+        ItemStack itemstack = this.player.getMainHandItem();
         if (!itemstack.isEmpty() && itemstack.getCount() <= -1) {
-            outerThis.player.containerMenu.sendAllDataToRemote();
+            this.player.containerMenu.sendAllDataToRemote();
         }
     }
 }

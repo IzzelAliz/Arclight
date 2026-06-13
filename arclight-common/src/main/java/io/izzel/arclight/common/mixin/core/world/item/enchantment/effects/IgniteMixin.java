@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.item.enchantment.effects;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.server.level.ServerLevel;
@@ -24,9 +25,9 @@ public class IgniteMixin {
     private void arclight$combustEvent(Entity instance, float f, ServerLevel serverLevel, int i, EnchantedItemInUse enchantedItemInUse) throws Throwable {
         EntityCombustEvent entityCombustEvent;
         if (enchantedItemInUse.owner() != null) {
-            entityCombustEvent = new EntityCombustByEntityEvent(enchantedItemInUse.owner().bridge$getBukkitEntity(), instance.bridge$getBukkitEntity(), this.duration.calculate(i));
+            entityCombustEvent = new EntityCombustByEntityEvent(((io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge) enchantedItemInUse.owner()).bridge$getBukkitEntity(), ((EntityBridge) instance).bridge$getBukkitEntity(), this.duration.calculate(i));
         } else {
-            entityCombustEvent = new EntityCombustEvent(instance.bridge$getBukkitEntity(), this.duration.calculate(i));
+            entityCombustEvent = new EntityCombustEvent(((EntityBridge) instance).bridge$getBukkitEntity(), this.duration.calculate(i));
         }
 
         Bukkit.getPluginManager().callEvent(entityCombustEvent);

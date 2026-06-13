@@ -10,7 +10,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
-import net.minecraft.world.level.storage.DimensionDataStorage;
+import io.izzel.arclight.common.mixin.core.world.level.storage.SavedDataStorageAccessor;
+import net.minecraft.world.level.storage.SavedDataStorage;
 import org.bukkit.inventory.InventoryHolder;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -33,8 +34,8 @@ public class ServerLevel_EntityCallbacksMixin {
     private void arclight$entityCleanup(Entity entity, CallbackInfo ci) {
         if (entity instanceof Player player) {
             for (ServerLevel serverLevel : ArclightServer.getMinecraftServer().getAllLevels()) {
-                DimensionDataStorage worldData = serverLevel.getDataStorage();
-                for (Object o : worldData.cache.values()) {
+                SavedDataStorage worldData = serverLevel.getDataStorage();
+                for (Object o : ((SavedDataStorageAccessor) worldData).cache().values()) {
                     if (o instanceof MapItemSavedData map) {
                         map.carriedByPlayers.remove(player);
                         ((MapItemSavedDataBridge) map).bridge$getCarriedBy().removeIf(holdingPlayer -> holdingPlayer.player == entity);

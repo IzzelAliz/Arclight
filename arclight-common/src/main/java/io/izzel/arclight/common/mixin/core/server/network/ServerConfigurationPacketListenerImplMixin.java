@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.server.network;
 
 import com.mojang.authlib.GameProfile;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
 import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
 import io.izzel.arclight.mixin.Decorate;
@@ -15,7 +16,7 @@ import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.network.ServerConfigurationPacketListenerImpl;
 import net.minecraft.server.players.PlayerList;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.CraftServerLinks;
+import org.bukkit.craftbukkit.CraftServerLinks;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerLinksSendEvent;
 import org.spongepowered.asm.mixin.Final;
@@ -49,7 +50,7 @@ public abstract class ServerConfigurationPacketListenerImplMixin extends ServerC
     private ServerLinks arclight$sendLinksEvent(MinecraftServer instance) throws Throwable {
         var links = (ServerLinks) DecorationOps.callsite().invoke(instance);
         var wrapper = new CraftServerLinks(links);
-        var event = new PlayerLinksSendEvent((Player) player.bridge$getBukkitEntity(), wrapper);
+        var event = new PlayerLinksSendEvent((Player) ((ServerPlayerBridge) this.player).bridge$getBukkitEntity(), wrapper);
         Bukkit.getPluginManager().callEvent(event);
         return wrapper.getServerLinks();
     }

@@ -4,7 +4,7 @@ import io.izzel.arclight.common.bridge.core.world.item.ItemBridge;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -29,7 +29,7 @@ public abstract class ItemMixin_NeoForge implements ItemBridge {
 
     @Override
     public boolean bridge$forge$onChorusFruitTeleport(LivingEntity entity, double targetX, double targetY, double targetZ) {
-        return EventHooks.onChorusFruitTeleport(entity, targetX, targetY, targetZ).isCanceled();
+        return EventHooks.onItemConsumptionTeleport(entity, entity.getUseItem(), targetX, targetY, targetZ).isCanceled();
     }
 
     @Override

@@ -3,7 +3,7 @@ package io.izzel.arclight.fabric.mod.event;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.minecraft.world.InteractionResult;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.block.Action;
 
 import java.util.function.Function;
@@ -23,7 +23,7 @@ public class FabricEventAdaptor {
             final var result = callback.interact(player, world, hand, pos, direction);
             if (result != InteractionResult.PASS) {
                 ArclightCaptures.cancelNextPlayerInteract();
-                CraftEventFactory.callPlayerInteractEvent(player, Action.LEFT_CLICK_BLOCK, pos, direction, player.getInventory().getSelected(), hand);
+                CraftEventFactory.callPlayerInteractEvent(player, Action.LEFT_CLICK_BLOCK, pos, direction, player.getInventory().getSelectedItem(), hand);
             }
             return result;
         };

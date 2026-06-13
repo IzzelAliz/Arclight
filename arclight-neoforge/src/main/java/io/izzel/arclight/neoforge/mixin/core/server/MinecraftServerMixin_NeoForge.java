@@ -1,10 +1,10 @@
 package io.izzel.arclight.neoforge.mixin.core.server;
 
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
-import net.minecraft.core.registries.Registries;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.ForcedChunksSavedData;
+import net.minecraft.world.level.TicketStorage;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.world.chunk.ForcedChunkManager;
 import net.neoforged.neoforge.event.level.LevelEvent;
@@ -34,7 +34,10 @@ public abstract class MinecraftServerMixin_NeoForge implements MinecraftServerBr
     }
 
     @Override
-    public void bridge$forge$reinstatePersistentChunks(ServerLevel level, ForcedChunksSavedData savedData) {
-        ForcedChunkManager.reinstatePersistentChunks(level, savedData);
+    public void bridge$forge$reinstatePersistentChunks(ServerLevel level, LongSet forcedChunks) {
+        TicketStorage saveData = level.getDataStorage().get(TicketStorage.TYPE);
+        if (saveData != null) {
+            ForcedChunkManager.activateAllDeactivatedTickets(level, saveData);
+        }
     }
 }

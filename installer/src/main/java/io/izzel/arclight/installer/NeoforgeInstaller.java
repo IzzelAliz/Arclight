@@ -103,6 +103,29 @@ public class NeoforgeInstaller {
         return false;
     }
 
+    private static String mergeLegacyClassPath(String classpath, Path self, InstallInfo installInfo, List<String> merges) {
+        return Stream.concat(
+                Stream.concat(Stream.of(self.toString()), Arrays.stream(classpath.split(File.pathSeparator))),
+                installInfo.libraries.keySet().stream()
+                        .peek(it -> {
+                            var lib = Paths.get("libraries", Util.mavenToPath(it));
+                            var name = lib.getFileName().toString();
+                            if (name.contains("maven-model")) {
+                                merges.add(name);
+                            }
+                        })
+                        .map(it -> "libraries/" + Util.mavenToPath(it))
+        ).sorted((a, b) -> {
+            if (a.contains("maven-repository-metadata")) {
+                return -1;
+            } else if (b.contains("maven-repository-metadata")) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }).distinct().collect(Collectors.joining(File.pathSeparator));
+    }
+
     private static Map.Entry<String, List<String>> classpath(Path path, InstallInfo installInfo) throws Throwable {
         boolean jvmArgs = true;
         String mainClass = null;
@@ -113,7 +136,16 @@ public class NeoforgeInstaller {
         List<String> ignores = new ArrayList<>();
         List<String> merges = new ArrayList<>();
         var self = new File(ForgeInstaller.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath();
-        for (String arg : Files.lines(path).toList()) {
+        var lines = Files.readAllLines(path);
+        for (int lineIndex = 0; lineIndex < lines.size(); lineIndex++) {
+            String arg = lines.get(lineIndex);
+            if (jvmArgs && (arg.equals("-classpath") || arg.startsWith("-classpath "))) {
+                String cp = arg.equals("-classpath")
+                        ? lines.get(++lineIndex)
+                        : arg.substring("-classpath ".length()).trim();
+                System.setProperty("legacyClassPath", mergeLegacyClassPath(cp, self, installInfo, merges));
+                continue;
+            }
             if (jvmArgs && arg.startsWith("-")) {
                 if (arg.startsWith("-p ")) {
                     addModules(arg.substring(2).trim());
@@ -124,29 +156,7 @@ public class NeoforgeInstaller {
                 } else if (arg.startsWith("-D")) {
                     var split = arg.substring(2).split("=", 2);
                     if (split[0].equals("legacyClassPath")) {
-                        split[1] =
-                            Stream.concat(
-                                Stream.concat(Stream.concat(Stream.of(self.toString()), Arrays.stream(split[1].split(File.pathSeparator))), installInfo.libraries.keySet().stream()
-                                    .peek(it -> {
-                                        var lib = Paths.get("libraries", Util.mavenToPath(it));
-                                        var name = lib.getFileName().toString();
-                                        if (name.contains("maven-model")) {
-                                            merges.add(name);
-                                        }
-                                    })
-                                    .map(it -> "libraries/" + Util.mavenToPath(it))),
-                                Stream.empty()
-                                //Stream.of(self)
-                            ).sorted((a, b) -> {
-                                // damn stupid jpms
-                                if (a.contains("maven-repository-metadata")) {
-                                    return -1;
-                                } else if (b.contains("maven-repository-metadata")) {
-                                    return 1;
-                                } else {
-                                    return 0;
-                                }
-                            }).distinct().collect(Collectors.joining(File.pathSeparator));
+                        split[1] = mergeLegacyClassPath(split[1], self, installInfo, merges);
                     } else if (split[0].equals("ignoreList")) {
                         ignores.addAll(Arrays.asList(split[1].split(",")));
                     }
@@ -170,6 +180,7 @@ public class NeoforgeInstaller {
         }
         addOpens(opens);
         addExports(exports);
+        applyLegacyClassPath();
         /*
         JarFile jarFile = new JarFile(path.toFile());
         Manifest manifest = jarFile.getManifest();
@@ -185,6 +196,19 @@ public class NeoforgeInstaller {
             addToPath(Paths.get("libraries", Util.mavenToPath(library)), false);
         }*/
         return Map.entry(Objects.requireNonNull(mainClass, "No main class found"), userArgs);
+    }
+
+    private static void applyLegacyClassPath() {
+        var legacyCp = System.getProperty("legacyClassPath");
+        if (legacyCp == null || legacyCp.isEmpty()) {
+            return;
+        }
+        for (String entry : legacyCp.split(File.pathSeparator)) {
+            if (entry.isEmpty()) {
+                continue;
+            }
+            ForgeInstaller.addToPath(Paths.get(entry));
+        }
     }
 
     public static void addExports(List<String> exports) throws Throwable {

@@ -23,7 +23,7 @@ import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket;
 import net.minecraft.network.protocol.cookie.ServerboundCookieResponsePacket;
 import net.minecraft.network.protocol.game.ClientboundSetDefaultSpawnPositionPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
@@ -31,10 +31,10 @@ import net.minecraft.server.network.ServerCommonPacketListenerImpl;
 import net.minecraft.util.StringUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v.util.CraftChatMessage;
-import org.bukkit.craftbukkit.v.util.Waitable;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.util.CraftChatMessage;
+import org.bukkit.craftbukkit.util.Waitable;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.slf4j.Logger;
@@ -188,7 +188,8 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
             return;
         }
         if (packetIn instanceof ClientboundSetDefaultSpawnPositionPacket packet6) {
-            ((ServerPlayerBridge) this.player).bridge$setCompassTarget(new Location(this.getCraftPlayer().getWorld(), packet6.pos.getX(), packet6.pos.getY(), packet6.pos.getZ()));
+            var respawn = packet6.respawnData();
+            ((ServerPlayerBridge) this.player).bridge$setCompassTarget(new Location(this.getCraftPlayer().getWorld(), respawn.pos().getX(), respawn.pos().getY(), respawn.pos().getZ()));
         }
     }
 
@@ -199,8 +200,8 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
 
     @Inject(method = "handleCookieResponse", cancellable = true, at = @At("HEAD"))
     private void arclight$handleCookie(ServerboundCookieResponsePacket serverboundCookieResponsePacket, CallbackInfo ci) {
-        PacketUtils.ensureRunningOnSameThread(serverboundCookieResponsePacket, (ServerCommonPacketListenerImpl) (Object) this, this.server);
-        if (((CraftPlayer) this.player.bridge$getBukkitEntity()).handleCookieResponse(serverboundCookieResponsePacket)) {
+        PacketUtils.ensureRunningOnSameThread(serverboundCookieResponsePacket, (ServerCommonPacketListenerImpl) (Object) this, this.player.level());
+        if (((CraftPlayer) ((ServerPlayerBridge) this.player).bridge$getBukkitEntity()).handleCookieResponse(serverboundCookieResponsePacket)) {
             ci.cancel();
         }
     }

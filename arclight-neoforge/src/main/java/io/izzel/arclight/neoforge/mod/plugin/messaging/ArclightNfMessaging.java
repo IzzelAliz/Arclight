@@ -4,13 +4,16 @@ import io.izzel.arclight.common.mod.plugin.messaging.ArclightPluginChannel;
 import io.izzel.arclight.common.mod.plugin.messaging.ChannelDirection;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.neoforge.mixin.neoforge.NetworkRegistryAccessor;
+import net.minecraft.network.ConnectionProtocol;
 import net.minecraft.network.protocol.PacketFlow;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.neoforged.neoforge.network.handling.IPayloadHandler;
 import net.neoforged.neoforge.network.registration.PayloadRegistration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.plugin.messaging.PluginMessageListenerRegistration;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -24,7 +27,7 @@ public class ArclightNfMessaging {
     @SuppressWarnings("StringOperationCanBeSimplified")
     public static String ARCLIGHT_CUSTOM_CHANNEL_VERSION = new String("arclight:custom/bukkit");
 
-    public static ArclightPluginChannel<? extends NeoforgePayloadHandler> setupChannel(Messenger messenger, ResourceLocation location, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
+    public static ArclightPluginChannel<? extends NeoforgePayloadHandler> setupChannel(Messenger messenger, Identifier location, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
         if (verifyChannel(location, incoming, outgoing)) {
             return new ArclightPluginChannel<>(messenger, ArclightNfPayloadHandler::new, location, incoming, outgoing);
         } else {
@@ -32,7 +35,7 @@ public class ArclightNfMessaging {
         }
     }
 
-    public static boolean verifyChannel(ResourceLocation location, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
+    public static boolean verifyChannel(Identifier location, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
         for (var protocol : ArclightPluginChannel.PROTOCOLS) {
             var known = NetworkRegistryAccessor.getRegistration().get(protocol).get(location);
             var builtin = NetworkRegistryAccessor.getBuiltinPayload().get(location);
@@ -56,17 +59,38 @@ public class ArclightNfMessaging {
 
     public static void updateChannel(ArclightPluginChannel<ArclightNfPayloadHandler> channel) {
         final var location = channel.getChannel();
+        final var handler = channel.getChannelHandler();
         for (var protocol : ArclightPluginChannel.PROTOCOLS) {
             var map = NetworkRegistryAccessor.getRegistration().get(protocol);
             if (channel.getDirection() != getFlowFromRegistration(map.get(location))) {
                 final var registration = createRegistration(channel);
                 if (registration == null) {
                     map.remove(location);
+                    removeHandlers(protocol, location);
                 } else {
                     map.put(location, registration);
+                    registerHandlers(protocol, location, handler, channel.getDirection());
                 }
             }
         }
+    }
+
+    private static void registerHandlers(ConnectionProtocol protocol, Identifier location, IPayloadHandler<?> handler, ChannelDirection direction) {
+        if (direction.hasIncoming()) {
+            handlerMap(NetworkRegistryAccessor.getServerboundHandlers(), protocol).put(location, handler);
+        }
+        if (direction.hasOutgoing()) {
+            handlerMap(NetworkRegistryAccessor.getClientboundHandlers(), protocol).put(location, handler);
+        }
+    }
+
+    private static void removeHandlers(ConnectionProtocol protocol, Identifier location) {
+        handlerMap(NetworkRegistryAccessor.getServerboundHandlers(), protocol).remove(location);
+        handlerMap(NetworkRegistryAccessor.getClientboundHandlers(), protocol).remove(location);
+    }
+
+    private static Map<Identifier, IPayloadHandler<?>> handlerMap(Map<ConnectionProtocol, Map<Identifier, IPayloadHandler<?>>> root, ConnectionProtocol protocol) {
+        return root.computeIfAbsent(protocol, ignored -> new java.util.concurrent.ConcurrentHashMap<>());
     }
 
     private static ChannelDirection getFlowFromRegistration(PayloadRegistration<?> registration) {
@@ -89,12 +113,11 @@ public class ArclightNfMessaging {
         if (direction.bitmap == 0) {
             return null;
         }
-        var handler = channel.getChannelHandler();
         var type = channel.getType();
         var codec = channel.getStreamCodec();
         var flow = channel.getDirection().flow;
         var version = ArclightNfMessaging.ARCLIGHT_CUSTOM_CHANNEL_VERSION;
 
-        return new PayloadRegistration<>(type, codec, handler, ArclightPluginChannel.PROTOCOLS, Optional.ofNullable(flow), version, true);
+        return new PayloadRegistration<>(type, codec, ArclightPluginChannel.PROTOCOLS, Optional.ofNullable(flow), version, true);
     }
 }

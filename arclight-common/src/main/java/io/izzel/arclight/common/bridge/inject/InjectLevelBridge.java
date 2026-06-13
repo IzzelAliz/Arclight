@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.bridge.inject;
 
-import org.bukkit.craftbukkit.v.CraftWorld;
+import org.bukkit.craftbukkit.CraftWorld;
 
 public interface InjectLevelBridge {
 

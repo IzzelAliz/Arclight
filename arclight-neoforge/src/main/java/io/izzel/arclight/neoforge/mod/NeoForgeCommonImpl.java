@@ -44,7 +44,7 @@ public class NeoForgeCommonImpl implements ArclightCommon.Api {
 
     @Override
     public boolean isModLoaded(String modid) {
-        return ModList.get() != null ? ModList.get().isLoaded(modid) : FMLLoader.getLoadingModList().getModFileById(modid) != null;
+        return ModList.get() != null ? ModList.get().isLoaded(modid) : FMLLoader.getCurrent().getLoadingModList().getModFileById(modid) != null;
     }
 
     @Override

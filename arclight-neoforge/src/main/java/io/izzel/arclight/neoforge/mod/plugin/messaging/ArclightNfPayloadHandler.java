@@ -5,7 +5,7 @@ import io.izzel.arclight.common.mod.plugin.messaging.ArclightPluginChannel;
 import io.izzel.arclight.common.mod.plugin.messaging.ArclightRawPayload;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.plugin.Plugin;
 
 public record ArclightNfPayloadHandler(ArclightPluginChannel<ArclightNfPayloadHandler> channel) implements NeoforgePayloadHandler {

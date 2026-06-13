@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -10,7 +11,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ProjectileWeaponItem;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -28,7 +29,7 @@ public class ProjectileWeaponItemMixin {
             return (boolean) DecorationOps.cancel().invoke();
         }
 
-        if (event.getProjectile() == entity.bridge$getBukkitEntity()) {
+        if (event.getProjectile() == ((EntityBridge) entity).bridge$getBukkitEntity()) {
             if (!(boolean) DecorationOps.callsite().invoke(instance, entity)) {
                 if (livingEntity instanceof net.minecraft.server.level.ServerPlayer) {
                     ((ServerPlayerBridge) livingEntity).bridge$getBukkitEntity().updateInventory();

@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.bukkit;
 import io.izzel.arclight.common.bridge.core.world.inventory.AnvilMenuBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
-import org.bukkit.craftbukkit.v.inventory.view.CraftAnvilView;
+import org.bukkit.craftbukkit.inventory.view.CraftAnvilView;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

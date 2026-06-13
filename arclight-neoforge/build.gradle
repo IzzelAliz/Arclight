@@ -27,10 +27,11 @@ dependencies {
 
     // XXX: for compiling (arclight-api): NeoForgeArclightServer#registerForgeEvent
     compileOnly("net.minecraftforge:eventbus:4.0.0") { transitive = false }
+    compileOnly("cpw.mods:modlauncher:11.0.5") { transitive = false }
 
     implementation(project(':i18n-config')) { transitive = false }
 
-    common(project(path: ':arclight-common', configuration: 'namedElements')) { transitive = false }
+    common(project(path: ':arclight-common')) { transitive = false }
     shadowBundle(project(path: ':arclight-common', configuration: 'transformProductionNeoForge')) { transitive = false }
 }
 
@@ -56,28 +57,30 @@ processResources {
     }
 }
 
+jar {
+    archiveClassifier = 'raw'
+}
+
 shadowJar {
+    dependsOn jar
+    mainSpec.sourcePaths.clear()
+    from(zipTree(jar.archiveFile))
+
     exclude 'fabric.mod.json'
     exclude 'architectury.common.json'
 
     configurations = [project.configurations.shadowBundle]
-    archiveClassifier = 'dev-shadow'
-}
-
-remapJar {
-    inputFile.set shadowJar.archiveFile
-    dependsOn shadowJar
-    atAccessWideners.add(loom.accessWidenerPath.get().asFile.getName())
+    archiveClassifier = null
 }
 
 tasks.register('srgJar', Jar) {
-    from(tasks.remapJar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) }) {
+    from(tasks.shadowJar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) }) {
         include 'io/izzel/**'
         exclude 'io/izzel/arclight/common/mixin/**'
         exclude 'io/izzel/arclight/forge/mixin/**'
     }
     archiveClassifier.set('srg')
-    dependsOn remapJar
+    dependsOn shadowJar
 }
 
 sourcesJar {

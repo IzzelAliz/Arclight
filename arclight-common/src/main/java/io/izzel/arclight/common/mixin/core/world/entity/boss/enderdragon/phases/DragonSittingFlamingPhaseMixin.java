@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.boss.enderdragon.phases;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.world.entity.AreaEffectCloud;
 import net.minecraft.world.entity.boss.enderdragon.phases.DragonSittingFlamingPhase;
 import org.bukkit.event.entity.EntityRemoveEvent;
@@ -17,6 +18,6 @@ public class DragonSittingFlamingPhaseMixin {
 
     @Inject(method = "end", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/AreaEffectCloud;discard()V"))
     private void arclight$despawn(CallbackInfo ci) {
-        this.flame.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
+        ((EntityBridge) this.flame).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
     }
 }

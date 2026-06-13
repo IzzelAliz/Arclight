@@ -3,7 +3,7 @@ package io.izzel.arclight.forge.mod.plugin.messaging;
 import io.izzel.arclight.common.mod.plugin.messaging.ArclightPluginChannel;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.forge.mixin.forge.NetworkRegistryAccessor;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraftforge.network.Channel;
 import net.minecraftforge.network.ChannelBuilder;
 import net.minecraftforge.network.NetworkRegistry;
@@ -19,7 +19,7 @@ public class ArclightForgeMessaging {
 
     public static final Channel.VersionTest ACCEPT_ALL = (status, version) -> true;
 
-    public static ArclightPluginChannel<? extends ForgePayloadHandler> setupChannel(Messenger messenger, ResourceLocation location, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
+    public static ArclightPluginChannel<? extends ForgePayloadHandler> setupChannel(Messenger messenger, Identifier location, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
         if (verifyChannel(location, incoming, outgoing)) {
             var channel = new ArclightPluginChannel<>(messenger, ArclightForgePayloadHandler::new, location, incoming, outgoing);
             var registration = channel.getChannelHandler();
@@ -39,7 +39,7 @@ public class ArclightForgeMessaging {
         }
     }
 
-    private static boolean verifyChannel(ResourceLocation location, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
+    private static boolean verifyChannel(Identifier location, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
         for (var protocol : ArclightPluginChannel.PROTOCOLS) {
             var registration = NetworkRegistry.findTarget(location);
             if (registration != null) {

@@ -16,7 +16,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.block.Action;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -56,10 +56,10 @@ public abstract class ServerPlayerGameModeMixin_NeoForge implements ServerPlayer
             switch (action) {
                 case START_DESTROY_BLOCK -> {
                     ArclightCaptures.cancelNextPlayerInteract();
-                    CraftEventFactory.callPlayerInteractEvent(player, Action.LEFT_CLICK_BLOCK, pos, face, player.getInventory().getSelected(), true, InteractionHand.MAIN_HAND, null);
+                    CraftEventFactory.callPlayerInteractEvent(player, Action.LEFT_CLICK_BLOCK, pos, face, player.getInventory().getSelectedItem(), true, InteractionHand.MAIN_HAND, null);
                 }
                 // Arclight: Returning directly from the method is really a rude decision, don't know how to handle now...
-                case ABORT_DESTROY_BLOCK -> CraftEventFactory.callBlockDamageAbortEvent(this.player, pos, player.getInventory().getSelected());
+                case ABORT_DESTROY_BLOCK -> CraftEventFactory.callBlockDamageAbortEvent(this.player, pos, player.getInventory().getSelectedItem());
             }
 
             this.player.connection.send(new ClientboundBlockUpdatePacket(this.level, pos));

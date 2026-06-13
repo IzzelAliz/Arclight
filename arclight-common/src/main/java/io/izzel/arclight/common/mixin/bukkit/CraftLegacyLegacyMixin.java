@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.bukkit;
 import io.izzel.arclight.common.bridge.bukkit.MaterialBridge;
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v.legacy.CraftLegacy;
+import org.bukkit.craftbukkit.legacy.CraftLegacy;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 

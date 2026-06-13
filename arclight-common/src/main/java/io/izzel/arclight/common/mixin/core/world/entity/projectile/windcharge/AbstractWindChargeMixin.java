@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.projectile.windcharge;
 
 import io.izzel.arclight.common.mixin.core.world.entity.projectile.AbstractHurtingProjectileMixin;
-import net.minecraft.world.entity.projectile.windcharge.AbstractWindCharge;
+import net.minecraft.world.entity.projectile.hurtingprojectile.windcharge.AbstractWindCharge;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import org.bukkit.event.entity.EntityRemoveEvent;

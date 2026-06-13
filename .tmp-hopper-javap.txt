@@ -1,0 +1,592 @@
+﻿Compiled from "HopperBlockEntity.java"
+public class net.minecraft.world.level.block.entity.HopperBlockEntity extends net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity implements net.minecraft.world.level.block.entity.Hopper {
+  public static final int MOVE_ITEM_SPEED;
+
+  public static final int HOPPER_CONTAINER_SIZE;
+
+  public net.minecraft.world.level.block.entity.HopperBlockEntity(net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+    Code:
+         0: aload_0
+         1: getstatic     #49                 // Field net/minecraft/world/level/block/entity/BlockEntityType.HOPPER:Lnet/minecraft/world/level/block/entity/BlockEntityType;
+         4: aload_1
+         5: aload_2
+         6: invokespecial #52                 // Method net/minecraft/world/level/block/entity/RandomizableContainerBlockEntity."<init>":(Lnet/minecraft/world/level/block/entity/BlockEntityType;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V
+         9: aload_0
+        10: iconst_5
+        11: getstatic     #58                 // Field net/minecraft/world/item/ItemStack.EMPTY:Lnet/minecraft/world/item/ItemStack;
+        14: invokestatic  #64                 // Method net/minecraft/core/NonNullList.withSize:(ILjava/lang/Object;)Lnet/minecraft/core/NonNullList;
+        17: putfield      #66                 // Field items:Lnet/minecraft/core/NonNullList;
+        20: aload_0
+        21: iconst_m1
+        22: putfield      #68                 // Field cooldownTime:I
+        25: aload_0
+        26: new           #9                  // class net/minecraft/world/level/block/entity/HopperBlockEntity$1
+        29: dup
+        30: aload_0
+        31: invokespecial #71                 // Method net/minecraft/world/level/block/entity/HopperBlockEntity$1."<init>":(Lnet/minecraft/world/level/block/entity/HopperBlockEntity;)V
+        34: putfield      #73                 // Field cooldownTimeJournal:Lnet/neoforged/neoforge/transfer/transaction/SnapshotJournal;
+        37: aload_0
+        38: aload_2
+        39: getstatic     #79                 // Field net/minecraft/world/level/block/HopperBlock.FACING:Lnet/minecraft/world/level/block/state/properties/EnumProperty;
+        42: invokevirtual #85                 // Method net/minecraft/world/level/block/state/BlockState.getValue:(Lnet/minecraft/world/level/block/state/properties/Property;)Ljava/lang/Comparable;
+        45: checkcast     #87                 // class net/minecraft/core/Direction
+        48: putfield      #89                 // Field facing:Lnet/minecraft/core/Direction;
+        51: return
+
+  protected void loadAdditional(net.minecraft.world.level.storage.ValueInput);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: invokespecial #99                 // Method net/minecraft/world/level/block/entity/RandomizableContainerBlockEntity.loadAdditional:(Lnet/minecraft/world/level/storage/ValueInput;)V
+         5: aload_0
+         6: aload_0
+         7: invokevirtual #103                // Method getContainerSize:()I
+        10: getstatic     #58                 // Field net/minecraft/world/item/ItemStack.EMPTY:Lnet/minecraft/world/item/ItemStack;
+        13: invokestatic  #64                 // Method net/minecraft/core/NonNullList.withSize:(ILjava/lang/Object;)Lnet/minecraft/core/NonNullList;
+        16: putfield      #66                 // Field items:Lnet/minecraft/core/NonNullList;
+        19: aload_0
+        20: aload_1
+        21: invokevirtual #107                // Method tryLoadLootTable:(Lnet/minecraft/world/level/storage/ValueInput;)Z
+        24: ifne          35
+        27: aload_1
+        28: aload_0
+        29: getfield      #66                 // Field items:Lnet/minecraft/core/NonNullList;
+        32: invokestatic  #113                // Method net/minecraft/world/ContainerHelper.loadAllItems:(Lnet/minecraft/world/level/storage/ValueInput;Lnet/minecraft/core/NonNullList;)V
+        35: aload_0
+        36: aload_1
+        37: ldc           #115                // String TransferCooldown
+        39: iconst_m1
+        40: invokeinterface #121,  3          // InterfaceMethod net/minecraft/world/level/storage/ValueInput.getIntOr:(Ljava/lang/String;I)I
+        45: putfield      #68                 // Field cooldownTime:I
+        48: return
+
+  protected void saveAdditional(net.minecraft.world.level.storage.ValueOutput);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: invokespecial #127                // Method net/minecraft/world/level/block/entity/RandomizableContainerBlockEntity.saveAdditional:(Lnet/minecraft/world/level/storage/ValueOutput;)V
+         5: aload_0
+         6: aload_1
+         7: invokevirtual #131                // Method trySaveLootTable:(Lnet/minecraft/world/level/storage/ValueOutput;)Z
+        10: ifne          21
+        13: aload_1
+        14: aload_0
+        15: getfield      #66                 // Field items:Lnet/minecraft/core/NonNullList;
+        18: invokestatic  #135                // Method net/minecraft/world/ContainerHelper.saveAllItems:(Lnet/minecraft/world/level/storage/ValueOutput;Lnet/minecraft/core/NonNullList;)V
+        21: aload_1
+        22: ldc           #115                // String TransferCooldown
+        24: aload_0
+        25: getfield      #68                 // Field cooldownTime:I
+        28: invokeinterface #141,  3          // InterfaceMethod net/minecraft/world/level/storage/ValueOutput.putInt:(Ljava/lang/String;I)V
+        33: return
+
+  public int getContainerSize();
+    Code:
+         0: aload_0
+         1: getfield      #66                 // Field items:Lnet/minecraft/core/NonNullList;
+         4: invokevirtual #146                // Method net/minecraft/core/NonNullList.size:()I
+         7: ireturn
+
+  public net.minecraft.world.item.ItemStack removeItem(int, int);
+    Code:
+         0: aload_0
+         1: aconst_null
+         2: invokevirtual #152                // Method unpackLootTable:(Lnet/minecraft/world/entity/player/Player;)V
+         5: aload_0
+         6: invokevirtual #156                // Method getItems:()Lnet/minecraft/core/NonNullList;
+         9: iload_1
+        10: iload_2
+        11: invokestatic  #159                // Method net/minecraft/world/ContainerHelper.removeItem:(Ljava/util/List;II)Lnet/minecraft/world/item/ItemStack;
+        14: areturn
+
+  public void setItem(int, net.minecraft.world.item.ItemStack);
+    Code:
+         0: aload_0
+         1: aconst_null
+         2: invokevirtual #152                // Method unpackLootTable:(Lnet/minecraft/world/entity/player/Player;)V
+         5: aload_0
+         6: invokevirtual #156                // Method getItems:()Lnet/minecraft/core/NonNullList;
+         9: iload_1
+        10: aload_2
+        11: invokevirtual #167                // Method net/minecraft/core/NonNullList.set:(ILjava/lang/Object;)Ljava/lang/Object;
+        14: pop
+        15: aload_2
+        16: aload_0
+        17: aload_2
+        18: invokevirtual #171                // Method getMaxStackSize:(Lnet/minecraft/world/item/ItemStack;)I
+        21: invokevirtual #175                // Method net/minecraft/world/item/ItemStack.limitSize:(I)V
+        24: return
+
+  public void onTransfer(int, int, net.neoforged.neoforge.transfer.transaction.TransactionContext);
+    Code:
+         0: iload_2
+         1: ifle          34
+         4: aload_0
+         5: invokevirtual #196                // Method isOnCustomCooldown:()Z
+         8: ifne          34
+        11: aload_0
+        12: iload_1
+        13: iload_2
+        14: invokevirtual #198                // Method wasEmpty:(II)Z
+        17: ifeq          34
+        20: aload_0
+        21: getfield      #73                 // Field cooldownTimeJournal:Lnet/neoforged/neoforge/transfer/transaction/SnapshotJournal;
+        24: aload_3
+        25: invokevirtual #204                // Method net/neoforged/neoforge/transfer/transaction/SnapshotJournal.updateSnapshots:(Lnet/neoforged/neoforge/transfer/transaction/TransactionContext;)V
+        28: aload_0
+        29: bipush        8
+        31: invokevirtual #207                // Method setCooldown:(I)V
+        34: return
+
+  public void setBlockState(net.minecraft.world.level.block.state.BlockState);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: invokespecial #213                // Method net/minecraft/world/level/block/entity/RandomizableContainerBlockEntity.setBlockState:(Lnet/minecraft/world/level/block/state/BlockState;)V
+         5: aload_0
+         6: aload_1
+         7: getstatic     #79                 // Field net/minecraft/world/level/block/HopperBlock.FACING:Lnet/minecraft/world/level/block/state/properties/EnumProperty;
+        10: invokevirtual #85                 // Method net/minecraft/world/level/block/state/BlockState.getValue:(Lnet/minecraft/world/level/block/state/properties/Property;)Ljava/lang/Comparable;
+        13: checkcast     #87                 // class net/minecraft/core/Direction
+        16: putfield      #89                 // Field facing:Lnet/minecraft/core/Direction;
+        19: return
+
+  protected net.minecraft.network.chat.Component getDefaultName();
+    Code:
+         0: getstatic     #217                // Field DEFAULT_NAME:Lnet/minecraft/network/chat/Component;
+         3: areturn
+
+  public static void pushItemsTick(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.entity.HopperBlockEntity);
+    Code:
+         0: aload_3
+         1: dup
+         2: getfield      #68                 // Field cooldownTime:I
+         5: iconst_1
+         6: isub
+         7: putfield      #68                 // Field cooldownTime:I
+        10: aload_3
+        11: aload_0
+        12: invokevirtual #225                // Method net/minecraft/world/level/Level.getGameTime:()J
+        15: putfield      #227                // Field tickedGameTime:J
+        18: aload_3
+        19: invokevirtual #230                // Method isOnCooldown:()Z
+        22: ifne          45
+        25: aload_3
+        26: iconst_0
+        27: invokevirtual #207                // Method setCooldown:(I)V
+        30: aload_0
+        31: aload_1
+        32: aload_2
+        33: aload_3
+        34: aload_0
+        35: aload_3
+        36: invokedynamic #247,  0            // InvokeDynamic #0:getAsBoolean:(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/block/entity/HopperBlockEntity;)Ljava/util/function/BooleanSupplier;
+        41: invokestatic  #251                // Method tryMoveItems:(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/entity/HopperBlockEntity;Ljava/util/function/BooleanSupplier;)Z
+        44: pop
+        45: return
+
+  public static boolean suckInItems(net.minecraft.world.level.Level, net.minecraft.world.level.block.entity.Hopper);
+    Code:
+         0: aload_1
+         1: invokeinterface #397,  1          // InterfaceMethod net/minecraft/world/level/block/entity/Hopper.getLevelX:()D
+         6: aload_1
+         7: invokeinterface #400,  1          // InterfaceMethod net/minecraft/world/level/block/entity/Hopper.getLevelY:()D
+        12: dconst_1
+        13: dadd
+        14: aload_1
+        15: invokeinterface #403,  1          // InterfaceMethod net/minecraft/world/level/block/entity/Hopper.getLevelZ:()D
+        20: invokestatic  #407                // Method net/minecraft/core/BlockPos.containing:(DDD)Lnet/minecraft/core/BlockPos;
+        23: astore_2
+        24: aload_0
+        25: aload_2
+        26: invokevirtual #411                // Method net/minecraft/world/level/Level.getBlockState:(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;
+        29: astore_3
+        30: aload_0
+        31: aload_1
+        32: aload_2
+        33: aload_3
+        34: invokestatic  #415                // Method getSourceContainerOrHandler:(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/block/entity/Hopper;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Lnet/neoforged/neoforge/transfer/item/ContainerOrHandler;
+        37: astore        4
+        39: aload         4
+        41: invokevirtual #324                // Method net/neoforged/neoforge/transfer/item/ContainerOrHandler.container:()Lnet/minecraft/world/Container;
+        44: ifnull        113
+        47: aload         4
+        49: invokevirtual #324                // Method net/neoforged/neoforge/transfer/item/ContainerOrHandler.container:()Lnet/minecraft/world/Container;
+        52: astore        5
+        54: getstatic     #418                // Field net/minecraft/core/Direction.DOWN:Lnet/minecraft/core/Direction;
+        57: astore        6
+        59: aload         5
+        61: aload         6
+        63: invokestatic  #390                // Method getSlots:(Lnet/minecraft/world/Container;Lnet/minecraft/core/Direction;)[I
+        66: astore        7
+        68: aload         7
+        70: arraylength
+        71: istore        8
+        73: iconst_0
+        74: istore        9
+        76: iload         9
+        78: iload         8
+        80: if_icmpge     111
+        83: aload         7
+        85: iload         9
+        87: iaload
+        88: istore        10
+        90: aload_1
+        91: aload         5
+        93: iload         10
+        95: aload         6
+        97: invokestatic  #422                // Method tryTakeInItemFromSlot:(Lnet/minecraft/world/level/block/entity/Hopper;Lnet/minecraft/world/Container;ILnet/minecraft/core/Direction;)Z
+       100: ifeq          105
+       103: iconst_1
+       104: ireturn
+       105: iinc          9, 1
+       108: goto          76
+       111: iconst_0
+       112: ireturn
+       113: aload         4
+       115: invokevirtual #352                // Method net/neoforged/neoforge/transfer/item/ContainerOrHandler.itemHandler:()Lnet/neoforged/neoforge/transfer/ResourceHandler;
+       118: ifnull        131
+       121: aload_1
+       122: aload         4
+       124: invokevirtual #352                // Method net/neoforged/neoforge/transfer/item/ContainerOrHandler.itemHandler:()Lnet/neoforged/neoforge/transfer/ResourceHandler;
+       127: invokestatic  #426                // Method net/neoforged/neoforge/transfer/item/VanillaInventoryCodeHooks.extractHook:(Lnet/minecraft/world/level/block/entity/Hopper;Lnet/neoforged/neoforge/transfer/ResourceHandler;)Z
+       130: ireturn
+       131: aload_1
+       132: invokeinterface #429,  1          // InterfaceMethod net/minecraft/world/level/block/entity/Hopper.isGridAligned:()Z
+       137: ifeq          163
+       140: aload_3
+       141: aload_0
+       142: aload_2
+       143: invokevirtual #433                // Method net/minecraft/world/level/block/state/BlockState.isCollisionShapeFullBlock:(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Z
+       146: ifeq          163
+       149: aload_3
+       150: getstatic     #439                // Field net/minecraft/tags/BlockTags.DOES_NOT_BLOCK_HOPPERS:Lnet/minecraft/tags/TagKey;
+       153: invokevirtual #443                // Method net/minecraft/world/level/block/state/BlockState.is:(Lnet/minecraft/tags/TagKey;)Z
+       156: ifne          163
+       159: iconst_1
+       160: goto          164
+       163: iconst_0
+       164: istore        5
+       166: iload         5
+       168: ifne          219
+       171: aload_0
+       172: aload_1
+       173: invokestatic  #447                // Method getItemsAtAndAbove:(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/block/entity/Hopper;)Ljava/util/List;
+       176: invokeinterface #450,  1          // InterfaceMethod java/util/List.iterator:()Ljava/util/Iterator;
+       181: astore        6
+       183: aload         6
+       185: invokeinterface #297,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+       190: ifeq          219
+       193: aload         6
+       195: invokeinterface #301,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+       200: checkcast     #452                // class net/minecraft/world/entity/item/ItemEntity
+       203: astore        7
+       205: aload_1
+       206: aload         7
+       208: invokestatic  #455                // Method addItem:(Lnet/minecraft/world/Container;Lnet/minecraft/world/entity/item/ItemEntity;)Z
+       211: ifeq          216
+       214: iconst_1
+       215: ireturn
+       216: goto          183
+       219: iconst_0
+       220: ireturn
+
+  public static boolean addItem(net.minecraft.world.Container, net.minecraft.world.entity.item.ItemEntity);
+    Code:
+         0: iconst_0
+         1: istore_2
+         2: aload_1
+         3: invokevirtual #468                // Method net/minecraft/world/entity/item/ItemEntity.getItem:()Lnet/minecraft/world/item/ItemStack;
+         6: invokevirtual #471                // Method net/minecraft/world/item/ItemStack.copy:()Lnet/minecraft/world/item/ItemStack;
+         9: astore_3
+        10: aconst_null
+        11: aload_0
+        12: aload_3
+        13: aconst_null
+        14: invokestatic  #340                // Method addItem:(Lnet/minecraft/world/Container;Lnet/minecraft/world/Container;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/core/Direction;)Lnet/minecraft/world/item/ItemStack;
+        17: astore        4
+        19: aload         4
+        21: invokevirtual #189                // Method net/minecraft/world/item/ItemStack.isEmpty:()Z
+        24: ifeq          43
+        27: iconst_1
+        28: istore_2
+        29: aload_1
+        30: getstatic     #58                 // Field net/minecraft/world/item/ItemStack.EMPTY:Lnet/minecraft/world/item/ItemStack;
+        33: invokevirtual #474                // Method net/minecraft/world/entity/item/ItemEntity.setItem:(Lnet/minecraft/world/item/ItemStack;)V
+        36: aload_1
+        37: invokevirtual #477                // Method net/minecraft/world/entity/item/ItemEntity.discard:()V
+        40: goto          49
+        43: aload_1
+        44: aload         4
+        46: invokevirtual #474                // Method net/minecraft/world/entity/item/ItemEntity.setItem:(Lnet/minecraft/world/item/ItemStack;)V
+        49: iload_2
+        50: ireturn
+
+  public static net.minecraft.world.item.ItemStack addItem(net.minecraft.world.Container, net.minecraft.world.Container, net.minecraft.world.item.ItemStack, net.minecraft.core.Direction);
+    Code:
+         0: aload_1
+         1: instanceof    #370                // class net/minecraft/world/WorldlyContainer
+         4: ifeq          67
+         7: aload_1
+         8: checkcast     #370                // class net/minecraft/world/WorldlyContainer
+        11: astore        4
+        13: aload_3
+        14: ifnull        67
+        17: aload         4
+        19: aload_3
+        20: invokeinterface #374,  2          // InterfaceMethod net/minecraft/world/WorldlyContainer.getSlotsForFace:(Lnet/minecraft/core/Direction;)[I
+        25: astore        5
+        27: iconst_0
+        28: istore        6
+        30: iload         6
+        32: aload         5
+        34: arraylength
+        35: if_icmpge     64
+        38: aload_2
+        39: invokevirtual #189                // Method net/minecraft/world/item/ItemStack.isEmpty:()Z
+        42: ifne          64
+        45: aload_0
+        46: aload_1
+        47: aload_2
+        48: aload         5
+        50: iload         6
+        52: iaload
+        53: aload_3
+        54: invokestatic  #482                // Method tryMoveInItem:(Lnet/minecraft/world/Container;Lnet/minecraft/world/Container;Lnet/minecraft/world/item/ItemStack;ILnet/minecraft/core/Direction;)Lnet/minecraft/world/item/ItemStack;
+        57: astore_2
+        58: iinc          6, 1
+        61: goto          30
+        64: goto          108
+        67: aload_1
+        68: invokeinterface #375,  1          // InterfaceMethod net/minecraft/world/Container.getContainerSize:()I
+        73: istore        5
+        75: iconst_0
+        76: istore        6
+        78: iload         6
+        80: iload         5
+        82: if_icmpge     108
+        85: aload_2
+        86: invokevirtual #189                // Method net/minecraft/world/item/ItemStack.isEmpty:()Z
+        89: ifne          108
+        92: aload_0
+        93: aload_1
+        94: aload_2
+        95: iload         6
+        97: aload_3
+        98: invokestatic  #482                // Method tryMoveInItem:(Lnet/minecraft/world/Container;Lnet/minecraft/world/Container;Lnet/minecraft/world/item/ItemStack;ILnet/minecraft/core/Direction;)Lnet/minecraft/world/item/ItemStack;
+       101: astore_2
+       102: iinc          6, 1
+       105: goto          78
+       108: aload_2
+       109: areturn
+
+  public static java.util.List<net.minecraft.world.entity.item.ItemEntity> getItemsAtAndAbove(net.minecraft.world.level.Level, net.minecraft.world.level.block.entity.Hopper);
+    Code:
+         0: aload_1
+         1: invokeinterface #543,  1          // InterfaceMethod net/minecraft/world/level/block/entity/Hopper.getSuckAabb:()Lnet/minecraft/world/phys/AABB;
+         6: aload_1
+         7: invokeinterface #397,  1          // InterfaceMethod net/minecraft/world/level/block/entity/Hopper.getLevelX:()D
+        12: ldc2_w        #544                // double 0.5d
+        15: dsub
+        16: aload_1
+        17: invokeinterface #400,  1          // InterfaceMethod net/minecraft/world/level/block/entity/Hopper.getLevelY:()D
+        22: ldc2_w        #544                // double 0.5d
+        25: dsub
+        26: aload_1
+        27: invokeinterface #403,  1          // InterfaceMethod net/minecraft/world/level/block/entity/Hopper.getLevelZ:()D
+        32: ldc2_w        #544                // double 0.5d
+        35: dsub
+        36: invokevirtual #551                // Method net/minecraft/world/phys/AABB.move:(DDD)Lnet/minecraft/world/phys/AABB;
+        39: astore_2
+        40: aload_0
+        41: ldc_w         #452                // class net/minecraft/world/entity/item/ItemEntity
+        44: aload_2
+        45: getstatic     #557                // Field net/minecraft/world/entity/EntitySelector.ENTITY_STILL_ALIVE:Ljava/util/function/Predicate;
+        48: invokevirtual #561                // Method net/minecraft/world/level/Level.getEntitiesOfClass:(Ljava/lang/Class;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;)Ljava/util/List;
+        51: areturn
+
+  public static net.minecraft.world.Container getContainerAt(net.minecraft.world.level.Level, net.minecraft.core.BlockPos);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: aload_0
+         3: aload_1
+         4: invokevirtual #411                // Method net/minecraft/world/level/Level.getBlockState:(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;
+         7: aload_1
+         8: invokevirtual #567                // Method net/minecraft/core/BlockPos.getX:()I
+        11: i2d
+        12: ldc2_w        #544                // double 0.5d
+        15: dadd
+        16: aload_1
+        17: invokevirtual #570                // Method net/minecraft/core/BlockPos.getY:()I
+        20: i2d
+        21: ldc2_w        #544                // double 0.5d
+        24: dadd
+        25: aload_1
+        26: invokevirtual #573                // Method net/minecraft/core/BlockPos.getZ:()I
+        29: i2d
+        30: ldc2_w        #544                // double 0.5d
+        33: dadd
+        34: invokestatic  #538                // Method getContainerAt:(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;DDD)Lnet/minecraft/world/Container;
+        37: areturn
+
+  public static net.neoforged.neoforge.transfer.item.ContainerOrHandler getContainerOrHandlerAt(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.core.Direction);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: aload_0
+         3: aload_1
+         4: invokevirtual #411                // Method net/minecraft/world/level/Level.getBlockState:(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;
+         7: aload_1
+         8: invokevirtual #567                // Method net/minecraft/core/BlockPos.getX:()I
+        11: i2d
+        12: ldc2_w        #544                // double 0.5d
+        15: dadd
+        16: aload_1
+        17: invokevirtual #570                // Method net/minecraft/core/BlockPos.getY:()I
+        20: i2d
+        21: ldc2_w        #544                // double 0.5d
+        24: dadd
+        25: aload_1
+        26: invokevirtual #573                // Method net/minecraft/core/BlockPos.getZ:()I
+        29: i2d
+        30: ldc2_w        #544                // double 0.5d
+        33: dadd
+        34: aload_2
+        35: invokestatic  #644                // Method getContainerOrHandlerAt:(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;DDDLnet/minecraft/core/Direction;)Lnet/neoforged/neoforge/transfer/item/ContainerOrHandler;
+        38: areturn
+
+  public double getLevelX();
+    Code:
+         0: aload_0
+         1: getfield      #672                // Field worldPosition:Lnet/minecraft/core/BlockPos;
+         4: invokevirtual #567                // Method net/minecraft/core/BlockPos.getX:()I
+         7: i2d
+         8: ldc2_w        #544                // double 0.5d
+        11: dadd
+        12: dreturn
+
+  public double getLevelY();
+    Code:
+         0: aload_0
+         1: getfield      #672                // Field worldPosition:Lnet/minecraft/core/BlockPos;
+         4: invokevirtual #570                // Method net/minecraft/core/BlockPos.getY:()I
+         7: i2d
+         8: ldc2_w        #544                // double 0.5d
+        11: dadd
+        12: dreturn
+
+  public double getLevelZ();
+    Code:
+         0: aload_0
+         1: getfield      #672                // Field worldPosition:Lnet/minecraft/core/BlockPos;
+         4: invokevirtual #573                // Method net/minecraft/core/BlockPos.getZ:()I
+         7: i2d
+         8: ldc2_w        #544                // double 0.5d
+        11: dadd
+        12: dreturn
+
+  public boolean isGridAligned();
+    Code:
+         0: iconst_1
+         1: ireturn
+
+  public void setCooldown(int);
+    Code:
+         0: aload_0
+         1: iload_1
+         2: putfield      #68                 // Field cooldownTime:I
+         5: return
+
+  public boolean isOnCustomCooldown();
+    Code:
+         0: aload_0
+         1: getfield      #68                 // Field cooldownTime:I
+         4: bipush        8
+         6: if_icmple     13
+         9: iconst_1
+        10: goto          14
+        13: iconst_0
+        14: ireturn
+
+  protected net.minecraft.core.NonNullList<net.minecraft.world.item.ItemStack> getItems();
+    Code:
+         0: aload_0
+         1: getfield      #66                 // Field items:Lnet/minecraft/core/NonNullList;
+         4: areturn
+
+  protected void setItems(net.minecraft.core.NonNullList<net.minecraft.world.item.ItemStack>);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: putfield      #66                 // Field items:Lnet/minecraft/core/NonNullList;
+         5: return
+
+  public static void entityInside(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.entity.Entity, net.minecraft.world.level.block.entity.HopperBlockEntity);
+    Code:
+         0: aload_3
+         1: instanceof    #452                // class net/minecraft/world/entity/item/ItemEntity
+         4: ifeq          78
+         7: aload_3
+         8: checkcast     #452                // class net/minecraft/world/entity/item/ItemEntity
+        11: astore        5
+        13: aload         5
+        15: invokevirtual #468                // Method net/minecraft/world/entity/item/ItemEntity.getItem:()Lnet/minecraft/world/item/ItemStack;
+        18: invokevirtual #189                // Method net/minecraft/world/item/ItemStack.isEmpty:()Z
+        21: ifne          78
+        24: aload_3
+        25: invokevirtual #682                // Method net/minecraft/world/entity/Entity.getBoundingBox:()Lnet/minecraft/world/phys/AABB;
+        28: aload_1
+        29: invokevirtual #567                // Method net/minecraft/core/BlockPos.getX:()I
+        32: ineg
+        33: i2d
+        34: aload_1
+        35: invokevirtual #570                // Method net/minecraft/core/BlockPos.getY:()I
+        38: ineg
+        39: i2d
+        40: aload_1
+        41: invokevirtual #573                // Method net/minecraft/core/BlockPos.getZ:()I
+        44: ineg
+        45: i2d
+        46: invokevirtual #551                // Method net/minecraft/world/phys/AABB.move:(DDD)Lnet/minecraft/world/phys/AABB;
+        49: aload         4
+        51: invokevirtual #683                // Method getSuckAabb:()Lnet/minecraft/world/phys/AABB;
+        54: invokevirtual #687                // Method net/minecraft/world/phys/AABB.intersects:(Lnet/minecraft/world/phys/AABB;)Z
+        57: ifeq          78
+        60: aload_0
+        61: aload_1
+        62: aload_2
+        63: aload         4
+        65: aload         4
+        67: aload         5
+        69: invokedynamic #695,  0            // InvokeDynamic #1:getAsBoolean:(Lnet/minecraft/world/level/block/entity/HopperBlockEntity;Lnet/minecraft/world/entity/item/ItemEntity;)Ljava/util/function/BooleanSupplier;
+        74: invokestatic  #251                // Method tryMoveItems:(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/entity/HopperBlockEntity;Ljava/util/function/BooleanSupplier;)Z
+        77: pop
+        78: return
+
+  protected net.minecraft.world.inventory.AbstractContainerMenu createMenu(int, net.minecraft.world.entity.player.Inventory);
+    Code:
+         0: new           #701                // class net/minecraft/world/inventory/HopperMenu
+         3: dup
+         4: iload_1
+         5: aload_2
+         6: aload_0
+         7: invokespecial #704                // Method net/minecraft/world/inventory/HopperMenu."<init>":(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;)V
+        10: areturn
+
+  public long getLastUpdateTime();
+    Code:
+         0: aload_0
+         1: getfield      #227                // Field tickedGameTime:J
+         4: lreturn
+
+  static {};
+    Code:
+         0: bipush        54
+         2: anewarray     #379                // class "[I"
+         5: putstatic     #377                // Field CACHED_SLOTS:[[I
+         8: ldc_w         #713                // String container.hopper
+        11: invokestatic  #719                // InterfaceMethod net/minecraft/network/chat/Component.translatable:(Ljava/lang/String;)Lnet/minecraft/network/chat/MutableComponent;
+        14: putstatic     #217                // Field DEFAULT_NAME:Lnet/minecraft/network/chat/Component;
+        17: return
+}

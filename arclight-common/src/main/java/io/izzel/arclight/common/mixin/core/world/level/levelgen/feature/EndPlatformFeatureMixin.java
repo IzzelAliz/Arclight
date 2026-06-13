@@ -1,5 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.levelgen.feature;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -10,7 +12,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.EndPlatformFeature;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.util.BlockStateListPopulator;
+import org.bukkit.craftbukkit.util.BlockStateListPopulator;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -49,8 +51,8 @@ public class EndPlatformFeatureMixin {
                                               @Local(allocate = "blockList") BlockStateListPopulator blockList,
                                               @Local(allocate = "entity") Entity entity) {
         if (entity != null) {
-            var bworld = serverLevelAccessor.getLevel().bridge$getWorld();
-            PortalCreateEvent portalEvent = new PortalCreateEvent((List<org.bukkit.block.BlockState>) (List) blockList.getList(), bworld, entity.bridge$getBukkitEntity(), org.bukkit.event.world.PortalCreateEvent.CreateReason.END_PLATFORM);
+            var bworld = ((WorldBridge) serverLevelAccessor.getLevel()).bridge$getWorld();
+            PortalCreateEvent portalEvent = new PortalCreateEvent((List<org.bukkit.block.BlockState>) (List) blockList.getList(), bworld, ((EntityBridge) entity).bridge$getBukkitEntity(), org.bukkit.event.world.PortalCreateEvent.CreateReason.END_PLATFORM);
 
             Bukkit.getPluginManager().callEvent(portalEvent);
             if (!portalEvent.isCancelled()) {

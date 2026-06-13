@@ -3,59 +3,73 @@ package io.izzel.arclight.common.mod.server.world.border;
 import net.minecraft.world.level.border.BorderChangeListener;
 import net.minecraft.world.level.border.WorldBorder;
 
-public class ArclightDelegatedBorderListener extends BorderChangeListener.DelegateBorderChangeListener {
+public class ArclightDelegatedBorderListener implements BorderChangeListener {
 
     public static boolean isEnabled() {
-        // return ArclightConfig.spec().getCompat().isAssociateWorldBorder();
         return true;
     }
 
-    private final BorderChangeListener.DelegateBorderChangeListener delegate;
+    private final WorldBorder border;
+    private final BorderChangeListener delegate;
 
-    public ArclightDelegatedBorderListener(WorldBorder border, BorderChangeListener.DelegateBorderChangeListener delegate) {
-        super(border);
+    public ArclightDelegatedBorderListener(WorldBorder border, BorderChangeListener delegate) {
+        this.border = border;
         this.delegate = delegate;
     }
 
     @Override
-    public void onBorderSizeSet(WorldBorder worldBorder, double d) {
-        if (!isEnabled()) { return; }
-        delegate.onBorderSizeSet(worldBorder, d);
+    public void onSetSize(WorldBorder worldBorder, double size) {
+        if (!isEnabled()) {
+            return;
+        }
+        delegate.onSetSize(worldBorder, size);
     }
 
     @Override
-    public void onBorderCenterSet(WorldBorder worldBorder, double d, double e) {
-        if (!isEnabled()) { return; }
-        delegate.onBorderCenterSet(worldBorder, d, e);
+    public void onSetCenter(WorldBorder worldBorder, double x, double z) {
+        if (!isEnabled()) {
+            return;
+        }
+        delegate.onSetCenter(worldBorder, x, z);
     }
 
     @Override
-    public void onBorderSizeLerping(WorldBorder worldBorder, double d, double e, long l) {
-        if (!isEnabled()) { return; }
-        delegate.onBorderSizeLerping(worldBorder, d, e, l);
+    public void onLerpSize(WorldBorder worldBorder, double from, double to, long time, long startTime) {
+        if (!isEnabled()) {
+            return;
+        }
+        delegate.onLerpSize(worldBorder, from, to, time, startTime);
     }
 
     @Override
-    public void onBorderSetWarningTime(WorldBorder worldBorder, int i) {
-        if (!isEnabled()) { return; }
-        delegate.onBorderSetWarningTime(worldBorder, i);
+    public void onSetWarningTime(WorldBorder worldBorder, int time) {
+        if (!isEnabled()) {
+            return;
+        }
+        delegate.onSetWarningTime(worldBorder, time);
     }
 
     @Override
-    public void onBorderSetWarningBlocks(WorldBorder worldBorder, int i) {
-        if (!isEnabled()) { return; }
-        delegate.onBorderSetWarningBlocks(worldBorder, i);
+    public void onSetWarningBlocks(WorldBorder worldBorder, int distance) {
+        if (!isEnabled()) {
+            return;
+        }
+        delegate.onSetWarningBlocks(worldBorder, distance);
     }
 
     @Override
-    public void onBorderSetDamagePerBlock(WorldBorder worldBorder, double d) {
-        if (!isEnabled()) { return; }
-        delegate.onBorderSetDamagePerBlock(worldBorder, d);
+    public void onSetDamagePerBlock(WorldBorder worldBorder, double damage) {
+        if (!isEnabled()) {
+            return;
+        }
+        delegate.onSetDamagePerBlock(worldBorder, damage);
     }
 
     @Override
-    public void onBorderSetDamageSafeZOne(WorldBorder worldBorder, double d) {
-        if (!isEnabled()) { return; }
-        delegate.onBorderSetDamageSafeZOne(worldBorder, d);
+    public void onSetSafeZone(WorldBorder worldBorder, double safeZone) {
+        if (!isEnabled()) {
+            return;
+        }
+        delegate.onSetSafeZone(worldBorder, safeZone);
     }
 }

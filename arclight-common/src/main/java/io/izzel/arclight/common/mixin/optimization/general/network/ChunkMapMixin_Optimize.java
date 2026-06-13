@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.optimization.general.network;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ChunkMap_TrackedEntityBridge;
 import io.izzel.arclight.common.mod.compat.ModIds;

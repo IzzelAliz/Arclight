@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;

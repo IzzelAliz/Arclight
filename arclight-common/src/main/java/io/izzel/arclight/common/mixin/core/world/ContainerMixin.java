@@ -5,7 +5,7 @@ import io.izzel.arclight.common.mod.inventory.SideViewingTracker;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
 import org.spongepowered.asm.mixin.Mixin;

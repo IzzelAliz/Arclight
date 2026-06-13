@@ -7,13 +7,14 @@ import io.izzel.tools.product.Product;
 import io.izzel.tools.product.Product4;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.boss.EnderDragonPart;
+import io.izzel.arclight.common.mixin.core.world.entity.boss.enderdragon.EnderDragonAccessor;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.entity.CraftEntity;
-import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
+import org.bukkit.craftbukkit.entity.CraftEntity;
+import org.bukkit.craftbukkit.event.CraftPortalEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -84,7 +85,7 @@ public interface EntityBridge extends CommandSourceBridge, InjectEntityBridge {
     }
 
     default Entity[] bridge$forge$getParts() {
-        return this instanceof EnderDragon dragon ? dragon.subEntities : null;
+        return this instanceof EnderDragon dragon ? ((EnderDragonAccessor) dragon).arclight$getSubEntities() : null;
     }
 
     default Product4<Boolean /* Cancelled */, Double /* X */, Double /* Y */, Double /* Z */>

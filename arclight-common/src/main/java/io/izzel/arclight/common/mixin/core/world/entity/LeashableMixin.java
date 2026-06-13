@@ -27,31 +27,31 @@ public interface LeashableMixin {
 
     @Decorate(method = "restoreLeashFromSave", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;spawnAtLocation(Lnet/minecraft/world/level/ItemLike;)Lnet/minecraft/world/entity/item/ItemEntity;"))
     private static ItemEntity arclight$forceDrop(Entity instance, ItemLike itemLike) throws Throwable {
-        instance.bridge().bridge$setForceDrops(true);
+        ((EntityBridge) instance).bridge$setForceDrops(true);
         var itemEntity = (ItemEntity) DecorationOps.callsite().invoke(instance, itemLike);
-        instance.bridge().bridge$setForceDrops(false);
+        ((EntityBridge) instance).bridge$setForceDrops(false);
         return itemEntity;
     }
 
     @Decorate(method = "dropLeash(Lnet/minecraft/world/entity/Entity;ZZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;spawnAtLocation(Lnet/minecraft/world/level/ItemLike;)Lnet/minecraft/world/entity/item/ItemEntity;"))
     private static ItemEntity arclight$forceDrop2(Entity instance, ItemLike itemLike) throws Throwable {
-        instance.bridge().bridge$setForceDrops(true);
+        ((EntityBridge) instance).bridge$setForceDrops(true);
         var itemEntity = (ItemEntity) DecorationOps.callsite().invoke(instance, itemLike);
-        instance.bridge().bridge$setForceDrops(false);
+        ((EntityBridge) instance).bridge$setForceDrops(false);
         return itemEntity;
     }
 
     @Decorate(method = "tickLeash", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Leashable;dropLeash(Lnet/minecraft/world/entity/Entity;ZZ)V"))
     private static <E extends Entity & Leashable> void arclight$unleashEvent(E entity, boolean bl, boolean bl2) throws Throwable {
-        Bukkit.getPluginManager().callEvent(new EntityUnleashEvent(entity.bridge$getBukkitEntity(), (!entity.isAlive())
+        Bukkit.getPluginManager().callEvent(new EntityUnleashEvent(((EntityBridge) entity).bridge$getBukkitEntity(), (!entity.isAlive())
             ? EntityUnleashEvent.UnleashReason.PLAYER_UNLEASH : EntityUnleashEvent.UnleashReason.HOLDER_GONE));
-        DecorationOps.callsite().invoke(entity, bl, !entity.bridge().bridge$pluginRemoved());
+        DecorationOps.callsite().invoke(entity, bl, !((EntityBridge) entity).bridge$pluginRemoved());
     }
 
     @Decorate(method = "leashTooFarBehaviour", inject = true, at = @At("HEAD"))
     private void arclight$distanceLeash() {
         if (this instanceof Entity entity) {
-            Bukkit.getPluginManager().callEvent(new EntityUnleashEvent(entity.bridge$getBukkitEntity(), EntityUnleashEvent.UnleashReason.DISTANCE));
+            Bukkit.getPluginManager().callEvent(new EntityUnleashEvent(((EntityBridge) entity).bridge$getBukkitEntity(), EntityUnleashEvent.UnleashReason.DISTANCE));
         }
     }
 }

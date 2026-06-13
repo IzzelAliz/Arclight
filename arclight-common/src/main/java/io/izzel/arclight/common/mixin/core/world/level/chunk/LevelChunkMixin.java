@@ -18,9 +18,9 @@ import net.minecraft.world.level.levelgen.blending.BlendingData;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.ticks.LevelChunkTicks;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.CraftChunk;
-import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataContainer;
-import org.bukkit.craftbukkit.v.persistence.DirtyCraftPersistentDataContainer;
+import org.bukkit.craftbukkit.CraftChunk;
+import org.bukkit.craftbukkit.persistence.CraftPersistentDataContainer;
+import org.bukkit.craftbukkit.persistence.DirtyCraftPersistentDataContainer;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -136,7 +136,7 @@ public abstract class LevelChunkMixin extends ChunkAccessMixin implements LevelC
                 random.setSeed(((ServerLevel) level).getSeed());
                 long xRand = random.nextLong() / 2L * 2L + 1L;
                 long zRand = random.nextLong() / 2L * 2L + 1L;
-                random.setSeed((long) this.chunkPos.x * xRand + (long) this.chunkPos.z * zRand ^ ((ServerLevel) level).getSeed());
+                random.setSeed((long) this.chunkPos.x() * xRand + (long) this.chunkPos.z() * zRand ^ ((ServerLevel) level).getSeed());
 
                 org.bukkit.World world = ((WorldBridge) this.level).bridge$getWorld();
                 if (world != null) {
@@ -165,7 +165,7 @@ public abstract class LevelChunkMixin extends ChunkAccessMixin implements LevelC
 
     @Redirect(method = "setBlockState", at = @At(value = "FIELD", ordinal = 1, target = "Lnet/minecraft/world/level/Level;isClientSide:Z"))
     public boolean arclight$redirectIsRemote(Level world) {
-        return world.isClientSide && this.arclight$doPlace;
+        return world.isClientSide() && this.arclight$doPlace;
     }
 
     @Override

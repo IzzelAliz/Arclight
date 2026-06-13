@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.bridge.core.world.server;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerEntity;
 import net.minecraft.world.entity.Entity;

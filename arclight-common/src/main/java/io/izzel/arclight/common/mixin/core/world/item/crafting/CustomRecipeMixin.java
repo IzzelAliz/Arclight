@@ -13,6 +13,6 @@ public class CustomRecipeMixin implements RecipeBridge {
 
     @Override
     public Recipe bridge$toBukkitRecipe(NamespacedKey id) {
-        return new org.bukkit.craftbukkit.v.inventory.CraftComplexRecipe(id, new ItemStack(Material.AIR), (CustomRecipe) (Object) this);
+        return new org.bukkit.craftbukkit.inventory.CraftComplexRecipe(id, new ItemStack(Material.AIR), (CustomRecipe) (Object) this);
     }
 }

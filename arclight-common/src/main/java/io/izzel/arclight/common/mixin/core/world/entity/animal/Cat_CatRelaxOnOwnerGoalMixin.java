@@ -1,7 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.animal.Cat;
+import net.minecraft.world.entity.animal.feline.Cat;
 import net.minecraft.world.level.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Item;
@@ -12,14 +13,14 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(targets = "net.minecraft.world.entity.animal.Cat$CatRelaxOnOwnerGoal")
+@Mixin(targets = "net.minecraft.world.entity.animal.feline.Cat$CatRelaxOnOwnerGoal")
 public class Cat_CatRelaxOnOwnerGoalMixin {
 
     @Shadow @Final private Cat cat;
 
     @Redirect(method = "giveMorningGift", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private boolean arclight$dropItem(Level instance, Entity entity) {
-        var event = new EntityDropItemEvent(this.cat.bridge$getBukkitEntity(), (Item) entity.bridge$getBukkitEntity());
+        var event = new EntityDropItemEvent(((EntityBridge) this.cat).bridge$getBukkitEntity(), (Item) ((EntityBridge) entity).bridge$getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
             return instance.addFreshEntity(entity);

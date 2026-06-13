@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.server.level.ServerLevel;
@@ -16,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.UUID;
 
-@Mixin(net.minecraft.world.entity.monster.ZombieVillager.class)
+@Mixin(net.minecraft.world.entity.monster.zombie.ZombieVillager.class)
 public abstract class ZombieVillagerMixin extends ZombieMixin {
 
     @Inject(method = "startConverting", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/ZombieVillager;removeEffect(Lnet/minecraft/core/Holder;)Z"))
@@ -31,10 +32,10 @@ public abstract class ZombieVillagerMixin extends ZombieMixin {
     }
 
     @Eject(method = "finishConversion", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/ZombieVillager;convertTo(Lnet/minecraft/world/entity/EntityType;Z)Lnet/minecraft/world/entity/Mob;"))
-    private <T extends Mob> T arclight$cure(net.minecraft.world.entity.monster.ZombieVillager zombieVillagerEntity, EntityType<T> entityType, boolean flag, CallbackInfo ci) {
+    private <T extends Mob> T arclight$cure(net.minecraft.world.entity.monster.zombie.ZombieVillager zombieVillagerEntity, EntityType<T> entityType, boolean flag, CallbackInfo ci) {
         T t = this.convertTo(entityType, flag, EntityTransformEvent.TransformReason.CURED, CreatureSpawnEvent.SpawnReason.CURED);
         if (t == null) {
-            ((ZombieVillager) this.bridge$getBukkitEntity()).setConversionTime(-1);
+            ((ZombieVillager) ((EntityBridge) this).bridge$getBukkitEntity()).setConversionTime(-1);
             ci.cancel();
         } else {
             ((LivingEntityBridge) t).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.CONVERSION);

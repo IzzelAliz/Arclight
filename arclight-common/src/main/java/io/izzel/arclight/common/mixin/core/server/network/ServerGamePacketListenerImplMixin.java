@@ -1,7 +1,10 @@
 package io.izzel.arclight.common.mixin.core.server.network;
 
 import com.mojang.brigadier.ParseResults;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
+import io.izzel.arclight.common.mod.util.ArclightInventoryHelper;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.inventory.AbstractContainerMenuBridge;
 import io.izzel.arclight.common.bridge.core.server.network.ServerGamePacketListenerImplBridge;
@@ -35,7 +38,7 @@ import net.minecraft.network.chat.SignedMessageChain;
 import net.minecraft.network.protocol.PacketUtils;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.network.protocol.game.ClientboundMoveVehiclePacket;
-import net.minecraft.network.protocol.game.ClientboundSetCarriedItemPacket;
+import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket;
 import net.minecraft.network.protocol.game.ServerboundChatCommandSignedPacket;
@@ -61,7 +64,7 @@ import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.network.protocol.game.ServerboundTeleportToEntityPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -79,7 +82,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
-import net.minecraft.world.entity.RelativeMovement;
+import net.minecraft.world.entity.Relative;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -91,7 +94,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.WritableBookContent;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Blocks;
@@ -104,15 +107,15 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandException;
-import org.bukkit.craftbukkit.v.entity.CraftEntity;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v.inventory.CraftItemType;
-import org.bukkit.craftbukkit.v.util.CraftChatMessage;
-import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
-import org.bukkit.craftbukkit.v.util.LazyPlayerSet;
-import org.bukkit.craftbukkit.v.util.Waitable;
+import org.bukkit.craftbukkit.entity.CraftEntity;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.inventory.CraftItemType;
+import org.bukkit.craftbukkit.util.CraftChatMessage;
+import org.bukkit.craftbukkit.util.CraftNamespacedKey;
+import org.bukkit.craftbukkit.util.LazyPlayerSet;
+import org.bukkit.craftbukkit.util.Waitable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
@@ -214,7 +217,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
     @Shadow protected abstract void tryHandleChat(String string, Runnable runnable);
     @Shadow protected abstract <S> Map<String, PlayerChatMessage> collectSignedArguments(ServerboundChatCommandSignedPacket serverboundChatCommandSignedPacket, SignableCommand<S> signableCommand, LastSeenMessages lastSeenMessages) throws SignedMessageChain.DecodeException;
     @Shadow public abstract void sendDisguisedChatMessage(Component component, ChatType.Bound bound);
-    @Shadow public abstract void teleport(double d, double e, double f, float g, float h, Set<RelativeMovement> set);
+    @Shadow public abstract void teleport(double d, double e, double f, float g, float h, Set<Relative> set);
     // @formatter:on
 
     private static final int SURVIVAL_PLACE_DISTANCE_SQUARED = 6 * 6;
@@ -275,22 +278,23 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
      */
     @Overwrite
     public void handleMoveVehicle(final ServerboundMoveVehiclePacket packetplayinvehiclemove) {
-        PacketUtils.ensureRunningOnSameThread(packetplayinvehiclemove, (ServerGamePacketListenerImpl) (Object) this, this.player.serverLevel());
-        if (containsInvalidValues(packetplayinvehiclemove.getX(), packetplayinvehiclemove.getY(), packetplayinvehiclemove.getZ(), packetplayinvehiclemove.getYRot(), packetplayinvehiclemove.getXRot())) {
+        PacketUtils.ensureRunningOnSameThread(packetplayinvehiclemove, (ServerGamePacketListenerImpl) (Object) this, this.player.level());
+        var vehiclePos = packetplayinvehiclemove.position();
+        if (containsInvalidValues(vehiclePos.x, vehiclePos.y, vehiclePos.z, packetplayinvehiclemove.yRot(), packetplayinvehiclemove.xRot())) {
             this.disconnect(Component.translatable("multiplayer.disconnect.invalid_vehicle_movement"));
         } else if (!this.updateAwaitingTeleport()) {
             Entity entity = this.player.getRootVehicle();
             if (entity != this.player && entity.getControllingPassenger() == this.player && entity == this.lastVehicle) {
-                ServerLevel worldserver = this.player.serverLevel();
+                ServerLevel worldserver = this.player.level();
 
                 double d0 = entity.getX();
                 double d2 = entity.getY();
                 double d3 = entity.getZ();
-                double d4 = packetplayinvehiclemove.getX();
-                double d5 = packetplayinvehiclemove.getY();
-                double d6 = packetplayinvehiclemove.getZ();
-                float f = packetplayinvehiclemove.getYRot();
-                float f2 = packetplayinvehiclemove.getXRot();
+                double d4 = vehiclePos.x;
+                double d5 = vehiclePos.y;
+                double d6 = vehiclePos.z;
+                float f = packetplayinvehiclemove.yRot();
+                float f2 = packetplayinvehiclemove.xRot();
                 double d7 = d4 - this.vehicleFirstGoodX;
                 double d8 = d5 - this.vehicleFirstGoodY;
                 double d9 = d6 - this.vehicleFirstGoodZ;
@@ -333,7 +337,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                 speed *= 2.0;
                 if (d11 - d10 > Math.max(100.0, Math.pow(10.0f * i * speed, 2.0)) && !this.isSingleplayerOwner()) {
                     LOGGER.warn("{} (vehicle of {}) moved too quickly! {},{},{}", entity.getName().getString(), this.player.getName().getString(), d7, d8, d9);
-                    this.send(new ClientboundMoveVehiclePacket(entity));
+                    this.send(ClientboundMoveVehiclePacket.fromEntity(entity));
                     return;
                 }
                 boolean flag = worldserver.noCollision(entity, entity.getBoundingBox().deflate(0.0625));
@@ -363,13 +367,13 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                     LOGGER.warn("{} (vehicle of {}) moved wrongly! {}", entity.getName().getString(), this.player.getName().getString(), Math.sqrt(d11));
                 }
                 Location curPos = this.getCraftPlayer().getLocation();
-                entity.absMoveTo(d4, d5, d6, f, f2);
-                this.player.absMoveTo(d4, d5, d6, this.player.getYRot(), this.player.getXRot());
+                entity.snapTo(d4, d5, d6, f, f2);
+                this.player.snapTo(d4, d5, d6, this.player.getYRot(), this.player.getXRot());
                 boolean flag3 = worldserver.noCollision(entity, entity.getBoundingBox().deflate(0.0625));
                 if (flag && (flag2 || !flag3)) {
-                    entity.absMoveTo(d0, d2, d3, f, f2);
-                    this.player.absMoveTo(d0, d2, d3, this.player.getYRot(), this.player.getXRot());
-                    this.send(new ClientboundMoveVehiclePacket(entity));
+                    entity.snapTo(d0, d2, d3, f, f2);
+                    this.player.snapTo(d0, d2, d3, this.player.getYRot(), this.player.getXRot());
+                    this.send(ClientboundMoveVehiclePacket.fromEntity(entity));
                     return;
                 }
                 Player player = this.getCraftPlayer();
@@ -383,11 +387,11 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                 }
                 Location from = new Location(player.getWorld(), this.lastPosX, this.lastPosY, this.lastPosZ, this.lastYaw, this.lastPitch);
                 Location to = player.getLocation().clone();
-                to.setX(packetplayinvehiclemove.getX());
-                to.setY(packetplayinvehiclemove.getY());
-                to.setZ(packetplayinvehiclemove.getZ());
-                to.setYaw(packetplayinvehiclemove.getYRot());
-                to.setPitch(packetplayinvehiclemove.getXRot());
+                to.setX(vehiclePos.x);
+                to.setY(vehiclePos.y);
+                to.setZ(vehiclePos.z);
+                to.setYaw(packetplayinvehiclemove.yRot());
+                to.setPitch(packetplayinvehiclemove.xRot());
                 double delta = Math.pow(this.lastPosX - to.getX(), 2.0) + Math.pow(this.lastPosY - to.getY(), 2.0) + Math.pow(this.lastPosZ - to.getZ(), 2.0);
                 float deltaAngle = Math.abs(this.lastYaw - to.getYaw()) + Math.abs(this.lastPitch - to.getPitch());
                 if ((delta > 0.00390625 || deltaAngle > 10.0f) && !((ServerPlayerBridge) this.player).bridge$isMovementBlocked()) {
@@ -412,11 +416,11 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                         return;
                     }
                 }
-                this.player.serverLevel().getChunkSource().move(this.player);
+                this.player.level().getChunkSource().move(this.player);
                 Vec3 vec3d = new Vec3(entity.getX() - d0, entity.getY() - d2, entity.getZ() - d3);
                 this.player.setKnownMovement(vec3d);
                 this.player.checkMovementStatistics(vec3d.x, vec3d.y, vec3d.z);
-                this.clientVehicleIsFloating = d11 >= -0.03125D && !flag1 && !this.server.isFlightAllowed() && !entity.isNoGravity() && this.noBlocksAround(entity);
+                this.clientVehicleIsFloating = d11 >= -0.03125D && !flag1 && !this.server.allowFlight() && !entity.isNoGravity() && this.noBlocksAround(entity);
                 this.vehicleLastGoodX = entity.getX();
                 this.vehicleLastGoodY = entity.getY();
                 this.vehicleLastGoodZ = entity.getZ();
@@ -429,7 +433,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;isChangingDimension()Z")))
     private void arclight$updateLoc(ServerboundAcceptTeleportationPacket packetIn, CallbackInfo ci) {
         if (((ServerPlayerBridge) this.player).bridge$isValid()) {
-            this.player.serverLevel().getChunkSource().move(this.player);
+            this.player.level().getChunkSource().move(this.player);
         }
     }
 
@@ -495,11 +499,11 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
      */
     @Overwrite
     public void handleMovePlayer(ServerboundMovePlayerPacket packetplayinflying) {
-        PacketUtils.ensureRunningOnSameThread(packetplayinflying, (ServerGamePacketListenerImpl) (Object) this, this.player.serverLevel());
+        PacketUtils.ensureRunningOnSameThread(packetplayinflying, (ServerGamePacketListenerImpl) (Object) this, this.player.level());
         if (containsInvalidValues(packetplayinflying.getX(0.0D), packetplayinflying.getY(0.0D), packetplayinflying.getZ(0.0D), packetplayinflying.getYRot(0.0F), packetplayinflying.getXRot(0.0F))) {
             this.disconnect(Component.translatable("multiplayer.disconnect.invalid_player_movement"));
         } else {
-            ServerLevel worldserver = this.player.serverLevel();
+            ServerLevel worldserver = this.player.level();
             if (!this.player.wonGame && !((ServerPlayerBridge) this.player).bridge$isMovementBlocked()) {
                 if (this.tickCount == 0) {
                     this.resetPosition();
@@ -513,8 +517,8 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                     float f1 = Mth.wrapDegrees(packetplayinflying.getXRot(this.player.getXRot()));
 
                     if (this.player.isPassenger()) {
-                        this.player.absMoveTo(this.player.getX(), this.player.getY(), this.player.getZ(), f, f1);
-                        this.player.serverLevel().getChunkSource().move(this.player);
+                        this.player.snapTo(this.player.getX(), this.player.getY(), this.player.getZ(), f, f1);
+                        this.player.level().getChunkSource().move(this.player);
                         this.allowedPlayerTicks = 20; // CraftBukkit
                     } else {
                         double d3 = this.player.getX();
@@ -575,7 +579,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                                     speed = player.getAbilities().walkingSpeed * 10f;
                                 }
 
-                                if (!this.player.isChangingDimension() && (!this.player.serverLevel().getGameRules().getBoolean(GameRules.RULE_DISABLE_ELYTRA_MOVEMENT_CHECK) || !this.player.isFallFlying())) {
+                                if (!this.player.isChangingDimension() && (!this.player.level().getGameRules().get(GameRules.ELYTRA_MOVEMENT_CHECK) || !this.player.isFallFlying())) {
                                     float f2 = this.player.isFallFlying() ? 300.0F : 100.0F;
 
                                     if (d11 - d10 > Math.max(f2, Math.pow((double) (org.spigotmc.SpigotConfig.movedTooQuicklyMultiplier * (float) i * speed), 2)) && !this.isSingleplayerOwner()) {
@@ -624,7 +628,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                                 this.player.doCheckFallDamage(this.player.getX() - d3, this.player.getY() - d4, this.player.getZ() - d5, packetplayinflying.isOnGround());
                             } else {
                                 // Reset to old location first
-                                this.player.absMoveTo(prevX, prevY, prevZ, prevYaw, prevPitch);
+                                this.player.snapTo(prevX, prevY, prevZ, prevYaw, prevPitch);
                                 CraftPlayer player = this.getCraftPlayer();
                                 if (!this.hasMoved) {
                                     this.lastPosX = prevX;
@@ -670,18 +674,18 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                                     }
                                 }
 
-                                this.player.absMoveTo(d0, d1, d2, f, f1); // Copied from above
+                                this.player.snapTo(d0, d1, d2, f, f1); // Copied from above
                                 boolean autoSpinAttack = this.player.isAutoSpinAttack();
                                 this.clientIsFloating = d12 >= -0.03125D
                                     && this.player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR
-                                    && !this.server.isFlightAllowed()
+                                    && !this.server.allowFlight()
                                     && !(this.player.getAbilities().mayfly || ((ServerPlayerBridge) this.player).bridge$platform$mayfly())
                                     && !this.player.hasEffect(MobEffects.LEVITATION)
                                     && !fallFlying
                                     && !autoSpinAttack
                                     && this.noBlocksAround(this.player);
                                 // CraftBukkit end
-                                this.player.serverLevel().getChunkSource().move(this.player);
+                                this.player.level().getChunkSource().move(this.player);
                                 var vec3 = new Vec3(this.player.getX() - d3, this.player.getY() - d4, this.player.getZ() - d5);
                                 this.player.setOnGroundWithMovement(packetplayinflying.isOnGround(), vec3);
                                 this.player.doCheckFallDamage(this.player.getX() - d3, this.player.getY() - d4, this.player.getZ() - d5, packetplayinflying.isOnGround());
@@ -719,7 +723,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
      */
     @Overwrite
     public void handlePlayerAction(ServerboundPlayerActionPacket packetplayinblockdig) {
-        PacketUtils.ensureRunningOnSameThread(packetplayinblockdig, (ServerGamePacketListenerImpl) (Object) this, this.player.serverLevel());
+        PacketUtils.ensureRunningOnSameThread(packetplayinblockdig, (ServerGamePacketListenerImpl) (Object) this, this.player.level());
         if (((ServerPlayerBridge) this.player).bridge$isMovementBlocked()) {
             return;
         }
@@ -789,7 +793,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             case START_DESTROY_BLOCK:
             case ABORT_DESTROY_BLOCK:
             case STOP_DESTROY_BLOCK: {
-                this.player.gameMode.handleBlockBreakAction(blockposition, packetplayinblockdig_enumplayerdigtype, packetplayinblockdig.getDirection(), this.player.level().getMaxBuildHeight(), packetplayinblockdig.getSequence());
+                this.player.gameMode.handleBlockBreakAction(blockposition, packetplayinblockdig_enumplayerdigtype, packetplayinblockdig.getDirection(), this.player.level().getMaxY(), packetplayinblockdig.getSequence());
                 this.player.connection.ackBlockChangesUpTo(packetplayinblockdig.getSequence());
                 return;
             }
@@ -900,10 +904,10 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
 
     @Inject(method = "handleSetCarriedItem", cancellable = true, at = @At(value = "FIELD", ordinal = 0, target = "Lnet/minecraft/world/entity/player/Inventory;selected:I"))
     private void arclight$itemHeldEvent(ServerboundSetCarriedItemPacket packet, CallbackInfo ci) {
-        PlayerItemHeldEvent event = new PlayerItemHeldEvent(this.getCraftPlayer(), this.player.getInventory().selected, packet.getSlot());
+        PlayerItemHeldEvent event = new PlayerItemHeldEvent(this.getCraftPlayer(), ArclightInventoryHelper.getSelectedSlot(this.player.getInventory()), packet.getSlot());
         this.cserver.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
-            this.send(new ClientboundSetCarriedItemPacket(this.player.getInventory().selected));
+            this.send(new ClientboundSetHeldSlotPacket(ArclightInventoryHelper.getSelectedSlot(this.player.getInventory())));
             this.player.resetLastActionTime();
             ci.cancel();
         }
@@ -1153,13 +1157,13 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         double d2 = this.player.getY() + this.player.getEyeHeight();
         double d3 = this.player.getZ();
         double d4 = ((PlayerBridge) this.player).bridge$platform$getBlockReach();
-        var origin = new Location(this.player.level().bridge$getWorld(), d0, d2, d3, f1, f2);
-        var result = this.player.level().bridge$getWorld().rayTrace(origin, origin.getDirection(), d4, org.bukkit.FluidCollisionMode.NEVER, false, 0.1, entity -> {
+        var origin = new Location(((WorldBridge) this.player.level()).bridge$getWorld(), d0, d2, d3, f1, f2);
+        var result = ((WorldBridge) this.player.level()).bridge$getWorld().rayTrace(origin, origin.getDirection(), d4, org.bukkit.FluidCollisionMode.NEVER, false, 0.1, entity -> {
             Entity handle = ((CraftEntity) entity).getHandle();
             return handle != this.player && ((ServerPlayerBridge) this.player).bridge$getBukkitEntity().canSee(entity) && !handle.isSpectator() && handle.isPickable() && !handle.isPassengerOfSameVehicle(player);
         });
         if (result == null) {
-            CraftEventFactory.callPlayerInteractEvent(this.player, Action.LEFT_CLICK_AIR, this.player.getInventory().getSelected(), InteractionHand.MAIN_HAND);
+            CraftEventFactory.callPlayerInteractEvent(this.player, Action.LEFT_CLICK_AIR, this.player.getInventory().getSelectedItem(), InteractionHand.MAIN_HAND);
         }
         PlayerAnimationEvent event = new PlayerAnimationEvent(this.getCraftPlayer(), packet.getHand() == InteractionHand.MAIN_HAND ? PlayerAnimationType.ARM_SWING : PlayerAnimationType.OFF_ARM_SWING);
         this.cserver.getPluginManager().callEvent(event);
@@ -1174,13 +1178,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             ci.cancel();
             return;
         }
-        if (packetIn.getAction() == ServerboundPlayerCommandPacket.Action.PRESS_SHIFT_KEY || packetIn.getAction() == ServerboundPlayerCommandPacket.Action.RELEASE_SHIFT_KEY) {
-            PlayerToggleSneakEvent event = new PlayerToggleSneakEvent(this.getCraftPlayer(), packetIn.getAction() == ServerboundPlayerCommandPacket.Action.PRESS_SHIFT_KEY);
-            this.cserver.getPluginManager().callEvent(event);
-            if (event.isCancelled()) {
-                ci.cancel();
-            }
-        } else if (packetIn.getAction() == ServerboundPlayerCommandPacket.Action.START_SPRINTING || packetIn.getAction() == ServerboundPlayerCommandPacket.Action.STOP_SPRINTING) {
+        if (packetIn.getAction() == ServerboundPlayerCommandPacket.Action.START_SPRINTING || packetIn.getAction() == ServerboundPlayerCommandPacket.Action.STOP_SPRINTING) {
             PlayerToggleSprintEvent e2 = new PlayerToggleSprintEvent(this.getCraftPlayer(), packetIn.getAction() == ServerboundPlayerCommandPacket.Action.START_SPRINTING);
             this.cserver.getPluginManager().callEvent(e2);
             if (e2.isCancelled()) {
@@ -1195,8 +1193,8 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             ci.cancel();
             return;
         }
-        final ServerLevel world = this.player.serverLevel();
-        final Entity entity = packet.getTarget(world);
+        final ServerLevel world = this.player.level();
+        final Entity entity = world.getEntity(packet.entityId());
         if (entity == player && !player.isSpectator()) {
             bridge$disconnect("Cannot interact with self!");
             ci.cancel();
@@ -1227,27 +1225,27 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
      */
     @Overwrite
     public void handleContainerClick(ServerboundContainerClickPacket packet) {
-        PacketUtils.ensureRunningOnSameThread(packet, (ServerGamePacketListenerImpl) (Object) this, this.player.serverLevel());
+        PacketUtils.ensureRunningOnSameThread(packet, (ServerGamePacketListenerImpl) (Object) this, this.player.level());
         if (((ServerPlayerBridge) this.player).bridge$isMovementBlocked()) {
             return;
         }
         this.player.resetLastActionTime();
-        if (this.player.containerMenu.containerId == packet.getContainerId() && this.player.containerMenu.stillValid(this.player)) { // CraftBukkit
+        if (this.player.containerMenu.containerId == packet.containerId() && this.player.containerMenu.stillValid(this.player)) { // CraftBukkit
             boolean cancelled = this.player.isSpectator(); // CraftBukkit - see below if
             if (false/*this.player.isSpectator()*/) { // CraftBukkit
                 this.player.containerMenu.sendAllDataToRemote();
             } else if (!this.player.containerMenu.stillValid(this.player)) {
                 LOGGER.debug("Player {} interacted with invalid menu {}", this.player, this.player.containerMenu);
             } else {
-                if (!this.player.containerMenu.isValidSlotIndex(packet.getSlotNum())) {
-                    LOGGER.debug("Player {} clicked invalid slot index {}, available slots: {}", this.player.getName(), packet.getSlotNum(), this.player.containerMenu.slots.size());
+                if (!this.player.containerMenu.isValidSlotIndex(packet.slotNum())) {
+                    LOGGER.debug("Player {} clicked invalid slot index {}, available slots: {}", this.player.getName(), packet.slotNum(), this.player.containerMenu.slots.size());
                     return;
                 }
-                boolean flag = packet.getStateId() != this.player.containerMenu.getStateId();
+                boolean flag = packet.stateId() != this.player.containerMenu.getStateId();
 
                 this.player.containerMenu.suppressRemoteUpdates();
                 // CraftBukkit start - Call InventoryClickEvent
-                if (packet.getSlotNum() < -1 && packet.getSlotNum() != -999) {
+                if (packet.slotNum() < -1 && packet.slotNum() != -999) {
                     return;
                 }
 
@@ -1259,42 +1257,42 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                 } finally {
                     ArclightCaptures.popContainerOwner(owner);
                 }
-                InventoryType.SlotType type = inventory.getSlotType(packet.getSlotNum());
+                InventoryType.SlotType type = inventory.getSlotType(packet.slotNum());
 
                 InventoryClickEvent event;
                 ClickType click = ClickType.UNKNOWN;
                 InventoryAction action = InventoryAction.UNKNOWN;
 
-                switch (packet.getClickType()) {
+                switch (packet.containerInput()) {
                     case PICKUP:
-                        if (packet.getButtonNum() == 0) {
+                        if (packet.buttonNum() == 0) {
                             click = ClickType.LEFT;
-                        } else if (packet.getButtonNum() == 1) {
+                        } else if (packet.buttonNum() == 1) {
                             click = ClickType.RIGHT;
                         }
-                        if (packet.getButtonNum() == 0 || packet.getButtonNum() == 1) {
+                        if (packet.buttonNum() == 0 || packet.buttonNum() == 1) {
                             action = InventoryAction.NOTHING; // Don't want to repeat ourselves
-                            if (packet.getSlotNum() == -999) {
+                            if (packet.slotNum() == -999) {
                                 if (!player.containerMenu.getCarried().isEmpty()) {
-                                    action = packet.getButtonNum() == 0 ? InventoryAction.DROP_ALL_CURSOR : InventoryAction.DROP_ONE_CURSOR;
+                                    action = packet.buttonNum() == 0 ? InventoryAction.DROP_ALL_CURSOR : InventoryAction.DROP_ONE_CURSOR;
                                 }
-                            } else if (packet.getSlotNum() < 0) {
+                            } else if (packet.slotNum() < 0) {
                                 action = InventoryAction.NOTHING;
                             } else {
-                                Slot slot = this.player.containerMenu.getSlot(packet.getSlotNum());
+                                Slot slot = this.player.containerMenu.getSlot(packet.slotNum());
                                 if (slot != null) {
                                     ItemStack clickedItem = slot.getItem();
                                     ItemStack cursor = player.containerMenu.getCarried();
                                     if (clickedItem.isEmpty()) {
                                         if (!cursor.isEmpty()) {
-                                            action = packet.getButtonNum() == 0 ? InventoryAction.PLACE_ALL : InventoryAction.PLACE_ONE;
+                                            action = packet.buttonNum() == 0 ? InventoryAction.PLACE_ALL : InventoryAction.PLACE_ONE;
                                         }
                                     } else if (slot.mayPickup(player)) {
                                         if (cursor.isEmpty()) {
-                                            action = packet.getButtonNum() == 0 ? InventoryAction.PICKUP_ALL : InventoryAction.PICKUP_HALF;
+                                            action = packet.buttonNum() == 0 ? InventoryAction.PICKUP_ALL : InventoryAction.PICKUP_HALF;
                                         } else if (slot.mayPlace(cursor)) {
                                             if (ItemStack.isSameItemSameComponents(clickedItem, cursor)) {
-                                                int toPlace = packet.getButtonNum() == 0 ? cursor.getCount() : 1;
+                                                int toPlace = packet.buttonNum() == 0 ? cursor.getCount() : 1;
                                                 toPlace = Math.min(toPlace, clickedItem.getMaxStackSize() - clickedItem.getCount());
                                                 toPlace = Math.min(toPlace, slot.container.getMaxStackSize() - clickedItem.getCount());
                                                 if (toPlace == 1) {
@@ -1324,16 +1322,16 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                         break;
                     // TODO check on updates
                     case QUICK_MOVE:
-                        if (packet.getButtonNum() == 0) {
+                        if (packet.buttonNum() == 0) {
                             click = ClickType.SHIFT_LEFT;
-                        } else if (packet.getButtonNum() == 1) {
+                        } else if (packet.buttonNum() == 1) {
                             click = ClickType.SHIFT_RIGHT;
                         }
-                        if (packet.getButtonNum() == 0 || packet.getButtonNum() == 1) {
-                            if (packet.getSlotNum() < 0) {
+                        if (packet.buttonNum() == 0 || packet.buttonNum() == 1) {
+                            if (packet.slotNum() < 0) {
                                 action = InventoryAction.NOTHING;
                             } else {
-                                Slot slot = this.player.containerMenu.getSlot(packet.getSlotNum());
+                                Slot slot = this.player.containerMenu.getSlot(packet.slotNum());
                                 if (slot != null && slot.mayPickup(this.player) && slot.hasItem()) {
                                     action = InventoryAction.MOVE_TO_OTHER_INVENTORY;
                                 } else {
@@ -1343,11 +1341,11 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                         }
                         break;
                     case SWAP:
-                        if ((packet.getButtonNum() >= 0 && packet.getButtonNum() < 9) || packet.getButtonNum() == 40) {
-                            click = (packet.getButtonNum() == 40) ? ClickType.SWAP_OFFHAND : ClickType.NUMBER_KEY;
-                            Slot clickedSlot = this.player.containerMenu.getSlot(packet.getSlotNum());
+                        if ((packet.buttonNum() >= 0 && packet.buttonNum() < 9) || packet.buttonNum() == 40) {
+                            click = (packet.buttonNum() == 40) ? ClickType.SWAP_OFFHAND : ClickType.NUMBER_KEY;
+                            Slot clickedSlot = this.player.containerMenu.getSlot(packet.slotNum());
                             if (clickedSlot.mayPickup(player)) {
-                                ItemStack hotbar = this.player.getInventory().getItem(packet.getButtonNum());
+                                ItemStack hotbar = this.player.getInventory().getItem(packet.buttonNum());
                                 boolean canCleanSwap = hotbar.isEmpty() || (clickedSlot.container == player.getInventory() && clickedSlot.mayPlace(hotbar)); // the slot will accept the hotbar item
                                 if (clickedSlot.hasItem()) {
                                     if (canCleanSwap) {
@@ -1366,12 +1364,12 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                         }
                         break;
                     case CLONE:
-                        if (packet.getButtonNum() == 2) {
+                        if (packet.buttonNum() == 2) {
                             click = ClickType.MIDDLE;
-                            if (packet.getSlotNum() < 0) {
+                            if (packet.slotNum() < 0) {
                                 action = InventoryAction.NOTHING;
                             } else {
-                                Slot slot = this.player.containerMenu.getSlot(packet.getSlotNum());
+                                Slot slot = this.player.containerMenu.getSlot(packet.slotNum());
                                 if (slot != null && slot.hasItem() && player.getAbilities().instabuild && player.containerMenu.getCarried().isEmpty()) {
                                     action = InventoryAction.CLONE_STACK;
                                 } else {
@@ -1384,18 +1382,18 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                         }
                         break;
                     case THROW:
-                        if (packet.getSlotNum() >= 0) {
-                            if (packet.getButtonNum() == 0) {
+                        if (packet.slotNum() >= 0) {
+                            if (packet.buttonNum() == 0) {
                                 click = ClickType.DROP;
-                                Slot slot = this.player.containerMenu.getSlot(packet.getSlotNum());
+                                Slot slot = this.player.containerMenu.getSlot(packet.slotNum());
                                 if (slot != null && slot.hasItem() && slot.mayPickup(player) && !slot.getItem().isEmpty() && slot.getItem().getItem() != Item.byBlock(Blocks.AIR)) {
                                     action = InventoryAction.DROP_ONE_SLOT;
                                 } else {
                                     action = InventoryAction.NOTHING;
                                 }
-                            } else if (packet.getButtonNum() == 1) {
+                            } else if (packet.buttonNum() == 1) {
                                 click = ClickType.CONTROL_DROP;
-                                Slot slot = this.player.containerMenu.getSlot(packet.getSlotNum());
+                                Slot slot = this.player.containerMenu.getSlot(packet.slotNum());
                                 if (slot != null && slot.hasItem() && slot.mayPickup(player) && !slot.getItem().isEmpty() && slot.getItem().getItem() != Item.byBlock(Blocks.AIR)) {
                                     action = InventoryAction.DROP_ALL_SLOT;
                                 } else {
@@ -1405,19 +1403,19 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                         } else {
                             // Sane default (because this happens when they are holding nothing. Don't ask why.)
                             click = ClickType.LEFT;
-                            if (packet.getButtonNum() == 1) {
+                            if (packet.buttonNum() == 1) {
                                 click = ClickType.RIGHT;
                             }
                             action = InventoryAction.NOTHING;
                         }
                         break;
                     case QUICK_CRAFT:
-                        this.player.containerMenu.clicked(packet.getSlotNum(), packet.getButtonNum(), packet.getClickType(), this.player);
+                        this.player.containerMenu.clicked(packet.slotNum(), packet.buttonNum(), packet.containerInput(), this.player);
                         break;
                     case PICKUP_ALL:
                         click = ClickType.DOUBLE_CLICK;
                         action = InventoryAction.NOTHING;
-                        if (packet.getSlotNum() >= 0 && !this.player.containerMenu.getCarried().isEmpty()) {
+                        if (packet.slotNum() >= 0 && !this.player.containerMenu.getCarried().isEmpty()) {
                             ItemStack cursor = this.player.containerMenu.getCarried();
                             action = InventoryAction.NOTHING;
                             // Quick check for if we have any of the item
@@ -1430,32 +1428,32 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                         break;
                 }
 
-                if (packet.getClickType() != net.minecraft.world.inventory.ClickType.QUICK_CRAFT) {
+                if (packet.containerInput() != net.minecraft.world.inventory.ContainerInput.QUICK_CRAFT) {
                     if (click == ClickType.NUMBER_KEY) {
-                        event = new InventoryClickEvent(inventory, type, packet.getSlotNum(), click, action, packet.getButtonNum());
+                        event = new InventoryClickEvent(inventory, type, packet.slotNum(), click, action, packet.buttonNum());
                     } else {
-                        event = new InventoryClickEvent(inventory, type, packet.getSlotNum(), click, action);
+                        event = new InventoryClickEvent(inventory, type, packet.slotNum(), click, action);
                     }
 
                     org.bukkit.inventory.Inventory top = inventory.getTopInventory();
-                    if (packet.getSlotNum() == 0 && top instanceof CraftingInventory) {
+                    if (packet.slotNum() == 0 && top instanceof CraftingInventory) {
                         org.bukkit.inventory.Recipe recipe = ((CraftingInventory) top).getRecipe();
                         if (recipe != null) {
                             if (click == ClickType.NUMBER_KEY) {
-                                event = new CraftItemEvent(recipe, inventory, type, packet.getSlotNum(), click, action, packet.getButtonNum());
+                                event = new CraftItemEvent(recipe, inventory, type, packet.slotNum(), click, action, packet.buttonNum());
                             } else {
-                                event = new CraftItemEvent(recipe, inventory, type, packet.getSlotNum(), click, action);
+                                event = new CraftItemEvent(recipe, inventory, type, packet.slotNum(), click, action);
                             }
                         }
                     }
 
-                    if (packet.getSlotNum() == 3 && top instanceof SmithingInventory) {
+                    if (packet.slotNum() == 3 && top instanceof SmithingInventory) {
                         org.bukkit.inventory.ItemStack result = ((SmithingInventory) top).getResult();
                         if (result != null) {
                             if (click == ClickType.NUMBER_KEY) {
-                                event = new SmithItemEvent(inventory, type, packet.getSlotNum(), click, action, packet.getButtonNum());
+                                event = new SmithItemEvent(inventory, type, packet.slotNum(), click, action, packet.buttonNum());
                             } else {
-                                event = new SmithItemEvent(inventory, type, packet.getSlotNum(), click, action);
+                                event = new SmithItemEvent(inventory, type, packet.slotNum(), click, action);
                             }
                         }
                     }
@@ -1470,7 +1468,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                     switch (event.getResult()) {
                         case ALLOW:
                         case DEFAULT:
-                            this.player.containerMenu.clicked(packet.getSlotNum(), packet.getButtonNum(), packet.getClickType(), this.player);
+                            this.player.containerMenu.clicked(packet.slotNum(), packet.buttonNum(), packet.containerInput(), this.player);
                             break;
                         case DENY:
                             /* Needs enum constructor in InventoryAction
@@ -1503,12 +1501,12 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                                 case PLACE_ONE:
                                 case SWAP_WITH_CURSOR:
                                     this.player.connection.send(new ClientboundContainerSetSlotPacket(-1, -1, this.player.inventoryMenu.incrementStateId(), this.player.containerMenu.getCarried()));
-                                    this.player.connection.send(new ClientboundContainerSetSlotPacket(this.player.containerMenu.containerId, this.player.inventoryMenu.incrementStateId(), packet.getSlotNum(), this.player.containerMenu.getSlot(packet.getSlotNum()).getItem()));
+                                    this.player.connection.send(new ClientboundContainerSetSlotPacket(this.player.containerMenu.containerId, this.player.inventoryMenu.incrementStateId(), packet.slotNum(), this.player.containerMenu.getSlot(packet.slotNum()).getItem()));
                                     break;
                                 // Modified clicked only
                                 case DROP_ALL_SLOT:
                                 case DROP_ONE_SLOT:
-                                    this.player.connection.send(new ClientboundContainerSetSlotPacket(this.player.containerMenu.containerId, this.player.inventoryMenu.incrementStateId(), packet.getSlotNum(), this.player.containerMenu.getSlot(packet.getSlotNum()).getItem()));
+                                    this.player.connection.send(new ClientboundContainerSetSlotPacket(this.player.containerMenu.containerId, this.player.inventoryMenu.incrementStateId(), packet.slotNum(), this.player.containerMenu.getSlot(packet.slotNum()).getItem()));
                                     break;
                                 // Modified cursor only
                                 case DROP_ALL_CURSOR:
@@ -1530,11 +1528,11 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                 }
                 // CraftBukkit end
 
-                for (var entry : Int2ObjectMaps.fastIterable(packet.getChangedSlots())) {
-                    this.player.containerMenu.setRemoteSlotNoCopy(entry.getIntKey(), entry.getValue());
+                for (var entry : Int2ObjectMaps.fastIterable(packet.changedSlots())) {
+                    this.player.containerMenu.setRemoteSlotUnsafe(entry.getIntKey(), entry.getValue());
                 }
 
-                this.player.containerMenu.setRemoteCarried(packet.getCarriedItem());
+                this.player.containerMenu.setRemoteCarried(packet.carriedItem());
                 this.player.containerMenu.resumeRemoteUpdates();
                 if (flag) {
                     this.player.containerMenu.broadcastFullState();
@@ -1550,20 +1548,6 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         CraftEventFactory.callRecipeBookSettingsEvent(this.player, packet.getBookType(), packet.isOpen(), packet.isFiltering());
     }
 
-    @Redirect(method = "handlePlaceRecipe", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/game/ServerboundPlaceRecipePacket;getRecipe()Lnet/minecraft/resources/ResourceLocation;"))
-    private ResourceLocation arclight$recipeBookClick(ServerboundPlaceRecipePacket instance) {
-        var location = instance.getRecipe();
-        org.bukkit.inventory.Recipe recipe = this.cserver.getRecipe(CraftNamespacedKey.fromMinecraft(location));
-        if (recipe == null) {
-            return location;
-        }
-        var event = CraftEventFactory.callRecipeBookClickEvent(this.player, recipe, instance.isShiftDown());
-        if (event.getRecipe() instanceof org.bukkit.Keyed keyed) {
-            return CraftNamespacedKey.toMinecraft(keyed.getKey());
-        }
-        return location;
-    }
-
     @Inject(method = "handleContainerButtonClick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;resetLastActionTime()V"))
     private void arclight$noEnchant(ServerboundContainerButtonClickPacket packetIn, CallbackInfo ci) {
         if (((ServerPlayerBridge) player).bridge$isMovementBlocked()) {
@@ -1577,7 +1561,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
      */
     @Overwrite
     public void handleSetCreativeModeSlot(final ServerboundSetCreativeModeSlotPacket packetplayinsetcreativeslot) {
-        PacketUtils.ensureRunningOnSameThread(packetplayinsetcreativeslot, (ServerGamePacketListenerImpl) (Object) this, this.player.serverLevel());
+        PacketUtils.ensureRunningOnSameThread(packetplayinsetcreativeslot, (ServerGamePacketListenerImpl) (Object) this, this.player.level());
         if (this.player.gameMode.isCreative()) {
             final boolean flag = packetplayinsetcreativeslot.slotNum() < 0;
             ItemStack itemstack = packetplayinsetcreativeslot.itemStack();
@@ -1586,17 +1570,6 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                 return;
             }
 
-            CustomData customdata = itemstack.getOrDefault(DataComponents.BLOCK_ENTITY_DATA, CustomData.EMPTY);
-
-            if (customdata.contains("x") && customdata.contains("y") && customdata.contains("z") && this.player.bridge$getBukkitEntity().hasPermission("minecraft.nbt.copy")) {
-                BlockPos blockpos = BlockEntity.getPosFromTag(customdata.getUnsafe());
-                if (this.player.level().isLoaded(blockpos)) {
-                    BlockEntity blockentity = this.player.level().getBlockEntity(blockpos);
-                    if (blockentity != null) {
-                        blockentity.saveToItem(itemstack, this.player.level().registryAccess());
-                    }
-                }
-            }
             final boolean flag2 = packetplayinsetcreativeslot.slotNum() >= 1 && packetplayinsetcreativeslot.slotNum() <= 45;
             boolean flag3 = itemstack.isEmpty() || itemstack.getCount() <= itemstack.getMaxStackSize();
             if (flag || (flag2 && !ItemStack.matches(this.player.inventoryMenu.getSlot(packetplayinsetcreativeslot.slotNum()).getItem(), packetplayinsetcreativeslot.itemStack()))) {
@@ -1654,7 +1627,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
      */
     @Overwrite
     public void handlePlayerAbilities(ServerboundPlayerAbilitiesPacket packet) {
-        PacketUtils.ensureRunningOnSameThread(packet, (ServerGamePacketListenerImpl) (Object) this, this.player.serverLevel());
+        PacketUtils.ensureRunningOnSameThread(packet, (ServerGamePacketListenerImpl) (Object) this, this.player.level());
         if ((this.player.getAbilities().mayfly || ((ServerPlayerBridge) this.player).bridge$platform$mayfly()) && this.player.getAbilities().flying != packet.isFlying()) {
             PlayerToggleFlightEvent event = new PlayerToggleFlightEvent(getCraftPlayer(), packet.isFlying());
             this.cserver.getPluginManager().callEvent(event);
@@ -1670,7 +1643,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
     private transient boolean arclight$teleportCancelled;
 
     @Decorate(method = "teleport(DDDFFLjava/util/Set;)V", inject = true, at = @At("HEAD"))
-    private void arclight$teleportEvent(double x, double y, double z, float yaw, float pitch, Set<RelativeMovement> relativeSet) throws Throwable {
+    private void arclight$teleportEvent(double x, double y, double z, float yaw, float pitch, Set<Relative> relativeSet) throws Throwable {
         PlayerTeleportEvent.TeleportCause cause = arclight$cause == null ? PlayerTeleportEvent.TeleportCause.UNKNOWN : arclight$cause;
         arclight$cause = null;
         Player player = this.getCraftPlayer();
@@ -1708,7 +1681,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         this.teleport(d0, d1, d2, f, f1, Collections.emptySet(), cause);
     }
 
-    public void teleport(double d0, double d1, double d2, float f, float f1, Set<RelativeMovement> set, PlayerTeleportEvent.TeleportCause cause) {
+    public void teleport(double d0, double d1, double d2, float f, float f1, Set<Relative> set, PlayerTeleportEvent.TeleportCause cause) {
         bridge$pushTeleportCause(cause);
         this.teleport(d0, d1, d2, f, f1, set);
     }

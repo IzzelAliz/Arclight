@@ -103,7 +103,7 @@ public class ForgeLikeProvider {
         }
         if (object.has("data")) {
             var data = object.getAsJsonObject("data");
-            if (data.has("MOJMAPS")) {
+            if (data.has("MOJMAPS") && minecraftData.mappingUrl() != null && minecraftData.mappingHash() != null) {
                 var serverMapping = data.getAsJsonObject("MOJMAPS").get("server").getAsString();
                 ret.put(serverMapping.substring(1, serverMapping.length() - 1),
                         new AbstractMap.SimpleImmutableEntry<>(minecraftData.mappingHash(), minecraftData.mappingUrl()));

@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.vanilla.world.entity;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.vanilla.world.entity.LivingEntityBridge_Vanilla;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;

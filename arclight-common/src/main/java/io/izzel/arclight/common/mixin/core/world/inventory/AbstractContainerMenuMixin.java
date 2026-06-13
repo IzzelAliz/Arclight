@@ -15,15 +15,15 @@ import net.minecraft.world.entity.SlotAccess;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickAction;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.ContainerSynchronizer;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
-import org.bukkit.craftbukkit.v.inventory.CraftInventory;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.inventory.CraftInventory;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.event.Event;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.InventoryView;
@@ -162,7 +162,7 @@ public abstract class AbstractContainerMenuMixin implements AbstractContainerMen
 
     @Inject(method = "doClick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/player/Player;drop(Lnet/minecraft/world/item/ItemStack;Z)Lnet/minecraft/world/entity/item/ItemEntity;"),
         slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/inventory/ClickAction;PRIMARY:Lnet/minecraft/world/inventory/ClickAction;")))
-    private void arclight$clearBeforeDrop(int i, int j, ClickType clickType, Player player, CallbackInfo ci) {
+    private void arclight$clearBeforeDrop(int i, int j, ContainerInput containerInput, Player player, CallbackInfo ci) {
         this.setCarried(ItemStack.EMPTY);
     }
 

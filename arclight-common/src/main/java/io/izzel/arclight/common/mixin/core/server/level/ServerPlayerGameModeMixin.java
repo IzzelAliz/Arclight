@@ -34,8 +34,8 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.BlockHitResult;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -86,7 +86,7 @@ public abstract class ServerPlayerGameModeMixin implements ServerPlayerGameModeB
     @Decorate(method = "handleBlockBreakAction", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;send(Lnet/minecraft/network/protocol/Packet;)V"),
         slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;mayInteract(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/core/BlockPos;)Z")))
     private void arclight$mayNotInteractEvent(ServerGamePacketListenerImpl instance, Packet<?> packet, BlockPos blockPos, ServerboundPlayerActionPacket.Action action, Direction direction) throws Throwable {
-        CraftEventFactory.callPlayerInteractEvent(this.player, Action.LEFT_CLICK_BLOCK, blockPos, direction, this.player.getInventory().getSelected(), InteractionHand.MAIN_HAND);
+        CraftEventFactory.callPlayerInteractEvent(this.player, Action.LEFT_CLICK_BLOCK, blockPos, direction, this.player.getInventory().getSelectedItem(), InteractionHand.MAIN_HAND);
         DecorationOps.callsite().invoke(instance, packet);
         BlockEntity blockEntity = this.level.getBlockEntity(blockPos);
         if (blockEntity != null) {
@@ -98,7 +98,7 @@ public abstract class ServerPlayerGameModeMixin implements ServerPlayerGameModeB
     @Decorate(method = "handleBlockBreakAction", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayerGameMode;isCreative()Z"))
     private void arclight$interactEvent(BlockPos blockPos, ServerboundPlayerActionPacket.Action action, Direction direction,
                                         @Local(allocate = "playerInteractEvent") PlayerInteractEvent event) throws Throwable {
-        event = CraftEventFactory.callPlayerInteractEvent(this.player, Action.LEFT_CLICK_BLOCK, blockPos, direction, this.player.getInventory().getSelected(), InteractionHand.MAIN_HAND);
+        event = CraftEventFactory.callPlayerInteractEvent(this.player, Action.LEFT_CLICK_BLOCK, blockPos, direction, this.player.getInventory().getSelectedItem(), InteractionHand.MAIN_HAND);
         if (event.isCancelled()) {
             this.player.connection.send(new ClientboundBlockUpdatePacket(this.level, blockPos));
             BlockEntity blockEntity = this.level.getBlockEntity(blockPos);
@@ -142,7 +142,7 @@ public abstract class ServerPlayerGameModeMixin implements ServerPlayerGameModeB
             }
             return;
         }
-        BlockDamageEvent blockEvent = CraftEventFactory.callBlockDamageEvent(this.player, blockPos, this.player.getInventory().getSelected(), f >= 1.0f);
+        BlockDamageEvent blockEvent = CraftEventFactory.callBlockDamageEvent(this.player, blockPos, this.player.getInventory().getSelectedItem(), f >= 1.0f);
         if (blockEvent.isCancelled()) {
             this.player.connection.send(new ClientboundBlockUpdatePacket(this.level, blockPos));
             return;
@@ -155,7 +155,7 @@ public abstract class ServerPlayerGameModeMixin implements ServerPlayerGameModeB
 
     @Inject(method = "handleBlockBreakAction", at = @At(value = "CONSTANT", args = "stringValue=aborted destroying"))
     private void arclight$abortBlockBreak(BlockPos blockPos, ServerboundPlayerActionPacket.Action action, Direction direction, int i, int j, CallbackInfo ci) {
-        CraftEventFactory.callBlockDamageAbortEvent(this.player, blockPos, this.player.getInventory().getSelected());
+        CraftEventFactory.callBlockDamageAbortEvent(this.player, blockPos, this.player.getInventory().getSelectedItem());
     }
 
     @Inject(method = "destroyBlock", at = @At("RETURN"))
@@ -230,7 +230,7 @@ public abstract class ServerPlayerGameModeMixin implements ServerPlayerGameModeB
             MenuProvider provider = blockstate.getMenuProvider(worldIn, blockpos);
             cancelledBlock = !(provider instanceof MenuProvider);
         }
-        if (playerIn.getCooldowns().isOnCooldown(stackIn.getItem())) {
+        if (playerIn.getCooldowns().isOnCooldown(stackIn)) {
             cancelledBlock = true;
         }
         PlayerInteractEvent bukkitEvent = CraftEventFactory.callPlayerInteractEvent(playerIn, Action.RIGHT_CLICK_BLOCK, blockpos, blockRaytraceResultIn.getDirection(), stackIn, cancelledBlock, handIn, blockRaytraceResultIn.getLocation());

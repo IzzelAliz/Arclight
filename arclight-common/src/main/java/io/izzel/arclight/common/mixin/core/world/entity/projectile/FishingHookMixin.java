@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.projectile.FishingHookBridge;
 import io.izzel.arclight.mixin.Decorate;
@@ -9,6 +10,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
+import io.izzel.arclight.common.mixin.core.world.entity.ExperienceOrbAccessor;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -111,7 +113,7 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
 
     @Inject(method = "retrieve", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/FishingHook;pullEntity(Lnet/minecraft/world/entity/Entity;)V"))
     private void arclight$catchEntity(ItemStack itemStack, CallbackInfoReturnable<Integer> cir) {
-        PlayerFishEvent fishEvent = new PlayerFishEvent(((ServerPlayerBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), this.hookedIn.bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.CAUGHT_ENTITY);
+        PlayerFishEvent fishEvent = new PlayerFishEvent(((ServerPlayerBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), ((EntityBridge) this.hookedIn).bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.CAUGHT_ENTITY);
         Bukkit.getPluginManager().callEvent(fishEvent);
         if (fishEvent.isCancelled()) {
             cir.setReturnValue(0);
@@ -120,7 +122,7 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
 
     @Decorate(method = "retrieve", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;setDeltaMovement(DDD)V"))
     private void arclight$catchFish(ItemStack stack, @Local(ordinal = -1) ItemEntity itementity, @Local(allocate = "expToDrop") int expToDrop) throws Throwable {
-        PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), itementity.bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.CAUGHT_FISH);
+        PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), ((EntityBridge) itementity).bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.CAUGHT_FISH);
         playerFishEvent.setExpToDrop(this.random.nextInt(6) + 1);
         Bukkit.getPluginManager().callEvent(playerFishEvent);
 
@@ -139,7 +141,7 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
             if (expToDrop <= 0) {
                 return false;
             }
-            orb.value = expToDrop;
+            ((ExperienceOrbAccessor) orb).arclight$setValue(expToDrop);
         }
         return (boolean) DecorationOps.callsite().invoke(instance, entity);
     }

@@ -20,9 +20,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.StructurePiece;
 import net.minecraft.world.level.storage.loot.LootTable;
-import org.bukkit.craftbukkit.v.CraftLootTable;
-import org.bukkit.craftbukkit.v.block.*;
-import org.bukkit.craftbukkit.v.util.TransformerGeneratorAccess;
+import org.bukkit.craftbukkit.CraftLootTable;
+import org.bukkit.craftbukkit.block.*;
+import org.bukkit.craftbukkit.util.TransformerGeneratorAccess;
 import org.bukkit.entity.EntityType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -90,7 +90,7 @@ public abstract class StructurePieceMixin implements StructurePieceBridge {
         boolean result = worldAccess.setBlock(position, craftBlockEntityState.getHandle(), i);
         var tileEntity = worldAccess.getBlockEntity(position);
         if (tileEntity != null) {
-            tileEntity.loadWithComponents(craftBlockEntityState.getSnapshotNBT(), worldAccess.registryAccess());
+            tileEntity.loadWithComponents(io.izzel.arclight.common.mod.util.ArclightNbtHelper.wrapInput(craftBlockEntityState.getSnapshotNBT(), worldAccess.registryAccess()));
         }
         return result;
     }

@@ -8,8 +8,8 @@ import io.izzel.arclight.common.mod.util.Blackhole;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
-import net.minecraft.world.entity.animal.Chicken;
-import net.minecraft.world.entity.projectile.ThrownEgg;
+import net.minecraft.world.entity.animal.chicken.Chicken;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEgg;
 import net.minecraft.world.phys.HitResult;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Ageable;
@@ -34,7 +34,7 @@ public abstract class ThrownEggMixin extends ThrowableProjectileMixin {
     @Overwrite
     protected void onHit(final HitResult result) {
         super.onHit(result);
-        if (!this.level().isClientSide) {
+        if (!this.level().isClientSide()) {
             boolean hatching = this.random.nextInt(8) == 0;
             byte b0 = 1;
             if (this.random.nextInt(32) == 0) {
@@ -57,7 +57,7 @@ public abstract class ThrownEggMixin extends ThrowableProjectileMixin {
                     // TrickOrTreatMod compat https://github.com/IzzelAliz/Arclight/issues/1178
                     // https://github.com/MehVahdJukaar/TrickOrTreatMod/blob/020bc478b8f8de6bfec2191a9e667f423f45d7db/common/src/main/java/net/mehvahdjukaar/hauntedharvest/mixins/ThrownEggEntityMixin.java
                     var entityType = ((EntityTypeBridge) (Object) hatchingType).bridge$getHandle();
-                    var entity = entityType.create(this.level());
+                    var entity = entityType.create(this.level(), net.minecraft.world.entity.EntitySpawnReason.MOB_SUMMONED);
                     // Let's do: Meadow mixin compatibility https://github.com/IzzelAliz/Arclight/issues/1149
                     if (entity instanceof Chicken) {
                         Chicken chicken = (Chicken) entity;
@@ -67,7 +67,7 @@ public abstract class ThrownEggMixin extends ThrowableProjectileMixin {
                         if (((EntityBridge) entity).bridge$getBukkitEntity() instanceof Ageable) {
                             ((Ageable) ((EntityBridge) entity).bridge$getBukkitEntity()).setBaby();
                         }
-                        entity.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), 0.0F);
+                        entity.snapTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), 0.0F);
                         if (!entity.fudgePositionAfterSizeChange(ZERO_SIZED_DIMENSIONS)) {
                             break;
                         }

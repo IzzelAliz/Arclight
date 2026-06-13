@@ -43,13 +43,16 @@ class ArclightGradlePlugin implements Plugin<Project> {
         arclight.mappingsConfiguration.bukkitToFabric = fabricMappings
         arclight.mappingsConfiguration.bukkitToFabricInheritance = fabricInheritance
 
-        project.tasks.register('relocateCraftBukkit', RenameJarTask) {
-            it.dependsOn project.tasks.remapJar
-            inputJar.set project.tasks.remapJar.archiveFile
-            archiveClassifier.set 'relocated'
-            mappings = arclight.mappingsConfiguration.reobfBukkitPackage
+        project.afterEvaluate {
+            def outputJar = project.tasks.findByName('shadowJar') ?: project.tasks.jar
+            project.tasks.register('relocateCraftBukkit', RenameJarTask) {
+                it.dependsOn outputJar
+                inputJar.set outputJar.archiveFile
+                archiveClassifier.set 'relocated'
+                mappings = arclight.mappingsConfiguration.reobfBukkitPackage
+            }
+            project.tasks.build.dependsOn('relocateCraftBukkit')
         }
-        project.tasks.build.dependsOn('relocateCraftBukkit')
 
         project.afterEvaluate {
             setupSpigot(project, arclightRepo)
@@ -87,23 +90,38 @@ class ArclightGradlePlugin implements Plugin<Project> {
         }
 
         def buildSpigotWorkDir = arclight.cacheDir.resolve('arclight_cache/buildtools')
+        def existingSpigotJar = buildSpigotWorkDir.resolve("spigot-${arclight.mcVersion}.jar")
+        def buildDataDir = buildSpigotWorkDir.resolve('BuildData')
+        def skipSpigotBuild = Files.exists(existingSpigotJar) && Files.exists(buildDataDir)
 
-        FileUtils.deleteDirectory(buildSpigotWorkDir.toFile())
+        if (!skipSpigotBuild) {
+            FileUtils.deleteDirectory(buildSpigotWorkDir.toFile())
+        }
         Files.createDirectories(buildSpigotWorkDir)
 
-        project.logger.lifecycle(":step1 download build tools")
-        def buildToolsJar = buildSpigotWorkDir.resolve('BuildTools.jar')
-        def downloadBuildTools = new FileDownloader("https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar", buildToolsJar)
-        downloadBuildTools.run()
+        if (!skipSpigotBuild) {
+            project.logger.lifecycle(":step1 download build tools")
+            def buildToolsJar = buildSpigotWorkDir.resolve('BuildTools.jar')
+            def downloadBuildTools = new FileDownloader("https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar", buildToolsJar)
+            downloadBuildTools.run()
 
-        project.logger.lifecycle(":step2 build spigot")
-        def spigotBuilder = project.getObjects().newInstance(SpigotBuilder)
-        spigotBuilder.buildToolsJar = buildToolsJar
-        spigotBuilder.workDir = buildSpigotWorkDir
-        spigotBuilder.outputDir = spigotDeps
-        spigotBuilder.minecraftVersion = arclight.mcVersion
-        spigotBuilder.reversion = arclight.spigotReversion
-        spigotBuilder.run()
+            project.logger.lifecycle(":step2 build spigot")
+            def spigotBuilder = project.getObjects().newInstance(SpigotBuilder)
+            spigotBuilder.buildToolsJar = buildToolsJar
+            spigotBuilder.workDir = buildSpigotWorkDir
+            spigotBuilder.outputDir = spigotDeps
+            spigotBuilder.minecraftVersion = arclight.mcVersion
+            spigotBuilder.reversion = arclight.spigotReversion
+            spigotBuilder.run()
+        } else {
+            project.logger.lifecycle(":step2 skipped, reusing cached spigot build")
+        }
+
+        Path spigotInputJar = spigotDeps.resolve("spigot-${arclight.mcVersion}.jar")
+        if (!Files.exists(spigotInputJar) && Files.exists(existingSpigotJar)) {
+            Files.createDirectories(spigotDeps)
+            Files.copy(existingSpigotJar, spigotInputJar)
+        }
 
         new LocalMavenHelper("io.izzel.arclight.generated", "spigot", arclight.mcVersion, null, arclightRepo).savePom()
 
@@ -113,13 +131,17 @@ class ArclightGradlePlugin implements Plugin<Project> {
         processMapping.mcVersion = arclight.mcVersion
         processMapping.bukkitVersion = arclight.bukkitVersion
         processMapping.outDir = mappingsDir.toFile()
-        processMapping.inJar = spigotBuilder.outputJar.toFile()
+        processMapping.inJar = spigotInputJar.toFile()
         processMapping.run()
 
         project.logger.lifecycle(":step4 remap spigot jar")
         def remapSpigot = new RemapSpigotTask(project)
-        remapSpigot.ssJar = new File(buildSpigotWorkDir.toFile(), 'BuildData/bin/SpecialSource.jar')
-        remapSpigot.inJar = spigotBuilder.outputJar.toFile()
+        def ssJar = new File(buildSpigotWorkDir.toFile(), 'BuildData/bin/SpecialSource.jar')
+        if (!ssJar.exists()) {
+            ssJar = new File(buildSpigotWorkDir.toFile(), 'work/decompile/SpecialSource.jar')
+        }
+        remapSpigot.ssJar = ssJar
+        remapSpigot.inJar = spigotInputJar.toFile()
         remapSpigot.inSrg = new File(processMapping.outDir, 'bukkit_srg.srg')
         remapSpigot.inSrgToStable = new File(processMapping.outDir, "srg_to_named.srg")
         remapSpigot.inheritanceMap = new File(processMapping.outDir, 'inheritanceMap.txt')
@@ -127,6 +149,7 @@ class ArclightGradlePlugin implements Plugin<Project> {
         remapSpigot.outDeobf = project.file(spigotDeobf)
         remapSpigot.inAt = arclight.accessTransformer
         remapSpigot.bukkitVersion = arclight.bukkitVersion
+        remapSpigot.mcVersion = arclight.mcVersion
         remapSpigot.inExtraSrg = arclight.extraMapping
         remapSpigot.run()
 

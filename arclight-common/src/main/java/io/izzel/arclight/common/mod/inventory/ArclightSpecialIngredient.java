@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mod.inventory;
 
 import net.minecraft.world.item.crafting.Ingredient;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.RecipeChoice;
 import org.jetbrains.annotations.NotNull;
@@ -24,8 +24,10 @@ public class ArclightSpecialIngredient implements RecipeChoice {
     @NotNull
     @Override
     public ItemStack getItemStack() {
-        net.minecraft.world.item.ItemStack[] items = ingredient.getItems();
-        return items.length > 0 ? CraftItemStack.asCraftMirror(items[0]) : new ItemStack(Material.AIR, 0);
+        var items = ingredient.items().toList();
+        return !items.isEmpty()
+            ? CraftItemStack.asCraftMirror(new net.minecraft.world.item.ItemStack(items.getFirst().value()))
+            : new ItemStack(Material.AIR, 0);
     }
 
     @NotNull

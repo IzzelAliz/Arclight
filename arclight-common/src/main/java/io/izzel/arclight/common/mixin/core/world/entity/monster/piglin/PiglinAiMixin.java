@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster.piglin;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.MobBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.monster.piglin.PiglinBridge;
 import io.izzel.arclight.mixin.Decorate;
@@ -13,8 +14,8 @@ import net.minecraft.world.entity.monster.piglin.Piglin;
 import net.minecraft.world.entity.monster.piglin.PiglinAi;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.PiglinBarterEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -57,7 +58,7 @@ public abstract class PiglinAiMixin {
         if (itemEntity.getItem().getItem() == Items.GOLD_NUGGET && !CraftEventFactory.callEntityPickupItemEvent(piglinEntity, itemEntity, 0, false).isCancelled()) {
             piglinEntity.take(itemEntity, itemEntity.getItem().getCount());
             itemstack = itemEntity.getItem();
-            itemEntity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
+            ((EntityBridge) itemEntity).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
             itemEntity.discard();
         } else if (!CraftEventFactory.callEntityPickupItemEvent(piglinEntity, itemEntity, itemEntity.getItem().getCount() - 1, false).isCancelled()) {
             piglinEntity.take(itemEntity, 1);
@@ -74,7 +75,7 @@ public abstract class PiglinAiMixin {
             eat(piglinEntity);
         } else {
             ((MobBridge) piglinEntity).bridge$captureItemDrop(itemEntity);
-            boolean flag = !piglinEntity.equipItemIfPossible(itemstack).equals(ItemStack.EMPTY);
+            boolean flag = !piglinEntity.equipItemIfPossible((net.minecraft.server.level.ServerLevel) piglinEntity.level(), itemstack).equals(ItemStack.EMPTY);
             if (!flag) {
                 putInInventory(piglinEntity, itemstack);
             }
@@ -126,6 +127,6 @@ public abstract class PiglinAiMixin {
 
     @Inject(method = "removeOneItemFromItemEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V"))
     private static void arclight$pickup(ItemEntity itemEntity, CallbackInfoReturnable<ItemStack> cir) {
-        itemEntity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
+        ((EntityBridge) itemEntity).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
     }
 }

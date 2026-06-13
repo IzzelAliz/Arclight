@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.vehicle;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.EntityMixin;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -26,7 +27,7 @@ public abstract class VehicleEntityMixin extends EntityMixin {
     @Decorate(method = "hurt", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/VehicleEntity;setHurtDir(I)V"))
     private void arclight$vehicleDamage(DamageSource source, float amount) throws Throwable {
         Vehicle vehicle = (Vehicle) this.getBukkitEntity();
-        org.bukkit.entity.Entity passenger = (source.getEntity() == null) ? null : source.getEntity().bridge$getBukkitEntity();
+        org.bukkit.entity.Entity passenger = (source.getEntity() == null) ? null : ((EntityBridge) source.getEntity()).bridge$getBukkitEntity();
         VehicleDamageEvent event = new VehicleDamageEvent(vehicle, passenger, amount);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
@@ -40,7 +41,7 @@ public abstract class VehicleEntityMixin extends EntityMixin {
     @Inject(method = "hurt", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/VehicleEntity;discard()V"))
     private void arclight$playerDestroy(DamageSource source, float f, CallbackInfoReturnable<Boolean> cir) {
         Vehicle vehicle = (Vehicle) this.getBukkitEntity();
-        org.bukkit.entity.Entity passenger = (source.getEntity() == null) ? null : source.getEntity().bridge$getBukkitEntity();
+        org.bukkit.entity.Entity passenger = (source.getEntity() == null) ? null : ((EntityBridge) source.getEntity()).bridge$getBukkitEntity();
         VehicleDestroyEvent destroyEvent = new VehicleDestroyEvent(vehicle, passenger);
         Bukkit.getPluginManager().callEvent(destroyEvent);
 
@@ -55,7 +56,7 @@ public abstract class VehicleEntityMixin extends EntityMixin {
     @Inject(method = "hurt", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/VehicleEntity;destroy(Lnet/minecraft/world/damagesource/DamageSource;)V"))
     private void arclight$destroy(DamageSource source, float f, CallbackInfoReturnable<Boolean> cir) {
         Vehicle vehicle = (Vehicle) this.getBukkitEntity();
-        org.bukkit.entity.Entity passenger = (source.getEntity() == null) ? null : source.getEntity().bridge$getBukkitEntity();
+        org.bukkit.entity.Entity passenger = (source.getEntity() == null) ? null : ((EntityBridge) source.getEntity()).bridge$getBukkitEntity();
         VehicleDestroyEvent destroyEvent = new VehicleDestroyEvent(vehicle, passenger);
         Bukkit.getPluginManager().callEvent(destroyEvent);
 

@@ -9,15 +9,16 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.LevelStem;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.CraftWorld;
-import org.bukkit.craftbukkit.v.block.CapturedBlockState;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.block.CapturedBlockState;
 import org.bukkit.entity.SpawnCategory;
 import org.bukkit.generator.ChunkGenerator;
 import org.spigotmc.SpigotWorldConfig;
@@ -59,7 +60,10 @@ public interface WorldBridge extends IWorldWriterBridge, LevelAccessorBridge, In
     }
 
     default boolean bridge$forge$mobGriefing(Entity entity) {
-        return ((Level) this).getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
+        if (this instanceof ServerLevel serverLevel) {
+            return serverLevel.getGameRules().get(GameRules.MOB_GRIEFING);
+        }
+        return GameRules.MOB_GRIEFING.defaultValue();
     }
 
     default void bridge$forge$onPotionBrewed(NonNullList<ItemStack> stacks) {}

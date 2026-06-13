@@ -7,7 +7,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import org.bukkit.craftbukkit.v.CraftServer;
+import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
 import java.net.SocketAddress;

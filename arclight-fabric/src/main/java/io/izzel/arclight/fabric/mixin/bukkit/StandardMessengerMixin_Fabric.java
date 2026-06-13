@@ -3,7 +3,7 @@ package io.izzel.arclight.fabric.mixin.bukkit;
 import io.izzel.arclight.common.bridge.bukkit.MessengerBridge;
 import io.izzel.arclight.common.mod.plugin.messaging.ArclightPluginChannel;
 import io.izzel.arclight.fabric.mod.plugin.messaging.ArclightFabricMessaging;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.plugin.messaging.PluginMessageListenerRegistration;
@@ -16,7 +16,7 @@ import java.util.Set;
 public abstract class StandardMessengerMixin_Fabric implements Messenger, MessengerBridge {
 
     @Override
-    public ArclightPluginChannel<?> arclight$setupChannel(ResourceLocation channel, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
+    public ArclightPluginChannel<?> arclight$setupChannel(Identifier channel, Set<PluginMessageListenerRegistration> incoming, Set<Plugin> outgoing) {
         return ArclightFabricMessaging.setupChannel(this, channel, incoming, outgoing);
     }
 }

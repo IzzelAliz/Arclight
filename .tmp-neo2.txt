@@ -1,0 +1,591 @@
+﻿.\gradlew : WARNING: A restricted method in java.lang.System has been called
+発生場所 C:\Users\SPLIGAN\AppData\Local\Temp\ps-script-6904eb8c-2642-4853-a08f-8e7c217914b5.ps1:84 文字:50
++ ... \Arclight"; .\gradlew :arclight-neoforge:compileJava --no-daemon 2>&1 ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (WARNING: A rest...has been called:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnam
+ed module (file:/C:/Users/SPLIGAN/.gradle/wrapper/dists/gradle-9.2.1-all/2lbhfocpgk6niea1fja7mj8kz/gradle-9.2.1/lib/nat
+ive-platform-0.22-milestone-29.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :buildSrc:compileJava UP-TO-DATE
+> Task :buildSrc:compileGroovy UP-TO-DATE
+> Task :buildSrc:processResources NO-SOURCE
+> Task :buildSrc:classes UP-TO-DATE
+> Task :buildSrc:jar UP-TO-DATE
+
+> Configure project :
+Architect Plugin: 3.5.167
+Architectury Loom: 1.14.476
+This version of Architectury Loom is in beta! Please report any issues you encounter: https://github.com/architectury/architectury-loom/issues
+
+> Configure project :arclight-common
+Setup for Spigot 26.1.2(4628)
+:spigot build cache valid, using it
+
+> Configure project :arclight-fabric
+Setup for Spigot 26.1.2(4628)
+:spigot build cache valid, using it
+
+> Configure project :arclight-neoforge
+Setup for Spigot 26.1.2(4628)
+:spigot build cache valid, using it
+
+> Task :arclight-common:commonMappings UP-TO-DATE
+> Task :i18n-config:compileJava UP-TO-DATE
+> Task :i18n-config:processResources UP-TO-DATE
+> Task :i18n-config:classes UP-TO-DATE
+> Task :i18n-config:jar UP-TO-DATE
+> Task :arclight-common:compileJava UP-TO-DATE
+
+> Task :arclight-neoforge:compileJava
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\bukkit\Craf
+tInventoryMixin.java:11: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・
+∪縺・    private IItemHandler arclight$inventory;
+            ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\bukkit\Craf
+tInventoryMixin.java:11: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・
+∪縺・    private IItemHandler arclight$inventory;
+            ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\bukkit\Craf
+tInventoryMixin.java:11: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・
+∪縺・    private IItemHandler arclight$inventory;
+            ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\bukkit\Craf
+tInventoryMixin.java:11: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・
+∪縺・    private IItemHandler arclight$inventory;
+            ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\bukkit\Craf
+tInventoryMixin.java:11: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・
+∪縺・    private IItemHandler arclight$inventory;
+            ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\core\world\
+level\LevelMixin_NeoForge.java:71: 繧ｨ繝ｩ繝ｼ: 荳埼←蜷医↑蝙・ LevelMixin_NeoForge繧担erverLevel縺ｫ螟画鋤縺ｧ縺阪∪縺帙ｓ:
+        return this instanceof net.minecraft.server.level.ServerLevel serverLevel && EventHooks.canEntityGrief(serverLe
+vel, entity);
+               ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\CombinedInvWrapperAccessor.java:8: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮCombinedInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ
+縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・@Mixin(CombinedInvWrapper.class)
+       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\CombinedInvWrapperAccessor.java:8: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮCombinedInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ
+縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・@Mixin(CombinedInvWrapper.class)
+       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\CombinedInvWrapperAccessor.java:8: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮCombinedInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ
+縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・@Mixin(CombinedInvWrapper.class)
+       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\CombinedInvWrapperAccessor.java:8: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮCombinedInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ
+縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・@Mixin(CombinedInvWrapper.class)
+       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\CombinedInvWrapperAccessor.java:8: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮCombinedInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ
+縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・@Mixin(CombinedInvWrapper.class)
+       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\CombinedInvWrapperAccessor.java:11: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandlerModifiable縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺
+翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・    IItemHandlerModifiable arclight$getHandlerFromIndex(int index);
+    ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\CombinedInvWrapperAccessor.java:11: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandlerModifiable縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺
+翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・    IItemHandlerModifiable arclight$getHandlerFromIndex(int index);
+    ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\CombinedInvWrapperAccessor.java:11: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandlerModifiable縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺
+翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・    IItemHandlerModifiable arclight$getHandlerFromIndex(int index);
+    ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\CombinedInvWrapperAccessor.java:11: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandlerModifiable縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺
+翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・    IItemHandlerModifiable arclight$getHandlerFromIndex(int index);
+    ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\CombinedInvWrapperAccessor.java:11: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandlerModifiable縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺
+翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・    IItemHandlerModifiable arclight$getHandlerFromIndex(int index);
+    ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\RangedWrapperAccessor.java:8: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮRangedWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎
+髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・@Mixin(RangedWrapper.class)
+       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\RangedWrapperAccessor.java:8: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮRangedWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎
+髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・@Mixin(RangedWrapper.class)
+       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\RangedWrapperAccessor.java:8: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮRangedWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎
+髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・@Mixin(RangedWrapper.class)
+       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\RangedWrapperAccessor.java:8: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮRangedWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎
+髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・@Mixin(RangedWrapper.class)
+       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\RangedWrapperAccessor.java:8: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮRangedWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎
+髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・@Mixin(RangedWrapper.class)
+       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\RangedWrapperAccessor.java:11: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandlerModifiable縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹
+∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・    IItemHandlerModifiable arclight$unwrap();
+    ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\RangedWrapperAccessor.java:11: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandlerModifiable縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹
+∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・    IItemHandlerModifiable arclight$unwrap();
+    ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\RangedWrapperAccessor.java:11: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandlerModifiable縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹
+∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・    IItemHandlerModifiable arclight$unwrap();
+    ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\RangedWrapperAccessor.java:11: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandlerModifiable縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹
+∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・    IItemHandlerModifiable arclight$unwrap();
+    ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\RangedWrapperAccessor.java:11: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandlerModifiable縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹
+∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・    IItemHandlerModifiable arclight$unwrap();
+    ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\SidedInvWrapperAccessor.java:8: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮSidedInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺
+壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・@Mixin(SidedInvWrapper.class)
+       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\SidedInvWrapperAccessor.java:8: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮSidedInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺
+壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・@Mixin(SidedInvWrapper.class)
+       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\SidedInvWrapperAccessor.java:8: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮSidedInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺
+壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・@Mixin(SidedInvWrapper.class)
+       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\SidedInvWrapperAccessor.java:8: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮSidedInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺
+壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・@Mixin(SidedInvWrapper.class)
+       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\it
+ems\SidedInvWrapperAccessor.java:8: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮSidedInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺
+壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・@Mixin(SidedInvWrapper.class)
+       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\optimizatio
+n\general\activationrange\entity\ItemEntityMixin_ActivationRange_NeoForge.java:43: 繧ｨ繝ｩ繝ｼ: isClientSide縺ｯLevel縺ｧprivate
+繧｢繧ｯ繧ｻ繧ｹ縺輔ｌ縺ｾ縺・        if (!this.level().isClientSide && this.age >= this.lifespan) {
+                         ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\NeoForgeCommo
+nImpl.java:47: 繧ｨ繝ｩ繝ｼ: static縺ｧ縺ｪ縺・Γ繧ｽ繝・ラ getLoadingModList()繧痴tatic繧ｳ繝ｳ繝・く繧ｹ繝医°繧牙盾辣ｧ縺吶ｋ縺薙→縺ｯ縺ｧ縺阪∪縺帙ｓ
+        return ModList.get() != null ? ModList.get().isLoaded(modid) : FMLLoader.getLoadingModList().getModFileById(mod
+id) != null;
+                                                                                ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\plugin\messag
+ing\ArclightNfMessaging.java:98: 繧ｨ繝ｩ繝ｼ: PayloadRegistration<>縺ｮ蝙句ｼ墓焚繧呈耳隲悶〒縺阪∪縺帙ｓ
+        return new PayloadRegistration<>(type, codec, handler, ArclightPluginChannel.PROTOCOLS, Optional.ofNullable(flo
+w), version, true);
+               ^
+  逅・罰: 蝙句､画焚T繧呈耳隲悶〒縺阪∪縺帙ｓ
+    (螳溷ｼ墓焚繝ｪ繧ｹ繝医→莉ｮ蠑墓焚繝ｪ繧ｹ繝医・髟ｷ縺輔′逡ｰ縺ｪ繧翫∪縺・
+  T縺悟梛螟画焚縺ｮ蝣ｴ蜷・
+    繝ｬ繧ｳ繝ｼ繝・PayloadRegistration縺ｧ螳｣險縺輔ｌ縺ｦ縺・ｋT extends CustomPacketPayload
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:54: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・  
+  public static Pair<IItemHandler, Object> makeItemHandlerPair(CraftInventory container) {
+                       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:54: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・  
+  public static Pair<IItemHandler, Object> makeItemHandlerPair(CraftInventory container) {
+                       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:54: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・  
+  public static Pair<IItemHandler, Object> makeItemHandlerPair(CraftInventory container) {
+                       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:54: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・  
+  public static Pair<IItemHandler, Object> makeItemHandlerPair(CraftInventory container) {
+                       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:54: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・  
+  public static Pair<IItemHandler, Object> makeItemHandlerPair(CraftInventory container) {
+                       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:71: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺
+・∪縺・            return Pair.of(new InvWrapper(inventory), nmsOwner);
+                               ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:78: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・  
+  public static Container getContainer(IItemHandler handler) {
+                                         ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:78: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・  
+  public static Container getContainer(IItemHandler handler) {
+                                         ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:78: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・  
+  public static Container getContainer(IItemHandler handler) {
+                                         ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:78: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・  
+  public static Container getContainer(IItemHandler handler) {
+                                         ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:78: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・  
+  public static Container getContainer(IItemHandler handler) {
+                                         ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:80: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺
+・∪縺・            case InvWrapper inv -> inv.getInv();
+                 ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:81: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮSidedInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺
+輔ｌ縺ｦ縺・∪縺・            case SidedInvWrapper sidedInv -> ((SidedInvWrapperAccessor) sidedInv).arclight$unwrap();
+                 ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:82: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮRangedWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ
+縺ｦ縺・∪縺・            case RangedWrapper ranged -> {
+                 ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:86: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮPlayerInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ
+縺輔ｌ縺ｦ縺・∪縺・            case PlayerInvWrapper player -> {
+                 ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:94: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・  
+  public static Inventory getOwnerInventory(Object nmsOwner, IItemHandler handler) {
+                                                               ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:94: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・  
+  public static Inventory getOwnerInventory(Object nmsOwner, IItemHandler handler) {
+                                                               ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:94: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・  
+  public static Inventory getOwnerInventory(Object nmsOwner, IItemHandler handler) {
+                                                               ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:94: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・  
+  public static Inventory getOwnerInventory(Object nmsOwner, IItemHandler handler) {
+                                                               ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:94: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・  
+  public static Inventory getOwnerInventory(Object nmsOwner, IItemHandler handler) {
+                                                               ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:106: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+   private final IItemHandler delegate;
+                  ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:106: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+   private final IItemHandler delegate;
+                  ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:106: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+   private final IItemHandler delegate;
+                  ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:106: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+   private final IItemHandler delegate;
+                  ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:106: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+   private final IItemHandler delegate;
+                  ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:116: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+   public DelegatedContainer(@Nonnull IItemHandler delegate, @Nullable Object nmsOwner) {
+                                       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:116: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+   public DelegatedContainer(@Nonnull IItemHandler delegate, @Nullable Object nmsOwner) {
+                                       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:116: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+   public DelegatedContainer(@Nonnull IItemHandler delegate, @Nullable Object nmsOwner) {
+                                       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:116: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+   public DelegatedContainer(@Nonnull IItemHandler delegate, @Nullable Object nmsOwner) {
+                                       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:116: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+   public DelegatedContainer(@Nonnull IItemHandler delegate, @Nullable Object nmsOwner) {
+                                       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:122: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+   public DelegatedContainer(@Nonnull Pair<IItemHandler, Object> input) {
+                                            ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:122: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+   public DelegatedContainer(@Nonnull Pair<IItemHandler, Object> input) {
+                                            ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:122: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+   public DelegatedContainer(@Nonnull Pair<IItemHandler, Object> input) {
+                                            ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:122: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+   public DelegatedContainer(@Nonnull Pair<IItemHandler, Object> input) {
+                                            ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:122: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+   public DelegatedContainer(@Nonnull Pair<IItemHandler, Object> input) {
+                                            ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:128: 隴ｦ蜻・ [removal] IItemHandler縺ｮgetSlots()縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・        return dele
+gate.getSlots();
+                       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:133: 隴ｦ蜻・ [removal] IItemHandler縺ｮgetSlots()縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・        for (int i 
+= 0; i < delegate.getSlots(); i++) {
+                                    ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:134: 隴ｦ蜻・ [removal] IItemHandler縺ｮgetStackInSlot(int)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・          
+  if (!delegate.getStackInSlot(i).isEmpty()) {
+                         ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:143: 隴ｦ蜻・ [removal] IItemHandler縺ｮgetStackInSlot(int)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・        re
+turn delegate.getStackInSlot(i).copy();
+                       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:148: 隴ｦ蜻・ [removal] IItemHandler縺ｮextractItem(int,int,boolean)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+       return delegate.extractItem(i, j, false);
+                       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:154: 隴ｦ蜻・ [removal] IItemHandler縺ｮextractItem(int,int,boolean)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+       return delegate.extractItem(i, Integer.MAX_VALUE, false);
+                       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:159: 隴ｦ蜻・ [removal] IItemHandler縺ｮisItemValid(int,ItemStack)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・   
+     if (!delegate.isItemValid(i, arg)) {
+                     ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:163: 隴ｦ蜻・ [removal] IItemHandler縺ｮextractItem(int,int,boolean)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+       final var take = delegate.extractItem(i, Integer.MAX_VALUE, true);
+                                 ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:167: 隴ｦ蜻・ [removal] IItemHandler縺ｮextractItem(int,int,boolean)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+       final var raw = delegate.extractItem(i, Integer.MAX_VALUE, false);
+                                ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:168: 隴ｦ蜻・ [removal] IItemHandler縺ｮinsertItem(int,ItemStack,boolean)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺
+・∪縺・        if (delegate.insertItem(i, arg, true).isEmpty()) {
+                    ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:169: 隴ｦ蜻・ [removal] IItemHandler縺ｮinsertItem(int,ItemStack,boolean)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺
+・∪縺・            delegate.insertItem(i, arg, false);
+                    ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:172: 隴ｦ蜻・ [removal] IItemHandler縺ｮinsertItem(int,ItemStack,boolean)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺
+・∪縺・        delegate.insertItem(i, raw, false);
+                ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:178: 隴ｦ蜻・ [removal] IItemHandler縺ｮgetSlots()縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・        for (int i 
+= 0; i < delegate.getSlots(); i++) {
+                                    ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:179: 隴ｦ蜻・ [removal] IItemHandler縺ｮgetSlotLimit(int)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・            
+final int limit = delegate.getSlotLimit(i);
+                                      ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:215: 隴ｦ蜻・ [removal] IItemHandler縺ｮisItemValid(int,ItemStack)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・   
+     return delegate.isItemValid(i, arg);
+                       ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:220: 隴ｦ蜻・ [removal] IItemHandler縺ｮgetSlots()縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・        for (int i 
+= 0; i < delegate.getSlots(); i++) {
+                                    ^
+C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delegate
+dContainer.java:221: 隴ｦ蜻・ [removal] IItemHandler縺ｮextractItem(int,int,boolean)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+           delegate.extractItem(i, Integer.MAX_VALUE, false);
+                    ^
+繝弱・繝・ 荳驛ｨ縺ｮ蜈･蜉帙ヵ繧｡繧､繝ｫ縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｪ縺БPI繧剃ｽｿ逕ｨ縺ｾ縺溘・繧ｪ繝ｼ繝舌・繝ｩ繧､繝峨＠縺ｦ縺・∪縺吶・
+繝弱・繝・ 隧ｳ邏ｰ縺ｯ縲・Xlint:deprecation繧ｪ繝励す繝ｧ繝ｳ繧呈欠螳壹＠縺ｦ蜀阪さ繝ｳ繝代う繝ｫ縺励※縺上□縺輔＞縲・
+繝弱・繝・ 蜈･蜉帙ヵ繧｡繧､繝ｫ縺ｮ謫堺ｽ懊・縺・■縲∵悴繝√ぉ繝・け縺ｾ縺溘・螳牙・縺ｧ縺ｯ縺ｪ縺・ｂ縺ｮ縺後≠繧翫∪縺吶・
+繝弱・繝・ 隧ｳ邏ｰ縺ｯ縲・Xlint:unchecked繧ｪ繝励す繝ｧ繝ｳ繧呈欠螳壹＠縺ｦ蜀阪さ繝ｳ繝代う繝ｫ縺励※縺上□縺輔＞縲・
+繧ｨ繝ｩ繝ｼ4蛟・
+隴ｦ蜻・2蛟・
+
+> Task :arclight-neoforge:compileJava FAILED
+
+[Incubating] Problems report is available at: file:///C:/Users/SPLIGAN/Documents/GitHub/Arclight/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':arclight-neoforge:compileJava'.
+> Compilation failed; see the compiler output below.
+  繝弱・繝・ 隧ｳ邏ｰ縺ｯ縲・Xlint:deprecation繧ｪ繝励す繝ｧ繝ｳ繧呈欠螳壹＠縺ｦ蜀阪さ繝ｳ繝代う繝ｫ縺励※縺上□縺輔＞縲・
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\core\worl
+d\level\LevelMixin_NeoForge.java:71: 繧ｨ繝ｩ繝ｼ: 荳埼←蜷医↑蝙・ LevelMixin_NeoForge繧担erverLevel縺ｫ螟画鋤縺ｧ縺阪∪縺帙ｓ:
+          return this instanceof net.minecraft.server.level.ServerLevel serverLevel && EventHooks.canEntityGrief(server
+Level, entity);
+                 ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\NeoForgeCom
+monImpl.java:47: 繧ｨ繝ｩ繝ｼ: static縺ｧ縺ｪ縺・Γ繧ｽ繝・ラ getLoadingModList()繧痴tatic繧ｳ繝ｳ繝・く繧ｹ繝医°繧牙盾辣ｧ縺吶ｋ縺薙→縺ｯ縺ｧ縺阪∪縺帙ｓ
+          return ModList.get() != null ? ModList.get().isLoaded(modid) : FMLLoader.getLoadingModList().getModFileById(m
+odid) != null;
+                                                                                  ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\optimizat
+ion\general\activationrange\entity\ItemEntityMixin_ActivationRange_NeoForge.java:43: 繧ｨ繝ｩ繝ｼ: isClientSide縺ｯLevel縺ｧpriva
+te繧｢繧ｯ繧ｻ繧ｹ縺輔ｌ縺ｾ縺・          if (!this.level().isClientSide && this.age >= this.lifespan) {
+                           ^
+  繝弱・繝・ 隧ｳ邏ｰ縺ｯ縲・Xlint:unchecked繧ｪ繝励す繝ｧ繝ｳ繧呈欠螳壹＠縺ｦ蜀阪さ繝ｳ繝代う繝ｫ縺励※縺上□縺輔＞縲・
+  繝弱・繝・ 荳驛ｨ縺ｮ蜈･蜉帙ヵ繧｡繧､繝ｫ縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｪ縺БPI繧剃ｽｿ逕ｨ縺ｾ縺溘・繧ｪ繝ｼ繝舌・繝ｩ繧､繝峨＠縺ｦ縺・∪縺吶・
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\bukkit\Cr
+aftInventoryMixin.java:11: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ
+縺・∪縺・      private IItemHandler arclight$inventory;
+              ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\
+items\CombinedInvWrapperAccessor.java:8: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮCombinedInvWrapper縺ｯ謗ｨ螂ｨ縺
+輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・  @Mixin(CombinedInvWrapper.class)
+         ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\
+items\CombinedInvWrapperAccessor.java:11: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandlerModifiable縺ｯ謗ｨ螂ｨ縺輔ｌ縺
+ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・      IItemHandlerModifiable arclight$getHandlerFromIndex(int index);
+      ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\
+items\RangedWrapperAccessor.java:8: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮRangedWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹
+∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・  @Mixin(RangedWrapper.class)
+         ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\
+items\RangedWrapperAccessor.java:11: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandlerModifiable縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺
+壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・      IItemHandlerModifiable arclight$unwrap();
+      ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mixin\neoforge\
+items\SidedInvWrapperAccessor.java:8: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮSidedInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫
+ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・  @Mixin(SidedInvWrapper.class)
+         ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:54: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・
+      public static Pair<IItemHandler, Object> makeItemHandlerPair(CraftInventory container) {
+                         ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:71: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺
+ｦ縺・∪縺・              return Pair.of(new InvWrapper(inventory), nmsOwner);
+                                 ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:78: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・
+      public static Container getContainer(IItemHandler handler) {
+                                           ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:80: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺
+ｦ縺・∪縺・              case InvWrapper inv -> inv.getInv();
+                   ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:81: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮSidedInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧
+ｯ縺輔ｌ縺ｦ縺・∪縺・              case SidedInvWrapper sidedInv -> ((SidedInvWrapperAccessor) sidedInv).arclight$unwrap();
+                   ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:82: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮRangedWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺
+輔ｌ縺ｦ縺・∪縺・              case RangedWrapper ranged -> {
+                   ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:86: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items.wrapper縺ｮPlayerInvWrapper縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・
+繧ｯ縺輔ｌ縺ｦ縺・∪縺・              case PlayerInvWrapper player -> {
+                   ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:94: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・
+      public static Inventory getOwnerInventory(Object nmsOwner, IItemHandler handler) {
+                                                                 ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:106: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺
+・      private final IItemHandler delegate;
+                    ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:116: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺
+・      public DelegatedContainer(@Nonnull IItemHandler delegate, @Nullable Object nmsOwner) {
+                                         ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:122: 隴ｦ蜻・ [removal] net.neoforged.neoforge.items縺ｮIItemHandler縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺
+・      public DelegatedContainer(@Nonnull Pair<IItemHandler, Object> input) {
+                                              ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:128: 隴ｦ蜻・ [removal] IItemHandler縺ｮgetSlots()縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・          return 
+delegate.getSlots();
+                         ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:133: 隴ｦ蜻・ [removal] IItemHandler縺ｮgetSlots()縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・          for (in
+t i = 0; i < delegate.getSlots(); i++) {
+                                      ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:134: 隴ｦ蜻・ [removal] IItemHandler縺ｮgetStackInSlot(int)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・        
+      if (!delegate.getStackInSlot(i).isEmpty()) {
+                           ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:143: 隴ｦ蜻・ [removal] IItemHandler縺ｮgetStackInSlot(int)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・        
+  return delegate.getStackInSlot(i).copy();
+                         ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:148: 隴ｦ蜻・ [removal] IItemHandler縺ｮextractItem(int,int,boolean)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺
+・          return delegate.extractItem(i, j, false);
+                         ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:154: 隴ｦ蜻・ [removal] IItemHandler縺ｮextractItem(int,int,boolean)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺
+・          return delegate.extractItem(i, Integer.MAX_VALUE, false);
+                         ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:159: 隴ｦ蜻・ [removal] IItemHandler縺ｮisItemValid(int,ItemStack)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+         if (!delegate.isItemValid(i, arg)) {
+                       ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:163: 隴ｦ蜻・ [removal] IItemHandler縺ｮextractItem(int,int,boolean)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺
+・          final var take = delegate.extractItem(i, Integer.MAX_VALUE, true);
+                                   ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:167: 隴ｦ蜻・ [removal] IItemHandler縺ｮextractItem(int,int,boolean)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺
+・          final var raw = delegate.extractItem(i, Integer.MAX_VALUE, false);
+                                  ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:168: 隴ｦ蜻・ [removal] IItemHandler縺ｮinsertItem(int,ItemStack,boolean)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺
+ｦ縺・∪縺・          if (delegate.insertItem(i, arg, true).isEmpty()) {
+                      ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:169: 隴ｦ蜻・ [removal] IItemHandler縺ｮinsertItem(int,ItemStack,boolean)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺
+ｦ縺・∪縺・              delegate.insertItem(i, arg, false);
+                      ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:172: 隴ｦ蜻・ [removal] IItemHandler縺ｮinsertItem(int,ItemStack,boolean)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺
+ｦ縺・∪縺・          delegate.insertItem(i, raw, false);
+                  ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:178: 隴ｦ蜻・ [removal] IItemHandler縺ｮgetSlots()縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・          for (in
+t i = 0; i < delegate.getSlots(); i++) {
+                                      ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:179: 隴ｦ蜻・ [removal] IItemHandler縺ｮgetSlotLimit(int)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・          
+    final int limit = delegate.getSlotLimit(i);
+                                        ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:215: 隴ｦ蜻・ [removal] IItemHandler縺ｮisItemValid(int,ItemStack)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・ 
+         return delegate.isItemValid(i, arg);
+                         ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:220: 隴ｦ蜻・ [removal] IItemHandler縺ｮgetSlots()縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺・          for (in
+t i = 0; i < delegate.getSlots(); i++) {
+                                      ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\util\Delega
+tedContainer.java:221: 隴ｦ蜻・ [removal] IItemHandler縺ｮextractItem(int,int,boolean)縺ｯ謗ｨ螂ｨ縺輔ｌ縺ｦ縺翫ｉ縺壹∝炎髯､逕ｨ縺ｫ繝槭・繧ｯ縺輔ｌ縺ｦ縺・∪縺
+・              delegate.extractItem(i, Integer.MAX_VALUE, false);
+                      ^
+  C:\Users\SPLIGAN\Documents\GitHub\Arclight\arclight-neoforge\src\main\java\io\izzel\arclight\neoforge\mod\plugin\mess
+aging\ArclightNfMessaging.java:98: 繧ｨ繝ｩ繝ｼ: PayloadRegistration<>縺ｮ蝙句ｼ墓焚繧呈耳隲悶〒縺阪∪縺帙ｓ
+          return new PayloadRegistration<>(type, codec, handler, ArclightPluginChannel.PROTOCOLS, Optional.ofNullable(f
+low), version, true);
+                 ^
+    逅・罰: 蝙句､画焚T繧呈耳隲悶〒縺阪∪縺帙ｓ
+      (螳溷ｼ墓焚繝ｪ繧ｹ繝医→莉ｮ蠑墓焚繝ｪ繧ｹ繝医・髟ｷ縺輔′逡ｰ縺ｪ繧翫∪縺・
+    T縺悟梛螟画焚縺ｮ蝣ｴ蜷・
+      繝ｬ繧ｳ繝ｼ繝・PayloadRegistration縺ｧ螳｣險縺輔ｌ縺ｦ縺・ｋT extends CustomPacketPayload
+  繝弱・繝・ 蜈･蜉帙ヵ繧｡繧､繝ｫ縺ｮ謫堺ｽ懊・縺・■縲∵悴繝√ぉ繝・け縺ｾ縺溘・螳牙・縺ｧ縺ｯ縺ｪ縺・ｂ縺ｮ縺後≠繧翫∪縺吶・
+  繧ｨ繝ｩ繝ｼ4蛟・
+  隴ｦ蜻・2蛟・
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to generate a Build Scan (powered by Develocity).
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 14s
+9 actionable tasks: 1 executed, 8 up-to-date

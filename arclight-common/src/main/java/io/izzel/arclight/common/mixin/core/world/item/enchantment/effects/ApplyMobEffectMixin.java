@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.item.enchantment.effects;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;

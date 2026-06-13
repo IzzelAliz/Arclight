@@ -8,7 +8,7 @@ import net.minecraft.network.chat.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v.util.CraftChatMessage;
+import org.bukkit.craftbukkit.util.CraftChatMessage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,8 +43,7 @@ public class ArclightDummyCommandSender extends ArclightDummyPermissible impleme
 
         @Override
         public void sendMessage(@NotNull BaseComponent component) {
-            var json = ComponentSerializer.toJson(component);
-            var result = Component.Serializer.fromJson(json, stack.getServer().registryAccess());
+            var result = CraftChatMessage.fromJSON(ComponentSerializer.toString(component));
             if (result != null) {
                 stack.sendSystemMessage(result);
             }

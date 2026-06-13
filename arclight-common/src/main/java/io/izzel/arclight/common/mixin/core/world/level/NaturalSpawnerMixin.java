@@ -16,7 +16,7 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.storage.LevelData;
-import org.bukkit.craftbukkit.v.util.CraftSpawnCategory;
+import org.bukkit.craftbukkit.util.CraftSpawnCategory;
 import org.bukkit.entity.SpawnCategory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Final;
@@ -42,7 +42,6 @@ public abstract class NaturalSpawnerMixin {
      */
     @Overwrite
     public static void spawnForChunk(ServerLevel world, LevelChunk chunk, NaturalSpawner.SpawnState manager, boolean flag, boolean flag1, boolean flag2) {
-        world.getProfiler().push("spawner");
         MobCategory[] classifications = SPAWNING_CATEGORIES;
         LevelData worldInfo = world.getLevelData();
         for (MobCategory classification : classifications) {
@@ -51,7 +50,7 @@ public abstract class NaturalSpawnerMixin {
             SpawnCategory spawnCategory = CraftSpawnCategory.toBukkit(classification);
             if (CraftSpawnCategory.isValidForLimits(spawnCategory)) {
                 spawnThisTick = ((WorldBridge) world).bridge$ticksPerSpawnCategory().getLong(spawnCategory) != 0 && worldInfo.getGameTime() % ((WorldBridge) world).bridge$ticksPerSpawnCategory().getLong(spawnCategory) == 0;
-                limit = world.bridge$getWorld().getSpawnLimit(spawnCategory);
+                limit = ((WorldBridge) world).bridge$getWorld().getSpawnLimit(spawnCategory);
             }
             if (spawnThisTick) {
                 if (limit != 0) {
@@ -62,7 +61,6 @@ public abstract class NaturalSpawnerMixin {
                 }
             }
         }
-        world.getProfiler().pop();
     }
 
     @Inject(method = "spawnCategoryForPosition(Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkAccess;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/NaturalSpawner$SpawnPredicate;Lnet/minecraft/world/level/NaturalSpawner$AfterSpawnCallback;)V",

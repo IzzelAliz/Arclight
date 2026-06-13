@@ -7,6 +7,11 @@ import java.util.function.Consumer
 
 class Utils {
 
+    static boolean isDeobfuscatedMc(String version) {
+        def major = version.split('\\.')[0]
+        return major.isInteger() && major.toInteger() >= 26
+    }
+
     static void download(String url, File dist) {
         dist.parentFile.mkdirs()
         def con = new URL(url).openConnection()

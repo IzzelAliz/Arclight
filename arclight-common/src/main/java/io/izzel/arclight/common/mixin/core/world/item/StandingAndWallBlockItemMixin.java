@@ -1,13 +1,14 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import net.minecraft.world.item.StandingAndWallBlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.block.data.CraftBlockData;
 import org.bukkit.event.block.BlockCanBuildEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,7 +23,7 @@ public class StandingAndWallBlockItemMixin {
     private void arclight$blockCanPlace(BlockPlaceContext context, CallbackInfoReturnable<BlockState> cir, BlockState place, BlockState defaultReturn) {
         if (defaultReturn != null) {
             var result = context.getLevel().isUnobstructed(defaultReturn, context.getClickedPos(), CollisionContext.empty());
-            var player = (context.getPlayer() instanceof ServerPlayerBridge bridge) ? bridge.bridge$getBukkitEntity() : null;
+            var player = (context.getPlayer() instanceof ServerPlayerBridge bridge) ? (org.bukkit.entity.Player) bridge.bridge$getBukkitEntity() : null;
 
             var event = new BlockCanBuildEvent(CraftBlock.at(context.getLevel(), context.getClickedPos()), player, CraftBlockData.fromData(defaultReturn), result);
             Bukkit.getPluginManager().callEvent(event);

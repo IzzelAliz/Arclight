@@ -1,14 +1,15 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.animal.Bee;
+import io.izzel.arclight.common.mod.nms.animal.bee.BeePollinateGoalAccessor;
+import net.minecraft.world.entity.animal.bee.Bee;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -16,10 +17,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Bee.class)
 public abstract class BeeMixin extends AnimalMixin {
-
-    // @formatter:off
-    @Shadow Bee.BeePollinateGoal beePollinateGoal;
-    // @formatter:on
 
     @Inject(method = "addAdditionalSaveData", at = @At("RETURN"))
     private void arclight$removePos(CompoundTag tag, CallbackInfo ci) {
@@ -44,8 +41,8 @@ public abstract class BeeMixin extends AnimalMixin {
             return false;
         } else {
             boolean ret = super.hurt(source, amount);
-            if (ret && !this.level().isClientSide) {
-                this.beePollinateGoal.stopPollinating();
+            if (ret && !this.level().isClientSide()) {
+                ((BeePollinateGoalAccessor) this).arclight$getBeePollinateGoal().stopPollinating();
             }
             return ret;
         }

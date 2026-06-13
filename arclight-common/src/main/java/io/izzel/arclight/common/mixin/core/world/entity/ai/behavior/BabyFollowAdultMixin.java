@@ -9,8 +9,8 @@ import net.minecraft.world.entity.ai.behavior.OneShot;
 import net.minecraft.world.entity.ai.behavior.declarative.BehaviorBuilder;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
-import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,7 +34,7 @@ public abstract class BabyFollowAdultMixin {
                         return false;
                     } else {
                         LivingEntity ageablemob = p_258331_.get(p_258317_);
-                        if (p_258327_.closerThan(ageablemob, (double) (p_259321_.getMaxValue() + 1)) && !p_258327_.closerThan(ageablemob, (double) p_259321_.getMinValue())) {
+                        if (p_258327_.closerThan(ageablemob, (double) (p_259321_.maxInclusive() + 1)) && !p_258327_.closerThan(ageablemob, (double) p_259321_.minInclusive())) {
                             // CraftBukkit start
                             EntityTargetLivingEntityEvent event = CraftEventFactory.callEntityTargetLivingEvent(p_258327_, ageablemob, EntityTargetEvent.TargetReason.FOLLOW_LEADER);
                             if (event.isCancelled()) {
@@ -46,7 +46,7 @@ public abstract class BabyFollowAdultMixin {
                             }
                             ageablemob = ((CraftLivingEntity) event.getTarget()).getHandle();
                             // CraftBukkit end
-                            WalkTarget walktarget = new WalkTarget(new EntityTracker(ageablemob, false), p_259190_.apply(p_258327_), p_259321_.getMinValue() - 1);
+                            WalkTarget walktarget = new WalkTarget(new EntityTracker(ageablemob, false), p_259190_.apply(p_258327_), p_259321_.minInclusive() - 1);
                             p_258318_.set(new EntityTracker(ageablemob, true));
                             p_258319_.set(walktarget);
                             return true;

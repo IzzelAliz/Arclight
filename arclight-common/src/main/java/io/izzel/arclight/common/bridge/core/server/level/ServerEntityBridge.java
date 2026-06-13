@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.bridge.core.server.level;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import net.minecraft.server.network.ServerPlayerConnection;
 import net.minecraft.world.entity.Entity;
 

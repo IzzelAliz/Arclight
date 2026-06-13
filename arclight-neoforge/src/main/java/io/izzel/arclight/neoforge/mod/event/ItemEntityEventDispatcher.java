@@ -2,7 +2,7 @@ package io.izzel.arclight.neoforge.mod.event;
 
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.item.ItemExpireEvent;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 
 public class ItemEntityEventDispatcher {
 

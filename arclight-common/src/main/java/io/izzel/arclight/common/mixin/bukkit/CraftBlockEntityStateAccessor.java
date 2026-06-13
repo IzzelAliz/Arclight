@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import net.minecraft.world.level.block.entity.BlockEntity;
-import org.bukkit.craftbukkit.v.block.CraftBlockEntityState;
+import org.bukkit.craftbukkit.block.CraftBlockEntityState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 

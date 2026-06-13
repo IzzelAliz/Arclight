@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.bukkit.util;
 import io.izzel.arclight.common.bridge.core.world.level.IWorldWriterBridge;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.LevelAccessor;
-import org.bukkit.craftbukkit.v.util.BlockStateListPopulator;
+import org.bukkit.craftbukkit.util.BlockStateListPopulator;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

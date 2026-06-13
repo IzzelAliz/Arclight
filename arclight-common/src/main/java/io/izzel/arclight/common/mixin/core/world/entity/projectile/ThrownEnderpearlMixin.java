@@ -4,7 +4,7 @@ import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridg
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageSources;
-import net.minecraft.world.entity.projectile.ThrownEnderpearl;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl;
 import net.minecraft.world.phys.HitResult;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;

@@ -15,8 +15,8 @@ import net.minecraft.util.datafix.DataFixers;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.PrimaryLevelData;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.command.CraftRemoteConsoleCommandSender;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.command.CraftRemoteConsoleCommandSender;
 import org.bukkit.event.server.RemoteServerCommandEvent;
 import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.plugin.PluginLoadOrder;
@@ -164,11 +164,11 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin implemen
     }
 
     @Override
-    public void arclight$prepareAndAddLevel(ServerLevel internal, PrimaryLevelData levelData) {
-        this.initWorld(internal, levelData, levelData, levelData.worldGenOptions());
-        internal.setSpawnSettings(true, true);
+    public void arclight$prepareAndAddLevel(ServerLevel internal, PrimaryLevelData levelData, net.minecraft.world.level.levelgen.WorldOptions worldOptions) {
+        this.initWorld(internal, levelData, levelData, worldOptions);
         this.addLevel(internal);
-        this.prepareLevels(internal.getChunkSource().chunkMap.progressListener, internal);
+        this.prepareLevels(internal);
+        this.updateMobSpawningFlags();
         internal.entityManager.tick();
     }
 }

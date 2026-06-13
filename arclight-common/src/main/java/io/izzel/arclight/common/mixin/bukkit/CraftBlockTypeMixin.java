@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.bukkit;
 
 import com.google.common.base.Preconditions;
 import io.izzel.arclight.common.mod.server.ArclightServer;
-import org.bukkit.craftbukkit.v.block.CraftBlockType;
+import org.bukkit.craftbukkit.block.CraftBlockType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.transformer.meta.MixinMerged;

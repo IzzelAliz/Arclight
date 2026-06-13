@@ -7,8 +7,11 @@ import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBrid
 import io.izzel.arclight.common.bridge.core.server.level.DistanceManagerBridge;
 import io.izzel.arclight.mixin.Decorate;
 import net.minecraft.server.level.*;
+import net.minecraft.util.profiling.Profiler;
+import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRule;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.storage.LevelData;
 import org.bukkit.entity.SpawnCategory;
@@ -39,12 +42,12 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
 
     public boolean isChunkLoaded(final int chunkX, final int chunkZ) {
         //bridge$chunkHolderAt is getUpdatingChunkIfPresent
-        ChunkHolder chunk = ((ChunkMapBridge) this.chunkMap).bridge$chunkHolderAt(ChunkPos.asLong(chunkX, chunkZ));
+        ChunkHolder chunk = ((ChunkMapBridge) this.chunkMap).bridge$chunkHolderAt(ChunkPos.pack(chunkX, chunkZ));
         return chunk != null && ((ChunkHolderBridge) chunk).bridge$getFullChunkNow() != null;
     }
 
     public LevelChunk getChunkUnchecked(int chunkX, int chunkZ) {
-        ChunkHolder chunk = ((ChunkMapBridge) this.chunkMap).bridge$chunkHolderAt(ChunkPos.asLong(chunkX, chunkZ));
+        ChunkHolder chunk = ((ChunkMapBridge) this.chunkMap).bridge$chunkHolderAt(ChunkPos.pack(chunkX, chunkZ));
         if (chunk == null) {
             return null;
         }
@@ -69,7 +72,7 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
     @ModifyVariable(method = "getChunkFutureMainThread", index = 4, at = @At("HEAD"), argsOnly = true)
     private boolean arclight$skipLoadIfUnloading(boolean flag, int chunkX, int chunkZ) {
         if (flag) {
-            ChunkHolder chunkholder = this.getVisibleChunkIfPresent(ChunkPos.asLong(chunkX, chunkZ));
+            ChunkHolder chunkholder = this.getVisibleChunkIfPresent(ChunkPos.pack(chunkX, chunkZ));
             if (chunkholder != null) {
                 FullChunkStatus chunkStatus = ChunkLevel.fullStatus(((ChunkHolderBridge) chunkholder).bridge$getOldTicketLevel());
                 FullChunkStatus currentStatus = ChunkLevel.fullStatus(chunkholder.getTicketLevel());
@@ -82,9 +85,9 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
         }
     }
 
-    @Redirect(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/GameRules;getBoolean(Lnet/minecraft/world/level/GameRules$Key;)Z"))
-    private boolean arclight$noPlayer(GameRules gameRules, GameRules.Key<GameRules.BooleanValue> key) {
-        return gameRules.getBoolean(key) && !this.level.players().isEmpty();
+    @Redirect(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/gamerules/GameRules;get(Lnet/minecraft/world/level/gamerules/GameRule;)Ljava/lang/Object;"))
+    private boolean arclight$noPlayer(GameRules gameRules, GameRule<Boolean> key) {
+        return gameRules.get(key) && !this.level.players().isEmpty();
     }
 
     @Redirect(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/LevelData;getGameTime()J"))
@@ -103,12 +106,13 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
     }
 
     public void purgeUnload() {
-        this.level.getProfiler().push("purge");
-        ((DistanceManagerBridge) this.distanceManager).bridge$tick();
+        ProfilerFiller profiler = Profiler.get();
+        profiler.push("purge");
+        ((DistanceManagerBridge) this.distanceManager).bridge$tick(this.chunkMap);
         this.bridge$tickDistanceManager();
-        this.level.getProfiler().popPush("unload");
+        profiler.popPush("unload");
         ((ChunkMapBridge) this.chunkMap).bridge$tick(() -> true);
-        this.level.getProfiler().pop();
+        profiler.pop();
         this.clearCache();
     }
 

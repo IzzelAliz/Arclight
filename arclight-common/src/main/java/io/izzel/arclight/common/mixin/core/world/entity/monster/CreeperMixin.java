@@ -20,7 +20,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreeperPowerEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
@@ -90,9 +90,9 @@ public abstract class CreeperMixin extends PathfinderMobMixin implements Creeper
     }
 
     // Use Redirect to preserve injection point
-    @Redirect(method = "explodeCreeper", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;DDDFLnet/minecraft/world/level/Level$ExplosionInteraction;)Lnet/minecraft/world/level/Explosion;"))
-    private Explosion arclight$redirectExplode(Level instance, Entity arg, double d, double e, double f, float g, Level.ExplosionInteraction arg2) {
-        return this.level().explode((Creeper) (Object) this,
+    @Redirect(method = "explodeCreeper", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;DDDFLnet/minecraft/world/level/Level$ExplosionInteraction;)V"))
+    private void arclight$redirectExplode(Level instance, Entity arg, double d, double e, double f, float g, Level.ExplosionInteraction arg2) {
+        this.level().explode((Creeper) (Object) this,
                 ((DamageSourceBridge) Explosion.getDefaultDamageSource(level(), (Creeper) (Object) this)).bridge$customCausingEntityDamager(entityIgniter), null,
                 this.getX(), this.getY(), this.getZ(), eventRadius, eventFire, Level.ExplosionInteraction.MOB);
     }

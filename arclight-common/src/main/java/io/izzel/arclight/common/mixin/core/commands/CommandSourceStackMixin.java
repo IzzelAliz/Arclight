@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.commands;
 
-import com.mojang.authlib.GameProfile;
+import net.minecraft.server.players.NameAndId;
 import com.mojang.brigadier.tree.CommandNode;
 import io.izzel.arclight.common.bridge.core.commands.CommandSourceStackBridge;
 import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
@@ -13,8 +13,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.players.PlayerList;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.command.VanillaCommandWrapper;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.command.VanillaCommandWrapper;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -50,9 +50,9 @@ public abstract class CommandSourceStackMixin implements CommandSourceStackBridg
         }
     }
 
-    @Redirect(method = "broadcastToAdmins", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;isOp(Lcom/mojang/authlib/GameProfile;)Z"))
-    private boolean arclight$feedbackPermission(PlayerList instance, GameProfile profile) {
-        return ((ServerPlayerBridge) instance.getPlayer(profile.getId())).bridge$getBukkitEntity().hasPermission("minecraft.admin.command_feedback");
+    @Redirect(method = "broadcastToAdmins", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;isOp(Lnet/minecraft/server/players/NameAndId;)Z"))
+    private boolean arclight$feedbackPermission(PlayerList instance, NameAndId profile) {
+        return ((ServerPlayerBridge) instance.getPlayer(profile.id())).bridge$getBukkitEntity().hasPermission("minecraft.admin.command_feedback");
     }
 
     public boolean hasPermission(int i, String bukkitPermission) {

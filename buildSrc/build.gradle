@@ -13,6 +13,10 @@ repositories {
     maven { url "https://maven.fabricmc.net/" }
 }
 
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs.add('-proc:full')
+}
+
 dependencies {
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)

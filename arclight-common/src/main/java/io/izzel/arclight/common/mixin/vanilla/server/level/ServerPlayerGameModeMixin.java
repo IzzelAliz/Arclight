@@ -38,7 +38,7 @@ public abstract class ServerPlayerGameModeMixin {
         BlockState blockState2;
         boolean bl;
         BlockState blockState = this.level.getBlockState(blockPos);
-        if (!ArclightEventFactory.onBlockBreak((ServerPlayerGameMode) (Object) this, this.level, this.player, blockPos, blockState, !this.player.getMainHandItem().getItem().canAttackBlock(blockState, this.level, blockPos, this.player))) {
+        if (!ArclightEventFactory.onBlockBreak((ServerPlayerGameMode) (Object) this, this.level, this.player, blockPos, blockState, !this.player.getMainHandItem().getItem().canDestroyBlock(this.player.getMainHandItem(), blockState, this.level, blockPos, this.player))) {
             return false;
         } else {
             blockEntity = this.level.getBlockEntity(blockPos);

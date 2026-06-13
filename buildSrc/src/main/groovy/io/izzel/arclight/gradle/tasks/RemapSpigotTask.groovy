@@ -1,6 +1,8 @@
 package io.izzel.arclight.gradle.tasks
 
 import io.izzel.arclight.gradle.Utils
+
+// RemapSpigotTask uses SpecialSource for obfuscated MC; 26.1+ uses package rename only.
 import net.md_5.specialsource.SpecialSource
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
@@ -45,10 +47,48 @@ class RemapSpigotTask implements Runnable {
     private List<String> includes
     private List<String> excludes
     private String bukkitVersion
+    private String mcVersion
     private File inAt
+
+    private void runDeobfuscated() {
+        if (inAt) {
+            def tmp = Files.createTempFile('arclight', 'jar')
+            copy(inJar.toPath(), tmp, includes, excludes)
+            def tmpSrg = Files.createTempFile('arclight', 'srg')
+            def srg = new StringBuilder()
+            def jarFile = new JarFile(tmp.toFile())
+            jarFile.entries().each { entry ->
+                if (entry.name.endsWith('.class') && entry.name.startsWith('org/bukkit/craftbukkit')) {
+                    def cl = entry.name.substring(0, entry.name.lastIndexOf('.')).replace('/', '.')
+                    srg.append(cl).append(' ').append(cl).append('\n')
+                }
+            }
+            jarFile.close()
+            tmpSrg.toFile().text = srg.toString()
+            def tmpOut = Files.createTempFile('arclight', 'jar')
+            SpecialSource.main([
+                    '-i', tmp.toFile().canonicalPath,
+                    '-o', tmpOut.toFile().canonicalPath,
+                    '-m', tmpSrg.toFile().canonicalPath,
+                    '--access-transformer', inAt.canonicalPath
+            ] as String[])
+            copy(tmpOut, outDeobf.toPath(), includes, excludes)
+            copy(tmpOut, outJar.toPath(), includes, excludes)
+            Files.delete(tmp)
+            Files.delete(tmpSrg)
+            Files.delete(tmpOut)
+            return
+        }
+        copy(inJar.toPath(), outDeobf.toPath(), includes, excludes)
+        copy(inJar.toPath(), outJar.toPath(), includes, excludes)
+    }
 
     @Override
     void run() {
+        if (Utils.isDeobfuscatedMc(mcVersion)) {
+            runDeobfuscated()
+            return
+        }
         def tmp = Files.createTempFile("arclight", "jar")
         SpecialSource.main(new String[]{
                 '-i', inJar.canonicalPath,
@@ -206,6 +246,16 @@ class RemapSpigotTask implements Runnable {
 
     void setBukkitVersion(String bukkitVersion) {
         this.bukkitVersion = bukkitVersion
+    }
+
+    @Input
+    @Optional
+    String getMcVersion() {
+        return mcVersion
+    }
+
+    void setMcVersion(String mcVersion) {
+        this.mcVersion = mcVersion
     }
 
     @InputFile

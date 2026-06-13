@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.core.server;
 
 import io.izzel.arclight.api.Unsafe;
 import net.minecraft.server.Bootstrap;
-import org.bukkit.craftbukkit.v.util.CraftLegacy;
+import org.bukkit.craftbukkit.util.CraftLegacy;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

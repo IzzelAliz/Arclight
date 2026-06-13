@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.common.bridge.bukkit.ItemMetaBridge;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaItem;
+import org.bukkit.craftbukkit.inventory.CraftMetaItem;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 

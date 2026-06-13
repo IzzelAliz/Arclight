@@ -66,27 +66,25 @@ public abstract class PrimedTntMixin extends EntityMixin {
 
         this.setFuse(i);
         if (i <= 0) {
-            if (!this.level().isClientSide) {
+            if (!this.level().isClientSide()) {
                 this.explode();
             }
             this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.EXPLODE);
             this.discard();
         } else {
             this.updateInWaterStateAndDoFluidPushing();
-            if (this.level().isClientSide) {
+            if (this.level().isClientSide()) {
                 this.level().addParticle(ParticleTypes.SMOKE, this.getX(), this.getY() + 0.5D, this.getZ(), 0.0D, 0.0D, 0.0D);
             }
         }
     }
 
-    @Decorate(method = "explode", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;)Lnet/minecraft/world/level/Explosion;"))
-    private Explosion arclight$explodeEvent(Level instance, Entity arg, DamageSource arg2, ExplosionDamageCalculator arg3, double d, double e, double f, float g, boolean bl, Level.ExplosionInteraction arg4) throws Throwable {
+    @Decorate(method = "explode", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;)V"))
+    private void arclight$explodeEvent(Level instance, Entity arg, DamageSource arg2, ExplosionDamageCalculator arg3, double d, double e, double f, float g, boolean bl, Level.ExplosionInteraction arg4) throws Throwable {
         ExplosionPrimeEvent event = new ExplosionPrimeEvent((Explosive) this.getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
-            return (Explosion) DecorationOps.callsite().invoke(instance, arg, arg2, arg3, d, e, f, g, bl, arg4);
-        } else {
-            return null;
+            DecorationOps.callsite().invoke(instance, arg, arg2, arg3, d, e, f, g, bl, arg4);
         }
     }
 }

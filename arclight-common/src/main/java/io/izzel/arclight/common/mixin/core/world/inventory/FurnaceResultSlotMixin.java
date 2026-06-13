@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.level.block.entity.AbstractFurnaceBlockEntityBridge;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.FurnaceResultSlot;

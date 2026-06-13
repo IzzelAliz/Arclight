@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.portal;
 
 import io.izzel.arclight.common.bridge.core.world.level.LevelAccessorBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.level.portal.PortalShapeBridge;
 import io.izzel.arclight.common.mod.mixins.annotation.RenameInto;
 import io.izzel.arclight.mixin.Decorate;
@@ -16,7 +17,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.portal.PortalShape;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
-import org.bukkit.craftbukkit.v.util.BlockStateListPopulator;
+import org.bukkit.craftbukkit.util.BlockStateListPopulator;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -80,7 +81,7 @@ public abstract class PortalShapeMixin implements PortalShapeBridge {
     @Inject(method = "createPortalBlocks", cancellable = true, at = @At("HEAD"))
     private void arclight$buildPortal(CallbackInfo ci) {
         if (LevelAccessorBridge.from(this.level) instanceof LevelAccessorBridge bridge) {
-            World world = bridge.bridge$getMinecraftWorld().bridge$getWorld();
+            World world = ((WorldBridge) bridge.bridge$getMinecraftWorld()).bridge$getWorld();
             net.minecraft.world.level.block.state.BlockState blockState = Blocks.NETHER_PORTAL.defaultBlockState().setValue(NetherPortalBlock.AXIS, this.axis);
             BlockPos.betweenClosed(this.bottomLeft, this.bottomLeft.relative(Direction.UP, this.height - 1).relative(this.rightDir, this.width - 1)).forEach((blockPos) -> {
                 blocks.setBlock(blockPos, blockState, 18);

@@ -7,7 +7,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.entity.Slime;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
@@ -36,7 +36,7 @@ public abstract class SlimeMixin extends MobMixin {
     @Override
     public void remove(Entity.RemovalReason p_149847_) {
         int i = this.getSize();
-        if (!this.level().isClientSide && i > 1 && this.isDeadOrDying()) {
+        if (!this.level().isClientSide() && i > 1 && this.isDeadOrDying()) {
             Component itextcomponent = this.getCustomName();
             boolean flag = this.isNoAi();
             float f = this.getDimensions(this.getPose()).width();
@@ -58,7 +58,7 @@ public abstract class SlimeMixin extends MobMixin {
             for (int l = 0; l < k; ++l) {
                 float f2 = ((float) (l % 2) - 0.5F) * f1;
                 float f3 = ((float) (l / 2) - 0.5F) * f1;
-                net.minecraft.world.entity.monster.Slime slimeentity = this.getType().create(this.level());
+                net.minecraft.world.entity.monster.Slime slimeentity = this.getType().create(this.level(), net.minecraft.world.entity.EntitySpawnReason.MOB_SUMMONED);
                 if (slimeentity == null) continue;
                 if (this.isPersistenceRequired()) {
                     slimeentity.setPersistenceRequired();
@@ -68,7 +68,8 @@ public abstract class SlimeMixin extends MobMixin {
                 slimeentity.setNoAi(flag);
                 slimeentity.setInvulnerable(this.isInvulnerable());
                 slimeentity.setSize(j, true);
-                slimeentity.moveTo(this.getX() + (double) f2, this.getY() + 0.5D, this.getZ() + (double) f3, this.random.nextFloat() * 360.0F, 0.0F);
+                slimeentity.setPos(this.getX() + (double) f2, this.getY() + 0.5D, this.getZ() + (double) f3);
+                slimeentity.setYRot(this.random.nextFloat() * 360.0F);
                 arclight$slimes.add(slimeentity);
             }
             if (CraftEventFactory.callEntityTransformEvent((net.minecraft.world.entity.monster.Slime) (Object) this, arclight$slimes, EntityTransformEvent.TransformReason.SPLIT).isCancelled()) {

@@ -1,10 +1,10 @@
 package io.izzel.arclight.common.mod.server.world.border;
 
-import io.izzel.arclight.common.bridge.core.world.level.border.WorldBorderBridge;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.world.level.border.BorderChangeListener;
 import net.minecraft.world.level.border.WorldBorder;
+import io.izzel.arclight.common.bridge.core.world.level.border.WorldBorderBridge;
 
 import java.util.function.Function;
 
@@ -17,38 +17,36 @@ public class ArclightBorderChangeListener implements BorderChangeListener {
     }
 
     @Override
-    public void onBorderSizeSet(WorldBorder border, double d) {
+    public void onSetSize(WorldBorder border, double size) {
         arclight$broadcastToDimension(border, ClientboundSetBorderSizePacket::new);
     }
 
     @Override
-    public void onBorderSizeLerping(WorldBorder border, double d, double e, long l) {
+    public void onLerpSize(WorldBorder border, double from, double to, long time, long startTime) {
         arclight$broadcastToDimension(border, ClientboundSetBorderLerpSizePacket::new);
     }
 
     @Override
-    public void onBorderCenterSet(WorldBorder border, double d, double e) {
+    public void onSetCenter(WorldBorder border, double x, double z) {
         arclight$broadcastToDimension(border, ClientboundSetBorderCenterPacket::new);
     }
 
     @Override
-    public void onBorderSetWarningTime(WorldBorder border, int i) {
+    public void onSetWarningTime(WorldBorder border, int time) {
         arclight$broadcastToDimension(border, ClientboundSetBorderWarningDelayPacket::new);
     }
 
     @Override
-    public void onBorderSetWarningBlocks(WorldBorder border, int i) {
+    public void onSetWarningBlocks(WorldBorder border, int distance) {
         arclight$broadcastToDimension(border, ClientboundSetBorderWarningDistancePacket::new);
     }
 
     @Override
-    public void onBorderSetDamagePerBlock(WorldBorder border, double d) {
-
+    public void onSetDamagePerBlock(WorldBorder border, double damage) {
     }
 
     @Override
-    public void onBorderSetDamageSafeZOne(WorldBorder border, double d) {
-
+    public void onSetSafeZone(WorldBorder border, double safeZone) {
     }
 
     private void arclight$broadcastToDimension(WorldBorder border, Function<WorldBorder, Packet<?>> packet) {

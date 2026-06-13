@@ -62,7 +62,7 @@ def installerLibsFabric = [
         'org.jline:jline-reader:3.12.1',
         'org.fusesource.jansi:jansi:1.18',
         'org.apache.maven:maven-artifact:3.8.5',
-        "net.fabricmc:intermediary:${libs.versions.minecraft.get()}",
+        // MC 26.1+ is unobfuscated — intermediary stub (0.0.0) is not required
         "net.fabricmc.fabric-api:fabric-api:${libs.versions.fabric.api.get()}"
 ]
 
@@ -70,7 +70,7 @@ dependencies {
     implementation 'com.google.guava:guava:32.1.2-jre'
     implementation 'org.ow2.asm:asm:9.7.1'
     implementation 'org.ow2.asm:asm-tree:9.7.1'
-    implementation 'net.minecraftforge:modlauncher:10.1.2'
+    implementation 'cpw.mods:modlauncher:11.0.5'
     implementation 'org.apache.logging.log4j:log4j-api:2.22.1'
     implementation 'org.apache.logging.log4j:log4j-core:2.22.1'
     implementation 'org.jetbrains:annotations:23.0.0'
@@ -83,8 +83,8 @@ dependencies {
     forgeImplementation 'net.minecraftforge:bootstrap:2.1.0'
     forgeImplementation 'net.minecraftforge:bootstrap-api:2.1.0'
 
-    neoforgeImplementation 'net.neoforged.fancymodloader:loader:4.0.1'
-    neoforgeImplementation 'cpw.mods:securejarhandler:2.1.24'
+    neoforgeImplementation 'net.neoforged.fancymodloader:loader:11.0.13'
+    neoforgeImplementation 'cpw.mods:securejarhandler:3.0.8'
 
     fabricImplementation "net.fabricmc:fabric-loader:${libs.versions.fabric.loader.get()}"
 
@@ -227,18 +227,17 @@ project.sourceSets.forge.output.dir file('build/forge_async_catcher'), builtBy: 
 
 project.sourceSets.neoforge.output.dir file('build/neoforge_async_catcher'), builtBy: tasks.register('neoforgeAsyncCatcher', RenameAsyncCatcherTask) {
     inputFile.set project.file('async_catcher.json')
-    mapping.set 'named'
+    mapping.set 'official'
     outputs.file('build/neoforge_async_catcher/async_catcher.json')
 }
 
 project.sourceSets.fabric.output.dir file('build/fabric_async_catcher'), builtBy: tasks.register('fabricAsyncCatcher', RenameAsyncCatcherTask) {
     inputFile.set project.file('async_catcher.json')
-    mapping.set 'intermediary'
+    mapping.set 'official'
     outputs.file('build/fabric_async_catcher/async_catcher.json')
 }
 
 compileJava {
-    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_21
     options.compilerArgs << '-XDignore.symbol.file' << '-XDenableSunApiLintControl'
     options.encoding = 'UTF-8'
 }
@@ -262,7 +261,7 @@ tasks.register('runProdForge', JavaExec) {
     args 'nogui'
     standardInput System.in
     javaLauncher.convention(javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     })
     dependsOn project.tasks.forgeJar
 }
@@ -282,7 +281,7 @@ tasks.register('runProdNeoforge', JavaExec) {
     args 'nogui'
     standardInput System.in
     javaLauncher.convention(javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     })
     dependsOn project.tasks.neoforgeJar
 }
@@ -302,7 +301,7 @@ tasks.register('runProdFabric', JavaExec) {
     args 'nogui'
     standardInput System.in
     javaLauncher.convention(javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     })
     dependsOn project.tasks.fabricJar
 }

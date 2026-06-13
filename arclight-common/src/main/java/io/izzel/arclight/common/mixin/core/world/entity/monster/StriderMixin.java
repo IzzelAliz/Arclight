@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
 import net.minecraft.world.entity.monster.Strider;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;

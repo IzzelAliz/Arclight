@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(net.minecraft.world.entity.animal.Sheep.class)
+@Mixin(net.minecraft.world.entity.animal.sheep.Sheep.class)
 public abstract class SheepMixin_Forge extends AnimalMixin {
     // Implementation is altered by minecraftforge, which delegates spawning to dropShearedItems
     @Inject(method = "dropShearedItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/Sheep;spawnAtLocation(Lnet/minecraft/world/item/ItemStack;F)Lnet/minecraft/world/entity/item/ItemEntity;"))

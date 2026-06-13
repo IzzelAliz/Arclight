@@ -18,8 +18,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SolidBucketItem;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.state.pattern.BlockInWorld;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -60,7 +60,7 @@ public abstract class ItemStackMixin_Vanilla {
             }
             interactionResult = item.useOn(useOnContext);
             ((WorldBridge) useOnContext.getLevel()).bridge$platform$endCaptureBlockBreak();
-            if (player != null && interactionResult.indicateItemUse()) {
+            if (player != null && interactionResult instanceof net.minecraft.world.InteractionResult.Success success && success.wasItemInteraction()) {
                 interactionResult = ArclightEventFactory.onBlockPlace(useOnContext, player, oldStack, (ItemStack) (Object) this, interactionResult);
                 if (interactionResult != InteractionResult.FAIL) {
                     player.awardStat(Stats.ITEM_USED.get(item));
