@@ -34,6 +34,7 @@
     "core.server.dedicated.DedicatedServerMixin_NeoForge",
     "core.server.level.DistanceManagerMixin_NeoForge",
     "core.server.level.ServerPlayerGameModeMixin_NeoForge",
+    "core.server.players.PlayerListMixin_NeoForge",
     "core.world.effect.PoisonMobEffectMixin_NeoForge",
     "core.world.entity.EntityMixin_NeoForge",
     "core.world.entity.LivingEntityMixin_NeoForge",
