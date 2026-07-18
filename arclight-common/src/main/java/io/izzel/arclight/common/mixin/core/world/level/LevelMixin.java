@@ -24,10 +24,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelWriter;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.border.WorldBorder;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.BitRandomSource;
@@ -45,9 +48,16 @@ import org.bukkit.entity.SpawnCategory;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.generator.ChunkGenerator;
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Opcodes;
 import org.spigotmc.SpigotWorldConfig;
 import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.gen.Accessor;
+import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -342,5 +352,35 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
         } finally {
             arclight$blockInteractionOverride = null;
         }
+    }
+
+    /**
+     * @author MemencioPerez
+     * @reason
+     */
+    @Overwrite
+    public @NotNull BlockState getBlockState(@NotNull BlockPos pos) {
+        if (this.isOutsideBuildHeight(pos)) {
+            return Blocks.VOID_AIR.defaultBlockState();
+        } else {
+            ChunkAccess chunk = this.getChunk(pos.getX() >> 4, pos.getZ() >> 4, ChunkStatus.FULL, true); // Paper - manually inline to reduce hops and avoid unnecessary null check to reduce total byte code size, this should never return null and if it does we will see it the next line but the real stack trace will matter in the chunk engine
+            return chunk.getBlockState(pos);
+        }
+    }
+
+    /**
+     * @author MemencioPerez
+     * @reason
+     */
+    @Overwrite
+    public @NotNull LevelChunk getChunk(int chunkX, int chunkZ) {
+        // Paper start - Perf: make sure loaded chunks get the inlined variant of this function
+        net.minecraft.server.level.ServerChunkCache cps = ((ServerLevel) (Object) this).getChunkSource();
+        LevelChunk ifLoaded = ((ServerChunkProviderBridge) cps).bridge$getChunkAtIfLoadedImmediately(chunkX, chunkZ);
+        if (ifLoaded != null) {
+            return ifLoaded;
+        }
+        return (LevelChunk) cps.getChunk(chunkX, chunkZ, ChunkStatus.FULL, true); // Paper - avoid a method jump
+        // Paper end - Perf: make sure loaded chunks get the inlined variant of this function
     }
 }
