@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.level;
 
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.level.border.WorldBorderBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
 import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
@@ -16,6 +17,7 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.FullChunkStatus;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
@@ -75,7 +77,6 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
 
     // @formatter:off
     @Shadow @Nullable public BlockEntity getBlockEntity(BlockPos pos) { return null; }
-    @Shadow public abstract BlockState getBlockState(BlockPos pos);
     @Shadow public abstract WorldBorder getWorldBorder();
     @Shadow @Final private WorldBorder worldBorder;
     @Shadow public abstract long getDayTime();
