@@ -76,16 +76,6 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
     }
 
     @Override
-    public Iterable<ChunkHolder> bridge$getLoadedChunksIterable() {
-        return this.getChunks();
-    }
-
-    @Override
-    public void bridge$tickEntityTracker() {
-        this.tick();
-    }
-
-    @Override
     public void bridge$setChunkGenerator(ChunkGenerator generator) {
         var rg = generator;
         if (rg instanceof CustomChunkGenerator custom) {

@@ -7,6 +7,7 @@ import io.izzel.arclight.api.Unsafe;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.Level;
 import org.bukkit.TreeType;
+import org.bukkit.entity.Entity;
 
 import java.util.List;
 
@@ -29,6 +30,8 @@ public class ArclightConstants {
     public static final int MAX_C2S_CUSTOM_PAYLOAD_SIZE = 32767; //TODO: Change with update
 
     public static final int ANVIL_DEFAULT_DENIED_COST = -1;
+
+    public static final Entity[] EMPTY_ENTITIES = new Entity[0];
 
     public static int currentTick;
 

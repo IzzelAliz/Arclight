@@ -32,7 +32,8 @@ public abstract class ChunkHolderMixin extends GenerationChunkHolder implements 
     @Shadow @Final private ShortSet[] changedBlocksPerSection;
     @Shadow @Final private LevelHeightAccessor levelHeightAccessor;
     @Shadow private int ticketLevel;
-    @Shadow public abstract CompletableFuture<ChunkResult<LevelChunk>> getFullChunkFuture();@Override @Accessor("oldTicketLevel") public abstract int bridge$getOldTicketLevel();
+    @Shadow public abstract CompletableFuture<ChunkResult<LevelChunk>> getFullChunkFuture();
+    @Override @Accessor("oldTicketLevel") public abstract int bridge$getOldTicketLevel();
     // @formatter:on
 
     @Unique
@@ -119,11 +120,10 @@ public abstract class ChunkHolderMixin extends GenerationChunkHolder implements 
         if (!fullChunkStatus.isOrAfter(FullChunkStatus.FULL) && fullChunkStatus2.isOrAfter(FullChunkStatus.FULL)) {
             this.getFullChunkFuture().thenAccept((either) -> {
                 LevelChunk chunk = either.orElse(null);
-                if (chunk != null) {
-                    ((ChunkMapBridge) chunkManager).bridge$getCallbackExecutor().execute(
-                            ((LevelChunkBridge) chunk)::bridge$loadCallback
-                    );
-                }
+                if (chunk == null) return;
+                ((ChunkMapBridge) chunkManager).bridge$getCallbackExecutor().execute(
+                        ((LevelChunkBridge) chunk)::bridge$loadCallback
+                );
             }).exceptionally((throwable) -> {
                 // ensure exceptions are printed, by default this is not the case
                 ArclightServer.LOGGER.fatal("Failed to schedule load callback for chunk " + this.pos, throwable);
