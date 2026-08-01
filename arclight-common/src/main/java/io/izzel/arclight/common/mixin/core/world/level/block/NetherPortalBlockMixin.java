@@ -59,9 +59,13 @@ public class NetherPortalBlockMixin {
         blockPos2 = worldBorder.clampToBounds(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
         ((PortalForcerBridge) serverLevel.getPortalForcer()).bridge$pushSearchRadius(event.getSearchRadius());
         ((PortalForcerBridge) serverLevel.getPortalForcer()).bridge$pushPortalCreate(entity, event.getCreationRadius());
-        var result = (DimensionTransition) DecorationOps.callsite().invoke(instance, serverLevel, entity, blockPos, blockPos2, bl, worldBorder);
-        ((PortalForcerBridge) serverLevel.getPortalForcer()).bridge$pushSearchRadius(-1);
-        ((PortalForcerBridge) serverLevel.getPortalForcer()).bridge$pushPortalCreate(null, -1);
+        final DimensionTransition result;
+        try {
+            result = (DimensionTransition) DecorationOps.callsite().invoke(instance, serverLevel, entity, blockPos, blockPos2, bl, worldBorder);
+        } finally {
+            ((PortalForcerBridge) serverLevel.getPortalForcer()).bridge$pushSearchRadius(-1);
+            ((PortalForcerBridge) serverLevel.getPortalForcer()).bridge$pushPortalCreate(null, -1);
+        }
         return result;
     }
 
