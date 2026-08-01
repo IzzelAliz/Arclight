@@ -57,9 +57,7 @@ public abstract class NetworkRegistryMixin {
         DecorationOps.callsite().invoke((Logger) NOPLogger.NOP_LOGGER, s, o);
 
         // If the method is still not cancelled, then we'll handle the mess.
-        PacketRecorder recorder = ((MessengerBridge) Bukkit.getMessenger()).arclight$getPacketRecorder();
-        recorder.recordUnknown(id);
-        recorder.update();
+        PacketRecorder.recordUnknown(id);
         if (flow == PacketFlow.CLIENTBOUND) {
             DecorationOps.cancel().invoke(RawPayload.discardedCodec(id, ArclightConstants.MAX_C2S_CUSTOM_PAYLOAD_SIZE));
             return;

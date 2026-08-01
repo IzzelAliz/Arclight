@@ -35,9 +35,6 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
     @Unique
     private SetMultimap<Plugin, ResourceLocation> arclight$crossSend;
 
-    @Unique
-    private PacketRecorder arclight$recorder;
-
     @ModifyConstant(
             method = "validateAndCorrectChannel",
             constant = @Constant(intValue = Messenger.MAX_CHANNEL_SIZE)
@@ -92,11 +89,6 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
         arclight$updateChannel(location, true);
     }
 
-    @Override
-    public PacketRecorder arclight$getPacketRecorder() {
-        return arclight$recorder;
-    }
-
     @Unique
     private void arclight$updateChannel(ResourceLocation location, boolean create) {
         if (location != null) {
@@ -124,7 +116,6 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
     private void arclight$init(CallbackInfo ci) {
         arclight$registry = new HashMap<>();
         arclight$crossSend = MultimapBuilder.hashKeys().hashSetValues().build();
-        arclight$recorder = new PacketRecorder();
     }
 
     @Redirect(method = {"removeFromOutgoing*", "removeFromIncoming*"}, at = @At(value = "INVOKE", target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))

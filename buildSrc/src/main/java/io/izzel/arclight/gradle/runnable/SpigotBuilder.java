@@ -117,7 +117,7 @@ public class SpigotBuilder implements Runnable {
             }
 
             if (extension == null) {
-                spec.setCommandLine("java", "-jar", buildToolsJar.normalize().toString(), "--rev", rev);
+                spec.setCommandLine("java", "-Dhttps.proxyHost=127.0.0.1", "-Dhttps.proxyPort=7892", "-jar", buildToolsJar.normalize().toString(), "--rev", rev);
             } else {
                 spec.setCommandLine("java", "-jar", buildToolsJar.normalize().toString(), "--dont-update");
             }

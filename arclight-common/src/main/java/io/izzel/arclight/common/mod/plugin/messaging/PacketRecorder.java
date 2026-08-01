@@ -2,38 +2,36 @@ package io.izzel.arclight.common.mod.plugin.messaging;
 
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.server.ArclightServer;
-import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.Util;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.stream.Collectors;
 
 public class PacketRecorder {
-    private final Object2IntArrayMap<ResourceLocation> unknown = new Object2IntArrayMap<>();
+    private static final ThreadLocal<PacketRecorder> RECORDER = ThreadLocal.withInitial(PacketRecorder::new);
+    private final Object2IntOpenHashMap<ResourceLocation> unknown = new Object2IntOpenHashMap<>();
     private long lastUpdate = Util.getMillis();
 
-    public PacketRecorder() {
+    private PacketRecorder() {
         unknown.defaultReturnValue(0);
     }
 
-    public void recordUnknown(ResourceLocation id) {
+    public static void recordUnknown(ResourceLocation id) {
         if (id == null) {
             ArclightServer.LOGGER.debug("Received packet with null id. This should never happen.");
             return;
         }
-        int num = unknown.getInt(id);
-        unknown.put(id, num + 1);
-    }
-
-    public void update() {
+        final var result = RECORDER.get();
+        result.unknown.addTo(id, 1);
         long now = Util.getMillis();
-        if (Math.abs(now - lastUpdate) > ArclightConstants.PACKET_RECORDER_PERIOD_SEC *1000) {
-            consumeAndLog();
-            lastUpdate = now;
+        if (Math.abs(now - result.lastUpdate) > ArclightConstants.PACKET_RECORDER_PERIOD_SEC * 1000) {
+            result.consumeAndLog();
+            result.lastUpdate = now;
         }
     }
 
-    public void consumeAndLog() {
+    private void consumeAndLog() {
         String unknowns = unknown.object2IntEntrySet().stream()
                 .map(it -> it.getKey().toString() + '(' + it.getIntValue() + ')')
                 .collect(Collectors.joining(", ", "unknown=[", "];"));
