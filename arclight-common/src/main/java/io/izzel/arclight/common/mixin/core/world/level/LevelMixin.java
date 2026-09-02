@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.level;
 
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.level.border.WorldBorderBridge;
-import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ServerChunkCacheBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
 import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
@@ -377,7 +377,7 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
     public @NotNull LevelChunk getChunk(int chunkX, int chunkZ) {
         // Paper start - Perf: make sure loaded chunks get the inlined variant of this function
         net.minecraft.server.level.ServerChunkCache cps = ((ServerLevel) (Object) this).getChunkSource();
-        LevelChunk ifLoaded = ((ServerChunkProviderBridge) cps).bridge$getChunkAtIfLoadedImmediately(chunkX, chunkZ);
+        LevelChunk ifLoaded = ((ServerChunkCacheBridge) cps).bridge$getChunkAtIfLoadedImmediately(chunkX, chunkZ);
         if (ifLoaded != null) {
             return ifLoaded;
         }

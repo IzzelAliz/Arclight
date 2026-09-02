@@ -19,6 +19,4 @@ public interface MessengerBridge {
     void arclight$registerAnonymousOutgoing(ResourceLocation location);
     ArclightPluginChannel<?> arclight$getAndCheckCrossSend(Plugin src, ResourceLocation channel);
     void arclight$checkUnsafeSend(Plugin src, ResourceLocation channel);
-
-    PacketRecorder arclight$getPacketRecorder();
 }

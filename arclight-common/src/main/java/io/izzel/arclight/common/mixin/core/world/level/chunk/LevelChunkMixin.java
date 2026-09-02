@@ -4,7 +4,7 @@ import io.izzel.arclight.common.bridge.core.world.level.LevelAccessorBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.chunk.ChunkAccessBridge;
 import io.izzel.arclight.common.bridge.core.world.level.chunk.LevelChunkBridge;
-import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ServerChunkCacheBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.BlockPos;
@@ -123,7 +123,7 @@ public abstract class LevelChunkMixin extends ChunkAccessMixin implements LevelC
     public void loadCallback() {
         org.bukkit.Server server = Bukkit.getServer();
         var self = (LevelChunk) (Object) this;
-        ((ServerChunkProviderBridge) this.level.getChunkSource()).bridge$addLoadedChunk(self); // Paper
+        ((ServerChunkCacheBridge) this.level.getChunkSource()).bridge$addLoadedChunk(self); // Paper
         if (server != null) {
             /*
              * If it's a new world, the first few chunks are generated inside
@@ -166,7 +166,7 @@ public abstract class LevelChunkMixin extends ChunkAccessMixin implements LevelC
         server.getPluginManager().callEvent(unloadEvent);
         // note: saving can be prevented, but not forced if no saving is actually required
         this.mustNotSave = !unloadEvent.isSaveChunk();
-        ((ServerChunkProviderBridge) this.level.getChunkSource()).bridge$removeLoadedChunk(self); // Paper
+        ((ServerChunkCacheBridge) this.level.getChunkSource()).bridge$removeLoadedChunk(self); // Paper
     }
 
     @Decorate(method = "setBlockState", at = @At(value = "FIELD", ordinal = 1, target = "Lnet/minecraft/world/level/Level;isClientSide:Z"))

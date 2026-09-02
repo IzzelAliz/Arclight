@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.api.Unsafe;
-import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ServerChunkCacheBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import net.minecraft.server.level.ServerLevel;
@@ -43,7 +43,7 @@ public abstract class CraftWorldMixin {
     @Overwrite(remap = false)
     public Chunk getChunkAt(int x, int z) {
         // Paper start - add ticket to hold chunk for a little while longer if plugin accesses it
-        net.minecraft.world.level.chunk.LevelChunk chunk = ((ServerChunkProviderBridge) this.world.getChunkSource()).bridge$getChunkAtIfLoadedImmediately(x, z);
+        net.minecraft.world.level.chunk.LevelChunk chunk = ((ServerChunkCacheBridge) this.world.getChunkSource()).bridge$getChunkAtIfLoadedImmediately(x, z);
         if (chunk == null) {
             this.addTicket(x, z);
             chunk = this.world.getChunkSource().getChunk(x, z, true);

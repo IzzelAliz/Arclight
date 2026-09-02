@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.core.server.level;
 
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ChunkMapBridge;
-import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ServerChunkCacheBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.util.thread.BlockableEventLoop;
@@ -29,10 +29,10 @@ public abstract class ServerChunkCache_MainThreadExecutorMixin extends Blockable
     @Overwrite
     public boolean pollTask() {
         try {
-            if (((ServerChunkProviderBridge) outer).bridge$tickDistanceManager()) {
+            if (((ServerChunkCacheBridge) outer).bridge$tickDistanceManager()) {
                 return true;
             } else {
-                ((ServerChunkProviderBridge) outer).bridge$getLightManager().tryScheduleUpdate();
+                ((ServerChunkCacheBridge) outer).bridge$getLightManager().tryScheduleUpdate();
                 return super.pollTask();
             }
         } finally {

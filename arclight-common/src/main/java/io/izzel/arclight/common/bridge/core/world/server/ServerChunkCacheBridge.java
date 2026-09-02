@@ -1,13 +1,10 @@
 package io.izzel.arclight.common.bridge.core.world.server;
 
-import java.io.IOException;
-
 import javax.annotation.Nullable;
-
 import net.minecraft.server.level.ThreadedLevelLightEngine;
 import net.minecraft.world.level.chunk.LevelChunk;
 
-public interface ServerChunkProviderBridge {
+public interface ServerChunkCacheBridge {
 
     void bridge$addLoadedChunk(LevelChunk chunk);
 
@@ -16,12 +13,7 @@ public interface ServerChunkProviderBridge {
     @Nullable
     LevelChunk bridge$getChunkAtIfLoadedImmediately(int x, int z);
 
-    void bridge$close(boolean save) throws IOException;
-
-    void bridge$purgeUnload();
     boolean bridge$tickDistanceManager();
-
-    boolean bridge$isChunkLoaded(int x, int z);
 
     ThreadedLevelLightEngine bridge$getLightManager();
 

@@ -9,7 +9,7 @@ import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.core.world.level.ExplosionBridge;
 import io.izzel.arclight.common.bridge.core.world.level.levelgen.flat.FlatLevelGeneratorSettingsBridge;
-import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge;
+import io.izzel.arclight.common.bridge.core.world.server.ServerChunkCacheBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge;
 import io.izzel.arclight.common.bridge.core.world.level.storage.DerivedLevelDataBridge;
 import io.izzel.arclight.common.bridge.core.world.level.storage.LevelStorageSourceBridge;
@@ -254,8 +254,8 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
         }
         this.spigotConfig = new SpigotWorldConfig(worldInfo.getLevelName());
         this.uuid = WorldUUID.getUUID(levelSave.getDimensionPath(this.dimension()).toFile());
-        ((ServerChunkProviderBridge) this.chunkSource).bridge$setViewDistance(spigotConfig.viewDistance);
-        ((ServerChunkProviderBridge) this.chunkSource).bridge$setSimulationDistance(spigotConfig.simulationDistance);
+        ((ServerChunkCacheBridge) this.chunkSource).bridge$setViewDistance(spigotConfig.viewDistance);
+        ((ServerChunkCacheBridge) this.chunkSource).bridge$setSimulationDistance(spigotConfig.simulationDistance);
         if (arclight$isActual()) {
             ((PrimaryLevelDataBridge) this.K).bridge$setWorld((ServerLevel) (Object) this);
             var data = this.getDataStorage().computeIfAbsent(LevelPersistentData.factory(), "bukkit_pdc");
