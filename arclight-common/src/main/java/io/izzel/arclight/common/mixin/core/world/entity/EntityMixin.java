@@ -955,13 +955,15 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             } else {
                 WorldBorder worldborder = world.getWorldBorder();
                 double d0 = DimensionType.getTeleportationScale(this.level().dimensionType(), world.dimensionType());
-                BlockPos blockpos1 = worldborder.clampToBounds(this.getX() * d0, this.getY(), this.getZ() * d0);
+                Vec3 exitPosition = new Vec3(this.getX() * d0, this.getY(), this.getZ() * d0);
+                BlockPos blockpos1 = worldborder.clampToBounds(exitPosition.x(), exitPosition.y(), exitPosition.z());
 
-                CraftPortalEvent event = this.callPortalEvent((Entity) (Object) this, world, new PositionImpl(blockpos1.getX(), blockpos1.getY(), blockpos1.getZ()), PlayerTeleportEvent.TeleportCause.NETHER_PORTAL, flag2 ? 16 : 128, 16);
+                CraftPortalEvent event = this.callPortalEvent((Entity) (Object) this, world, exitPosition, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL, flag2 ? 16 : 128, 16);
                 if (event == null) {
                     return null;
                 }
                 ServerLevel worldFinal = world = ((CraftWorld) event.getTo().getWorld()).getHandle();
+                worldborder = worldFinal.getWorldBorder();
                 blockpos1 = worldFinal.getWorldBorder().clampToBounds(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
 
                 return this.getExitPortal(world, blockpos1, flag2, worldborder, event.getSearchRadius(), event.getCanCreatePortal(), event.getCreationRadius()).map((result) -> {
@@ -991,7 +993,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                 blockpos = world.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, world.getSharedSpawnPos());
             }
 
-            CraftPortalEvent event = this.callPortalEvent((Entity) (Object) this, world, new PositionImpl(blockpos.getX() + 0.5D, blockpos.getY(), blockpos.getZ() + 0.5D), PlayerTeleportEvent.TeleportCause.END_PORTAL, 0, 0);
+            CraftPortalEvent event = this.callPortalEvent((Entity) (Object) this, world, new Vec3(blockpos.getX() + 0.5D, blockpos.getY(), blockpos.getZ() + 0.5D), PlayerTeleportEvent.TeleportCause.END_PORTAL, 0, 0);
             if (event == null) {
                 return null;
             }
@@ -1003,7 +1005,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         }
     }
 
-    protected CraftPortalEvent callPortalEvent(Entity entity, ServerLevel exitWorldServer, PositionImpl exitPosition, PlayerTeleportEvent.TeleportCause cause, int searchRadius, int creationRadius) {
+    protected CraftPortalEvent callPortalEvent(Entity entity, ServerLevel exitWorldServer, Vec3 exitPosition, PlayerTeleportEvent.TeleportCause cause, int searchRadius, int creationRadius) {
         CraftEntity bukkitEntity = ((EntityBridge) entity).bridge$getBukkitEntity();
         Location enter = bukkitEntity.getLocation();
         Location exit = new Location(((WorldBridge) exitWorldServer).bridge$getWorld(), exitPosition.x(), exitPosition.y(), exitPosition.z());
