@@ -1023,7 +1023,9 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
 
                 this.chatMessageChain.append((executor) -> {
                     return CompletableFuture.allOf(completablefuture, completablefuture1).thenAcceptAsync((ovoid) -> {
-                        PlayerChatMessage playerchatmessage1 = playerchatmessage.withUnsignedContent(completablefuture1.join()).filter(completablefuture.join().mask());
+                        Component decoratedContent = completablefuture1.join();
+                        if (decoratedContent == null) return; // Forge: ServerChatEvent was cancelled
+                        PlayerChatMessage playerchatmessage1 = playerchatmessage.withUnsignedContent(decoratedContent).filter(completablefuture.join().mask());
 
                         this.broadcastChatMessage(playerchatmessage1);
                     }, ArclightServer.getChatExecutor()); // CraftBukkit - async chat
