@@ -1,4 +1,4 @@
 net/minecraft/world/level/block/ChestBlock$DoubleInventory net/minecraft/world/level/block/ChestBlock$2$1
-	tileentitychest f_51612_
-	tileentitychest1 f_51613_
+	tileentitychest val$first
+	tileentitychest1 val$second
 net/minecraft/world/level/block/entity/LecternBlockEntity$LecternInventory net/minecraft/world/level/block/entity/LecternBlockEntity$1

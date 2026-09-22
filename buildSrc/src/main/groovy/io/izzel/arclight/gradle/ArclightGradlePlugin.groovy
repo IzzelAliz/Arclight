@@ -66,6 +66,20 @@ class ArclightGradlePlugin implements Plugin<Project> {
         def spigotMapped = spigotDeps.resolve("spigot-${arclight.mcVersion}-mapped.jar")
         def spigotDeobf = spigotDeps.resolve("spigot-${arclight.mcVersion}-deobf.jar")
 
+        // Generated mappings and bytecode also depend on our build logic and inputs,
+        // not just the upstream Spigot revision. Never accept a legacy cache blindly.
+        def digest = java.security.MessageDigest.getInstance('SHA-256')
+        def inputs = project.rootProject.fileTree('buildSrc/src/main').files +
+                project.rootProject.files('build.gradle', 'settings.gradle', 'buildSrc/build.gradle',
+                        'gradle/libs.versions.toml', 'gradle/wrapper/gradle-wrapper.properties').files +
+                [arclight.accessTransformer, arclight.extraMapping].findAll { it != null }
+        inputs.sort { a, b -> a.path <=> b.path }.each { file ->
+            digest.update(project.rootProject.relativePath(file).getBytes(StandardCharsets.UTF_8))
+            digest.update(file.bytes)
+        }
+        digest.update(arclight.bukkitVersion.getBytes(StandardCharsets.UTF_8))
+        def inputHash = HexFormat.of().formatHex(digest.digest())
+        def inputMeta = arclight.cacheDir.resolve('spigot_inputs.sha256')
         def buildMeta = arclight.cacheDir.resolve('spigot_version.json')
         def rev = arclight.mcVersion
         if (arclight.spigotReversion) {
@@ -76,9 +90,9 @@ class ArclightGradlePlugin implements Plugin<Project> {
         def newBuildMeta = IOUtils.toString(new URI("https://hub.spigotmc.org/versions/${rev}.json").toURL(), StandardCharsets.UTF_8)
         if (Files.exists(buildMeta)) {
             var built = Files.readString(buildMeta)
-            if (built == newBuildMeta) {
+            if (built == newBuildMeta && Files.exists(inputMeta) && Files.readString(inputMeta) == inputHash) {
                 if (arclight.mappingsConfiguration.areMappingsExist()
-                        && Files.exists(spigotDeobf)) {
+                        && Files.exists(spigotDeobf) && Files.exists(spigotMapped)) {
                     project.logger.lifecycle(":spigot build cache valid, using it")
                     project.logger.debug(built)
                     return
@@ -131,5 +145,6 @@ class ArclightGradlePlugin implements Plugin<Project> {
         remapSpigot.run()
 
         Files.writeString(buildMeta, newBuildMeta)
+        Files.writeString(inputMeta, inputHash)
     }
 }

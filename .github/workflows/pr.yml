@@ -23,12 +23,12 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.gradle
-        key: ${{ runner.os }}-gradle-user-home
+        key: ${{ runner.os }}-gradle-user-home-v2-${{ hashFiles('**/*.gradle', 'gradle/libs.versions.toml', 'gradle/wrapper/gradle-wrapper.properties', 'buildSrc/src/**', 'arclight-common/bukkit.at', 'arclight-common/extra_mapping.tsrg', 'gradle.properties') }}
     - name: Cache Gradle Files
       uses: actions/cache@v4
       with:
         path: ./.gradle
-        key: ${{ runner.os }}-gradle-file
+        key: ${{ runner.os }}-gradle-file-v2-${{ hashFiles('**/*.gradle', 'gradle/libs.versions.toml', 'gradle/wrapper/gradle-wrapper.properties', 'buildSrc/src/**', 'arclight-common/bukkit.at', 'arclight-common/extra_mapping.tsrg', 'gradle.properties') }}
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build

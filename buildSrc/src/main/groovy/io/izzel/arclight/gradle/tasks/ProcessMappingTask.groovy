@@ -1,8 +1,8 @@
 package io.izzel.arclight.gradle.tasks
 
 import io.izzel.arclight.gradle.util.AwWriter
-import net.fabricmc.loom.LoomGradleExtension
 import net.fabricmc.loom.configuration.providers.mappings.MappingConfiguration
+import net.fabricmc.loom.LoomGradleExtension
 import net.fabricmc.lorenztiny.TinyMappingsReader
 import net.fabricmc.mappingio.MappingReader
 import net.fabricmc.mappingio.tree.MemoryMappingTree
@@ -11,25 +11,21 @@ import net.md_5.specialsource.Jar
 import net.md_5.specialsource.provider.JarProvider
 import org.cadixdev.at.AccessTransformSet
 import org.cadixdev.at.io.AccessTransformFormats
-import org.cadixdev.bombe.type.MethodDescriptor
-import org.cadixdev.bombe.type.ObjectType
 import org.cadixdev.lorenz.MappingSet
 import org.cadixdev.lorenz.io.srg.SrgWriter
 import org.cadixdev.lorenz.io.srg.csrg.CSrgReader
-import org.cadixdev.lorenz.io.srg.tsrg.TSrgReader
 import org.cadixdev.lorenz.io.srg.tsrg.TSrgWriter
 import org.cadixdev.lorenz.model.ClassMapping
 import org.cadixdev.lorenz.model.FieldMapping
+import org.objectweb.asm.Type
 import org.cadixdev.lorenz.model.Mapping
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
-import org.objectweb.asm.Type
 
 import java.util.jar.JarFile
-import java.util.stream.Collectors
 
 class ProcessMappingTask implements Runnable {
 
@@ -47,19 +43,32 @@ class ProcessMappingTask implements Runnable {
 
     @Override
     void run() {
-        def tree = new MemoryMappingTree()
-        MappingReader.read(LoomGradleExtension.get(project).mappingConfiguration.tinyMappingsWithSrg, tree)
-        def mcp = new TinyMappingsReader(tree, "named", "srg").read()
-        def intermediaryRev = new TinyMappingsReader(tree, "intermediary", "official").read()
+        def loom = LoomGradleExtension.get(project)
 
+        // BuildTools produces Spigot class names with obfuscated members. Both
+        // platform maps therefore start at Loom's `official` namespace, which
+        // is the left side of BuildData's obfuscated -> Spigot csrg file.
+        def defaultTree = new MemoryMappingTree()
+        MappingReader.read(loom.mappingConfiguration.tinyMappings, defaultTree)
+        def intermediary = new TinyMappingsReader(defaultTree, "official", "intermediary").read()
+        def named = new TinyMappingsReader(defaultTree, "official", "named").read()
+
+        // This API generates official Mojang mappings on demand, including
+        // while common is evaluated before either platform project.
         def mojmapTree = new MemoryMappingTree()
         MappingReader.read(MappingConfiguration.getMojmapSrgFileIfPossible(project), mojmapTree)
-        def official = new TinyMappingsReader(mojmapTree, "official", "named").read()
-        def officialRev = official.reverse()
+        def mojmap = new TinyMappingsReader(mojmapTree, "official", "named").read()
+        // Join by the full official identity. Lorenz merge is not relational
+        // composition: it can match renamed inner-class suffixes or field names.
+        def mojmapToNamed = MappingSet.create()
+        mojmap.topLevelClassMappings.each { joinNamedClass(it, named, mojmapToNamed) }
 
         if (!outDir.isDirectory()) {
             outDir.mkdirs()
         }
+        // The historic filename is consumed by RemapSpigotTask.
+        // The first remap has Mojang names already, so this is the
+        // Mojang -> Loom named map, not an SRG -> named map.
         new File(outDir, "srg_to_named.srg").withWriter {
             new SrgWriter(it) {
                 @Override
@@ -78,13 +87,7 @@ class ProcessMappingTask implements Runnable {
                     }
                     super.writeClassMapping(mapping)
                 }
-            }.write(mcp.reverse())
-        }
-
-        def srg = MappingSet.create()
-        LoomGradleExtension.get(project).srgProvider.mergedMojangRaw.toFile().withReader {
-            def data = it.lines().filter { String s -> !(s.startsWith('\t\t') || s.startsWith('tsrg2')) }.collect(Collectors.joining('\n'))
-            new TSrgReader(new StringReader(data.toString())).read(srg)
+            }.write(mojmapToNamed)
         }
 
         def csrg = MappingSet.create()
@@ -92,10 +95,13 @@ class ProcessMappingTask implements Runnable {
         clFile.withReader {
             new CSrgReader(it).read(csrg)
         }
-        def srgRev = srg.reverse()
-        def finalMap = srgRev.merge(csrg).reverse()
-        def neoforgeMap = officialRev.merge(csrg).reverse()
-        def fabricMap = intermediaryRev.merge(csrg).reverse()
+        def spigotToOfficial = csrg.reverse()
+        // Compose from the BuildData (Mojmap) side so methods retain the
+        // descriptor stored in the hybrid BuildTools jar: Mojmap class names
+        // plus obfuscated member names.
+        def finalMap = spigotToOfficial.merge(mojmap)
+        def neoforgeMap = finalMap
+        def fabricMap = spigotToOfficial.merge(intermediary)
 
         def im = new InheritanceMap()
         def classes = [] as ArrayList<String>
@@ -164,12 +170,8 @@ class ProcessMappingTask implements Runnable {
 
                 @Override
                 protected void writeFieldMapping(FieldMapping mapping) {
-                    def cl = srgRev.getClassMapping(mapping.parent.fullDeobfuscatedName).get()
-                    def field = cl.getFieldMapping(mapping.deobfuscatedName).get().deobfuscatedName
-                    def nmsCl = official.getClassMapping(cl.fullDeobfuscatedName)
-                            .get().getFieldMapping(field).get().signature.type.get()
-                    def sig = Type.getType(csrg.deobfuscate(nmsCl).toString()).getClassName()
-                    this.writer.println(String.format("    %s %s -> %s", sig, mapping.getDeobfuscatedName(), mapping.getObfuscatedName()))
+                    def type = Type.getType(mapping.signature.type.orElseThrow().toString()).className
+                    this.writer.println("    $type ${mapping.deobfuscatedName} -> ${mapping.obfuscatedName}")
                 }
             }.write(finalMap)
         }
@@ -199,12 +201,8 @@ class ProcessMappingTask implements Runnable {
 
                 @Override
                 protected void writeFieldMapping(FieldMapping mapping) {
-                    def cl = officialRev.getClassMapping(mapping.parent.fullDeobfuscatedName).get()
-                    def field = cl.getFieldMapping(mapping.deobfuscatedName).get().deobfuscatedName
-                    def nmsCl = official.getClassMapping(cl.fullDeobfuscatedName)
-                            .get().getFieldMapping(field).get().signature.type.get()
-                    def sig = Type.getType(csrg.deobfuscate(nmsCl).toString()).getClassName()
-                    this.writer.println(String.format("    %s %s -> %s", sig, mapping.getDeobfuscatedName(), mapping.getObfuscatedName()))
+                    def type = Type.getType(mapping.signature.type.orElseThrow().toString()).className
+                    this.writer.println("    $type ${mapping.deobfuscatedName} -> ${mapping.obfuscatedName}")
                 }
             }.write(neoforgeMap)
         }
@@ -234,65 +232,53 @@ class ProcessMappingTask implements Runnable {
 
                 @Override
                 protected void writeFieldMapping(FieldMapping mapping) {
-                    def cl = intermediaryRev.getClassMapping(mapping.parent.fullDeobfuscatedName).get()
-                    def field = cl.getFieldMapping(mapping.deobfuscatedName).get().deobfuscatedName
-                    def nmsCl = official.getClassMapping(cl.fullDeobfuscatedName)
-                            .get().getFieldMapping(field).get().signature.type.get()
-                    def sig = Type.getType(csrg.deobfuscate(nmsCl).toString()).getClassName()
-                    this.writer.println(String.format("    %s %s -> %s", sig, mapping.getDeobfuscatedName(), mapping.getObfuscatedName()))
+                    def type = Type.getType(mapping.signature.type.orElseThrow().toString()).className
+                    this.writer.println("    $type ${mapping.deobfuscatedName} -> ${mapping.obfuscatedName}")
                 }
             }.write(fabricMap)
         }
-        new File(outDir, 'bukkit_at.at').withWriter { w ->
-            new File(buildData, "mappings/bukkit-${mcVersion}.at").eachLine { l ->
-                if (l.trim().isEmpty() || l.startsWith('#')) {
-                    w.writeLine(l)
-                    return
-                }
-                def split = l.split(' ', 2)
-                def i = split[1].indexOf('(')
-                if (i == -1) {
-                    def name = split[1].substring(split[1].lastIndexOf('/') + 1)
-                    if (name.charAt(0).isUpperCase() && name.charAt(1).isLowerCase()) {
-                        w.writeLine("${split[0].replace('inal', '')} ${(finalMap.deobfuscate(new ObjectType(split[1])) as ObjectType).className.replace('/', '.')}")
-                    } else {
-                        def cl = split[1].substring(0, split[1].lastIndexOf('/'))
-                        def f = finalMap.getClassMapping(cl)
-                                .flatMap { mcp.getClassMapping(it.fullDeobfuscatedName) }
-                                .flatMap { it.getFieldMapping(name) }
-                                .map { it.deobfuscatedName }
-                        if (f.isEmpty()) {
-                            w.writeLine("# TODO ${split[0].replace('inal', '')} ${(finalMap.deobfuscate(new ObjectType(cl)) as ObjectType).className.replace('/', '.')} $name")
-                        } else {
-                            w.writeLine("${split[0].replace('inal', '')} ${(finalMap.deobfuscate(new ObjectType(cl)) as ObjectType).className.replace('/', '.')} ${f.get()}")
-                        }
-                    }
-                } else {
-                    def desc = split[1].substring(i)
-                    def s = split[1].substring(0, i)
-                    def cl = s.substring(0, s.lastIndexOf('/'))
-                    def name = s.substring(s.lastIndexOf('/') + 1)
-                    def m = finalMap.getClassMapping(cl)
-                            .flatMap { mcp.getClassMapping(it.fullDeobfuscatedName) }
-                            .map() { it.methodMappings.find { it.obfuscatedName == name } }
-                    if (m.isEmpty()) {
-                        w.writeLine("${name == '<init>' ? '' : '# TODO '}${split[0].replace('inal', '')} ${(finalMap.deobfuscate(new ObjectType(cl)) as ObjectType).className.replace('/', '.')} $name${finalMap.deobfuscate(MethodDescriptor.of(desc))}")
-                    } else {
-                        w.writeLine("${split[0].replace('inal', '')} ${(finalMap.deobfuscate(new ObjectType(cl)) as ObjectType).className.replace('/', '.')} ${m.get().deobfuscatedName}${m.get().deobfuscatedDescriptor}")
-                    }
-                }
+        // BuildData ATs already use Mojang names in this revision.
+        def at = AccessTransformSet.create()
+        new File(buildData, "mappings/bukkit-${mcVersion}.at").eachLine { line ->
+            def trimmed = line.trim()
+            if (!trimmed || trimmed.startsWith('#')) return
+            def parts = trimmed.split(' ', 2)
+            def member = parts[1]
+            def paren = member.indexOf('(')
+            String converted
+            if (paren >= 0) {
+                def ownerEnd = member.lastIndexOf('/', paren)
+                converted = member.substring(0, ownerEnd).replace('/', '.') + ' ' + member.substring(ownerEnd + 1)
+            } else {
+                def last = member.substring(member.lastIndexOf('/') + 1)
+                converted = mojmapToNamed.getClassMapping(member).isPresent() ? member.replace('/', '.') :
+                        member.substring(0, member.lastIndexOf('/')).replace('/', '.') + ' ' + last
             }
+            AccessTransformFormats.FML.read(new StringReader(parts[0].replace('inal', '') + ' ' + converted + '\n'), at)
         }
-        new File(outDir, 'bukkit_at.at').withReader { r ->
-            def at = AccessTransformSet.create()
-            AccessTransformFormats.FML.read(r, at)
-            def srgToIntermediate = new TinyMappingsReader(tree, "srg", "named").read()
-            def remapped = at.remap(srgToIntermediate)
-            new File(outDir, 'bukkit_aw.aw').withWriter { w ->
-                new AwWriter(w, LoomGradleExtension.get(project).namedMinecraftProvider).write(remapped)
-            }
+        def namedAt = at.remap(mojmapToNamed)
+        new File(outDir, 'bukkit_at.at').withWriter { AccessTransformFormats.FML.write(it, namedAt) }
+        new File(outDir, 'bukkit_aw.aw').withWriter { w ->
+            new AwWriter(w, loom.namedMinecraftProvider).write(namedAt)
         }
         new File(outDir, 'reobf_bukkit.srg').text = "PK: org/bukkit/craftbukkit/v org/bukkit/craftbukkit/$bukkitVersion"
+    }
+
+    private static void joinNamedClass(ClassMapping<?, ?> source, MappingSet named, MappingSet result) {
+        def target = named.getClassMapping(source.fullObfuscatedName).orElse(null)
+        def output = result.getOrCreateClassMapping(source.fullDeobfuscatedName)
+        output.setDeobfuscatedName(target == null ? source.fullDeobfuscatedName : target.fullDeobfuscatedName)
+        source.methodMappings.each { method ->
+            def match = target == null ? null : target.getMethodMapping(method.signature).orElse(null)
+            output.getOrCreateMethodMapping(method.deobfuscatedSignature)
+                    .setDeobfuscatedName(match == null ? method.deobfuscatedName : match.deobfuscatedName)
+        }
+        source.fieldMappings.each { field ->
+            def match = target == null ? null : target.getFieldMapping(field.signature).orElse(null)
+            output.getOrCreateFieldMapping(field.deobfuscatedSignature)
+                    .setDeobfuscatedName(match == null ? field.deobfuscatedName : match.deobfuscatedName)
+        }
+        source.innerClassMappings.each { joinNamedClass(it, named, result) }
     }
 
     @InputDirectory
