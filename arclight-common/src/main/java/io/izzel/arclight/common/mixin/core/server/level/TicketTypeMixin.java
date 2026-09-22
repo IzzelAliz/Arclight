@@ -7,6 +7,7 @@ import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.gen.Accessor;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(TicketType.class)
 public abstract class TicketTypeMixin implements TicketTypeBridge {
@@ -14,9 +15,14 @@ public abstract class TicketTypeMixin implements TicketTypeBridge {
     @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
     private static long pluginTimeout = 0L;
     @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL)
-    private static final TicketType PLUGIN = new TicketType(TicketType.NO_TIMEOUT, TicketType.FLAG_LOADING | TicketType.FLAG_SIMULATION);
+    private static final TicketType PLUGIN = arclight$register("plugin", TicketType.NO_TIMEOUT, TicketType.FLAG_LOADING | TicketType.FLAG_SIMULATION | TicketType.FLAG_KEEP_DIMENSION_ACTIVE);
     @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL)
-    private static final TicketType PLUGIN_TICKET = new TicketType(TicketType.NO_TIMEOUT, TicketType.FLAG_LOADING | TicketType.FLAG_SIMULATION);
+    private static final TicketType PLUGIN_TICKET = arclight$register("plugin_ticket", TicketType.NO_TIMEOUT, TicketType.FLAG_LOADING | TicketType.FLAG_SIMULATION | TicketType.FLAG_KEEP_DIMENSION_ACTIVE);
+
+    @Invoker("register")
+    private static TicketType arclight$register(String name, long timeout, int flags) {
+        throw new AssertionError();
+    }
 
     /**
      * @author IzzelAliz

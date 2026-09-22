@@ -6,6 +6,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.storage.DerivedLevelData;
 import net.minecraft.world.level.storage.ServerLevelData;
+import net.minecraft.world.level.storage.WorldData;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -14,6 +15,7 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(DerivedLevelData.class)
 public class DerivedLevelDataMixin implements DerivedLevelDataBridge {
 
+    @Shadow @Final private WorldData worldData;
     @Shadow @Final private ServerLevelData wrapped;
 
     private ResourceKey<LevelStem> typeKey;
@@ -35,7 +37,7 @@ public class DerivedLevelDataMixin implements DerivedLevelDataBridge {
                 } else if (typeKey == LevelStem.END) {
                     suffix = "the_end";
                 } else {
-                    suffix = (typeKey.registry().getNamespace() + "_" + typeKey.registry().getPath()).replace('/', '_');
+                    suffix = (typeKey.identifier().getNamespace() + "_" + typeKey.identifier().getPath()).replace('/', '_');
                 }
                 return worldName + suffix;
             } else {
@@ -46,11 +48,16 @@ public class DerivedLevelDataMixin implements DerivedLevelDataBridge {
                 } else if (typeKey == LevelStem.NETHER) {
                     suffix = "DIM-1";
                 } else {
-                    suffix = typeKey.registry().getNamespace() + "/" + typeKey.registry().getPath();
+                    suffix = typeKey.identifier().getNamespace() + "/" + typeKey.identifier().getPath();
                 }
                 return worldName + suffix;
             }
         }
+    }
+
+    @Override
+    public WorldData bridge$getWorldData() {
+        return worldData;
     }
 
     @Override

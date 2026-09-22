@@ -58,6 +58,12 @@ public class ArclightNfMessaging {
         final var location = channel.getChannel();
         for (var protocol : ArclightPluginChannel.PROTOCOLS) {
             var map = NetworkRegistryAccessor.getRegistration().get(protocol);
+            var handlers = NetworkRegistryAccessor.getServerboundHandlers().get(protocol);
+            if (channel.getDirection().hasIncoming()) {
+                handlers.put(location, channel.getChannelHandler());
+            } else {
+                handlers.remove(location, channel.getChannelHandler());
+            }
             if (channel.getDirection() != getFlowFromRegistration(map.get(location))) {
                 final var registration = createRegistration(channel);
                 if (registration == null) {
@@ -89,7 +95,6 @@ public class ArclightNfMessaging {
         if (direction.bitmap == 0) {
             return null;
         }
-        var handler = channel.getChannelHandler();
         var type = channel.getType();
         var codec = channel.getStreamCodec();
         var flow = channel.getDirection().flow;

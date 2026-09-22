@@ -28,7 +28,14 @@ public class ProjectileWeaponItemMixin {
         }
 
         if (event.getProjectile() == projectile.bridge$getBukkitEntity()) {
-            return (Projectile) DecorationOps.callsite().invoke(projectile, instance, projectileStack, consumer);
+            var spawned = (Projectile) DecorationOps.callsite().invoke(projectile, instance, projectileStack, consumer);
+            if (spawned.isRemoved()) {
+                if (livingEntity instanceof net.minecraft.server.level.ServerPlayer player) {
+                    ((io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge) player).bridge$getBukkitEntity().updateInventory();
+                }
+                return (Projectile) DecorationOps.cancel().invoke();
+            }
+            return spawned;
         }
         return projectile;
     }

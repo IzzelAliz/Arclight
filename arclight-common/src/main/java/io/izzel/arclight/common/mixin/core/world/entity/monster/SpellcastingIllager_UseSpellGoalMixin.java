@@ -1,6 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
 import net.minecraft.world.entity.monster.illager.SpellcasterIllager;
+import io.izzel.arclight.api.EnumHelper;
+import java.util.ArrayList;
+import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Spellcaster;
 import org.bukkit.event.entity.EntitySpellCastEvent;
@@ -46,6 +49,17 @@ public abstract class SpellcastingIllager_UseSpellGoalMixin {
     }
 
     private static Spellcaster.Spell arclight$toBukkitSpell(Enum<?> spell) {
-        return Spellcaster.Spell.valueOf(spell.name());
+        try {
+            return Spellcaster.Spell.valueOf(spell.name());
+        } catch (IllegalArgumentException e) {
+            // Match CraftSpellcaster's extension path without naming the protected NMS enum.
+            var newTypes = new ArrayList<Spellcaster.Spell>();
+            var nmsValues = spell.getDeclaringClass().getEnumConstants();
+            for (var id = Spellcaster.Spell.values().length; id < nmsValues.length; id++) {
+                newTypes.add(EnumHelper.makeEnum(Spellcaster.Spell.class, nmsValues[id].name(), id, List.of(), List.of()));
+            }
+            EnumHelper.addEnums(Spellcaster.Spell.class, newTypes);
+            return Spellcaster.Spell.valueOf(spell.name());
+        }
     }
 }

@@ -1,6 +1,10 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
+import io.izzel.arclight.common.mod.util.BulkEffectRemovalContext;
+import io.izzel.arclight.common.mod.util.ChorusTeleportContext;
 import com.google.common.base.Function;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Either;
@@ -11,7 +15,6 @@ import io.izzel.arclight.common.bridge.core.world.level.LevelAccessorBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
-import io.izzel.arclight.common.util.IteratorUtil;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
@@ -125,7 +128,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public abstract ItemStack getOffhandItem();
     @Shadow public abstract Optional<BlockPos> getSleepingPos();
     @Shadow @Final private static EntityDataAccessor<Boolean> DATA_EFFECT_AMBIENCE_ID;
-    @Shadow @Final public Map<MobEffect, MobEffectInstance> activeEffects;
+    @Shadow @Final public Map<Holder<MobEffect>, MobEffectInstance> activeEffects;
     @Shadow public abstract boolean isDeadOrDying();
     @Shadow public abstract boolean isInvulnerableTo(ServerLevel serverLevel, DamageSource source);
     @Shadow public boolean hurtServer(ServerLevel serverLevel, DamageSource source, float amount) { return false; }
@@ -279,6 +282,46 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         return this.removeAllEffects();
     }
 
+    /**
+     * Capture the cause and the pre-call active map exactly once. Loader adapters
+     * invoke bridge$willRemoveEffect only at their actual physical-removal gate.
+     * The result reflects keys that truly left activeEffects, not the loader's
+     * optimistic boolean (which can be true when every candidate is vetoed).
+     */
+    @WrapMethod(method = "removeAllEffects")
+    private boolean arclight$bulkEffectRemovalScope(Operation<Boolean> original) {
+        BulkEffectRemovalContext context = new BulkEffectRemovalContext(
+            new HashMap<>(this.activeEffects),
+            bridge$getEffectCause().orElse(EntityPotionEffectEvent.Cause.UNKNOWN)
+        );
+        this.arclight$bulkEffectRemovalContexts.push(context);
+        try {
+            original.call();
+            for (Holder<MobEffect> effect : context.originalEffects.keySet()) {
+                if (!this.activeEffects.containsKey(effect)) {
+                    return true;
+                }
+            }
+            return false;
+        } finally {
+            this.arclight$bulkEffectRemovalContexts.pop();
+        }
+    }
+
+    @Override
+    public boolean bridge$willRemoveEffect(MobEffectInstance effect) {
+        BulkEffectRemovalContext context = this.arclight$bulkEffectRemovalContexts.peek();
+        EntityPotionEffectEvent.Cause cause = context == null
+            ? bridge$getEffectCause().orElse(EntityPotionEffectEvent.Cause.UNKNOWN)
+            : context.cause;
+        return !CraftEventFactory.callEntityPotionEffectChangeEvent(
+            (LivingEntity) (Object) this, effect, null, cause, EntityPotionEffectEvent.Action.CLEARED
+        ).isCancelled();
+    }
+
+    @Unique private final Deque<BulkEffectRemovalContext> arclight$bulkEffectRemovalContexts = new ArrayDeque<>();
+
+
     @Override
     public boolean bridge$removeAllEffects(EntityPotionEffectEvent.Cause cause) {
         return removeAllEffects(cause);
@@ -418,19 +461,32 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         return this.expToDrop;
     }
 
-    @Inject(method = "readAdditionalSaveData", at = @At("HEAD"))
+    // Apply after serialized attributes, but before Health is read and clamped.
+    @Inject(method = "readAdditionalSaveData(Lnet/minecraft/world/level/storage/ValueInput;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getMaxHealth()F"))
     public void arclight$readMaxHealth(ValueInput input, CallbackInfo ci) {
-        input.getInt("Bukkit.MaxHealth").ifPresent(value -> this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(value.doubleValue()));
+        float maxHealth = input.getFloatOr("Bukkit.MaxHealth", -1.0F);
+        if (maxHealth > 0.0F) {
+            this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(maxHealth);
+        }
     }
 
-    @SuppressWarnings("unchecked")
-    @Decorate(method = "onEffectsRemoved", at = @At(value = "INVOKE", target = "Ljava/util/Collection;iterator()Ljava/util/Iterator;"))
-    private Iterator<MobEffectInstance> arclight$clearReason(Collection<MobEffectInstance> instance) throws Throwable {
-        var cause = bridge$getEffectCause().orElse(EntityPotionEffectEvent.Cause.UNKNOWN);
-        return IteratorUtil.filter((Iterator<MobEffectInstance>) DecorationOps.callsite().invoke(instance), effect -> {
-            EntityPotionEffectEvent event = CraftEventFactory.callEntityPotionEffectChangeEvent((LivingEntity) (Object) this, effect, null, cause, EntityPotionEffectEvent.Action.CLEARED);
-            return !event.isCancelled();
-        });
+    /**
+     * Both actual loader paths invoke the plural notification after their map
+     * mutation. Do not dispatch Bukkit from this post-removal hook: adapters have
+     * already decided each candidate. Filtering protects NMS/client notification
+     * from Fabric/NeoForge entries that stayed active after a veto.
+     */
+    @Decorate(method = "removeAllEffects", require = 0,
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;onEffectsRemoved(Ljava/util/Collection;)V"))
+    private void arclight$notifyOnlyActuallyRemovedBulkEffects(LivingEntity instance,
+                                                                 Collection<MobEffectInstance> effects) throws Throwable {
+        List<MobEffectInstance> removed = new ArrayList<>();
+        for (MobEffectInstance effect : effects) {
+            if (!this.activeEffects.containsKey(effect.getEffect())) {
+                removed.add(effect);
+            }
+        }
+        DecorationOps.callsite().invoke(instance, (Collection<MobEffectInstance>) removed);
     }
 
     /**
@@ -776,14 +832,51 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         return (ItemStack) DecorationOps.callsite().invoke(itemStack, worldIn, entityLiving);
     }
 
+    @WrapMethod(method = "randomTeleport(DDDZ)Z")
+    private boolean arclight$chorusTeleportScope(double x, double y, double z, boolean showParticles, Operation<Boolean> original) {
+        ChorusTeleportContext.Frame frame = ChorusTeleportContext.enter((LivingEntity) (Object) this);
+        try {
+            return original.call(x, y, z, showParticles);
+        } finally {
+            ChorusTeleportContext.exit(frame);
+        }
+    }
+
     @Decorate(method = "randomTeleport", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/LivingEntity;teleportTo(DDD)V"))
-    private void arclight$entityTeleport(LivingEntity entity, double x, double y, double z) throws Throwable {
-        if ((Object) this instanceof ServerPlayer) {
-            (((ServerPlayer) (Object) this).connection).teleport(new PositionMoveRotation(new Vec3(x, y, z), Vec3.ZERO, this.getYRot(), this.getXRot()), java.util.Collections.emptySet());
-            if (!((ServerGamePacketListenerImplBridge) ((ServerPlayer) (Object) this).connection).bridge$teleportCancelled()) {
+    private void arclight$entityTeleport(LivingEntity entity, double x, double y, double z,
+                                        double requestedX, double requestedY, double requestedZ, boolean showParticles) throws Throwable {
+        if ((Object) this instanceof ServerPlayer player) {
+            double fromX = this.getX(), fromY = this.getY(), fromZ = this.getZ();
+            boolean valid;
+            this.setPos(x, y, z);
+            try {
+                valid = this.level().noCollision((Entity) (Object) this) && !this.level().containsAnyLiquid(this.getBoundingBox());
+            } finally {
+                this.setPos(fromX, fromY, fromZ);
+            }
+            if (!valid) {
                 DecorationOps.cancel().invoke(false);
                 return;
             }
+            ServerGamePacketListenerImplBridge connection = (ServerGamePacketListenerImplBridge) player.connection;
+            ChorusTeleportContext.Scope scope = ChorusTeleportContext.current();
+            if (scope != null) {
+                connection.bridge$pushTeleportCause(org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT);
+            }
+            player.connection.teleport(new PositionMoveRotation(new Vec3(x, y, z), Vec3.ZERO, this.getYRot(), this.getXRot()), java.util.Collections.emptySet());
+            boolean cancelled = connection.bridge$teleportCancelled();
+            if (scope != null) {
+                scope.setCancelled(cancelled);
+            }
+            if (cancelled) {
+                DecorationOps.cancel().invoke(false);
+                return;
+            }
+            if (showParticles) {
+                this.level().broadcastEntityEvent((Entity) (Object) this, (byte) 46);
+            }
+            DecorationOps.cancel().invoke(true);
+            return;
         } else {
             EntityTeleportEvent event = new EntityTeleportEvent(getBukkitEntity(), new Location(this.level().bridge$getWorld(), this.getX(), this.getY(), this.getZ()),
                 new Location(this.level().bridge$getWorld(), x, y, z));
@@ -854,7 +947,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     }
 
     public void setItemSlot(EquipmentSlot slot, ItemStack stack, boolean silent) {
-        this.setItemSlot(slot, stack);
+        this.onEquipItem(slot, this.equipment.set(slot, stack), stack, silent);
     }
 
     public void onEquipItem(EquipmentSlot slot, ItemStack stack, ItemStack stack1, boolean silent) {

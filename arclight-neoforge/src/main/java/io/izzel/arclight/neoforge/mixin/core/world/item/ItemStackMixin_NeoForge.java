@@ -2,9 +2,8 @@ package io.izzel.arclight.neoforge.mixin.core.world.item;
 
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.item.ItemStackBridge;
-import io.izzel.arclight.mixin.Decorate;
-import io.izzel.arclight.mixin.DecorationOps;
-import io.izzel.arclight.mixin.Local;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -37,27 +36,29 @@ public abstract class ItemStackMixin_NeoForge implements ItemStackBridge, IItemS
     @Shadow private int count;
     // @formatter:on
 
-    @Decorate(method = "hurtAndBreak(ILnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Ljava/util/function/Consumer;)V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper;processDurabilityChange(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;I)I"))
-    private int arclight$itemDamage(ServerLevel serverLevel, ItemStack itemStack, int i, @Local(ordinal = 0) LivingEntity damager) throws Throwable {
-        int result = (int) DecorationOps.callsite().invoke(serverLevel, itemStack, i);
-        if (damager instanceof ServerPlayer) {
-            PlayerItemDamageEvent event = new PlayerItemDamageEvent(((ServerPlayerBridge) damager).bridge$getBukkitEntity(), CraftItemStack.asCraftMirror((ItemStack) (Object) this), result);
+    @WrapOperation(method = "hurtAndBreak(ILnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Ljava/util/function/Consumer;)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;processDurabilityChange(ILnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;)I"))
+    private int arclight$itemDamage(ItemStack stack, int amount, ServerLevel level, LivingEntity damager, Operation<Integer> original) {
+        // Preserve the existing event gate, but do not eventize hurtWithoutBreaking.
+        boolean eventEligible = amount > 0 && stack.isDamageableItem()
+            && damager != null && !damager.hasInfiniteMaterials();
+        int result = original.call(stack, amount, level, damager);
+        if (eventEligible && damager instanceof ServerPlayer) {
+            PlayerItemDamageEvent event = new PlayerItemDamageEvent(((ServerPlayerBridge) damager).bridge$getBukkitEntity(), CraftItemStack.asCraftMirror(stack), result);
             event.getPlayer().getServer().getPluginManager().callEvent(event);
-
             if (result != event.getDamage() || event.isCancelled()) {
                 event.getPlayer().updateInventory();
             }
             if (event.isCancelled()) {
-                return (int) DecorationOps.cancel().invoke();
+                return 0;
             }
             result = event.getDamage();
         }
         return result;
     }
 
-    @Inject(method = "hurtAndBreak(ILnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Ljava/util/function/Consumer;)V", at = @At(value = "INVOKE", target = "Ljava/util/function/Consumer;accept(Ljava/lang/Object;)V"))
-    private void arclight$itemBreak(int amount, ServerLevel level, @org.jetbrains.annotations.Nullable LivingEntity livingEntity, Consumer<Item> onBroken, CallbackInfo ci) {
+    @Inject(method = "applyDamage(ILnet/minecraft/world/entity/LivingEntity;Ljava/util/function/Consumer;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;shrink(I)V"))
+    private void arclight$itemBreak(int damage, @org.jetbrains.annotations.Nullable LivingEntity livingEntity, Consumer<Item> onBroken, CallbackInfo ci) {
         if (this.count == 1 && livingEntity instanceof ServerPlayer serverPlayer) {
             CraftEventFactory.callPlayerItemBreakEvent(serverPlayer, (ItemStack) (Object) this);
         }

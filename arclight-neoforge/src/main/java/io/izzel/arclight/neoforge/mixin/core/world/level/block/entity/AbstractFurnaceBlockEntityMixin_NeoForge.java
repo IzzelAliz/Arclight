@@ -1,5 +1,6 @@
 package io.izzel.arclight.neoforge.mixin.core.world.level.block.entity;
 
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
@@ -17,11 +18,11 @@ import org.spongepowered.asm.mixin.injection.At;
 public abstract class AbstractFurnaceBlockEntityMixin_NeoForge {
 
     @Decorate(method = "burn", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/core/NonNullList;get(I)Ljava/lang/Object;"))
-    private static <E> E arclight$furnaceSmelt(NonNullList<E> instance, int i, @Local(ordinal = 0) AbstractFurnaceBlockEntity blockEntity, @Local(ordinal = -1) ItemStack itemStack2, @Local(ordinal = -2) ItemStack itemStack1) throws Throwable {
+    private static <E> E arclight$furnaceSmelt(NonNullList<E> instance, int i, @Local(ordinal = -1) ItemStack itemStack2, @Local(ordinal = -2) ItemStack itemStack1) throws Throwable {
         CraftItemStack source = CraftItemStack.asCraftMirror(itemStack1);
         org.bukkit.inventory.ItemStack result = CraftItemStack.asBukkitCopy(itemStack2);
 
-        FurnaceSmeltEvent furnaceSmeltEvent = new FurnaceSmeltEvent(CraftBlock.at(blockEntity.getLevel(), blockEntity.getBlockPos()), source, result);
+        FurnaceSmeltEvent furnaceSmeltEvent = new FurnaceSmeltEvent(CraftBlock.at(ArclightCaptures.getTickingBlockEntity().getLevel(), ArclightCaptures.getTickingBlockEntity().getBlockPos()), source, result);
         Bukkit.getPluginManager().callEvent(furnaceSmeltEvent);
 
         if (furnaceSmeltEvent.isCancelled()) {

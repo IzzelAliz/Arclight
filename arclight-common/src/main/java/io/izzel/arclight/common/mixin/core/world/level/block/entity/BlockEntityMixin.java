@@ -8,6 +8,7 @@ import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -48,6 +49,14 @@ public abstract class BlockEntityMixin implements BlockEntityBridge {
 
     @Shadow
     public abstract void applyComponents(DataComponentMap dataComponentMap, DataComponentPatch dataComponentPatch);
+
+    @Inject(method = "getPosFromTag", at = @At("HEAD"), cancellable = true)
+    private static void arclight$nullBase(@Nullable ChunkPos base, CompoundTag tag, CallbackInfoReturnable<BlockPos> cir) {
+        // CraftBukkit reads item block-state metadata without an owning chunk.
+        if (base == null) {
+            cir.setReturnValue(new BlockPos(tag.getIntOr("x", 0), tag.getIntOr("y", 0), tag.getIntOr("z", 0)));
+        }
+    }
 
     @Inject(method = "loadAdditional", at = @At("RETURN"))
     public void arclight$loadPersistent(ValueInput input, CallbackInfo ci) {

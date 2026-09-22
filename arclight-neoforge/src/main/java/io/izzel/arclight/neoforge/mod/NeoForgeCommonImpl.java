@@ -8,7 +8,6 @@ import net.neoforged.fml.ModList;
 import org.objectweb.asm.ClassReader;
 
 import java.lang.invoke.MethodHandle;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Set;
 
@@ -19,14 +18,12 @@ public class NeoForgeCommonImpl implements ArclightCommon.Api {
     static {
         try {
             ClassLoader classLoader = NeoForgeCommonImpl.class.getClassLoader();
-            Class<?> transformingClassLoader = Class.forName("cpw.mods.modlauncher.TransformingClassLoader");
-            Field classTransformer = transformingClassLoader.getDeclaredField("classTransformer");
-            classTransformer.setAccessible(true);
-            Object transformer = classTransformer.get(classLoader);
-            Method transform = transformer.getClass().getDeclaredMethod("transform", byte[].class, String.class, String.class);
-            MH_TRANSFORM = Unsafe.lookup().unreflect(transform).bindTo(transformer);
+            Class<?> transformingClassLoader = Class.forName("net.neoforged.fml.classloading.transformation.TransformingClassLoader");
+            // Use the loader entrypoint so frame recomputation retains its hierarchy context.
+            Method transform = transformingClassLoader.getDeclaredMethod("maybeTransformClassBytes", byte[].class, String.class, String.class);
+            MH_TRANSFORM = Unsafe.lookup().unreflect(transform).bindTo(classLoader);
         } catch (Throwable t) {
-            throw new IllegalStateException("Unknown modlauncher version", t);
+            throw new IllegalStateException("Unsupported FML transforming classloader", t);
         }
     }
 
@@ -34,7 +31,7 @@ public class NeoForgeCommonImpl implements ArclightCommon.Api {
     public byte[] platformRemapClass(byte[] cl) {
         String className = new ClassReader(cl).getClassName();
         try {
-            return (byte[]) MH_TRANSFORM.invokeExact(cl, className.replace('/', '.'), "source");
+            return (byte[]) MH_TRANSFORM.invokeExact(cl, className.replace('/', '.'), (String) null);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }

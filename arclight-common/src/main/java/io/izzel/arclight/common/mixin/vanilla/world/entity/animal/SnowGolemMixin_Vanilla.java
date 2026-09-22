@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class SnowGolemMixin_Vanilla extends PathfinderMobMixin {
 
     // Forge/NeoForge: ShearsItem#interactLivingEntity
-    @Inject(method = "mobInteract", require = 0, cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/SnowGolem;shear(Lnet/minecraft/sounds/SoundSource;)V"))
+    @Inject(method = "mobInteract", require = 0, cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/golem/SnowGolem;shear(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/sounds/SoundSource;Lnet/minecraft/world/item/ItemStack;)V"))
     private void arclight$onShear(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir, @Local ItemStack stack) {
         if (!CraftEventFactory.handlePlayerShearEntityEvent(player, (Entity) (Object) this, stack, hand)) {
             cir.setReturnValue(InteractionResult.PASS);

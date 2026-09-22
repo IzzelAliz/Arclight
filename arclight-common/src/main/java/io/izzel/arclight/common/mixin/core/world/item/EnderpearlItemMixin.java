@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
@@ -30,10 +32,8 @@ public class EnderpearlItemMixin extends Item {
     @Overwrite
     public @NotNull InteractionResult use(Level worldIn, Player playerIn, @NotNull InteractionHand handIn) {
         ItemStack itemstack = playerIn.getItemInHand(handIn);
-        if (!worldIn.isClientSide()) {
-            ThrownEnderpearl enderpearlentity = new ThrownEnderpearl(worldIn, playerIn, itemstack);
-            enderpearlentity.shootFromRotation(playerIn, playerIn.getXRot(), playerIn.getYRot(), 0.0F, 1.5F, 1.0F);
-            if (!worldIn.addFreshEntity(enderpearlentity)) {
+        if (worldIn instanceof ServerLevel serverLevel) {
+            if (Projectile.spawnProjectileFromRotation(ThrownEnderpearl::new, serverLevel, itemstack, playerIn, 0.0F, EnderpearlItem.PROJECTILE_SHOOT_POWER, 1.0F).isRemoved()) {
                 if (playerIn instanceof ServerPlayerBridge) {
                     ((ServerPlayerBridge) playerIn).bridge$getBukkitEntity().updateInventory();
                 }

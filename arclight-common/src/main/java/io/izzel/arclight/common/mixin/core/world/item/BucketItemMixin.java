@@ -1,5 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import io.izzel.arclight.common.mod.util.BucketUseContext;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.level.LevelAccessorBridge;
 import io.izzel.arclight.common.bridge.core.world.item.BucketItemBridge;
@@ -61,12 +64,16 @@ public abstract class BucketItemMixin implements BucketItemBridge {
         return (ItemStack) DecorationOps.callsite().invoke(pickup, entity, worldIn, pos, state);
     }
 
-    @Inject(method = "use", at = @At("RETURN"))
-    private void arclight$clean(Level worldIn, Player playerIn, InteractionHand handIn, CallbackInfoReturnable<InteractionResult> cir) {
-        arclight$setDirection(null);
-        arclight$setClick(null);
-        arclight$setHand(null);
-        arclight$setStack(null);
+    @WrapMethod(method = "use")
+    private InteractionResult arclight$useContext(Level level, Player player, InteractionHand hand, Operation<InteractionResult> original) {
+        BucketUseContext previous = arclight$context.get();
+        arclight$context.set(new BucketUseContext());
+        try {
+            return original.call(level, player, hand);
+        } finally {
+            if (previous == null) arclight$context.remove();
+            else arclight$context.set(previous);
+        }
     }
 
     @ModifyArg(method = "use", index = 2, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemUtils;createFilledResult(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/item/ItemStack;"))
@@ -75,6 +82,8 @@ public abstract class BucketItemMixin implements BucketItemBridge {
     }
 
     public boolean emptyContents(Player entity, Level world, BlockPos pos, @Nullable BlockHitResult result, Direction direction, BlockPos clicked, ItemStack itemstack, InteractionHand hand) {
+        BucketUseContext previous = arclight$context.get();
+        arclight$context.set(new BucketUseContext());
         arclight$setDirection(direction);
         arclight$setClick(clicked);
         arclight$setHand(hand);
@@ -82,85 +91,76 @@ public abstract class BucketItemMixin implements BucketItemBridge {
         try {
             return this.emptyContents(entity, world, pos, result);
         } finally {
-            arclight$setDirection(null);
-            arclight$setClick(null);
-            arclight$setHand(null);
-            arclight$setStack(null);
+            if (previous == null) arclight$context.remove();
+            else arclight$context.set(previous);
         }
     }
 
     @Unique
-    @Nullable
-    private transient Direction arclight$direction;
-
-    @Unique
-    @Nullable
-    private transient BlockPos arclight$click;
-
-    @Unique
-    @Nullable
-    private transient InteractionHand arclight$hand;
-
-    @Unique
-    @Nullable
-    private transient ItemStack arclight$stack;
-
-    @Unique
-    @Nullable
-    private transient org.bukkit.inventory.ItemStack arclight$captureItem;
+    private final ThreadLocal<BucketUseContext> arclight$context = new ThreadLocal<>();
 
     @Nullable
     @Override
     public Direction arclight$getDirection() {
-        return this.arclight$direction;
+        BucketUseContext context = this.arclight$context.get();
+        return context == null ? null : context.direction;
     }
 
     @Override
     public void arclight$setDirection(@Nullable Direction value) {
-        this.arclight$direction = value;
+        BucketUseContext context = this.arclight$context.get();
+        if (context != null) context.direction = value;
     }
 
     @Nullable
     @Override
     public BlockPos arclight$getClick() {
-        return this.arclight$click;
+        BucketUseContext context = this.arclight$context.get();
+        return context == null ? null : context.click;
     }
 
     @Override
     public void arclight$setClick(@Nullable BlockPos value) {
-        this.arclight$click = value;
+        BucketUseContext context = this.arclight$context.get();
+        if (context != null) context.click = value;
     }
 
     @Nullable
     @Override
     public InteractionHand arclight$getHand() {
-        return this.arclight$hand;
+        BucketUseContext context = this.arclight$context.get();
+        return context == null ? null : context.hand;
     }
 
     @Override
     public void arclight$setHand(@Nullable InteractionHand value) {
-        this.arclight$hand = value;
+        BucketUseContext context = this.arclight$context.get();
+        if (context != null) context.hand = value;
     }
 
     @Nullable
     @Override
     public ItemStack arclight$getStack() {
-        return this.arclight$stack;
+        BucketUseContext context = this.arclight$context.get();
+        return context == null ? null : context.stack;
     }
 
     @Override
     public void arclight$setStack(@Nullable ItemStack value) {
-        this.arclight$stack = value;
+        BucketUseContext context = this.arclight$context.get();
+        if (context != null) context.stack = value;
     }
 
     @Nullable
     @Override
     public org.bukkit.inventory.ItemStack arclight$getCaptureItem() {
-        return this.arclight$captureItem;
+        BucketUseContext context = this.arclight$context.get();
+        return context == null ? null : context.captureItem;
     }
 
     @Override
     public void arclight$setCaptureItem(@Nullable org.bukkit.inventory.ItemStack value) {
-        this.arclight$captureItem = value;
+        BucketUseContext context = this.arclight$context.get();
+        if (context != null) context.captureItem = value;
     }
 }

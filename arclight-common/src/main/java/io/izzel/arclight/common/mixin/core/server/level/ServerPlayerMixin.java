@@ -42,6 +42,7 @@ import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.damagesource.CombatTracker;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.PositionMoveRotation;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Relative;
@@ -487,26 +488,36 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         return new CraftPortalEvent(event);
     }
 
-    @Inject(method = "teleport(Lnet/minecraft/world/level/portal/TeleportTransition;)Lnet/minecraft/server/level/ServerPlayer;", cancellable = true, at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;teleport(Lnet/minecraft/world/entity/PositionMoveRotation;Ljava/util/Set;)V"))
-    private void arclight$cancelledTeleport(TeleportTransition dimensionTransition, CallbackInfoReturnable<ServerPlayer> cir) {
-        if (((ServerGamePacketListenerImplBridge) this.connection).bridge$teleportCancelled()) {
-            cir.setReturnValue(null);
+    @Decorate(method = "teleport(Lnet/minecraft/world/level/portal/TeleportTransition;)Lnet/minecraft/server/level/ServerPlayer;", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;teleport(Lnet/minecraft/world/entity/PositionMoveRotation;Ljava/util/Set;)V"))
+    private void arclight$cancelledTeleport(ServerGamePacketListenerImpl connection, net.minecraft.world.entity.PositionMoveRotation position, Set<Relative> relatives,
+                                          @Local(ordinal = 0) TeleportTransition transition) throws Throwable {
+        var bridge = (ServerGamePacketListenerImplBridge) connection;
+        bridge.bridge$pushTeleportCause(((DimensionTransitionBridge) (Object) transition).bridge$getTeleportCause());
+        DecorationOps.callsite().invoke(connection, position, relatives);
+        if (bridge.bridge$teleportCancelled()) {
+            DecorationOps.cancel().invoke((ServerPlayer) null);
+            return;
         }
     }
 
     @Decorate(method = "teleport(Lnet/minecraft/world/level/portal/TeleportTransition;)Lnet/minecraft/server/level/ServerPlayer;", inject = true, at = @At(value = "FIELD", target = "Lnet/minecraft/server/level/ServerPlayer;isChangingDimension:Z"))
     private void arclight$fireTeleportEvent(TeleportTransition dimensionTransition, @Local(ordinal = 0) ServerLevel newLevel, @Local(ordinal = 1) ServerLevel oldLevel) throws Throwable {
         Location enter = this.getBukkitEntity().getLocation();
-        Location exit = (newLevel == null) ? null : CraftLocation.toBukkit(dimensionTransition.position(), newLevel.bridge$getWorld(), dimensionTransition.yRot(), dimensionTransition.xRot());
-        PlayerTeleportEvent tpEvent = new PlayerTeleportEvent(this.getBukkitEntity(), enter, exit, ((DimensionTransitionBridge) (Object) dimensionTransition).bridge$getTeleportCause());
+        PositionMoveRotation absolutePosition = PositionMoveRotation.calculateAbsolute(PositionMoveRotation.of((ServerPlayer) (Object) this), PositionMoveRotation.of(dimensionTransition), dimensionTransition.relatives());
+        Location exit = (newLevel == null) ? null : CraftLocation.toBukkit(absolutePosition.position(), newLevel.bridge$getWorld(), absolutePosition.yRot(), absolutePosition.xRot());
+        PlayerTeleportEvent tpEvent = new PlayerTeleportEvent(this.getBukkitEntity(), enter, exit == null ? null : exit.clone(), ((DimensionTransitionBridge) (Object) dimensionTransition).bridge$getTeleportCause());
         Bukkit.getServer().getPluginManager().callEvent(tpEvent);
         if (tpEvent.isCancelled() || tpEvent.getTo() == null) {
             DecorationOps.cancel().invoke((ServerPlayer) null);
             return;
         }
-        exit = tpEvent.getTo();
-        newLevel = ((CraftWorld) exit.getWorld()).getHandle();
-        dimensionTransition = new TeleportTransition(newLevel, new Vec3(exit.getX(), exit.getY(), exit.getZ()), dimensionTransition.deltaMovement(), exit.getYaw(), exit.getPitch(), dimensionTransition.postTeleportTransition());
+        if (!tpEvent.getTo().equals(exit)) {
+            exit = tpEvent.getTo();
+            newLevel = ((CraftWorld) exit.getWorld()).getHandle();
+            var cause = ((DimensionTransitionBridge) (Object) dimensionTransition).bridge$getTeleportCause();
+            dimensionTransition = new TeleportTransition(newLevel, CraftLocation.toVec3D(exit), Vec3.ZERO, exit.getYaw(), exit.getPitch(), dimensionTransition.missingRespawnBlock(), dimensionTransition.asPassenger(), Set.of(), dimensionTransition.postTeleportTransition());
+            ((DimensionTransitionBridge) (Object) dimensionTransition).bridge$setTeleportCause(cause);
+        }
         ((ServerGamePacketListenerImplBridge) this.connection).bridge$pushNoTeleportEvent();
         DecorationOps.blackhole().invoke(newLevel, dimensionTransition);
     }
@@ -547,8 +558,37 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         return Either.left(Player.BedSleepingProblem.OTHER_PROBLEM);
     }
 
+    private transient boolean arclight$bedEnterEventFired;
+
+    @com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod(method = "startSleepInBed")
+    private Either<Player.BedSleepingProblem, Unit> arclight$withBedEventScope(BlockPos pos,
+            com.llamalad7.mixinextras.injector.wrapoperation.Operation<Either<Player.BedSleepingProblem, Unit>> original) {
+        boolean previous = this.arclight$bedEnterEventFired;
+        this.arclight$bedEnterEventFired = false;
+        try {
+            return original.call(pos);
+        } finally {
+            this.arclight$bedEnterEventFired = previous;
+        }
+    }
+
+    @Override
+    public void bridge$markBedEnterEventFired() {
+        this.arclight$bedEnterEventFired = true;
+    }
+
+    @Override
+    public boolean bridge$consumeBedEnterEventFired() {
+        boolean fired = this.arclight$bedEnterEventFired;
+        this.arclight$bedEnterEventFired = false;
+        return fired;
+    }
+
     @Redirect(method = "startSleepInBed", at = @At(value = "INVOKE", remap = false, target = "Lcom/mojang/datafixers/util/Either;ifRight(Ljava/util/function/Consumer;)Lcom/mojang/datafixers/util/Either;"))
     private <L, R> Either<L, R> arclight$successSleep(Either<L, R> either, Consumer<? super R> consumer, BlockPos pos) {
+        if (this.bridge$consumeBedEnterEventFired()) {
+            return either.ifRight(consumer);
+        }
         return bridge$fireBedEvent(either, pos).ifRight(consumer);
     }
 

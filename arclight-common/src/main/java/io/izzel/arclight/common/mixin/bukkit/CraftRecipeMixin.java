@@ -31,8 +31,10 @@ public interface CraftRecipeMixin {
         } else if (bukkit instanceof RecipeChoice.MaterialChoice) {
             stack = Ingredient.of(((RecipeChoice.MaterialChoice) bukkit).getChoices().stream().map(CraftMagicNumbers::getItem));
         } else if (bukkit instanceof RecipeChoice.ExactChoice) {
-            stack = Ingredient.of(((RecipeChoice.ExactChoice) bukkit).getChoices().stream().map(CraftItemStack::asNMSCopy).map(net.minecraft.world.item.ItemStack::getItem));
-            ((IngredientBridge) (Object) stack).bridge$setExact(true);
+            List<net.minecraft.world.item.ItemStack> exactChoices = ((RecipeChoice.ExactChoice) bukkit).getChoices().stream()
+                .map(CraftItemStack::asNMSCopy).toList();
+            stack = Ingredient.of(exactChoices.stream().map(net.minecraft.world.item.ItemStack::getItem));
+            ((IngredientBridge) (Object) stack).bridge$setExactChoices(exactChoices);
         } else if (bukkit instanceof ArclightSpecialIngredient) {
             stack = ((ArclightSpecialIngredient) bukkit).getIngredient();
         } else {
@@ -60,10 +62,8 @@ public interface CraftRecipeMixin {
             return null;
         } else {
             if (((IngredientBridge) (Object) list).bridge$isExact()) {
-                List<ItemStack> choices = new ArrayList<>(items.size());
-                for (Holder<Item> i : items) {
-                    choices.add(CraftItemStack.asBukkitCopy(new net.minecraft.world.item.ItemStack(i)));
-                }
+                List<net.minecraft.world.item.ItemStack> exactChoices = ((IngredientBridge) (Object) list).bridge$getExactChoices();
+                List<ItemStack> choices = exactChoices.stream().map(CraftItemStack::asBukkitCopy).toList();
                 return new RecipeChoice.ExactChoice(choices);
             } else {
                 List<org.bukkit.Material> choices = new ArrayList<>(items.size());

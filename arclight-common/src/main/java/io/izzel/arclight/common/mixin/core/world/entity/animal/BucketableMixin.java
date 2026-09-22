@@ -53,6 +53,7 @@ public interface BucketableMixin {
                 CriteriaTriggers.FILLED_BUCKET.trigger((ServerPlayer) player, itemstack1);
             }
 
+            entity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
             entity.discard();
             return Optional.of(InteractionResult.SUCCESS);
         } else {

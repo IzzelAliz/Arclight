@@ -197,20 +197,11 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
             if (this.isDeadOrDying()) {
                 return false;
             } else {
-                if (source.scalesWithDifficulty()) {
-                    if (this.level().getDifficulty() == Difficulty.PEACEFUL) {
-                        // amount = 0.0F;
-                        return false;
-                    }
-
-                    if (this.level().getDifficulty() == Difficulty.EASY) {
-                        amount = Math.min(amount / 2.0F + 1.0F, amount);
-                    }
-
-                    if (this.level().getDifficulty() == Difficulty.HARD) {
-                        amount = amount * 3.0F / 2.0F;
-                    }
+                var difficulty = this.level().getDifficulty();
+                if (source.scalesWithDifficulty() && difficulty == Difficulty.PEACEFUL) {
+                    return false;
                 }
+                amount = this.bridge$platform$scaleDamage(source, (net.minecraft.world.entity.player.Player) (Object) this, amount, difficulty);
 
                 boolean damaged = super.hurtServer(serverLevel, source, amount);
                 if (damaged) {
@@ -253,20 +244,22 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     }
 
     @Decorate(method = "attack", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;deflectProjectile(Lnet/minecraft/world/entity/Entity;)Z"))
-    private void arclight$nonLivingDamage(Entity entity, @Local(ordinal = -1) DamageSource damageSource, @Local(ordinal = 1) float enchantDamage) throws Throwable {
-        if (CraftEventFactory.handleNonLivingEntityDamageEvent(entity, damageSource, enchantDamage, false)) {
+    private void arclight$nonLivingDamage(Entity entity, @Local(ordinal = -1) DamageSource damageSource, @Local(ordinal = 2) float enchantDamage) throws Throwable {
+        if (entity.getType().is(net.minecraft.tags.EntityTypeTags.REDIRECTABLE_PROJECTILE)
+            && entity instanceof net.minecraft.world.entity.projectile.Projectile
+            && CraftEventFactory.handleNonLivingEntityDamageEvent(entity, damageSource, enchantDamage, false)) {
             DecorationOps.cancel().invoke();
             return;
         }
         DecorationOps.blackhole().invoke();
     }
 
-    @Redirect(method = "doSweepAttack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDD)V"),
+    @Redirect(method = "doSweepAttack*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDD)V"),
         slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z")))
     private void arclight$skipKnockback(LivingEntity instance, double d, double e, double f) {
     }
 
-    @Decorate(method = "doSweepAttack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
+    @Decorate(method = "doSweepAttack*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
     private boolean arclight$applyKnockback(LivingEntity instance, ServerLevel serverLevel, DamageSource damageSource, float f) throws Throwable {
         var result = (boolean) DecorationOps.callsite().invoke(instance, serverLevel, damageSource, f);
         if (!result) {

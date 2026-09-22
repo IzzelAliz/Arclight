@@ -4,39 +4,30 @@ import io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.PathfinderMobMixin;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
-import io.izzel.arclight.mixin.Local;
-import net.minecraft.world.entity.animal.frog.Frog;
+import net.minecraft.world.entity.ConversionParams;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.frog.Tadpole;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.event.entity.EntityRemoveEvent;
+import org.bukkit.event.entity.EntityTransformEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Tadpole.class)
 public abstract class TadpoleMixin extends PathfinderMobMixin {
 
-    // @formatter:off
-    @Shadow protected abstract void setAge(int i);
-    // @formatter:on
+    @Shadow protected abstract void setAge(int age);
 
-    @Inject(method = "ageUp()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/frog/Tadpole;convertTo(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/entity/ConversionParams;Lnet/minecraft/world/entity/ConversionParams$AfterConversion;)Lnet/minecraft/world/entity/Mob;"))
-    private void arclight$ageUp(CallbackInfo ci) {
-        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.TRANSFORMATION);
-    }
-
-    @Decorate(method = "method_63651(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/animal/frog/Frog;)V", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/frog/Tadpole;playSound(Lnet/minecraft/sounds/SoundEvent;FF)V"))
-    private void arclight$transform(@Local(ordinal = -1) Frog frog) throws Throwable {
-        if (CraftEventFactory.callEntityTransformEvent((Tadpole) (Object) this, frog, org.bukkit.event.entity.EntityTransformEvent.TransformReason.METAMORPHOSIS).isCancelled()) {
-            this.setAge(0); // Sets the age to 0 for avoid a loop if the event is canceled
-            DecorationOps.cancel().invoke();
-            return;
-        } else {
-            ((ServerLevelBridge) this.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.METAMORPHOSIS);
+    @Decorate(method = "ageUp()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/frog/Tadpole;convertTo(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/entity/ConversionParams;Lnet/minecraft/world/entity/ConversionParams$AfterConversion;)Lnet/minecraft/world/entity/Mob;"))
+    private Mob arclight$transform(Tadpole tadpole, EntityType<?> type, ConversionParams params,
+                                  ConversionParams.AfterConversion<?> afterConversion) throws Throwable {
+        this.bridge$pushTransformReason(EntityTransformEvent.TransformReason.METAMORPHOSIS);
+        ((ServerLevelBridge) this.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.METAMORPHOSIS);
+        Mob result = (Mob) DecorationOps.callsite().invoke(tadpole, type, params, afterConversion);
+        if (result == null) {
+            this.setAge(0);
         }
-        DecorationOps.blackhole().invoke();
+        return result;
     }
 }

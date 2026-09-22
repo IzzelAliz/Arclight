@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 @Mixin(ThrownLingeringPotion.class)
 public abstract class ThrownLingeringPotionMixin extends ThrownPotionMixin {
 
-    @Inject(method = "method_67148", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
+    @Inject(method = "onHitAsPotion", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private void arclight$makeCloud(ServerLevel level, ItemStack stack, HitResult hitResult, CallbackInfo ci, AreaEffectCloud entity) {
         LingeringPotionSplashEvent event = CraftEventFactory.callLingeringPotionSplashEvent((ThrownLingeringPotion) (Object) this, hitResult, entity);

@@ -7,6 +7,7 @@ import io.izzel.arclight.mixin.Eject;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.entity.Entity;
@@ -57,7 +58,7 @@ public class SweetBerryBushBlockMixin {
                 dropper.accept(serverLevel, CraftItemStack.asNMSCopy(itemStack));
             }
         } else {
-            return result;
+            return (boolean) DecorationOps.cancel().invoke((InteractionResult) InteractionResult.SUCCESS);
         }
         return result;
     }

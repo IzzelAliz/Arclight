@@ -4,6 +4,7 @@ import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -20,10 +21,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(CropBlock.class)
 public abstract class CropBlockMixin_NeoForge {
 
-    @Redirect(method = "entityInside", at = @At(value = "INVOKE", remap = false, target = "Lnet/neoforged/neoforge/event/EventHooks;canEntityGrief(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/Entity;)Z"))
-    public boolean arclight$entityChangeBlock(Level world, Entity entity, BlockState state, Level worldIn, BlockPos pos) {
-        boolean result = EventHooks.canEntityGrief((ServerLevel) world, entity);
-        return !CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state, result);
+    @Redirect(method = "entityInside(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/InsideBlockEffectApplier;Z)V", at = @At(value = "INVOKE", remap = false, target = "Lnet/neoforged/neoforge/event/EventHooks;canEntityGrief(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;)Z"))
+    public boolean arclight$entityChangeBlock(ServerLevel world, Entity entity, BlockState state, Level worldIn, BlockPos pos, Entity entityIn, InsideBlockEffectApplier effectApplier, boolean steppingCarefully) {
+        return CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state, !EventHooks.canEntityGrief(world, entity));
     }
 
     @Inject(method = "getGrowthSpeed", cancellable = true, at = @At("RETURN"))

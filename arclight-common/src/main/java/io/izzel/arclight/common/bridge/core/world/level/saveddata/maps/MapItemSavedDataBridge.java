@@ -5,8 +5,13 @@ import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import org.bukkit.craftbukkit.v.map.CraftMapView;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface MapItemSavedDataBridge {
+
+    UUID bridge$updateUUID();
+
+    void bridge$resolveDimension(long least, long most);
 
     CraftMapView bridge$getMapView();
 

@@ -164,15 +164,15 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
         return gameProfile;
     }
 
-    @Redirect(method = "verifyLoginAndFinishConnectionSetup", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;canPlayerLogin(Ljava/net/SocketAddress;Lcom/mojang/authlib/GameProfile;)Lnet/minecraft/network/chat/Component;"))
-    private Component arclight$canLogin(PlayerList instance, SocketAddress socketAddress, GameProfile gameProfile) {
+    @Redirect(method = "verifyLoginAndFinishConnectionSetup", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;canPlayerLogin(Ljava/net/SocketAddress;Lnet/minecraft/server/players/NameAndId;)Lnet/minecraft/network/chat/Component;"))
+    private Component arclight$canLogin(PlayerList instance, SocketAddress socketAddress, net.minecraft.server.players.NameAndId nameAndId, GameProfile gameProfile) {
         if (this.player == null) {
             this.player = ((PlayerListBridge) instance).bridge$canPlayerLogin(socketAddress, gameProfile, (ServerLoginPacketListenerImpl) (Object) this);
         }
         return null;
     }
 
-    @Inject(method = "verifyLoginAndFinishConnectionSetup", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/players/PlayerList;canPlayerLogin(Ljava/net/SocketAddress;Lcom/mojang/authlib/GameProfile;)Lnet/minecraft/network/chat/Component;"))
+    @Inject(method = "verifyLoginAndFinishConnectionSetup", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/players/PlayerList;canPlayerLogin(Ljava/net/SocketAddress;Lnet/minecraft/server/players/NameAndId;)Lnet/minecraft/network/chat/Component;"))
     private void arclight$returnIfFail(GameProfile p_299507_, CallbackInfo ci) {
         if (this.player == null) {
             ci.cancel();
@@ -183,8 +183,8 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
         }
     }
 
-    @Redirect(method = "verifyLoginAndFinishConnectionSetup", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;disconnectAllPlayersWithProfile(Lcom/mojang/authlib/GameProfile;)Z"))
-    private boolean arclight$skipKick(PlayerList instance, GameProfile gameProfile) {
+    @Redirect(method = "verifyLoginAndFinishConnectionSetup", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;disconnectAllPlayersWithProfile(Ljava/util/UUID;)Z"))
+    private boolean arclight$skipKick(PlayerList instance, UUID profileId) {
         return this.isPlayerAlreadyInWorld(Objects.requireNonNull(this.authenticatedProfile));
     }
 

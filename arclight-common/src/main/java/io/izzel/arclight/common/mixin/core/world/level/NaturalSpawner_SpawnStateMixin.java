@@ -22,7 +22,7 @@ public abstract class NaturalSpawner_SpawnStateMixin implements WorldEntitySpawn
     @Shadow @Final private int spawnableChunkCount;
     @Shadow @Final private Object2IntOpenHashMap<MobCategory> mobCategoryCounts;
     @Shadow protected abstract boolean canSpawn(EntityType<?> p_234989_1_, BlockPos p_234989_2_, ChunkAccess p_234989_3_);
-    @Shadow @Final private LocalMobCapCalculator localMobCapCalculator;
+    @Shadow protected abstract boolean canSpawnForCategoryLocal(MobCategory category, ChunkPos pos);
     // @formatter:on
 
     @Override
@@ -43,6 +43,6 @@ public abstract class NaturalSpawner_SpawnStateMixin implements WorldEntitySpawn
 
     @Override
     public boolean bridge$canSpawnLocal(MobCategory classification, ChunkPos pos) {
-        return this.localMobCapCalculator.canSpawn(classification, pos);
+        return this.canSpawnForCategoryLocal(classification, pos);
     }
 }

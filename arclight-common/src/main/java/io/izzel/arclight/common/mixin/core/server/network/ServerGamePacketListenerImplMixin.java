@@ -83,21 +83,22 @@ import net.minecraft.world.entity.PositionMoveRotation;
 import net.minecraft.world.entity.Relative;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.RecipeBookMenu;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeHolderBridge;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.component.TypedEntityData;
 import net.minecraft.world.item.component.WritableBookContent;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.gamerules.GameRules;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -105,6 +106,7 @@ import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.craftbukkit.v.util.CraftLocation;
 import org.bukkit.command.CommandException;
 import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
@@ -197,6 +199,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
     @Shadow private int awaitingTeleport;
     @Shadow @Final private TickThrottler dropSpamThrottler;
     @Shadow protected abstract boolean noBlocksAround(Entity p_241162_1_);
+    @Shadow protected abstract boolean shouldCheckPlayerMovement(boolean isFallFlying);
     @Shadow private static double clampHorizontal(double p_143610_) { return 0; }
     @Shadow private static double clampVertical(double p_143654_) { return 0; }
     @Shadow private static boolean containsInvalidValues(double p_143664_, double p_143665_, double p_143666_, float p_143667_, float p_143668_) { return false; }
@@ -417,7 +420,8 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                 Vec3 vec3d = new Vec3(entity.getX() - d0, entity.getY() - d2, entity.getZ() - d3);
                 this.player.setKnownMovement(vec3d);
                 this.player.checkMovementStatistics(vec3d.x, vec3d.y, vec3d.z);
-                this.clientVehicleIsFloating = d11 >= -0.03125D && !flag1 && !entity.isNoGravity() && this.noBlocksAround(entity);
+                this.clientVehicleIsFloating = d11 >= -0.03125D && !flag1 && !this.server.allowFlight()
+                    && !entity.isFlyingVehicle() && !entity.isNoGravity() && this.noBlocksAround(entity);
                 this.vehicleLastGoodX = entity.getX();
                 this.vehicleLastGoodY = entity.getY();
                 this.vehicleLastGoodZ = entity.getZ();
@@ -576,7 +580,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                                     speed = player.getAbilities().walkingSpeed * 10f;
                                 }
 
-                                if (!this.player.isChangingDimension() && (this.player.level().getGameRules().get(GameRules.ELYTRA_MOVEMENT_CHECK) || !this.player.isFallFlying())) {
+                                if (this.shouldCheckPlayerMovement(this.player.isFallFlying())) {
                                     float f2 = this.player.isFallFlying() ? 300.0F : 100.0F;
 
                                     if (d11 - d10 > Math.max(f2, Math.pow((double) (org.spigotmc.SpigotConfig.movedTooQuicklyMultiplier * (float) i * speed), 2)) && !this.isSingleplayerOwner()) {
@@ -675,7 +679,8 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                                 boolean autoSpinAttack = this.player.isAutoSpinAttack();
                                 this.clientIsFloating = d12 >= -0.03125D
                                     && this.player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR
-                                                                        && !(this.player.getAbilities().mayfly || ((ServerPlayerBridge) this.player).bridge$platform$mayfly())
+                                    && !this.server.allowFlight()
+                                    && !(this.player.getAbilities().mayfly || ((ServerPlayerBridge) this.player).bridge$platform$mayfly())
                                     && !this.player.hasEffect(MobEffects.LEVITATION)
                                     && !fallFlying
                                     && !autoSpinAttack
@@ -1550,24 +1555,32 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         CraftEventFactory.callRecipeBookSettingsEvent(this.player, packet.getBookType(), packet.isOpen(), packet.isFiltering());
     }
 
-    @Redirect(method = "handlePlaceRecipe", at = @At(value = "INVOKE", target = "Lnet/minecraft/stats/ServerRecipeBook;contains(Lnet/minecraft/resources/ResourceKey;)Z"))
-    private boolean arclight$recipeBookClick(net.minecraft.stats.ServerRecipeBook instance, net.minecraft.resources.ResourceKey<net.minecraft.world.item.crafting.Recipe<?>> recipeKey, ServerboundPlaceRecipePacket packet) {
-        org.bukkit.inventory.Recipe recipe = this.cserver.getRecipe(CraftNamespacedKey.fromMinecraft(recipeKey.identifier()));
+    @Decorate(method = "handlePlaceRecipe", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/RecipeBookMenu;handlePlacement(ZZLnet/minecraft/world/item/crafting/RecipeHolder;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/player/Inventory;)Lnet/minecraft/world/inventory/RecipeBookMenu$PostPlaceAction;"))
+    private RecipeBookMenu.PostPlaceAction arclight$recipeBookClick(RecipeBookMenu menu, boolean useMaxItems, boolean creative, RecipeHolder<?> holder, ServerLevel level, Inventory inventory) throws Throwable {
+        var recipe = ((RecipeHolderBridge) (Object) holder).bridge$toBukkitRecipe();
         if (recipe == null) {
-            return instance.contains(recipeKey);
+            return (RecipeBookMenu.PostPlaceAction) DecorationOps.cancel().invoke();
         }
-        var event = CraftEventFactory.callRecipeBookClickEvent(this.player, recipe, packet.useMaxItems());
-        if (event.getRecipe() instanceof org.bukkit.Keyed keyed) {
-            var newKey = org.bukkit.craftbukkit.v.inventory.CraftRecipe.toMinecraft(keyed.getKey());
-            return instance.contains(newKey);
+        var event = CraftEventFactory.callRecipeBookClickEvent(this.player, recipe, useMaxItems);
+        var replacement = this.server.getRecipeManager().byKey(org.bukkit.craftbukkit.v.inventory.CraftRecipe.toMinecraft(((org.bukkit.Keyed) event.getRecipe()).getKey())).orElse(null);
+        if (replacement == null) {
+            return (RecipeBookMenu.PostPlaceAction) DecorationOps.cancel().invoke();
         }
-        return instance.contains(recipeKey);
+        return (RecipeBookMenu.PostPlaceAction) DecorationOps.callsite().invoke(menu, event.isShiftClick(), creative, replacement, level, inventory);
     }
 
     @Inject(method = "handleContainerButtonClick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;resetLastActionTime()V"))
     private void arclight$noEnchant(ServerboundContainerButtonClickPacket packetIn, CallbackInfo ci) {
         if (((ServerPlayerBridge) player).bridge$isMovementBlocked()) {
             ci.cancel();
+        }
+    }
+
+    // Spigot gates data export, not the ordinary pick or creative inventory update.
+    @Decorate(method = "handlePickItemFromBlock(Lnet/minecraft/network/protocol/game/ServerboundPickItemFromBlockPacket;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;addBlockDataToItem(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/item/ItemStack;)V"))
+    private void arclight$nbtCopy(BlockState blockState, ServerLevel level, BlockPos pos, ItemStack itemStack) throws Throwable {
+        if (this.player.bridge$getBukkitEntity().hasPermission("minecraft.nbt.copy")) {
+            DecorationOps.callsite().invoke(blockState, level, pos, itemStack);
         }
     }
 
@@ -1586,22 +1599,6 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                 return;
             }
 
-            TypedEntityData<BlockEntityType<?>> customdata = itemstack.get(DataComponents.BLOCK_ENTITY_DATA);
-
-            if (customdata != null && customdata.contains("x") && customdata.contains("y") && customdata.contains("z") && this.player.bridge$getBukkitEntity().hasPermission("minecraft.nbt.copy")) {
-                var tag = customdata.getUnsafe();
-                BlockPos blockpos = new BlockPos(
-                    tag.getInt("x").orElse(0),
-                    tag.getInt("y").orElse(0),
-                    tag.getInt("z").orElse(0)
-                );
-                if (this.player.level().isLoaded(blockpos)) {
-                    BlockEntity blockentity = this.player.level().getBlockEntity(blockpos);
-                    if (blockentity != null) {
-                        blockentity.applyComponentsFromItemStack(itemstack);
-                    }
-                }
-            }
             final boolean flag2 = packetplayinsetcreativeslot.slotNum() >= 1 && packetplayinsetcreativeslot.slotNum() <= 45;
             boolean flag3 = itemstack.isEmpty() || itemstack.getCount() <= itemstack.getMaxStackSize();
             if (flag || (flag2 && !ItemStack.matches(this.player.inventoryMenu.getSlot(packetplayinsetcreativeslot.slotNum()).getItem(), packetplayinsetcreativeslot.itemStack()))) {
@@ -1629,8 +1626,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                         break;
                     case DENY: {
                         if (packetplayinsetcreativeslot.slotNum() >= 0) {
-                            this.player.connection.send(new ClientboundContainerSetSlotPacket(this.player.inventoryMenu.containerId, this.player.inventoryMenu.incrementStateId(), packetplayinsetcreativeslot.slotNum(), this.player.inventoryMenu.getSlot(packetplayinsetcreativeslot.slotNum()).getItem()));
-                            this.player.connection.send(new ClientboundContainerSetSlotPacket(-1, this.player.inventoryMenu.incrementStateId(), -1, ItemStack.EMPTY));
+                            this.player.inventoryMenu.sendAllDataToRemote();
                         }
                         return;
                     }
@@ -1678,27 +1674,19 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
 
     @Decorate(method = "teleport(Lnet/minecraft/world/entity/PositionMoveRotation;Ljava/util/Set;)V", inject = true, at = @At("HEAD"))
     private void arclight$teleportEvent(PositionMoveRotation positionMoveRotation, Set<Relative> relativeSet) throws Throwable {
-        double x = positionMoveRotation.position().x;
-        double y = positionMoveRotation.position().y;
-        double z = positionMoveRotation.position().z;
-        float yaw = positionMoveRotation.yRot();
-        float pitch = positionMoveRotation.xRot();
+        PositionMoveRotation absolutePosition = PositionMoveRotation.calculateAbsolute(PositionMoveRotation.of(this.player), positionMoveRotation, relativeSet);
         PlayerTeleportEvent.TeleportCause cause = arclight$cause == null ? PlayerTeleportEvent.TeleportCause.UNKNOWN : arclight$cause;
         arclight$cause = null;
         Player player = this.getCraftPlayer();
         Location from = player.getLocation();
-        Location to = new Location(this.getCraftPlayer().getWorld(), x, y, z, yaw, pitch);
+        Location to = new Location(this.getCraftPlayer().getWorld(), absolutePosition.position().x, absolutePosition.position().y, absolutePosition.position().z, absolutePosition.yRot(), absolutePosition.xRot());
         if (!arclight$noTeleportEvent && !from.equals(to)) {
             PlayerTeleportEvent event = new PlayerTeleportEvent(player, from.clone(), to.clone(), cause);
             this.cserver.getPluginManager().callEvent(event);
             if (event.isCancelled() || !to.equals(event.getTo())) {
-                relativeSet.clear();
+                relativeSet = Collections.emptySet();
                 to = (event.isCancelled() ? event.getFrom() : event.getTo());
-                x = to.getX();
-                y = to.getY();
-                z = to.getZ();
-                yaw = to.getYaw();
-                pitch = to.getPitch();
+                positionMoveRotation = new PositionMoveRotation(CraftLocation.toVec3D(to), Vec3.ZERO, to.getYaw(), to.getPitch());
             }
             arclight$teleportCancelled = event.isCancelled();
         } else {
@@ -1706,14 +1694,14 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         }
         arclight$noTeleportEvent = false;
 
-        if (Float.isNaN(yaw)) {
-            yaw = 0.0f;
+        if (Float.isNaN(positionMoveRotation.yRot())) {
+            positionMoveRotation = new PositionMoveRotation(positionMoveRotation.position(), positionMoveRotation.deltaMovement(), 0.0f, positionMoveRotation.xRot());
         }
-        if (Float.isNaN(pitch)) {
-            pitch = 0.0f;
+        if (Float.isNaN(positionMoveRotation.xRot())) {
+            positionMoveRotation = new PositionMoveRotation(positionMoveRotation.position(), positionMoveRotation.deltaMovement(), positionMoveRotation.yRot(), 0.0f);
         }
         this.justTeleported = true;
-        DecorationOps.blackhole().invoke(new PositionMoveRotation(new Vec3(x, y, z), positionMoveRotation.deltaMovement(), yaw, pitch), relativeSet);
+        DecorationOps.blackhole().invoke(positionMoveRotation, relativeSet);
     }
 
     public void teleport(double d0, double d1, double d2, float f, float f1, PlayerTeleportEvent.TeleportCause cause) {

@@ -139,7 +139,7 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
             if (expToDrop <= 0) {
                 return false;
             }
-            orb = new ExperienceOrb(this.level(), orb.getX(), orb.getY(), orb.getZ(), expToDrop);
+            entity = new ExperienceOrb(this.level(), orb.getX(), orb.getY(), orb.getZ(), expToDrop);
         }
         return (boolean) DecorationOps.callsite().invoke(instance, entity);
     }

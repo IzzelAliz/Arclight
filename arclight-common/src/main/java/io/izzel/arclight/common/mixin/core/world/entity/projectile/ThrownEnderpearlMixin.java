@@ -2,8 +2,14 @@ package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
 import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.level.portal.DimensionTransitionBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import net.minecraft.world.level.portal.TeleportTransition;
+import org.bukkit.event.player.PlayerTeleportEvent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl;
 import net.minecraft.world.phys.HitResult;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -32,8 +38,15 @@ public abstract class ThrownEnderpearlMixin extends ThrowableProjectileMixin {
         ((WorldBridge) this.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.ENDER_PEARL);
     }
 
-    @Redirect(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/damagesource/DamageSources;enderPearl()Lnet/minecraft/world/damagesource/DamageSource;"))
-    private DamageSource arclight$entityDamage(DamageSources instance) {
-        return ((DamageSourceBridge) instance.enderPearl()).bridge$customCausingEntity((ThrownEnderpearl) (Object) this);
+    @Decorate(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;teleport(Lnet/minecraft/world/level/portal/TeleportTransition;)Lnet/minecraft/server/level/ServerPlayer;"))
+    private ServerPlayer arclight$pearlCause(ServerPlayer player, TeleportTransition transition) throws Throwable {
+        ((DimensionTransitionBridge) (Object) transition).bridge$setTeleportCause(PlayerTeleportEvent.TeleportCause.ENDER_PEARL);
+        return (ServerPlayer) DecorationOps.callsite().invoke(player, transition);
+    }
+
+    @Redirect(method = "onHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
+    private boolean arclight$entityDamage(ServerPlayer player, ServerLevel level, DamageSource source, float amount) {
+        var damageSource = ((DamageSourceBridge) this.damageSources().enderPearl()).bridge$customCausingEntity((ThrownEnderpearl) (Object) this);
+        return player.hurtServer(level, damageSource, amount);
     }
 }

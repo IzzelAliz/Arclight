@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
 import com.google.common.collect.ImmutableList;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.InternalEntityBridge;
@@ -12,6 +14,7 @@ import io.izzel.arclight.common.bridge.core.world.level.portal.DimensionTransiti
 import io.izzel.arclight.common.mod.server.BukkitRegistry;
 import io.izzel.arclight.common.mod.server.entity.ArclightSpawnReason;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import io.izzel.arclight.common.mod.util.FireDurationContext;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.util.BlockUtil;
@@ -39,7 +42,9 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageSources;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.PositionMoveRotation;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Leashable;
@@ -99,6 +104,7 @@ import java.util.UUID;
 public abstract class EntityMixin implements InternalEntityBridge, EntityBridge, CommandSourceBridge {
 
     // @formatter:off
+    @Shadow protected abstract void applyEffectsFromBlocks();
     @Shadow private float yRot;
     @Shadow public abstract Level level();
     @Shadow protected int boardingCooldown;
@@ -567,6 +573,16 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         setSecondsOnFire(tick, callEvent);
     }
 
+    @WrapMethod(method = "applyEffectsFromBlocks(Ljava/util/List;)V")
+    private void arclight$withFireDurationContext(List<?> movements, Operation<Void> original) {
+        FireDurationContext.pushScope();
+        try {
+            original.call(movements);
+        } finally {
+            FireDurationContext.popScope();
+        }
+    }
+
     @ModifyArg(method = "applyEffectsFromBlocks(Ljava/util/List;)V", index = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;stepOn(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/entity/Entity;)V"))
     private BlockPos arclight$captureBlockWalk(BlockPos pos) {
         ArclightCaptures.captureDamageEventBlock(pos);
@@ -608,44 +624,98 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     }
 
     @Unique protected transient boolean arclight$saveNotIncludeAll = false;
+    @Unique private static final ThreadLocal<Boolean> arclight$saveNotIncludeAllContext = new ThreadLocal<>();
 
     protected void addAdditionalSaveData(CompoundTag tag, boolean includeAll) {
         var old = arclight$saveNotIncludeAll;
+        Boolean previousContext = arclight$saveNotIncludeAllContext.get();
         arclight$saveNotIncludeAll = !includeAll;
+        arclight$saveNotIncludeAllContext.set(!includeAll);
         try {
             var output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, this.level().registryAccess());
             addAdditionalSaveData(output);
             tag.merge(output.buildResult());
+            arclight$postMergeSelectiveSave(tag, includeAll);
         } finally {
             arclight$saveNotIncludeAll = old;
+            if (previousContext == null) arclight$saveNotIncludeAllContext.remove();
+            else arclight$saveNotIncludeAllContext.set(previousContext);
         }
     }
 
     public CompoundTag saveWithoutId(CompoundTag tag, boolean includeAll) {
         var old = arclight$saveNotIncludeAll;
+        Boolean previousContext = arclight$saveNotIncludeAllContext.get();
         arclight$saveNotIncludeAll = !includeAll;
+        arclight$saveNotIncludeAllContext.set(!includeAll);
         try {
             var output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, this.level().registryAccess());
             this.saveWithoutId(output);
             tag.merge(output.buildResult());
+            arclight$postMergeSelectiveSave(tag, includeAll);
             return tag;
         } finally {
             arclight$saveNotIncludeAll = old;
+            if (previousContext == null) arclight$saveNotIncludeAllContext.remove();
+            else arclight$saveNotIncludeAllContext.set(previousContext);
         }
     }
 
     public boolean saveAsPassenger(CompoundTag tag, boolean includeAll) {
         var old = arclight$saveNotIncludeAll;
+        Boolean previousContext = arclight$saveNotIncludeAllContext.get();
         arclight$saveNotIncludeAll = !includeAll;
+        arclight$saveNotIncludeAllContext.set(!includeAll);
         try {
             var output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, this.level().registryAccess());
             var saved = this.saveAsPassenger(output);
             if (saved) {
                 tag.merge(output.buildResult());
+                arclight$postMergeSelectiveSave(tag, includeAll);
             }
             return saved;
         } finally {
             arclight$saveNotIncludeAll = old;
+            if (previousContext == null) arclight$saveNotIncludeAllContext.remove();
+            else arclight$saveNotIncludeAllContext.set(previousContext);
+        }
+    }
+
+    public boolean saveAsPassenger(ValueOutput output, boolean includeAll) {
+        var old = arclight$saveNotIncludeAll;
+        Boolean previousContext = arclight$saveNotIncludeAllContext.get();
+        arclight$saveNotIncludeAll = !includeAll;
+        arclight$saveNotIncludeAllContext.set(!includeAll);
+        try {
+            return this.saveAsPassenger(output);
+        } finally {
+            arclight$saveNotIncludeAll = old;
+            if (previousContext == null) arclight$saveNotIncludeAllContext.remove();
+            else arclight$saveNotIncludeAllContext.set(previousContext);
+        }
+    }
+
+    @WrapMethod(method = "saveAsPassenger(Lnet/minecraft/world/level/storage/ValueOutput;)Z")
+    private boolean arclight$saveAsPassenger$propagateIncludeAll(ValueOutput output, Operation<Boolean> original) {
+        Boolean context = arclight$saveNotIncludeAllContext.get();
+        if (context == null) {
+            return original.call(output);
+        }
+        boolean previous = this.arclight$saveNotIncludeAll;
+        this.arclight$saveNotIncludeAll = context;
+        try {
+            return original.call(output);
+        } finally {
+            this.arclight$saveNotIncludeAll = previous;
+        }
+    }
+
+    protected void arclight$postMergeSelectiveSave(CompoundTag tag, boolean includeAll) {
+        if (!includeAll) {
+            tag.remove("Pos");
+            tag.remove("UUID");
+            tag.remove("WorldUUIDLeast");
+            tag.remove("WorldUUIDMost");
         }
     }
 
@@ -692,7 +762,12 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         if (this.bukkitEntity != null) {
             this.bukkitEntity.storeBukkitValues(compound);
         }
-        // ValueOutput has no removal API in 1.21.11; the caller controls which keys are written.
+        if (this.arclight$saveNotIncludeAll) {
+            compound.discard("Pos");
+            compound.discard("UUID");
+            compound.discard("WorldUUIDLeast");
+            compound.discard("WorldUUIDMost");
+        }
     }
 
     private static boolean isLevelAtLeast(ValueInput tag, int level) {
@@ -909,9 +984,9 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     }
 
     @Decorate(method = "thunderHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;igniteForSeconds(F)V"))
-    private void arclight$onStruckByLightning$EntityCombustByEntityEvent0(Entity entity, float f) throws Throwable {
+    private void arclight$onStruckByLightning$EntityCombustByEntityEvent0(Entity entity, float f, ServerLevel level, LightningBolt lightning) throws Throwable {
         final org.bukkit.entity.Entity thisBukkitEntity = this.getBukkitEntity();
-        final org.bukkit.entity.Entity stormBukkitEntity = entity.bridge$getBukkitEntity();
+        final org.bukkit.entity.Entity stormBukkitEntity = lightning.bridge$getBukkitEntity();
         final PluginManager pluginManager = Bukkit.getPluginManager();
         // CraftBukkit start - Call a combust event when lightning strikes
         EntityCombustByEntityEvent entityCombustEvent = new EntityCombustByEntityEvent(stormBukkitEntity, thisBukkitEntity, 8);
@@ -923,25 +998,6 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         // CraftBukkit end
     }
 
-    @Decorate(method = "thunderHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
-    private boolean arclight$onStruckByLightning$EntityCombustByEntityEvent1(Entity entity, ServerLevel serverLevel, DamageSource source, float amount) throws Throwable {
-        final org.bukkit.entity.Entity thisBukkitEntity = this.getBukkitEntity();
-        final org.bukkit.entity.Entity stormBukkitEntity = entity.bridge$getBukkitEntity();
-        final PluginManager pluginManager = Bukkit.getPluginManager();
-        if (thisBukkitEntity instanceof Hanging) {
-            HangingBreakByEntityEvent hangingEvent = new HangingBreakByEntityEvent((Hanging) thisBukkitEntity, stormBukkitEntity);
-            pluginManager.callEvent(hangingEvent);
-
-            if (hangingEvent.isCancelled()) {
-                return false;
-            }
-        }
-
-        if (this.fireImmune()) {
-            return false;
-        }
-        return (boolean) DecorationOps.callsite().invoke(entity, serverLevel, ((DamageSourceBridge) source).bridge$customCausingEntity(entity), amount);
-    }
 
     @Override
     public void bridge$setRideCooldown(int rideCooldown) {
@@ -960,16 +1016,19 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Decorate(method = "teleport(Lnet/minecraft/world/level/portal/TeleportTransition;)Lnet/minecraft/world/entity/Entity;", inject = true, at = @At("HEAD"))
     private void arclight$changeDim(TeleportTransition dimensionTransition) throws Throwable {
         if (this.level() instanceof ServerLevel && !this.isRemoved()) {
-            Location to = new Location(dimensionTransition.newLevel().bridge$getWorld(), dimensionTransition.position().x, dimensionTransition.position().y, dimensionTransition.position().z, dimensionTransition.yRot(), dimensionTransition.xRot());
-            EntityTeleportEvent teleEvent = CraftEventFactory.callEntityTeleportEvent((Entity) (Object) this, to);
-            if (teleEvent.isCancelled()) {
+            PositionMoveRotation absolutePosition = PositionMoveRotation.calculateAbsolute(PositionMoveRotation.of((Entity) (Object) this), PositionMoveRotation.of(dimensionTransition), dimensionTransition.relatives());
+            Location to = new Location(dimensionTransition.newLevel().bridge$getWorld(), absolutePosition.position().x, absolutePosition.position().y, absolutePosition.position().z, absolutePosition.yRot(), absolutePosition.xRot());
+            EntityTeleportEvent teleEvent = CraftEventFactory.callEntityTeleportEvent((Entity) (Object) this, to.clone());
+            if (teleEvent.isCancelled() || teleEvent.getTo() == null) {
                 DecorationOps.cancel().invoke((Entity) null);
                 return;
             }
-            to = teleEvent.getTo();
-            var cause = ((DimensionTransitionBridge) (Object) dimensionTransition).bridge$getTeleportCause();
-            dimensionTransition = new TeleportTransition(((CraftWorld) to.getWorld()).getHandle(), CraftLocation.toVec3D(to), dimensionTransition.deltaMovement(), to.getYaw(), to.getPitch(), dimensionTransition.missingRespawnBlock(), dimensionTransition.asPassenger(), dimensionTransition.relatives(), dimensionTransition.postTeleportTransition());
-            ((DimensionTransitionBridge) (Object) dimensionTransition).bridge$setTeleportCause(cause);
+            if (!to.equals(teleEvent.getTo())) {
+                to = teleEvent.getTo();
+                var cause = ((DimensionTransitionBridge) (Object) dimensionTransition).bridge$getTeleportCause();
+                dimensionTransition = new TeleportTransition(((CraftWorld) to.getWorld()).getHandle(), CraftLocation.toVec3D(to), Vec3.ZERO, to.getYaw(), to.getPitch(), dimensionTransition.missingRespawnBlock(), dimensionTransition.asPassenger(), Set.of(), dimensionTransition.postTeleportTransition());
+                ((DimensionTransitionBridge) (Object) dimensionTransition).bridge$setTeleportCause(cause);
+            }
         }
     }
 

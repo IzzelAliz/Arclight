@@ -25,7 +25,10 @@ import java.util.jar.JarOutputStream;
 public class ForgeLikeProvider {
 
     static CompletableFuture<Path> downloadInstaller(String coord, String dist, String hash, CompletableFuture<MinecraftProvider.MinecraftData> minecraftData, InstallInfo info, ExecutorService pool, Consumer<String> logger) {
-        MavenDownloader forge = new MavenDownloader(Mirrors.getMavenRepo(), coord, dist, hash);
+        String officialRepo = coord.startsWith("net.neoforged:")
+            ? "https://maven.neoforged.net/releases/" : "https://maven.minecraftforge.net/";
+        MavenDownloader forge = new MavenDownloader(Mirrors.getMavenRepo(), coord, dist, hash,
+            officialRepo + Util.mavenToPath(coord));
         return MinecraftProvider.reportSupply(pool, logger).apply(forge).thenCombineAsync(minecraftData, (path, data) -> {
             try (var jarFile = new JarFile(path.toFile())) {
                 Map<String, Map.Entry<String, String>> map = new HashMap<>();
@@ -106,7 +109,7 @@ public class ForgeLikeProvider {
             if (data.has("MOJMAPS")) {
                 var serverMapping = data.getAsJsonObject("MOJMAPS").get("server").getAsString();
                 ret.put(serverMapping.substring(1, serverMapping.length() - 1),
-                        new AbstractMap.SimpleImmutableEntry<>(minecraftData.mappingHash(), minecraftData.mappingUrl()));
+                        new AbstractMap.SimpleImmutableEntry<>(minecraftData.mappingHash(), minecraftData.officialMappingUrl()));
             }
         }
         return ret;

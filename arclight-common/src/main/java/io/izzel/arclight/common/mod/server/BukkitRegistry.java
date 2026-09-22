@@ -31,12 +31,12 @@ import net.minecraft.world.item.crafting.CookingBookCategory;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.level.gamerules.GameRule;
 import net.minecraft.world.level.gamerules.GameRuleTypeVisitor;
-import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.dimension.LevelStem;
 import org.bukkit.*;
 import org.bukkit.block.Biome;
+import org.bukkit.craftbukkit.v.CraftGameRule;
 import org.bukkit.craftbukkit.v.CraftStatistic;
 import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
 import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
@@ -51,7 +51,6 @@ import org.bukkit.entity.SpawnCategory;
 import org.bukkit.event.player.PlayerRecipeBookSettingsChangeEvent;
 import org.bukkit.potion.PotionType;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -105,31 +104,13 @@ public class BukkitRegistry {
     }
 
     private static void loadGameRules(DedicatedServer console) {
-        Map<String, GameRule<?>> gameRules;
-        Constructor<GameRule> constructor;
-        try {
-            var rules = GameRule.class.getDeclaredField("gameRules");
-            rules.setAccessible(true);
-            gameRules = (Map<String, GameRule<?>>) rules.get(null);
-            constructor = GameRule.class.getDeclaredConstructor(String.class, Class.class);
-            constructor.setAccessible(true);
-        } catch (ReflectiveOperationException e) {
-            ArclightServer.LOGGER.warn("Cannot register all custom game rules for bukkit!", e);
-            ArclightServer.LOGGER.warn("This is a bug, and will cause commands like mvgamerule not working properly. Please report this!");
-            return;
-        }
         console.getWorldData().getGameRules().visitGameRuleTypes(new GameRuleTypeVisitor() {
             @Override
             public <T> void visit(GameRule<T> rule) {
-                String id = rule.getIdentifier().toString();
-                if (!gameRules.containsKey(id)) {
-                    try {
-                        var instance = constructor.newInstance(id, rule.valueClass());
-                        gameRules.put(id, instance);
-                    } catch (ReflectiveOperationException e) {
-                        ArclightServer.LOGGER.warn("Cannot register custom game rule {} for bukkit!", id, e);
-                    }
-                }
+                // Since 1.21.11 Bukkit game rules are registry-backed. Resolve the
+                // canonical wrapper (including mod namespaces and value types)
+                // through CraftRegistry rather than constructing detached rules.
+                CraftGameRule.minecraftToBukkit(rule);
             }
         });
     }
@@ -319,12 +300,12 @@ public class BukkitRegistry {
             ResourceKey<LevelStem> key = entry.getKey();
             World.Environment environment = DIM_MAP.get(key);
             if (environment == null) {
-                String name = ResourceLocationUtil.standardize(key.registry());
+                String name = ResourceLocationUtil.standardize(key.identifier());
                 environment = EnumHelper.makeEnum(World.Environment.class, name, i, ENV_CTOR, ImmutableList.of(i - 1));
                 newTypes.add(environment);
                 ENVIRONMENT_MAP.put(i - 1, environment);
                 DIM_MAP.put(key, environment);
-                ArclightServer.LOGGER.debug("Registered {} as environment {}", key.registry(), environment);
+                ArclightServer.LOGGER.debug("Registered {} as environment {}", key.identifier(), environment);
                 i++;
             }
         }

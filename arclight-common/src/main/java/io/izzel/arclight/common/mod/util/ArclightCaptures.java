@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mod.util;
 
 import com.google.common.base.Preconditions;
 import io.izzel.arclight.common.mod.ArclightConstants;
+import joptsimple.OptionSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.WorldLoader;
@@ -15,6 +16,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.Block;
 import org.bukkit.TreeType;
 import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
@@ -24,6 +26,16 @@ import org.bukkit.event.entity.EntityPotionEffectEvent;
 import java.util.*;
 
 public class ArclightCaptures {
+
+    private static OptionSet bukkitOptions;
+
+    public static void captureBukkitOptions(OptionSet options) {
+        bukkitOptions = Objects.requireNonNull(options, "options");
+    }
+
+    public static OptionSet getBukkitOptions() {
+        return Objects.requireNonNull(bukkitOptions, "Bukkit command-line options were not captured");
+    }
 
     private static Entity entityChangeBlock;
 
@@ -66,8 +78,33 @@ public class ArclightCaptures {
     }
 
     public static void captureBlockBreakPlayer(BlockBreakEvent event) {
-        blockBreakEventStack.push(new BlockBreakEventContext(event, isPrimaryEvent));
+        captureBlockBreakPlayer(event, null);
+    }
+
+    public static void captureBlockBreakPlayer(BlockBreakEvent event, Block block) {
+        blockBreakEventStack.push(new BlockBreakEventContext(event, isPrimaryEvent, block));
         isPrimaryEvent = false;
+    }
+
+    private static final ThreadLocal<Deque<BlockBreakExperienceScope>> vanillaBlockBreakExperienceScopes = ThreadLocal.withInitial(ArrayDeque::new);
+
+    public static void pushVanillaBlockBreakExperienceSuppression(ServerLevel level, BlockPos pos) {
+        vanillaBlockBreakExperienceScopes.get().push(new BlockBreakExperienceScope(level, pos));
+    }
+
+    public static boolean shouldSuppressVanillaBlockBreakExperience(ServerLevel level, BlockPos pos) {
+        Deque<BlockBreakExperienceScope> scopes = vanillaBlockBreakExperienceScopes.get();
+        return !scopes.isEmpty() && scopes.peek().matches(level, pos);
+    }
+
+    public static void popVanillaBlockBreakExperienceSuppression() {
+        Deque<BlockBreakExperienceScope> scopes = vanillaBlockBreakExperienceScopes.get();
+        if (!scopes.isEmpty()) {
+            scopes.pop();
+        }
+        if (scopes.isEmpty()) {
+            vanillaBlockBreakExperienceScopes.remove();
+        }
     }
 
     public static List<ItemEntity> getBlockDrops() {
@@ -446,14 +483,14 @@ public class ArclightCaptures {
         private final ArrayList<ItemEntity> blockDrops;
         private final BlockState blockBreakPlayerState;
         private final boolean primary;
-        private final boolean dropItems;
+        private final Block nmsBlock;
 
-        public BlockBreakEventContext(BlockBreakEvent event, boolean primary) {
+        public BlockBreakEventContext(BlockBreakEvent event, boolean primary, Block nmsBlock) {
             this.blockBreakEvent = event;
             this.blockDrops = new ArrayList<>();
             this.blockBreakPlayerState = event.getBlock().getState();
             this.primary = primary;
-            this.dropItems = event.isDropItems();
+            this.nmsBlock = nmsBlock;
         }
 
         public BlockBreakEvent getEvent() {
@@ -465,7 +502,7 @@ public class ArclightCaptures {
         }
 
         public boolean isDropItems() {
-            return dropItems;
+            return blockBreakEvent.isDropItems();
         }
 
         public BlockState getBlockBreakPlayerState() {
@@ -480,6 +517,20 @@ public class ArclightCaptures {
 
         public boolean isPrimary() {
             return primary;
+        }
+
+        public Block getNmsBlock() {
+            return nmsBlock;
+        }
+
+        public boolean shouldFinalizeExperience() {
+            return blockBreakEvent != null && nmsBlock != null;
+        }
+    }
+
+    private record BlockBreakExperienceScope(ServerLevel level, BlockPos pos) {
+        private boolean matches(ServerLevel level, BlockPos pos) {
+            return this.level == level && this.pos.equals(pos);
         }
     }
 }

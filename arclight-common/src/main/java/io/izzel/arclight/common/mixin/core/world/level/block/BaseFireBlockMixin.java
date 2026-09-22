@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
+import io.izzel.arclight.common.mod.util.FireDurationContext;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.BlockPos;
@@ -32,11 +33,14 @@ public class BaseFireBlockMixin {
         Bukkit.getPluginManager().callEvent(event);
 
         if (!event.isCancelled()) {
-            if (event.getDuration() != 8.0F) {
-                applier.runBefore(effect, e -> e.igniteForSeconds(event.getDuration()));
-            }
+            applier.runBefore(effect, e -> FireDurationContext.set(e, event.getDuration()));
             DecorationOps.callsite().invoke(applier, effect);
         }
+    }
+
+    @Decorate(method = "fireIgnite", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;igniteForSeconds(F)V"))
+    private static void arclight$fireIgniteDuration(Entity entity, float seconds) throws Throwable {
+        DecorationOps.callsite().invoke(entity, FireDurationContext.consume(entity, seconds));
     }
 
     @Redirect(method = "onPlace", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;removeBlock(Lnet/minecraft/core/BlockPos;Z)Z"))

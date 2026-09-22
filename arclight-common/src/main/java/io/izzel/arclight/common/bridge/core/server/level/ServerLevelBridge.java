@@ -12,6 +12,10 @@ import net.minecraft.world.level.storage.LevelStorageSource;
 
 public interface ServerLevelBridge extends WorldBridge {
 
+    net.minecraft.world.level.storage.PrimaryLevelData bridge$getPrimaryLevelData();
+
+    boolean bridge$createExplosion(Entity source, double x, double y, double z, float power, boolean fire, net.minecraft.world.level.Level.ExplosionInteraction interaction);
+
     <T extends ParticleOptions> int bridge$sendParticles(T type, double posX, double posY, double posZ, int particleCount, double xOffset, double yOffset, double zOffset, double speed, boolean force);
 
     void bridge$pushStrikeLightningCause(LightningStrikeEvent.Cause cause);

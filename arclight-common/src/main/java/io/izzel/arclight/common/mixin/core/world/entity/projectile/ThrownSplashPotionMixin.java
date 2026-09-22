@@ -34,20 +34,21 @@ public abstract class ThrownSplashPotionMixin extends ThrownPotionMixin {
      * @reason Bukkit PotionSplashEvent
      */
     @Overwrite
-    public void method_67148(ServerLevel level, ItemStack stack, HitResult hitResult) {
+    public void onHitAsPotion(ServerLevel level, ItemStack stack, HitResult hitResult) {
         PotionContents potionContents = stack.getOrDefault(net.minecraft.core.component.DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
         float scale = stack.getOrDefault(net.minecraft.core.component.DataComponents.POTION_DURATION_SCALE, 1.0F);
         Iterable<MobEffectInstance> effects = potionContents.getAllEffects();
-        AABB hitBox = this.getBoundingBox().expandTowards(hitResult.getLocation().subtract(this.position())).inflate(4.0, 2.0, 4.0);
+        AABB hitBox = this.getBoundingBox().move(hitResult.getLocation().subtract(this.position()));
         AABB searchBox = hitBox.inflate(4.0, 2.0, 4.0);
         List<LivingEntity> entities = this.level().getEntitiesOfClass(LivingEntity.class, searchBox);
+        float margin = ProjectileUtil.computeMargin((ThrownSplashPotion) (Object) this);
         Map<org.bukkit.entity.LivingEntity, Double> affected = new HashMap<>();
         if (!entities.isEmpty()) {
             for (LivingEntity entityLiving : entities) {
                 if (!entityLiving.isAffectedByPotions()) {
                     continue;
                 }
-                double distance = hitBox.distanceToSqr(entityLiving.getBoundingBox().inflate(ProjectileUtil.computeMargin(entityLiving)));
+                double distance = hitBox.distanceToSqr(entityLiving.getBoundingBox().inflate(margin));
                 if (distance >= 16.0) {
                     continue;
                 }
@@ -56,8 +57,9 @@ public abstract class ThrownSplashPotionMixin extends ThrownPotionMixin {
             }
         }
         PotionSplashEvent event = CraftEventFactory.callPotionSplashEvent((ThrownSplashPotion) (Object) this, hitResult, affected);
-        if (!event.isCancelled()) {
+        if (!event.isCancelled() && !entities.isEmpty()) {
             Entity owner = this.getOwner();
+            Entity effectSource = ((ThrownSplashPotion) (Object) this).getEffectSource();
             for (org.bukkit.entity.LivingEntity victim : event.getAffectedEntities()) {
                 if (!(victim instanceof CraftLivingEntity)) {
                     continue;
@@ -82,7 +84,7 @@ public abstract class ThrownSplashPotionMixin extends ThrownPotionMixin {
                             continue;
                         }
                         ((LivingEntityBridge) entityLiving).bridge$pushEffectCause(EntityPotionEffectEvent.Cause.POTION_SPLASH);
-                        entityLiving.addEffect(scaledEffect, owner);
+                        entityLiving.addEffect(scaledEffect, effectSource);
                     }
                 }
             }

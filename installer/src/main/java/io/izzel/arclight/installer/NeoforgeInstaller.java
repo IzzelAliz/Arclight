@@ -80,24 +80,31 @@ public class NeoforgeInstaller {
         String dist = String.format("neoforge-%s-installer.jar", info.installer.neoforge);
         var installerFuture = ForgeLikeProvider.downloadInstaller(coord, dist, info.installer.neoforgeHash, minecraftData, info, pool, logger);
         var serverFuture = minecraftData.thenCompose(data -> MinecraftProvider.reportSupply(pool, logger).apply(
-            new FileDownloader(String.format(data.serverUrl(), info.installer.minecraft),
-                String.format("libraries/net/minecraft/server/%1$s/server-%1$s.jar", info.installer.minecraft), data.serverHash())
+            () -> data.downloadServer(String.format("libraries/net/minecraft/server/%1$s/server-%1$s.jar", info.installer.minecraft))
         ));
         return new CompletableFuture[]{installerFuture, serverFuture};
     }
 
     private static boolean forgeClasspathMissing(Path path) throws Exception {
-        for (String arg : Files.lines(path).toList()) {
-            if (arg.startsWith("-p ")) {
-                var modules = arg.substring(2).trim();
-                if (!Arrays.stream(modules.split(File.pathSeparator)).map(Paths::get).allMatch(Files::exists)) {
-                    return true;
+        var args = Files.readAllLines(path);
+        for (int i = 0; i < args.size(); i++) {
+            String arg = args.get(i).trim();
+            String classpath = null;
+            for (String flag : List.of("-p", "--module-path", "-classpath", "-cp", "--class-path")) {
+                if (arg.equals(flag)) {
+                    if (++i >= args.size()) return true;
+                    classpath = args.get(i).trim();
+                    break;
+                } else if (arg.startsWith(flag + " ")) {
+                    classpath = arg.substring(flag.length()).trim();
+                    break;
                 }
-            } else if (arg.startsWith("-DlegacyClassPath")) {
-                var classpath = arg.substring("-DlegacyClassPath=".length()).trim();
-                if (!Arrays.stream(classpath.split(File.pathSeparator)).map(Paths::get).allMatch(Files::exists)) {
-                    return true;
-                }
+            }
+            if (arg.startsWith("-DlegacyClassPath=")) {
+                classpath = arg.substring("-DlegacyClassPath=".length()).trim();
+            }
+            if (classpath != null && !Arrays.stream(classpath.split(File.pathSeparator)).map(Paths::get).allMatch(Files::exists)) {
+                return true;
             }
         }
         return false;
@@ -177,8 +184,23 @@ public class NeoforgeInstaller {
         return Map.entry(Objects.requireNonNull(mainClass, "No main class found"), userArgs);
     }
 
-    private static void addLegacyClassPath(String classpath, Path self, InstallInfo installInfo, List<String> merges) {
-        System.setProperty("legacyClassPath", buildLegacyClassPath(classpath, self, installInfo, merges));
+    private static void addLegacyClassPath(String classpath, Path self, InstallInfo installInfo, List<String> merges) throws IOException {
+        var launchClasspath = buildLegacyClassPath(classpath, self, installInfo, merges);
+        var paths = Arrays.stream(launchClasspath.split(File.pathSeparator)).map(Paths::get).toList();
+        var urls = new URL[paths.size()];
+        for (int i = 0; i < paths.size(); i++) {
+            urls[i] = paths.get(i).toUri().toURL();
+        }
+        // FML 10 uses an ordinary classpath, not BootstrapLauncher's legacyClassPath.
+        // Keep classes AND service resources in the same non-platform loader: the JDK
+        // ServiceLoader treats the platform loader specially and skips classpath providers.
+        // Include the original Arclight jar (without renaming it) for hook discovery.
+        var loader = new URLClassLoader("arclight-neoforge", urls, ClassLoader.getPlatformClassLoader());
+        System.setProperty("legacyClassPath", launchClasspath);
+        System.setProperty("java.class.path", launchClasspath);
+        // FML takes this as StartupArgs.parentClassLoader. Do not close it with the
+        // temporary installer loader: it is needed for the lifetime of the server.
+        Thread.currentThread().setContextClassLoader(loader);
     }
 
     private static String buildLegacyClassPath(String classpath, Path self, InstallInfo installInfo, List<String> merges) {

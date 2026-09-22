@@ -1,66 +1,66 @@
 package io.izzel.arclight.boot.neoforge.mod;
 
-import cpw.mods.jarhandling.impl.JarContentsImpl;
-import io.izzel.arclight.api.Unsafe;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import net.neoforged.fml.jarcontents.CompositeJarContents;
+import net.neoforged.fml.jarcontents.JarContents;
+import net.neoforged.fml.jarmoduleinfo.JarModuleInfo;
+import net.neoforged.fml.util.ClasspathResourceUtils;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-/**
- * Filter out packages already provided by Arclight.
- * For duplicate modules, the packages will be removed
- * before modules are removed.
- * For duplicate packages in non-duplicate library modules,
- * only the packages will be removed.
- * For duplicate packages in non-duplicate mod modules,
- * the packages won't be removed
- * Duplicated shaded mods are like modules, and are removed
- * later by JarInJarFilter.
- */
-public class ArclightJarContentsImplFilter {
-    // Use unsafe to bypass JPMS accessibility check
-    private static final MethodHandles.Lookup LOOKUP = Unsafe.lookup();
-    private static VarHandle PACKAGES;
-    private static Set<String> serviceLayerPackages;
-    private static final Logger LOGGER = LogManager.getLogger("Arclight");
+/** Masks parent-provided library packages using FML10's supported content filters. */
+public final class ArclightJarContentsImplFilter {
 
-    static {
-        try {
-            PACKAGES = LOOKUP.findVarHandle(JarContentsImpl.class, "packages", Set.class);
-        } catch (ReflectiveOperationException e) {
-            LOGGER.error("Arclight failed to filter JarContents. This may cause dependency conflicts with some mods!", e);
-        }
-        serviceLayerPackages = ArclightJarContentsImplFilter.class
-                .getModule()
-                .getLayer()
-                .modules()
-                .stream()
-                .flatMap(it -> it.getPackages().stream())
-                .collect(Collectors.toSet());
+    private record ParentContent(Set<String> packages, Set<String> modules) {}
+
+    private static final class ParentHolder {
+        static final ParentContent CONTENT = scanParentContent();
     }
 
-    /*
-     * The result of getPackages() is cached
-     * Through modifying the cache, we modify the result of getPackages()
-     * Note: ModJarMetadata use getPackagesExcluding(String...),
-     * which bypass the cache. This won't work for ModJarMetadata.
-     */
-    public static void filter(JarContentsImpl impl) {
-        if (PACKAGES != null) {
-            impl.getPackages();
-            Set<String> raw = (Set<String>)PACKAGES.get(impl);
-            Set<String> result = raw.stream()
-                    .filter(ArclightJarContentsImplFilter::test)
-                    .collect(Collectors.toSet());
-            PACKAGES.set(impl, result);
+    private static ParentContent scanParentContent() {
+        var packages = new HashSet<String>();
+        var modules = new HashSet<String>();
+        ModuleLayer.boot().modules().forEach(module -> {
+            packages.addAll(module.getPackages());
+            modules.add(module.getName());
+        });
+        // FML10 services live on a plain URL classpath, not in a service ModuleLayer.
+        // Scan the service loader (not the TCCL, which later becomes the game loader).
+        for (var path : ClasspathResourceUtils.getAllClasspathItems(ArclightJarContentsImplFilter.class.getClassLoader())) {
+            if (!Files.exists(path)) continue;
+            try (var contents = JarContents.ofPath(path)) {
+                var metadata = JarModuleInfo.from(contents);
+                modules.add(metadata.name());
+                // Classpath jars may have duplicate/invalid JPMS service declarations;
+                // scanning packages does not need to build their module descriptors.
+                packages.addAll(JarModuleInfo.scanModulePackages(contents));
+            } catch (IOException e) {
+                throw new UncheckedIOException("Cannot inspect parent classpath " + path, e);
+            }
         }
+        return new ParentContent(Set.copyOf(packages), Set.copyOf(modules));
+    }
+
+    public static boolean providesModule(String name) {
+        return ParentHolder.CONTENT.modules().contains(name);
     }
 
     public static boolean test(String pkg) {
-        return !serviceLayerPackages.contains(pkg);
+        return !ParentHolder.CONTENT.packages().contains(pkg);
+    }
+
+    public static JarContents filter(JarContents contents) {
+        return new CompositeJarContents(List.of(contents), List.of(path -> {
+            // Rebuild library descriptors from the remaining content. An explicit
+            // descriptor may still export/provide packages which were just removed.
+            if (path.equals("module-info.class") || path.startsWith("META-INF/versions/") && path.endsWith("/module-info.class")) return false;
+            if (path.startsWith("META-INF/")) return !path.startsWith("META-INF/services/");
+            int slash = path.lastIndexOf('/');
+            return slash < 0 || test(path.substring(0, slash).replace('/', '.'));
+        }));
     }
 }

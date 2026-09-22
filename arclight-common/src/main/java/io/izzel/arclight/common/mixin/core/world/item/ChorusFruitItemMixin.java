@@ -1,24 +1,28 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
-import io.izzel.arclight.common.bridge.core.server.network.ServerGamePacketListenerImplBridge;
-import net.minecraft.server.level.ServerPlayer;
+import io.izzel.arclight.common.mod.util.ChorusTeleportContext;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.consume_effects.TeleportRandomlyConsumeEffect;
-import net.minecraft.world.level.Level;
-import org.bukkit.event.player.PlayerTeleportEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(TeleportRandomlyConsumeEffect.class)
 public class ChorusFruitItemMixin {
-
-    @Inject(method = "apply", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;randomTeleport(DDDZ)Z"))
-    private void arclight$teleportCause(Level level, ItemStack itemStack, LivingEntity livingEntity, CallbackInfoReturnable<Boolean> cir) {
-        if (livingEntity instanceof ServerPlayer p) {
-            ((ServerGamePacketListenerImplBridge) p.connection).bridge$pushTeleportCause(PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT);
+    @Decorate(method = "apply", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;randomTeleport(DDDZ)Z"))
+    private boolean arclight$randomTeleport(LivingEntity user, double x, double y, double z, boolean showParticles) throws Throwable {
+        ChorusTeleportContext.Scope scope = ChorusTeleportContext.push(user);
+        boolean result;
+        try {
+            result = (boolean) DecorationOps.callsite().invoke(user, x, y, z, showParticles);
+        } finally {
+            ChorusTeleportContext.pop(scope);
         }
+        // Cancel after releasing the scope: Decorate early-return is bytecode control flow.
+        if (scope.cancelled()) {
+            return (boolean) DecorationOps.cancel().invoke(false);
+        }
+        return result;
     }
 }

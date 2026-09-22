@@ -1,8 +1,11 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -33,6 +36,12 @@ public abstract class EggItemMixin extends Item {
     private Projectile arclight$updateIfFail(Projectile.ProjectileFactory<? extends Projectile> factory, ServerLevel serverLevel, ItemStack itemStack, LivingEntity livingEntity, float xRot, float velocity, float inaccuracy,
                                              Level worldIn, Player playerIn, InteractionHand handIn) throws Throwable {
         var projectile = (Projectile) DecorationOps.callsite().invoke(factory, serverLevel, itemStack, livingEntity, xRot, velocity, inaccuracy);
+        if (projectile.isRemoved()) {
+            if (playerIn instanceof ServerPlayer) {
+                ((ServerPlayerBridge) playerIn).bridge$getBukkitEntity().updateInventory();
+            }
+            return (Projectile) DecorationOps.cancel().invoke((InteractionResult) InteractionResult.FAIL);
+        }
         worldIn.playSound(null, playerIn.getX(), playerIn.getY(), playerIn.getZ(), SoundEvents.EGG_THROW, SoundSource.PLAYERS, 0.5F, 0.4F / (worldIn.getRandom().nextFloat() * 0.4F + 0.8F));
         return projectile;
     }

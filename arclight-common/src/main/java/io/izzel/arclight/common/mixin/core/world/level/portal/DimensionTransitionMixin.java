@@ -14,13 +14,13 @@ import org.spongepowered.asm.mixin.Unique;
 public class DimensionTransitionMixin implements DimensionTransitionBridge {
 
     @ShadowConstructor
-    public void arclight$constructor(ServerLevel newLevel, Vec3 pos, Vec3 speed, float yRot, float xRot, boolean missingRespawnBlock, TeleportTransition.PostTeleportTransition postTeleportTransition) {
+    public void arclight$constructor(ServerLevel newLevel, Vec3 pos, Vec3 speed, float yRot, float xRot, boolean missingRespawnBlock, boolean asPassenger, java.util.Set<net.minecraft.world.entity.Relative> relatives, TeleportTransition.PostTeleportTransition postTeleportTransition) {
         throw new RuntimeException();
     }
 
     @CreateConstructor
     public void arclight$constructor(ServerLevel newLevel, Vec3 pos, Vec3 speed, float yRot, float xRot, boolean missingRespawnBlock, TeleportTransition.PostTeleportTransition postTeleportTransition, PlayerTeleportEvent.TeleportCause cause) {
-        arclight$constructor(newLevel, pos, speed, yRot, xRot, missingRespawnBlock, postTeleportTransition);
+        arclight$constructor(newLevel, pos, speed, yRot, xRot, missingRespawnBlock, false, java.util.Set.of(), postTeleportTransition);
         this.arclight$cause = cause;
     }
 

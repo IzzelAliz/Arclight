@@ -73,7 +73,7 @@ public abstract class VineBlockMixin extends BlockMixin {
 
                 }
             } else {
-                if (direction == Direction.UP && pos.getY() < worldIn.getMaxY() - 1) {
+                if (direction == Direction.UP && pos.getY() < worldIn.getMaxY()) {
                     if (this.canSupportAtFace(worldIn, pos, direction)) {
                         CraftEventFactory.handleBlockGrowEvent(worldIn, pos, state.setValue(UP, Boolean.TRUE), 2);
                         return;

@@ -50,6 +50,9 @@ public interface LivingEntityBridge extends EntityBridge {
 
     Optional<EntityPotionEffectEvent.Cause> bridge$getEffectCause();
 
+    /** Fires the one Bukkit pre-removal decision for a bulk-clear candidate. */
+    boolean bridge$willRemoveEffect(MobEffectInstance effect);
+
     void bridge$pushKnockbackCause(Entity attacker, EntityKnockbackEvent.KnockbackCause cause);
 
     @Override

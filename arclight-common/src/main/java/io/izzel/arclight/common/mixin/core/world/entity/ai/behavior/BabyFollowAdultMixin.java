@@ -1,7 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.ai.behavior;
 
 import net.minecraft.util.valueproviders.UniformInt;
-import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.behavior.BabyFollowAdult;
 import net.minecraft.world.entity.ai.behavior.EntityTracker;
@@ -26,29 +25,29 @@ public abstract class BabyFollowAdultMixin {
      * @reason
      */
     @Overwrite
-    public static OneShot<AgeableMob> create(UniformInt p_259321_, Function<LivingEntity, Float> p_259190_) {
-        return BehaviorBuilder.create((p_258331_) -> {
-            return p_258331_.group(p_258331_.present(MemoryModuleType.NEAREST_VISIBLE_ADULT), p_258331_.registered(MemoryModuleType.LOOK_TARGET), p_258331_.absent(MemoryModuleType.WALK_TARGET)).apply(p_258331_, (p_258317_, p_258318_, p_258319_) -> {
-                return (p_258326_, p_258327_, p_258328_) -> {
-                    if (!p_258327_.isBaby()) {
+    public static OneShot<LivingEntity> create(UniformInt followRange, Function<LivingEntity, Float> speedModifier, MemoryModuleType<? extends LivingEntity> nearestVisibleType, boolean targetEye) {
+        return BehaviorBuilder.create((behaviorbuilderInstance) -> {
+            return behaviorbuilderInstance.group(behaviorbuilderInstance.present(nearestVisibleType), behaviorbuilderInstance.registered(MemoryModuleType.LOOK_TARGET), behaviorbuilderInstance.absent(MemoryModuleType.WALK_TARGET)).apply(behaviorbuilderInstance, (memoryAccessor, lookTarget, walkTarget) -> {
+                return (serverLevel, baby, gameTime) -> {
+                    if (!baby.isBaby()) {
                         return false;
                     } else {
-                        LivingEntity ageablemob = p_258331_.get(p_258317_);
-                        if (p_258327_.closerThan(ageablemob, (double) (p_259321_.getMaxValue() + 1)) && !p_258327_.closerThan(ageablemob, (double) p_259321_.getMinValue())) {
+                        LivingEntity adult = behaviorbuilderInstance.get(memoryAccessor);
+                        if (baby.closerThan(adult, (double) (followRange.getMaxValue() + 1)) && !baby.closerThan(adult, (double) followRange.getMinValue())) {
                             // CraftBukkit start
-                            EntityTargetLivingEntityEvent event = CraftEventFactory.callEntityTargetLivingEvent(p_258327_, ageablemob, EntityTargetEvent.TargetReason.FOLLOW_LEADER);
+                            EntityTargetLivingEntityEvent event = CraftEventFactory.callEntityTargetLivingEvent(baby, adult, EntityTargetEvent.TargetReason.FOLLOW_LEADER);
                             if (event.isCancelled()) {
                                 return false;
                             }
                             if (event.getTarget() == null) {
-                                p_258317_.erase();
+                                memoryAccessor.erase();
                                 return true;
                             }
-                            ageablemob = ((CraftLivingEntity) event.getTarget()).getHandle();
+                            adult = ((CraftLivingEntity) event.getTarget()).getHandle();
                             // CraftBukkit end
-                            WalkTarget walktarget = new WalkTarget(new EntityTracker(ageablemob, false), p_259190_.apply(p_258327_), p_259321_.getMinValue() - 1);
-                            p_258318_.set(new EntityTracker(ageablemob, true));
-                            p_258319_.set(walktarget);
+                            WalkTarget target = new WalkTarget(new EntityTracker(adult, targetEye, targetEye), speedModifier.apply(baby), followRange.getMinValue() - 1);
+                            lookTarget.set(new EntityTracker(adult, true, targetEye));
+                            walkTarget.set(target);
                             return true;
                         } else {
                             return false;

@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity.decoration;
 
-import io.izzel.arclight.common.mixin.core.world.entity.decoration.BlockAttachedEntityMixin;
+import net.minecraft.world.entity.decoration.BlockAttachedEntity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.Level;
 import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.server.level.ServerPlayer;
@@ -17,7 +19,11 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 @Mixin(LeashFenceKnotEntity.class)
-public abstract class LeashFenceKnotEntityMixin extends BlockAttachedEntityMixin {
+public abstract class LeashFenceKnotEntityMixin extends BlockAttachedEntity {
+
+    protected LeashFenceKnotEntityMixin(EntityType<? extends BlockAttachedEntity> type, Level level) {
+        super(type, level);
+    }
 
     /**
      * @author IzzelAliz
@@ -30,7 +36,7 @@ public abstract class LeashFenceKnotEntityMixin extends BlockAttachedEntityMixin
             return InteractionResult.SUCCESS;
         }
         if (entityhuman.getItemInHand(enumhand).is(Items.SHEARS)) {
-            InteractionResult interactionresult = InteractionResult.PASS;
+            InteractionResult interactionresult = super.interact(entityhuman, enumhand);
 
             if (interactionresult instanceof InteractionResult.Success interactionresult_success && interactionresult_success.wasItemInteraction()) {
                 return interactionresult;
@@ -54,13 +60,20 @@ public abstract class LeashFenceKnotEntityMixin extends BlockAttachedEntityMixin
         boolean flag1 = false;
         if (!flag && !entityhuman.isSecondaryUseActive()) {
             for (var leashable : Leashable.leashableLeashedTo((LeashFenceKnotEntity) (Object) this)) {
-                if (leashable instanceof Entity entity) {
-                    if (CraftEventFactory.callPlayerUnleashEntityEvent(entity, entityhuman, enumhand).isCancelled()) {
-                        continue;
+                if (leashable.canHaveALeashAttachedTo(entityhuman)) {
+                    if (leashable instanceof Entity entity) {
+                        if (CraftEventFactory.callPlayerUnleashEntityEvent(entity, entityhuman, enumhand).isCancelled()) {
+                            continue;
+                        }
+                        if (CraftEventFactory.callPlayerLeashEntityEvent(entity, (LeashFenceKnotEntity) (Object) this, entityhuman, enumhand).isCancelled()) {
+                            ((ServerPlayer) entityhuman).connection.send(new ClientboundSetEntityLinkPacket(entity, leashable.getLeashHolder()));
+                            flag1 = true;
+                            continue;
+                        }
                     }
+                    leashable.setLeashedTo(entityhuman, true);
+                    flag1 = true;
                 }
-                leashable.setLeashedTo(entityhuman, true);
-                flag1 = true;
             }
         }
         if (flag || flag1) {
@@ -68,6 +81,6 @@ public abstract class LeashFenceKnotEntityMixin extends BlockAttachedEntityMixin
             this.playSound(SoundEvents.LEAD_TIED, 1.0F, 1.0F);
             return InteractionResult.SUCCESS;
         }
-        return InteractionResult.PASS;
+        return super.interact(entityhuman, enumhand);
     }
 }

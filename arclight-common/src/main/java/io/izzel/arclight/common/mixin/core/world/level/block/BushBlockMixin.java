@@ -6,7 +6,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.BushBlock;
 import net.minecraft.world.level.block.VegetationBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
@@ -21,9 +20,6 @@ public abstract class BushBlockMixin extends BlockMixin {
     public BlockState arclight$blockFade(Block block, BlockState state, LevelReader level,
                                          ScheduledTickAccess scheduledTickAccess, BlockPos pos, Direction direction,
                                          BlockPos neighborPos, BlockState neighborState, RandomSource random) {
-        if (!((Object) this instanceof BushBlock)) {
-            return block.defaultBlockState();
-        }
         if (!(level instanceof net.minecraft.world.level.LevelAccessor levelAccessor)) {
             return block.defaultBlockState();
         }

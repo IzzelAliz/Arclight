@@ -1,117 +1,246 @@
 package io.izzel.arclight.neoforge.mixin.neoforge.items;
 
-import com.google.common.base.Preconditions;
 import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
-import io.izzel.arclight.mixin.Decorate;
-import io.izzel.arclight.mixin.DecorationOps;
-import io.izzel.arclight.neoforge.mod.util.DelegatedContainer;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.Container;
+import io.izzel.arclight.neoforge.mod.util.ResourceHandlerContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.Hopper;
 import net.minecraft.world.level.block.entity.HopperBlockEntity;
-import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.ResourceHandlerUtil;
+import net.neoforged.neoforge.transfer.item.ItemResource;
 import net.neoforged.neoforge.transfer.item.VanillaInventoryCodeHooks;
-import org.apache.commons.lang3.tuple.Pair;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.inventory.CraftInventory;
 import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
-import org.bukkit.event.inventory.HopperInventorySearchEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
-import org.bukkit.inventory.Inventory;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.util.Optional;
+import org.spongepowered.asm.mixin.Overwrite;
 
 @Mixin(VanillaInventoryCodeHooks.class)
 public abstract class VanillaInventoryCodeHooksMixin {
 
-    @Inject(method = "getItemHandlerAt", at = @At("RETURN"), remap = false)
-    private static void arclight$recordResult(Level worldIn, double x, double y, double z, Direction side, CallbackInfoReturnable<Optional<Pair<IItemHandler, Object>>> cir) {
-        if (cir.getReturnValue().isPresent()) {
-            DelegatedContainer.recordLastHandler();
+    /**
+     * Applies Bukkit's push event contract to NeoForge's transactional-handler path.
+     *
+     * <p>Spigot removes the offered source item before calling the event, then puts the event
+     * stack into its destination and only restores the offered source item if nothing was
+     * accepted. In particular, Bukkit does not impose conservation between the offered and
+     * event-rewritten stacks: {@code IRON x1 -> GOLD x2} is valid. Just as Spigot's
+     * {@code origCount - remainderCount} accounting does, complete placement consumes only the original offer. Partial placement charges
+     * the accepted replacement amount, then continues the native slot scan.</p>
+     */
+    @Overwrite(remap = false)
+    public static boolean insertHook(HopperBlockEntity hopper, ResourceHandler<ItemResource> itemHandler) {
+        if (ResourceHandlerUtil.isFull(itemHandler)) {
+            return false;
         }
+
+        for (int i = 0, size = hopper.getContainerSize(); i < size; i++) {
+            ItemStack hopperItem = hopper.getItem(i);
+            if (hopperItem.isEmpty()) {
+                continue;
+            }
+
+            ItemStack originalSlotContents = hopperItem.copy();
+            ItemStack removed = hopper.removeItem(i, 1);
+            ItemStack remainingAfterRemoval = hopper.getItem(i).copy();
+            InventoryMoveItemEvent event = new InventoryMoveItemEvent(
+                ((IInventoryBridge) hopper).getOwnerInventory(),
+                CraftItemStack.asCraftMirror(removed).clone(),
+                ResourceHandlerContainer.getOwnerInventory(itemHandler), true
+            );
+            // Bukkit callbacks must not run under a root handler transaction: a listener may
+            // mutate the ResourceHandlerContainer or invoke another handler transfer.
+            try {
+                Bukkit.getPluginManager().callEvent(event);
+            } catch (RuntimeException | Error exception) {
+                arclight$restoreUnmovedOffer(hopper, i, originalSlotContents, remainingAfterRemoval);
+                throw exception;
+            }
+            if (event.isCancelled()) {
+                arclight$restoreUnmovedOffer(hopper, i, originalSlotContents, remainingAfterRemoval);
+                hopper.setCooldown(((WorldBridge) hopper.getLevel()).bridge$spigotConfig().hopperTransfer);
+                return false;
+            }
+
+            ItemStack requested = CraftItemStack.asNMSCopy(event.getItem());
+            if (requested.isEmpty() || requested.getCount() <= 0) {
+                arclight$restoreUnmovedOffer(hopper, i, originalSlotContents, remainingAfterRemoval);
+                continue;
+            }
+
+            if (!ItemStack.matches(hopper.getItem(i), remainingAfterRemoval)) {
+                // A listener changed the live source slot. Do not overwrite that mutation with a
+                // stale pre-event snapshot or transfer an item we can no longer charge safely.
+                continue;
+            }
+
+            // An attempt is independently transactional. A partial insert is committed just as
+            // Bukkit commits a non-empty remainder transfer; a zero insert is rolled back before
+            // the native slot scan continues.
+            try (var transaction = Transaction.openRoot()) {
+                int inserted = itemHandler.insert(ItemResource.of(requested), requested.getCount(), transaction);
+                if (inserted <= 0) {
+                    arclight$restoreUnmovedOffer(hopper, i, originalSlotContents, remainingAfterRemoval);
+                    continue;
+                }
+                boolean complete = inserted == requested.getCount();
+                if (!complete) {
+                    arclight$chargePushSource(hopper, i, originalSlotContents, remainingAfterRemoval, inserted);
+                }
+                transaction.commit();
+                if (complete) {
+                    return true;
+                }
+            } catch (RuntimeException | Error exception) {
+                arclight$restoreUnmovedOffer(hopper, i, originalSlotContents, remainingAfterRemoval);
+                throw exception;
+            }
+        }
+        return false;
     }
 
-    @Decorate(method = "insertHook", at = @At(value = "INVOKE", target = "Lnet/neoforged/neoforge/items/VanillaInventoryCodeHooks;getAttachedItemHandler(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Direction;)Ljava/util/Optional;"))
-    private static Optional<Pair<IItemHandler, Object>> arclight$searchTo(Level level, BlockPos pos, Direction direction, HopperBlockEntity hopperBlockEntity) throws Throwable {
-        final var handler = (Optional<Pair<IItemHandler, Object>>) DecorationOps.callsite().invoke(level, pos, direction);
-        final var hopper = CraftBlock.at(level, pos);
-        final var searchBlock = CraftBlock.at(level, pos.relative(hopperBlockEntity.facing));
-        final var container = handler.map(DelegatedContainer::new).orElse(null);
-        return arclight$runHopperInventorySearchEvent(container, hopper, searchBlock, HopperInventorySearchEvent.ContainerType.DESTINATION);
-    }
+    /**
+     * Applies Bukkit's pull event contract while retaining NeoForge's transactional source
+     * extraction. Placement is calculated across all hopper slots before extraction, so a
+     * rewritten event stack may split/merge just like Spigot's {@code addItem} path.
+     */
+    @Overwrite(remap = false)
+    public static boolean extractHook(Hopper hopper, ResourceHandler<ItemResource> itemHandler) {
+        for (int index = 0, size = itemHandler.size(); index < size; index++) {
+            ItemResource itemResource = itemHandler.getResource(index);
+            if (itemResource.isEmpty() || itemHandler.getAmountAsInt(index) <= 0) {
+                continue;
+            }
 
-    @Decorate(method = {"lambda$dropperInsertHook$1", "lambda$insertHook$2", "lambda$insertCrafterOutput$3"}, at = @At(value = "INVOKE", target = "Lnet/neoforged/neoforge/items/VanillaInventoryCodeHooks;putStackInInventoryAllSlots(Lnet/minecraft/world/level/block/entity/BlockEntity;Ljava/lang/Object;Lnet/neoforged/neoforge/items/IItemHandler;Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/item/ItemStack;"))
-    private static ItemStack arclight$sourceInitiatedMoveItem(BlockEntity source, Object destination, IItemHandler instance, ItemStack stack) throws Throwable {
-        if (!stack.isEmpty()) {
-            CraftItemStack original = CraftItemStack.asCraftMirror(stack);
-
-            Inventory destInventory = DelegatedContainer.getOwnerInventory(destination, instance);
-            InventoryMoveItemEvent event = new InventoryMoveItemEvent(((IInventoryBridge) source).getOwnerInventory(), original.clone(), destInventory, true);
+            // The upstream handler hook offers exactly one resource. Bukkit listeners may change
+            // this stack's item and/or count, but the source remains charged for that offer only.
+            ItemStack candidate = itemResource.toStack();
+            InventoryMoveItemEvent event = new InventoryMoveItemEvent(
+                ResourceHandlerContainer.getOwnerInventory(itemHandler),
+                CraftItemStack.asCraftMirror(candidate).clone(),
+                ((IInventoryBridge) hopper).getOwnerInventory(), false
+            );
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
-                if (source instanceof HopperBlockEntity hopper) {
-                    hopper.setCooldown(((WorldBridge) source.getLevel()).bridge$spigotConfig().hopperTransfer);
+                if (hopper instanceof HopperBlockEntity blockEntity) {
+                    blockEntity.setCooldown(((WorldBridge) blockEntity.getLevel()).bridge$spigotConfig().hopperTransfer);
                 }
-                // Delay hopper checks
-                // Arclight: we can return stack directly so we use vanilla revert logic and eventually return false if none is transferred
-                // Arclight: but CraftBukkit makes it delayed directly, don't know why, so have to catch the index to revert change?
-                return stack;
+                return false;
             }
-            stack = CraftItemStack.asNMSCopy(event.getItem());
-        }
-        return (ItemStack) DecorationOps.callsite().invoke(source, destination, instance, stack);
-    }
 
-    @Decorate(method = "extractHook", at = @At(value = "INVOKE", target = "Lnet/neoforged/neoforge/items/VanillaInventoryCodeHooks;getSourceItemHandler(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/block/entity/Hopper;)Ljava/util/Optional;"))
-    private static Optional<Pair<IItemHandler, Object>> arclight$searchFrom(Level level, Hopper hopper) throws Throwable {
-        final var handler = (Optional<Pair<IItemHandler, Object>>) DecorationOps.callsite().invoke(level, hopper);
-        final var blockPos = BlockPos.containing(hopper.getLevelX(), hopper.getLevelY(), hopper.getLevelZ());
-        final var hopperBlock = CraftBlock.at(level, blockPos);
-        final var containerBlock = CraftBlock.at(level, blockPos.above());
-        final var container = handler.map(DelegatedContainer::new).orElse(null);
-        return arclight$runHopperInventorySearchEvent(container, hopperBlock, containerBlock, HopperInventorySearchEvent.ContainerType.SOURCE);
-    }
-
-    @Decorate(method = "lambda$extractHook$0", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/neoforged/neoforge/items/IItemHandler;extractItem(IIZ)Lnet/minecraft/world/item/ItemStack;"))
-    private static ItemStack arclight$nonSourceInitiatedMoveItem(IItemHandler instance, int slot, int expected, boolean simulate, Hopper hopper, Pair<IItemHandler, Object> sourcePair) throws Throwable {
-        Preconditions.checkArgument(simulate, "Should be injected at simulate=true");
-        ItemStack stack = (ItemStack) DecorationOps.callsite().invoke(instance, slot, expected, simulate);
-        if (stack.isEmpty()) {
-            return stack;
-        }
-        Object destination = sourcePair.getRight();
-        CraftItemStack original = CraftItemStack.asCraftMirror(stack);
-        Inventory sourceInventory = DelegatedContainer.getOwnerInventory(destination, instance);
-
-        InventoryMoveItemEvent event = new InventoryMoveItemEvent(sourceInventory, original.clone(), ((IInventoryBridge) hopper).getOwnerInventory(), false);
-        Bukkit.getPluginManager().callEvent(event);
-        if (event.isCancelled()) {
-            if (hopper instanceof HopperBlockEntity entity) {
-                entity.setCooldown(((WorldBridge) entity.getLevel()).bridge$spigotConfig().hopperTransfer);
+            ItemStack requested = CraftItemStack.asNMSCopy(event.getItem());
+            if (requested.isEmpty() || requested.getCount() <= 0) {
+                continue;
             }
-            // Delay hopper checks
-            // Arclight: we can return stack directly so we use vanilla revert logic and eventually return false if none is transferred
-            // Arclight: but CraftBukkit makes it delayed directly, don't know why, so have to catch the index to revert change?
-            return ItemStack.EMPTY;
+            int accepted = arclight$hopperAcceptance(hopper, requested);
+            if (accepted <= 0) {
+                continue;
+            }
+
+            // A listener can mutate the event-facing handler inventory. Re-read the live source
+            // after event dispatch. Like Spigot, charge the source by event amount minus hopper
+            // remainder, clamped to the source resource actually still present.
+            ItemResource liveResource = itemHandler.getResource(index);
+            int liveAmount = liveResource.isEmpty() ? 0 : itemHandler.getAmountAsInt(index);
+            int sourceCharge = Math.min(accepted == requested.getCount() ? 1 : accepted, liveAmount);
+            if (sourceCharge <= 0) {
+                continue;
+            }
+            try (var transaction = Transaction.openRoot()) {
+                int extracted = itemHandler.extract(index, liveResource, sourceCharge, transaction);
+                // Unlike Bukkit Containers, a generic handler can report a partial extract. Keep
+                // NeoForge's native all-or-nothing source transaction in that case; otherwise a
+                // complete rewritten destination stack could be placed for only part of its charge.
+                if (extracted != sourceCharge) {
+                    continue;
+                }
+                arclight$placeInHopper(hopper, requested, accepted);
+                transaction.commit();
+                if (accepted == requested.getCount()) {
+                    return true;
+                }
+            }
         }
-        return CraftItemStack.asNMSCopy(event.getItem());
+        return false;
     }
 
-    private static Optional<Pair<IItemHandler, Object>> arclight$runHopperInventorySearchEvent(Container inventory, CraftBlock hopper, CraftBlock searchLocation, HopperInventorySearchEvent.ContainerType containerType) {
-        var event = new HopperInventorySearchEvent((inventory != null) ? new CraftInventory(inventory) : null, containerType, hopper, searchLocation);
-        Bukkit.getServer().getPluginManager().callEvent(event);
-        CraftInventory craftInventory = (CraftInventory) event.getInventory();
-        return Optional.ofNullable(DelegatedContainer.makeItemHandlerPair(craftInventory));
+    /** Returns the amount a normal Spigot hopper destination can take across all its slots. */
+    private static int arclight$hopperAcceptance(Hopper hopper, ItemStack requested) {
+        int remaining = requested.getCount();
+        int accepted = 0;
+        int maxPerSlot = Math.min(requested.getMaxStackSize(), hopper.getMaxStackSize());
+        for (int i = 0, size = hopper.getContainerSize(); i < size && remaining > 0; i++) {
+            ItemStack destination = hopper.getItem(i);
+            if (!hopper.canPlaceItem(i, requested)) {
+                continue;
+            }
+            int capacity;
+            if (destination.isEmpty()) {
+                capacity = maxPerSlot;
+            } else if (ItemStack.isSameItemSameComponents(destination, requested)) {
+                capacity = maxPerSlot - destination.getCount();
+            } else {
+                continue;
+            }
+            int moved = Math.min(remaining, Math.max(0, capacity));
+            accepted += moved;
+            remaining -= moved;
+        }
+        return accepted;
     }
 
+    /** Places a preflighted accepted amount using the same split/merge rules as hopper addItem. */
+    private static void arclight$placeInHopper(Hopper hopper, ItemStack requested, int amount) {
+        int remaining = amount;
+        int maxPerSlot = Math.min(requested.getMaxStackSize(), hopper.getMaxStackSize());
+        for (int i = 0, size = hopper.getContainerSize(); i < size && remaining > 0; i++) {
+            ItemStack destination = hopper.getItem(i);
+            if (!hopper.canPlaceItem(i, requested)) {
+                continue;
+            }
+            int capacity;
+            if (destination.isEmpty()) {
+                capacity = maxPerSlot;
+            } else if (ItemStack.isSameItemSameComponents(destination, requested)) {
+                capacity = maxPerSlot - destination.getCount();
+            } else {
+                continue;
+            }
+            int moved = Math.min(remaining, Math.max(0, capacity));
+            if (moved <= 0) {
+                continue;
+            }
+            if (destination.isEmpty()) {
+                hopper.setItem(i, requested.copyWithCount(moved));
+            } else {
+                destination.grow(moved);
+                hopper.setItem(i, destination);
+            }
+            remaining -= moved;
+        }
+        if (remaining != 0) {
+            throw new IllegalStateException("Hopper changed after ResourceHandler transfer preflight");
+        }
+        hopper.setChanged();
+    }
+
+    /** Charges Spigot's event amount minus remainder, but never beyond the original live source. */
+    private static void arclight$chargePushSource(HopperBlockEntity hopper, int slot, ItemStack original, ItemStack expectedRemaining, int accepted) {
+        int sourceCharge = Math.min(accepted, original.getCount());
+        if (sourceCharge <= 0 || !ItemStack.matches(hopper.getItem(slot), expectedRemaining)) {
+            return;
+        }
+        ItemStack result = original.copy();
+        result.shrink(sourceCharge);
+        hopper.setItem(slot, result);
+    }
+
+    /** Avoid clobbering a listener's same-slot mutation while preserving normal Bukkit restoration. */
+    private static void arclight$restoreUnmovedOffer(HopperBlockEntity hopper, int slot, ItemStack original, ItemStack expectedRemaining) {
+        if (ItemStack.matches(hopper.getItem(slot), expectedRemaining)) {
+            hopper.setItem(slot, original);
+        }
+    }
 }

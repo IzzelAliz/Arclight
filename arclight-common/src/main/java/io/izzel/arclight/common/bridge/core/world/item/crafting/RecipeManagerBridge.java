@@ -9,4 +9,7 @@ public interface RecipeManagerBridge {
     void bridge$addRecipe(RecipeHolder<?> recipe);
 
     void bridge$clearRecipes();
+
+    default void bridge$syncModRecipeContent(net.minecraft.server.level.ServerPlayer player) {
+    }
 }

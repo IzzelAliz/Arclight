@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
+import io.izzel.arclight.common.bridge.core.world.entity.ExperienceOrbBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
@@ -26,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Optional;
 
 @Mixin(ExperienceOrb.class)
-public abstract class ExperienceOrbMixin extends EntityMixin {
+public abstract class ExperienceOrbMixin extends EntityMixin implements ExperienceOrbBridge {
 
     // @formatter:off
     @Shadow private Player followingPlayer;
@@ -34,6 +35,11 @@ public abstract class ExperienceOrbMixin extends EntityMixin {
     // @formatter:on
 
     private transient Player arclight$lastPlayer;
+
+    @Override
+    public void bridge$setValue(int value) {
+        this.setValue(value);
+    }
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;discard()V"))
     private void arclight$tickDespawn(CallbackInfo ci) {
@@ -50,7 +56,7 @@ public abstract class ExperienceOrbMixin extends EntityMixin {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/Entity;tick()V"))
+    @Inject(method = "followNearbyPlayer", at = @At("HEAD"))
     private void arclight$captureLast(CallbackInfo ci) {
         arclight$lastPlayer = this.followingPlayer;
     }
@@ -60,7 +66,8 @@ public abstract class ExperienceOrbMixin extends EntityMixin {
         arclight$lastPlayer = null;
     }
 
-    @Inject(method = "followNearbyPlayer", at = @At("RETURN"))
+    // The first three reads validate the previous target; the fourth gates attraction.
+    @Inject(method = "followNearbyPlayer", cancellable = true, at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/ExperienceOrb;followingPlayer:Lnet/minecraft/world/entity/player/Player;", opcode = Opcodes.GETFIELD, ordinal = 3))
     private void arclight$targetPlayer(CallbackInfo ci) {
         if (this.followingPlayer != arclight$lastPlayer) {
             EntityTargetLivingEntityEvent event = CraftEventFactory.callEntityTargetLivingEvent((ExperienceOrb) (Object) this, this.followingPlayer, (this.followingPlayer != null) ? EntityTargetEvent.TargetReason.CLOSEST_PLAYER : EntityTargetEvent.TargetReason.FORGOT_TARGET);
@@ -68,6 +75,7 @@ public abstract class ExperienceOrbMixin extends EntityMixin {
 
             if (event.isCancelled()) {
                 this.followingPlayer = arclight$lastPlayer;
+                ci.cancel();
             } else {
                 this.followingPlayer = (target instanceof Player) ? (Player) target : null;
             }

@@ -12,6 +12,7 @@ import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
 import net.minecraft.network.Connection;
+import net.neoforged.neoforge.network.handling.IPayloadHandler;
 import net.minecraft.network.ConnectionProtocol;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
@@ -47,6 +48,16 @@ public abstract class NetworkRegistryMixin {
         PAYLOAD_REGISTRATIONS = ImmutableMap.of(
                 ConnectionProtocol.CONFIGURATION, new ConcurrentHashMap<>(),
                 ConnectionProtocol.PLAY, new ConcurrentHashMap<>()
+        );
+    }
+
+    @Shadow @Final @Mutable private static Map<ConnectionProtocol, Map<Identifier, IPayloadHandler<?>>> SERVERBOUND_HANDLERS;
+
+    @Redirect(method = "<clinit>", at = @At(value = "FIELD", opcode = Opcodes.PUTSTATIC, target = "Lnet/neoforged/neoforge/network/registration/NetworkRegistry;SERVERBOUND_HANDLERS:Ljava/util/Map;"))
+    private static void arclight$useConcurrentHandlers(Map<ConnectionProtocol, Map<Identifier, IPayloadHandler<?>>> value) {
+        SERVERBOUND_HANDLERS = ImmutableMap.of(
+            ConnectionProtocol.CONFIGURATION, new ConcurrentHashMap<>(value.get(ConnectionProtocol.CONFIGURATION)),
+            ConnectionProtocol.PLAY, new ConcurrentHashMap<>(value.get(ConnectionProtocol.PLAY))
         );
     }
 

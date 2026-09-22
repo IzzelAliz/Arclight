@@ -3,17 +3,15 @@ package io.izzel.arclight.neoforge.mixin.core.world.entity.vehicle;
 import io.izzel.arclight.common.bridge.core.world.entity.vehicle.AbstractMinecartBridge;
 import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(AbstractMinecart.class)
 public abstract class AbstractMinecartMixin_NeoForge implements AbstractMinecartBridge {
 
-    // @formatter:off
-    @Shadow(remap = false) public abstract boolean canUseRail();
-    // @formatter:on
-
     @Override
     public boolean bridge$forge$canUseRail() {
-        return this.canUseRail();
+        // NeoForge 21.11 removed the mutable canUseRail extension. Preserve the
+        // current native behavior rather than reintroducing legacy speed limits
+        // or rail callbacks around the new MinecartBehavior implementation.
+        return true;
     }
 }

@@ -53,6 +53,12 @@ public abstract class AbstractContainerMenuMixin implements AbstractContainerMen
     @Shadow public abstract void setCarried(ItemStack p_150439_);
     @Shadow public NonNullList<Slot> slots;
     @Shadow protected abstract SlotAccess createCarriedSlotAccess();
+    @Shadow private boolean suppressRemoteUpdates;
+
+    protected boolean arclight$isSuppressingRemoteUpdates() {
+        return this.suppressRemoteUpdates;
+    }
+
     @Shadow public abstract void sendAllDataToRemote();
     @Shadow public abstract int incrementStateId();
     @Shadow protected abstract boolean tryItemClickBehaviourOverride(Player arg, ClickAction arg2, Slot arg3, ItemStack arg4, ItemStack arg5);

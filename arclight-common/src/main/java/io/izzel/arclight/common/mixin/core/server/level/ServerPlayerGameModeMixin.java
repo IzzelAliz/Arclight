@@ -1,5 +1,7 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerGameModeBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
@@ -158,12 +160,22 @@ public abstract class ServerPlayerGameModeMixin implements ServerPlayerGameModeB
         CraftEventFactory.callBlockDamageAbortEvent(this.player, blockPos, this.player.getInventory().getSelectedItem());
     }
 
-    @Inject(method = "destroyBlock", at = @At("RETURN"))
-    public void arclight$resetBlockBreak(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
-        ArclightCaptures.BlockBreakEventContext breakEventContext = ArclightCaptures.popPrimaryBlockBreakEvent();
-
-        if (breakEventContext != null) {
-            bridge$handleBlockDrop(breakEventContext, pos);
+    @WrapMethod(method = "destroyBlock")
+    private boolean arclight$resetBlockBreak(BlockPos pos, Operation<Boolean> original) {
+        int captureDepth = ArclightCaptures.blockBreakEventStack.size();
+        boolean destroyed = false;
+        try {
+            return destroyed = original.call(pos);
+        } finally {
+            if (ArclightCaptures.blockBreakEventStack.size() > captureDepth) {
+                ArclightCaptures.BlockBreakEventContext breakEventContext = ArclightCaptures.popPrimaryBlockBreakEvent();
+                if (breakEventContext != null) {
+                    bridge$handleBlockDrop(breakEventContext, pos);
+                    if (destroyed && breakEventContext.shouldFinalizeExperience()) {
+                        breakEventContext.getNmsBlock().popExperience(this.level, pos, breakEventContext.getEvent().getExpToDrop());
+                    }
+                }
+            }
         }
     }
 
@@ -180,7 +192,7 @@ public abstract class ServerPlayerGameModeMixin implements ServerPlayerGameModeB
         List<ItemEntity> blockDrops = breakEventContext.getBlockDrops();
         org.bukkit.block.BlockState state = breakEventContext.getBlockBreakPlayerState();
 
-        if (blockDrops != null && (breakEvent == null || breakEvent.isDropItems())) {
+        if (blockDrops != null && (breakEvent == null || (!breakEvent.isCancelled() && breakEvent.isDropItems()))) {
             CraftBlock craftBlock = CraftBlock.at(this.level, pos);
             CraftEventFactory.handleBlockDropItemEvent(craftBlock, state, this.player, blockDrops);
         }

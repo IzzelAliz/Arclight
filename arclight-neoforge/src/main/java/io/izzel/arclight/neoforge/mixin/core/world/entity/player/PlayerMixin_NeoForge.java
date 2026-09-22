@@ -8,42 +8,27 @@ import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
 import io.izzel.arclight.neoforge.mixin.core.world.entity.LivingEntityMixin_NeoForge;
 import net.minecraft.util.Mth;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.neoforged.neoforge.common.CommonHooks;
 import net.neoforged.neoforge.common.damagesource.DamageContainer;
 import net.neoforged.neoforge.common.extensions.IPlayerExtension;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
 
 @Mixin(Player.class)
 public abstract class PlayerMixin_NeoForge extends LivingEntityMixin_NeoForge implements PlayerBridge, IPlayerExtension {
 
-    @Inject(method = "hurt", cancellable = true, at = @At("HEAD"))
-    private void arclight$onPlayerAttack(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        if (CommonHooks.onEntityIncomingDamage((Player) (Object) this, new DamageContainer(source, amount))) {
-            cir.setReturnValue(false);
-        }
-    }
-
-    @Inject(method = "attack", cancellable = true, at = @At("HEAD"))
-    private void arclight$onPlayerAttackTarget(Entity entity, CallbackInfo ci) {
-        if (!CommonHooks.onPlayerAttackTarget((Player) (Object) this, entity)) {
-            ci.cancel();
-        }
-    }
 
     @Decorate(method = "actuallyHurt", inject = true, at = @At("HEAD"))
-    private void arclight$neoforge$getDamageContainer(DamageSource damageSource, float f, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer container) throws Throwable {
+    private void arclight$neoforge$getDamageContainer(ServerLevel serverLevel, DamageSource damageSource, float f, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer container) throws Throwable {
         container = ArclightCaptures.getDamageContainer();
         DecorationOps.blackhole().invoke(container);
     }
@@ -85,13 +70,14 @@ public abstract class PlayerMixin_NeoForge extends LivingEntityMixin_NeoForge im
         DecorationOps.callsite().invoke(container, reduction, amount);
     }
 
-    @Inject(method = "actuallyHurt", at = @At("RETURN"))
-    private void arclight$neoforge$popEntityDamageEvent(DamageSource arg, float g, CallbackInfo ci) {
-        ArclightCaptures.popDamageContainer();
-    }
 
     @Override
     public boolean bridge$platform$mayfly() {
         return this.mayFly();
+    }
+
+    @Override
+    public float bridge$platform$scaleDamage(DamageSource source, Player player, float amount, Difficulty difficulty) {
+        return Math.max(0.0F, source.type().scaling().getScalingFunction().scaleDamage(source, player, amount, difficulty));
     }
 }

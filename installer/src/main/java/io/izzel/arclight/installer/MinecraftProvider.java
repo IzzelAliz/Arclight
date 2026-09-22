@@ -62,7 +62,7 @@ public class MinecraftProvider {
                                 logger.accept("Minecraft version: %s, server: %s, mappings: %s".formatted(info.installer.minecraft, serverHash, mappingHash));
                                 return new MinecraftProvider.MinecraftData(entry.getKey(),
                                         Mirrors.mapMojangMirror(serverUrl, entry.getKey()), serverHash,
-                                        Mirrors.mapMojangMirror(mappingUrl, entry.getKey()), mappingHash);
+                                        Mirrors.mapMojangMirror(mappingUrl, entry.getKey()), mappingHash, serverUrl, mappingUrl);
                             }
                         }
                     }
@@ -121,6 +121,22 @@ public class MinecraftProvider {
     }
 
     record MinecraftData(String mirror, String serverUrl, String serverHash, String mappingUrl,
-                         String mappingHash) {
+                         String mappingHash, String officialServerUrl, String officialMappingUrl) {
+
+        Path downloadServer(String target) {
+            try {
+                return new FileDownloader(serverUrl, target, serverHash).get();
+            } catch (Exception mirrorFailure) {
+                if (serverUrl.equals(officialServerUrl)) {
+                    throw new CompletionException(mirrorFailure);
+                }
+                try {
+                    return new FileDownloader(officialServerUrl, target, serverHash).get();
+                } catch (Exception officialFailure) {
+                    officialFailure.addSuppressed(mirrorFailure);
+                    throw new CompletionException(officialFailure);
+                }
+            }
+        }
     }
 }

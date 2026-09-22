@@ -16,8 +16,15 @@ public class Main_Neoforge {
 
     public static void main(String[] args) throws Throwable {
         try {
+            if (System.getProperty("log4j2.configurationFile") == null
+                && System.getProperty("log4j.configurationFile") == null
+                && System.getenv("LOG4J_CONFIGURATION_FILE") == null) {
+                System.setProperty("log4j2.configurationFile", "arclight-log4j2.xml");
+            }
             Map.Entry<String, List<String>> install = forgeInstall();
-            var cl = Class.forName(install.getKey());
+            // Plain-classpath FML installs a runtime loader distinct from this launcher
+            // and the short-lived installer loader; use the same loader as FML's TCCL.
+            var cl = Class.forName(install.getKey(), true, Thread.currentThread().getContextClassLoader());
             var method = cl.getMethod("main", String[].class);
             var target = Stream.concat(install.getValue().stream(), Arrays.stream(args)).toArray(String[]::new);
             method.invoke(null, (Object) target);

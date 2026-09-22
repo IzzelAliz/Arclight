@@ -15,6 +15,8 @@ import java.util.List;
 
 public interface PlayerListBridge {
 
+    void bridge$preparePlayerData(net.minecraft.network.Connection connection, ServerPlayer player, java.util.Optional<net.minecraft.nbt.CompoundTag> data);
+
     void bridge$setPlayers(List<ServerPlayer> players);
 
     List<ServerPlayer> bridge$getPlayers();

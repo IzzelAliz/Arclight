@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BucketItem.class)
 public abstract class BucketItemMixin_Vanilla implements BucketItemBridge {
-    @Inject(method = "use", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/BucketItem;emptyContents(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/phys/BlockHitResult;)Z"))
+    @Inject(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/BucketItem;emptyContents(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/phys/BlockHitResult;)Z"))
     private void arclight$capture(Level worldIn, Player playerIn, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir, @Local BlockHitResult result, @Local ItemStack stack) {
         arclight$setDirection(result.getDirection());
         arclight$setClick(result.getBlockPos());
@@ -32,7 +32,7 @@ public abstract class BucketItemMixin_Vanilla implements BucketItemBridge {
         arclight$setStack(stack);
     }
 
-    @Inject(method = "emptyContents", require = 0, cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/dimension/DimensionType;ultraWarm()Z"))
+    @Inject(method = "emptyContents", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;environmentAttributes()Lnet/minecraft/world/attribute/EnvironmentAttributeSystem;"))
     private void arclight$bucketEmpty(LivingEntity player, Level worldIn, BlockPos posIn, BlockHitResult rayTrace, CallbackInfoReturnable<Boolean> cir) {
         if (LevelAccessorBridge.from(worldIn) instanceof LevelAccessorBridge bridge && player != null && arclight$getStack() != null) {
             if (!(player instanceof ServerPlayer bucketPlayer)) {
@@ -43,6 +43,12 @@ public abstract class BucketItemMixin_Vanilla implements BucketItemBridge {
                 ((ServerPlayer) bucketPlayer).connection.send(new ClientboundBlockUpdatePacket(worldIn, posIn));
                 ((ServerPlayerBridge) bucketPlayer).bridge$getBukkitEntity().updateInventory();
                 cir.setReturnValue(false);
+            } else {
+                // Preserve the original/modded remainder unless a plugin actually changed it.
+                org.bukkit.inventory.ItemStack remainder = event.getItemStack();
+                if (remainder != null && !remainder.equals(new org.bukkit.inventory.ItemStack(org.bukkit.Material.BUCKET))) {
+                    arclight$setCaptureItem(remainder.clone());
+                }
             }
         }
     }

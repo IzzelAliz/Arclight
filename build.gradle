@@ -11,7 +11,7 @@ allprojects {
     apply plugin: 'java'
 
     group 'io.izzel.arclight'
-    version '1.0.2-SNAPSHOT'
+    version '1.0.0-SNAPSHOT'
 
     def getGitHash = { ->
         def stdout = new ByteArrayOutputStream()
@@ -23,7 +23,7 @@ allprojects {
     }
 
     ext {
-        versionName = 'feudal-kings'
+        versionName = 'group-of-soldiers'
         gitHash = getGitHash()
         supportedPlatforms = ['neoforge', 'fabric']
         commonProject = project(':arclight-common')
@@ -127,7 +127,16 @@ rootProject.ext.platformProjects.each { Project p ->
         apply plugin: 'com.gradleup.shadow'
 
         loom {
-            accessWidenerPath = getRootProject().ext.commonProject.loom.accessWidenerPath
+            if (p.name == 'arclight-fabric') {
+                // NeoForge owns climateSettings via its coremod; Fabric needs raw access.
+                def fabricAw = p.layout.buildDirectory.file('generated-access/arclight.accesswidener').get().asFile
+                fabricAw.parentFile.mkdirs()
+                fabricAw.text = getRootProject().ext.commonProject.file('src/main/resources/arclight.accesswidener').text +
+                    '\naccessible field net/minecraft/world/level/biome/Biome climateSettings Lnet/minecraft/world/level/biome/Biome$ClimateSettings;\n'
+                accessWidenerPath = fabricAw
+            } else {
+                accessWidenerPath = getRootProject().ext.commonProject.loom.accessWidenerPath
+            }
         }
 
         jar {

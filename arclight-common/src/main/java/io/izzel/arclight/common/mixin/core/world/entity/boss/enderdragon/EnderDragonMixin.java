@@ -13,6 +13,7 @@ import net.minecraft.world.entity.boss.enderdragon.phases.DragonPhaseInstance;
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.ServerExplosion;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -45,7 +46,7 @@ public abstract class EnderDragonMixin extends MobMixin {
 
     @Shadow @Nullable private EndDragonFight dragonFight;
 
-    private final Explosion explosionSource = null;
+    private Explosion explosionSource;
 
     @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/boss/enderdragon/phases/DragonPhaseInstance;getFlyTargetLocation()Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 arclight$noMoveHovering(DragonPhaseInstance phase) {
@@ -106,6 +107,10 @@ public abstract class EnderDragonMixin extends MobMixin {
         }
         if (!flag2) {
             return flag;
+        }
+        if (this.explosionSource == null) {
+            this.explosionSource = new ServerExplosion(serverLevel, (EnderDragon) (Object) this, null, null,
+                new Vec3(Double.NaN, Double.NaN, Double.NaN), Float.NaN, true, Explosion.BlockInteraction.DESTROY);
         }
         final EntityExplodeEvent event = CraftEventFactory.callEntityExplodeEvent((EnderDragon) (Object) this, destroyedBlocks, 0.0f, explosionSource.getBlockInteraction());
         if (event.isCancelled()) {

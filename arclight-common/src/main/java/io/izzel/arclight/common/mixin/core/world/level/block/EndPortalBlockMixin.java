@@ -56,7 +56,7 @@ public class EndPortalBlockMixin {
             return;
         }
         Location to = event.getTo();
-        var newDt = new TeleportTransition(((CraftWorld) to.getWorld()).getHandle(), CraftLocation.toVec3D(to), entity.getDeltaMovement(), to.getYaw(), to.getPitch(), TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET));
+        var newDt = new TeleportTransition(((CraftWorld) to.getWorld()).getHandle(), CraftLocation.toVec3D(to), entity.getDeltaMovement(), to.getYaw(), to.getPitch(), dt.missingRespawnBlock(), dt.asPassenger(), dt.relatives(), dt.postTeleportTransition());
         ((DimensionTransitionBridge) (Object) newDt).bridge$setTeleportCause(PlayerTeleportEvent.TeleportCause.END_PORTAL);
         cir.setReturnValue(newDt);
     }

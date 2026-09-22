@@ -138,7 +138,7 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
 
     public void purgeUnload() {
         
-        ((DistanceManagerBridge) this.distanceManager).bridge$tick();
+        ((DistanceManagerBridge) this.distanceManager).bridge$purgeStaleTickets(this.chunkMap);
         this.bridge$tickDistanceManager();
         
         ((ChunkMapBridge) this.chunkMap).bridge$tick(() -> true);

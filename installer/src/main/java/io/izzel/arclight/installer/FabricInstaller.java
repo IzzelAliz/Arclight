@@ -39,7 +39,6 @@ public class FabricInstaller {
             MinecraftProvider.handleFutures(System.out::println, array);
             pool.shutdownNow();
         }
-        FabricApiPatcher.patchFabricApi(installInfo);
         return classpath(installInfo, path);
     }
 
@@ -115,8 +114,7 @@ public class FabricInstaller {
                 }
             });
         var serverFuture = minecraftData.thenCompose(data -> MinecraftProvider.reportSupply(pool, logger).apply(
-            new FileDownloader(String.format(data.serverUrl(), info.installer.minecraft),
-                String.format("libraries/net/minecraft/server/%1$s/server-%1$s.jar", info.installer.minecraft), data.serverHash())
+            () -> data.downloadServer(String.format("libraries/net/minecraft/server/%1$s/server-%1$s.jar", info.installer.minecraft))
         ));
         return new CompletableFuture[]{installerFuture, serverFuture};
     }

@@ -24,6 +24,7 @@ public abstract class ZombifiedPiglinMixin extends ZombieMixin {
     // @formatter:off
     @Shadow public abstract EntityReference<LivingEntity> getPersistentAngerTarget();
     @Shadow public abstract long getPersistentAngerEndTime();
+    @Shadow public abstract void setPersistentAngerTarget(EntityReference<LivingEntity> target);
     // @formatter:on
 
     /**
@@ -53,6 +54,7 @@ public abstract class ZombifiedPiglinMixin extends ZombieMixin {
         PigZombieAngerEvent event = new PigZombieAngerEvent((PigZombie) this.getBukkitEntity(), entity == null ? null : ((EntityBridge) entity).bridge$getBukkitEntity(), (int) time);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
+            this.setPersistentAngerTarget(null);
             return Math.max(0L, this.getPersistentAngerEndTime() - this.level().getGameTime());
         }
         return event.getNewAnger();

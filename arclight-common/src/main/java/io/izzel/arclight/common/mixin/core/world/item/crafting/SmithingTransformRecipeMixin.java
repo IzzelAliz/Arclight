@@ -1,13 +1,10 @@
 package io.izzel.arclight.common.mixin.core.world.item.crafting;
 
 import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeBridge;
-import io.izzel.arclight.common.mod.util.ArclightSpecialRecipe;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.SmithingTransformRecipe;
 import net.minecraft.world.item.crafting.TransmuteResult;
 import org.bukkit.NamespacedKey;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
 import org.bukkit.craftbukkit.v.inventory.CraftSmithingTransformRecipe;
 import org.bukkit.inventory.Recipe;
@@ -29,12 +26,7 @@ public class SmithingTransformRecipeMixin implements RecipeBridge {
 
     @Override
     public Recipe bridge$toBukkitRecipe(NamespacedKey id) {
-        ItemStack resultStack = this.result.apply(ItemStack.EMPTY);
-        if (resultStack.isEmpty() || this.template.isEmpty() || this.addition.isEmpty()) {
-            return new ArclightSpecialRecipe(id, (SmithingTransformRecipe) (Object) this);
-        }
-        CraftItemStack result = CraftItemStack.asCraftMirror(resultStack);
-
-        return new CraftSmithingTransformRecipe(id, result, CraftRecipe.toBukkit(this.template.get()), CraftRecipe.toBukkit(this.base), CraftRecipe.toBukkit(this.addition.get()));
+        return new CraftSmithingTransformRecipe(id, CraftRecipe.toBukkit(this.result),
+            CraftRecipe.toBukkit(this.template), CraftRecipe.toBukkit(this.base), CraftRecipe.toBukkit(this.addition));
     }
 }

@@ -17,6 +17,11 @@ public interface ServerPlayerBridge extends PlayerBridge {
 
     <L, R> Either<L, R> bridge$fireBedEvent(Either<L, R> e, BlockPos pos);
 
+    /** Marks that NeoForge already consumed the single Bukkit bed-enter decision. */
+    void bridge$markBedEnterEventFired();
+
+    boolean bridge$consumeBedEnterEventFired();
+
     @Override
     CraftPlayer bridge$getBukkitEntity();
 

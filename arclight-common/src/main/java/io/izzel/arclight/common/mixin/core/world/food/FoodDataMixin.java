@@ -32,7 +32,6 @@ public abstract class FoodDataMixin implements FoodDataBridge {
     @Shadow public int foodLevel;
     @Shadow public abstract void eat(int foodLevelIn, float foodSaturationModifier);
     @Shadow public float saturationLevel;
-    @Shadow private int lastFoodLevel;
     // @formatter:on
 
     private Player entityhuman;
@@ -75,24 +74,18 @@ public abstract class FoodDataMixin implements FoodDataBridge {
         DecorationOps.callsite().invoke(foodStats, deltaFoodLevel, foodSaturationModifier);
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE_ASSIGN", remap = false, target = "Ljava/lang/Math;max(II)I"))
-    public void arclight$foodLevelChange2(Player player, CallbackInfo ci) {
-        if (entityhuman == null) {
-            return;
-        }
-        FoodLevelChangeEvent event = CraftEventFactory.callFoodLevelChangeEvent(entityhuman, Math.max(this.lastFoodLevel - 1, 0));
-
-        if (!event.isCancelled()) {
-            this.foodLevel = event.getFoodLevel();
-        } else {
-            this.foodLevel = this.lastFoodLevel;
-        }
-
-        ((ServerPlayer) entityhuman).connection.send(new ClientboundSetHealthPacket(((ServerPlayerBridge) entityhuman).bridge$getBukkitEntity().getScaledHealth(), this.foodLevel, this.saturationLevel));
+    @Decorate(method = "tick", at = @At(value = "INVOKE", remap = false, target = "Ljava/lang/Math;max(II)I"))
+    private int arclight$foodLevelChange2(int candidate, int minimum, ServerPlayer player) throws Throwable {
+        int proposed = (int) DecorationOps.callsite().invoke(candidate, minimum);
+        if (this.entityhuman == null) this.entityhuman = player;
+        FoodLevelChangeEvent event = CraftEventFactory.callFoodLevelChangeEvent(player, proposed);
+        int result = event.isCancelled() ? this.foodLevel : event.getFoodLevel();
+        player.connection.send(new ClientboundSetHealthPacket(((ServerPlayerBridge) player).bridge$getBukkitEntity().getScaledHealth(), result, this.saturationLevel));
+        return result;
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;heal(F)V"))
-    public void arclight$heal(Player player, CallbackInfo ci) {
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;heal(F)V"))
+    public void arclight$heal(ServerPlayer player, CallbackInfo ci) {
         if (entityhuman == null) {
             entityhuman = player;
         }

@@ -1,16 +1,29 @@
 package io.izzel.arclight.neoforge.mixin.core.world.entity.animal;
 
 import io.izzel.arclight.common.mixin.core.world.entity.animal.AnimalMixin;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.animal.sheep.Sheep;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.LootTable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(net.minecraft.world.entity.animal.sheep.Sheep.class)
+import java.util.function.BiConsumer;
+
+@Mixin(Sheep.class)
 public abstract class SheepMixin_NeoForge extends AnimalMixin {
-    @Inject(method = "shear", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/Sheep;spawnAtLocation(Lnet/minecraft/world/level/ItemLike;I)Lnet/minecraft/world/entity/item/ItemEntity;"))
-    private void arclight$forceDrop(CallbackInfo ci) { forceDrops = true; }
 
-    @Inject(method = "shear", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/animal/Sheep;spawnAtLocation(Lnet/minecraft/world/level/ItemLike;I)Lnet/minecraft/world/entity/item/ItemEntity;"))
-    private void arclight$forceDropReset(CallbackInfo ci) { forceDrops = false; }
+    @Decorate(method = "shear", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/sheep/Sheep;dropFromShearingLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/item/ItemStack;Ljava/util/function/BiConsumer;)V"))
+    private void arclight$forceDrop(Sheep sheep, ServerLevel level, ResourceKey<LootTable> lootTable, ItemStack stack, BiConsumer<ServerLevel, ItemStack> dropper) throws Throwable {
+        boolean previous = this.bridge$isForceDrops();
+        this.bridge$setForceDrops(true);
+        try {
+            DecorationOps.callsite().invoke(sheep, level, lootTable, stack, dropper);
+        } finally {
+            this.bridge$setForceDrops(previous);
+        }
+    }
 }

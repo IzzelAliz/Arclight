@@ -2,6 +2,9 @@ package io.izzel.arclight.common.mixin.core.server.players;
 
 import com.google.common.collect.Lists;
 import com.mojang.authlib.GameProfile;
+import io.izzel.arclight.common.bridge.core.server.network.ServerCommonPacketListenerImplBridge;
+import net.minecraft.server.network.ServerConfigurationPacketListenerImpl;
+import net.minecraft.server.network.CommonListenerCookie;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.network.ConnectionBridge;
@@ -138,6 +141,31 @@ public abstract class PlayerListMixin implements PlayerListBridge {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$loadServer(MinecraftServer minecraftServer, LayeredRegistryAccess<RegistryLayer> p_251844_, PlayerDataStorage p_203844_, net.minecraft.server.notifications.NotificationService notificationService, CallbackInfo ci) {
         cserver = ArclightServer.createOrLoad((DedicatedServer) minecraftServer, (PlayerList) (Object) this);
+    }
+
+    @Override
+    public void bridge$preparePlayerData(Connection connection, ServerPlayer playerIn, java.util.Optional<net.minecraft.nbt.CompoundTag> data) {
+        if (connection.getPacketListener() instanceof ServerConfigurationPacketListenerImpl listener) {
+            var bridge = (ServerCommonPacketListenerImplBridge) listener;
+            var previous = bridge.bridge$getPlayer();
+            if (previous != null && previous != playerIn && previous.getUUID().equals(playerIn.getUUID())) {
+                // Keep the native new player; move the plugin-facing wrapper before spawn/join callbacks.
+                var bukkit = ((ServerPlayerBridge) previous).bridge$getBukkitEntity();
+                bukkit.setHandle(playerIn);
+                ((EntityBridge) playerIn).bridge$setBukkitEntity(bukkit);
+                bridge.bridge$setPlayer(playerIn);
+            }
+        }
+        // File time is a fallback: native entity loading may replace it with saved Bukkit data.
+        if (data.isPresent() && !(this.server.isSingleplayerOwner(playerIn.nameAndId())
+                && this.server.getWorldData().getLoadedPlayerTag() != null)) {
+            var bukkit = ((ServerPlayerBridge) playerIn).bridge$getBukkitEntity();
+            long modified = new java.io.File(((io.izzel.arclight.common.bridge.core.world.level.storage.PlayerDataStorageBridge) this.playerIo)
+                    .bridge$getPlayerDir(), playerIn.getStringUUID() + ".dat").lastModified();
+            if (modified < bukkit.getFirstPlayed()) {
+                bukkit.setFirstPlayed(modified);
+            }
+        }
     }
 
     @ModifyVariable(method = "placeNewPlayer", ordinal = 0, at = @At("STORE"))

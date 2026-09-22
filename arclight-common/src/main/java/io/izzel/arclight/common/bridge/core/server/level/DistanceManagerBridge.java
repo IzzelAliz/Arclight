@@ -15,7 +15,7 @@ public interface DistanceManagerBridge {
 
     boolean bridge$removeTicket(long chunkPos, Ticket ticket);
 
-    void bridge$tick();
+    void bridge$purgeStaleTickets(net.minecraft.server.level.ChunkMap chunkMap);
 
     void bridge$removeAllTicketsFor(TicketType ticketType, int ticketLevel, Object ticketIdentifier);
 

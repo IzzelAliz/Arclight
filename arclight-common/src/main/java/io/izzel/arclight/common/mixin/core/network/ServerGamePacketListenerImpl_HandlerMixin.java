@@ -98,10 +98,12 @@ public class ServerGamePacketListenerImpl_HandlerMixin {
         this.arclight$interactVec = null;
     }
 
-    @Decorate(method = "onAttack", inject = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/level/ServerPlayer;attack(Lnet/minecraft/world/entity/Entity;)V"))
-    private void arclight$sendDirty(@Local(ordinal = -1) ItemStack itemstack) {
+    @Decorate(method = "onAttack", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;attack(Lnet/minecraft/world/entity/Entity;)V"))
+    private void arclight$sendDirty(ServerPlayer player, Entity target) throws Throwable {
+        ItemStack itemstack = player.getItemInHand(InteractionHand.MAIN_HAND);
+        DecorationOps.callsite().invoke(player, target);
         if (!itemstack.isEmpty() && itemstack.getCount() <= -1) {
-            outerThis.player.containerMenu.sendAllDataToRemote();
+            player.containerMenu.sendAllDataToRemote();
         }
     }
 }

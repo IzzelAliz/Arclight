@@ -53,7 +53,9 @@ public abstract class AnvilMenuMixin extends ItemCombinerMenuMixin implements An
         return arclight$zeroCostAllowed;
     }
 
-    @Decorate(method = "createResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/ResultContainer;setItem(ILnet/minecraft/world/item/ItemStack;)V"))
+    // NeoForge moves the vanilla result calculation into createResultInternal before running its anvil hook.
+    // Match the result write across both layouts so Bukkit can still rewrite/cancel it without suppressing that hook.
+    @Decorate(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/ResultContainer;setItem(ILnet/minecraft/world/item/ItemStack;)V"))
     private void arclight$prepareAnvilEvent(ResultContainer instance, int i, ItemStack itemStack) throws Throwable {
         arclight$zeroCostAllowed = false;
         final CraftAnvilView craft = getBukkitView();
@@ -82,17 +84,19 @@ public abstract class AnvilMenuMixin extends ItemCombinerMenuMixin implements An
         cir.setReturnValue(cir.getReturnValueZ() && hasItem);
     }
 
-    @Inject(method = "createResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/AnvilMenu;broadcastChanges()V"))
+    @Inject(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/AnvilMenu;broadcastChanges()V"))
     private void arclight$sync(CallbackInfo ci) {
-        this.sendAllDataToRemote();
+        if (!this.arclight$isSuppressingRemoteUpdates()) {
+            this.sendAllDataToRemote();
+        }
     }
 
-    @ModifyConstant(method = "createResult", constant = @Constant(intValue = 40), require = 0)
+    @ModifyConstant(method = "createResult*", constant = @Constant(intValue = 40), require = 0)
     private int arclight$maximumRepairCost(int i) {
         return i - 40 + maximumRepairCost;
     }
 
-    @ModifyConstant(method = "createResult", constant = @Constant(intValue = 39), require = 0)
+    @ModifyConstant(method = "createResult*", constant = @Constant(intValue = 39), require = 0)
     private int arclight$maximumRepairCost2(int i) {
         return i - 40 + maximumRepairCost;
     }

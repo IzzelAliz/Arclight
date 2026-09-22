@@ -4,13 +4,12 @@ import net.neoforged.fml.loading.moddiscovery.ModFile;
 import net.neoforged.neoforgespi.locating.IDependencyLocator;
 import net.neoforged.neoforgespi.locating.IDiscoveryPipeline;
 import net.neoforged.neoforgespi.locating.IModFile;
-import net.neoforged.neoforgespi.locating.IOrderedProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class ArclightJarInJarFilter implements IDependencyLocator, IOrderedProvider {
+public class ArclightJarInJarFilter implements IDependencyLocator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("ArclightJiJ");
 
@@ -18,17 +17,25 @@ public class ArclightJarInJarFilter implements IDependencyLocator, IOrderedProvi
     @Override
     public void scanMods(List<IModFile> loadedMods, IDiscoveryPipeline pipeline) {
         try {
+            // FML10 still has no public removal API. This is the one intentional
+            // internal dependency: DiscoveryPipeline.loadedFiles, verified against 10.0.36.
+            // The supplied loadedMods list is a snapshot and cannot remove candidates.
             var field = pipeline.getClass().getDeclaredField("loadedFiles");
             field.setAccessible(true);
             var loadedFiles = (List<ModFile>) field.get(pipeline);
-            loadedFiles.removeIf(it -> {
-                var optional = getClass().getModule().getLayer().findModule(it.getModFileInfo().moduleName());
-                optional.ifPresent(module -> LOGGER.info("Skip jij dependency {}@{} because Arclight has {}",
-                    it.getModFileInfo().moduleName(), it.getModFileInfo().versionString(), module.getDescriptor().toNameAndVersion()));
-                return optional.isPresent();
-            });
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            var iterator = loadedFiles.iterator();
+            while (iterator.hasNext()) {
+                var file = iterator.next();
+                if (file.getDiscoveryAttributes().parent() == null) continue;
+                var name = file.getModuleDescriptor().name();
+                if (ArclightJarContentsImplFilter.providesModule(name)) {
+                    LOGGER.info("Skip jij dependency {} because it is already on the Arclight parent classpath", name);
+                    iterator.remove();
+                    file.close();
+                }
+            }
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("FML discovery pipeline changed; cannot remove duplicate Arclight dependencies", e);
         }
     }
 
@@ -39,6 +46,6 @@ public class ArclightJarInJarFilter implements IDependencyLocator, IOrderedProvi
 
     @Override
     public int getPriority() {
-        return IOrderedProvider.LOWEST_SYSTEM_PRIORITY;
+        return LOWEST_SYSTEM_PRIORITY;
     }
 }

@@ -34,21 +34,40 @@ import java.util.Stack;
 public abstract class LivingEntityMixin_NeoForge extends EntityMixin_NeoForge implements LivingEntityBridge {
 
     // @formatter:off
-    @Shadow protected abstract void dropExperience(@Nullable Entity entity);
+    @Shadow protected abstract void dropExperience(ServerLevel serverLevel, @Nullable Entity entity);
     @Shadow protected Stack<DamageContainer> damageContainers;
     // @formatter:on
 
-    @Redirect(method = "dropAllDeathLoot", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;dropExperience(Lnet/minecraft/world/entity/Entity;)V"))
-    private void arclight$dropLater(LivingEntity instance, Entity entity) {
+    @Redirect(method = "dropAllDeathLoot", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;dropExperience(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;)V"))
+    private void arclight$dropLater(LivingEntity instance, ServerLevel serverLevel, Entity entity) {
     }
 
     @Inject(method = "dropAllDeathLoot", at = @At("RETURN"))
-    private void arclight$dropLast(ServerLevel arg, DamageSource damageSource, CallbackInfo ci) {
-        this.dropExperience(damageSource.getEntity());
+    private void arclight$dropLast(ServerLevel serverLevel, DamageSource damageSource, CallbackInfo ci) {
+        this.dropExperience(serverLevel, damageSource.getEntity());
     }
 
-    @Decorate(method = "hurt", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/neoforged/neoforge/common/damagesource/DamageContainer;getNewDamage()F"))
-    private float arclight$neoforge$entityDamageEvent(DamageContainer instance, DamageSource source, float original, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer container) throws Throwable {
+    @Decorate(method = "hurtServer", inject = true, at = @At("HEAD"))
+    private void arclight$beginDamageCapture(ServerLevel serverLevel, DamageSource source, float original, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer container) throws Throwable {
+        // This local is the owner token for this invocation. Do not use a per-entity
+        // marker stack: nested damage calls must retain the outer capture identity.
+        container = null;
+        DecorationOps.blackhole().invoke(container);
+    }
+
+    @Decorate(method = "hurtServer", at = @At(value = "INVOKE", target = "Lnet/neoforged/neoforge/common/CommonHooks;onEntityIncomingDamage(Lnet/minecraft/world/entity/LivingEntity;Lnet/neoforged/neoforge/common/damagesource/DamageContainer;)Z"))
+    private boolean arclight$neoforge$popIncomingDamageOnCancel(LivingEntity entity, DamageContainer container) throws Throwable {
+        boolean cancelled = (boolean) DecorationOps.callsite().invoke(entity, container);
+        // NeoForge returns directly on incoming cancellation without consuming the
+        // container it just pushed. Only remove our exact invocation's container.
+        if (cancelled && this.damageContainers.peek() == container) {
+            this.damageContainers.pop();
+        }
+        return cancelled;
+    }
+
+    @Decorate(method = "hurtServer", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/neoforged/neoforge/common/damagesource/DamageContainer;getNewDamage()F"))
+    private float arclight$neoforge$entityDamageEvent(DamageContainer instance, ServerLevel serverLevel, DamageSource source, float original, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer container) throws Throwable {
         float result = (float) DecorationOps.callsite().invoke(instance);
         final EntityDamageEvent event = arclight$fireEntityDamageEvent(source, result);
 
@@ -60,16 +79,25 @@ public abstract class LivingEntityMixin_NeoForge extends EntityMixin_NeoForge im
         container = new ArclightDamageContainer(event);
         DecorationOps.blackhole().invoke(container);
         damageContainers.peek().setNewDamage((float) event.getDamage());
+        ArclightCaptures.captureDamageContainer(container);
 
         if (source.getEntity() instanceof net.minecraft.world.entity.player.Player player) {
             player.resetAttackStrengthTicker();
         }
-        return result;
+        // hurtServer stores this callsite's return in its working damage local and later
+        // overwrites DamageContainer from that local. Keep both data-flow paths aligned.
+        return (float) event.getDamage();
     }
 
-    @Decorate(method = "hurt", at = @At(value = "INVOKE", target = "Lnet/neoforged/neoforge/common/CommonHooks;onDamageBlock(Lnet/minecraft/world/entity/LivingEntity;Lnet/neoforged/neoforge/common/damagesource/DamageContainer;Z)Lnet/neoforged/neoforge/event/entity/living/LivingShieldBlockEvent;"))
-    private LivingShieldBlockEvent arclight$neoforge$postApplyShield(LivingEntity blocker, DamageContainer container, boolean originalBlocked, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer arclight) throws Throwable {
-        LivingShieldBlockEvent result = (LivingShieldBlockEvent) DecorationOps.callsite().invoke(blocker, container, originalBlocked);
+    @Decorate(method = "applyItemBlocking", inject = true, at = @At("HEAD"))
+    private void arclight$neoforge$getShieldDamageContainer(ServerLevel serverLevel, DamageSource source, float original, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer container) throws Throwable {
+        container = ArclightCaptures.getDamageContainer();
+        DecorationOps.blackhole().invoke(container);
+    }
+
+    @Decorate(method = "applyItemBlocking", at = @At(value = "INVOKE", target = "Lnet/neoforged/neoforge/common/CommonHooks;onDamageBlock(Lnet/minecraft/world/entity/LivingEntity;Lnet/neoforged/neoforge/common/damagesource/DamageContainer;FZ)Lnet/neoforged/neoforge/event/entity/living/LivingShieldBlockEvent;"))
+    private LivingShieldBlockEvent arclight$neoforge$postApplyShield(LivingEntity blocker, DamageContainer container, float originalDamage, boolean originalBlocked, ServerLevel serverLevel, DamageSource source, float original, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer arclight) throws Throwable {
+        LivingShieldBlockEvent result = (LivingShieldBlockEvent) DecorationOps.callsite().invoke(blocker, container, originalDamage, originalBlocked);
         float bukkit = -(float) arclight.getBukkit().getDamage(EntityDamageEvent.DamageModifier.BLOCKING);
         if (originalBlocked == result.getBlocked() && result.getBlockedDamage() == result.getOriginalBlockedDamage()) {
             if (bukkit > 0.0F) {
@@ -85,25 +113,21 @@ public abstract class LivingEntityMixin_NeoForge extends EntityMixin_NeoForge im
         return result;
     }
 
-    @Decorate(method = "hurt", inject = true, at = @At(value = "INVOKE", ordinal = 3, target = "Lnet/minecraft/world/damagesource/DamageSource;is(Lnet/minecraft/tags/TagKey;)Z"))
-    private void arclight$neoforge$postApplyFreezing(DamageSource source, float original, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer container) throws Throwable {
+    @Decorate(method = "hurtServer", inject = true, at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/damagesource/DamageSource;is(Lnet/minecraft/tags/TagKey;)Z"))
+    private void arclight$neoforge$postApplyFreezing(ServerLevel serverLevel, DamageSource source, float original, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer container) throws Throwable {
         original = container.calculateStage(EntityDamageEvent.DamageModifier.FREEZING, original);
         DecorationOps.blackhole().invoke(original);
     }
 
-    @Decorate(method = "hurt", at = @At(value = "INVOKE", target = "Lnet/neoforged/neoforge/common/damagesource/DamageContainer;setNewDamage(F)V"))
-    private void arclight$neoforge$postApplyHardHat(DamageContainer container, float arg, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer arclight) throws Throwable {
+    @Decorate(method = "hurtServer", at = @At(value = "INVOKE", target = "Lnet/neoforged/neoforge/common/damagesource/DamageContainer;setNewDamage(F)V"))
+    private void arclight$neoforge$postApplyHardHat(DamageContainer container, float arg, ServerLevel serverLevel, DamageSource source, float original, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer arclight) throws Throwable {
         arg = arclight.calculateStage(EntityDamageEvent.DamageModifier.HARD_HAT, arg);
         DecorationOps.callsite().invoke(container, arg);
     }
 
-    @Decorate(method = "hurt", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;actuallyHurt(Lnet/minecraft/world/damagesource/DamageSource;F)V"))
-    private void arclight$vanilla$captureEntityDamageEvent(DamageSource source, float original, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer container) throws Throwable {
-        ArclightCaptures.captureDamageContainer(container);
-    }
 
     @Decorate(method = "actuallyHurt", inject = true, at = @At("HEAD"))
-    private void arclight$vanilla$getEntityDamageEvent(DamageSource damageSource, float f, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer container) throws Throwable {
+    private void arclight$vanilla$getEntityDamageEvent(ServerLevel serverLevel, DamageSource damageSource, float f, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer container) throws Throwable {
         container = ArclightCaptures.getDamageContainer();
         DecorationOps.blackhole().invoke(container);
     }
@@ -152,9 +176,15 @@ public abstract class LivingEntityMixin_NeoForge extends EntityMixin_NeoForge im
         DecorationOps.callsite().invoke(container, reduction, amount);
     }
 
-    @Inject(method = "actuallyHurt", at = @At("RETURN"))
-    private void arclight$vanilla$popEntityDamageEvent(DamageSource arg, float g, CallbackInfo ci) {
-        ArclightCaptures.popDamageContainer();
+    @Decorate(method = "hurtServer", inject = true, at = @At("RETURN"))
+    private void arclight$finishDamageCapture(ServerLevel serverLevel, DamageSource source, float original, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer container) {
+        // A cancelled Bukkit event never creates a capture. For accepted damage, this
+        // method-local token owns exactly one global capture, including cooldown exits
+        // that do not call actuallyHurt. Identity prevents an inner invocation from
+        // consuming an outer capture.
+        if (container != null && ArclightCaptures.getDamageContainer() == container) {
+            ArclightCaptures.popDamageContainer();
+        }
     }
 
     @Override

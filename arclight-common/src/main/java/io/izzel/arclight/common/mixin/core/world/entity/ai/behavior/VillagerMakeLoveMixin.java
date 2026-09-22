@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(VillagerMakeLove.class)
 public class VillagerMakeLoveMixin {
 
-    @Redirect(method = "breed", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/npc/Villager;getBreedOffspring(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/AgeableMob;)Lnet/minecraft/world/entity/npc/Villager;"))
+    @Redirect(method = "breed", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/npc/villager/Villager;getBreedOffspring(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/AgeableMob;)Lnet/minecraft/world/entity/npc/villager/Villager;"))
     private Villager arclight$entityBreed(Villager lona, ServerLevel world, AgeableMob anonymous) {
         Villager child = lona.getBreedOffspring(world, anonymous);
         if (child != null && !CraftEventFactory.callEntityBreedEvent(child, lona, anonymous, null, null, 0).isCancelled()) {

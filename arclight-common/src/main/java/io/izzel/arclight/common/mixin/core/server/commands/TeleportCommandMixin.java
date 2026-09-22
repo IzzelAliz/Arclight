@@ -52,15 +52,18 @@ public class TeleportCommandMixin {
         if (!Level.isInSpawnableBounds(blockpos)) {
             throw INVALID_POSITION.create();
         } else {
-            float f = Mth.wrapDegrees(yaw);
-            float f1 = Mth.wrapDegrees(pitch);
+            x = set.contains(Relative.X) ? x - entity.getX() : x;
+            y = set.contains(Relative.Y) ? y - entity.getY() : y;
+            z = set.contains(Relative.Z) ? z - entity.getZ() : z;
+            float f = Mth.wrapDegrees(set.contains(Relative.Y_ROT) ? yaw - entity.getYRot() : yaw);
+            float f1 = Mth.wrapDegrees(set.contains(Relative.X_ROT) ? pitch - entity.getXRot() : pitch);
 
             boolean result;
             if (entity instanceof ServerPlayer player) {
                 ((ServerPlayerBridge) player).bridge$pushChangeDimensionCause(PlayerTeleportEvent.TeleportCause.COMMAND);
                 result = player.teleportTo(level, x, y, z, set, f, f1, true);
             } else {
-                Location to = new Location(((ServerLevelBridge) level).bridge$getWorld(), x, y, z, yaw, pitch);
+                Location to = new Location(((ServerLevelBridge) level).bridge$getWorld(), x, y, z, f, f1);
                 var e = new org.bukkit.event.entity.EntityTeleportEvent(((EntityBridge) entity).bridge$getBukkitEntity(), ((EntityBridge) entity).bridge$getBukkitEntity().getLocation(), to);
                 Bukkit.getPluginManager().callEvent(e);
                 if (e.isCancelled()) {

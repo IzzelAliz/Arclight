@@ -4,12 +4,11 @@ import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.level.block.BlockBridge;
 import io.izzel.arclight.common.mixin.core.world.level.block.state.BlockBehaviourMixin;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
-import io.izzel.arclight.common.mod.util.DistValidate;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
+
 import net.minecraft.util.valueproviders.IntProvider;
-import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -20,10 +19,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import org.bukkit.craftbukkit.v.CraftWorld;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.event.block.BlockBreakEvent;
+
 import org.bukkit.event.entity.EntityExhaustionEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -73,7 +69,7 @@ public abstract class BlockMixin extends BlockBehaviourMixin implements BlockBri
 
     @Override
     public int bridge$getExpDrop(BlockState blockState, ServerLevel world, BlockPos blockPos, ItemStack itemStack) {
-        return this.bridge$tryDropExperience(world, blockPos, itemStack, UniformInt.of(1, 5));
+        return 0;
     }
 
     @Inject(method = "playerDestroy", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;causeFoodExhaustion(F)V"))
@@ -81,20 +77,4 @@ public abstract class BlockMixin extends BlockBehaviourMixin implements BlockBri
         ((PlayerBridge) player).bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason.BLOCK_MINED);
     }
 
-    @Inject(method = "playerDestroy", at = @At("RETURN"))
-    private void arclight$handleBlockDrops(Level worldIn, Player player, BlockPos pos, BlockState blockState, BlockEntity te, ItemStack stack, CallbackInfo ci) {
-        ArclightCaptures.BlockBreakEventContext breakEventContext = ArclightCaptures.popPrimaryBlockBreakEvent();
-
-        if (breakEventContext != null) {
-            BlockBreakEvent breakEvent = breakEventContext.getEvent();
-            List<ItemEntity> blockDrops = breakEventContext.getBlockDrops();
-            org.bukkit.block.BlockState state = breakEventContext.getBlockBreakPlayerState();
-
-            if (player instanceof ServerPlayer && blockDrops != null && (breakEvent == null || breakEvent.isDropItems())
-                && DistValidate.isValid(worldIn)) {
-                CraftBlock craftBlock = CraftBlock.at(((CraftWorld) state.getWorld()).getHandle(), pos);
-                CraftEventFactory.handleBlockDropItemEvent(craftBlock, state, ((ServerPlayer) player), blockDrops);
-            }
-        }
-    }
 }

@@ -113,7 +113,7 @@ public abstract class ArclightEventFactory {
 
         var bblock = CraftBlock.at(level, pos);
         var event = new BlockBreakEvent(bblock, (Player) player.bridge$getBukkitEntity());
-        ArclightCaptures.captureBlockBreakPlayer(event);
+        ArclightCaptures.captureBlockBreakPlayer(event, state.getBlock());
 
         // Sword + Creative mode pre-cancel
         event.setCancelled(isSwordNoBreak);

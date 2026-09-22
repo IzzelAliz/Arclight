@@ -56,6 +56,7 @@ public abstract class PrimedTntMixin extends EntityMixin {
         this.handlePortal();
         this.applyGravity();
         this.move(MoverType.SELF, this.getDeltaMovement());
+        this.applyEffectsFromBlocks();
         this.setDeltaMovement(this.getDeltaMovement().scale(0.98D));
         if (this.onGround) {
             this.setDeltaMovement(this.getDeltaMovement().multiply(0.7D, -0.5D, 0.7D));

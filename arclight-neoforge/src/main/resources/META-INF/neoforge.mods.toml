@@ -13,5 +13,17 @@ description='''
     Arclight bukkit layer for NeoForge
     '''
 
+[[mixins]]
+config="mixins.arclight.core.json"
+
+[[mixins]]
+config="mixins.arclight.bukkit.json"
+
+[[mixins]]
+config="mixins.arclight.neoforge.json"
+
+[[mixins]]
+config="mixins.arclight.impl.optimization.json"
+
 [[accessTransformers]]
 file="META-INF/accesstransformer.cfg"

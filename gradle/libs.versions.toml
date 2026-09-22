@@ -22,7 +22,7 @@ special-source = '1.11.5'
 mixin = '0.8.5'
 
 # arclight
-arclight-api = '1.7.3'
+arclight-api = '1.7.5'
 izzel-tools = '1.3.0'
 mixin-tools = '1.2.6'
 
@@ -39,8 +39,8 @@ fabric-permissions-api = '0.3.1'
 # spigot dependencies (CHECK when migrating Spigot Versions)
 spigot-reversion = '4598'
 bukkit-api = 'v1_21_R7'
-spigot-api = '1.21.11-R0.1-SNAPSHOT'
-bungeecord-chat-api = '1.20-R0.2'
+spigot-api = '1.21.11-R0.2-SNAPSHOT'
+bungeecord-chat-api = '1.21-R0.4'
 jline = '3.30.4'
 terminal-console-appender = '1.2.0'
 log4j = '2.22.1'
@@ -72,6 +72,8 @@ specialsource = { module = 'net.md-5:SpecialSource', version.ref = 'special-sour
 minecraft = { module = 'com.mojang:minecraft', version.ref = 'minecraft' }
 spigot-api = { module = 'org.spigotmc:spigot-api', version.ref = 'spigot-api' }
 bungeecord-chat = { module = 'net.md-5:bungeecord-chat', version.ref = 'bungeecord-chat-api' }
+bungeecord-dialog = { module = 'net.md-5:bungeecord-dialog', version.ref = 'bungeecord-chat-api' }
+bungeecord-serializer = { module = 'net.md-5:bungeecord-serializer', version.ref = 'bungeecord-chat-api' }
 snakeyaml = { module = 'org.yaml:snakeyaml', version.ref = 'snakeyaml' }
 mysql-connectorj = { module = 'com.mysql:mysql-connector-j', version.ref = 'mysql-connector-j' }
 jline = { module = 'org.jline:jline', version.ref = 'jline' }
@@ -104,5 +106,5 @@ sponge-mixin = { module = 'org.spongepowered:mixin', version.ref = 'mixin' }
 asm = ['asm-commons', 'asm-tree', 'asm-util']
 lorenz = ['lorenz-core', 'lorenz-proguard', 'lorenz-tiny']
 log4j = ['log4j-api', 'log4j-core', 'log4j-jul']
-spigot-shade = ['spigot-api', 'bungeecord-chat', 'jline']
-spigot-runtime = ['spigot-api', 'snakeyaml', 'mysql-connectorj', 'bungeecord-chat', 'jline']
+spigot-shade = ['spigot-api', 'bungeecord-chat', 'bungeecord-dialog', 'bungeecord-serializer', 'jline']
+spigot-runtime = ['spigot-api', 'snakeyaml', 'mysql-connectorj', 'bungeecord-chat', 'bungeecord-dialog', 'bungeecord-serializer', 'jline']

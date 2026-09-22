@@ -31,18 +31,18 @@ public class StyleMixin {
     public Style setStrikethrough(final Boolean b) {
         return this.shadowColor == null && this.color == null && this.bold == null && this.italic == null && this.underlined == null && b == null && this.obfuscated == null && this.clickEvent == null && this.hoverEvent == null && this.insertion == null && this.font == null
             ? Style.EMPTY
-            : Style.EMPTY.withColor(this.color).withShadowColor(this.shadowColor).withBold(this.bold).withItalic(this.italic).withUnderlined(this.underlined).withStrikethrough(b).withObfuscated(this.obfuscated).withClickEvent(this.clickEvent).withHoverEvent(this.hoverEvent).withInsertion(this.insertion).withFont(this.font);
+            : (this.shadowColor == null ? Style.EMPTY : Style.EMPTY.withShadowColor(this.shadowColor)).withColor(this.color).withBold(this.bold).withItalic(this.italic).withUnderlined(this.underlined).withStrikethrough(b).withObfuscated(this.obfuscated).withClickEvent(this.clickEvent).withHoverEvent(this.hoverEvent).withInsertion(this.insertion).withFont(this.font);
     }
 
     public Style setUnderline(final Boolean b) {
         return this.shadowColor == null && this.color == null && this.bold == null && this.italic == null && b == null && this.strikethrough == null && this.obfuscated == null && this.clickEvent == null && this.hoverEvent == null && this.insertion == null && this.font == null
             ? Style.EMPTY
-            : Style.EMPTY.withColor(this.color).withShadowColor(this.shadowColor).withBold(this.bold).withItalic(this.italic).withUnderlined(b).withStrikethrough(this.strikethrough).withObfuscated(this.obfuscated).withClickEvent(this.clickEvent).withHoverEvent(this.hoverEvent).withInsertion(this.insertion).withFont(this.font);
+            : (this.shadowColor == null ? Style.EMPTY : Style.EMPTY.withShadowColor(this.shadowColor)).withColor(this.color).withBold(this.bold).withItalic(this.italic).withUnderlined(b).withStrikethrough(this.strikethrough).withObfuscated(this.obfuscated).withClickEvent(this.clickEvent).withHoverEvent(this.hoverEvent).withInsertion(this.insertion).withFont(this.font);
     }
 
     public Style setRandom(final Boolean b) {
         return this.shadowColor == null && this.color == null && this.bold == null && this.italic == null && this.underlined == null && this.strikethrough == null && b == null && this.clickEvent == null && this.hoverEvent == null && this.insertion == null && this.font == null
             ? Style.EMPTY
-            : Style.EMPTY.withColor(this.color).withShadowColor(this.shadowColor).withBold(this.bold).withItalic(this.italic).withUnderlined(this.underlined).withStrikethrough(this.strikethrough).withObfuscated(b).withClickEvent(this.clickEvent).withHoverEvent(this.hoverEvent).withInsertion(this.insertion).withFont(this.font);
+            : (this.shadowColor == null ? Style.EMPTY : Style.EMPTY.withShadowColor(this.shadowColor)).withColor(this.color).withBold(this.bold).withItalic(this.italic).withUnderlined(this.underlined).withStrikethrough(this.strikethrough).withObfuscated(b).withClickEvent(this.clickEvent).withHoverEvent(this.hoverEvent).withInsertion(this.insertion).withFont(this.font);
     }
 }

@@ -13,14 +13,12 @@ import io.izzel.arclight.common.mod.server.BukkitRegistry;
 import io.izzel.arclight.common.mod.server.world.border.ArclightBorderChangeListener;
 import io.izzel.arclight.common.mod.server.world.border.ArclightDelegatedBorderListener;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
-import io.izzel.arclight.common.mod.util.BukkitOptionParser;
 import io.izzel.arclight.common.util.IteratorUtil;
 import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
 import it.unimi.dsi.fastutil.longs.LongIterator;
-import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
@@ -79,7 +77,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.lang.management.ManagementFactory;
 import java.net.Proxy;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -152,13 +149,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void arclight$loadOptions(Thread p_236723_, LevelStorageSource.LevelStorageAccess p_236724_, PackRepository p_236725_, WorldStem worldStem, Proxy p_236727_, DataFixer p_236728_, Services p_236729_, LevelLoadListener p_236730_, CallbackInfo ci) {
-        String[] arguments = ManagementFactory.getRuntimeMXBean().getInputArguments().toArray(new String[0]);
-        OptionParser parser = new BukkitOptionParser();
-        try {
-            options = parser.parse(arguments);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        this.options = ArclightCaptures.getBukkitOptions();
         this.vanillaCommandDispatcher = worldStem.dataPackResources().getCommands();
         this.worldLoader = ArclightCaptures.getDataLoadContext();
         ArclightServer.setMinecraftServer((MinecraftServer) (Object) this);
@@ -306,6 +297,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     public final void prepareLevels() {
         for (ServerLevel serverWorld : this.levels.values()) {
             this.prepareLevels(serverWorld);
+            serverWorld.entityManager.tick(); // Make pending entities available to WorldLoadEvent listeners.
             Bukkit.getPluginManager().callEvent(new WorldLoadEvent(serverWorld.bridge$getWorld()));
         }
         this.updateEffectiveRespawnData();

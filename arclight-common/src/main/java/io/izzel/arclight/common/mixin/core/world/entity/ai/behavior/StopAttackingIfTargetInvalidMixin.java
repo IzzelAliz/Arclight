@@ -6,6 +6,7 @@ import net.minecraft.world.entity.ai.behavior.BehaviorControl;
 import net.minecraft.world.entity.ai.behavior.StopAttackingIfTargetInvalid;
 import net.minecraft.world.entity.ai.behavior.declarative.BehaviorBuilder;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+import net.minecraft.server.level.ServerLevel;
 import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityTargetEvent;
@@ -14,8 +15,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.Predicate;
 
 @Mixin(StopAttackingIfTargetInvalid.class)
 public abstract class StopAttackingIfTargetInvalidMixin {
@@ -29,26 +28,26 @@ public abstract class StopAttackingIfTargetInvalidMixin {
      * @reason
      */
     @Overwrite
-    public static <E extends Mob> BehaviorControl<E> create(Predicate<LivingEntity> p_260357_, BiConsumer<E, LivingEntity> p_259568_, boolean p_260319_) {
+    public static <E extends Mob> BehaviorControl<E> create(StopAttackingIfTargetInvalid.StopAttackCondition stopAttackingWhen, StopAttackingIfTargetInvalid.TargetErasedCallback<E> onTargetErased, boolean canGrowTiredOfTryingToReachTarget) {
         return BehaviorBuilder.create((p_258801_) -> {
             return p_258801_.group(p_258801_.present(MemoryModuleType.ATTACK_TARGET), p_258801_.registered(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE)).apply(p_258801_, (p_258787_, p_258788_) -> {
-                return (p_258795_, p_258796_, p_258797_) -> {
+                return (ServerLevel serverLevel, E mob, long gameTime) -> {
                     LivingEntity livingentity = p_258801_.get(p_258787_);
-                    if (p_258796_.canAttack(livingentity) && (!p_260319_ || !isTiredOfTryingToReachTarget(p_258796_, p_258801_.tryGet(p_258788_))) && livingentity.isAlive() && livingentity.level() == p_258796_.level() && !p_260357_.test(livingentity)) {
+                    if (mob.canAttack(livingentity) && (!canGrowTiredOfTryingToReachTarget || !isTiredOfTryingToReachTarget(mob, p_258801_.tryGet(p_258788_))) && livingentity.isAlive() && livingentity.level() == mob.level() && !stopAttackingWhen.test(serverLevel, livingentity)) {
                         return true;
                     } else {
                         // CraftBukkit start
-                        LivingEntity old = p_258796_.getBrain().getMemory(MemoryModuleType.ATTACK_TARGET).orElse(null);
-                        EntityTargetEvent event = CraftEventFactory.callEntityTargetLivingEvent(p_258796_, null, (old != null && !old.isAlive()) ? EntityTargetEvent.TargetReason.TARGET_DIED : EntityTargetEvent.TargetReason.FORGOT_TARGET);
+                        LivingEntity old = mob.getBrain().getMemory(MemoryModuleType.ATTACK_TARGET).orElse(null);
+                        EntityTargetEvent event = CraftEventFactory.callEntityTargetLivingEvent(mob, null, (old != null && !old.isAlive()) ? EntityTargetEvent.TargetReason.TARGET_DIED : EntityTargetEvent.TargetReason.FORGOT_TARGET);
                         if (event.isCancelled()) {
                             return false;
                         }
                         if (event.getTarget() != null) {
-                            p_258796_.getBrain().setMemory(MemoryModuleType.ATTACK_TARGET, ((CraftLivingEntity) event.getTarget()).getHandle());
+                            mob.getBrain().setMemory(MemoryModuleType.ATTACK_TARGET, ((CraftLivingEntity) event.getTarget()).getHandle());
                             return true;
                         }
                         // CraftBukkit end
-                        p_259568_.accept(p_258796_, livingentity);
+                        onTargetErased.accept(serverLevel, mob, livingentity);
                         p_258787_.erase();
                         return true;
                     }

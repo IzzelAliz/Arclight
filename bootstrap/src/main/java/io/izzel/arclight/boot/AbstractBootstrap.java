@@ -15,11 +15,13 @@ import org.objectweb.asm.tree.*;
 
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.jar.Attributes;
+import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
@@ -56,7 +58,7 @@ public interface AbstractBootstrap {
                                 var reset = new InsnList();
                                 reset.add(new InsnNode(Opcodes.ACONST_NULL));
                                 reset.add(new FieldInsnNode(Opcodes.PUTSTATIC, "com/mojang/brigadier/tree/CommandNode", fieldNode.name, fieldNode.desc));
-                                method.instructions.insert(instruction, assign);
+                                method.instructions.insert(instruction, reset);
                                 break;
                             }
                         }
@@ -95,19 +97,51 @@ public interface AbstractBootstrap {
     }
 
     default void setupMod(ArclightPlatform platform, boolean extract) throws Exception {
-        ArclightVersion.setVersion(ArclightVersion.FEUDAL_KINGS);
+        ArclightVersion.setVersion(ArclightVersion.GROUP_OF_SOLDIERS);
         ArclightPlatform.setPlatform(platform);
-        try (InputStream stream = getClass().getResourceAsStream("/META-INF/MANIFEST.MF")) {
+        try (InputStream stream = ownArchiveResource(getClass(), "META-INF/MANIFEST.MF")) {
             Manifest manifest = new Manifest(stream);
             Attributes attributes = manifest.getMainAttributes();
             String version = attributes.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
             if (extract) {
-                extract(getClass().getModule().getResourceAsStream("/common.jar"), version);
+                try (InputStream common = ownArchiveResource(getClass(), "common.jar")) {
+                    extract(common, version);
+                }
             }
             String buildTime = attributes.getValue("Implementation-Timestamp");
             LogManager.getLogger("Arclight").info(ArclightLocale.getInstance().get("logo"),
                     ArclightLocale.getInstance().get("release-name." + ArclightVersion.current().getReleaseName()), version, buildTime);
         }
+    }
+
+    private static InputStream ownArchiveResource(Class<?> type, String name) throws Exception {
+        var domain = type.getProtectionDomain();
+        var source = domain == null ? null : domain.getCodeSource();
+        URL location = source == null ? null : source.getLocation();
+        if (location == null) {
+            return type.getModule().getResourceAsStream("/" + name);
+        }
+        Path path = Paths.get(location.toURI());
+        if (Files.isDirectory(path)) {
+            return Files.newInputStream(path.resolve(name));
+        }
+        JarFile archive = new JarFile(path.toFile());
+        var entry = archive.getJarEntry(name);
+        if (entry == null) {
+            archive.close();
+            return null;
+        }
+        InputStream stream = archive.getInputStream(entry);
+        return new java.io.FilterInputStream(stream) {
+            @Override
+            public void close() throws java.io.IOException {
+                try {
+                    super.close();
+                } finally {
+                    archive.close();
+                }
+            }
+        };
     }
 
     private void extract(InputStream path, String version) throws Exception {

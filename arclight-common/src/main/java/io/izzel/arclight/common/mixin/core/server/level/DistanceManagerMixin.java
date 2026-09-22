@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.server.level;
 
 import io.izzel.arclight.common.bridge.core.world.server.ChunkHolderBridge;
 import io.izzel.arclight.common.bridge.core.server.level.DistanceManagerBridge;
+import io.izzel.arclight.common.bridge.core.server.level.TicketBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
@@ -28,6 +29,11 @@ public abstract class DistanceManagerMixin implements DistanceManagerBridge {
     private Queue<ChunkHolder> arclight$scheduleUpdatingQueue = new LinkedList<>();
 
     @Override
+    public void bridge$purgeStaleTickets(ChunkMap chunkMap) {
+        this.ticketStorage.purgeStaleTickets(chunkMap);
+    }
+
+    @Override
     public void arclight$offerUpdate(ChunkHolder holder) {
         arclight$scheduleUpdatingQueue.add(holder);
     }
@@ -49,20 +55,27 @@ public abstract class DistanceManagerMixin implements DistanceManagerBridge {
         return set;
     }
 
+    @Unique
+    private static Ticket arclight$keyedTicket(TicketType type, int level, Object value) {
+        Ticket ticket = new Ticket(type, level);
+        ((TicketBridge) (Object) ticket).bridge$setKey(value);
+        return ticket;
+    }
+
     public boolean addRegionTicketAtDistance(TicketType type, ChunkPos pos, int level, Object value) {
-        return this.addTicket(pos.toLong(), new Ticket(type, 33 - level));
+        return this.addTicket(pos.toLong(), arclight$keyedTicket(type, 33 - level, value));
     }
 
     public boolean removeRegionTicketAtDistance(TicketType type, ChunkPos pos, int level, Object value) {
-        return this.removeTicket(pos.toLong(), new Ticket(type, 33 - level));
+        return this.removeTicket(pos.toLong(), arclight$keyedTicket(type, 33 - level, value));
     }
 
     public boolean addTicketAtLevel(TicketType type, ChunkPos pos, int level, Object value) {
-        return this.addTicket(pos.toLong(), new Ticket(type, level));
+        return this.addTicket(pos.toLong(), arclight$keyedTicket(type, level, value));
     }
 
     public boolean removeTicketAtLevel(TicketType type, ChunkPos pos, int level, Object value) {
-        return this.removeTicket(pos.toLong(), new Ticket(type, level));
+        return this.removeTicket(pos.toLong(), arclight$keyedTicket(type, level, value));
     }
 
     @Override
@@ -102,7 +115,8 @@ public abstract class DistanceManagerMixin implements DistanceManagerBridge {
     }
 
     public void removeAllTicketsFor(TicketType ticketType, int ticketLevel, Object ticketIdentifier) {
-        this.ticketStorage.removeTicketIf((ticket, chunkPos) -> ticket.getType() == ticketType && ticket.getTicketLevel() == ticketLevel, null);
+        this.ticketStorage.removeTicketIf((ticket, chunkPos) -> ticket.getType() == ticketType && ticket.getTicketLevel() == ticketLevel
+            && Objects.equals(((TicketBridge) (Object) ticket).bridge$getKey(), ticketIdentifier), null);
     }
 
     @Override

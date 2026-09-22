@@ -57,7 +57,7 @@ public abstract class ThrownEggMixin extends ThrowableProjectileMixin {
                     // TrickOrTreatMod compat https://github.com/IzzelAliz/Arclight/issues/1178
                     // https://github.com/MehVahdJukaar/TrickOrTreatMod/blob/020bc478b8f8de6bfec2191a9e667f423f45d7db/common/src/main/java/net/mehvahdjukaar/hauntedharvest/mixins/ThrownEggEntityMixin.java
                     var entityType = ((EntityTypeBridge) (Object) hatchingType).bridge$getHandle();
-                    var entity = entityType.create(this.level(), net.minecraft.world.entity.EntitySpawnReason.SPAWN_ITEM_USE);
+                    var entity = entityType.create(this.level(), net.minecraft.world.entity.EntitySpawnReason.TRIGGERED);
                     // Let's do: Meadow mixin compatibility https://github.com/IzzelAliz/Arclight/issues/1149
                     if (entity instanceof Chicken) {
                         Chicken chicken = (Chicken) entity;

@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.commands;
 
 import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.server.permissions.Permission;
 import net.minecraft.server.permissions.PermissionSet;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v.command.ServerCommandSender;
@@ -14,7 +15,8 @@ public class CommandSource1Mixin implements CommandSourceBridge {
 
     public CommandSender getBukkitSender(CommandSourceStack wrapper) {
         return new ServerCommandSender() {
-            private final boolean isOp = wrapper.permissions().union(wrapper.getServer().operatorUserPermissions()) == wrapper.permissions();
+            // Compilation contexts used to inspect command trees deliberately have no server.
+            private final boolean isOp = wrapper.getServer() != null && wrapper.permissions().hasPermission(new Permission.HasCommandLevel(wrapper.getServer().operatorUserPermissions().level()));
 
             @Override
             public boolean isOp() {

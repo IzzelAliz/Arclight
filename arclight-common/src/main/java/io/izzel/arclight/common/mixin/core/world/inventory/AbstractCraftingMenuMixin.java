@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.Shadow;
 public abstract class AbstractCraftingMenuMixin extends AbstractContainerMenuMixin {
 
     // @formatter:off
-    @Shadow @Final protected CraftingContainer craftSlots;
-    @Shadow @Final protected ResultContainer resultSlots;
+    @Shadow @Final public CraftingContainer craftSlots;
+    @Shadow @Final public ResultContainer resultSlots;
     // @formatter:on
 }

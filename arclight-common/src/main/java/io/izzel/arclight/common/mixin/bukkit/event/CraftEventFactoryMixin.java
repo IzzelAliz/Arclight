@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.bukkit.event;
 
 import com.google.common.base.Function;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.ExperienceOrbBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
@@ -14,6 +15,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -53,6 +55,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
@@ -83,6 +86,11 @@ public abstract class CraftEventFactoryMixin {
             }
         }
         return source;
+    }
+
+    @Redirect(method = "doEntityAddEventCalling", remap = false, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;setValue(I)V", remap = true))
+    private static void arclight$setExperienceOrbValue(ExperienceOrb experienceOrb, int value) {
+        ((ExperienceOrbBridge) experienceOrb).bridge$setValue(value);
     }
 
     @Inject(method = "handleEntityDamageEvent*", cancellable = true, at = @At(value = "NEW", target = "java/lang/IllegalStateException"))

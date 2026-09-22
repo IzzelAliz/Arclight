@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.level.storage;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.Lifecycle;
+import io.izzel.arclight.common.bridge.core.world.level.storage.DerivedLevelDataBridge;
 import io.izzel.arclight.common.bridge.core.world.level.storage.PrimaryLevelDataBridge;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
@@ -12,13 +13,13 @@ import net.minecraft.network.protocol.game.ClientboundChangeDifficultyPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.WorldDimensions;
 import net.minecraft.world.level.levelgen.WorldGenSettings;
 import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.storage.PrimaryLevelData;
+import net.minecraft.world.level.storage.LevelData;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.event.weather.ThunderChangeEvent;
@@ -86,9 +87,21 @@ public abstract class PrimaryLevelDataMixin implements PrimaryLevelDataBridge {
     @Inject(method = "setDifficulty", at = @At("RETURN"))
     private void arclight$sendDiffChange(Difficulty newDifficulty, CallbackInfo ci) {
         ClientboundChangeDifficultyPacket packet = new ClientboundChangeDifficultyPacket(newDifficulty, this.isDifficultyLocked());
-        for (Player player : this.world.players()) {
-            ((ServerPlayer) player).connection.send(packet);
+        for (ServerPlayer player : this.world.getServer().getPlayerList().getPlayers()) {
+            if (arclight$ownsDifficulty(player.level().getLevelData())) {
+                player.connection.send(packet);
+            }
         }
+    }
+
+    private boolean arclight$ownsDifficulty(LevelData data) {
+        if (data == (Object) this) {
+            return true;
+        }
+        if (data instanceof DerivedLevelDataBridge bridge) {
+            return bridge.bridge$getWorldData() == (Object) this;
+        }
+        return false;
     }
 
     @Override

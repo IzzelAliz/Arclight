@@ -134,6 +134,11 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
 
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     public PrimaryLevelData K; // Stupid CraftBukkit patch.
+
+    @Override
+    public PrimaryLevelData bridge$getPrimaryLevelData() {
+        return K;
+    }
     public LevelStorageSource.LevelStorageAccess convertable;
     public UUID uuid;
     public ResourceKey<LevelStem> typeKey;
@@ -231,6 +236,11 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(MinecraftServer minecraftServer, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, ServerLevelData worldInfo, ResourceKey<Level> dimension, LevelStem levelStem, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking, RandomSequences seq, CallbackInfo ci) {
         this.pvpMode = this.serverLevelData.getGameRules().get(GameRules.PVP);
+        for (var category : org.bukkit.entity.SpawnCategory.values()) {
+            if (org.bukkit.craftbukkit.v.util.CraftSpawnCategory.isValidForLimits(category)) {
+                this.ticksPerSpawnCategory.put(category, this.getCraftServer().getTicksPerSpawns(category));
+            }
+        }
         this.convertable = levelSave;
         if (arclight$isActual() && this.dragonFight == null && this.environment == World.Environment.THE_END) {
             this.dragonFight = new EndDragonFight((ServerLevel)(Object) this, K.worldGenOptions().seed(), K.endDragonFightData());
@@ -548,6 +558,21 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
         }
     }
 
+    private boolean[] arclight$explosionResult;
+
+    @Override
+    public boolean bridge$createExplosion(Entity source, double x, double y, double z, float power, boolean fire, Level.ExplosionInteraction interaction) {
+        boolean[] previous = this.arclight$explosionResult;
+        boolean[] result = new boolean[1];
+        this.arclight$explosionResult = result;
+        try {
+            ((ServerLevel) (Object) this).explode(source, Explosion.getDefaultDamageSource((ServerLevel) (Object) this, source), null, x, y, z, power, fire, interaction);
+            return result[0];
+        } finally {
+            this.arclight$explosionResult = previous;
+        }
+    }
+
     @ModifyVariable(method = "explode", index = 17, at = @At(value = "STORE", ordinal = 0))
     private Explosion.BlockInteraction arclight$standardExplodePost(Explosion.BlockInteraction interaction) {
         return super.arclight$getStandardExplodeBlockInteraction(interaction);
@@ -555,6 +580,9 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
 
     @Decorate(method = "explode", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ServerExplosion;isSmall()Z"))
     private void arclight$doExplosion(@Local(ordinal = 0) ServerExplosion explosion) throws Throwable {
+        if (this.arclight$explosionResult != null) {
+            this.arclight$explosionResult[0] = !((ExplosionBridge) explosion).bridge$wasCancelled();
+        }
         if (((ExplosionBridge) explosion).bridge$wasCancelled()) {
             DecorationOps.cancel().invoke();
             return;

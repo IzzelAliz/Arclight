@@ -87,6 +87,16 @@ import java.util.logging.Logger;
 @Mixin(value = CraftServer.class, remap = false)
 public abstract class CraftServerMixin implements CraftServerBridge {
 
+    /**
+     * @author IzzelAliz
+     * @reason Use the runtime level-data accessor instead of the patched field descriptor.
+     */
+    @Overwrite(remap = false)
+    public GameMode getDefaultGameMode() {
+        var data = (ServerLevelData) this.console.getLevel(net.minecraft.world.level.Level.OVERWORLD).getLevelData();
+        return GameMode.getByValue(data.getGameType().getId());
+    }
+
     // @formatter:off
     @Shadow @Final private CraftCommandMap commandMap;
     @Shadow @Final private SimplePluginManager pluginManager;
@@ -119,9 +129,6 @@ public abstract class CraftServerMixin implements CraftServerBridge {
 
     @Shadow
     public abstract World getWorld(String name);
-
-    @Shadow
-    public abstract GameMode getDefaultGameMode();
 
     @Shadow
     public abstract DedicatedServer getServer();
@@ -420,7 +427,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
             ((PrimaryLevelDataBridge) levelData).arclight$checkName(name);
             levelData.setModdedInfo(this.console.getServerModName(), this.console.getModdedStatus().shouldReportAsModified());
 
-            ((DedicatedServerBridge) this.console).arclight$forceUpgradeIfNeeded(worldSession, dimensions); // Arclight
+            ((DedicatedServerBridge) this.console).arclight$forceUpgradeIfNeeded(worldSession, levelData, dimensions); // Arclight
 
             long j = BiomeManager.obfuscateSeed(creator.seed());
             List<CustomSpawner> list = ImmutableList.of(new PhantomSpawner(), new PatrolSpawner(), new CatSpawner(), new VillageSiege(), new WanderingTraderSpawner(levelData));
@@ -437,10 +444,6 @@ public abstract class CraftServerMixin implements CraftServerBridge {
                 worldKey = net.minecraft.world.level.Level.END;
             } else {
                 worldKey = ResourceKey.create(Registries.DIMENSION, Identifier.withDefaultNamespace(name.toLowerCase(Locale.ROOT)));
-            }
-
-            if (!creator.keepSpawnInMemory()) {
-                levelData.getGameRules().set(GameRules.RESPAWN_RADIUS, 0, null);
             }
 
             this.bridge$offerBiomeProviderCache(name, biomeProvider);

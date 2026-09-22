@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(ResetProfession.class)
 public class ResetProfessionMixin {
 
-    @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/npc/Villager;setVillagerData(Lnet/minecraft/world/entity/npc/VillagerData;)V"))
+    @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/npc/villager/Villager;setVillagerData(Lnet/minecraft/world/entity/npc/villager/VillagerData;)V"))
     private static void arclight$careerChangeHook(Villager villagerEntity, VillagerData villagerData) {
         VillagerCareerChangeEvent event = CraftEventFactory.callVillagerCareerChangeEvent(villagerEntity,
             org.bukkit.entity.Villager.Profession.NONE,

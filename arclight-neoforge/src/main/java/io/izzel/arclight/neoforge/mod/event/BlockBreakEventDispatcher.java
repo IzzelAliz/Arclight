@@ -3,6 +3,10 @@ package io.izzel.arclight.neoforge.mod.event;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.DistValidate;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 import org.bukkit.Bukkit;
@@ -19,10 +23,12 @@ public class BlockBreakEventDispatcher {
             BlockBreakEvent breakEvent = new BlockBreakEvent(craftBlock, ((ServerPlayerBridge) event.getPlayer()).bridge$getBukkitEntity());
             ArclightCaptures.captureBlockBreakPlayer(breakEvent);
             breakEvent.setCancelled(event.isCanceled());
-            //breakEvent.setExpToDrop(event.getExpToDrop());
+            ServerLevel level = (ServerLevel) event.getLevel();
+            BlockEntity blockEntity = level.getBlockEntity(event.getPos());
+            ItemStack tool = event.getPlayer().getMainHandItem();
+            breakEvent.setExpToDrop(EnchantmentHelper.processBlockExperience(level, tool, event.getState().getExpDrop(level, event.getPos(), blockEntity, event.getPlayer(), tool)));
             Bukkit.getPluginManager().callEvent(breakEvent);
             event.setCanceled(breakEvent.isCancelled());
-            //event.setExpToDrop(breakEvent.getExpToDrop());
         }
     }
 }

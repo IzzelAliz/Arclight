@@ -35,7 +35,7 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin implement
     private double flyingX = 0.95;
     private double flyingY = 0.95;
     private double flyingZ = 0.95;
-    public double maxSpeed = 0.4D;
+    public Double maxSpeed;
 
     @Inject(method = "<init>(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/level/Level;)V", at = @At("RETURN"))
     private void arclight$init(EntityType<?> type, Level worldIn, CallbackInfo ci) {
@@ -46,7 +46,7 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin implement
         flyingX = 0.95;
         flyingY = 0.95;
         flyingZ = 0.95;
-        maxSpeed = 0.4D;
+        maxSpeed = null;
     }
 
     @Unique
@@ -57,7 +57,7 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin implement
         this.arclight$prevLocation = new Location(null, this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
     }
 
-    @Inject(method = "tick", at = @At("RETURN"))
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/minecart/MinecartBehavior;tick()V", shift = At.Shift.AFTER))
     private void arclight$vehicleUpdateEvent(CallbackInfo ci) {
         org.bukkit.World bworld = this.level().bridge$getWorld();
         Location to = new Location(bworld, this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
@@ -72,13 +72,12 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin implement
         }
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    protected double getMaxSpeed(ServerLevel level) {
-        return (this.isInWater() ? this.maxSpeed / 2.0D : this.maxSpeed);
+    @org.spongepowered.asm.mixin.Shadow
+    protected abstract double getMaxSpeed(ServerLevel level);
+
+    @Override
+    public Double bridge$getMaxSpeedOverride() {
+        return this.maxSpeed;
     }
 
     /**

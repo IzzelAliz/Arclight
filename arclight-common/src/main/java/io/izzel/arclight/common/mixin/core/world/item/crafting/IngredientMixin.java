@@ -1,35 +1,30 @@
 package io.izzel.arclight.common.mixin.core.world.item.crafting;
 
 import io.izzel.arclight.common.bridge.core.world.item.crafting.IngredientBridge;
-import net.minecraft.core.HolderSet;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
 @Mixin(Ingredient.class)
 public abstract class IngredientMixin implements IngredientBridge {
 
-    @Shadow @Final private HolderSet<Item> values;
-
-    public boolean exact;
+    private List<ItemStack> exactChoices;
 
     @Inject(method = "test(Lnet/minecraft/world/item/ItemStack;)Z", cancellable = true, at = @At("HEAD"))
     private void arclight$exactMatch(@Nullable ItemStack itemStack, CallbackInfoReturnable<Boolean> cir) {
-        if (exact) {
+        if (this.exactChoices != null) {
             if (itemStack == null) {
                 cir.setReturnValue(false);
                 return;
             }
-            for (var item : this.values) {
-                if (itemStack.is(item) && ItemStack.isSameItemSameComponents(itemStack, item.value().getDefaultInstance())) {
+            for (ItemStack exactChoice : this.exactChoices) {
+                if (ItemStack.isSameItemSameComponents(itemStack, exactChoice)) {
                     cir.setReturnValue(true);
                     return;
                 }
@@ -39,12 +34,20 @@ public abstract class IngredientMixin implements IngredientBridge {
     }
 
     @Override
-    public void bridge$setExact(boolean exact) {
-        this.exact = exact;
+    public void bridge$setExactChoices(List<ItemStack> exactChoices) {
+        this.exactChoices = exactChoices.stream().map(ItemStack::copy).toList();
+    }
+
+    @Override
+    public List<ItemStack> bridge$getExactChoices() {
+        if (this.exactChoices == null) {
+            return null;
+        }
+        return this.exactChoices.stream().map(ItemStack::copy).toList();
     }
 
     @Override
     public boolean bridge$isExact() {
-        return this.exact;
+        return this.exactChoices != null;
     }
 }

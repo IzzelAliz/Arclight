@@ -84,7 +84,6 @@ shadowJar {
     exclude 'architectury.common.json'
 
     configurations = [project.configurations.shadowBundle]
-    from(rootProject.layout.projectDirectory.dir('.gradle/arclight/arclight_cache/buildtools/Spigot/Spigot-API/target/classes'))
     archiveClassifier = 'dev-shadow'
 }
 

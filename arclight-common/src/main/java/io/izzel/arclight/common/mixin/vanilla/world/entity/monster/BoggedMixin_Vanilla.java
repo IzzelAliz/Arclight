@@ -21,7 +21,7 @@ public abstract class BoggedMixin_Vanilla extends AbstractSkeletonMixin {
 
     @Shadow @Final private static EntityDataAccessor<Boolean> DATA_SHEARED;
 
-    @Inject(method = "mobInteract", cancellable = true, require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/Bogged;shear(Lnet/minecraft/sounds/SoundSource;)V"))
+    @Inject(method = "mobInteract", cancellable = true, require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/skeleton/Bogged;shear(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/sounds/SoundSource;Lnet/minecraft/world/item/ItemStack;)V"))
     private void arclight$shearEvent(Player player, InteractionHand interactionHand, CallbackInfoReturnable<InteractionResult> cir) {
         if (!CraftEventFactory.handlePlayerShearEntityEvent(player, (Entity) (Object) this, player.getItemInHand(interactionHand), interactionHand)) {
             ((SynchedEntityDataBridge) this.getEntityData()).bridge$markDirty(DATA_SHEARED);

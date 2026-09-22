@@ -12,15 +12,15 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.Set;
 
-@Mixin(targets = "net.minecraft.server.level.DistanceManager$ChunkTicketTracker")
+@Mixin(targets = "net.minecraft.server.level.LoadingChunkTracker")
 public class DistanceManager_ChunkTicketTrackerMixin {
     // @formatter:off
-    @Shadow(aliases = {"this$0", "f_140874_", "field_18255"}, remap = false) @Final private DistanceManager outerThis;
+    @Shadow @Final private DistanceManager distanceManager;
     // @formatter:on
 
     @Decorate(method = "setLevel", at = @At(value = "INVOKE", target = "Ljava/util/Set;add(Ljava/lang/Object;)Z"))
     private boolean arclight$setLevel(Set instance, Object e) throws Throwable {
-        ((DistanceManagerBridge) outerThis).arclight$offerUpdate((ChunkHolder) e);
+        ((DistanceManagerBridge) distanceManager).arclight$offerUpdate((ChunkHolder) e);
         return (boolean) DecorationOps.callsite().invoke(instance, e);
     }
 }

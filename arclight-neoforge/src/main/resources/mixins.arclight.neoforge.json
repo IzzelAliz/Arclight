@@ -37,11 +37,11 @@
     "core.world.effect.PoisonMobEffectMixin_NeoForge",
     "core.world.entity.EntityMixin_NeoForge",
     "core.world.entity.LivingEntityMixin_NeoForge",
+    "core.world.entity.LivingEntityBulkEffectsMixin_NeoForge",
     "core.world.entity.MobMixin_NeoForge",
     "core.world.entity.ai.behavior.HarvestFarmlandMixin_NeoForge",
     "core.world.entity.animal.MushroomCowMixin_NeoForge",
     "core.world.entity.animal.SheepMixin_NeoForge",
-    "core.world.entity.animal.WolfMixin_NeoForge",
     "core.world.entity.animal.frog.TadpoleMixin_NeoForge",
     "core.world.entity.item.ItemEntityMixin_NeoForge",
     "core.world.entity.monster.ZombieMixin_NeoForge",
@@ -83,6 +83,6 @@
     "neoforge.items.RangedWrapperAccessor",
     "neoforge.items.SidedInvWrapperAccessor",
     "neoforge.items.VanillaInventoryCodeHooksMixin",
-    "optimization.general.activationrange.entity.ItemEntityMixin_ActivationRange_NeoForge",
+    "optimization.general.activationrange.entity.ItemEntityMixin_ActivationRange_NeoForge"
   ]
 }
