@@ -27,6 +27,7 @@
     "CraftInventoryMixin",
     "CraftInventoryViewMixin",
     "CraftItemFactoryMixin",
+    "CraftItemFlagMixin",
     "CraftItemStackMixin",
     "CraftLegacyLegacyMixin",
     "CraftLegacyUtilMixin",
