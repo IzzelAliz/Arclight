@@ -33,6 +33,7 @@
     "CraftLegacyUtilMixin",
     "CraftMetaItemMixin",
     "CraftPlayerMixin",
+    "CraftPlayerProfileMixin",
     "CraftRecipeMixin",
     "CraftRegionAccessorMixin",
     "CraftSchedulerMixin",
