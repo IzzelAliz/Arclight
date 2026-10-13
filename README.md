@@ -35,6 +35,8 @@ This project is licensed under [GPL v3](LICENSE).
 
 ## Sponsor
 
+[![Akira Cloud — Minecraft server hosting](.github/akiracloud.webp)](https://portal.akiracloud.net/aff.php?aff=128)
+
 [![](.github/bisecthosting.webp)](https://bisecthosting.com/arclight)
 
 Get 25% off hosting server with promocode **arclight** at [BisectHosting](https://bisecthosting.com/arclight).
