@@ -5,7 +5,7 @@ import net.minecraft.world.entity.AreaEffectCloud;
 import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownLingeringPotion;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.HitResult;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.LingeringPotionSplashEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

@@ -2,11 +2,6 @@ package io.izzel.arclight.gradle.tasks
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
-import net.fabricmc.loom.LoomGradleExtension
-import net.fabricmc.lorenztiny.TinyMappingsReader
-import net.fabricmc.mappingio.MappingReader
-import net.fabricmc.mappingio.tree.MemoryMappingTree
-import org.cadixdev.bombe.type.signature.MethodSignature
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -26,20 +21,12 @@ abstract class RenameAsyncCatcherTask extends DefaultTask {
     void run() {
         def input = inputFile.get().asFile
         def output = outputs.files.singleFile
-        def tree = new MemoryMappingTree()
-        MappingReader.read(LoomGradleExtension.get(project.project(":arclight-common")).mappingConfiguration.tinyMappings, tree)
-        def set = new TinyMappingsReader(tree, "named", mapping.get()).read()
-        def map = new JsonSlurper().parse(input) as Map<String, Map<String, String>>
-        def mapped = map.collectEntries { ent ->
-            def clMap = set.getOrCreateClassMapping(ent.key)
-            def cl = clMap.fullDeobfuscatedName
-            def methods = ent.value.collectEntries {
-                def sig = MethodSignature.of(it.key)
-                def mappedSig = clMap.getOrCreateMethodMapping(sig)
-                [(mappedSig.deobfuscatedSignature.toJvmsIdentifier()): it.value]
-            }
-            [(cl): methods]
+        if (mapping.get() != 'official') {
+            throw new IllegalArgumentException('26.1.2 AsyncCatcher requires the official namespace')
         }
-        output.text = JsonOutput.toJson(mapped)
+        // Both platforms use the source namespace; no mapping provider exists.
+        def map = new JsonSlurper().parse(input) as Map<String, Map<String, String>>
+        output.parentFile.mkdirs()
+        output.text = JsonOutput.toJson(map)
     }
 }

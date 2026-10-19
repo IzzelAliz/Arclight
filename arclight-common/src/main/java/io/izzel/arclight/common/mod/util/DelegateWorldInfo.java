@@ -5,27 +5,26 @@ import io.izzel.arclight.common.bridge.core.world.level.storage.DerivedLevelData
 import io.izzel.arclight.common.bridge.core.world.level.storage.PrimaryLevelDataBridge;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.level.*;
-import net.minecraft.world.level.gamerules.GameRules;
-import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.storage.*;
-import net.minecraft.world.level.timers.TimerQueue;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.UUID;
 
 @SuppressWarnings("all")
 public class DelegateWorldInfo extends PrimaryLevelData {
 
     private final ServerLevelData serverLevelData;
 
-    public DelegateWorldInfo(LevelSettings levelSettings, WorldOptions worldOptions,
+    public DelegateWorldInfo(LevelSettings levelSettings,
                              SpecialWorldProperty specialWorldProperty, Lifecycle lifecycle,
                              ServerLevelData serverLevelData) {
-        super(levelSettings, worldOptions, specialWorldProperty, lifecycle);
+        super(levelSettings, specialWorldProperty, lifecycle);
         this.serverLevelData = serverLevelData;
+    }
+
+    @Override
+    public RespawnData getRespawnData() {
+        return serverLevelData.getRespawnData();
     }
 
     public float getSpawnAngle() {
@@ -38,43 +37,8 @@ public class DelegateWorldInfo extends PrimaryLevelData {
     }
 
     @Override
-    public long getDayTime() {
-        return serverLevelData.getDayTime();
-    }
-
-    @Override
     public String getLevelName() {
         return serverLevelData.getLevelName();
-    }
-
-    @Override
-    public int getClearWeatherTime() {
-        return serverLevelData.getClearWeatherTime();
-    }
-
-    @Override
-    public void setClearWeatherTime(int time) {
-        serverLevelData.setClearWeatherTime(time);
-    }
-
-    @Override
-    public boolean isThundering() {
-        return serverLevelData.isThundering();
-    }
-
-    @Override
-    public int getThunderTime() {
-        return serverLevelData.getThunderTime();
-    }
-
-    @Override
-    public boolean isRaining() {
-        return serverLevelData.isRaining();
-    }
-
-    @Override
-    public int getRainTime() {
-        return serverLevelData.getRainTime();
     }
 
     @Override
@@ -88,33 +52,8 @@ public class DelegateWorldInfo extends PrimaryLevelData {
     }
 
     @Override
-    public void setDayTime(long time) {
-        serverLevelData.setDayTime(time);
-    }
-
-    @Override
     public void setSpawn(RespawnData respawnData) {
         serverLevelData.setSpawn(respawnData);
-    }
-
-    @Override
-    public void setThundering(boolean thunderingIn) {
-        serverLevelData.setThundering(thunderingIn);
-    }
-
-    @Override
-    public void setThunderTime(int time) {
-        serverLevelData.setThunderTime(time);
-    }
-
-    @Override
-    public void setRaining(boolean isRaining) {
-        serverLevelData.setRaining(isRaining);
-    }
-
-    @Override
-    public void setRainTime(int time) {
-        serverLevelData.setRainTime(time);
     }
 
     @Override
@@ -143,21 +82,6 @@ public class DelegateWorldInfo extends PrimaryLevelData {
     }
 
     @Override
-    public GameRules getGameRules() {
-        return serverLevelData.getGameRules();
-    }
-
-    @Override
-    public java.util.Optional<net.minecraft.world.level.border.WorldBorder.Settings> getLegacyWorldBorderSettings() {
-        return serverLevelData.getLegacyWorldBorderSettings();
-    }
-
-    @Override
-    public void setLegacyWorldBorderSettings(java.util.Optional<net.minecraft.world.level.border.WorldBorder.Settings> settings) {
-        serverLevelData.setLegacyWorldBorderSettings(settings);
-    }
-
-    @Override
     public Difficulty getDifficulty() {
         return serverLevelData.getDifficulty();
     }
@@ -165,42 +89,6 @@ public class DelegateWorldInfo extends PrimaryLevelData {
     @Override
     public boolean isDifficultyLocked() {
         return serverLevelData.isDifficultyLocked();
-    }
-
-    @Override
-    public TimerQueue<MinecraftServer> getScheduledEvents() {
-        return serverLevelData.getScheduledEvents();
-    }
-
-    @Override
-    public int getWanderingTraderSpawnDelay() {
-        return serverLevelData.getWanderingTraderSpawnDelay();
-    }
-
-    @Override
-    public void setWanderingTraderSpawnDelay(int delay) {
-        serverLevelData.setWanderingTraderSpawnDelay(delay);
-    }
-
-    @Override
-    public int getWanderingTraderSpawnChance() {
-        return serverLevelData.getWanderingTraderSpawnChance();
-    }
-
-    @Override
-    public void setWanderingTraderSpawnChance(int chance) {
-        serverLevelData.setWanderingTraderSpawnChance(chance);
-    }
-
-    @Nullable
-    @Override
-    public UUID getWanderingTraderId() {
-        return serverLevelData.getWanderingTraderId();
-    }
-
-    @Override
-    public void setWanderingTraderId(UUID id) {
-        serverLevelData.setWanderingTraderId(id);
     }
 
     @Override
@@ -214,7 +102,7 @@ public class DelegateWorldInfo extends PrimaryLevelData {
 
 
     public static DelegateWorldInfo wrap(ServerLevelData data) {
-        return new DelegateWorldInfo(worldSettings(data), generatorSettings(data), specialWorldProperty(data), lifecycle(data), data);
+        return new DelegateWorldInfo(worldSettings(data), specialWorldProperty(data), lifecycle(data), data);
     }
 
     private static LevelSettings worldSettings(ServerLevelData data) {
@@ -228,18 +116,9 @@ public class DelegateWorldInfo extends PrimaryLevelData {
             return p.getLevelSettings();
         }
 
-        return new LevelSettings(data.getLevelName(), data.getGameType(), data.isHardcore(), data.getDifficulty(),
-                data.isAllowCommands(), data.getGameRules(), WorldDataConfiguration.DEFAULT);
-    }
-
-    private static WorldOptions generatorSettings(ServerLevelData data) {
-        data = resolveDelegate(data);
-
-        if (data instanceof WorldData p) {
-            return p.worldGenOptions();
-        }
-
-        return WorldOptions.defaultWithRandomSeed();
+        return new LevelSettings(data.getLevelName(), data.getGameType(),
+                new LevelSettings.DifficultySettings(data.getDifficulty(), data.isHardcore(), data.isDifficultyLocked()),
+                data.isAllowCommands(), WorldDataConfiguration.DEFAULT);
     }
 
     private static SpecialWorldProperty specialWorldProperty(ServerLevelData data) {

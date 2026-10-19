@@ -16,8 +16,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.LavaFluid;
-import org.bukkit.craftbukkit.v.block.CraftBlockState;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.block.CraftBlockState;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -56,7 +56,7 @@ public abstract class LavaFluidMixin implements LavaFluidBridge {
                                     continue;
                                 }
                             }
-                            world.setBlockAndUpdate(blockpos, bridge$forge$fireFluidPlaceBlockEvent(world, blockpos, pos, Blocks.FIRE.defaultBlockState()));
+                            world.setBlockAndUpdate(blockpos, bridge$forge$fireFluidPlaceBlockEvent(world, blockpos, pos, net.minecraft.world.level.block.BaseFireBlock.getState(world, blockpos)));
                             return;
                         }
                     } else if (blockstate.blocksMotion()) {
@@ -77,7 +77,7 @@ public abstract class LavaFluidMixin implements LavaFluidBridge {
                                 continue;
                             }
                         }
-                        world.setBlockAndUpdate(blockpos1.above(), bridge$forge$fireFluidPlaceBlockEvent(world, blockpos1.above(), pos, Blocks.FIRE.defaultBlockState()));
+                        world.setBlockAndUpdate(blockpos1.above(), bridge$forge$fireFluidPlaceBlockEvent(world, blockpos1.above(), pos, net.minecraft.world.level.block.BaseFireBlock.getState(world, blockpos1)));
                     }
                 }
             }

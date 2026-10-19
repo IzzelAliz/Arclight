@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.inventory;
 
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.inventory.LecternMenuBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.LecternInventoryBridge;
 import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
 import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
 import net.minecraft.world.Container;
@@ -10,8 +11,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.LecternMenu;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.inventory.CraftInventoryLectern;
-import org.bukkit.craftbukkit.v.inventory.view.CraftLecternView;
+import org.bukkit.craftbukkit.inventory.CraftInventoryLectern;
+import org.bukkit.craftbukkit.inventory.view.CraftLecternView;
 import org.bukkit.event.player.PlayerTakeLecternBookEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -63,6 +64,10 @@ public abstract class LecternMenuMixin extends AbstractContainerMenuMixin implem
 
     @Inject(method = "stillValid", cancellable = true, at = @At("HEAD"))
     public void arclight$unreachable(Player playerIn, CallbackInfoReturnable<Boolean> cir) {
+        if (this.lectern instanceof LecternInventoryBridge inventory && !inventory.bridge$getLectern().hasBook()) {
+            cir.setReturnValue(false);
+            return;
+        }
         if (!bridge$isCheckReachable()) cir.setReturnValue(true);
     }
 

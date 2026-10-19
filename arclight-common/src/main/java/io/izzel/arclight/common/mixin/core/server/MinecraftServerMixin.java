@@ -48,6 +48,7 @@ import net.minecraft.world.level.TicketStorage;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.dimension.LevelStem;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.ServerLevelData;
@@ -56,9 +57,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.RemoteConsoleCommandSender;
-import org.bukkit.craftbukkit.v.CraftRegistry;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.scoreboard.CraftScoreboardManager;
+import org.bukkit.craftbukkit.CraftRegistry;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.scoreboard.CraftScoreboardManager;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
@@ -81,6 +82,7 @@ import java.net.Proxy;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.function.BooleanSupplier;
@@ -109,18 +111,52 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
 
     @Shadow private PlayerList playerList;
 
-    public MinecraftServerMixin(String name) {
-        super(name);
+    public MinecraftServerMixin(String name, boolean propagatesCrashes) {
+        super(name, propagatesCrashes);
     }
 
     public WorldLoader.DataLoadContext worldLoader;
     private boolean forceTicks;
     public CraftServer server;
     public OptionSet options;
+
+    @Override
+    public OptionSet bridge$getOptions() {
+        return this.options;
+    }
     public ConsoleCommandSender console;
     public RemoteConsoleCommandSender remoteConsole;
     public java.util.Queue<Runnable> processQueue = new java.util.concurrent.ConcurrentLinkedQueue<>();
     public int autosavePeriod;
+
+    @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(method = "forceGameTimeSynchronization", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;broadcastAll(Lnet/minecraft/network/protocol/Packet;)V"))
+    private void arclight$worldGameTimeSync(net.minecraft.server.players.PlayerList list, net.minecraft.network.protocol.Packet<?> packet,
+            com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original) {
+        for (net.minecraft.server.level.ServerPlayer player : list.getPlayers()) {
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTimePacket(player.level().getGameTime(), java.util.Map.of()));
+        }
+    }
+
+
+    @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(method = "tickChildren", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/clock/ServerClockManager;tick()V"))
+    private void arclight$tickWorldClocks(net.minecraft.world.clock.ServerClockManager global,
+            com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original) {
+        var levels = ((MinecraftServer) (Object) this).getAllLevels();
+        boolean any = false;
+        for (ServerLevel level : levels) {
+            original.call(level.clockManager());
+            any = true;
+        }
+        if (!any) {
+            original.call(global);
+        }
+    }
+
+
+    @Override
+    public void bridge$setAutosavePeriod(int period) {
+        this.autosavePeriod = period;
+    }
     public Commands vanillaCommandDispatcher;
     private boolean hasStopped = false;
     private final Object stopLock = new Object();
@@ -148,7 +184,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    public void arclight$loadOptions(Thread p_236723_, LevelStorageSource.LevelStorageAccess p_236724_, PackRepository p_236725_, WorldStem worldStem, Proxy p_236727_, DataFixer p_236728_, Services p_236729_, LevelLoadListener p_236730_, CallbackInfo ci) {
+    public void arclight$loadOptions(Thread p_236723_, LevelStorageSource.LevelStorageAccess p_236724_, PackRepository p_236725_, WorldStem worldStem, Optional<GameRules> gameRules, Proxy p_236727_, DataFixer p_236728_, Services p_236729_, LevelLoadListener p_236730_, boolean propagatesCrashes, CallbackInfo ci) {
         this.options = ArclightCaptures.getBukkitOptions();
         this.vanillaCommandDispatcher = worldStem.dataPackResources().getCommands();
         this.worldLoader = ArclightCaptures.getDataLoadContext();
@@ -255,7 +291,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         if (this.forceTicks) cir.setReturnValue(true);
     }
 
-    @Inject(method = "createLevels", at = @At(value = "NEW", ordinal = 0, target = "(Lnet/minecraft/server/MinecraftServer;Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/world/level/storage/ServerLevelData;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/dimension/LevelStem;ZJLjava/util/List;ZLnet/minecraft/world/RandomSequences;)Lnet/minecraft/server/level/ServerLevel;"))
+    @Inject(method = "createLevels", at = @At(value = "NEW", ordinal = 0, target = "(Lnet/minecraft/server/MinecraftServer;Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/world/level/storage/ServerLevelData;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/dimension/LevelStem;ZJLjava/util/List;Z)Lnet/minecraft/server/level/ServerLevel;"))
     private void arclight$registerEnv(CallbackInfo ci) {
         BukkitRegistry.registerEnvironments(this.registryAccess().lookupOrThrow(Registries.LEVEL_STEM));
     }
@@ -303,6 +339,19 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         this.updateEffectiveRespawnData();
     }
 
+    @Unique
+    private void arclight$setupWorldDebugLevel(WorldData data, ServerLevel level) {
+        // Match CraftBukkit's world-local debug setup without replacing the native helper.
+        data.setDifficulty(net.minecraft.world.Difficulty.PEACEFUL);
+        data.setDifficultyLocked(true);
+        ((io.izzel.arclight.common.bridge.core.world.level.GameRulesBridge) level.getGameRules())
+            .bridge$setWorldRule(GameRules.ADVANCE_WEATHER, false, level);
+        level.clockManager().moveToTimeMarker(
+            this.registryAccess().getOrThrow(net.minecraft.world.clock.WorldClocks.OVERWORLD),
+            net.minecraft.world.clock.ClockTimeMarkers.NOON);
+        data.overworldData().setGameType(net.minecraft.world.level.GameType.SPECTATOR);
+    }
+
     // bukkit methods
     public void initWorld(ServerLevel serverWorld, ServerLevelData worldInfo, WorldData saveData, WorldOptions worldOptions) {
         boolean flag = saveData.isDebugWorld();
@@ -331,7 +380,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
                 setInitialSpawn(serverWorld, worldInfo, worldOptions.generateBonusChest(), flag, this.levelLoadListener);
                 worldInfo.setInitialized(true);
                 if (flag) {
-                    this.setupDebugLevel(this.worldData);
+                    this.arclight$setupWorldDebugLevel(saveData, serverWorld);
                 }
             } catch (Throwable throwable) {
                 CrashReport crashreport = CrashReport.forThrowable(throwable, "Exception initializing level");
@@ -349,19 +398,17 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     // bukkit methods
     public void prepareLevels(ServerLevel serverWorld) {
         this.bridge$forge$markLevelsDirty();
-        if (!serverWorld.bridge$getWorld().getKeepSpawnInMemory()) {
-            return;
-        }
         this.forceTicks = true;
         ChunkLoadCounter chunkLoadCounter = new ChunkLoadCounter();
         chunkLoadCounter.track(serverWorld, () -> {
             TicketStorage forcedchunkssavedata = serverWorld.getDataStorage().get(TicketStorage.TYPE);
             if (forcedchunkssavedata != null) {
+                forcedchunkssavedata.activateAllDeactivatedTickets();
                 LongIterator longiterator = forcedchunkssavedata.getForceLoadedChunks().iterator();
 
                 while (longiterator.hasNext()) {
                     long k = longiterator.nextLong();
-                    ChunkPos chunkpos = new ChunkPos(k);
+                    ChunkPos chunkpos = ChunkPos.unpack(k);
                     serverWorld.getChunkSource().updateChunkForced(chunkpos, true);
                 }
                 this.bridge$forge$reinstatePersistentChunks(serverWorld, forcedchunkssavedata);
@@ -387,10 +434,33 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     }
 
     public void removeLevel(ServerLevel level) {
-        this.levels.remove(level.dimension());
-        this.arclight$onServerUnload(level);
-        this.bridge$forge$markLevelsDirty();
-        ((CraftServerBridge) Bukkit.getServer()).bridge$removeWorld(level);
+        if (!this.levels.remove(level.dimension(), level)) {
+            return;
+        }
+        Throwable failure = null;
+        try {
+            this.arclight$onServerUnload(level);
+        } catch (RuntimeException | Error ex) {
+            failure = ex;
+        }
+        try {
+            this.bridge$forge$markLevelsDirty();
+        } catch (RuntimeException | Error ex) {
+            if (failure == null) failure = ex;
+            else if (failure != ex) failure.addSuppressed(ex);
+        }
+        try {
+            ((CraftServerBridge) Bukkit.getServer()).bridge$removeWorld(level);
+        } catch (RuntimeException | Error ex) {
+            if (failure == null) failure = ex;
+            else if (failure != ex) failure.addSuppressed(ex);
+        }
+        if (failure instanceof Error error) {
+            throw error;
+        }
+        if (failure != null) {
+            throw (RuntimeException) failure;
+        }
     }
 
     @Inject(method = "tickChildren", at = @At("HEAD"))
@@ -407,9 +477,11 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         }
     }
 
-    @Inject(method = "saveAllChunks", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;overworld()Lnet/minecraft/server/level/ServerLevel;"))
-    private void arclight$skipSave(boolean suppressLog, boolean flush, boolean forced, CallbackInfoReturnable<Boolean> cir) {
-        cir.setReturnValue(!this.levels.isEmpty());
+    // Every ServerLevel saves its own level.dat, respecting skipSave. Keep the global
+    // SavedData flush below this call: mods may still store unrelated global data there.
+    @com.llamalad7.mixinextras.injector.WrapWithCondition(method = "saveAllChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;saveDataTag(Lnet/minecraft/world/level/storage/WorldData;Ljava/util/UUID;)V"))
+    private boolean arclight$worldOwnsLevelDat(LevelStorageSource.LevelStorageAccess access, WorldData data, java.util.UUID playerId) {
+        return false;
     }
 
     @Inject(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/WorldData;setDataConfiguration(Lnet/minecraft/world/level/WorldDataConfiguration;)V"))

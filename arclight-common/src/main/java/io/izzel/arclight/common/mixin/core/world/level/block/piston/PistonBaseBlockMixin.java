@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.piston.PistonStructureResolver;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
+import org.bukkit.craftbukkit.block.CraftBlock;
 import org.bukkit.event.block.BlockPistonEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
@@ -33,7 +33,7 @@ public class PistonBaseBlockMixin {
     @Shadow @Final private boolean isSticky;
     // @formatter:on
 
-    @Inject(method = "checkIfExtend", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;blockEvent(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;II)V"))
+    @Inject(method = "checkIfExtend", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;blockEvent(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;II)V", ordinal = 1))
     public void arclight$pistonRetract(Level worldIn, BlockPos pos, BlockState state, CallbackInfo ci, Direction direction) {
         if (!this.isSticky) {
             Block block = CraftBlock.at(worldIn, pos);

@@ -6,7 +6,7 @@ import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.ComposterBlock;
-import org.bukkit.craftbukkit.v.inventory.CraftBlockInventoryHolder;
+import org.bukkit.craftbukkit.inventory.CraftBlockInventoryHolder;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(ComposterBlock.EmptyContainer.class)

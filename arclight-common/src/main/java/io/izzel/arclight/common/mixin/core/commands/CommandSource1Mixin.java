@@ -5,7 +5,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.permissions.Permission;
 import net.minecraft.server.permissions.PermissionSet;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v.command.ServerCommandSender;
+import org.bukkit.craftbukkit.command.ServerCommandSender;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 

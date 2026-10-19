@@ -2,8 +2,8 @@ package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.common.mod.server.entity.EntityClassLookup;
 import net.minecraft.world.entity.Entity;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.entity.CraftEntity;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.entity.CraftEntity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

@@ -2,7 +2,7 @@ package io.izzel.arclight.fabric.mod.permission;
 
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.fabric.api.util.TriState;
-import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 import org.bukkit.permissions.PermissibleBase;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.ServerOperator;

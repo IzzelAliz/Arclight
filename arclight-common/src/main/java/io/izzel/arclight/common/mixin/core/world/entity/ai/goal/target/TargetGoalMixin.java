@@ -17,9 +17,14 @@ public class TargetGoalMixin {
 
     @Shadow @Final protected Mob mob;
 
-    @Inject(method = "canContinueToUse", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;setTarget(Lnet/minecraft/world/entity/LivingEntity;)V"))
-    private void arclight$reason(CallbackInfoReturnable<Boolean> cir) {
-        ((MobBridge) this.mob).bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.CLOSEST_ENTITY, true);
+    @io.izzel.arclight.mixin.Decorate(method = "canContinueToUse()Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;setTarget(Lnet/minecraft/world/entity/LivingEntity;)V"))
+    private void arclight$continueTarget(Mob mob, net.minecraft.world.entity.LivingEntity target) throws Throwable {
+        if (mob.level() != target.level()) {
+            io.izzel.arclight.mixin.DecorationOps.cancel().invoke(false);
+            return;
+        }
+        ((MobBridge) mob).bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason.CLOSEST_ENTITY, true);
+        io.izzel.arclight.mixin.DecorationOps.callsite().invoke(mob, target);
     }
 
     @Inject(method = "stop", at = @At("HEAD"))

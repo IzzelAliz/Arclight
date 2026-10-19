@@ -1,5 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -7,7 +11,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,27 +38,36 @@ public abstract class LightningBoltMixin extends EntityMixin {
         return isSilent ? 0 : this.life;
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;thunderHit(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LightningBolt;)V"))
-    private void arclight$captureEntity(CallbackInfo ci) {
-        ArclightCaptures.captureDamageEventEntity((Entity) (Object) this);
-    }
-
-    @Inject(method = "tick", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/Entity;thunderHit(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LightningBolt;)V"))
-    private void arclight$resetEntity(CallbackInfo ci) {
-        ArclightCaptures.captureDamageEventEntity(null);
-    }
-
-    @Redirect(method = "spawnFire", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
-    private boolean arclight$blockIgnite(ServerLevel world, BlockPos pos, BlockState state) {
-        if (!CraftEventFactory.callBlockIgniteEvent(world, pos, (LightningBolt) (Object) this).isCancelled()) {
-            return world.setBlockAndUpdate(pos, state);
-        } else {
-            return false;
+    @WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;thunderHit(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LightningBolt;)V"))
+    private void arclight$captureEntity(Entity entity, ServerLevel world, LightningBolt lightning, Operation<Void> original) {
+        // The damage-event getter consumes the slot; snapshot without consuming parent context.
+        Entity previous = ArclightCaptures.peekDamageEventEntity();
+        ArclightCaptures.captureDamageEventEntity(lightning);
+        try {
+            original.call(entity, world, lightning);
+        } finally {
+            ArclightCaptures.captureDamageEventEntity(previous);
         }
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;thunderHit(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LightningBolt;)V"))
-    private void arclight$onLightning(CallbackInfo ci) {
-        ArclightCaptures.captureDamageEventEntity((LightningBolt) (Object) this);
+    @WrapOperation(method = "spawnFire", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"), require = 2, expect = 2, allow = 2)
+    private boolean arclight$blockIgnite(ServerLevel world, BlockPos pos, BlockState state, Operation<Boolean> original,
+                                        @Share(value = "igniteVeto", namespace = "arclight:lightning") LocalBooleanRef veto) {
+        // One decision per candidate, in this spawnFire invocation (also across reentry).
+        veto.set(CraftEventFactory.callBlockIgniteEvent(world, pos, (LightningBolt) (Object) this).isCancelled());
+        if (veto.get()) {
+            return false;
+        }
+        return original.call(world, pos, state);
     }
+
+    @WrapOperation(method = "spawnFire", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/entity/LightningBolt;blocksSetOnFire:I"), require = 2, expect = 2, allow = 2)
+    private void arclight$igniteCredit(LightningBolt bolt, int value, Operation<Void> original,
+                                      @Share(value = "igniteVeto", namespace = "arclight:lightning") LocalBooleanRef veto) {
+        // Veto skips only this credit; an allowed setter returning false still counts.
+        if (!veto.get()) {
+            original.call(bolt, value);
+        }
+    }
+
 }

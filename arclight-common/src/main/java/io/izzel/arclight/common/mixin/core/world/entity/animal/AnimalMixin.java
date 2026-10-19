@@ -1,5 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.izzel.arclight.common.bridge.core.world.entity.animal.AnimalBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.AgeableMobMixin;
@@ -11,12 +14,13 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.gamerules.GameRules;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityEnterLoveModeEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -79,9 +83,25 @@ public abstract class AnimalMixin extends AgeableMobMixin implements AnimalBridg
         return breedItem;
     }
 
-    @Inject(method = "spawnChildFromBreeding", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V"))
-    private void arclight$reason(ServerLevel level, Animal p_27565_, CallbackInfo ci) {
+    private transient boolean arclight$breedCancelled;
+
+    @WrapMethod(method = "spawnChildFromBreeding")
+    private void arclight$breedingScope(ServerLevel level, Animal partner, Operation<Void> original) {
+        this.arclight$breedCancelled = false;
+        try {
+            original.call(level, partner);
+        } finally {
+            this.arclight$breedCancelled = false;
+        }
+    }
+
+    @WrapOperation(method = "spawnChildFromBreeding", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V"))
+    private void arclight$spawnBreedingChild(ServerLevel level, Entity offspring, Operation<Void> original) {
+        if (this.arclight$breedCancelled) {
+            return;
+        }
         ((WorldBridge) level).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.BREEDING);
+        original.call(level, offspring);
     }
 
     /**
@@ -98,6 +118,7 @@ public abstract class AnimalMixin extends AgeableMobMixin implements AnimalBridg
         if (entityageable != null) {
             org.bukkit.event.entity.EntityBreedEvent entityBreedEvent = CraftEventFactory.callEntityBreedEvent(entityageable, (Animal) (Object) this, entityanimal, cause.orElse(null), this.breedItem, experience);
             if (entityBreedEvent.isCancelled()) {
+                this.arclight$breedCancelled = true;
                 return;
             }
             experience = entityBreedEvent.getExperience();

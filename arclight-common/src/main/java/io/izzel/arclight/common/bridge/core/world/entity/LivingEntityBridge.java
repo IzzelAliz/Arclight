@@ -13,7 +13,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityKnockbackEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
@@ -37,6 +37,10 @@ public interface LivingEntityBridge extends EntityBridge {
     int bridge$getExpToDrop();
 
     void bridge$pushHealReason(EntityRegainHealthEvent.RegainReason regainReason);
+
+    /** Reads the pending one-shot reason without consuming it; null means none. */
+    @Nullable
+    EntityRegainHealthEvent.RegainReason bridge$peekHealReason();
 
     void bridge$heal(float healAmount, EntityRegainHealthEvent.RegainReason regainReason);
 

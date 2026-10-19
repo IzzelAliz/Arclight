@@ -2,7 +2,6 @@ package io.izzel.arclight.common.mod.util.remapper.patcher.integrated;
 
 import io.izzel.arclight.api.PluginPatcher;
 import io.izzel.arclight.common.mod.server.ArclightServer;
-import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -42,16 +41,7 @@ public class WorldEdit {
     // Correctly handle reflection name picking
     // Their naming mapping for NMS is somehow behind the version
     public static void handleStaticRefraction(ClassNode node, PluginPatcher.ClassRepo repo) {
-        var remapper = ArclightRemapper.getMojMapper();
-
-        var override = Map.of(
-                "NEXT_TICK_TIME", remapper.mapFieldName(
-                        "net/minecraft/server/MinecraftServer",
-                        "nextTickTimeNanos",
-                        "J",
-                        Opcodes.ACC_PRIVATE
-                )
-        );
+        var override = Map.of("NEXT_TICK_TIME", "nextTickTimeNanos");
         for (MethodNode method : node.methods) {
             if ("<clinit>".equals(method.name)) {
                 LdcInsnNode lastLdc = null;

@@ -14,8 +14,8 @@ import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.Tilt;
 import net.minecraft.world.phys.BlockHitResult;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,14 +29,14 @@ public class BigDripleafBlockMixin {
 
     @Shadow @Final private static EnumProperty<Tilt> TILT;
 
-    @Inject(method = "onProjectileHit", cancellable = true, at = @At("HEAD"))
+    @Inject(method = "onProjectileHit(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/phys/BlockHitResult;Lnet/minecraft/world/entity/projectile/Projectile;)V", cancellable = true, at = @At("HEAD"), require = 1, expect = 1, allow = 1)
     private void arclight$projectileHit(Level level, BlockState state, BlockHitResult hitResult, Projectile projectile, CallbackInfo ci) {
-        if (!DistValidate.isValid(level) && CraftEventFactory.callEntityChangeBlockEvent(projectile, hitResult.getBlockPos(), state.setValue(TILT, Tilt.FULL))) {
+        if (DistValidate.isValid(level) && !CraftEventFactory.callEntityChangeBlockEvent(projectile, hitResult.getBlockPos(), state.setValue(TILT, Tilt.FULL))) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "entityInside", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/BigDripleafBlock;setTiltAndScheduleTick(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/properties/Tilt;Lnet/minecraft/sounds/SoundEvent;)V"))
+    @Inject(method = "entityInside(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/InsideBlockEffectApplier;Z)V", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/BigDripleafBlock;setTiltAndScheduleTick(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/properties/Tilt;Lnet/minecraft/sounds/SoundEvent;)V"), require = 1, expect = 1, allow = 1)
     private void arclight$entityInteract(BlockState state, Level level, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier, boolean isPrecise, CallbackInfo ci) {
         if (!DistValidate.isValid(level)) return;
         org.bukkit.event.Cancellable cancellable;
@@ -51,7 +51,7 @@ public class BigDripleafBlockMixin {
             ci.cancel();
             return;
         }
-        if (!CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state.setValue(TILT, Tilt.FULL))) {
+        if (!CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state.setValue(TILT, Tilt.UNSTABLE))) {
             ci.cancel();
         }
     }

@@ -5,13 +5,15 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.ContainerOpenersCounter;
 import net.minecraft.world.level.block.state.BlockState;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+import org.objectweb.asm.Opcodes;
 
 @Mixin(ContainerOpenersCounter.class)
 public abstract class ContainerOpenersCounterMixin {
@@ -37,28 +39,27 @@ public abstract class ContainerOpenersCounterMixin {
         openerCountChanged(world, blockposition, iblockdata, i, j);
     }
 
-    @Inject(method = "incrementOpeners", at = @At("HEAD"))
-    private void arclight$increase(LivingEntity p_155453_, Level level, BlockPos pos, BlockState p_155456_, double distance, CallbackInfo ci) {
-        int oldPower = Math.max(0, Math.min(15, this.openCount++));
+    // After the native PUTFIELD and ISTORE: update once and retain the invocation-local previous count.
+    @Inject(method = "incrementOpeners", at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/block/entity/ContainerOpenersCounter;openCount:I", opcode = Opcodes.PUTFIELD, ordinal = 0, shift = At.Shift.BY, by = 2), locals = LocalCapture.CAPTURE_FAILHARD)
+    private void arclight$increase(LivingEntity p_155453_, Level level, BlockPos pos, BlockState p_155456_, double distance, CallbackInfo ci, int previous) {
+        int oldPower = Math.max(0, Math.min(15, previous));
         if (level.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.TRAPPED_CHEST)) {
             int newPower = Math.max(0, Math.min(15, this.openCount));
             if (oldPower != newPower) {
                 CraftEventFactory.callRedstoneChange(level, pos, oldPower, newPower);
             }
         }
-        this.openCount--;
     }
 
-    @Inject(method = "decrementOpeners", at = @At("HEAD"))
-    private void arclight$decrease(LivingEntity p_155453_, Level level, BlockPos pos, BlockState p_155456_, CallbackInfo ci) {
-        int oldPower = Math.max(0, Math.min(15, this.openCount--));
+    @Inject(method = "decrementOpeners", at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/block/entity/ContainerOpenersCounter;openCount:I", opcode = Opcodes.PUTFIELD, ordinal = 0, shift = At.Shift.BY, by = 2), locals = LocalCapture.CAPTURE_FAILHARD)
+    private void arclight$decrease(LivingEntity p_155453_, Level level, BlockPos pos, BlockState p_155456_, CallbackInfo ci, int previous) {
+        int oldPower = Math.max(0, Math.min(15, previous));
         if (level.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.TRAPPED_CHEST)) {
             int newPower = Math.max(0, Math.min(15, this.openCount));
             if (oldPower != newPower) {
                 CraftEventFactory.callRedstoneChange(level, pos, oldPower, newPower);
             }
         }
-        this.openCount++;
     }
 
     @ModifyVariable(method = "recheckOpeners", ordinal = 0, at = @At(value = "FIELD", ordinal = 0, target = "Lnet/minecraft/world/level/block/entity/ContainerOpenersCounter;openCount:I"))

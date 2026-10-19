@@ -1,12 +1,13 @@
 package io.izzel.arclight.neoforge.mixin.core.world.item;
 
+import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ShearsItem;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,6 +18,10 @@ public abstract class ShearsItemMixin_NeoForge {
 
     @Inject(method = "interactLivingEntity", cancellable = true, at = @At(value = "INVOKE", remap = false, target = "Lnet/neoforged/neoforge/common/IShearable;onSheared(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)Ljava/util/List;"))
     private void arclight$onShear(ItemStack stack, Player playerIn, LivingEntity entity, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
+        if (((PlayerBridge) playerIn).bridge$isCopperShearCancelled(entity)) {
+            cir.setReturnValue(InteractionResult.PASS);
+            return;
+        }
         if (!CraftEventFactory.handlePlayerShearEntityEvent(playerIn, entity, stack, hand)) {
             cir.setReturnValue(InteractionResult.PASS);
         }

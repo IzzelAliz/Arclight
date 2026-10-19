@@ -1,15 +1,24 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge;
+import io.izzel.arclight.common.bridge.core.world.level.saveddata.WeatherDataBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.common.bridge.core.world.level.storage.DerivedLevelDataBridge;
+import io.izzel.arclight.common.bridge.core.world.level.storage.PrimaryLevelDataBridge;
+import io.izzel.arclight.common.mod.server.world.BukkitWorldIdentity;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.saveddata.WeatherData;
 import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.level.storage.WorldData;
-import org.bukkit.craftbukkit.v.CraftWorld;
+import org.bukkit.craftbukkit.CraftWorld;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.io.File;
 
@@ -25,7 +34,7 @@ public abstract class CraftWorldMixin {
         var interaction = !breakBlocks ? net.minecraft.world.level.Level.ExplosionInteraction.NONE
             : source == null ? io.izzel.arclight.common.mod.ArclightConstants.STANDARD
             : net.minecraft.world.level.Level.ExplosionInteraction.MOB;
-        var entity = source == null ? null : ((org.bukkit.craftbukkit.v.entity.CraftEntity) source).getHandle();
+        var entity = source == null ? null : ((org.bukkit.craftbukkit.entity.CraftEntity) source).getHandle();
         return ((ServerLevelBridge) this.world).bridge$createExplosion(entity, x, y, z, power, fire, interaction);
     }
 
@@ -49,69 +58,37 @@ public abstract class CraftWorldMixin {
         }
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason Use the native world-data interface, not CraftBukkit's patched field descriptor.
-     */
-    @Overwrite(remap = false)
-    public int getWeatherDuration() {
-        return ((ServerLevelData) this.world.getLevelData()).getRainTime();
+    // Avoid the removed PrimaryLevelData-typed ServerLevel field in the Bukkit body.
+    @Inject(method = "setHardcore(Z)V", at = @At("HEAD"), cancellable = true, remap = false)
+    private void arclight$setHardcore(boolean hardcore, CallbackInfo ci) {
+        var data = this.world.getLevelData();
+        Object owner = data instanceof DerivedLevelDataBridge bridge ? bridge.bridge$getWorldData() : data;
+        // Primary settings must be live; Derived hardcore reads its metadata owner.
+        var settings = owner instanceof PrimaryLevelDataBridge bridge
+            ? bridge.bridge$getWorldSettings()
+            : ((PrimaryLevelDataBridge) ((ServerLevelBridge) this.world).bridge$getPrimaryLevelData()).bridge$getWorldSettings();
+        settings.difficultySettings().hardcore = hardcore;
+        ci.cancel();
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason Use the native world-data interface, not CraftBukkit's patched field descriptor.
-     */
-    @Overwrite(remap = false)
-    public void setWeatherDuration(int duration) {
-        ((ServerLevelData) this.world.getLevelData()).setRainTime(duration);
+    @Decorate(method = "setStorm(Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/saveddata/WeatherData;setRaining(Z)V"), remap = false)
+    private void arclight$stormScope(WeatherData weather, boolean value) throws Throwable {
+        var token = WeatherDataBridge.bridge$pushWeatherScope(weather, this.world);
+        try {
+            DecorationOps.callsite().invoke(weather, value);
+        } finally {
+            token.close();
+        }
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason Use the native world-data interface and retain CraftBukkit's duration resets.
-     */
-    @Overwrite(remap = false)
-    public void setThundering(boolean thundering) {
-        ((ServerLevelData) this.world.getLevelData()).setThundering(thundering);
-        setThunderDuration(0);
-        setClearWeatherDuration(0);
-    }
-
-    /**
-     * @author IzzelAliz
-     * @reason Use the native world-data interface, not CraftBukkit's patched field descriptor.
-     */
-    @Overwrite(remap = false)
-    public int getThunderDuration() {
-        return ((ServerLevelData) this.world.getLevelData()).getThunderTime();
-    }
-
-    /**
-     * @author IzzelAliz
-     * @reason Use the native world-data interface, not CraftBukkit's patched field descriptor.
-     */
-    @Overwrite(remap = false)
-    public void setThunderDuration(int duration) {
-        ((ServerLevelData) this.world.getLevelData()).setThunderTime(duration);
-    }
-
-    /**
-     * @author IzzelAliz
-     * @reason Use the native world-data interface, not CraftBukkit's patched field descriptor.
-     */
-    @Overwrite(remap = false)
-    public int getClearWeatherDuration() {
-        return ((ServerLevelData) this.world.getLevelData()).getClearWeatherTime();
-    }
-
-    /**
-     * @author IzzelAliz
-     * @reason Use the native world-data interface, not CraftBukkit's patched field descriptor.
-     */
-    @Overwrite(remap = false)
-    public void setClearWeatherDuration(int duration) {
-        ((ServerLevelData) this.world.getLevelData()).setClearWeatherTime(duration);
+    @Decorate(method = "setThundering(Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/saveddata/WeatherData;setThundering(Z)V"), remap = false)
+    private void arclight$thunderScope(WeatherData weather, boolean value) throws Throwable {
+        var token = WeatherDataBridge.bridge$pushWeatherScope(weather, this.world);
+        try {
+            DecorationOps.callsite().invoke(weather, value);
+        } finally {
+            token.close();
+        }
     }
 
     // @formatter:off
@@ -124,7 +101,7 @@ public abstract class CraftWorldMixin {
      */
     @Overwrite(remap = false)
     public File getWorldFolder() {
-        return ((ServerLevelBridge) this.world).bridge$getConvertable().getDimensionPath(this.world.dimension()).toFile();
+        return BukkitWorldIdentity.getWorldFolder(((ServerLevelBridge) this.world).bridge$getConvertable(), this.world.dimension()).toFile();
     }
 
     /**

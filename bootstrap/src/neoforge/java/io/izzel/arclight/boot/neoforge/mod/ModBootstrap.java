@@ -24,14 +24,14 @@ public class ModBootstrap implements AbstractBootstrap {
         try {
             // Standalone installs already expose these jars on the FML parent loader.
             // When installed as an early-service mod, append them to that service's
-            // URLClassLoader. FML10's game loader delegates to it without JPMS surgery.
+            // URLClassLoader. FML 11's game loader delegates to it without JPMS surgery.
             loadLibraries(MinecraftProvider.modInstall(logger::info));
             var bootstrap = new ModBootstrap();
             bootstrap.setupMod(ArclightPlatform.NEOFORGE);
             bootstrap.dirtyHacks();
             initialized = true;
         } catch (Throwable e) {
-            throw new IllegalStateException("Error bootstrapping Arclight for FML 10", e);
+            throw new IllegalStateException("Error bootstrapping Arclight for FML 11", e);
         }
     }
 

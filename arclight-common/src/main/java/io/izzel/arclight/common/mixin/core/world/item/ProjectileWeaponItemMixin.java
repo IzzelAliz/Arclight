@@ -8,7 +8,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ProjectileWeaponItem;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -21,6 +21,8 @@ public class ProjectileWeaponItemMixin {
     @Decorate(method = "shoot", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/Projectile;spawnProjectile(Lnet/minecraft/world/entity/projectile/Projectile;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Ljava/util/function/Consumer;)Lnet/minecraft/world/entity/projectile/Projectile;"))
     private Projectile arclight$shootBow(Projectile projectile, ServerLevel instance, ItemStack projectileStack, Consumer<Projectile> consumer, ServerLevel serverLevel, LivingEntity livingEntity, InteractionHand interactionHand, ItemStack itemStack,
                                          List<ItemStack> list, float f, float g, boolean bl, LivingEntity target) throws Throwable {
+        consumer.accept(projectile);
+        Consumer<Projectile> alreadyShot = ignored -> {};
         var event = CraftEventFactory.callEntityShootBowEvent(livingEntity, itemStack, projectileStack, projectile, interactionHand, f, true);
         if (event.isCancelled()) {
             event.getProjectile().remove();
@@ -28,8 +30,8 @@ public class ProjectileWeaponItemMixin {
         }
 
         if (event.getProjectile() == projectile.bridge$getBukkitEntity()) {
-            var spawned = (Projectile) DecorationOps.callsite().invoke(projectile, instance, projectileStack, consumer);
-            if (spawned.isRemoved()) {
+            var spawned = (Projectile) DecorationOps.callsite().invoke(projectile, instance, projectileStack, alreadyShot);
+            if (spawned.isRemoved() || !((io.izzel.arclight.common.bridge.core.world.entity.projectile.ProjectileSpawnBridge) spawned).bridge$wasSpawnAccepted()) {
                 if (livingEntity instanceof net.minecraft.server.level.ServerPlayer player) {
                     ((io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge) player).bridge$getBukkitEntity().updateInventory();
                 }

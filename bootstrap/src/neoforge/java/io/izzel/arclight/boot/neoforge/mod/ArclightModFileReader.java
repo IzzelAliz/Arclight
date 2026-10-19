@@ -20,6 +20,10 @@ public class ArclightModFileReader implements IModFileReader {
         // must remain on the transforming loader, including shaded mod packages.
         if (contents.containsFile(JarModsDotTomlModFileReader.MODS_TOML)) {
             if (!"Arclight".equals(contents.getManifest().getMainAttributes().getValue("Implementation-Title"))) return null;
+            // FML's local module package ownership precedes parent fallback.
+            // Use this same class-only view for descriptor scanning and module reads.
+            // Only Arclight's own shaded JLine packages can cross the appender ABI.
+            var moduleContents = ArclightJarContentsImplFilter.filterSelfJLine(contents);
             final ModFile[] file = new ModFile[1];
             var metadata = new JarModuleInfo() {
                 public String name() { return file[0].getId(); }
@@ -35,12 +39,12 @@ public class ArclightModFileReader implements IModFileReader {
                     return builder.build();
                 }
             };
-            file[0] = new ModFile(contents, metadata, ModFileParser::modsTomlParser, attributes.withReader(this));
+            file[0] = new ModFile(moduleContents, metadata, ModFileParser::modsTomlParser, attributes.withReader(this));
             return file[0];
         }
-        // FML 10 loads LIBRARY jars on its early URLClassLoader, which requires
-        // original content roots. Parent-first delegation replaces the old JPMS
-        // package masking; leave these jars and their SPI resources to FML.
+        // FML 11 loads LIBRARY jars on its early URLClassLoader, which requires
+        // original content roots. Leave these jars and their SPI resources to FML;
+        // this does not change local package ownership in game modules.
         return null;
     }
 

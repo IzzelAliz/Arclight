@@ -16,6 +16,12 @@ import org.spongepowered.asm.mixin.Mixin;
 public abstract class BlockMixin_NeoForge implements BlockBridge, IBlockExtension {
 
     @Override
+    public net.minecraft.util.TriState bridge$forge$canSustainPlant(BlockState soil, net.minecraft.world.level.BlockGetter level, BlockPos pos, Direction direction, BlockState plant) {
+        return soil.canSustainPlant(level, pos, direction, plant);
+    }
+
+
+    @Override
     public boolean bridge$forge$onCropsGrowPre(Level level, BlockPos pos, BlockState state, boolean def) {
         return CommonHooks.canCropGrow(level, pos, state, def);
     }

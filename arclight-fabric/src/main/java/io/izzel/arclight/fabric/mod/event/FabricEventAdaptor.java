@@ -3,7 +3,7 @@ package io.izzel.arclight.fabric.mod.event;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.minecraft.world.InteractionResult;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.block.Action;
 
 import java.util.function.Function;

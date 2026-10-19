@@ -12,7 +12,7 @@ import net.neoforged.neoforge.transfer.item.ItemResource;
 import net.neoforged.neoforge.transfer.item.VanillaInventoryCodeHooks;
 import net.neoforged.neoforge.transfer.transaction.Transaction;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;

@@ -106,17 +106,17 @@ import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.util.CraftLocation;
+import org.bukkit.craftbukkit.util.CraftLocation;
 import org.bukkit.command.CommandException;
-import org.bukkit.craftbukkit.v.entity.CraftEntity;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v.inventory.CraftItemType;
-import org.bukkit.craftbukkit.v.util.CraftChatMessage;
-import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
-import org.bukkit.craftbukkit.v.util.LazyPlayerSet;
-import org.bukkit.craftbukkit.v.util.Waitable;
+import org.bukkit.craftbukkit.entity.CraftEntity;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.inventory.CraftItemType;
+import org.bukkit.craftbukkit.util.CraftChatMessage;
+import org.bukkit.craftbukkit.util.CraftNamespacedKey;
+import org.bukkit.craftbukkit.util.LazyPlayerSet;
+import org.bukkit.craftbukkit.util.Waitable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
@@ -1201,7 +1201,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             return;
         }
         final ServerLevel world = this.player.level();
-        final Entity entity = packet.getTarget(world);
+        final Entity entity = world.getEntityOrPart(packet.entityId());
         if (entity == player && !player.isSpectator()) {
             bridge$disconnect("Cannot interact with self!");
             ci.cancel();
@@ -1250,11 +1250,11 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                 }
                 boolean flag = packet.stateId() != this.player.containerMenu.getStateId();
 
-                this.player.containerMenu.suppressRemoteUpdates();
-                // CraftBukkit start - Call InventoryClickEvent
                 if (packet.slotNum() < -1 && packet.slotNum() != -999) {
                     return;
                 }
+                this.player.containerMenu.suppressRemoteUpdates();
+                // CraftBukkit start - Call InventoryClickEvent
 
                 ServerPlayer owner = this.player;
                 InventoryView inventory;
@@ -1270,7 +1270,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                 ClickType click = ClickType.UNKNOWN;
                 InventoryAction action = InventoryAction.UNKNOWN;
 
-                switch (packet.clickType()) {
+                switch (packet.containerInput()) {
                     case PICKUP:
                         if (packet.buttonNum() == 0) {
                             click = ClickType.LEFT;
@@ -1417,7 +1417,6 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                         }
                         break;
                     case QUICK_CRAFT:
-                        this.player.containerMenu.clicked(packet.slotNum(), packet.buttonNum(), packet.clickType(), this.player);
                         break;
                     case PICKUP_ALL:
                         click = ClickType.DOUBLE_CLICK;
@@ -1435,7 +1434,9 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                         break;
                 }
 
-                if (packet.clickType() != net.minecraft.world.inventory.ClickType.QUICK_CRAFT) {
+                if (packet.containerInput() == net.minecraft.world.inventory.ContainerInput.QUICK_CRAFT || this.player.containerMenu.quickcraftStatus != 0) {
+                    this.player.containerMenu.clicked(packet.slotNum(), packet.buttonNum(), packet.containerInput(), this.player);
+                } else {
                     if (click == ClickType.NUMBER_KEY) {
                         event = new InventoryClickEvent(inventory, type, packet.slotNum(), click, action, packet.buttonNum());
                     } else {
@@ -1469,13 +1470,14 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                     AbstractContainerMenu oldContainer = this.player.containerMenu; // SPIGOT-1224
                     cserver.getPluginManager().callEvent(event);
                     if (this.player.containerMenu != oldContainer) {
+                        oldContainer.resumeRemoteUpdates();
                         return;
                     }
 
                     switch (event.getResult()) {
                         case ALLOW:
                         case DEFAULT:
-                            this.player.containerMenu.clicked(packet.slotNum(), packet.buttonNum(), packet.clickType(), this.player);
+                            this.player.containerMenu.clicked(packet.slotNum(), packet.buttonNum(), packet.containerInput(), this.player);
                             break;
                         case DENY:
                             /* Needs enum constructor in InventoryAction
@@ -1562,7 +1564,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             return (RecipeBookMenu.PostPlaceAction) DecorationOps.cancel().invoke();
         }
         var event = CraftEventFactory.callRecipeBookClickEvent(this.player, recipe, useMaxItems);
-        var replacement = this.server.getRecipeManager().byKey(org.bukkit.craftbukkit.v.inventory.CraftRecipe.toMinecraft(((org.bukkit.Keyed) event.getRecipe()).getKey())).orElse(null);
+        var replacement = this.server.getRecipeManager().byKey(org.bukkit.craftbukkit.inventory.CraftRecipe.toMinecraft(((org.bukkit.Keyed) event.getRecipe()).getKey())).orElse(null);
         if (replacement == null) {
             return (RecipeBookMenu.PostPlaceAction) DecorationOps.cancel().invoke();
         }

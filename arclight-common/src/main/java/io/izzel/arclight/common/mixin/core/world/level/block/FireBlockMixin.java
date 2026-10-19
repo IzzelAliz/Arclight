@@ -6,7 +6,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.ScheduledTickAccess;
@@ -14,9 +13,9 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FireBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlockState;
-import org.bukkit.craftbukkit.v.block.CraftBlockStates;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.block.CraftBlockState;
+import org.bukkit.craftbukkit.block.CraftBlockStates;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.block.BlockFadeEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public abstract class FireBlockMixin extends BaseFireBlockMixin implements FireBlockBridge {
 
     // @formatter:off
-    @Shadow protected abstract BlockState getStateForPlacement(BlockGetter blockReader, BlockPos pos);
+    @Shadow private BlockState getStateWithAge(LevelReader level, BlockPos pos, int age) { throw new AssertionError(); }
     @Shadow @Final private Object2IntMap<net.minecraft.world.level.block.Block> burnOdds;
     // @formatter:on
 
@@ -63,7 +62,7 @@ public abstract class FireBlockMixin extends BaseFireBlockMixin implements FireB
         BlockFadeEvent event = new BlockFadeEvent(blockState.getBlock(), blockState);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
-            return this.getStateForPlacement(world, pos).setValue(FireBlock.AGE, state.getValue(FireBlock.AGE));
+            return this.getStateWithAge(world, pos, state.getValue(FireBlock.AGE));
         } else {
             return blockState.getHandle();
         }

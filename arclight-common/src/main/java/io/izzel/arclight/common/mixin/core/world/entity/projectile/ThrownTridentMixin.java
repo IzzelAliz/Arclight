@@ -12,9 +12,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ThrownTrident.class)
 public abstract class ThrownTridentMixin extends AbstractArrowMixin implements ThrownTridentBridge {
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/arrow/ThrownTrident;discard()V"))
+    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/projectile/arrow/ThrownTrident;discard()V"))
     private void arclight$dropCause(CallbackInfo ci) {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DROP);
+    }
+
+    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/entity/projectile/arrow/ThrownTrident;discard()V"))
+    private void arclight$despawnCause(CallbackInfo ci) {
+        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
     }
 
     @Override

@@ -26,8 +26,8 @@ public class Cat_CatRelaxOnOwnerGoalMixin {
 
     @Redirect(method = "giveMorningGift", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/feline/Cat;dropFromGiftLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/resources/ResourceKey;Ljava/util/function/BiConsumer;)Z"))
     private boolean arclight$dropItem(Cat instance, ServerLevel level, ResourceKey<LootTable> lootTable, BiConsumer<ServerLevel, ItemStack> dropper) {
+        var pos = this.cat.blockPosition().immutable();
         return instance.dropFromGiftLootTable(level, lootTable, (serverLevel, itemStack) -> {
-            var pos = this.cat.blockPosition();
             var itemEntity = new ItemEntity(serverLevel,
                 (double) pos.getX() - (double) Mth.sin(this.cat.yBodyRot * ((float) Math.PI / 180F)),
                 (double) pos.getY(),

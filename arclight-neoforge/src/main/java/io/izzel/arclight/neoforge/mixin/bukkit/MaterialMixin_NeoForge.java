@@ -21,6 +21,7 @@ public abstract class MaterialMixin_NeoForge implements MaterialBridge {
 
     @Override
     public int bridge$forge$getBurnTime(Item item) {
-        return new ItemStack(item).getBurnTime(null, null);
+        var server = io.izzel.arclight.common.mod.server.ArclightServer.getMinecraftServer();
+        return server == null ? 0 : new ItemStack(item).getBurnTime(null, server.fuelValues());
     }
 }

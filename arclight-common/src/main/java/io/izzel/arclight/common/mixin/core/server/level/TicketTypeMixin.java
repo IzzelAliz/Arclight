@@ -33,6 +33,11 @@ public abstract class TicketTypeMixin implements TicketTypeBridge {
         return (Object) this == PLUGIN ? pluginTimeout : this.arclight$timeout();
     }
 
+    @Override
+    public void bridge$setPluginTimeout(long timeout) {
+        pluginTimeout = timeout;
+    }
+
     @Accessor("timeout")
     public abstract long arclight$timeout();
 

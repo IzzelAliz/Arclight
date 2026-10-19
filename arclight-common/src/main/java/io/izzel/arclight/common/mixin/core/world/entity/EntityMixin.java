@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.entity;
 import com.google.common.collect.ImmutableList;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.entity.InternalEntityBridge;
@@ -16,6 +17,7 @@ import io.izzel.arclight.common.mod.server.entity.ArclightSpawnReason;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.mod.util.FireDurationContext;
 import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.Local;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.util.BlockUtil;
 import net.minecraft.util.ProblemReporter;
@@ -67,14 +69,14 @@ import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.CraftWorld;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.entity.CraftEntity;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
-import org.bukkit.craftbukkit.v.util.CraftLocation;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.entity.CraftEntity;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftPortalEvent;
+import org.bukkit.craftbukkit.util.CraftLocation;
 import org.bukkit.entity.Hanging;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.entity.*;
@@ -194,7 +196,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     @Shadow protected abstract void removeAfterChangingDimensions();
     @Shadow public abstract Vec3 getRelativePortalPosition(Direction.Axis axis, BlockUtil.FoundRectangle result);
     @Shadow public abstract EntityDimensions getDimensions(Pose poseIn);
-    @Shadow protected abstract boolean updateInWaterStateAndDoFluidPushing();
+    @Shadow protected abstract boolean updateFluidInteraction();
     @Shadow public abstract boolean isInLava();
     @Shadow public abstract void lavaHurt();
     @Shadow protected boolean firstTick;
@@ -859,19 +861,19 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         return (boolean) DecorationOps.callsite().invoke(instance, entity);
     }
 
-    @Inject(method = "interact", cancellable = true, at = {
+    @Inject(method = "interact(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/InteractionResult;", cancellable = true, at = {
         @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Leashable;removeLeash()V"),
-        @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Leashable;dropLeash()V")
+        @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/Leashable;dropLeash()V")
     })
-    private void arclight$unleashEvent(Player player, InteractionHand interactionHand, CallbackInfoReturnable<InteractionResult> cir) {
+    private void arclight$unleashEvent(Player player, InteractionHand interactionHand, Vec3 location, CallbackInfoReturnable<InteractionResult> cir) {
         if (CraftEventFactory.callPlayerUnleashEntityEvent((Entity) (Object) this, player, interactionHand).isCancelled()) {
             ((ServerPlayer) player).connection.send(new ClientboundSetEntityLinkPacket((Entity) (Object) this, ((Leashable) this).getLeashHolder()));
             cir.setReturnValue(InteractionResult.PASS);
         }
     }
 
-    @Inject(method = "interact", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Leashable;setLeashedTo(Lnet/minecraft/world/entity/Entity;Z)V"))
-    private void arclight$leashEvent(Player player, InteractionHand interactionHand, CallbackInfoReturnable<InteractionResult> cir) {
+    @Inject(method = "interact(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/InteractionResult;", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Leashable;isLeashed()Z"))
+    private void arclight$leashEvent(Player player, InteractionHand interactionHand, Vec3 location, CallbackInfoReturnable<InteractionResult> cir) {
         if (CraftEventFactory.callPlayerLeashEntityEvent((Entity) (Object) this, player, player, interactionHand).isCancelled()) {
             ((ServerPlayerBridge) player).bridge$resendItemInHands(); // SPIGOT-7615: Resend to fix client desync with used item
             ((ServerPlayer) player).connection.send(new ClientboundSetEntityLinkPacket((Entity) (Object) this, ((Leashable) this).getLeashHolder()));
@@ -901,14 +903,55 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         }
     }
 
+    private EntityUnleashEvent.UnleashReason arclight$unleashReason = EntityUnleashEvent.UnleashReason.UNKNOWN;
+
+    @WrapMethod(method = "shearOffAllLeashConnections")
+    private boolean arclight$withShearReason(Player player, Operation<Boolean> original) {
+        var previous = this.arclight$unleashReason;
+        this.arclight$unleashReason = EntityUnleashEvent.UnleashReason.SHEAR;
+        try {
+            return original.call(player);
+        } finally {
+            this.arclight$unleashReason = previous;
+        }
+    }
+
+    @Decorate(method = "dropAllLeashConnections", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Leashable;dropLeash()V"))
+    private void arclight$allLeashDropEvent(Leashable leashable) throws Throwable {
+        if (leashable instanceof Entity entity) {
+            Bukkit.getPluginManager().callEvent(new EntityUnleashEvent(entity.bridge$getBukkitEntity(), this.arclight$unleashReason));
+        }
+        DecorationOps.callsite().invoke(leashable);
+    }
+
+    @WrapOperation(method = "attemptToShearEquipment", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;spawnAtLocation(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/entity/item/ItemEntity;"))
+    private ItemEntity arclight$forcedEquipmentDrop(Entity entity, ServerLevel level, ItemStack stack, Vec3 offset, Operation<ItemEntity> original) {
+        boolean previous = this.forceDrops;
+        this.forceDrops = true;
+        try {
+            return original.call(entity, level, stack, offset);
+        } finally {
+            this.forceDrops = previous;
+        }
+    }
+
+    @Decorate(method = "startRiding(Lnet/minecraft/world/entity/Entity;ZZ)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/EntityType;canSerialize()Z"))
+    private boolean arclight$allowForcedVehicle(EntityType<?> type, @Local(ordinal = 0) boolean force) throws Throwable {
+        boolean serializable = (boolean) DecorationOps.callsite().invoke(type);
+        return force || serializable;
+    }
+
+    // The vehicle owns the cancellation flag; removeVehicle executes on the rider.
     private transient boolean arclight$dismountCancelled = false;
 
-    @Inject(method = "removeVehicle", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/Entity;removePassenger(Lnet/minecraft/world/entity/Entity;)V"))
+    @Inject(method = "removeVehicle", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/Entity;removePassenger(Lnet/minecraft/world/entity/Entity;)V"))
     private void arclight$stopRiding(CallbackInfo ci, Entity entity) {
-        if (arclight$dismountCancelled) {
+        EntityMixin vehicleMixin = (EntityMixin) (Object) entity;
+        if (vehicleMixin.arclight$dismountCancelled) {
+            vehicleMixin.arclight$dismountCancelled = false;
             this.vehicle = entity;
+            ci.cancel(); // Do not emit ENTITY_DISMOUNT after a cancelled Bukkit exit.
         }
-        arclight$dismountCancelled = false;
     }
 
     @Inject(method = "removePassenger", cancellable = true, at = @At("HEAD"))

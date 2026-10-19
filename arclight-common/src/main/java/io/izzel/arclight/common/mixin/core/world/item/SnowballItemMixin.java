@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -35,6 +36,9 @@ public class SnowballItemMixin extends Item {
             Snowball snowballentity = new Snowball(worldIn, playerIn, itemstack);
             snowballentity.shootFromRotation(playerIn, playerIn.getXRot(), playerIn.getYRot(), 0.0F, 1.5F, 1.0F);
             if (worldIn.addFreshEntity(snowballentity)) {
+                if (worldIn instanceof ServerLevel serverLevel) {
+                    snowballentity.applyOnProjectileSpawned(serverLevel, itemstack);
+                }
                 itemstack.consume(1, playerIn);
                 worldIn.playSound(null, playerIn.getX(), playerIn.getY(), playerIn.getZ(), SoundEvents.SNOWBALL_THROW, SoundSource.NEUTRAL, 0.5F, 0.4F / (worldIn.getRandom().nextFloat() * 0.4F + 0.8F));
             } else if (playerIn instanceof ServerPlayer) {

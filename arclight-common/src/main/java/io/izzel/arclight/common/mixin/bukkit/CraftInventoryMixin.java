@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.bukkit;
 
 import net.minecraft.world.Container;
 import net.minecraft.world.level.block.entity.LecternBlockEntity;
-import org.bukkit.craftbukkit.v.inventory.CraftInventory;
+import org.bukkit.craftbukkit.inventory.CraftInventory;
 import org.bukkit.event.inventory.InventoryType;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

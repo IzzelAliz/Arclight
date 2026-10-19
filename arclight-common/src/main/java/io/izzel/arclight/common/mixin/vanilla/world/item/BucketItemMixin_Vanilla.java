@@ -15,7 +15,7 @@ import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -32,9 +32,9 @@ public abstract class BucketItemMixin_Vanilla implements BucketItemBridge {
         arclight$setStack(stack);
     }
 
-    @Inject(method = "emptyContents", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;environmentAttributes()Lnet/minecraft/world/attribute/EnvironmentAttributeSystem;"))
-    private void arclight$bucketEmpty(LivingEntity player, Level worldIn, BlockPos posIn, BlockHitResult rayTrace, CallbackInfoReturnable<Boolean> cir) {
-        if (LevelAccessorBridge.from(worldIn) instanceof LevelAccessorBridge bridge && player != null && arclight$getStack() != null) {
+    @Inject(method = "emptyContents(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/phys/BlockHitResult;)Z", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;isAir()Z"), require = 1, allow = 1)
+    private void arclight$bucketEmpty(LivingEntity player, Level worldIn, BlockPos posIn, BlockHitResult rayTrace, CallbackInfoReturnable<Boolean> cir, @Local(ordinal = 2) boolean placeLiquid) {
+        if (placeLiquid && LevelAccessorBridge.from(worldIn) instanceof LevelAccessorBridge bridge && player != null && arclight$getStack() != null) {
             if (!(player instanceof ServerPlayer bucketPlayer)) {
                 return;
             }

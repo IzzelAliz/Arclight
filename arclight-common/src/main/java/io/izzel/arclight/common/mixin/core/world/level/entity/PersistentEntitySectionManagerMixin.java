@@ -1,5 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.entity;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.Local;
@@ -13,7 +15,7 @@ import net.minecraft.world.level.entity.EntityPersistentStorage;
 import net.minecraft.world.level.entity.EntitySection;
 import net.minecraft.world.level.entity.EntitySectionStorage;
 import net.minecraft.world.level.entity.PersistentEntitySectionManager;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -49,7 +51,7 @@ public abstract class PersistentEntitySectionManagerMixin<T extends EntityAccess
     }
 
     public List<Entity> getEntities(ChunkPos chunkCoordIntPair) {
-        return sectionStorage.getExistingSectionsInChunk(chunkCoordIntPair.toLong())
+        return sectionStorage.getExistingSectionsInChunk(chunkCoordIntPair.pack())
             .flatMap(EntitySection::getEntities).map(o -> (Entity) o).collect(Collectors.toList());
     }
 
@@ -63,19 +65,20 @@ public abstract class PersistentEntitySectionManagerMixin<T extends EntityAccess
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/entity/EntityPersistentStorage;storeEntities(Lnet/minecraft/world/level/entity/ChunkEntities;)V"))
     private void arclight$fireUnload(long pos, @Local(ordinal = -1) List<T> list) {
         if (arclight$fireEvent) {
-            CraftEventFactory.callEntitiesUnloadEvent(((EntityStorage) permanentStorage).level, new ChunkPos(pos),
+            CraftEventFactory.callEntitiesUnloadEvent(((EntityStorage) permanentStorage).level, ChunkPos.unpack(pos),
                 list.stream().map(entity -> (Entity) entity).collect(Collectors.toList()));
         }
     }
 
-    @Inject(method = "storeChunkSections", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/entity/EntityPersistentStorage;storeEntities(Lnet/minecraft/world/level/entity/ChunkEntities;)V"))
-    private void arclight$resetFlag(long pos, Consumer<T> consumer, CallbackInfoReturnable<Boolean> cir) {
-        arclight$fireEvent = false;
-    }
-
-    @Inject(method = "processChunkUnload", at = @At("HEAD"))
-    private void arclight$fireEvent(long pChunkPosValue, CallbackInfoReturnable<Boolean> cir) {
+    @WrapMethod(method = "processChunkUnload")
+    private boolean arclight$unloadScope(long chunkPos, Operation<Boolean> original) {
+        boolean previous = arclight$fireEvent;
         arclight$fireEvent = true;
+        try {
+            return original.call(chunkPos);
+        } finally {
+            arclight$fireEvent = previous;
+        }
     }
 
     @Inject(method = "processPendingLoads", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", shift = At.Shift.AFTER, remap = false, target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;put(JLjava/lang/Object;)Ljava/lang/Object;"))

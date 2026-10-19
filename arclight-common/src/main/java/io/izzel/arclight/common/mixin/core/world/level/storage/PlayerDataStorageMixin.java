@@ -15,7 +15,7 @@ import net.minecraft.world.level.storage.FileNameDateFormatter;
 import net.minecraft.world.level.storage.PlayerDataStorage;
 import net.minecraft.world.level.storage.TagValueInput;
 import org.slf4j.Logger;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

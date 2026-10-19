@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.inventory;
 import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
 import org.spongepowered.asm.mixin.Final;

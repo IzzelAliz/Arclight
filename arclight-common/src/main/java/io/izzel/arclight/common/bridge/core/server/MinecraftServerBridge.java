@@ -6,9 +6,11 @@ import net.minecraft.util.TimeSource;
 import net.minecraft.world.level.TicketStorage;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.RemoteConsoleCommandSender;
-import org.bukkit.craftbukkit.v.CraftServer;
+import org.bukkit.craftbukkit.CraftServer;
 
 public interface MinecraftServerBridge {
+    joptsimple.OptionSet bridge$getOptions();
+    void bridge$setAutosavePeriod(int period);
 
     void bridge$setConsole(ConsoleCommandSender console);
 
@@ -29,6 +31,8 @@ public interface MinecraftServerBridge {
     void arclight$onServerLoad(ServerLevel level);
 
     void arclight$onServerUnload(ServerLevel level);
+    /** Compensate a failed createWorld only while its exact level is still published. */
+    void arclight$rollbackPublishedLevel(ServerLevel level);
 
     default void bridge$forge$markLevelsDirty() {}
 

@@ -154,7 +154,10 @@ public class NeoforgeInstaller {
                     jvmArgs = false;
                     mainClass = arg;
                 } else {
-                    userArgs.addAll(Arrays.asList(arg.split(" ")));
+                    // The generated 26.1.2 args file writes each server argument
+                    // pair on one line ("--fml.mcVersion 26.1.2"). Do not pass
+                    // such a line as a single argument to FML.
+                    userArgs.addAll(Arrays.asList(arg.trim().split("\\s+")));
                 }
             }
         }
@@ -191,7 +194,7 @@ public class NeoforgeInstaller {
         for (int i = 0; i < paths.size(); i++) {
             urls[i] = paths.get(i).toUri().toURL();
         }
-        // FML 10 uses an ordinary classpath, not BootstrapLauncher's legacyClassPath.
+        // FML 11 uses an ordinary classpath, not BootstrapLauncher's legacyClassPath.
         // Keep classes AND service resources in the same non-platform loader: the JDK
         // ServiceLoader treats the platform loader specially and skips classpath providers.
         // Include the original Arclight jar (without renaming it) for hook discovery.

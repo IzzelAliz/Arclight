@@ -17,8 +17,8 @@ public class ArclightJarInJarFilter implements IDependencyLocator {
     @Override
     public void scanMods(List<IModFile> loadedMods, IDiscoveryPipeline pipeline) {
         try {
-            // FML10 still has no public removal API. This is the one intentional
-            // internal dependency: DiscoveryPipeline.loadedFiles, verified against 10.0.36.
+            // FML 11 still has no public removal API. This internal field is
+            // verified against loader 11.0.15's ModDiscoverer.DiscoveryPipeline.
             // The supplied loadedMods list is a snapshot and cannot remove candidates.
             var field = pipeline.getClass().getDeclaredField("loadedFiles");
             field.setAccessible(true);

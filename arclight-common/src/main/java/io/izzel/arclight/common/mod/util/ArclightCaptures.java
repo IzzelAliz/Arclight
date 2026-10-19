@@ -19,7 +19,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.Block;
 import org.bukkit.TreeType;
 import org.bukkit.block.BlockState;
-import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
+import org.bukkit.craftbukkit.event.CraftPortalEvent;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 
@@ -69,6 +69,46 @@ public class ArclightCaptures {
      */
     public static boolean isPrimaryEvent = false;
     public static Stack<BlockBreakEventContext> blockBreakEventStack = new Stack<>();
+    private static BlockBreakCaptureScope blockBreakCaptureScope;
+
+    public static BlockBreakCaptureScope beginBlockBreakCapture() {
+        BlockBreakCaptureScope scope = new BlockBreakCaptureScope(blockBreakCaptureScope);
+        blockBreakCaptureScope = scope;
+        // A nested invocation must not consume its caller's pending primary marker.
+        isPrimaryEvent = false;
+        return scope;
+    }
+
+    private static int blockBreakCaptureDepth() {
+        return blockBreakCaptureScope == null ? 0 : blockBreakCaptureScope.captureDepth;
+    }
+
+    public static final class BlockBreakCaptureScope implements AutoCloseable {
+        private final BlockBreakCaptureScope parent;
+        private final int captureDepth;
+        private final boolean parentPrimaryEvent;
+
+        private BlockBreakCaptureScope(BlockBreakCaptureScope parent) {
+            this.parent = parent;
+            this.captureDepth = blockBreakEventStack.size();
+            this.parentPrimaryEvent = parent != null && isPrimaryEvent;
+        }
+
+        @Override
+        public void close() {
+            if (blockBreakCaptureScope != this) {
+                throw new IllegalStateException("Block break capture scopes closed out of order");
+            }
+            try {
+                while (blockBreakEventStack.size() > captureDepth) {
+                    blockBreakEventStack.pop();
+                }
+            } finally {
+                isPrimaryEvent = parentPrimaryEvent;
+                blockBreakCaptureScope = parent;
+            }
+        }
+    }
 
     public static void captureNextBlockBreakEventAsPrimaryEvent() {
         // fix #674, some mod will implement their own "destroyBlock(...)"
@@ -125,13 +165,14 @@ public class ArclightCaptures {
     }
 
     public static BlockBreakEventContext popPrimaryBlockBreakEvent() {
-        if (!blockBreakEventStack.empty()) {
+        int captureDepth = blockBreakCaptureDepth();
+        if (blockBreakEventStack.size() > captureDepth) {
             BlockBreakEventContext eventContext = blockBreakEventStack.pop();
 
             // deal with unhandled secondary events
             // should never happen, but just in case
             ArrayList<BlockBreakEventContext> unhandledEvents = new ArrayList<>();
-            while (!blockBreakEventStack.empty() && !eventContext.isPrimary()) {
+            while (blockBreakEventStack.size() > captureDepth && !eventContext.isPrimary()) {
                 unhandledEvents.add(eventContext);
                 eventContext = blockBreakEventStack.pop();
             }
@@ -148,7 +189,7 @@ public class ArclightCaptures {
     }
 
     public static BlockBreakEventContext popSecondaryBlockBreakEvent() {
-        if (!blockBreakEventStack.empty()) {
+        if (blockBreakEventStack.size() > blockBreakCaptureDepth()) {
             BlockBreakEventContext eventContext = blockBreakEventStack.peek();
             if (!eventContext.isPrimary()) {
                 return blockBreakEventStack.pop();
@@ -158,6 +199,12 @@ public class ArclightCaptures {
     }
 
     public static void clearBlockBreakEventContexts() {
+        // tick/destroyAndAck may be reentered by a listener. Those are not new
+        // capture sessions while an ancestor destroyBlock/finalizer is active.
+        if (blockBreakCaptureScope != null) {
+            return;
+        }
+        isPrimaryEvent = false;
         if (!blockBreakEventStack.empty()) {
             // ArclightMod.LOGGER.warn("Unhandled block break event");
             blockBreakEventStack.clear();
@@ -238,6 +285,11 @@ public class ArclightCaptures {
 
     public static void captureDamageEventEntity(Entity entity) {
         damageEventEntity = entity;
+    }
+
+    /** Returns the current damage entity without consuming it, for nested invocation restoration. */
+    public static Entity peekDamageEventEntity() {
+        return damageEventEntity;
     }
 
     public static Entity getDamageEventEntity() {

@@ -4,6 +4,7 @@ import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
 import io.izzel.arclight.common.bridge.core.server.dedicated.DedicatedServerBridge;
 import io.izzel.arclight.common.mixin.core.server.MinecraftServerMixin;
 import io.izzel.arclight.common.mod.server.ArclightServer;
+import io.izzel.arclight.common.mod.server.world.WorldCreationContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.server.ConsoleInput;
@@ -17,7 +18,7 @@ import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.PrimaryLevelData;
 import net.minecraft.world.level.storage.WorldData;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.CraftServer;
+import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.event.server.RemoteServerCommandEvent;
 import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.plugin.PluginLoadOrder;
@@ -36,8 +37,8 @@ import java.util.List;
 @Mixin(DedicatedServer.class)
 public abstract class DedicatedServerMixin extends MinecraftServerMixin implements DedicatedServerBridge {
 
-    public DedicatedServerMixin(String name) {
-        super(name);
+    public DedicatedServerMixin(String name, boolean propagatesCrashes) {
+        super(name, propagatesCrashes);
     }
 
     @Inject(method = "initServer", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/dedicated/DedicatedServer;setPlayerList(Lnet/minecraft/server/players/PlayerList;)V"))
@@ -80,6 +81,15 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin implemen
     }
 
     @Shadow @Final private List<ConsoleInput> consoleInput;
+    @Shadow @Final @org.spongepowered.asm.mixin.Mutable private net.minecraft.server.dedicated.DedicatedServerSettings settings;
+
+    @Override
+    public net.minecraft.server.dedicated.DedicatedServerProperties bridge$reloadProperties() {
+        this.settings = new net.minecraft.server.dedicated.DedicatedServerSettings(
+            ((io.izzel.arclight.common.bridge.core.server.dedicated.DedicatedServerSettingsBridge) this.settings).bridge$getSource());
+        return this.settings.getProperties();
+    }
+
 
     /**
      * @author IzzelAliz
@@ -162,19 +172,28 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin implemen
 
     @Override
     public void arclight$forceUpgradeIfNeeded(LevelStorageSource.LevelStorageAccess worldSession, WorldData worldData, RegistryAccess.Frozen dimensions) {
-        if (this.options.has("forceUpgrade")) {
-            io.izzel.arclight.common.mixin.core.server.MainAccessor.arclight$forceUpgrade(
-                worldSession, worldData, DataFixers.getDataFixer(), this.options.has("eraseCache"),
+        if (this.options.has("forceUpgrade") || this.options.has("recreateRegionFiles")) {
+            io.izzel.arclight.common.mod.server.WorldUpgradeHelper.forceUpgrade(
+                worldSession, DataFixers.getDataFixer(), this.options.has("eraseCache"),
                 () -> true, dimensions, this.options.has("recreateRegionFiles"));
         }
     }
 
     @Override
     public void arclight$prepareAndAddLevel(ServerLevel internal, PrimaryLevelData levelData) {
-        this.initWorld(internal, levelData, levelData, levelData.worldGenOptions());
+        this.initWorld(internal, levelData, levelData, WorldCreationContext.require(internal).options());
         internal.setSpawnSettings(true);
         this.addLevel(internal);
         this.prepareLevels(internal);
         internal.entityManager.tick();
+    }
+
+    @Override
+    public void arclight$rollbackPublishedLevel(ServerLevel level) {
+        // addLevel puts into levels before notifying platform listeners, which may throw
+        // or create a replacement level at the same key. Never remove that replacement.
+        if (((MinecraftServer) (Object) this).getLevel(level.dimension()) == level) {
+            this.removeLevel(level);
+        }
     }
 }

@@ -1,10 +1,11 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -13,8 +14,8 @@ import net.minecraft.world.level.block.RedStoneOreBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -23,7 +24,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(RedStoneOreBlock.class)
 public abstract class RedStoneOreBlockMixin {
@@ -32,35 +32,52 @@ public abstract class RedStoneOreBlockMixin {
     @Shadow private static void interact(BlockState state, Level world, BlockPos pos) { }
     // @formatter:on
 
-    private static transient Entity arclight$entity;
+    // Scoped to the actual interact invocation, including third-party Operation wrappers.
+    private static final ThreadLocal<Entity> arclight$entity = new ThreadLocal<>();
 
-    @Inject(method = "attack", at = @At(value = "HEAD"))
-    public void arclight$interact1(BlockState state, Level worldIn, BlockPos pos, Player player, CallbackInfo ci) {
-        arclight$entity = player;
+    @WrapOperation(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/RedStoneOreBlock;interact(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)V"))
+    private void arclight$interact1(BlockState state, Level world, BlockPos pos, Operation<Void> original,
+                                    BlockState hostState, Level hostWorld, BlockPos hostPos, Player player) {
+        arclight$withEntity(state, world, pos, player, original);
     }
 
-    @Inject(method = "stepOn", cancellable = true, at = @At(value = "HEAD"))
-    public void arclight$entityInteract(Level worldIn, BlockPos pos, BlockState state, Entity entityIn, CallbackInfo ci) {
-        if (entityIn instanceof Player) {
-            PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(((Player) entityIn), Action.PHYSICAL, pos, null, null, null);
+    @WrapOperation(method = "stepOn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/RedStoneOreBlock;interact(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)V"))
+    private void arclight$entityInteract(BlockState state, Level world, BlockPos pos, Operation<Void> original,
+                                        Level hostWorld, BlockPos hostPos, BlockState hostState, Entity entity) {
+        if (entity instanceof Player player) {
+            PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(player, Action.PHYSICAL, pos, null, null, null);
             if (event.isCancelled()) {
-                ci.cancel();
                 return;
             }
         } else {
-            EntityInteractEvent event = new EntityInteractEvent(entityIn.bridge$getBukkitEntity(), CraftBlock.at(worldIn, pos));
+            EntityInteractEvent event = new EntityInteractEvent(entity.bridge$getBukkitEntity(), CraftBlock.at(world, pos));
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
-                ci.cancel();
                 return;
             }
         }
-        arclight$entity = entityIn;
+        arclight$withEntity(world.getBlockState(pos), world, pos, entity, original);
     }
 
-    @Inject(method = "useItemOn", at = @At(value = "HEAD"))
-    public void arclight$interact3(ItemStack itemStack, BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult, CallbackInfoReturnable<InteractionResult> cir) {
-        arclight$entity = player;
+    @WrapOperation(method = "useItemOn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/RedStoneOreBlock;interact(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)V"))
+    private void arclight$interact3(BlockState state, Level world, BlockPos pos, Operation<Void> original,
+                                    ItemStack itemStack, BlockState hostState, Level hostWorld, BlockPos hostPos,
+                                    Player player, InteractionHand hand, BlockHitResult hitResult) {
+        arclight$withEntity(state, world, pos, player, original);
+    }
+
+    private static void arclight$withEntity(BlockState state, Level world, BlockPos pos, Entity entity, Operation<Void> original) {
+        Entity previous = arclight$entity.get();
+        arclight$entity.set(entity);
+        try {
+            original.call(state, world, pos);
+        } finally {
+            if (previous == null) {
+                arclight$entity.remove();
+            } else {
+                arclight$entity.set(previous);
+            }
+        }
     }
 
     @Inject(method = "randomTick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
@@ -71,15 +88,22 @@ public abstract class RedStoneOreBlockMixin {
     }
 
     private static void interact(BlockState blockState, Level world, BlockPos blockPos, Entity entity) {
-        arclight$entity = entity;
-        interact(blockState, world, blockPos);
+        Entity previous = arclight$entity.get();
+        arclight$entity.set(entity);
+        try {
+            interact(blockState, world, blockPos);
+        } finally {
+            if (previous == null) {
+                arclight$entity.remove();
+            } else {
+                arclight$entity.set(previous);
+            }
+        }
     }
 
-    @Inject(method = "interact", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
-    private static void arclight$entityChangeBlock(BlockState blockState, Level world, BlockPos blockPos, CallbackInfo ci) {
-        if (!CraftEventFactory.callEntityChangeBlockEvent(arclight$entity, blockPos, blockState.setValue(RedStoneOreBlock.LIT, true))) {
-            ci.cancel();
-        }
-        arclight$entity = null;
+    @WrapOperation(method = "interact(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
+    private static boolean arclight$entityChangeBlock(Level world, BlockPos pos, BlockState state, int flags, Operation<Boolean> original) {
+        return CraftEventFactory.callEntityChangeBlockEvent(arclight$entity.get(), pos, state)
+            && original.call(world, pos, state, flags);
     }
 }

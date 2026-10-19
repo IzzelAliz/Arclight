@@ -6,7 +6,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.RemoveBlockGoal;
 import net.minecraft.world.level.Level;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
+import org.bukkit.craftbukkit.block.CraftBlock;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

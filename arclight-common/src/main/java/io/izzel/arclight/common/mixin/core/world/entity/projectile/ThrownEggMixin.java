@@ -62,6 +62,10 @@ public abstract class ThrownEggMixin extends ThrowableProjectileMixin {
                     if (entity instanceof Chicken) {
                         Chicken chicken = (Chicken) entity;
                         Blackhole.consume(chicken);
+                        var variant = ((ThrownEgg) (Object) this).getItem().get(net.minecraft.core.component.DataComponents.CHICKEN_VARIANT);
+                        if (variant != null) {
+                            chicken.setVariant(variant);
+                        }
                     }
                     if (entity != null) {
                         if (((EntityBridge) entity).bridge$getBukkitEntity() instanceof Ageable) {

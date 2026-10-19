@@ -75,16 +75,16 @@ import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.WeatherType;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.CraftWorld;
-import org.bukkit.craftbukkit.v.CraftWorldBorder;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
-import org.bukkit.craftbukkit.v.scoreboard.CraftScoreboardManager;
-import org.bukkit.craftbukkit.v.util.CraftChatMessage;
-import org.bukkit.craftbukkit.v.util.CraftLocation;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.CraftWorldBorder;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftPortalEvent;
+import org.bukkit.craftbukkit.scoreboard.CraftScoreboardManager;
+import org.bukkit.craftbukkit.util.CraftChatMessage;
+import org.bukkit.craftbukkit.util.CraftLocation;
 import org.bukkit.event.entity.EntityExhaustionEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
@@ -639,6 +639,11 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         return this.containerCounter;
     }
 
+    @Inject(method = "initMenu(Lnet/minecraft/world/inventory/AbstractContainerMenu;)V", at = @At("RETURN"), require = 1, expect = 1, allow = 1)
+    private void arclight$startOpen(AbstractContainerMenu container, CallbackInfo ci) {
+        ((AbstractContainerMenuBridge) container).bridge$startOpen();
+    }
+
     @Decorate(method = "openMenu*", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;closeContainer()V"))
     private void arclight$skipSwitch(ServerPlayer serverPlayer) throws Throwable {
         if (Blackhole.actuallyFalse()) {
@@ -671,16 +676,28 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     }
 
     @Decorate(method = "openHorseInventory", inject = true, at = @At("HEAD"))
-    private void arclight$openHorseInv(final AbstractHorse entityhorseabstract, final Container iinventory) throws Throwable {
+    private void arclight$openHorseInv(final AbstractHorse entityhorseabstract, final Container iinventory,
+                                      @Local(allocate = "arclightHorseMenu") AbstractContainerMenu container) throws Throwable {
         this.nextContainerCounter();
-        AbstractContainerMenu container = new HorseInventoryMenu(this.containerCounter, this.getInventory(), iinventory, entityhorseabstract, entityhorseabstract.getInventoryColumns());
+        container = new HorseInventoryMenu(this.containerCounter, this.getInventory(), iinventory, entityhorseabstract, entityhorseabstract.getInventoryColumns());
         ((AbstractContainerMenuBridge) container).bridge$setTitle(entityhorseabstract.getDisplayName());
         container = CraftEventFactory.callInventoryOpenEvent((ServerPlayer) (Object) this, container);
         if (container == null) {
             iinventory.stopOpen((ServerPlayer) (Object) this);
+            DecorationOps.cancel().invoke();
             return;
         }
-        DecorationOps.blackhole().invoke();
+        DecorationOps.blackhole().invoke(container);
+    }
+
+    @Decorate(method = "openHorseInventory", at = @At(value = "NEW", target = "(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;Lnet/minecraft/world/entity/animal/equine/AbstractHorse;I)Lnet/minecraft/world/inventory/HorseInventoryMenu;"))
+    private HorseInventoryMenu arclight$reuseHorseMenu(int id, Inventory inventory, Container horseInventory, AbstractHorse horse, int columns,
+                                                     @Local(allocate = "arclightHorseMenu") AbstractContainerMenu container) throws Throwable {
+        // The fixed factory accepts this exact HorseInventoryMenu; veto already returned from the host.
+        if (container != null) {
+            return (HorseInventoryMenu) container;
+        }
+        return (HorseInventoryMenu) DecorationOps.callsite().invoke(id, inventory, horseInventory, horse, columns);
     }
 
     @Redirect(method = "openHorseInventory", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;nextContainerCounter()V"))
@@ -780,10 +797,19 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     }
 
     public long getPlayerTime() {
+        return this.getPlayerTime(this.level().getDefaultClockTime());
+    }
+
+    @Override
+    public long bridge$getPlayerTime(long totalTicks) {
+        return this.getPlayerTime(totalTicks);
+    }
+
+    public long getPlayerTime(long totalTicks) {
         if (this.relativeTime) {
-            return this.level().getDayTime() + this.timeOffset;
+            return totalTicks + this.timeOffset;
         }
-        return this.level().getDayTime() - this.level().getDayTime() % 24000L + this.timeOffset;
+        return totalTicks - totalTicks % 24000L + this.timeOffset;
     }
 
     public WeatherType getPlayerWeather() {
@@ -836,7 +862,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
     public void resetPlayerWeather() {
         this.weather = null;
-        this.setPlayerWeather(this.level().getLevelData().isRaining() ? WeatherType.DOWNFALL : WeatherType.CLEAR, false);
+        this.setPlayerWeather(((ServerLevel) this.level()).getWeatherData().isRaining() ? WeatherType.DOWNFALL : WeatherType.CLEAR, false);
     }
 
     @Override
@@ -866,20 +892,22 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         this.setRespawnPosition(p_9160_ == null ? null : new ServerPlayer.RespawnConfig(LevelData.RespawnData.of(p_9159_, p_9160_, p_9161_, 0.0F), p_9162_), p_9163_);
     }
 
-    @Decorate(method = "setRespawnPosition", inject = true, at = @At("HEAD"))
+    @Decorate(method = "setRespawnPosition(Lnet/minecraft/server/level/ServerPlayer$RespawnConfig;Z)V", inject = true, at = @At("HEAD"))
     private void arclight$spawnChangeEvent(@Nullable ServerPlayer.RespawnConfig config, boolean sendMessage) throws Throwable {
         var cause = arclight$spawnChangeCause == null ? PlayerSpawnChangeEvent.Cause.UNKNOWN : arclight$spawnChangeCause;
         arclight$spawnChangeCause = null;
         ResourceKey<Level> resourceKey = config == null ? Level.OVERWORLD : config.respawnData().dimension();
         BlockPos blockPos = config == null ? null : config.respawnData().pos();
         float yaw = config == null ? 0.0F : config.respawnData().yaw();
+        float pitch = config == null ? 0.0F : config.respawnData().pitch();
         boolean forced = config != null && config.forced();
         ServerLevel newWorld = this.server.getLevel(resourceKey);
-        Location newSpawn = (blockPos != null && newWorld != null) ? CraftLocation.toBukkit(blockPos, newWorld.bridge$getWorld(), yaw, 0) : null;
+        Location newSpawn = (blockPos != null && newWorld != null) ? CraftLocation.toBukkit(blockPos, newWorld.bridge$getWorld(), yaw, pitch) : null;
 
         PlayerSpawnChangeEvent event = new PlayerSpawnChangeEvent(this.getBukkitEntity(), newSpawn, forced, cause);
         Bukkit.getServer().getPluginManager().callEvent(event);
         if (event.isCancelled()) {
+            DecorationOps.cancel().invoke();
             return;
         }
         newSpawn = event.getNewSpawn();
@@ -889,12 +917,14 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             resourceKey = ((CraftWorld) newSpawn.getWorld()).getHandle().dimension();
             blockPos = BlockPos.containing(newSpawn.getX(), newSpawn.getY(), newSpawn.getZ());
             yaw = newSpawn.getYaw();
+            pitch = newSpawn.getPitch();
         } else {
             resourceKey = Level.OVERWORLD;
             blockPos = null;
             yaw = 0.0F;
+            pitch = 0.0F;
         }
-        DecorationOps.blackhole().invoke(blockPos == null ? null : new ServerPlayer.RespawnConfig(LevelData.RespawnData.of(resourceKey, blockPos, yaw, 0.0F), forced), sendMessage);
+        DecorationOps.blackhole().invoke(blockPos == null ? null : new ServerPlayer.RespawnConfig(LevelData.RespawnData.of(resourceKey, blockPos, yaw, pitch), forced), sendMessage);
     }
 
     public Scoreboard getScoreboard() {

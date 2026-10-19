@@ -13,8 +13,8 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ProjectileDeflection;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import org.bukkit.craftbukkit.v.entity.CraftEntity;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.entity.CraftEntity;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.projectiles.ProjectileSource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -26,7 +26,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import javax.annotation.Nullable;
 
 @Mixin(Projectile.class)
-public abstract class ProjectileMixin extends EntityMixin {
+public abstract class ProjectileMixin extends EntityMixin implements io.izzel.arclight.common.bridge.core.world.entity.projectile.ProjectileSpawnBridge {
+
+    @org.spongepowered.asm.mixin.Unique private boolean arclight$spawnAccepted;
+
+    @Override
+    public boolean bridge$wasSpawnAccepted() {
+        return this.arclight$spawnAccepted;
+    }
+
+    @Override
+    public void bridge$setSpawnAccepted(boolean accepted) {
+        this.arclight$spawnAccepted = accepted;
+    }
+
 
     // @formatter:off
     @Shadow @Nullable public abstract Entity getOwner();
@@ -41,6 +54,7 @@ public abstract class ProjectileMixin extends EntityMixin {
             @Share("arclight$spawnAccepted") LocalBooleanRef accepted) {
         boolean result = original.call(level, entity);
         accepted.set(result);
+        ((io.izzel.arclight.common.bridge.core.world.entity.projectile.ProjectileSpawnBridge) entity).bridge$setSpawnAccepted(result);
         return result;
     }
 
@@ -53,15 +67,10 @@ public abstract class ProjectileMixin extends EntityMixin {
         }
     }
 
-    @Inject(method = "setOwner", at = @At("RETURN"))
-    private void arclight$updateSource(EntityReference<Entity> entityReference, CallbackInfo ci) {
-        Entity entityIn = this.getOwner();
-        if (entityIn != null) {
-            CraftEntity entity = entityIn.bridge$getBukkitEntity();
-            if (entity instanceof ProjectileSource) {
-                this.projectileSource = ((ProjectileSource) entity);
-            }
-        }
+    @Inject(method = "setOwner(Lnet/minecraft/world/entity/Entity;)V", at = @At("RETURN"))
+    private void arclight$updateSource(Entity owner, CallbackInfo ci) {
+        CraftEntity entity = owner == null ? null : owner.bridge$getBukkitEntity();
+        this.projectileSource = entity instanceof ProjectileSource source ? source : null;
     }
 
     protected boolean hitCancelled = false;

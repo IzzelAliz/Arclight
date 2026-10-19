@@ -20,18 +20,32 @@ public abstract class PigMixin extends AnimalMixin implements PigBridge {
 
     @Decorate(method = "thunderHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/pig/Pig;convertTo(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/entity/ConversionParams;Lnet/minecraft/world/entity/ConversionParams$AfterConversion;)Lnet/minecraft/world/entity/Mob;"))
     private Mob arclight$pigZap(Pig pig, EntityType<? extends Mob> entityType, ConversionParams conversionParams, ConversionParams.AfterConversion afterConversion, ServerLevel world, LightningBolt lightningBolt) throws Throwable {
-        LightningBolt previous = this.arclight$lightningBolt;
         this.arclight$lightningBolt = lightningBolt;
+        this.arclight$pigZapCancelled = false;
+        Mob converted;
+        boolean cancelled;
         try {
             ((WorldBridge) pig.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.LIGHTNING);
             this.bridge$pushTransformReason(EntityTransformEvent.TransformReason.LIGHTNING);
-            return (Mob) DecorationOps.callsite().invoke(pig, entityType, conversionParams, afterConversion);
+            converted = (Mob) DecorationOps.callsite().invoke(pig, entityType, conversionParams, afterConversion);
+            cancelled = this.arclight$pigZapCancelled;
         } finally {
-            this.arclight$lightningBolt = previous;
+            this.arclight$lightningBolt = null;
+            this.arclight$pigZapCancelled = false;
         }
+        if (cancelled) {
+            return (Mob) DecorationOps.cancel().invoke();
+        }
+        return converted;
     }
 
     private transient LightningBolt arclight$lightningBolt;
+    private transient boolean arclight$pigZapCancelled;
+
+    @Override
+    public void bridge$cancelPigZap() {
+        this.arclight$pigZapCancelled = true;
+    }
 
     @Override
     public LightningBolt bridge$getPigZapLightning() {

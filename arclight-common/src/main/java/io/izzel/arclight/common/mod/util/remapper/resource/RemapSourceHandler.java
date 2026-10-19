@@ -3,8 +3,6 @@ package io.izzel.arclight.common.mod.util.remapper.resource;
 import com.google.common.io.ByteStreams;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.ArclightCommon;
-import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
-import io.izzel.arclight.common.mod.util.remapper.GlobalClassRepo;
 import org.objectweb.asm.ClassReader;
 
 import java.io.ByteArrayInputStream;
@@ -39,7 +37,7 @@ public class RemapSourceHandler extends URLStreamHandler {
             if (className.startsWith("net/minecraft/") || className.equals("com/mojang/brigadier/tree/CommandNode")) {
                 bytes = ArclightCommon.api().platformRemapClass(bytes);
             }
-            this.array = ArclightRemapper.getResourceMapper().remapClassFile(bytes, GlobalClassRepo.INSTANCE);
+            this.array = bytes;
         }
 
         @Override

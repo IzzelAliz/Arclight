@@ -97,7 +97,7 @@ public interface AbstractBootstrap {
     }
 
     default void setupMod(ArclightPlatform platform, boolean extract) throws Exception {
-        ArclightVersion.setVersion(ArclightVersion.GROUP_OF_SOLDIERS);
+        ArclightVersion.setVersion(ArclightVersion.DIPPER);
         ArclightPlatform.setPlatform(platform);
         try (InputStream stream = ownArchiveResource(getClass(), "META-INF/MANIFEST.MF")) {
             Manifest manifest = new Manifest(stream);

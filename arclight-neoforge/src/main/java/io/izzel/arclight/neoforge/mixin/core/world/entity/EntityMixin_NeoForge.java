@@ -6,17 +6,13 @@ import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.tools.product.Product;
 import io.izzel.tools.product.Product4;
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.extensions.IEntityExtension;
 import net.neoforged.neoforge.entity.PartEntity;
@@ -45,14 +41,6 @@ public abstract class EntityMixin_NeoForge implements EntityBridge, IEntityExten
     @Override
     public void bridge$revive() {
         this.revive();
-    }
-
-    @Redirect(method = "updateFluidHeightAndDoFluidPushing(Z)V", remap = false, at = @At(value = "INVOKE", remap = true, target="Lnet/minecraft/world/level/material/FluidState;getFlow(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/Vec3;"))
-    private Vec3 arclight$setLava(FluidState instance, BlockGetter level, BlockPos pos) {
-        if (instance.getType().is(FluidTags.LAVA)) {
-            this.bridge$setLastLavaContact(pos.immutable());
-        }
-        return instance.getFlow(level, pos);
     }
 
     @Redirect(method = "spawnAtLocation(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/entity/item/ItemEntity;", at = @At(value = "INVOKE", remap = false, ordinal = 0, target = "Lnet/minecraft/world/entity/Entity;captureDrops()Ljava/util/Collection;"))
@@ -92,8 +80,8 @@ public abstract class EntityMixin_NeoForge implements EntityBridge, IEntityExten
     }
 
     @Override
-    public Product4<Boolean, Double, Double, Double> bridge$onEntityTeleportCommand(double x, double y, double z) {
-        var event = EventHooks.onEntityTeleportCommand((Entity) (Object) this, x, y, z);
+    public Product4<Boolean, Double, Double, Double> bridge$onEntityTeleportCommand(ServerLevel level, double x, double y, double z) {
+        var event = EventHooks.onEntityTeleportCommand((Entity) (Object) this, level, x, y, z);
         return Product.of(event.isCanceled(), event.getTargetX(), event.getTargetY(), event.getTargetZ());
     }
 }

@@ -22,7 +22,7 @@ import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.minecraft.world.level.storage.LevelStorageSource;
-import org.bukkit.craftbukkit.v.generator.CustomChunkGenerator;
+import org.bukkit.craftbukkit.generator.CustomChunkGenerator;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -61,6 +61,23 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
     @Redirect(method = "upgradeChunkTag", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;dimension()Lnet/minecraft/resources/ResourceKey;"))
     private ResourceKey<LevelStem> arclight$useTypeKey(ServerLevel serverWorld) {
         return ((WorldBridge) serverWorld).bridge$getTypeKey();
+    }
+
+    @com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod(method = "upgradeChunkTag(Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/nbt/CompoundTag;")
+    private net.minecraft.nbt.CompoundTag arclight$preserveBelowZeroPolicy(net.minecraft.nbt.CompoundTag tag,
+            com.llamalad7.mixinextras.injector.wrapoperation.Operation<net.minecraft.nbt.CompoundTag> original) {
+        int version = net.minecraft.nbt.NbtUtils.getDataVersion(tag, -1);
+        boolean stopBelowZero = version < net.minecraft.SharedConstants.getCurrentVersion().dataVersion().version()
+            && version <= 2730
+            && !((WorldBridge) this.level).bridge$spigotConfig().belowZeroGenerationInExistingChunks
+            && "full".equals(tag.getCompoundOrEmpty("Level").getStringOr("Status", ""));
+        // Keep the native DFU/context/version/error chain intact and call it exactly once.
+        net.minecraft.nbt.CompoundTag upgraded = original.call(tag);
+        if (stopBelowZero) {
+            upgraded.putString("Status", net.minecraft.core.registries.BuiltInRegistries.CHUNK_STATUS
+                .getKey(net.minecraft.world.level.chunk.status.ChunkStatus.SPAWN).toString());
+        }
+        return upgraded;
     }
 
     public final ArclightCallbackExecutor callbackExecutor = new ArclightCallbackExecutor();

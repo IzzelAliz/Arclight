@@ -13,7 +13,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Witch;
 import net.minecraft.world.item.trading.MerchantOffer;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;

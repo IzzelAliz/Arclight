@@ -63,19 +63,19 @@ public abstract class DistanceManagerMixin implements DistanceManagerBridge {
     }
 
     public boolean addRegionTicketAtDistance(TicketType type, ChunkPos pos, int level, Object value) {
-        return this.addTicket(pos.toLong(), arclight$keyedTicket(type, 33 - level, value));
+        return this.addTicket(pos.pack(), arclight$keyedTicket(type, 33 - level, value));
     }
 
     public boolean removeRegionTicketAtDistance(TicketType type, ChunkPos pos, int level, Object value) {
-        return this.removeTicket(pos.toLong(), arclight$keyedTicket(type, 33 - level, value));
+        return this.removeTicket(pos.pack(), arclight$keyedTicket(type, 33 - level, value));
     }
 
     public boolean addTicketAtLevel(TicketType type, ChunkPos pos, int level, Object value) {
-        return this.addTicket(pos.toLong(), arclight$keyedTicket(type, level, value));
+        return this.addTicket(pos.pack(), arclight$keyedTicket(type, level, value));
     }
 
     public boolean removeTicketAtLevel(TicketType type, ChunkPos pos, int level, Object value) {
-        return this.removeTicket(pos.toLong(), arclight$keyedTicket(type, level, value));
+        return this.removeTicket(pos.pack(), arclight$keyedTicket(type, level, value));
     }
 
     @Override

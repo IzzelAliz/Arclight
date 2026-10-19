@@ -56,13 +56,16 @@ public class MinecraftProvider {
                                 var server = downloads.getAsJsonObject("server");
                                 var serverUrl = server.get("url").getAsString();
                                 var serverHash = server.get("sha1").getAsString();
+                                // Since 26.1, Mojang distributes named server classes and
+                                // omits server_mappings from the version manifest altogether.
                                 var mapping = downloads.getAsJsonObject("server_mappings");
-                                var mappingUrl = mapping.get("url").getAsString();
-                                var mappingHash = mapping.get("sha1").getAsString();
+                                var mappingUrl = mapping == null ? null : mapping.get("url").getAsString();
+                                var mappingHash = mapping == null ? null : mapping.get("sha1").getAsString();
                                 logger.accept("Minecraft version: %s, server: %s, mappings: %s".formatted(info.installer.minecraft, serverHash, mappingHash));
                                 return new MinecraftProvider.MinecraftData(entry.getKey(),
                                         Mirrors.mapMojangMirror(serverUrl, entry.getKey()), serverHash,
-                                        Mirrors.mapMojangMirror(mappingUrl, entry.getKey()), mappingHash, serverUrl, mappingUrl);
+                                        mappingUrl == null ? null : Mirrors.mapMojangMirror(mappingUrl, entry.getKey()),
+                                        mappingHash, serverUrl, mappingUrl);
                             }
                         }
                     }

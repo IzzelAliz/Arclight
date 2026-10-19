@@ -33,13 +33,13 @@ import net.minecraft.world.level.levelgen.BitRandomSource;
 import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.level.storage.WritableLevelData;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.CraftWorld;
-import org.bukkit.craftbukkit.v.block.CapturedBlockState;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.util.CraftSpawnCategory;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.block.CapturedBlockState;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.block.data.CraftBlockData;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.util.CraftSpawnCategory;
 import org.bukkit.entity.SpawnCategory;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -59,12 +59,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Mixin(Level.class)
-public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWriter {
+public abstract class LevelMixin implements WorldBridge, io.izzel.arclight.common.bridge.core.world.level.TreeCaptureBridge, LevelAccessor, LevelWriter {
 
     // @formatter:off
     @Shadow @Nullable public BlockEntity getBlockEntity(BlockPos pos) { return null; }
     @Shadow public abstract BlockState getBlockState(BlockPos pos);
-    @Shadow public abstract long getDayTime();
     @Shadow public abstract MinecraftServer getServer();
     @Shadow public abstract LevelData getLevelData();
     @Shadow public abstract ResourceKey<Level> dimension();
@@ -94,6 +93,35 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
     public Map<BlockPos, BlockEntity> capturedTileEntities = new HashMap<>();
 
     @Unique private boolean arclight$isActual;
+    @Unique private final io.izzel.arclight.common.mod.util.TreeCapture arclight$treeCapture = new io.izzel.arclight.common.mod.util.TreeCapture();
+
+    @Override
+    public Object bridge$treeCaptureIdentity() {
+        if (!this.arclight$isActual || Thread.currentThread() != this.arclight$getMainThread()) {
+            throw new IllegalStateException("Tree capture identity requires the logic Level thread");
+        }
+        return this.arclight$treeCapture.currentIdentity();
+    }
+
+    @Override
+    public <T> io.izzel.arclight.common.mod.util.TreeCapture.Result<T> bridge$captureTree(java.util.function.Supplier<T> action) {
+        if (!this.arclight$isActual) {
+            throw new IllegalStateException("Tree capture requires an actual logic Level");
+        }
+        if (Thread.currentThread() != this.arclight$getMainThread()) {
+            throw new IllegalStateException("Tree capture requires the Level thread");
+        }
+        return this.arclight$treeCapture.capture(action);
+    }
+
+    @Inject(method = "getBlockState(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;",
+        at = @At("HEAD"), cancellable = true)
+    private void arclight$treeRead(BlockPos pos, CallbackInfoReturnable<BlockState> cir) {
+        if (this.arclight$isActual && Thread.currentThread() == this.arclight$getMainThread()) {
+            BlockState state = this.arclight$treeCapture.read(pos);
+            if (state != null) cir.setReturnValue(state);
+        }
+    }
 
     @ShadowConstructor
     public void arclight$constructor(WritableLevelData worldInfo, ResourceKey<Level> dimension, RegistryAccess registryAccess, final Holder<DimensionType> dimensionType, boolean isRemote, boolean isDebug, long seed, int maxNeighborUpdate) {
@@ -158,6 +186,12 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
     @Inject(method = "setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;II)Z",
         at = @At("HEAD"), cancellable = true)
     private void arclight$hooks(BlockPos pos, BlockState newState, int flags, int i, CallbackInfoReturnable<Boolean> cir) {
+        if (this.arclight$isActual && Thread.currentThread() == this.arclight$getMainThread()
+            && this.arclight$treeCapture.active()) {
+            this.arclight$treeCapture.write((Level) (Object) this, pos, newState, flags);
+            cir.setReturnValue(true);
+            return;
+        }
         if (!ArclightCaptures.setLastEntityChangeBlockResult(processCaptures(pos, newState, flags))) {
             cir.setReturnValue(false);
         }
@@ -327,4 +361,16 @@ public abstract class LevelMixin implements WorldBridge, LevelAccessor, LevelWri
             arclight$blockInteractionOverride = null;
         }
     }
+
+    @Override
+    public <T> io.izzel.arclight.common.mod.util.TreeCapture.JoinResult<T> bridge$captureTreeOrJoin(java.util.function.Supplier<T> action) {
+        if (!this.arclight$isActual) {
+            throw new IllegalStateException("Tree capture requires an actual logic Level");
+        }
+        if (Thread.currentThread() != this.arclight$getMainThread()) {
+            throw new IllegalStateException("Tree capture requires the Level thread");
+        }
+        return this.arclight$treeCapture.captureOrJoin(action);
+    }
+
 }

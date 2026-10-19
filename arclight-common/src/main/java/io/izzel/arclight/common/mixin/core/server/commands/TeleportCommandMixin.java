@@ -21,7 +21,7 @@ import net.minecraft.world.entity.Relative;
 import net.minecraft.world.level.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.CraftWorld;
+import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.spongepowered.asm.mixin.*;
 
@@ -41,7 +41,7 @@ public class TeleportCommandMixin {
      */
     @Overwrite
     private static void performTeleport(CommandSourceStack source, Entity entity, ServerLevel level, double x, double y, double z, Set<Relative> set, float yaw, float pitch, @Nullable LookAt p_139024_) throws CommandSyntaxException {
-        var event = ((EntityBridge) entity).bridge$onEntityTeleportCommand(x, y, z);
+        var event = ((EntityBridge) entity).bridge$onEntityTeleportCommand(level, x, y, z);
         if (event._1) {
             return;
         }

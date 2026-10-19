@@ -9,7 +9,6 @@ import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.server.level.ServerEntity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -121,14 +120,11 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
         }
     }
 
-    /**
-     * Keep Bukkit's PlayerVelocityEvent on the final motion packet. This callsite is
-     * the 1.21.11 replacement for broadcastAndSend: it reaches tracking players and
-     * the subject, and the packet is rebuilt after a plugin changes velocity.
-     */
-    @Decorate(method = "sendChanges", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerEntity$Synchronizer;sendToTrackingPlayersAndSelf(Lnet/minecraft/network/protocol/Packet;)V"))
-    private void arclight$velocityEvent(ServerEntity.Synchronizer synchronizer, Packet<? super ClientGamePacketListener> packet) throws Throwable {
-        if (this.entity instanceof ServerPlayer player) {
+    /** Dispatch before clearing the pending motion flag, matching CraftBukkit. */
+    @Decorate(method = "sendChanges", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD,
+        target = "Lnet/minecraft/world/entity/Entity;hurtMarked:Z"))
+    private void arclight$velocityEvent(Entity entity, boolean hurtMarked) throws Throwable {
+        if (entity instanceof ServerPlayer player) {
             Player bukkitPlayer = ((ServerPlayerBridge) player).bridge$getBukkitEntity();
             Vector velocity = bukkitPlayer.getVelocity();
             PlayerVelocityEvent event = new PlayerVelocityEvent(bukkitPlayer, velocity.clone());
@@ -139,10 +135,10 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
             }
             if (!velocity.equals(event.getVelocity())) {
                 bukkitPlayer.setVelocity(event.getVelocity());
-                packet = new ClientboundSetEntityMotionPacket(this.entity);
             }
         }
-        DecorationOps.callsite().invoke(synchronizer, packet);
+        DecorationOps.callsite().invoke(entity, hurtMarked);
+        // The native packet is constructed afterward from the final velocity.
     }
 
     /**

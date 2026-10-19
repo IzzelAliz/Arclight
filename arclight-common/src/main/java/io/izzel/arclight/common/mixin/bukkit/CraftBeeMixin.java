@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.bukkit;
 import io.izzel.arclight.common.bridge.core.world.entity.BeeBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.animal.bee.Bee;
-import org.bukkit.craftbukkit.v.entity.CraftBee;
+import org.bukkit.craftbukkit.entity.CraftBee;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

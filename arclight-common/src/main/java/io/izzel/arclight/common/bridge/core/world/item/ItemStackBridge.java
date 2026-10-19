@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.bridge.core.world.item;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -13,6 +14,10 @@ public interface ItemStackBridge {
     void arclight$restorePatch(DataComponentPatch datacomponentpatch);
 
     void arclight$setItem(Item item);
+
+    default boolean bridge$canSetItem(Holder<Item> item) {
+        return true;
+    }
 
     default InteractionResult bridge$forge$onItemUseFirst(UseOnContext context) {
         return InteractionResult.PASS;

@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.entity.ai.goal;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.BreakDoorGoal;
 import net.minecraft.world.entity.ai.goal.DoorInteractGoal;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

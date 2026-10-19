@@ -12,6 +12,10 @@ import org.jetbrains.annotations.Nullable;
 
 public interface BlockBridge {
 
+    default net.minecraft.util.TriState bridge$forge$canSustainPlant(BlockState soil, net.minecraft.world.level.BlockGetter level, BlockPos pos, Direction direction, BlockState plant) {
+        return net.minecraft.util.TriState.DEFAULT;
+    }
+
     int bridge$getExpDrop(BlockState blockState, ServerLevel world, BlockPos blockPos, ItemStack itemStack);
 
     int bridge$tryDropExperience(ServerLevel worldserver, BlockPos blockposition, ItemStack itemstack, IntProvider intprovider);

@@ -2,7 +2,7 @@ package io.izzel.arclight.neoforge.mod.util;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.common.util.BlockSnapshot;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
+import org.bukkit.craftbukkit.block.CraftBlock;
 
 public class ArclightBlockSnapshot extends CraftBlock {
 

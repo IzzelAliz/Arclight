@@ -11,7 +11,7 @@ import net.minecraft.world.item.FishingRodItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.CraftEquipmentSlot;
+import org.bukkit.craftbukkit.CraftEquipmentSlot;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

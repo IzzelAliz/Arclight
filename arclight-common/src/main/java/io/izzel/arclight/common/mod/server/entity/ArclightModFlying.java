@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mod.server.entity;
 
 import net.minecraft.world.entity.animal.FlyingAnimal;
-import org.bukkit.craftbukkit.v.CraftServer;
+import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.entity.Flying;
 
 public class ArclightModFlying extends ArclightModMob implements Flying {

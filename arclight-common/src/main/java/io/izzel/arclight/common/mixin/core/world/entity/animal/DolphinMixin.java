@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,11 +15,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Dolphin.class)
 public abstract class DolphinMixin extends PathfinderMobMixin {
 
-    @Inject(method = "pickUpItem", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/dolphin/Dolphin;setItemSlot(Lnet/minecraft/world/entity/EquipmentSlot;Lnet/minecraft/world/item/ItemStack;)V"))
-    private void arclight$entityPick(ServerLevel level, ItemEntity itemEntity, CallbackInfo ci) {
+    @Inject(method = "pickUpItem", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/dolphin/Dolphin;onItemPickup(Lnet/minecraft/world/entity/item/ItemEntity;)V"))
+    private void arclight$entityPick(ServerLevel level, ItemEntity itemEntity, CallbackInfo ci,
+            @com.llamalad7.mixinextras.sugar.Local com.llamalad7.mixinextras.sugar.ref.LocalRef<net.minecraft.world.item.ItemStack> stack) {
         if (CraftEventFactory.callEntityPickupItemEvent((Dolphin) (Object) this, itemEntity, 0, false).isCancelled()) {
             ci.cancel();
+            return;
         }
+        stack.set(itemEntity.getItem());
     }
 
     @Inject(method = "pickUpItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V"))

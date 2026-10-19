@@ -7,12 +7,24 @@ import net.minecraft.util.Unit;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.Player;
-import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 import org.bukkit.event.entity.EntityExhaustionEvent;
 
 public interface PlayerBridge extends LivingEntityBridge {
 
     boolean bridge$isFauxSleeping();
+
+    void bridge$cancelCopperShear(net.minecraft.world.entity.Entity target);
+
+    boolean bridge$isCopperShearCancelled(net.minecraft.world.entity.Entity target);
+
+    /** Dispatch/refund only; false means Bukkit vetoed this exact item entity. */
+    boolean bridge$callDropItemEvent(net.minecraft.world.entity.item.ItemEntity item, boolean traceItem);
+
+    /** NeoForge dispatches at its toss helper's admission call, not Player.drop RETURN. */
+    default boolean bridge$platform$dropEventAtReturn() {
+        return true;
+    }
 
     @Override
     CraftHumanEntity bridge$getBukkitEntity();

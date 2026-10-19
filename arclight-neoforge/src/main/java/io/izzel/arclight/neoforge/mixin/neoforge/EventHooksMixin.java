@@ -1,5 +1,9 @@
 package io.izzel.arclight.neoforge.mixin.neoforge;
 
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.boss.wither.WitherBoss;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
@@ -23,4 +27,12 @@ public abstract class EventHooksMixin {
     private static void arclight$captureDirection(Entity entity, List<BlockSnapshot> blockSnapshots, Direction direction, CallbackInfoReturnable<Boolean> cir) {
         ArclightCaptures.capturePlaceEventDirection(direction);
     }
+    @Inject(method = "checkMobDespawn(Lnet/minecraft/world/entity/Mob;)Z", remap = false,
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;discard()V", remap = false))
+    private static void arclight$witherDespawnCause(Mob mob, CallbackInfoReturnable<Boolean> cir) {
+        if (mob instanceof WitherBoss) {
+            ((EntityBridge) mob).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
+        }
+    }
+
 }

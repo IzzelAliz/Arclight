@@ -6,7 +6,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractMountInventoryMenu;
-import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
+import org.bukkit.craftbukkit.inventory.CraftInventoryView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

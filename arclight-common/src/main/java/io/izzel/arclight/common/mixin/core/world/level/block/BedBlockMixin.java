@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import net.minecraft.core.BlockPos;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.attribute.EnvironmentAttributes;
@@ -15,6 +17,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
@@ -22,6 +25,16 @@ import static net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING;
 
 @Mixin(BedBlock.class)
 public abstract class BedBlockMixin {
+
+    @org.spongepowered.asm.mixin.injection.Inject(method = "setPlacedBy", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;updateNeighborsAt(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;)V"))
+    private void arclight$deferPlacementPhysics(Level level, BlockPos pos, BlockState state,
+            net.minecraft.world.entity.LivingEntity placer, net.minecraft.world.item.ItemStack stack,
+            org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
+        if (((io.izzel.arclight.common.bridge.core.world.level.WorldBridge) level).bridge$isCapturingBlockBreak()) {
+            ci.cancel();
+        }
+    }
+
 
     // @formatter:off
     @Shadow @Final public static EnumProperty<BedPart> PART;
@@ -36,7 +49,7 @@ public abstract class BedBlockMixin {
     @Overwrite
     public InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         if (level.isClientSide()) {
-            return InteractionResult.CONSUME;
+            return InteractionResult.SUCCESS_SERVER;
         } else {
             if (state.getValue(PART) != BedPart.HEAD) {
                 pos = pos.relative(state.getValue(FACING));
@@ -58,15 +71,16 @@ public abstract class BedBlockMixin {
             } else */
             if (state.getValue(OCCUPIED)) {
                 if (!this.kickVillagerOutOfBed(level, pos)) {
-                    player.displayClientMessage(Component.translatable("block.minecraft.bed.occupied"), true);
+                    player.sendOverlayMessage(Component.translatable("block.minecraft.bed.occupied"));
                 }
 
-                return InteractionResult.SUCCESS;
+                return InteractionResult.SUCCESS_SERVER;
             } else {
                 var maybeLeft = player.startSleepInBed(pos).left();
                 if (maybeLeft.isPresent()) {
                     final var problem = maybeLeft.get();
                     if (level.environmentAttributes().getValue(EnvironmentAttributes.BED_RULE, pos).explodes()) {
+                        org.bukkit.block.BlockState bedSnapshot = CraftBlock.at(level, pos).getState();
                         level.removeBlock(pos, false);
                         BlockPos blockpos = pos.relative(state.getValue(FACING).getOpposite());
                         if (level.getBlockState(blockpos).is((BedBlock) (Object) this)) {
@@ -74,12 +88,12 @@ public abstract class BedBlockMixin {
                         }
 
                         Vec3 vec3d = pos.getCenter();
-                        level.explode(null, level.damageSources().badRespawnPointExplosion(vec3d), null, vec3d, 5.0F, true, Level.ExplosionInteraction.BLOCK);
+                        level.explode(null, ((DamageSourceBridge) level.damageSources().badRespawnPointExplosion(vec3d)).bridge$directBlockState(bedSnapshot), null, vec3d, 5.0F, true, Level.ExplosionInteraction.BLOCK);
                     } else if (problem.message() != null) {
-                        player.displayClientMessage(problem.message(), true);
+                        player.sendOverlayMessage(problem.message());
                     }
                 }
-                return InteractionResult.SUCCESS;
+                return InteractionResult.SUCCESS_SERVER;
             }
         }
     }

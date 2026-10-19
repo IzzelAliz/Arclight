@@ -65,13 +65,13 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.CraftEquipmentSlot;
-import org.bukkit.craftbukkit.v.attribute.CraftAttributeMap;
-import org.bukkit.craftbukkit.v.block.CraftBlockState;
-import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.CraftEquipmentSlot;
+import org.bukkit.craftbukkit.attribute.CraftAttributeMap;
+import org.bukkit.craftbukkit.block.CraftBlockState;
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
@@ -186,6 +186,12 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         this.collides = true;
         this.craftAttributes = new CraftAttributeMap(this.attributes);
         this.entityData.set(DATA_HEALTH_ID, (float) this.getAttributeValue(Attributes.MAX_HEALTH));
+    }
+
+    @Override
+    public boolean bridge$canCollideWithBukkit(Entity other, boolean pushable) {
+        // Selected fixed-CB semantics: false remains a veto even for exempt UUIDs.
+        return pushable && this.collides && !this.collidableExemptions.contains(other.getUUID());
     }
 
     public SoundEvent getHurtSound0(DamageSource damagesource) {
@@ -574,7 +580,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         damage += blockingModifier;
 
         Function<Double, Double> freezing = f -> {
-            if (source.is(DamageTypeTags.IS_FREEZING) && this.getType().is(EntityTypeTags.FREEZE_HURTS_EXTRA_TYPES)) {
+            if (source.is(DamageTypeTags.IS_FREEZING) && this.getType().builtInRegistryHolder().is(EntityTypeTags.FREEZE_HURTS_EXTRA_TYPES)) {
                 return -(f - (f * 5.0F));
             }
             return -0.0;
@@ -832,19 +838,13 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         return (ItemStack) DecorationOps.callsite().invoke(itemStack, worldIn, entityLiving);
     }
 
-    @WrapMethod(method = "randomTeleport(DDDZ)Z")
-    private boolean arclight$chorusTeleportScope(double x, double y, double z, boolean showParticles, Operation<Boolean> original) {
-        ChorusTeleportContext.Frame frame = ChorusTeleportContext.enter((LivingEntity) (Object) this);
-        try {
-            return original.call(x, y, z, showParticles);
-        } finally {
-            ChorusTeleportContext.exit(frame);
-        }
-    }
+    // Chorus scope wraps the physical body in the loader-specific LivingEntity mixin.
+    // Do not wrap NeoForge's four-argument delegator: a second enter would shadow its claimed scope.
 
-    @Decorate(method = "randomTeleport", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/LivingEntity;teleportTo(DDD)V"))
+    // Vanilla has the callsite in the four-argument method; NeoForge delegates to the ItemStack overload.
+    @Decorate(method = {"randomTeleport(DDDZ)Z", "randomTeleport(DDDZLnet/minecraft/world/item/ItemStack;)Z"}, at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/LivingEntity;teleportTo(DDD)V"))
     private void arclight$entityTeleport(LivingEntity entity, double x, double y, double z,
-                                        double requestedX, double requestedY, double requestedZ, boolean showParticles) throws Throwable {
+                                         @Local(ordinal = 0) boolean showParticles) throws Throwable {
         if ((Object) this instanceof ServerPlayer player) {
             double fromX = this.getX(), fromY = this.getY(), fromZ = this.getZ();
             boolean valid;
@@ -891,6 +891,10 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 z = this.getZ();
             }
             if (event.isCancelled()) {
+                ChorusTeleportContext.Scope scope = ChorusTeleportContext.current();
+                if (scope != null) {
+                    scope.setCancelled(true);
+                }
                 DecorationOps.cancel().invoke(false);
                 return;
             }
@@ -907,6 +911,11 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Override
     public void bridge$pushHealReason(EntityRegainHealthEvent.RegainReason regainReason) {
         arclight$regainReason = regainReason;
+    }
+
+    @Override
+    public EntityRegainHealthEvent.RegainReason bridge$peekHealReason() {
+        return arclight$regainReason;
     }
 
     @Override

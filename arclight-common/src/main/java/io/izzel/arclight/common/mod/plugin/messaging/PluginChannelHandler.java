@@ -1,6 +1,6 @@
 package io.izzel.arclight.common.mod.plugin.messaging;
 
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.plugin.Plugin;
 
 public interface PluginChannelHandler {

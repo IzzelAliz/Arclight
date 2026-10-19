@@ -40,7 +40,7 @@ public class ForgeLikeProvider {
                 CompletableFuture<?>[] array = suppliers.stream().map(MinecraftProvider.reportSupply(pool, logger)).toArray(CompletableFuture[]::new);
                 MinecraftProvider.handleFutures(logger, array);
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new CompletionException("Cannot inspect installer profile " + path, e);
             }
             return stripDownloadMapping(path, logger);
         });
@@ -48,6 +48,21 @@ public class ForgeLikeProvider {
 
     static Path stripDownloadMapping(Path installer, Consumer<String> logger) {
         try {
+            // Keep NeoForge 26.1.2's signed installer intact: its profile has no
+            // mapping-download task, only EXTRACT_FILES/PROCESS_MINECRAFT_JAR.
+            try (var source = new JarFile(installer.toFile())) {
+                var profile = source.getJarEntry("install_profile.json");
+                if (profile == null) throw new IOException("Installer has no install_profile.json: " + installer);
+                var json = JsonParser.parseReader(new InputStreamReader(source.getInputStream(profile))).getAsJsonObject();
+                var processors = json.getAsJsonArray("processors");
+                boolean downloadsMappings = false;
+                if (processors != null) for (var processor : processors) {
+                    for (var arg : processor.getAsJsonObject().getAsJsonArray("args")) {
+                        if ("DOWNLOAD_MOJMAPS".equals(arg.getAsString())) downloadsMappings = true;
+                    }
+                }
+                if (!downloadsMappings) return installer;
+            }
             logger.accept("Processing forge installer...");
             var path = Paths.get(".arclight", "installer_stripped.jar");
             if (!Files.isDirectory(path.getParent())) {
@@ -67,6 +82,13 @@ public class ForgeLikeProvider {
                     if (name.equals("install_profile.json")) {
                         var element = new JsonParser().parse(new InputStreamReader(from.getInputStream(entry)));
                         var processors = element.getAsJsonObject().getAsJsonArray("processors");
+                        // NeoForge 26.1.2 uses PROCESS_MINECRAFT_JAR on the bundled
+                        // server and has no DOWNLOAD_MOJMAPS processor. Preserve it.
+                        if (processors == null) {
+                            to.putNextEntry(entry);
+                            to.write(new Gson().toJson(element).getBytes(StandardCharsets.UTF_8));
+                            continue;
+                        }
                         outer:
                         for (var i = 0; i < processors.size(); i++) {
                             var processor = processors.get(i).getAsJsonObject();
@@ -107,6 +129,9 @@ public class ForgeLikeProvider {
         if (object.has("data")) {
             var data = object.getAsJsonObject("data");
             if (data.has("MOJMAPS")) {
+                if (minecraftData.mappingHash() == null || minecraftData.officialMappingUrl() == null) {
+                    throw new IOException("Installer requires MOJMAPS but Minecraft " + minecraft + " publishes no server mappings");
+                }
                 var serverMapping = data.getAsJsonObject("MOJMAPS").get("server").getAsString();
                 ret.put(serverMapping.substring(1, serverMapping.length() - 1),
                         new AbstractMap.SimpleImmutableEntry<>(minecraftData.mappingHash(), minecraftData.officialMappingUrl()));

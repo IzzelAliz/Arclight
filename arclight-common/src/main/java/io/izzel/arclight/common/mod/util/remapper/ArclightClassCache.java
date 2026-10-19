@@ -52,7 +52,7 @@ public abstract class ArclightClassCache implements AutoCloseable {
 
     private static class Impl extends ArclightClassCache {
 
-        private static final int SPEC_VERSION = 3;
+        private static final int SPEC_VERSION = 4;
         private static final boolean ENABLED = ArclightConfig.spec().getOptimization().isCachePluginClass();
 
         private final ConcurrentHashMap<String, String> nameToHash = new ConcurrentHashMap<>();

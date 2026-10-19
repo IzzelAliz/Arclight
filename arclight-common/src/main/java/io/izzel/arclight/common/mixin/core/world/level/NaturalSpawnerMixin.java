@@ -3,6 +3,11 @@ package io.izzel.arclight.common.mixin.core.world.level;
 import io.izzel.arclight.common.bridge.core.world.level.IWorldWriterBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.spawner.WorldEntitySpawnerBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import io.izzel.arclight.mixin.Local;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.animal.feline.Ocelot;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
@@ -22,7 +27,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
@@ -51,17 +55,32 @@ public abstract class NaturalSpawnerMixin {
         }
     }
 
-    @Inject(method = "spawnCategoryForPosition(Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkAccess;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/NaturalSpawner$SpawnPredicate;Lnet/minecraft/world/level/NaturalSpawner$AfterSpawnCallback;)V",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V"))
-    private static void arclight$naturalSpawn(MobCategory p_234966_0_, ServerLevel worldIn, ChunkAccess p_234966_2_, BlockPos p_234966_3_, NaturalSpawner.SpawnPredicate p_234966_4_, NaturalSpawner.AfterSpawnCallback p_234966_5_, CallbackInfo ci) {
-        ((WorldBridge) worldIn).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.NATURAL);
+    @com.llamalad7.mixinextras.expression.Definition(id="cluster", local=@com.llamalad7.mixinextras.sugar.Local(type=int.class,index=11))
+    @com.llamalad7.mixinextras.expression.Definition(id="group", local=@com.llamalad7.mixinextras.sugar.Local(type=int.class,index=19))
+    @com.llamalad7.mixinextras.expression.Expression({"cluster = cluster + @(1)", "group = group + @(1)"})
+    @com.llamalad7.mixinextras.injector.ModifyExpressionValue(method="spawnCategoryForPosition(Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkAccess;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/NaturalSpawner$SpawnPredicate;Lnet/minecraft/world/level/NaturalSpawner$AfterSpawnCallback;)V",at=@At("MIXINEXTRAS:EXPRESSION"),require=2,allow=2)
+    private static int arclight$neutralizeNativeCounters(int delta) { return 0; }
+
+    @Decorate(method="spawnCategoryForPosition(Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkAccess;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/NaturalSpawner$SpawnPredicate;Lnet/minecraft/world/level/NaturalSpawner$AfterSpawnCallback;)V",inject=true,
+        at=@At(value="INVOKE",target="Lnet/minecraft/server/level/ServerLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V",shift=At.Shift.AFTER))
+    private static void arclight$commitNaturalCounts(@Local(ordinal=0) Mob mob,@Local(ordinal=1) int cluster,@Local(ordinal=7) int group)throws Throwable {
+        if (!mob.isRemoved()) { ++cluster; ++group; }
+        DecorationOps.blackhole().invoke(cluster,group);
     }
 
-    @Redirect(method = "spawnCategoryForPosition(Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkAccess;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/NaturalSpawner$SpawnPredicate;Lnet/minecraft/world/level/NaturalSpawner$AfterSpawnCallback;)V",
+    @Decorate(method = "spawnCategoryForPosition(Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkAccess;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/NaturalSpawner$SpawnPredicate;Lnet/minecraft/world/level/NaturalSpawner$AfterSpawnCallback;)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V"))
+    private static void arclight$naturalSpawn(ServerLevel level, Entity entity) throws Throwable {
+        ((WorldBridge) level).bridge$pushAddEntityReason(entity instanceof Ocelot ocelot && ocelot.getAge() < 0
+            ? CreatureSpawnEvent.SpawnReason.OCELOT_BABY : CreatureSpawnEvent.SpawnReason.NATURAL);
+        DecorationOps.callsite().invoke(level, entity);
+    }
+
+    @Decorate(method = "spawnCategoryForPosition(Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkAccess;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/NaturalSpawner$SpawnPredicate;Lnet/minecraft/world/level/NaturalSpawner$AfterSpawnCallback;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/NaturalSpawner$AfterSpawnCallback;run(Lnet/minecraft/world/entity/Mob;Lnet/minecraft/world/level/chunk/ChunkAccess;)V"))
-    private static void arclight$skipRun(NaturalSpawner.AfterSpawnCallback afterSpawnCallback, Mob mob, ChunkAccess chunkAccess) {
+    private static void arclight$skipRun(NaturalSpawner.AfterSpawnCallback afterSpawnCallback, Mob mob, ChunkAccess chunkAccess) throws Throwable {
         if (!mob.isRemoved()) {
-            afterSpawnCallback.run(mob, chunkAccess);
+            DecorationOps.callsite().invoke(afterSpawnCallback, mob, chunkAccess);
         }
     }
 

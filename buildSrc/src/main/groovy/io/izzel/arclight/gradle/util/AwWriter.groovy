@@ -1,6 +1,5 @@
 package io.izzel.arclight.gradle.util
 
-import net.fabricmc.loom.configuration.providers.minecraft.mapped.NamedMinecraftProvider
 import net.md_5.specialsource.Jar
 import org.cadixdev.at.AccessChange
 import org.cadixdev.at.AccessTransform
@@ -11,17 +10,15 @@ import org.cadixdev.bombe.type.signature.MethodSignature
 class AwWriter {
 
     private final BufferedWriter writer
-    private final NamedMinecraftProvider<?> mc
     private final Jar jar
 
-    AwWriter(BufferedWriter writer, NamedMinecraftProvider<?> mc) {
+    AwWriter(BufferedWriter writer, File minecraftJar) {
         this.writer = writer
-        this.mc = mc
-        this.jar = Jar.init(mc.minecraftJarPaths.get(0).toFile())
+        this.jar = Jar.init(minecraftJar)
     }
 
     void write(AccessTransformSet set) throws IOException {
-        this.writer.writeLine("accessWidener v2 named")
+        this.writer.writeLine("accessWidener v2 official")
         set.getClasses().forEach((originalClassName, classSet) -> {
             def className = originalClassName.replace('/', '.')
             writeClass(className, classSet.get())
@@ -56,32 +53,36 @@ class AwWriter {
     }
 
     private void writeField(String className, String name, AccessTransform transform) throws IOException {
-        if (transform.isEmpty()) {
-            return
-        }
+        if (transform.isEmpty()) return
         def classNode = jar.getNode(className.replace('.', '/'))
         if (!classNode) {
-            println("Not found class " + className)
-            this.writer.writeLine("# TODO field " + className.replace('.', '/') + " " + name)
+            writer.writeLine("# TODO field " + className.replace('.', '/') + " " + name)
             return
         }
-        def field = classNode.fields.find { it.name == name }
-        if (!field) {
-            println("Not found field " + className + " " + name)
-            this.writer.writeLine("# TODO field " + className.replace('.', '/') + " " + name)
-            return
+        def fields = name == null ? classNode.fields : classNode.fields.findAll { it.name == name }
+        if (fields.isEmpty()) {
+            writer.writeLine("# TODO field " + className.replace('.', '/') + " " + name)
         }
-
-        writeAccessTransform("field " + classNode.name + " " + field.name + " " + field.desc, true, transform)
+        fields.each { field ->
+            writeAccessTransform("field " + classNode.name + " " + field.name + " " + field.desc, true, transform)
+        }
     }
 
     private void writeMethod(String className, MethodSignature signature, AccessTransform transform) throws IOException {
-        if (transform.isEmpty()) {
+        if (transform.isEmpty()) return
+        def owner = className.replace('.', '/')
+        if (signature == null) {
+            def node = jar.getNode(owner)
+            if (node == null) {
+                writer.writeLine("# TODO methods " + owner)
+                return
+            }
+            node.methods.each { method ->
+                writeAccessTransform("method $owner ${method.name} ${method.desc}", false, transform)
+            }
             return
         }
-
-        writeAccessTransform("method " + className.replace('.', '/') + " " + signature.name + " " + signature.descriptor.toString(),
-                false, transform)
+        writeAccessTransform("method $owner ${signature.name} ${signature.descriptor}", false, transform)
     }
 
 

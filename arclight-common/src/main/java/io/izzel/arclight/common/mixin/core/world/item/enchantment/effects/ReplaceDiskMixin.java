@@ -9,7 +9,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import net.minecraft.world.item.enchantment.effects.ReplaceDisk;
 import net.minecraft.world.level.block.state.BlockState;
-import org.bukkit.craftbukkit.v.block.CraftBlockState;
+import org.bukkit.craftbukkit.block.CraftBlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 

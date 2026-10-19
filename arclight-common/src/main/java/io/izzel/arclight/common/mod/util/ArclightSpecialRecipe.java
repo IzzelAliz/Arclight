@@ -12,9 +12,9 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeInput;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.craftbukkit.v.inventory.CraftComplexRecipe;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
+import org.bukkit.craftbukkit.inventory.CraftComplexRecipe;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.util.CraftNamespacedKey;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

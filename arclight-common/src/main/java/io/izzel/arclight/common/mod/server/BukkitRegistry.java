@@ -36,12 +36,12 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.dimension.LevelStem;
 import org.bukkit.*;
 import org.bukkit.block.Biome;
-import org.bukkit.craftbukkit.v.CraftGameRule;
-import org.bukkit.craftbukkit.v.CraftStatistic;
-import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
-import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
-import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
-import org.bukkit.craftbukkit.v.util.CraftSpawnCategory;
+import org.bukkit.craftbukkit.CraftGameRule;
+import org.bukkit.craftbukkit.CraftStatistic;
+import org.bukkit.craftbukkit.inventory.CraftRecipe;
+import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+import org.bukkit.craftbukkit.util.CraftNamespacedKey;
+import org.bukkit.craftbukkit.util.CraftSpawnCategory;
 import org.bukkit.enchantments.EnchantmentTarget;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;
@@ -104,7 +104,7 @@ public class BukkitRegistry {
     }
 
     private static void loadGameRules(DedicatedServer console) {
-        console.getWorldData().getGameRules().visitGameRuleTypes(new GameRuleTypeVisitor() {
+        console.getGameRules().visitGameRuleTypes(new GameRuleTypeVisitor() {
             @Override
             public <T> void visit(GameRule<T> rule) {
                 // Since 1.21.11 Bukkit game rules are registry-backed. Resolve the

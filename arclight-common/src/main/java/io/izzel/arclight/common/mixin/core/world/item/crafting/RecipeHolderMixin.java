@@ -4,7 +4,7 @@ import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeBridge;
 import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeHolderBridge;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.crafting.RecipeHolder;
-import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
+import org.bukkit.craftbukkit.util.CraftNamespacedKey;
 import org.bukkit.inventory.Recipe;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

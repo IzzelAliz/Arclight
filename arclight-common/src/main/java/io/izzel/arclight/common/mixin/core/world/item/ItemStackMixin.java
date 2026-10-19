@@ -3,11 +3,13 @@ package io.izzel.arclight.common.mixin.core.world.item;
 import io.izzel.arclight.common.bridge.core.world.item.ItemStackBridge;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.component.PatchedDataComponentMap;
+import net.minecraft.core.Holder;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(ItemStack.class)
@@ -15,7 +17,7 @@ public abstract class ItemStackMixin implements ItemStackBridge {
 
     // @formatter:off
     @Shadow @Final PatchedDataComponentMap components;
-    @Shadow @Deprecated @Nullable private Item item;
+    @Shadow @Final @Mutable @Deprecated @Nullable private Holder<Item> item;
     // @formatter:on
 
     public void restorePatch(DataComponentPatch datacomponentpatch) {
@@ -28,12 +30,14 @@ public abstract class ItemStackMixin implements ItemStackBridge {
     }
 
     @Deprecated
-    public void setItem(@Nullable Item item) {
-        this.item = item;
+    public void setItem(@Nullable Holder<Item> item) {
+        if (this.bridge$canSetItem(item)) {
+            this.item = item;
+        }
     }
 
     @Override
     public void arclight$setItem(Item item) {
-        this.setItem(item);
+        this.setItem(item == null ? null : item.builtInRegistryHolder());
     }
 }

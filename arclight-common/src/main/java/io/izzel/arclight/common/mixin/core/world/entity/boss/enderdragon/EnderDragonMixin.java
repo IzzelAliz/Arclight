@@ -18,7 +18,7 @@ import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.dimension.end.EndDragonFight;
+import net.minecraft.world.level.dimension.end.EnderDragonFight;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.level.storage.loot.LootParams;
@@ -26,8 +26,8 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
@@ -44,7 +44,7 @@ import java.util.List;
 @Mixin(EnderDragon.class)
 public abstract class EnderDragonMixin extends MobMixin {
 
-    @Shadow @Nullable private EndDragonFight dragonFight;
+    @Shadow @Nullable private EnderDragonFight dragonFight;
 
     private Explosion explosionSource;
 

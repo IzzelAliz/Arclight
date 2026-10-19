@@ -13,9 +13,9 @@ import net.minecraft.world.level.material.FluidState;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.block.data.CraftBlockData;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.FluidLevelChangeEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -52,13 +52,15 @@ public abstract class FlowingFluidMixin {
     }
 
     @Decorate(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
-    private boolean arclight$fluidLevelChange(ServerLevel world, BlockPos pos, BlockState newState, int flags) throws Throwable {
+    private boolean arclight$fluidLevelChange(ServerLevel world, BlockPos pos, BlockState newState, int flags,
+                                               @Local(ordinal = 0) BlockState blockState) throws Throwable {
         if (DistValidate.isValid(world)) {
             FluidLevelChangeEvent event = CraftEventFactory.callFluidLevelChangeEvent(world, pos, newState);
             if (event.isCancelled()) {
                 return (boolean) DecorationOps.cancel().invoke();
             } else {
-                newState = ((CraftBlockData) event.getNewData()).getState();
+                blockState = ((CraftBlockData) event.getNewData()).getState();
+                newState = blockState;
             }
         }
         return (boolean) DecorationOps.callsite().invoke(world, pos, newState, flags);

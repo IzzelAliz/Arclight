@@ -2,15 +2,14 @@ package io.izzel.arclight.common.mixin.core.world.item.crafting;
 
 import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeBridge;
 import io.izzel.arclight.common.mod.util.ArclightSpecialRecipe;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CraftingBookCategory;
+import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.item.crafting.ShapedRecipePattern;
 import org.bukkit.NamespacedKey;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
-import org.bukkit.craftbukkit.v.inventory.CraftShapedRecipe;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.inventory.CraftRecipe;
+import org.bukkit.craftbukkit.inventory.CraftShapedRecipe;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.RecipeChoice;
 import org.spongepowered.asm.mixin.Final;
@@ -24,22 +23,22 @@ public abstract class ShapedRecipeMixin implements RecipeBridge {
 
     // @formatter:off
     @Shadow @Final ShapedRecipePattern pattern;
-    @Shadow @Final ItemStack result;
-    @Shadow @Final String group;
+    @Shadow @Final ItemStackTemplate result;
     @Shadow public abstract int getHeight();
     @Shadow public abstract int getWidth();
-    @Shadow public abstract CraftingBookCategory category();
     // @formatter:on
 
     @Override
     public Recipe bridge$toBukkitRecipe(NamespacedKey id) {
-        if (this.getWidth() < 1 || this.getWidth() > 3 || this.getHeight() < 1 || this.getHeight() > 3 || this.result.isEmpty()) {
+        if (this.getWidth() < 1 || this.getWidth() > 3 || this.getHeight() < 1 || this.getHeight() > 3 || this.result.create().isEmpty()) {
             return new ArclightSpecialRecipe(id, (net.minecraft.world.item.crafting.Recipe<?>) this);
         }
         CraftItemStack result = CraftItemStack.asCraftMirror(this.result);
         CraftShapedRecipe recipe = new CraftShapedRecipe(id, result, (ShapedRecipe) (Object) this);
-        recipe.setGroup(this.group);
-        recipe.setCategory(CraftRecipe.getCategory(this.category()));
+        // Metadata getters are inherited from NormalCraftingRecipe, not declared shadow targets.
+        ShapedRecipe self = (ShapedRecipe) (Object) this;
+        recipe.setGroup(self.group());
+        recipe.setCategory(CraftRecipe.getCategory(self.category()));
 
         switch (this.getHeight()) {
             case 1:

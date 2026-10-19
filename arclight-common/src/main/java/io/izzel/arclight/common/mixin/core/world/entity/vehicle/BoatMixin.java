@@ -25,7 +25,7 @@ public abstract class BoatMixin extends VehicleEntityMixin {
 
     @Inject(method = "push", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/VehicleEntity;push(Lnet/minecraft/world/entity/Entity;)V"))
     private void arclight$collideVehicle(Entity entityIn, CallbackInfo ci) {
-        if (isPassengerOfSameVehicle(entityIn)) {
+        if (!isPassengerOfSameVehicle(entityIn)) {
             VehicleEntityCollisionEvent event = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), ((EntityBridge) entityIn).bridge$getBukkitEntity());
             Bukkit.getPluginManager().callEvent(event);
 
@@ -35,7 +35,7 @@ public abstract class BoatMixin extends VehicleEntityMixin {
         }
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/boat/AbstractBoat;tickBubbleColumn()V"))
+    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/vehicle/boat/AbstractBoat;applyEffectsFromBlocks()V"))
     private void arclight$updateVehicle(CallbackInfo ci) {
         final org.bukkit.World bworld = this.level().bridge$getWorld();
         final Location to = new Location(bworld, this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());

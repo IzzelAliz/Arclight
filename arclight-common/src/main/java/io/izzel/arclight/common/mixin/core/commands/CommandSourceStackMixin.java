@@ -5,6 +5,7 @@ import io.izzel.arclight.common.bridge.core.commands.CommandSourceStackBridge;
 import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 
+import io.izzel.arclight.common.mod.command.CommandPermissionSet;
 import io.izzel.arclight.common.mod.compat.CommandNodeHooks;
 import io.izzel.arclight.common.mod.server.command.ArclightDummyCommandSender;
 import net.minecraft.commands.CommandSource;
@@ -18,12 +19,12 @@ import net.minecraft.server.permissions.PermissionSet;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.command.VanillaCommandWrapper;
+import org.bukkit.craftbukkit.CraftServer;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -46,13 +47,20 @@ public abstract class CommandSourceStackMixin implements CommandSourceStackBridg
 
     public CommandNode currentCommand;
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    @Inject(method = "hasPermission", cancellable = true, at = @At("HEAD"))
-    public void arclight$checkPermission(int level, String permission, CallbackInfoReturnable<Boolean> cir) {
-        CommandNode currentCommand = bridge$getCurrentCommand();
-        if (currentCommand != null) {
-            cir.setReturnValue(hasPermission(level, VanillaCommandWrapper.getPermission(currentCommand)));
+    @Unique private CommandPermissionSet arclight$bukkitPermissions;
+
+    @Inject(method = "permissions()Lnet/minecraft/server/permissions/PermissionSet;", cancellable = true, at = @At("RETURN"))
+    private void arclight$permissions(CallbackInfoReturnable<PermissionSet> cir) {
+        cir.setReturnValue(arclight$permissionView(cir.getReturnValue()));
+    }
+
+    @Unique
+    private CommandPermissionSet arclight$permissionView(PermissionSet permissions) {
+        if (this.arclight$bukkitPermissions == null || !this.arclight$bukkitPermissions.isDelegateFor(permissions)) {
+            this.arclight$bukkitPermissions = new CommandPermissionSet(permissions, this,
+                () -> getLevel() == null || !((CraftServer) Bukkit.getServer()).ignoreVanillaPermissions);
         }
+        return this.arclight$bukkitPermissions;
     }
 
     @Redirect(method = "broadcastToAdmins(Lnet/minecraft/network/chat/Component;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;isOp(Lnet/minecraft/server/players/NameAndId;)Z"))
@@ -65,8 +73,8 @@ public abstract class CommandSourceStackMixin implements CommandSourceStackBridg
     }
 
     public boolean hasPermission(int i, String bukkitPermission) {
-        // World is null when loading functions
-        return ((getLevel() == null || !((CraftServer) Bukkit.getServer()).ignoreVanillaPermissions) && this.permissions.hasPermission(new Permission.HasCommandLevel(PermissionLevel.byId(i)))) || getBukkitSender().hasPermission(bukkitPermission);
+        return arclight$permissionView(this.permissions).hasPermission(
+            new Permission.HasCommandLevel(PermissionLevel.byId(i)), bukkitPermission);
     }
 
     @Override

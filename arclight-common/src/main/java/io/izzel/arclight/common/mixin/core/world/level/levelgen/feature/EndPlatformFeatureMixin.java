@@ -10,7 +10,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.EndPlatformFeature;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.util.BlockStateListPopulator;
+import org.bukkit.craftbukkit.util.BlockStateListPopulator;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

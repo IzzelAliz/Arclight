@@ -2,15 +2,17 @@ package io.izzel.arclight.common.mixin.core.world.level.gameevent.vibrations;
 
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
+import io.izzel.arclight.mixin.Local;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.gameevent.vibrations.VibrationSystem;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.CraftGameEvent;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
+import org.bukkit.craftbukkit.CraftGameEvent;
+import org.bukkit.craftbukkit.block.CraftBlock;
 import org.bukkit.event.block.BlockReceiveGameEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,11 +20,12 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(VibrationSystem.Listener.class)
 public abstract class VibrationListenerMixin {
 
+    // Vec3 ordinal 0 is sourcePosition; ordinal 1 is the already-resolved listener destination.
     @Decorate(method = "handleGameEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/gameevent/vibrations/VibrationSystem$User;canReceiveVibration(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Holder;Lnet/minecraft/world/level/gameevent/GameEvent$Context;)Z"))
-    private boolean arclight$gameEvent(VibrationSystem.User instance, ServerLevel serverLevel, BlockPos pos, Holder<GameEvent> gameEventHolder, GameEvent.Context context) throws Throwable {
+    private boolean arclight$gameEvent(VibrationSystem.User instance, ServerLevel serverLevel, BlockPos pos, Holder<GameEvent> gameEventHolder, GameEvent.Context context, @Local(ordinal = 1) Vec3 destination) throws Throwable {
         var defaultCancel = !(boolean) DecorationOps.callsite().invoke(instance, serverLevel, pos, gameEventHolder, context);
         Entity entity = context.sourceEntity();
-        BlockReceiveGameEvent event = new BlockReceiveGameEvent(CraftGameEvent.minecraftToBukkit(gameEventHolder.value()), CraftBlock.at(serverLevel, pos), (entity == null) ? null : entity.bridge$getBukkitEntity());
+        BlockReceiveGameEvent event = new BlockReceiveGameEvent(CraftGameEvent.minecraftToBukkit(gameEventHolder.value()), CraftBlock.at(serverLevel, BlockPos.containing(destination)), (entity == null) ? null : entity.bridge$getBukkitEntity());
         event.setCancelled(defaultCancel);
         Bukkit.getPluginManager().callEvent(event);
         return !event.isCancelled();

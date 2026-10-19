@@ -25,10 +25,10 @@ public abstract class SnifferMixin extends AnimalMixin {
         return (instance, stack) -> {
             BlockPos pos = this.getHeadBlock();
             ItemEntity entity = new ItemEntity(this.level(), pos.getX(), pos.getY(), pos.getZ(), stack);
-            entity.setDefaultPickUpDelay();
             var event = new EntityDropItemEvent(this.getBukkitEntity(), (Item) ((EntityBridge) entity).bridge$getBukkitEntity());
             Bukkit.getPluginManager().callEvent(event);
             if (!event.isCancelled()) {
+                entity.setDefaultPickUpDelay();
                 instance.addFreshEntity(entity);
             }
         };

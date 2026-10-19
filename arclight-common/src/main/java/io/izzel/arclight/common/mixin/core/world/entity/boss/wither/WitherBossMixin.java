@@ -1,6 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.entity.boss.wither;
 
 import io.izzel.arclight.common.mixin.core.world.entity.PathfinderMobMixin;
+import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.BlockPos;
@@ -11,7 +14,7 @@ import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
@@ -56,13 +59,28 @@ public abstract class WitherBossMixin extends PathfinderMobMixin {
         return (boolean) DecorationOps.callsite().invoke(instance, blockPos, b, entity);
     }
 
-    @Inject(method = "customServerAiStep", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/boss/wither/WitherBoss;heal(F)V"))
-    private void arclight$healReason(CallbackInfo ci) {
-        bridge$pushHealReason(EntityRegainHealthEvent.RegainReason.WITHER_SPAWN);
+    @WrapOperation(method = "customServerAiStep(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/boss/wither/WitherBoss;heal(F)V"))
+    private void arclight$healReason(WitherBoss instance, float amount, Operation<Void> original) {
+        LivingEntityBridge bridge = (LivingEntityBridge) instance;
+        EntityRegainHealthEvent.RegainReason previous = bridge.bridge$peekHealReason();
+        bridge.bridge$pushHealReason(EntityRegainHealthEvent.RegainReason.WITHER_SPAWN);
+        try {
+            original.call(instance, amount);
+        } finally {
+            bridge.bridge$pushHealReason(previous);
+        }
     }
 
-    @Inject(method = "customServerAiStep", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/entity/boss/wither/WitherBoss;heal(F)V"))
-    private void arclight$healReason2(CallbackInfo ci) {
-        bridge$pushHealReason(EntityRegainHealthEvent.RegainReason.REGEN);
+    @WrapOperation(method = "customServerAiStep(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/entity/boss/wither/WitherBoss;heal(F)V"))
+    private void arclight$healReason2(WitherBoss instance, float amount, Operation<Void> original) {
+        LivingEntityBridge bridge = (LivingEntityBridge) instance;
+        EntityRegainHealthEvent.RegainReason previous = bridge.bridge$peekHealReason();
+        bridge.bridge$pushHealReason(EntityRegainHealthEvent.RegainReason.REGEN);
+        try {
+            original.call(instance, amount);
+        } finally {
+            bridge.bridge$pushHealReason(previous);
+        }
     }
+
 }

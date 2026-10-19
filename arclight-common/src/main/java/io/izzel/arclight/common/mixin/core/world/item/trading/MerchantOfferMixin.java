@@ -6,7 +6,7 @@ import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
-import org.bukkit.craftbukkit.v.inventory.CraftMerchantRecipe;
+import org.bukkit.craftbukkit.inventory.CraftMerchantRecipe;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 

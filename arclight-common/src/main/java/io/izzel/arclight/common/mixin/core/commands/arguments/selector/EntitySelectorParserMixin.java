@@ -4,6 +4,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.izzel.arclight.common.bridge.core.commands.arguments.selector.EntitySelectorParserBridge;
 import net.minecraft.commands.arguments.selector.EntitySelector;
 import net.minecraft.commands.arguments.selector.EntitySelectorParser;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -27,11 +28,12 @@ public abstract class EntitySelectorParserMixin implements EntitySelectorParserB
     }
 
     public EntitySelector parse(boolean overridePermissions) throws CommandSyntaxException {
+        Boolean previous = this.arclight$overridePermissions;
         try {
             this.arclight$overridePermissions = overridePermissions;
             return this.parse();
         } finally {
-            this.arclight$overridePermissions = null;
+            this.arclight$overridePermissions = previous;
         }
     }
 
@@ -41,11 +43,18 @@ public abstract class EntitySelectorParserMixin implements EntitySelectorParserB
     }
 
     public void parseSelector(boolean overridePermissions) throws CommandSyntaxException {
-        this.usesSelectors = !overridePermissions;
-        this.parseSelector();
+        Boolean previous = this.arclight$overridePermissions;
+        try {
+            this.arclight$overridePermissions = overridePermissions;
+            this.parseSelector();
+        } finally {
+            this.arclight$overridePermissions = previous;
+        }
     }
 
-    @Inject(method = "parseSelector", at = @At("HEAD"))
+    @Inject(method = "parseSelector()V", at = @At(value = "FIELD",
+        target = "Lnet/minecraft/commands/arguments/selector/EntitySelectorParser;usesSelectors:Z",
+        opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER))
     public void arclight$onParserSelector(CallbackInfo ci) {
         if (this.arclight$overridePermissions != null) {
             this.usesSelectors = !this.arclight$overridePermissions;

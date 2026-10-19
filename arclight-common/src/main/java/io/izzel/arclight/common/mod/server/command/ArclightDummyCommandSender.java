@@ -7,7 +7,7 @@ import net.minecraft.commands.CommandSourceStack;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v.util.CraftChatMessage;
+import org.bukkit.craftbukkit.util.CraftChatMessage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -1,5 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
+import io.izzel.arclight.api.ArclightPlatform;
+import io.izzel.arclight.common.mod.mixins.annotation.OnlyInPlatform;
 import io.izzel.arclight.common.mod.util.ChorusTeleportContext;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -8,6 +10,7 @@ import net.minecraft.world.item.consume_effects.TeleportRandomlyConsumeEffect;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+@OnlyInPlatform({ArclightPlatform.VANILLA, ArclightPlatform.FABRIC})
 @Mixin(TeleportRandomlyConsumeEffect.class)
 public class ChorusFruitItemMixin {
     @Decorate(method = "apply", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;randomTeleport(DDDZ)Z"))

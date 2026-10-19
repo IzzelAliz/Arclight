@@ -6,4 +6,6 @@ import java.util.Set;
 
 public interface GameRulesBridge {
     Set<GameRule<?>> arclight$getAllRules();
+
+    <T> void bridge$setWorldRule(GameRule<T> rule, T value, net.minecraft.server.level.ServerLevel level);
 }

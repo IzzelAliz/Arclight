@@ -1,4 +1,4 @@
-net/minecraft/world/level/block/ChestBlock$DoubleInventory net/minecraft/world/level/block/ChestBlock$2$1
-	tileentitychest val$first
-	tileentitychest1 val$second
+net/minecraft/world/level/block/ChestBlock$DoubleChestCombiner$Dummy$DoubleInventory net/minecraft/world/level/block/ChestBlock$2$1
+	first val$first
+	second val$second
 net/minecraft/world/level/block/entity/LecternBlockEntity$LecternInventory net/minecraft/world/level/block/entity/LecternBlockEntity$1

@@ -54,14 +54,13 @@ def installerLibsFabric = [
         'org.jline:jline-reader:3.12.1',
         'org.fusesource.jansi:jansi:1.18',
         'org.apache.maven:maven-artifact:3.8.5',
-        "net.fabricmc:intermediary:${libs.versions.minecraft.get()}",
         "net.fabricmc.fabric-api:fabric-api:${libs.versions.fabric.api.get()}"
 ]
 
 dependencies {
     implementation 'com.google.guava:guava:32.1.2-jre'
-    implementation 'org.ow2.asm:asm:9.7.1'
-    implementation 'org.ow2.asm:asm-tree:9.7.1'
+    implementation libs.asm.commons
+    implementation libs.asm.tree
     implementation 'net.minecraftforge:modlauncher:10.1.2'
     implementation 'org.apache.logging.log4j:log4j-api:2.22.1'
     implementation 'org.apache.logging.log4j:log4j-core:2.22.1'
@@ -69,7 +68,7 @@ dependencies {
     implementation 'org.spongepowered:mixin:0.8.5'
     implementation 'org.apache.logging.log4j:log4j-jul:2.22.1'
 
-    neoforgeImplementation 'net.neoforged.fancymodloader:loader:10.0.36'
+    neoforgeImplementation 'net.neoforged.fancymodloader:loader:11.0.15'
 
     fabricImplementation "net.fabricmc:fabric-loader:${libs.versions.fabric.loader.get()}"
 
@@ -121,7 +120,7 @@ tasks.register('neoforgeJar', Jar) {
         exclude 'org/apache/commons/lang/enum/**'
     }
     into('/') {
-        it.from(project(':arclight-neoforge').tasks.relocateCraftBukkit.outputs.files.collect())
+        it.from(project(':arclight-neoforge').tasks.named('shadowJar').flatMap { it.archiveFile })
         it.rename { name -> 'common.jar' }
     }
     into('/') {
@@ -145,7 +144,7 @@ tasks.register('fabricJar', Jar) {
     manifest.attributes 'Automatic-Module-Name': 'arclight.boot'
     from(configurations.embedFabric.collect { it.isDirectory() ? it : zipTree(it) })
     into('/') {
-        it.from(project(':arclight-fabric').tasks.relocateCraftBukkit.outputs.files.collect())
+        it.from(project(':arclight-fabric').tasks.named('shadowJar').flatMap { it.archiveFile })
         it.rename { name -> 'common.jar' }
     }
     into('/') {
@@ -174,18 +173,18 @@ project.sourceSets.fabric.output.dir file('build/arclight_installer'), builtBy: 
 
 project.sourceSets.neoforge.output.dir file('build/neoforge_async_catcher'), builtBy: tasks.register('neoforgeAsyncCatcher', RenameAsyncCatcherTask) {
     inputFile.set project.file('async_catcher.json')
-    mapping.set 'named'
+    mapping.set 'official'
     outputs.file('build/neoforge_async_catcher/async_catcher.json')
 }
 
 project.sourceSets.fabric.output.dir file('build/fabric_async_catcher'), builtBy: tasks.register('fabricAsyncCatcher', RenameAsyncCatcherTask) {
     inputFile.set project.file('async_catcher.json')
-    mapping.set 'intermediary'
+    mapping.set 'official'
     outputs.file('build/fabric_async_catcher/async_catcher.json')
 }
 
 compileJava {
-    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_25
     options.compilerArgs << '-XDignore.symbol.file' << '-XDenableSunApiLintControl'
     options.encoding = 'UTF-8'
 }
@@ -209,7 +208,7 @@ tasks.register('runProdNeoforge', JavaExec) {
     args 'nogui'
     standardInput System.in
     javaLauncher.convention(javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     })
     dependsOn project.tasks.neoforgeJar
 }
@@ -229,7 +228,7 @@ tasks.register('runProdFabric', JavaExec) {
     args 'nogui'
     standardInput System.in
     javaLauncher.convention(javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     })
     dependsOn project.tasks.fabricJar
 }

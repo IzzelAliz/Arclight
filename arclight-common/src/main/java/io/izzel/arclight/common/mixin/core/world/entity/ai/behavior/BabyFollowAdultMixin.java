@@ -8,8 +8,8 @@ import net.minecraft.world.entity.ai.behavior.OneShot;
 import net.minecraft.world.entity.ai.behavior.declarative.BehaviorBuilder;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
-import org.bukkit.craftbukkit.v.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,7 +33,7 @@ public abstract class BabyFollowAdultMixin {
                         return false;
                     } else {
                         LivingEntity adult = behaviorbuilderInstance.get(memoryAccessor);
-                        if (baby.closerThan(adult, (double) (followRange.getMaxValue() + 1)) && !baby.closerThan(adult, (double) followRange.getMinValue())) {
+                        if (baby.closerThan(adult, (double) (followRange.maxInclusive() + 1)) && !baby.closerThan(adult, (double) followRange.minInclusive())) {
                             // CraftBukkit start
                             EntityTargetLivingEntityEvent event = CraftEventFactory.callEntityTargetLivingEvent(baby, adult, EntityTargetEvent.TargetReason.FOLLOW_LEADER);
                             if (event.isCancelled()) {
@@ -45,7 +45,7 @@ public abstract class BabyFollowAdultMixin {
                             }
                             adult = ((CraftLivingEntity) event.getTarget()).getHandle();
                             // CraftBukkit end
-                            WalkTarget target = new WalkTarget(new EntityTracker(adult, targetEye, targetEye), speedModifier.apply(baby), followRange.getMinValue() - 1);
+                            WalkTarget target = new WalkTarget(new EntityTracker(adult, targetEye, targetEye), speedModifier.apply(baby), followRange.minInclusive() - 1);
                             lookTarget.set(new EntityTracker(adult, true, targetEye));
                             walkTarget.set(target);
                             return true;

@@ -7,8 +7,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.bukkit.block.BlockState;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.inventory.CraftMetaItem;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.inventory.CraftMetaItem;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import javax.annotation.Nullable;
@@ -44,8 +44,8 @@ public interface MaterialBridge {
     boolean bridge$shouldApplyStateFactory();
 
     default Item bridge$getCraftRemainingItem(Item item) {
-        ItemStack remaining = item.getCraftingRemainder();
-        return remaining.isEmpty() ? null : remaining.getItem();
+        var remaining = item.getCraftingRemainder();
+        return remaining == null ? null : remaining.item().value();
     }
 
     default int bridge$forge$getMaxStackSize(Item item) {

@@ -3,6 +3,8 @@ package io.izzel.arclight.common.mixin.vanilla.world.item;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
+import io.izzel.arclight.common.mod.util.SignPlacementScope;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.core.BlockPos;
@@ -17,8 +19,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SolidBucketItem;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.state.pattern.BlockInWorld;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -39,6 +41,12 @@ public abstract class ItemStackMixin_Vanilla {
     @Shadow public abstract Item getItem();
     @Shadow public abstract ItemStack copy();
     // @formatter:on
+
+    @WrapMethod(method = "useOn(Lnet/minecraft/world/item/context/UseOnContext;)Lnet/minecraft/world/InteractionResult;")
+    private InteractionResult arclight$signPlacement(UseOnContext context, Operation<InteractionResult> original) {
+        return io.izzel.arclight.common.mod.util.BonemealTreeConsumer.useOn(
+            (ItemStack) (Object) this, context, () -> SignPlacementScope.use(context, original));
+    }
 
     /**
      * @author IzzelAliz
@@ -62,7 +70,8 @@ public abstract class ItemStackMixin_Vanilla {
             if (player != null && interactionResult instanceof InteractionResult.Success success && success.wasItemInteraction()) {
                 interactionResult = ArclightEventFactory.onBlockPlace(useOnContext, player, oldStack, (ItemStack) (Object) this, interactionResult);
                 if (interactionResult != InteractionResult.FAIL) {
-                    player.awardStat(Stats.ITEM_USED.get(item));
+                    io.izzel.arclight.common.mod.util.BonemealTreeConsumer.award(
+                        player, () -> player.awardStat(Stats.ITEM_USED.get(item)));
                 }
             }
 

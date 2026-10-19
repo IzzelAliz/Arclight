@@ -5,7 +5,7 @@ import io.izzel.arclight.common.bridge.core.server.rcon.RconConsoleSourceBridge;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.rcon.RconConsoleSource;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v.command.CraftRemoteConsoleCommandSender;
+import org.bukkit.craftbukkit.command.CraftRemoteConsoleCommandSender;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

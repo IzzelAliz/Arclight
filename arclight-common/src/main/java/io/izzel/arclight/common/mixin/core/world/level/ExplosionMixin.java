@@ -19,7 +19,7 @@ import net.minecraft.world.level.block.TntBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.TNTPrimeEvent;
@@ -84,7 +84,7 @@ public abstract class ExplosionMixin implements ExplosionBridge {
     private boolean arclight$keepExplodeEvent(ServerExplosion explosion, @Local(ordinal = -1) List<BlockPos> targetBlocks) throws Throwable {
         boolean interactsWithBlocks = (boolean) DecorationOps.callsite().invoke(explosion);
         if (!interactsWithBlocks) {
-            net.minecraft.util.Util.shuffle(targetBlocks, this.level.random);
+            net.minecraft.util.Util.shuffle(targetBlocks, this.level.getRandom());
             this.wasCanceled = this.arclight$callExplodeEvent(targetBlocks);
         }
         return interactsWithBlocks;
@@ -150,8 +150,10 @@ public abstract class ExplosionMixin implements ExplosionBridge {
 
         boolean cancelled;
         List<org.bukkit.block.Block> bukkitBlocks;
-        if (this.source != null) {
-            EntityExplodeEvent event = CraftEventFactory.callEntityExplodeEvent(this.source, blockList, this.yield, this.getBlockInteraction());
+        Entity eventSource = this.source != null ? this.source
+            : ((DamageSourceBridge) this.damageSource).bridge$getCausingEntityDamager();
+        if (eventSource != null) {
+            EntityExplodeEvent event = CraftEventFactory.callEntityExplodeEvent(eventSource, blockList, this.yield, this.getBlockInteraction());
             cancelled = event.isCancelled();
             bukkitBlocks = event.blockList();
             this.yield = event.getYield();

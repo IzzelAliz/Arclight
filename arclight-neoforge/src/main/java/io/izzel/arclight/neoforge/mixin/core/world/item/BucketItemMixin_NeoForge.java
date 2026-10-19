@@ -15,7 +15,7 @@ import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -33,9 +33,9 @@ public abstract class BucketItemMixin_NeoForge implements BucketItemBridge {
         arclight$setStack(stack);
     }
 
-    @Inject(method = "emptyContents(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/phys/BlockHitResult;Lnet/minecraft/world/item/ItemStack;)Z", cancellable = true, at = @At(value = "INVOKE", remap = false, target = "Lnet/neoforged/neoforge/fluids/FluidStack;isEmpty()Z"))
-    private void arclight$bucketEmpty(LivingEntity player, Level worldIn, BlockPos posIn, BlockHitResult rayTrace, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
-        if (LevelAccessorBridge.from(worldIn) instanceof LevelAccessorBridge bridge && player instanceof ServerPlayer serverPlayer && stack != null) {
+    @Inject(method = "emptyContents(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/phys/BlockHitResult;Lnet/minecraft/world/item/ItemStack;)Z", cancellable = true, at = @At(value = "INVOKE", remap = false, target = "Lnet/minecraft/world/level/block/state/BlockState;isAir()Z"), require = 1, allow = 1)
+    private void arclight$bucketEmpty(LivingEntity player, Level worldIn, BlockPos posIn, BlockHitResult rayTrace, ItemStack stack, CallbackInfoReturnable<Boolean> cir, @Local(ordinal = 2) boolean placeLiquid) {
+        if (placeLiquid && LevelAccessorBridge.from(worldIn) instanceof LevelAccessorBridge bridge && player instanceof ServerPlayer serverPlayer && stack != null) {
             PlayerBucketEmptyEvent event = CraftEventFactory.callPlayerBucketEmptyEvent(bridge.bridge$getMinecraftWorld(), serverPlayer, posIn, arclight$getClick(), arclight$getDirection(), stack, arclight$getHand() == null ? InteractionHand.MAIN_HAND : arclight$getHand());
             if (event.isCancelled()) {
                 serverPlayer.connection.send(new ClientboundBlockUpdatePacket(worldIn, posIn));

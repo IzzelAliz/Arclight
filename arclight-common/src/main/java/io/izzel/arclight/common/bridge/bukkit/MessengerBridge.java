@@ -4,7 +4,7 @@ import io.izzel.arclight.common.mod.plugin.messaging.ArclightPluginChannel;
 import io.izzel.arclight.common.mod.plugin.messaging.PacketRecorder;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import net.minecraft.resources.Identifier;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.messaging.PluginMessageListenerRegistration;
 

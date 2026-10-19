@@ -10,9 +10,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CapturedBlockState;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
+import org.bukkit.craftbukkit.block.CapturedBlockState;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.block.data.CraftBlockData;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,7 +28,7 @@ public abstract class LevelMixin_Vanilla implements LevelAccessor, WorldBridge {
 
     // @formatter:off
     @Shadow @Final public boolean isClientSide;
-    @Shadow public abstract boolean isDebug();
+    @Shadow public abstract boolean isInValidBounds(BlockPos blockPos); @Shadow public abstract boolean isDebug();
     @Shadow public abstract LevelChunk getChunkAt(BlockPos blockPos);
     @Shadow public abstract BlockState getBlockState(BlockPos blockPos);
     @Shadow public abstract void setBlocksDirty(BlockPos blockPos, BlockState blockState, BlockState blockState2);
@@ -75,7 +75,7 @@ public abstract class LevelMixin_Vanilla implements LevelAccessor, WorldBridge {
      */
     @Overwrite
     public boolean setBlock(BlockPos blockPos, BlockState blockState, int i, int j) {
-        if (this.isOutsideBuildHeight(blockPos)) {
+        if (!this.isInValidBounds(blockPos)) {
             return false;
         } else if (!this.isClientSide && this.isDebug()) {
             return false;

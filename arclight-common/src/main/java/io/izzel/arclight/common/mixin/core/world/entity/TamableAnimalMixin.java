@@ -5,7 +5,7 @@ import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.world.entity.TamableAnimal;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityTeleportEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -16,6 +16,12 @@ public abstract class TamableAnimalMixin extends AnimalMixin {
 
     // @formatter:off
     @Shadow public abstract boolean isTame();
+
+    @org.spongepowered.asm.mixin.injection.Inject(method = "feed", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/TamableAnimal;heal(F)V"))
+    private void arclight$foodHeal(org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
+        this.bridge$pushHealReason(org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason.EATING);
+    }
+
     // @formatter:on
 
     @Decorate(method = "maybeTeleportTo", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/TamableAnimal;snapTo(DDDFF)V"))

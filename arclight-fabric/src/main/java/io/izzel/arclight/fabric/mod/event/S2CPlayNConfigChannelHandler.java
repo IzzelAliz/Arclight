@@ -10,14 +10,14 @@ import net.minecraft.server.network.ServerGamePacketListenerImpl;
 
 import java.util.List;
 
-public class S2CPlayNConfigChannelHandler implements S2CPlayChannelEvents.Register, S2CPlayChannelEvents.Unregister, S2CConfigurationChannelEvents.Register, S2CConfigurationChannelEvents.Unregister {
+public class S2CPlayNConfigChannelHandler implements ClientboundPlayChannelEvents.Register, ClientboundPlayChannelEvents.Unregister, ClientboundConfigurationChannelEvents.Register, ClientboundConfigurationChannelEvents.Unregister {
 
     public static void register() {
         var handler = new S2CPlayNConfigChannelHandler();
-        S2CPlayChannelEvents.REGISTER.register(handler);
-        S2CPlayChannelEvents.UNREGISTER.register(handler);
-        S2CConfigurationChannelEvents.REGISTER.register(handler);
-        S2CConfigurationChannelEvents.UNREGISTER.register(handler);
+        ClientboundPlayChannelEvents.REGISTER.register(handler);
+        ClientboundPlayChannelEvents.UNREGISTER.register(handler);
+        ClientboundConfigurationChannelEvents.REGISTER.register(handler);
+        ClientboundConfigurationChannelEvents.UNREGISTER.register(handler);
     }
 
     private void register(MinecraftServer server, ServerCommonPacketListenerImpl listener, List<Identifier> channels) {

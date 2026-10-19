@@ -6,7 +6,7 @@ import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.TileState;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
+import org.bukkit.craftbukkit.block.CraftBlock;
 import org.bukkit.entity.Entity;
 import org.jetbrains.annotations.Nullable;
 

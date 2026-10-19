@@ -21,11 +21,24 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(Allay.class)
 public abstract class AllayMixin extends MobMixin {
 
+    @org.spongepowered.asm.mixin.injection.Inject(method = "aiStep", at = @org.spongepowered.asm.mixin.injection.At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/allay/Allay;heal(F)V"))
+    private void arclight$localHealReason(org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
+        this.bridge$pushHealReason(org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason.REGEN);
+    }
+
+
     // @formatter:off
     @Shadow @Final private static EntityDataAccessor<Boolean> DATA_CAN_DUPLICATE;
     // @formatter:on
 
     public boolean forceDancing = false;
+
+    @org.spongepowered.asm.mixin.injection.Inject(method = "shouldStopDancing()Z", at = @At("HEAD"), cancellable = true)
+    private void arclight$keepForcedDance(org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> cir) {
+        if (this.forceDancing) {
+            cir.setReturnValue(false);
+        }
+    }
 
     public void setCanDuplicate(boolean canDuplicate) {
         this.entityData.set(DATA_CAN_DUPLICATE, canDuplicate);

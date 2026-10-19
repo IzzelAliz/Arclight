@@ -17,9 +17,9 @@ import net.minecraft.world.level.levelgen.WorldgenRandom;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.generator.CraftLimitedRegion;
-import org.bukkit.craftbukkit.v.generator.structure.CraftStructure;
-import org.bukkit.craftbukkit.v.util.RandomSourceWrapper;
+import org.bukkit.craftbukkit.generator.CraftLimitedRegion;
+import org.bukkit.craftbukkit.generator.structure.CraftStructure;
+import org.bukkit.craftbukkit.util.RandomSourceWrapper;
 import org.bukkit.generator.BlockPopulator;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -46,7 +46,7 @@ public abstract class ChunkGeneratorMixin implements ChunkGeneratorBridge {
     private void arclight$structureSpawn(@Local(ordinal = -1) StructureManager manager, @Local(ordinal = -1) ChunkPos chunkPos, @Local(ordinal = -1) Structure structure, @Local(ordinal = -1) StructureStart structurestart) throws Throwable {
         if (LevelAccessorBridge.from(manager.level) instanceof LevelAccessorBridge bridge) {
             var box = structurestart.getBoundingBox();
-            var event = new org.bukkit.event.world.AsyncStructureSpawnEvent(bridge.bridge$getMinecraftWorld().bridge$getWorld(), CraftStructure.minecraftToBukkit(structure), new org.bukkit.util.BoundingBox(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ()), chunkPos.x, chunkPos.z);
+            var event = new org.bukkit.event.world.AsyncStructureSpawnEvent(bridge.bridge$getMinecraftWorld().bridge$getWorld(), CraftStructure.minecraftToBukkit(structure), new org.bukkit.util.BoundingBox(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ()), chunkPos.x(), chunkPos.z());
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
                 DecorationOps.cancel().invoke(true);
@@ -76,8 +76,8 @@ public abstract class ChunkGeneratorMixin implements ChunkGeneratorBridge {
         // only call when a populator is present (prevents unnecessary entity conversion)
         if (!world.getPopulators().isEmpty()) {
             CraftLimitedRegion limitedRegion = new CraftLimitedRegion(region, chunk.getPos());
-            int x = chunk.getPos().x;
-            int z = chunk.getPos().z;
+            int x = chunk.getPos().x();
+            int z = chunk.getPos().z();
             for (BlockPopulator populator : world.getPopulators()) {
                 WorldgenRandom random = new WorldgenRandom(new LegacyRandomSource(region.getSeed()));
                 random.setDecorationSeed(region.getSeed(), x, z);

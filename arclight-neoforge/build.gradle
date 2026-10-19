@@ -30,22 +30,9 @@ dependencies {
 
     implementation(project(':i18n-config')) { transitive = false }
 
-    common(project(path: ':arclight-common', configuration: 'namedElements')) { transitive = false }
+    common(project(path: ':arclight-common', configuration: 'runtimeElements')) { transitive = false }
     shadowBundle(project(path: ':arclight-common', configuration: 'transformProductionNeoForge')) { transitive = false }
 }
-
-tasks.register('neoforgeMappings', Copy) {
-    destinationDir = file('build/neoforge_mappings')
-    from(arclight.mappingsConfiguration.bukkitToNeoForge) {
-        rename { name -> 'bukkit_srg.srg' }
-    }
-    from(arclight.mappingsConfiguration.bukkitToNeoForge) {
-        rename { name -> 'bukkit_moj.srg'}
-    }
-    from arclight.mappingsConfiguration.bukkitToForgeInheritance
-}
-
-project.sourceSets.main.output.dir file('build/neoforge_mappings'), builtBy: tasks.neoforgeMappings
 
 processResources {
     def ver = "${project.version}+$gitHash"
@@ -64,20 +51,16 @@ shadowJar {
     archiveClassifier = 'dev-shadow'
 }
 
-remapJar {
-    inputFile.set shadowJar.archiveFile
-    dependsOn shadowJar
-    atAccessWideners.add(loom.accessWidenerPath.get().asFile.getName())
-}
+loom.getNeoForge().convertAccessWideners(tasks.named('shadowJar'), loom.accessWidenerPath.get().asFile.name)
 
 tasks.register('srgJar', Jar) {
-    from(tasks.remapJar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) }) {
+    from(tasks.shadowJar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) }) {
         include 'io/izzel/**'
         exclude 'io/izzel/arclight/common/mixin/**'
         exclude 'io/izzel/arclight/forge/mixin/**'
     }
     archiveClassifier.set('srg')
-    dependsOn remapJar
+    dependsOn shadowJar
 }
 
 sourcesJar {

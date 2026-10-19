@@ -15,9 +15,9 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataContainer;
-import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataTypeRegistry;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.persistence.CraftPersistentDataContainer;
+import org.bukkit.craftbukkit.persistence.CraftPersistentDataTypeRegistry;
 import org.bukkit.inventory.InventoryHolder;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -85,7 +85,8 @@ public abstract class BlockEntityMixin implements BlockEntityBridge {
 
     @Inject(method = "applyComponents", locals = LocalCapture.CAPTURE_FAILHARD, at = @At("RETURN"))
     private void arclight$captureSet(DataComponentMap dataComponentMap, DataComponentPatch dataComponentPatch, CallbackInfo ci, Set<DataComponentType<?>> set) {
-        set.remove(DataComponents.ENTITY_DATA);
+        set.remove(DataComponents.BLOCK_ENTITY_DATA);
+        set.remove(DataComponents.BLOCK_STATE);
         arclight$appliedSet = set;
     }
 

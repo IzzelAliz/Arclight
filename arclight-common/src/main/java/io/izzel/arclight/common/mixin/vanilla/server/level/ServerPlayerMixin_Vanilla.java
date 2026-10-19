@@ -48,7 +48,7 @@ public abstract class ServerPlayerMixin_Vanilla extends Player implements Server
             net.minecraft.advancements.CriteriaTriggers.SLEPT_IN_BED.trigger(player);
         });
         if (!player.level().canSleepThroughNights()) {
-            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("sleep.not_possible"), true);
+            player.sendOverlayMessage(net.minecraft.network.chat.Component.translatable("sleep.not_possible"));
         }
         player.level().updateSleepingPlayerList();
         return (Either<L, R>) slept;

@@ -22,16 +22,18 @@ public abstract class WolfMixin extends TamableAnimalMixin {
     private void arclight$handledBy(Wolf wolfEntity, boolean p_233687_1_) {
     }
 
+    @Inject(method = "hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z", at = @At("RETURN"))
+    private void arclight$resetSitOnDamage(CallbackInfoReturnable<Boolean> cir) {
+        if (cir.getReturnValueZ()) {
+            ((Wolf) (Object) this).setOrderedToSit(false);
+        }
+    }
+
     @Inject(method = "applyTamingSideEffects", at = @At("RETURN"))
     private void arclight$healToMax(CallbackInfo ci) {
         if (this.isTame()) {
             this.setHealth(this.getMaxHealth());
         }
-    }
-
-    @Inject(method = "mobInteract", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/wolf/Wolf;heal(F)V"))
-    private void arclight$healReason(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
-        bridge$pushHealReason(EntityRegainHealthEvent.RegainReason.EATING);
     }
 
     @Inject(method = "mobInteract", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/wolf/Wolf;setTarget(Lnet/minecraft/world/entity/LivingEntity;)V"))

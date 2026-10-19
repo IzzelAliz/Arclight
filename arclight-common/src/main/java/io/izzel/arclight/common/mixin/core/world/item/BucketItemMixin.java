@@ -25,9 +25,9 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.BucketPickup;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v.util.DummyGeneratorAccess;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.util.DummyGeneratorAccess;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -52,6 +52,9 @@ public abstract class BucketItemMixin implements BucketItemBridge {
                                           @Local(ordinal = 0) InteractionHand handIn, @Local(ordinal = 0) ItemStack stack, @Local(ordinal = 0) BlockHitResult result) throws Throwable {
         if (entity instanceof Player playerIn && LevelAccessorBridge.from(worldIn) instanceof LevelAccessorBridge bridge) {
             ItemStack dummyFluid = pickup.pickupBlock(playerIn, DummyGeneratorAccess.INSTANCE, pos, state);
+            if (dummyFluid.isEmpty()) {
+                return (ItemStack) DecorationOps.cancel().invoke((InteractionResult) InteractionResult.FAIL);
+            }
             PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent(bridge.bridge$getMinecraftWorld(), playerIn, pos, pos, result.getDirection(), stack, dummyFluid.getItem(), handIn);
             if (event.isCancelled()) {
                 ((ServerPlayer) playerIn).connection.send(new ClientboundBlockUpdatePacket(worldIn, pos));

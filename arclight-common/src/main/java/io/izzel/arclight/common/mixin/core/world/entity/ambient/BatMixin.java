@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.entity.ambient;
 
 import io.izzel.arclight.common.mixin.core.world.entity.MobMixin;
 import net.minecraft.world.entity.ambient.Bat;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;

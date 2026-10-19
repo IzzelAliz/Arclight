@@ -1,7 +1,7 @@
 {
   "accessWidener": "arclight.accesswidener",
   "injected_interfaces": {
-    "net/minecraft/class_1297": ["io/izzel/arclight/common/bridge/inject/InjectEntityBridge"],
-    "net/minecraft/class_1937": ["io/izzel/arclight/common/bridge/inject/InjectLevelBridge"]
+    "net/minecraft/world/entity/Entity": ["io/izzel/arclight/common/bridge/inject/InjectEntityBridge"],
+    "net/minecraft/world/level/Level": ["io/izzel/arclight/common/bridge/inject/InjectLevelBridge"]
   }
 }

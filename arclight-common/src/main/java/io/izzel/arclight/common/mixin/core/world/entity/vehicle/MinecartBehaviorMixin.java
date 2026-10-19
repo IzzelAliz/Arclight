@@ -17,6 +17,11 @@ public abstract class MinecartBehaviorMixin extends MinecartBehavior {
         super(minecart);
     }
 
+    @com.llamalad7.mixinextras.injector.ModifyExpressionValue(method = "getSlowdownFactor", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/minecart/AbstractMinecart;isVehicle()Z"))
+    private boolean arclight$occupiedOrNoSlowdown(boolean original) {
+        return original || !((AbstractMinecartBridge) this.minecart).bridge$isSlowWhenEmpty();
+    }
+
     @Inject(method = "getMaxSpeed", at = @At("HEAD"), cancellable = true)
     private void arclight$maxSpeedOverride(ServerLevel level, CallbackInfoReturnable<Double> cir) {
         Double maxSpeed = ((AbstractMinecartBridge) this.minecart).bridge$getMaxSpeedOverride();

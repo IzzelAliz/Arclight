@@ -7,6 +7,9 @@ import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBrid
 import io.izzel.arclight.common.bridge.core.server.level.DistanceManagerBridge;
 import io.izzel.arclight.common.bridge.core.world.spawner.WorldEntitySpawnerBridge;
 import io.izzel.arclight.mixin.Decorate;
+import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.server.level.*;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.entity.MobCategory;
@@ -15,8 +18,9 @@ import net.minecraft.world.level.gamerules.GameRule;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.storage.LevelData;
+import net.minecraft.world.level.storage.SavedDataStorage;
 import org.bukkit.entity.SpawnCategory;
-import org.bukkit.craftbukkit.v.util.CraftSpawnCategory;
+import org.bukkit.craftbukkit.util.CraftSpawnCategory;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -38,20 +42,27 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
     @Shadow @Final public ChunkMap chunkMap;
     @Shadow @Final public ServerLevel level;
     @Shadow @Final private DistanceManager distanceManager;
+    @Shadow @Final private SavedDataStorage savedDataStorage;
     @Shadow protected abstract void clearCache();
     @Shadow @Nullable protected abstract ChunkHolder getVisibleChunkIfPresent(long chunkPosIn);
     @Invoker("runDistanceManagerUpdates") public abstract boolean bridge$tickDistanceManager();
     @Accessor("lightEngine") public abstract ThreadedLevelLightEngine bridge$getLightManager();
     // @formatter:on
 
+    @WrapWithCondition(method = "getChunk(IILnet/minecraft/world/level/chunk/status/ChunkStatus;Z)Lnet/minecraft/world/level/chunk/ChunkAccess;",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerChunkCache;storeInCache(JLnet/minecraft/world/level/chunk/ChunkAccess;Lnet/minecraft/world/level/chunk/status/ChunkStatus;)V"))
+    private boolean arclight$cacheNonNull(ServerChunkCache cache, long position, ChunkAccess chunk, ChunkStatus status) {
+        return chunk != null;
+    }
+
     public boolean isChunkLoaded(final int chunkX, final int chunkZ) {
         //bridge$chunkHolderAt is getUpdatingChunkIfPresent
-        ChunkHolder chunk = ((ChunkMapBridge) this.chunkMap).bridge$chunkHolderAt(ChunkPos.asLong(chunkX, chunkZ));
+        ChunkHolder chunk = ((ChunkMapBridge) this.chunkMap).bridge$chunkHolderAt(ChunkPos.pack(chunkX, chunkZ));
         return chunk != null && ((ChunkHolderBridge) chunk).bridge$getFullChunkNow() != null;
     }
 
     public LevelChunk getChunkUnchecked(int chunkX, int chunkZ) {
-        ChunkHolder chunk = ((ChunkMapBridge) this.chunkMap).bridge$chunkHolderAt(ChunkPos.asLong(chunkX, chunkZ));
+        ChunkHolder chunk = ((ChunkMapBridge) this.chunkMap).bridge$chunkHolderAt(ChunkPos.pack(chunkX, chunkZ));
         if (chunk == null) {
             return null;
         }
@@ -76,7 +87,7 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
     @ModifyVariable(method = "getChunkFutureMainThread", index = 4, at = @At("HEAD"), argsOnly = true)
     private boolean arclight$skipLoadIfUnloading(boolean flag, int chunkX, int chunkZ) {
         if (flag) {
-            ChunkHolder chunkholder = this.getVisibleChunkIfPresent(ChunkPos.asLong(chunkX, chunkZ));
+            ChunkHolder chunkholder = this.getVisibleChunkIfPresent(ChunkPos.pack(chunkX, chunkZ));
             if (chunkholder != null) {
                 FullChunkStatus chunkStatus = ChunkLevel.fullStatus(((ChunkHolderBridge) chunkholder).bridge$getOldTicketLevel());
                 FullChunkStatus currentStatus = ChunkLevel.fullStatus(chunkholder.getTicketLevel());
@@ -132,6 +143,7 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
         if (save) {
             this.save(true);
         }
+        this.savedDataStorage.close();
         this.lightEngine.close();
         this.chunkMap.close();
     }

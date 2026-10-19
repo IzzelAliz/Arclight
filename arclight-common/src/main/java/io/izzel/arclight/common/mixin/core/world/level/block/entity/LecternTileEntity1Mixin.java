@@ -9,7 +9,7 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.block.LecternBlock;
 import net.minecraft.world.level.block.entity.LecternBlockEntity;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,7 +21,7 @@ import java.util.List;
 
 @SuppressWarnings("public-target")
 @Mixin(targets = "net/minecraft/world/level/block/entity/LecternBlockEntity$1")
-public abstract class LecternTileEntity1Mixin implements IInventoryBridge, Container {
+public abstract class LecternTileEntity1Mixin implements IInventoryBridge, Container, io.izzel.arclight.common.bridge.core.world.inventory.LecternInventoryBridge {
     @Shadow(aliases = {"this$0", "f_59572_", "field_17391"}, remap = false)
     private LecternBlockEntity outerThis;
     public List<HumanEntity> transaction = new ArrayList<>();
@@ -90,6 +90,11 @@ public abstract class LecternTileEntity1Mixin implements IInventoryBridge, Conta
 
     @Override
     public void setCurrentRecipe(RecipeHolder<?> recipe) {
+    }
+
+    @Override
+    public LecternBlockEntity bridge$getLectern() {
+        return outerThis;
     }
 
     public LecternBlockEntity getLectern() {

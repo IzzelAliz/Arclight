@@ -4,7 +4,7 @@ import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import net.minecraft.CrashReport;
 import net.minecraft.SystemReport;
-import org.bukkit.craftbukkit.v.CraftCrashReport;
+import org.bukkit.craftbukkit.CraftCrashReport;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

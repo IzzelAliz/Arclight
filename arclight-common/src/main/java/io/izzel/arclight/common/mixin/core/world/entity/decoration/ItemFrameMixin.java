@@ -14,7 +14,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,6 +29,7 @@ public abstract class ItemFrameMixin extends BlockAttachedEntityMixin {
     // @formatter:off
     @Shadow @Final private static EntityDataAccessor<ItemStack> DATA_ITEM;
     @Shadow protected abstract void onItemChanged(ItemStack p_218866_);
+    @Shadow public abstract net.minecraft.sounds.SoundEvent getAddItemSound();
     // @formatter:on
 
     @Inject(method = "hurtServer", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/ItemFrame;dropItem(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;Z)V"))
@@ -46,16 +47,11 @@ public abstract class ItemFrameMixin extends BlockAttachedEntityMixin {
         this.onItemChanged(itemstack);
         this.getEntityData().set(DATA_ITEM, itemstack);
         if (!itemstack.isEmpty() && playSound) {
-            this.playSound(SoundEvents.ITEM_FRAME_ADD_ITEM, 1.0f, 1.0f);
+            this.playSound(this.getAddItemSound(), 1.0f, 1.0f);
         }
         if (flag && this.pos != null) {
             this.level().updateNeighbourForOutputSignal(this.pos, Blocks.AIR);
         }
-    }
-
-    @Inject(method = "calculateBoundingBox", at = @At("HEAD"), cancellable = true)
-    private void arclight$calculateBoundingBox(BlockPos blockPos, Direction direction, CallbackInfoReturnable<AABB> cir) {
-        cir.setReturnValue(calculateBoundingBoxStatic(blockPos, direction));
     }
 
     @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)

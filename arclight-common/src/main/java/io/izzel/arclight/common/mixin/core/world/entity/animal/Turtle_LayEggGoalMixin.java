@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.TurtleEggBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -39,6 +39,8 @@ public abstract class Turtle_LayEggGoalMixin extends MoveToBlockGoal {
             } else if (((TurtleBridge) this.turtle).bridge$getDigging() > 200) {
                 Level world = this.turtle.level();
                 if (CraftEventFactory.callEntityChangeBlockEvent(this.turtle, this.blockPos.above(), (Blocks.TURTLE_EGG.defaultBlockState()).setValue(TurtleEggBlock.EGGS, this.turtle.getRandom().nextInt(4) + 1))) {
+                    world.playSound(null, blockpos, net.minecraft.sounds.SoundEvents.TURTLE_LAY_EGG,
+                        net.minecraft.sounds.SoundSource.BLOCKS, 0.3F, 0.9F + world.getRandom().nextFloat() * 0.2F);
                     BlockPos blockpos1 = this.blockPos.above();
                     BlockState blockstate = Blocks.TURTLE_EGG.defaultBlockState().setValue(TurtleEggBlock.EGGS, this.turtle.getRandom().nextInt(4) + 1);
                     world.setBlock(blockpos1, blockstate, 3);

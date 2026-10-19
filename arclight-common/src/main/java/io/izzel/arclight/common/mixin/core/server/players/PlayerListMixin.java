@@ -12,6 +12,7 @@ import io.izzel.arclight.common.bridge.core.network.syncher.SynchedEntityDataBri
 import io.izzel.arclight.common.bridge.core.server.network.ServerGamePacketListenerImplBridge;
 import io.izzel.arclight.common.bridge.core.server.players.PlayerListBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.clock.ServerClockOwnerBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.server.world.border.ArclightBorderChangeListener;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
@@ -54,6 +55,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.ServerStatsCounter;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.clock.ServerClockManager;
+import net.minecraft.network.protocol.game.ClientboundSetTimePacket;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -67,11 +70,11 @@ import net.minecraft.world.level.storage.PlayerDataStorage;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.CraftWorld;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v.util.CraftChatMessage;
-import org.bukkit.craftbukkit.v.util.CraftLocation;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.util.CraftChatMessage;
+import org.bukkit.craftbukkit.util.CraftLocation;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
@@ -149,6 +152,13 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             var bridge = (ServerCommonPacketListenerImplBridge) listener;
             var previous = bridge.bridge$getPlayer();
             if (previous != null && previous != playerIn && previous.getUUID().equals(playerIn.getUUID())) {
+                // A fresh player has no saved entity tag state when loadPlayerData returns empty.
+                // Carry the original login-event player's final tags before rebinding its Bukkit wrapper.
+                if (data.isEmpty()) {
+                    for (String tag : previous.entityTags()) {
+                        playerIn.addTag(tag);
+                    }
+                }
                 // Keep the native new player; move the plugin-facing wrapper before spawn/join callbacks.
                 var bukkit = ((ServerPlayerBridge) previous).bridge$getBukkitEntity();
                 bukkit.setHandle(playerIn);
@@ -157,11 +167,13 @@ public abstract class PlayerListMixin implements PlayerListBridge {
             }
         }
         // File time is a fallback: native entity loading may replace it with saved Bukkit data.
-        if (data.isPresent() && !(this.server.isSingleplayerOwner(playerIn.nameAndId())
-                && this.server.getWorldData().getLoadedPlayerTag() != null)) {
+        if (data.isPresent()) {
+            var ownerUUID = this.server.getWorldData().getSinglePlayerUUID();
+            var dataUUID = this.server.isSingleplayerOwner(playerIn.nameAndId()) && ownerUUID != null
+                ? ownerUUID : playerIn.getUUID();
             var bukkit = ((ServerPlayerBridge) playerIn).bridge$getBukkitEntity();
             long modified = new java.io.File(((io.izzel.arclight.common.bridge.core.world.level.storage.PlayerDataStorageBridge) this.playerIo)
-                    .bridge$getPlayerDir(), playerIn.getStringUUID() + ".dat").lastModified();
+                    .bridge$getPlayerDir(), dataUUID + ".dat").lastModified();
             if (modified < bukkit.getFirstPlayed()) {
                 bukkit.setFirstPlayed(modified);
             }
@@ -242,6 +254,13 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         cserver.getScoreboardManager().removePlayer(((ServerPlayerBridge) playerIn).bridge$getBukkitEntity());
     }
 
+    @Redirect(method = "sendLevelInfo", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/clock/ServerClockManager;createFullSyncPacket()Lnet/minecraft/network/protocol/game/ClientboundSetTimePacket;"))
+    private ClientboundSetTimePacket arclight$playerClockFullSync(ServerClockManager instance, ServerPlayer player, ServerLevel destination) {
+        // sendLevelInfo is used by native join and respawn, and by the Bukkit transfer path.
+        // The target level is authoritative even while a transfer is being finalized.
+        return ((ServerClockOwnerBridge) destination.clockManager()).createFullSyncPacket(player);
+    }
+
     @Decorate(method = "sendLevelInfo", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;getWorldBorder()Lnet/minecraft/world/level/border/WorldBorder;"))
     private WorldBorder arclight$useRespectiveWorldBorder(ServerLevel overworld, ServerPlayer player, ServerLevel destination) throws Throwable {
         return (WorldBorder) DecorationOps.callsite().invoke(destination);
@@ -319,7 +338,7 @@ public abstract class PlayerListMixin implements PlayerListBridge {
         playerIn.copyFrom(playerIn, flag);
         playerIn.setEntityId(playerIn.getEntityId());
         playerIn.setPrimaryHand(playerIn.getPrimaryHand());
-        for (String s : playerIn.getTags()) {
+        for (String s : playerIn.entityTags()) {
             playerIn.addTag(s);
         }
         */

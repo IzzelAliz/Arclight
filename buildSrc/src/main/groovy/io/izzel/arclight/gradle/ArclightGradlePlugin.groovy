@@ -5,8 +5,6 @@ import io.izzel.arclight.gradle.runnable.FileDownloader
 import io.izzel.arclight.gradle.runnable.SpigotBuilder
 import io.izzel.arclight.gradle.tasks.ProcessMappingTask
 import io.izzel.arclight.gradle.tasks.RemapSpigotTask
-import io.izzel.arclight.gradle.tasks.RenameJarTask
-import net.fabricmc.loom.LoomGradlePlugin
 import net.fabricmc.loom.configuration.mods.dependency.LocalMavenHelper
 import org.apache.commons.io.FileUtils
 import org.gradle.api.Plugin
@@ -28,28 +26,6 @@ class ArclightGradlePlugin implements Plugin<Project> {
             name = 'Arclight Spigot Repo'
             url = arclightRepo
         }
-
-        def mappingsDir = arclight.cacheDir.resolve('arclight_cache/mappings')
-        def forgeMappings = mappingsDir.resolve('bukkit_srg.srg').toFile()
-        def forgeInheritance = mappingsDir.resolve('inheritanceMap.txt').toFile()
-        def reobfMappings = mappingsDir.resolve('reobf_bukkit.srg').toFile()
-        def neoforgeMappings = mappingsDir.resolve('bukkit_moj.srg').toFile()
-        def fabricMappings = mappingsDir.resolve('bukkit_intermediary.srg').toFile()
-        def fabricInheritance = mappingsDir.resolve('inheritanceMap_intermediary.txt').toFile()
-        arclight.mappingsConfiguration.bukkitToForge = forgeMappings
-        arclight.mappingsConfiguration.reobfBukkitPackage = reobfMappings
-        arclight.mappingsConfiguration.bukkitToForgeInheritance = forgeInheritance
-        arclight.mappingsConfiguration.bukkitToNeoForge = neoforgeMappings
-        arclight.mappingsConfiguration.bukkitToFabric = fabricMappings
-        arclight.mappingsConfiguration.bukkitToFabricInheritance = fabricInheritance
-
-        project.tasks.register('relocateCraftBukkit', RenameJarTask) {
-            it.dependsOn project.tasks.remapJar
-            inputJar.set project.tasks.remapJar.archiveFile
-            archiveClassifier.set 'relocated'
-            mappings = arclight.mappingsConfiguration.reobfBukkitPackage
-        }
-        project.tasks.build.dependsOn('relocateCraftBukkit')
 
         project.afterEvaluate {
             setupSpigot(project, arclightRepo)
@@ -88,16 +64,14 @@ class ArclightGradlePlugin implements Plugin<Project> {
 
         project.logger.lifecycle("Setup for Spigot ${arclight.mcVersion}(${arclight.spigotReversion})")
         def newBuildMeta = IOUtils.toString(new URI("https://hub.spigotmc.org/versions/${rev}.json").toURL(), StandardCharsets.UTF_8)
-        if (Files.exists(buildMeta)) {
-            var built = Files.readString(buildMeta)
-            if (built == newBuildMeta && Files.exists(inputMeta) && Files.readString(inputMeta) == inputHash) {
-                if (arclight.mappingsConfiguration.areMappingsExist()
-                        && Files.exists(spigotDeobf) && Files.exists(spigotMapped)) {
-                    project.logger.lifecycle(":spigot build cache valid, using it")
-                    project.logger.debug(built)
-                    return
-                }
-            }
+        if (Files.exists(buildMeta) && Files.exists(inputMeta)
+                && Files.readString(buildMeta) == newBuildMeta
+                && Files.readString(inputMeta) == inputHash
+                && Files.exists(mappingsDir.resolve('bukkit_at.at'))
+                && Files.exists(mappingsDir.resolve('bukkit_aw.aw'))
+                && Files.exists(spigotDeobf) && Files.exists(spigotMapped)) {
+            project.logger.lifecycle(':spigot build cache valid, using it')
+            return
         }
 
         def buildSpigotWorkDir = arclight.cacheDir.resolve('arclight_cache/buildtools')
@@ -132,11 +106,7 @@ class ArclightGradlePlugin implements Plugin<Project> {
 
         project.logger.lifecycle(":step4 remap spigot jar")
         def remapSpigot = new RemapSpigotTask(project)
-        remapSpigot.ssJar = new File(buildSpigotWorkDir.toFile(), 'BuildData/bin/SpecialSource.jar')
         remapSpigot.inJar = spigotBuilder.outputJar.toFile()
-        remapSpigot.inSrg = new File(processMapping.outDir, 'bukkit_srg.srg')
-        remapSpigot.inSrgToStable = new File(processMapping.outDir, "srg_to_named.srg")
-        remapSpigot.inheritanceMap = new File(processMapping.outDir, 'inheritanceMap.txt')
         remapSpigot.outJar = project.file(spigotMapped)
         remapSpigot.outDeobf = project.file(spigotDeobf)
         remapSpigot.inAt = arclight.accessTransformer

@@ -8,19 +8,20 @@ architectury {
 
 loom {
     accessWidenerPath = file('src/main/resources/arclight.accesswidener')
-    mixin {
-        useLegacyMixinAp = true
-        defaultRefmapName = 'arclight-common-refmap.json'
-        add sourceSets.main, 'arclight-common-refmap.json'
-    }
+
 }
 
 configurations {
     mixinProcessorSupport
+    compileClasspath {
+        // Shared classes must retain scalar Redirect.at metadata understood by
+        // NeoForge's Mixin/MixinExtras; Fabric also accepts that representation.
+        resolutionStrategy.force 'net.fabricmc:sponge-mixin:0.17.3+mixin.0.8.7'
+    }
 }
 
 dependencies {
-    modImplementation libs.fabric.loader
+    implementation libs.fabric.loader
 
     compileOnly rootProject.ext.generatedSpigot
 
@@ -47,6 +48,8 @@ dependencies {
 }
 
 compileJava {
+    // No obfuscation/refmap AP in official-only builds; retain code generators.
+    options.compilerArgs += ['-processor', 'lombok.launch.AnnotationProcessorHider$AnnotationProcessor,lombok.launch.AnnotationProcessorHider$ClaimingProcessor,io.izzel.arclight.mixin.ap.EjectProvider']
     options.compilerArgs << '-XDignore.symbol.file' << '-XDenableSunApiLintControl'
     options.annotationProcessorPath = configurations.annotationProcessor + configurations.mixinProcessorSupport
     options.encoding = 'UTF-8'

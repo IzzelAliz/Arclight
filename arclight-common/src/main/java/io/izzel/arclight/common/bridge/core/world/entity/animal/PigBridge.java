@@ -7,4 +7,6 @@ public interface PigBridge {
     LightningBolt bridge$getPigZapLightning();
 
     void bridge$clearPigZapLightning();
+
+    void bridge$cancelPigZap();
 }

@@ -25,9 +25,11 @@ public class FabricInstaller {
     public static Map.Entry<String, List<Path>> applicationInstall() throws Exception {
         InputStream stream = ForgeInstaller.class.getResourceAsStream("/META-INF/installer.json");
         InstallInfo installInfo = new Gson().fromJson(new InputStreamReader(stream), InstallInfo.class);
-        List<Supplier<Path>> suppliers = MinecraftProvider.checkMavenNoSource(installInfo.fabricDeps());
+        List<Supplier<Path>> suppliers = MinecraftProvider.checkMavenNoSource(runtimeDeps(installInfo));
         Path path = Paths.get("libraries/net/fabricmc/fabric-loader", installInfo.installer.fabricLoader, "fabric-loader-" + installInfo.installer.fabricLoader + ".jar");
-        var installFabric = !Files.exists(path) || fabricClasspathMissing(path);
+        var serverPath = Paths.get("libraries/net/minecraft/server", installInfo.installer.minecraft,
+            "server-" + installInfo.installer.minecraft + ".jar");
+        var installFabric = !Files.exists(path) || fabricClasspathMissing(path) || !Files.exists(serverPath);
         if (!suppliers.isEmpty() || installFabric) {
             System.out.println("Downloading missing libraries ...");
             ExecutorService pool = Executors.newWorkStealingPool(8);
@@ -42,30 +44,34 @@ public class FabricInstaller {
         return classpath(installInfo, path);
     }
 
-    private static final Set<String> BOOTSTRAP_LIBS = Set.of(
-        "net.fabricmc:intermediary:"
-    );
-
     private static final Set<String> BUILTIN_MODS = Set.of(
         "net.fabricmc.fabric-api:fabric-api:"
     );
 
+    private static Map<String, String> runtimeDeps(InstallInfo info) {
+        var deps = info.fabricDeps();
+        // Fabric's 26.1.2 intermediary jar contains only the tiny header and the
+        // 0.0.0 intermediary in loader metadata is a sentinel, not a runtime jar.
+        if ("26.1.2".equals(info.installer.minecraft)) {
+            deps.keySet().removeIf(it -> it.startsWith("net.fabricmc:intermediary:"));
+        }
+        return deps;
+    }
+
     private static Map.Entry<String, List<Path>> classpath(InstallInfo info, Path path) throws Exception {
         var mcPath = String.format("libraries/net/minecraft/server/%1$s/server-%1$s.jar", info.installer.minecraft);
         System.setProperty("fabric.gameJarPath", Paths.get(mcPath).toAbsolutePath().toString());
-        var gameLibs = info.fabricDeps().keySet().stream()
-            .filter(it -> BOOTSTRAP_LIBS.stream().noneMatch(it::startsWith) && BUILTIN_MODS.stream().noneMatch(it::startsWith))
+        var gameLibs = runtimeDeps(info).keySet().stream()
+            .filter(it -> BUILTIN_MODS.stream().noneMatch(it::startsWith))
             .map(it -> "libraries/" + Util.mavenToPath(it)).collect(Collectors.joining(File.pathSeparator));
         System.setProperty("arclight.fabric.classpath", gameLibs);
-        var builtinMods = info.fabricDeps().keySet().stream()
+        var builtinMods = runtimeDeps(info).keySet().stream()
             .filter(it -> BUILTIN_MODS.stream().anyMatch(it::startsWith))
             .map(it -> "libraries/" + Util.mavenToPath(it)).collect(Collectors.joining(File.pathSeparator));
         System.setProperty("arclight.fabric.builtinMods", builtinMods);
         var libs = new ArrayList<Path>();
         fabricDeps(path).keySet().stream().map(it -> Paths.get("libraries", Util.mavenToPath(it))).forEach(libs::add);
-        info.fabricDeps().keySet().stream()
-            .filter(it -> BOOTSTRAP_LIBS.stream().anyMatch(it::startsWith))
-            .forEach(it -> libs.add(Paths.get("libraries", Util.mavenToPath(it))));
+
         libs.add(path);
         try (var file = new JarFile(path.toFile())) {
             var mainClass = file.getManifest().getMainAttributes().getValue(Attributes.Name.MAIN_CLASS);

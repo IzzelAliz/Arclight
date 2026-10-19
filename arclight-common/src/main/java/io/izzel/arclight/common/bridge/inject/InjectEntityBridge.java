@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.bridge.inject;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
-import org.bukkit.craftbukkit.v.entity.CraftEntity;
+import org.bukkit.craftbukkit.entity.CraftEntity;
 
 public interface InjectEntityBridge {
 

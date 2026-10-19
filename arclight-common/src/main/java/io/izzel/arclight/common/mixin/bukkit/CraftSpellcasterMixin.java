@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.api.EnumHelper;
 import io.izzel.arclight.common.mod.server.ArclightServer;
-import org.bukkit.craftbukkit.v.entity.CraftSpellcaster;
+import org.bukkit.craftbukkit.entity.CraftSpellcaster;
 import org.bukkit.entity.Spellcaster;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

@@ -1,16 +1,14 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.animal.bee.Bee;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Mixin(targets = "net.minecraft.world.entity.animal.bee.Bee$BeeGrowCropGoal")
 public class Bee_GrowCropGoalMixin {
@@ -18,10 +16,10 @@ public class Bee_GrowCropGoalMixin {
     @Shadow(aliases = {"this$0", "f_28021_", "field_20373"}, remap = false)
     private Bee outerThis;
 
-    @Inject(method = "tick", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;levelEvent(ILnet/minecraft/core/BlockPos;I)V"))
-    private void arclight$entityChangeBlock(CallbackInfo ci, int i, BlockPos blockPos, BlockState blockState, Block block, BlockState state) {
-        if (!CraftEventFactory.callEntityChangeBlockEvent(outerThis, blockPos, state)) {
-            ci.cancel();
-        }
+    // Veto this layer's proposal at the native null guard, not the entire tick.
+    // This leaves pre-event bonemeal intact and skips all three commit effects.
+    @ModifyVariable(method = "tick()V", at = @At(value = "LOAD", ordinal = 0), ordinal = 1, require = 1)
+    private BlockState arclight$entityChangeBlock(BlockState state, @Local BlockPos blockPos) {
+        return state != null && CraftEventFactory.callEntityChangeBlockEvent(outerThis, blockPos, state) ? state : null;
     }
 }

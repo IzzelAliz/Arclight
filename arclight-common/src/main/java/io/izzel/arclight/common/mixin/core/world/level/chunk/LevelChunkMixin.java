@@ -20,9 +20,9 @@ import net.minecraft.world.level.levelgen.blending.BlendingData;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.ticks.LevelChunkTicks;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.CraftChunk;
-import org.bukkit.craftbukkit.v.persistence.CraftPersistentDataContainer;
-import org.bukkit.craftbukkit.v.persistence.DirtyCraftPersistentDataContainer;
+import org.bukkit.craftbukkit.CraftChunk;
+import org.bukkit.craftbukkit.persistence.CraftPersistentDataContainer;
+import org.bukkit.craftbukkit.persistence.DirtyCraftPersistentDataContainer;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -67,7 +67,7 @@ public abstract class LevelChunkMixin extends ChunkAccessMixin implements LevelC
     }
 
     public org.bukkit.Chunk getBukkitChunk() {
-        return new CraftChunk((ServerLevel) this.level, this.chunkPos.x, this.chunkPos.z);
+        return new CraftChunk((ServerLevel) this.level, this.chunkPos.x(), this.chunkPos.z());
     }
 
     @Override
@@ -128,7 +128,7 @@ public abstract class LevelChunkMixin extends ChunkAccessMixin implements LevelC
              * no way of creating a CraftWorld/CraftServer at that point.
              */
 
-            var bukkitChunk = new CraftChunk((ServerLevel) this.level, this.chunkPos.x, this.chunkPos.z);
+            var bukkitChunk = new CraftChunk((ServerLevel) this.level, this.chunkPos.x(), this.chunkPos.z());
             server.getPluginManager().callEvent(new ChunkLoadEvent(bukkitChunk, this.needsDecoration));
 
             if (this.needsDecoration) {
@@ -137,7 +137,7 @@ public abstract class LevelChunkMixin extends ChunkAccessMixin implements LevelC
                 random.setSeed(((ServerLevel) level).getSeed());
                 long xRand = random.nextLong() / 2L * 2L + 1L;
                 long zRand = random.nextLong() / 2L * 2L + 1L;
-                random.setSeed((long) this.chunkPos.x * xRand + (long) this.chunkPos.z * zRand ^ ((ServerLevel) level).getSeed());
+                random.setSeed((long) this.chunkPos.x() * xRand + (long) this.chunkPos.z() * zRand ^ ((ServerLevel) level).getSeed());
 
                 org.bukkit.World world = ((WorldBridge) this.level).bridge$getWorld();
                 if (world != null) {
@@ -157,7 +157,7 @@ public abstract class LevelChunkMixin extends ChunkAccessMixin implements LevelC
 
     public void unloadCallback() {
         org.bukkit.Server server = Bukkit.getServer();
-        var bukkitChunk = new CraftChunk((ServerLevel) this.level, this.chunkPos.x, this.chunkPos.z);
+        var bukkitChunk = new CraftChunk((ServerLevel) this.level, this.chunkPos.x(), this.chunkPos.z());
         org.bukkit.event.world.ChunkUnloadEvent unloadEvent = new org.bukkit.event.world.ChunkUnloadEvent(bukkitChunk, this.isUnsaved());
         server.getPluginManager().callEvent(unloadEvent);
         // note: saving can be prevented, but not forced if no saving is actually required

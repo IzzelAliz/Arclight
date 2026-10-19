@@ -3,11 +3,10 @@ package io.izzel.arclight.common.mixin.core.world.entity.vehicle;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.vehicle.AbstractMinecartBridge;
 import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -19,7 +18,6 @@ import org.bukkit.event.vehicle.VehicleMoveEvent;
 import org.bukkit.event.vehicle.VehicleUpdateEvent;
 import org.bukkit.util.Vector;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -80,36 +78,28 @@ public abstract class AbstractMinecartMixin extends VehicleEntityMixin implement
         return this.maxSpeed;
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    protected void comeOffTrack(ServerLevel level) {
-        final double d0 = this.getMaxSpeed(level);
-        final Vec3 vec3d = this.getDeltaMovement();
-        this.setDeltaMovement(Mth.clamp(vec3d.x, -d0, d0), vec3d.y, Mth.clamp(vec3d.z, -d0, d0));
-        if (this.onGround) {
-            this.setDeltaMovement(new Vec3(this.getDeltaMovement().x * this.derailedX, this.getDeltaMovement().y * this.derailedY, this.getDeltaMovement().z * this.derailedZ));
+    @Decorate(method = "comeOffTrack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;scale(D)Lnet/minecraft/world/phys/Vec3;", ordinal = 0))
+    private Vec3 arclight$derailedVelocity(Vec3 movement, double factor) throws Throwable {
+        Vec3 result = (Vec3) DecorationOps.callsite().invoke(movement, factor);
+        if (this.derailedX == 0.5 && this.derailedY == 0.5 && this.derailedZ == 0.5) {
+            return result;
         }
-        this.move(MoverType.SELF, this.getDeltaMovement());
-        if (!this.onGround) {
-            this.setDeltaMovement(new Vec3(this.getDeltaMovement().x * this.flyingX, this.getDeltaMovement().y * this.flyingY, this.getDeltaMovement().z * this.flyingZ));
-        }
+        return result.multiply(this.derailedX / 0.5, this.derailedY / 0.5, this.derailedZ / 0.5);
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite
-    protected Vec3 applyNaturalSlowdown(Vec3 movement) {
-        double slowdown = this.slowWhenEmpty ? 0.96D : 0.997D;
-        Vec3 vec3 = movement.multiply(slowdown, 0.0D, slowdown);
-        if (this.isInWater()) {
-            vec3 = vec3.scale(0.949999988079071D);
+    @Decorate(method = "comeOffTrack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;scale(D)Lnet/minecraft/world/phys/Vec3;", ordinal = 1))
+    private Vec3 arclight$flyingVelocity(Vec3 movement, double factor) throws Throwable {
+        Vec3 result = (Vec3) DecorationOps.callsite().invoke(movement, factor);
+        if (this.flyingX == 0.95 && this.flyingY == 0.95 && this.flyingZ == 0.95) {
+            return result;
         }
-        return vec3;
+        // Retain peer drag (for example Railcraft) and apply Bukkit's per-axis modifier relative to vanilla.
+        return result.multiply(this.flyingX / 0.95, this.flyingY / 0.95, this.flyingZ / 0.95);
+    }
+
+    @Override
+    public boolean bridge$isSlowWhenEmpty() {
+        return this.slowWhenEmpty;
     }
 
     @Inject(method = "push", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/vehicle/minecart/AbstractMinecart;hasPassenger(Lnet/minecraft/world/entity/Entity;)Z"))

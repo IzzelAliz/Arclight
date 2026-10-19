@@ -20,7 +20,7 @@ import net.minecraft.world.phys.Vec3;
 public class SpawnEggItemMixin {
 
     @Inject(method = "spawnOffspringFromSpawnEgg", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V"))
-    private void arclight$reason(Player player, Mob mob, EntityType<? extends Mob> entityType, ServerLevel world, Vec3 pos, ItemStack stack, CallbackInfoReturnable<Optional<Mob>> cir) {
+    private static void arclight$reason(Player player, Mob mob, EntityType<? extends Mob> entityType, ServerLevel world, Vec3 pos, ItemStack stack, CallbackInfoReturnable<Optional<Mob>> cir) {
         ((WorldBridge) world).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.SPAWNER_EGG);
     }
 }

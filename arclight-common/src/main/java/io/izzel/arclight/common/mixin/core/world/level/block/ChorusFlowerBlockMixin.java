@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -14,7 +15,7 @@ import net.minecraft.world.level.block.ChorusPlantBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -43,22 +44,29 @@ public abstract class ChorusFlowerBlockMixin extends BlockMixin {
     @Overwrite
     public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random) {
         BlockPos blockpos = pos.above();
-        if (worldIn.isEmptyBlock(blockpos) && blockpos.getY() < 256) {
+        if (worldIn.isEmptyBlock(blockpos) && blockpos.getY() <= worldIn.getMaxY()) {
             int i = state.getValue(AGE);
             if (i < 5 && this.bridge$forge$onCropsGrowPre(worldIn, blockpos, state, true)) {
                 boolean flag = false;
                 boolean flag1 = false;
                 BlockState blockstate = worldIn.getBlockState(pos.below());
                 Block block = blockstate.getBlock();
-                if (block == Blocks.END_STONE) {
+                var soilDecision = this.bridge$forge$canSustainPlant(blockstate, worldIn, pos.below(), Direction.UP, state);
+                if (soilDecision != net.minecraft.util.TriState.DEFAULT) {
+                    flag = soilDecision == net.minecraft.util.TriState.TRUE;
+                } else if (blockstate.is(BlockTags.SUPPORTS_CHORUS_FLOWER)) {
                     flag = true;
                 } else if (block == this.plant) {
                     int j = 1;
 
                     for (int k = 0; k < 4; ++k) {
-                        Block block1 = worldIn.getBlockState(pos.below(j + 1)).getBlock();
+                        BlockState testState = worldIn.getBlockState(pos.below(j + 1));
+                        Block block1 = testState.getBlock();
                         if (block1 != this.plant) {
-                            if (block1 == Blocks.END_STONE) {
+                            var soilDecision2 = this.bridge$forge$canSustainPlant(testState, worldIn, pos.below(j + 1), Direction.UP, state);
+                            if (soilDecision2 != net.minecraft.util.TriState.DEFAULT) {
+                                flag1 = soilDecision2 == net.minecraft.util.TriState.TRUE;
+                            } else if (testState.is(BlockTags.SUPPORTS_CHORUS_FLOWER)) {
                                 flag1 = true;
                             }
                             break;

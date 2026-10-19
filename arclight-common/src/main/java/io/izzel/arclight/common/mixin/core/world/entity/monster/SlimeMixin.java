@@ -1,91 +1,40 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
-import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.sugar.Local;
+import com.llamalad7.mixinextras.sugar.ref.LocalIntRef;
 import io.izzel.arclight.common.mixin.core.world.entity.MobMixin;
-import net.minecraft.network.chat.Component;
+import io.izzel.arclight.common.mod.server.entity.SlimeSplitScope;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.entity.Slime;
-import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.event.entity.EntityTransformEvent;
 import org.bukkit.event.entity.SlimeSplitEvent;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-
-import java.util.ArrayList;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(net.minecraft.world.entity.monster.Slime.class)
 public abstract class SlimeMixin extends MobMixin {
-
-    // @formatter:off
-    @Shadow public abstract int getSize();
-    @Shadow public abstract EntityType<? extends net.minecraft.world.entity.monster.Slime> getType();
-    // @formatter:on
-
-    private transient ArrayList<LivingEntity> arclight$slimes;
-
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @Overwrite(remap = false)
-    @Override
-    public void remove(Entity.RemovalReason p_149847_) {
-        int i = this.getSize();
-        if (!this.level().isClientSide() && i > 1 && this.isDeadOrDying()) {
-            Component itextcomponent = this.getCustomName();
-            boolean flag = this.isNoAi();
-            float f = this.getDimensions(this.getPose()).width();
-            float f1 = f / 2.0F;
-            int j = i / 2;
-            int k = 2 + this.random.nextInt(3);
-
-            {
-                SlimeSplitEvent event = new SlimeSplitEvent((Slime) this.getBukkitEntity(), k);
-                Bukkit.getPluginManager().callEvent(event);
-                if (event.isCancelled() || event.getCount() <= 0) {
-                    super.remove(p_149847_);
-                    return;
-                }
-                k = event.getCount();
-            }
-            arclight$slimes = new ArrayList<>(k);
-
-            for (int l = 0; l < k; ++l) {
-                float f2 = ((float) (l % 2) - 0.5F) * f1;
-                float f3 = ((float) (l / 2) - 0.5F) * f1;
-                net.minecraft.world.entity.monster.Slime slimeentity = this.getType().create(this.level(), net.minecraft.world.entity.EntitySpawnReason.MOB_SUMMONED);
-                if (slimeentity == null) continue;
-                if (this.isPersistenceRequired()) {
-                    slimeentity.setPersistenceRequired();
-                }
-
-                slimeentity.setCustomName(itextcomponent);
-                slimeentity.setNoAi(flag);
-                slimeentity.setInvulnerable(this.isInvulnerable());
-                slimeentity.setSize(j, true);
-                slimeentity.snapTo(this.getX() + (double) f2, this.getY() + 0.5D, this.getZ() + (double) f3, this.random.nextFloat() * 360.0F, 0.0F);
-                arclight$slimes.add(slimeentity);
-            }
-            if (CraftEventFactory.callEntityTransformEvent((net.minecraft.world.entity.monster.Slime) (Object) this, arclight$slimes, EntityTransformEvent.TransformReason.SPLIT).isCancelled()) {
-                super.remove(p_149847_);
-                arclight$slimes = null;
-                return;
-            }
-            for (int l = 0; l < arclight$slimes.size(); l++) {
-                // Apotheosis compat, see https://github.com/IzzelAliz/Arclight/issues/1078
-                float f2 = ((float) (l % 2) - 0.5F) * f;
-                float f3 = ((float) (l / 2) - 0.5F) * f;
-                net.minecraft.world.entity.monster.Slime living = (net.minecraft.world.entity.monster.Slime) arclight$slimes.get(l);
-                ((WorldBridge) this.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.SLIME_SPLIT);
-                this.level().addFreshEntity(living);
-            }
-            arclight$slimes = null;
+    @WrapMethod(method = "remove(Lnet/minecraft/world/entity/Entity$RemovalReason;)V")
+    private void arclight$splitScope(Entity.RemovalReason reason, Operation<Void> original) {
+        try (var scope = SlimeSplitScope.enter((Mob) (Object) this)) {
+            original.call(reason);
         }
-        super.remove(p_149847_);
+    }
+
+    @Inject(method = "remove(Lnet/minecraft/world/entity/Entity$RemovalReason;)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/Slime;getTeam()Lnet/minecraft/world/scores/PlayerTeam;", shift = At.Shift.AFTER),
+        cancellable = true, require = 1)
+    private void arclight$splitCount(Entity.RemovalReason reason, CallbackInfo ci, @Local(index = 6) LocalIntRef count) {
+        SlimeSplitEvent event = new SlimeSplitEvent((org.bukkit.entity.Slime) this.getBukkitEntity(), count.get());
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled() || event.getCount() <= 0) {
+            super.remove(reason);
+            ci.cancel();
+        } else {
+            count.set(event.getCount());
+        }
     }
 }

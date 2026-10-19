@@ -10,10 +10,10 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.GrindstoneMenu;
 import net.minecraft.world.item.ItemStack;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.inventory.CraftInventoryGrindstone;
-import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.inventory.CraftInventoryGrindstone;
+import org.bukkit.craftbukkit.inventory.CraftInventoryView;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.event.inventory.PrepareGrindstoneEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -43,7 +43,7 @@ public abstract class GrindstoneMenuMixin extends AbstractContainerMenuMixin imp
             // Call prepare event; preserve injection point
             PrepareGrindstoneEvent event = new PrepareGrindstoneEvent(craft, CraftItemStack.asCraftMirror(itemStack).clone());
             event.getView().getPlayer().getServer().getPluginManager().callEvent(event);
-            DecorationOps.callsite().invoke(instance, 2, CraftItemStack.asNMSCopy(event.getResult()));
+            DecorationOps.callsite().invoke(instance, i, CraftItemStack.asNMSCopy(event.getResult()));
         } else {
             // Run plugin custom logic
             CraftEventFactory.callPrepareGrindstoneEvent(getBukkitView(), itemStack);
@@ -64,6 +64,14 @@ public abstract class GrindstoneMenuMixin extends AbstractContainerMenuMixin imp
         CraftInventoryGrindstone inventory = new CraftInventoryGrindstone(this.repairSlots, this.resultSlots);
         bukkitEntity = new ArclightGrindstoneView(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (GrindstoneMenu) (Object) this);
         return bukkitEntity;
+    }
+
+    @Inject(method = "stillValid", at = @At("HEAD"), cancellable = true)
+    private void arclight$unreachable(net.minecraft.world.entity.player.Player player,
+            org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> cir) {
+        if (!bridge$isCheckReachable()) {
+            cir.setReturnValue(true);
+        }
     }
 
     @Override

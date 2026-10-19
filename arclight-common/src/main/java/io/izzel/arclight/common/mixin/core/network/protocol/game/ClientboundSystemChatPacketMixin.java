@@ -6,7 +6,7 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
-import org.bukkit.craftbukkit.v.util.CraftChatMessage;
+import org.bukkit.craftbukkit.util.CraftChatMessage;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(ClientboundSystemChatPacket.class)

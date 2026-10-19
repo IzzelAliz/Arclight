@@ -10,7 +10,7 @@ import net.minecraft.world.level.gameevent.GameEventDispatcher;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.CraftGameEvent;
+import org.bukkit.craftbukkit.CraftGameEvent;
 import org.bukkit.event.world.GenericGameEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

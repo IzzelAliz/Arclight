@@ -1,23 +1,17 @@
 package io.izzel.arclight.common.mod.util.remapper.generated;
 
-import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.util.remapper.*;
 import io.izzel.arclight.common.util.Enumerations;
 import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.Type;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
-import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.WildcardType;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -26,12 +20,9 @@ import java.security.Permissions;
 import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
 import java.util.Enumeration;
-import java.util.StringJoiner;
 
 @SuppressWarnings("unused")
 public class ArclightReflectionHandler extends ClassLoader {
-
-    private static final String PREFIX = "net.minecraft.";
 
     public static ClassLoaderRemapper remapper;
 
@@ -91,348 +82,7 @@ public class ArclightReflectionHandler extends ClassLoader {
         }
     }
 
-    // srg -> bukkit
-    public static String redirectFieldGetName(Field field) {
-        return remapper.tryMapFieldToBukkit(field.getDeclaringClass(), field.getName(), field);
-    }
-
-    // srg -> bukkit
-    public static String redirectMethodGetName(Method method) {
-        return remapper.tryMapMethodToBukkit(method.getDeclaringClass(), method);
-    }
-
-    // srg -> bukkit
-    public static String redirectClassGetCanonicalName(Class<?> cl) {
-        if (cl.isArray()) {
-            String name = redirectClassGetCanonicalName(cl.getComponentType());
-            if (name == null) return null;
-            return name + "[]";
-        }
-        if (cl.isLocalClass() || cl.isAnonymousClass()) {
-            return null;
-        }
-        String canonicalName = cl.getCanonicalName();
-        if (canonicalName == null) {
-            return null;
-        }
-        Class<?> enclosingClass = cl.getEnclosingClass();
-        if (enclosingClass == null) {
-            return redirectClassGetName(cl);
-        } else {
-            String name = redirectClassGetCanonicalName(enclosingClass);
-            if (name == null) return null;
-            return name + "." + redirectClassGetSimpleName(cl);
-        }
-    }
-
-    // srg -> bukkit
-    public static String redirectClassGetSimpleName(Class<?> cl) {
-        String simpleName = cl.getSimpleName();
-        if (simpleName.length() == 0) {
-            return simpleName; // anon class
-        }
-        Class<?> enclosingClass = cl.getEnclosingClass();
-        if (enclosingClass == null) { // simple class / lambdas
-            String mapped = redirectClassGetName(cl);
-            return mapped.substring(mapped.lastIndexOf('.') + 1);
-        } else { // nested class
-            String outer = redirectClassGetName(enclosingClass);
-            String inner = redirectClassGetName(cl);
-            return inner.substring(outer.length() + 1);
-        }
-    }
-
-    // srg -> bukkit
-    public static String handleClassGetName(String cl) {
-        return remapper.toBukkitRemapper().mapType(cl.replace('.', '/')).replace('/', '.');
-    }
-
-    // srg -> bukkit
-    public static String redirectClassGetName(Class<?> cl) {
-        String internalName = Type.getInternalName(cl);
-        Type type = Type.getObjectType(remapper.toBukkitRemapper().mapType(internalName));
-        return type.getInternalName().replace('/', '.');
-    }
-
-    // srg -> bukkit
-    public static String handlePackageGetName(String name) {
-        if (name.startsWith(PREFIX)) {
-            return PREFIX + "server." + ArclightVersion.current().packageName();
-        } else {
-            return name;
-        }
-    }
-
-    // srg -> bukkit
-    public static String redirectPackageGetName(Package pkg) {
-        return handlePackageGetName(pkg.getName());
-    }
-
-    // srg -> bukkit
-    public static String redirectTypeGetName(java.lang.reflect.Type type) {
-        if (type instanceof Class<?> cl) {
-            if (cl.isArray()) {
-                return redirectTypeGetName(cl.getComponentType()) + "[]";
-            }
-            return redirectClassGetName(cl);
-        } else if (type instanceof WildcardType wType) {
-            StringBuilder sb;
-            java.lang.reflect.Type[] bounds;
-            if (wType.getLowerBounds().length == 0) {
-                if (wType.getUpperBounds().length == 0 || Object.class == wType.getUpperBounds()[0]) {
-                    return "?";
-                }
-                bounds = wType.getUpperBounds();
-                sb = new StringBuilder("? extends ");
-            } else {
-                bounds = wType.getLowerBounds();
-                sb = new StringBuilder("? super ");
-            }
-            for (int i = 0; i < bounds.length; i++) {
-                if (i > 0) {
-                    sb.append(" & ");
-                }
-                sb.append(redirectTypeGetName(bounds[i]));
-            }
-            return sb.toString();
-        } else if (type instanceof ParameterizedType pType) {
-            var sb = new StringBuilder();
-            if (pType.getOwnerType() != null) {
-                sb.append(redirectTypeGetName(pType.getOwnerType()));
-                sb.append("$");
-                sb.append(redirectClassGetSimpleName((Class<?>) pType.getRawType()));
-            } else {
-                sb.append(redirectTypeGetName(pType.getRawType()));
-            }
-            if (pType.getActualTypeArguments() != null) {
-                var sj = new StringJoiner(", ", "<", ">");
-                sj.setEmptyValue("");
-                for (var t : pType.getActualTypeArguments()) {
-                    sj.add(redirectTypeGetName(t));
-                }
-                sb.append(sj);
-            }
-            return sb.toString();
-        } else if (type instanceof GenericArrayType arrayType) {
-            return redirectTypeGetName(arrayType.getGenericComponentType()) + "[]";
-        }
-        return type.getTypeName();
-    }
-
-    // bukkit -> srg
-    public static Class<?> redirectClassForName(String cl) throws ClassNotFoundException {
-        return redirectClassForName(cl, true, Unsafe.getCallerClass().getClassLoader());
-    }
-
-    // bukkit -> srg
-    public static Class<?> redirectClassForName(String cl, boolean initialize, ClassLoader classLoader) throws ClassNotFoundException {
-        try {
-            String replace = remapper.mapType(cl.replace('.', '/')).replace('/', '.');
-            return Class.forName(replace, initialize, classLoader);
-        } catch (ClassNotFoundException e) { // nested/inner class
-            int i = cl.lastIndexOf('.');
-            if (i > 0) {
-                String replace = cl.substring(0, i).replace('.', '/') + "$" + cl.substring(i + 1);
-                replace = remapper.mapType(replace).replace('/', '.').replace('$', '.');
-                return Class.forName(replace, initialize, classLoader);
-            } else throw e;
-        }
-    }
-
-    // bukkit -> srg
-    public static Object[] handleClassGetField(Class<?> cl, String bukkitName) {
-        return new Object[]{cl, remapper.tryMapFieldToSrg(cl, bukkitName)};
-    }
-
-    // bukkit -> srg
-    public static Field redirectClassGetField(Class<?> cl, String bukkitName) throws NoSuchFieldException {
-        String field = remapper.tryMapFieldToSrg(cl, bukkitName);
-        return cl.getField(field);
-    }
-
-    // bukkit -> srg
-    public static Object[] handleClassGetDeclaredField(Class<?> cl, String bukkitName) {
-        return handleClassGetField(cl, bukkitName);
-    }
-
-    // bukkit -> srg
-    public static Field redirectClassGetDeclaredField(Class<?> cl, String bukkitName) throws NoSuchFieldException {
-        String field = remapper.tryMapDecFieldToSrg(cl, bukkitName);
-        return cl.getDeclaredField(field);
-    }
-
-    // bukkit -> srg
-    public static Object[] handleClassGetMethod(Class<?> cl, String bukkitName, Class<?>... pTypes) {
-        Method method = remapper.tryMapMethodToSrg(cl, bukkitName, pTypes);
-        return new Object[]{cl, method == null ? bukkitName : method.getName(), pTypes};
-    }
-
-    // bukkit -> srg
-    public static Method redirectClassGetMethod(Class<?> cl, String bukkitName, Class<?>... pTypes) throws NoSuchMethodException {
-        Method method = remapper.tryMapMethodToSrg(cl, bukkitName, pTypes);
-        if (method != null) {
-            return method;
-        } else {
-            return cl.getMethod(bukkitName, pTypes);
-        }
-    }
-
-    // bukkit -> srg
-    public static Object[] handleClassGetDeclaredMethod(Class<?> cl, String bukkitName, Class<?>... pTypes) {
-        return handleClassGetMethod(cl, bukkitName, pTypes);
-    }
-
-    // bukkit -> srg
-    public static Method redirectClassGetDeclaredMethod(Class<?> cl, String bukkitName, Class<?>... pTypes) throws NoSuchMethodException {
-        Method method = remapper.tryMapMethodToSrg(cl, bukkitName, pTypes);
-        if (method != null) {
-            return method;
-        } else {
-            return cl.getDeclaredMethod(bukkitName, pTypes);
-        }
-    }
-
-    // bukkit -> srg
-    public static Object[] handleFromDescStr(String desc, ClassLoader classLoader) {
-        return new Object[]{remapper.mapMethodDesc(desc), classLoader};
-    }
-
-    // bukkit -> srg
-    public static MethodType redirectFromDescStr(String desc, ClassLoader classLoader) {
-        String methodDesc = remapper.mapMethodDesc(desc);
-        return MethodType.fromMethodDescriptorString(methodDesc, classLoader);
-    }
-
-    // bukkit -> srg
-    public static Object[] handleLookupFindStatic(MethodHandles.Lookup lookup, Class<?> cl, String name, MethodType methodType) {
-        Method method = remapper.tryMapMethodToSrg(cl, name, methodType.parameterArray());
-        return new Object[]{lookup, cl, method == null ? name : method.getName(), methodType};
-    }
-
-    // bukkit -> srg
-    public static MethodHandle redirectLookupFindStatic(MethodHandles.Lookup lookup, Class<?> cl, String name, MethodType methodType) throws NoSuchMethodException, IllegalAccessException {
-        Method method = remapper.tryMapMethodToSrg(cl, name, methodType.parameterArray());
-        if (method != null) {
-            return lookup.findStatic(cl, method.getName(), methodType);
-        } else {
-            return lookup.findStatic(cl, name, methodType);
-        }
-    }
-
-    // bukkit -> srg
-    public static Object[] handleLookupFindVirtual(MethodHandles.Lookup lookup, Class<?> cl, String name, MethodType methodType) {
-        return handleLookupFindStatic(lookup, cl, name, methodType);
-    }
-
-    // bukkit -> srg
-    public static MethodHandle redirectLookupFindVirtual(MethodHandles.Lookup lookup, Class<?> cl, String name, MethodType methodType) throws NoSuchMethodException, IllegalAccessException {
-        Method method = remapper.tryMapMethodToSrg(cl, name, methodType.parameterArray());
-        if (method != null) {
-            return lookup.findVirtual(cl, method.getName(), methodType);
-        } else {
-            return lookup.findVirtual(cl, name, methodType);
-        }
-    }
-
-    // bukkit -> srg
-    public static Object[] handleLookupFindSpecial(MethodHandles.Lookup lookup, Class<?> cl, String name, MethodType methodType, Class<?> spec) {
-        Method method = remapper.tryMapMethodToSrg(cl, name, methodType.parameterArray());
-        return new Object[]{lookup, cl, method == null ? name : method.getName(), methodType, spec};
-    }
-
-    // bukkit -> srg
-    public static MethodHandle redirectLookupFindSpecial(MethodHandles.Lookup lookup, Class<?> cl, String name, MethodType methodType, Class<?> spec) throws NoSuchMethodException, IllegalAccessException {
-        Method method = remapper.tryMapMethodToSrg(cl, name, methodType.parameterArray());
-        if (method != null) {
-            return lookup.findSpecial(cl, method.getName(), methodType, spec);
-        } else {
-            return lookup.findSpecial(cl, name, methodType, spec);
-        }
-    }
-
-    // bukkit -> srg
-    public static Object[] handleLookupFindGetter(MethodHandles.Lookup lookup, Class<?> cl, String name, Class<?> type) {
-        String field = remapper.tryMapFieldToSrg(cl, name);
-        return new Object[]{lookup, cl, field, type};
-    }
-
-    // bukkit -> srg
-    public static MethodHandle redirectLookupFindGetter(MethodHandles.Lookup lookup, Class<?> cl, String name, Class<?> type) throws IllegalAccessException, NoSuchFieldException {
-        String field = remapper.tryMapFieldToSrg(cl, name);
-        return lookup.findGetter(cl, field, type);
-    }
-
-    // bukkit -> srg
-    public static Object[] handleLookupFindSetter(MethodHandles.Lookup lookup, Class<?> cl, String name, Class<?> type) {
-        return handleLookupFindGetter(lookup, cl, name, type);
-    }
-
-    // bukkit -> srg
-    public static MethodHandle redirectLookupFindSetter(MethodHandles.Lookup lookup, Class<?> cl, String name, Class<?> type) throws IllegalAccessException, NoSuchFieldException {
-        String field = remapper.tryMapFieldToSrg(cl, name);
-        return lookup.findSetter(cl, field, type);
-    }
-
-    // bukkit -> srg
-    public static Object[] handleLookupFindStaticGetter(MethodHandles.Lookup lookup, Class<?> cl, String name, Class<?> type) {
-        return handleLookupFindGetter(lookup, cl, name, type);
-    }
-
-    // bukkit -> srg
-    public static MethodHandle redirectLookupFindStaticGetter(MethodHandles.Lookup lookup, Class<?> cl, String name, Class<?> type) throws IllegalAccessException, NoSuchFieldException {
-        String field = remapper.tryMapFieldToSrg(cl, name);
-        return lookup.findStaticGetter(cl, field, type);
-    }
-
-    // bukkit -> srg
-    public static Object[] handleLookupFindStaticSetter(MethodHandles.Lookup lookup, Class<?> cl, String name, Class<?> type) {
-        return handleLookupFindGetter(lookup, cl, name, type);
-    }
-
-    // bukkit -> srg
-    public static MethodHandle redirectLookupFindStaticSetter(MethodHandles.Lookup lookup, Class<?> cl, String name, Class<?> type) throws IllegalAccessException, NoSuchFieldException {
-        String field = remapper.tryMapFieldToSrg(cl, name);
-        return lookup.findStaticSetter(cl, field, type);
-    }
-
-    // bukkit -> srg
-    public static Class<?> redirectLookupFindClass(MethodHandles.Lookup lookup, String name) throws ClassNotFoundException {
-        return redirectClassForName(name, false, lookup.lookupClass().getClassLoader());
-    }
-
-    // bukkit -> srg
-    public static Object[] handleLookupFindVarHandle(MethodHandles.Lookup lookup, Class<?> cl, String name, Class<?> type) {
-        return handleLookupFindGetter(lookup, cl, name, type);
-    }
-
-    // bukkit -> srg
-    public static VarHandle redirectLookupFindVarHandle(MethodHandles.Lookup lookup, Class<?> cl, String name, Class<?> type) throws NoSuchFieldException, IllegalAccessException {
-        String field = remapper.tryMapFieldToSrg(cl, name);
-        return lookup.findVarHandle(cl, field, type);
-    }
-
-    // bukkit -> srg
-    public static Object[] handleLookupFindStaticVarHandle(MethodHandles.Lookup lookup, Class<?> cl, String name, Class<?> type) {
-        return handleLookupFindGetter(lookup, cl, name, type);
-    }
-
-    // bukkit -> srg
-    public static VarHandle redirectLookupFindStaticVarHandle(MethodHandles.Lookup lookup, Class<?> cl, String name, Class<?> type) throws NoSuchFieldException, IllegalAccessException {
-        String field = remapper.tryMapFieldToSrg(cl, name);
-        return lookup.findStaticVarHandle(cl, field, type);
-    }
-
-    public static Object[] handleClassLoaderLoadClass(ClassLoader loader, String binaryName) {
-        return new Object[]{loader, remapper.mapType(binaryName.replace('.', '/')).replace('/', '.')};
-    }
-
-    // bukkit -> srg
-    public static Class<?> redirectClassLoaderLoadClass(ClassLoader loader, String binaryName) throws ClassNotFoundException {
-        String replace = remapper.mapType(binaryName.replace('.', '/')).replace('/', '.');
-        return loader.loadClass(replace);
-    }
-
-    public static String findMappedResource(Class<?> cl, String name) {
+    public static String findClassResource(Class<?> cl, String name) {
         if (name.isEmpty() || !name.endsWith(".class")) return null;
         name = name.substring(0, name.length() - 6);
         String className;
@@ -442,18 +92,17 @@ public class ArclightReflectionHandler extends ClassLoader {
             } else {
                 Class<?> c = cl;
                 while (c.isArray()) c = c.getComponentType();
-                String mapped = remapper.toBukkitRemapper().mapType(c.getName().replace('.', '/'));
-                int index = mapped.lastIndexOf('/');
+                String ownerName = c.getName().replace('.', '/');
+                int index = ownerName.lastIndexOf('/');
                 if (index == -1) {
                     className = name;
                 } else {
-                    className = mapped.substring(0, index) + '/' + name;
+                    className = ownerName.substring(0, index) + '/' + name;
                 }
             }
         } else {
             className = name;
         }
-        className = remapper.mapType(className);
         if (className.startsWith("java/") || className.startsWith("jdk/") || className.startsWith("javax/")) {
             return null;
         } else if (cl != null) return "/" + className + ".class";
@@ -461,54 +110,54 @@ public class ArclightReflectionHandler extends ClassLoader {
     }
 
     public static URL redirectClassGetResource(Class<?> cl, String name) throws MalformedURLException {
-        String mappedResource = findMappedResource(cl, name);
-        if (mappedResource == null) {
+        String classResource = findClassResource(cl, name);
+        if (classResource == null) {
             if (name.startsWith("/java/") || name.startsWith("/jdk/") || name.startsWith("/javax/")) {
                 return ClassLoader.getPlatformClassLoader().getResource(name);
             }
             return cl.getResource(name);
         } else {
-            URL resource = cl.getResource(mappedResource);
+            URL resource = cl.getResource(classResource);
             return resource == null ? null : new URL("remap:" + resource);
         }
     }
 
     public static InputStream redirectClassGetResourceAsStream(Class<?> cl, String name) throws IOException {
-        String mappedResource = findMappedResource(cl, name);
-        if (mappedResource == null) {
+        String classResource = findClassResource(cl, name);
+        if (classResource == null) {
             if (name.startsWith("/java/") || name.startsWith("/jdk/") || name.startsWith("/javax/")) {
                 return ClassLoader.getPlatformClassLoader().getResourceAsStream(name);
             }
             return cl.getResourceAsStream(name);
         } else {
-            URL resource = cl.getResource(mappedResource);
+            URL resource = cl.getResource(classResource);
             if (resource == null) return null;
             return new URL("remap:" + resource).openStream();
         }
     }
 
     public static URL redirectClassLoaderGetResource(ClassLoader loader, String name) throws MalformedURLException {
-        String mappedResource = findMappedResource(null, name);
-        if (mappedResource == null) {
+        String classResource = findClassResource(null, name);
+        if (classResource == null) {
             if (name.startsWith("java/") || name.startsWith("jdk/") || name.startsWith("javax/")) {
                 return ClassLoader.getPlatformClassLoader().getResource(name);
             }
             return loader.getResource(name);
         } else {
-            URL resource = loader.getResource(mappedResource);
+            URL resource = loader.getResource(classResource);
             return resource == null ? null : new URL("remap:" + resource);
         }
     }
 
     public static Enumeration<URL> redirectClassLoaderGetResources(ClassLoader loader, String name) throws IOException {
-        String mappedResource = findMappedResource(null, name);
-        if (mappedResource == null) {
+        String classResource = findClassResource(null, name);
+        if (classResource == null) {
             if (name.startsWith("java/") || name.startsWith("jdk/") || name.startsWith("javax/")) {
                 return ClassLoader.getPlatformClassLoader().getResources(name);
             }
             return loader.getResources(name);
         } else {
-            Enumeration<URL> resources = loader.getResources(mappedResource);
+            Enumeration<URL> resources = loader.getResources(classResource);
             return Enumerations.remapped(resources);
         }
     }

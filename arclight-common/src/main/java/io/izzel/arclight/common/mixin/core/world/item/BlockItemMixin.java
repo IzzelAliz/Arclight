@@ -3,6 +3,11 @@ package io.izzel.arclight.common.mixin.core.world.item;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.level.LevelAccessorBridge;
 import io.izzel.arclight.common.mod.util.DistValidate;
+import io.izzel.arclight.common.mod.util.SignPlacementScope;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.minecraft.world.level.Level;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
@@ -12,10 +17,10 @@ import net.minecraft.world.item.SolidBucketItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.block.CraftBlockStates;
-import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.block.CraftBlockStates;
+import org.bukkit.craftbukkit.block.data.CraftBlockData;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockCanBuildEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,6 +38,19 @@ public abstract class BlockItemMixin {
     // @formatter:on
 
     private transient org.bukkit.block.BlockState arclight$state;
+
+    @WrapMethod(method = "place(Lnet/minecraft/world/item/context/BlockPlaceContext;)Lnet/minecraft/world/InteractionResult;")
+    private InteractionResult arclight$signPlacement(BlockPlaceContext context, Operation<InteractionResult> original) {
+        return SignPlacementScope.place(context, original);
+    }
+
+    @WrapOperation(method = "place(Lnet/minecraft/world/item/context/BlockPlaceContext;)Lnet/minecraft/world/InteractionResult;",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/BlockItem;updateCustomBlockEntityTag(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
+    private boolean arclight$signTag(BlockItem item, BlockPos pos, Level level,
+                                     net.minecraft.world.entity.player.Player player,
+                                     net.minecraft.world.item.ItemStack stack, BlockState state, Operation<Boolean> original) {
+        return SignPlacementScope.tag(pos, level, player, stack, original, item, state);
+    }
 
     @Inject(method = "place", locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/item/BlockItem;getPlacementState(Lnet/minecraft/world/item/context/BlockPlaceContext;)Lnet/minecraft/world/level/block/state/BlockState;"))

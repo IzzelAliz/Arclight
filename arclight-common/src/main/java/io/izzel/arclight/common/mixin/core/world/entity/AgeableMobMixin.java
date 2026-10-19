@@ -4,14 +4,10 @@ import io.izzel.arclight.common.bridge.core.world.entity.AgeableMobBridge;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
 
@@ -22,27 +18,16 @@ public abstract class AgeableMobMixin extends PathfinderMobMixin implements Agea
     @Shadow public abstract boolean isBaby();
     @Shadow @Nullable public abstract AgeableMob getBreedOffspring(ServerLevel world, AgeableMob mate);
     @Shadow public abstract void setAge(int age);
+    @Shadow public abstract boolean isAgeLocked();
     // @formatter:on
-
-    public boolean ageLocked;
-
-    @Inject(method = "addAdditionalSaveData", at = @At("RETURN"))
-    private void arclight$writeAgeLocked(ValueOutput output, CallbackInfo ci) {
-        output.putBoolean("AgeLocked", ageLocked);
-    }
-
-    @Inject(method = "readAdditionalSaveData", at = @At("RETURN"))
-    private void arclight$readAgeLocked(ValueInput input, CallbackInfo ci) {
-        ageLocked = input.getBooleanOr("AgeLocked", false);
-    }
 
     @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;isClientSide()Z"))
     private boolean arclight$tickIfNotLocked(Level world) {
-        return world.isClientSide() || ageLocked;
+        return world.isClientSide() || this.isAgeLocked();
     }
 
     @Override
     public boolean bridge$isAgeLocked() {
-        return this.ageLocked;
+        return this.isAgeLocked();
     }
 }

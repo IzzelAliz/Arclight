@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -13,8 +15,8 @@ import net.minecraft.world.level.block.TurtleEggBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -50,8 +52,6 @@ public class TurtleEggBlockMixin {
     private void arclight$born(BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random, CallbackInfo ci) {
         if (CraftEventFactory.callBlockFadeEvent(worldIn, pos, Blocks.AIR.defaultBlockState()).isCancelled()) {
             ci.cancel();
-        } else {
-            ((WorldBridge) worldIn).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.EGG);
         }
     }
 
@@ -67,6 +67,18 @@ public class TurtleEggBlockMixin {
 
         if (cancellable.isCancelled()) {
             ci.cancel();
+        }
+    }
+
+    @WrapOperation(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"), require = 1)
+    private boolean arclight$eachEgg(ServerLevel level, Entity entity, Operation<Boolean> original) {
+        WorldBridge bridge = (WorldBridge) level;
+        CreatureSpawnEvent.SpawnReason parent = bridge.bridge$getAddEntityReason();
+        bridge.bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.EGG);
+        try {
+            return original.call(level, entity);
+        } finally {
+            bridge.bridge$pushAddEntityReason(parent);
         }
     }
 }

@@ -2,8 +2,8 @@ import io.izzel.arclight.gradle.ArclightGradlePlugin
 import io.izzel.arclight.gradle.tasks.UploadFilesTask
 
 plugins {
-    id 'architectury-plugin' version '3.4-SNAPSHOT' apply false
-    id 'dev.architectury.loom' apply false  // version: gradle/libs.versions.toml
+    id 'architectury-plugin' version '3.5.170' apply false
+    id 'dev.architectury.loom-no-remap' apply false  // version: gradle/libs.versions.toml
     id 'com.gradleup.shadow' version '8.3.+' apply false
 }
 
@@ -15,15 +15,13 @@ allprojects {
 
     def getGitHash = { ->
         def stdout = new ByteArrayOutputStream()
-        exec {
+        return providers.exec {
             commandLine 'git', 'rev-parse', '--short', 'HEAD'
-            standardOutput = stdout
-        }
-        return stdout.toString().trim()
+        }.standardOutput.asText.get().trim()
     }
 
     ext {
-        versionName = 'group-of-soldiers'
+        versionName = 'dipper'
         gitHash = getGitHash()
         supportedPlatforms = ['neoforge', 'fabric']
         commonProject = project(':arclight-common')
@@ -36,7 +34,7 @@ allprojects {
 
     java {
         toolchain {
-            languageVersion = JavaLanguageVersion.of(21)
+            languageVersion = JavaLanguageVersion.of(25)
         }
     }
 
@@ -67,8 +65,8 @@ allprojects {
 rootProject.ext.subProjects.each { Project p ->
     configure(p) {
         apply plugin: 'architectury-plugin'
-        apply plugin: 'dev.architectury.loom'
         apply plugin: ArclightGradlePlugin
+        apply plugin: 'dev.architectury.loom-no-remap'
 
         architectury {
             minecraft = libs.versions.minecraft.get()
@@ -83,7 +81,7 @@ rootProject.ext.subProjects.each { Project p ->
 
         arclight {
             mcVersion = libs.versions.minecraft.get()
-            bukkitVersion = libs.versions.bukkit.api.get()
+            bukkitVersion = ''
             spigotReversion = libs.versions.spigot.reversion.get()
             accessTransformer = rootProject.ext.commonProject.file('bukkit.at')
             extraMapping = rootProject.ext.commonProject.file('extra_mapping.tsrg')
@@ -109,10 +107,7 @@ rootProject.ext.subProjects.each { Project p ->
 
         dependencies {
             minecraft libs.minecraft
-            mappings loom.layered() {
-                officialMojangMappings()
-                parchment("org.parchmentmc.data:parchment-${libs.versions.minecraft.get()}:${libs.versions.parchment.get()}@zip")
-            }
+
         }
 
         java {
@@ -123,16 +118,30 @@ rootProject.ext.subProjects.each { Project p ->
 
 rootProject.ext.platformProjects.each { Project p ->
     configure(p) {
-        apply plugin: 'dev.architectury.loom'
+        apply plugin: 'dev.architectury.loom-no-remap'
         apply plugin: 'com.gradleup.shadow'
 
         loom {
             if (p.name == 'arclight-fabric') {
                 // NeoForge owns climateSettings via its coremod; Fabric needs raw access.
                 def fabricAw = p.layout.buildDirectory.file('generated-access/arclight.accesswidener').get().asFile
-                fabricAw.parentFile.mkdirs()
-                fabricAw.text = getRootProject().ext.commonProject.file('src/main/resources/arclight.accesswidener').text +
-                    '\naccessible field net/minecraft/world/level/biome/Biome climateSettings Lnet/minecraft/world/level/biome/Biome$ClimateSettings;\n'
+                def commonAw = getRootProject().ext.commonProject.file('src/main/resources/arclight.accesswidener')
+                def generateAw = {
+                    fabricAw.parentFile.mkdirs()
+                    fabricAw.text = commonAw.text +
+                        '\naccessible field net/minecraft/world/level/biome/Biome climateSettings Lnet/minecraft/world/level/biome/Biome$ClimateSettings;\n'
+                }
+                // Loom reads this during configuration; clean may remove it afterwards.
+                generateAw()
+                def generateFabricAccessWidener = tasks.register('generateFabricAccessWidener') {
+                    inputs.file(commonAw)
+                    outputs.file(fabricAw)
+                    mustRunAfter(tasks.named('clean'))
+                    doLast { generateAw() }
+                }
+                tasks.matching { it.name in ['shadowJar', 'validateAccessWidener'] }.configureEach {
+                    dependsOn(generateFabricAccessWidener)
+                }
                 accessWidenerPath = fabricAw
             } else {
                 accessWidenerPath = getRootProject().ext.commonProject.loom.accessWidenerPath
@@ -165,11 +174,9 @@ tasks.register('collect', Copy) {
 
 def gitBranch() {
     def stdout = new ByteArrayOutputStream()
-    exec {
+    return providers.exec {
         commandLine 'git', 'rev-parse', '--abbrev-ref', 'HEAD'
-        standardOutput = stdout
-    }
-    return stdout.toString().trim()
+    }.standardOutput.asText.get().trim()
 }
 
 tasks.register('uploadFiles', UploadFilesTask) {

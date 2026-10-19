@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v.util.CraftLegacy;
+import org.bukkit.craftbukkit.util.CraftLegacy;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 

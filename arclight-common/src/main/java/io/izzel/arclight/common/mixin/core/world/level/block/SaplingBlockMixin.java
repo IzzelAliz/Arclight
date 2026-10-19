@@ -1,30 +1,66 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
+import io.izzel.arclight.common.mod.util.SaplingGrowthRandom;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.SaplingBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
 
-// todo Re-implement this
 @Mixin(SaplingBlock.class)
 public abstract class SaplingBlockMixin {
 
-    // @formatter:off
-    //@Shadow public abstract void grow(IWorld worldIn, BlockPos pos, BlockState state, Random rand);
-    // @formatter:on
-
-    // @SuppressWarnings("unchecked")
-    /*
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/SaplingBlock;grow(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Ljava/util/Random;)V"))
-    public void arclight$treeGrow(SaplingBlock saplingBlock, IWorld worldIn, BlockPos pos, BlockState state, Random rand) {
-        BlockStateListPopulator populator = new ArclightBlockPopulator(worldIn.getWorld());
-        this.grow(populator, pos, state, rand);
-        if (populator.getBlocks().size() > 0) {
-            TreeType treeType = ArclightCaptures.getTreeType();
-            Location location = CraftBlock.at(worldIn, pos).getLocation();
-            StructureGrowEvent event = new StructureGrowEvent(location, treeType, false, null, (List<org.bukkit.block.BlockState>) (Object) populator.getList());
-            Bukkit.getPluginManager().callEvent(event);
-            if (!event.isCancelled()) {
-                populator.updateList();
+    @WrapOperation(
+        method = "randomTick(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/util/RandomSource;)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/util/RandomSource;nextInt(I)I"),
+        require = 1, expect = 1, allow = 1
+    )
+    private int arclight$naturalGrowthRoll(RandomSource random, int bound, Operation<Integer> original,
+                                         BlockState state, ServerLevel level, BlockPos pos, RandomSource tickRandom) {
+        // Change only this call's receiver; advanceTree must retain the original tick RNG.
+        return original.call(new SaplingGrowthRandom(random,
+            () -> ((WorldBridge) level).bridge$spigotConfig().saplingModifier), bound);
+    }
+    @WrapOperation(method = "randomTick(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/util/RandomSource;)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/SaplingBlock;advanceTree(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/util/RandomSource;)V"),
+        require = 1, expect = 1, allow = 1)
+    private void arclight$naturalTree(SaplingBlock sapling, ServerLevel level, BlockPos pos,
+        BlockState state, RandomSource random, Operation<Void> original) {
+        // Stage 0 is the native stage setter, not a tree transaction.
+        if (state.getValue(SaplingBlock.STAGE) == 0) {
+            original.call(sapling, level, pos, state, random);
+            return;
+        }
+        var observer = io.izzel.arclight.common.mod.util.TreeGrowthContext.observe(level);
+        io.izzel.arclight.common.mod.util.TreeCapture.JoinResult<Void> capture;
+        try {
+            capture = ((io.izzel.arclight.common.bridge.core.world.level.TreeCaptureBridge) level)
+                .bridge$captureTreeOrJoin(() -> original.call(sapling, level, pos, state, random));
+        } finally {
+            observer.close();
+        }
+        var result = observer.result();
+        if (!capture.ownedRoot() || capture.states().isEmpty()) return;
+        if (result == null) throw new IllegalStateException("Missing same-invocation tree provenance");
+        java.util.List<org.bukkit.block.BlockState> blocks = new java.util.ArrayList<>(capture.states());
+        org.bukkit.event.world.StructureGrowEvent event = null;
+        if (result.kind() != io.izzel.arclight.common.mod.util.TreeGrowthContext.Kind.EMPTY) {
+            org.bukkit.TreeType type = result.kind() == io.izzel.arclight.common.mod.util.TreeGrowthContext.Kind.KNOWN
+                ? result.selection().type() : io.izzel.arclight.common.mod.ArclightConstants.MOD;
+            event = new org.bukkit.event.world.StructureGrowEvent(
+                org.bukkit.craftbukkit.util.CraftLocation.toBukkit(pos, ((WorldBridge) level).bridge$getWorld()),
+                type, false, null, blocks);
+            org.bukkit.Bukkit.getPluginManager().callEvent(event);
+        }
+        if (event == null || !event.isCancelled()) {
+            for (org.bukkit.block.BlockState block : blocks) {
+                org.bukkit.craftbukkit.block.CapturedBlockState.setBlockState(block);
             }
         }
-    }*/
+    }
 }

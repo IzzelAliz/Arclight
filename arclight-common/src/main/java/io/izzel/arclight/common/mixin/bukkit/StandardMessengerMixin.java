@@ -7,7 +7,7 @@ import io.izzel.arclight.common.mod.plugin.messaging.PacketRecorder;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.common.mod.plugin.messaging.ArclightPluginChannel;
 import net.minecraft.resources.Identifier;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.plugin.messaging.PluginMessageListenerRegistration;

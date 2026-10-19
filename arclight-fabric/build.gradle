@@ -9,11 +9,7 @@ architectury {
 }
 
 loom {
-    mixin {
-        useLegacyMixinAp = true
-        defaultRefmapName = 'arclight-fabric-refmap.json'
-        add sourceSets.main, 'arclight-fabric-refmap.json'
-    }
+
 }
 
 configurations {
@@ -21,8 +17,8 @@ configurations {
 }
 
 dependencies {
-    modImplementation libs.fabric.loader
-    modImplementation libs.fabric.api
+    implementation libs.fabric.loader
+    implementation libs.fabric.api
 
     implementation libs.izzel.tools
     implementation libs.arclight.api
@@ -38,7 +34,7 @@ dependencies {
     implementation rootProject.ext.generatedSpigot
     shadowBundle rootProject.ext.generatedSpigot
 
-    modImplementation libs.fabric.permissions.api
+    implementation libs.fabric.permissions.api
     include libs.fabric.permissions.api
 
     // XXX: for compiling (arclight-api): FabricArclightServer#registerForgeEvent
@@ -46,28 +42,15 @@ dependencies {
 
     implementation(project(':i18n-config')) { transitive = false }
 
-    common(project(path: ':arclight-common', configuration: 'namedElements')) { transitive = false }
+    common(project(path: ':arclight-common', configuration: 'runtimeElements')) { transitive = false }
     shadowBundle(project(path: ':arclight-common', configuration: 'transformProductionFabric')) { transitive = false }
     common(project(':bootstrap')) { transitive = false }
     shadowBundle(project(':bootstrap')) { transitive = false }
 }
 
-tasks.register('fabricMappings', Copy) {
-    destinationDir = file('build/fabric_mappings')
-    from(arclight.mappingsConfiguration.bukkitToFabric) {
-        rename { name -> 'bukkit_srg.srg' }
-    }
-    from(arclight.mappingsConfiguration.bukkitToNeoForge) {
-        rename { name -> 'bukkit_moj.srg' }
-    }
-    from(arclight.mappingsConfiguration.bukkitToFabricInheritance) {
-        rename { name -> 'inheritanceMap.txt' }
-    }
-}
-
-project.sourceSets.main.output.dir file('build/fabric_mappings'), builtBy: tasks.fabricMappings
-
 compileJava {
+    // No obfuscation/refmap AP in official-only builds; retain code generators.
+    options.compilerArgs += ['-processor', 'lombok.launch.AnnotationProcessorHider$AnnotationProcessor,lombok.launch.AnnotationProcessorHider$ClaimingProcessor,io.izzel.arclight.mixin.ap.EjectProvider']
     options.annotationProcessorPath = configurations.annotationProcessor + configurations.mixinProcessorSupport
 }
 
@@ -87,20 +70,18 @@ shadowJar {
     archiveClassifier = 'dev-shadow'
 }
 
-remapJar {
-    injectAccessWidener.set true
-    inputFile.set shadowJar.archiveFile
-    dependsOn shadowJar
-}
+loom.injectAccessWidener(tasks.named('shadowJar'))
+// The bootstrap embeds the shadow JAR, not Loom's standard jar output.
+loom.nestJars(tasks.named('shadowJar'), configurations.named('include'))
 
 tasks.register('srgJar', Jar) {
-    from(tasks.remapJar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) }) {
+    from(tasks.shadowJar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) }) {
         include 'io/izzel/**'
         exclude 'io/izzel/arclight/common/mixin/**'
         exclude 'io/izzel/arclight/forge/mixin/**'
     }
     archiveClassifier.set('srg')
-    dependsOn remapJar
+    dependsOn shadowJar
 }
 
 sourcesJar {

@@ -1,40 +1,36 @@
 package io.izzel.arclight.neoforge.mixin.core.world.level.block.entity;
 
-import io.izzel.arclight.common.mod.util.ArclightCaptures;
-import io.izzel.arclight.mixin.Decorate;
-import io.izzel.arclight.mixin.DecorationOps;
-import io.izzel.arclight.mixin.Local;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
+import io.izzel.arclight.common.mod.util.FurnaceEventHooks;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
-import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
-import org.bukkit.event.inventory.FurnaceSmeltEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(AbstractFurnaceBlockEntity.class)
 public abstract class AbstractFurnaceBlockEntityMixin_NeoForge {
 
-    @Decorate(method = "burn", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/core/NonNullList;get(I)Ljava/lang/Object;"))
-    private static <E> E arclight$furnaceSmelt(NonNullList<E> instance, int i, @Local(ordinal = -1) ItemStack itemStack2, @Local(ordinal = -2) ItemStack itemStack1) throws Throwable {
-        CraftItemStack source = CraftItemStack.asCraftMirror(itemStack1);
-        org.bukkit.inventory.ItemStack result = CraftItemStack.asBukkitCopy(itemStack2);
-
-        FurnaceSmeltEvent furnaceSmeltEvent = new FurnaceSmeltEvent(CraftBlock.at(ArclightCaptures.getTickingBlockEntity().getLevel(), ArclightCaptures.getTickingBlockEntity().getBlockPos()), source, result);
-        Bukkit.getPluginManager().callEvent(furnaceSmeltEvent);
-
-        if (furnaceSmeltEvent.isCancelled()) {
-            return (E) DecorationOps.cancel().invoke(false);
+    // Wrap the transaction's entry, not burn's second list access (which is fuel
+    // after output has already been written). The successor credit uses this same
+    // invocation-local result, so cancellation cannot add recipe/experience credit.
+    @WrapOperation(method = "serverTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;burn(Lnet/minecraft/core/NonNullList;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;)V"))
+    private static void arclight$furnaceSmelt(NonNullList<ItemStack> items, ItemStack input, ItemStack result, Operation<Void> original,
+                                             @Local(argsOnly = true) AbstractFurnaceBlockEntity furnace,
+                                             @Share(value = "smelted", namespace = "arclight:furnace") LocalBooleanRef smelted) {
+        smelted.set(false);
+        ItemStack replacement = FurnaceEventHooks.smeltResult((net.minecraft.server.level.ServerLevel) furnace.getLevel(),
+            furnace.getBlockPos(), items, input, result);
+        if (replacement == null) {
+            return;
         }
-
-        result = furnaceSmeltEvent.getResult();
-        itemStack2 = CraftItemStack.asNMSCopy(result);
-        if (itemStack2.isEmpty()) {
-            itemStack1.shrink(1);
-            return (E) DecorationOps.cancel().invoke(true);
-        }
-        return (E) DecorationOps.callsite().invoke(instance, i);
+        // Native burn retains component-aware output, wet-sponge and input handling;
+        // previous/next third-party wrappers still receive the accepted event result.
+        original.call(items, input, replacement);
+        smelted.set(true);
     }
 }

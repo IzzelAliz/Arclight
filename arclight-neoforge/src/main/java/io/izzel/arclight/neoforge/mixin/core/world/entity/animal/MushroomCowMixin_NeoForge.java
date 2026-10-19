@@ -13,6 +13,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.cow.Cow;
 import net.minecraft.world.entity.animal.cow.MushroomCow;
+import net.minecraft.world.item.ItemInstance;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootTable;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -32,8 +33,9 @@ public abstract class MushroomCowMixin_NeoForge extends MobMixin_NeoForge {
         return (Mob) DecorationOps.callsite().invoke(mushroomCow, entityType, conversionParams, afterConversion);
     }
 
-    @Decorate(method = "lambda$shear$2", remap = false, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/cow/MushroomCow;dropFromShearingLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/item/ItemStack;Ljava/util/function/BiConsumer;)V"))
-    private void arclight$forceDrop(MushroomCow mushroomCow, ServerLevel level, ResourceKey<LootTable> lootTable, ItemStack stack, BiConsumer<ServerLevel, ItemStack> dropper, ServerLevel conversionLevel, ItemStack tool, Cow cow) throws Throwable {
+    // 26.1.2 conversion callback, not the separate BiConsumer drop lambda.
+    @Decorate(method = "lambda$shear$1(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/animal/cow/Cow;)V", remap = false, require = 1, allow = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/cow/MushroomCow;dropFromShearingLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/item/ItemInstance;Ljava/util/function/BiConsumer;)V"))
+    private void arclight$forceDrop(MushroomCow mushroomCow, ServerLevel level, ResourceKey<LootTable> lootTable, ItemInstance stack, BiConsumer<ServerLevel, ItemStack> dropper, ServerLevel conversionLevel, ItemStack tool, Cow cow) throws Throwable {
         var bridge = (io.izzel.arclight.common.bridge.core.entity.EntityBridge) mushroomCow;
         boolean forceDrops = bridge.bridge$isForceDrops();
         bridge.bridge$setForceDrops(true);

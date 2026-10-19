@@ -2,16 +2,13 @@ package io.izzel.arclight.common.mixin.core.world.entity.player;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Either;
-import io.izzel.arclight.common.bridge.core.entity.InternalEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.world.food.FoodDataBridge;
-import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.LivingEntityMixin;
-import io.izzel.arclight.common.mod.server.ArclightServer;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
@@ -40,15 +37,14 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.PlayerEnderChestContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.util.CraftVector;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.util.CraftVector;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -60,7 +56,6 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerVelocityEvent;
 import org.bukkit.scoreboard.Team;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.FrameNode;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -79,6 +74,32 @@ import java.util.Optional;
 
 @Mixin(net.minecraft.world.entity.player.Player.class)
 public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBridge {
+
+    private transient boolean arclight$interacting;
+    private transient Entity arclight$cancelledCopperShear;
+
+    @com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod(method = "interactOn(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/InteractionResult;")
+    private net.minecraft.world.InteractionResult arclight$copperShearInteraction(Entity target, net.minecraft.world.InteractionHand hand, Vec3 location,
+            com.llamalad7.mixinextras.injector.wrapoperation.Operation<net.minecraft.world.InteractionResult> original) {
+        this.arclight$interacting = true;
+        this.arclight$cancelledCopperShear = null;
+        try {
+            return original.call(target, hand, location);
+        } finally {
+            this.arclight$interacting = false;
+            this.arclight$cancelledCopperShear = null;
+        }
+    }
+
+    @Override
+    public void bridge$cancelCopperShear(Entity target) {
+        if (this.arclight$interacting) this.arclight$cancelledCopperShear = target;
+    }
+
+    @Override
+    public boolean bridge$isCopperShearCancelled(Entity target) {
+        return this.arclight$interacting && this.arclight$cancelledCopperShear == target;
+    }
 
     // @formatter:off
     @Shadow public abstract String getScoreboardName();
@@ -144,20 +165,28 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     private transient boolean arclight$skipDropItemEvent;
 
     public ItemEntity drop(ItemStack itemstack, boolean flag, boolean flag1, boolean callEvent) {
+        boolean previousSkipDropItemEvent = arclight$skipDropItemEvent;
         try {
             arclight$skipDropItemEvent = !callEvent;
             return this.drop(itemstack, flag1);
         } finally {
-            arclight$skipDropItemEvent = false;
+            arclight$skipDropItemEvent = previousSkipDropItemEvent;
         }
     }
 
     @Inject(method = "drop(Lnet/minecraft/world/item/ItemStack;Z)Lnet/minecraft/world/entity/item/ItemEntity;",
         cancellable = true, at = @At("RETURN"))
     private void arclight$playerDropItem(ItemStack droppedItem, boolean traceItem, CallbackInfoReturnable<ItemEntity> cir) {
-        ItemEntity itemEntity = cir.getReturnValue();
+        if (this.bridge$platform$dropEventAtReturn()
+            && !this.bridge$callDropItemEvent(cir.getReturnValue(), traceItem)) {
+            cir.setReturnValue(null);
+        }
+    }
+
+    @Override
+    public boolean bridge$callDropItemEvent(ItemEntity itemEntity, boolean traceItem) {
         if (arclight$skipDropItemEvent || itemEntity == null) {
-            return;
+            return true;
         }
         Player player = (Player) this.getBukkitEntity();
         Item drop = (Item) itemEntity.bridge$getBukkitEntity();
@@ -178,8 +207,9 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
                 // Fallback
                 player.getInventory().addItem(drop.getItemStack());
             }
-            cir.setReturnValue(null);
+            return false;
         }
+        return true;
     }
 
     /**
@@ -245,7 +275,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
 
     @Decorate(method = "attack", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;deflectProjectile(Lnet/minecraft/world/entity/Entity;)Z"))
     private void arclight$nonLivingDamage(Entity entity, @Local(ordinal = -1) DamageSource damageSource, @Local(ordinal = 2) float enchantDamage) throws Throwable {
-        if (entity.getType().is(net.minecraft.tags.EntityTypeTags.REDIRECTABLE_PROJECTILE)
+        if (entity.typeHolder().is(net.minecraft.tags.EntityTypeTags.REDIRECTABLE_PROJECTILE)
             && entity instanceof net.minecraft.world.entity.projectile.Projectile
             && CraftEventFactory.handleNonLivingEntityDamageEvent(entity, damageSource, enchantDamage, false)) {
             DecorationOps.cancel().invoke();

@@ -8,7 +8,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerLinks;
 import net.minecraft.server.network.ServerConfigurationPacketListenerImpl;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.CraftServerLinks;
+import org.bukkit.craftbukkit.CraftServerLinks;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerLinksSendEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,6 +23,17 @@ public abstract class ServerConfigurationPacketListenerImplMixin_NeoForge extend
     // @formatter:off
     @Shadow protected abstract void startConfiguration();
     @Shadow private void runConfiguration() { throw new AssertionError(); }
+    @Shadow public abstract void finishCurrentTask(net.minecraft.server.network.ConfigurationTask.Type type);
+
+    @Inject(method = "finishCurrentTask", cancellable = true, at = @At("HEAD"))
+    private void arclight$finishTaskOnMainThread(net.minecraft.server.network.ConfigurationTask.Type type, CallbackInfo ci) {
+        // NeoForge custom-payload acknowledgements may arrive on a Netty thread.
+        // Completing one task can immediately start PrepareSpawnTask and mutate chunk tickets.
+        if (!ArclightServer.isPrimaryThread()) {
+            ArclightServer.executeOnMainThread(() -> this.finishCurrentTask(type));
+            ci.cancel();
+        }
+    }
     // @formatter:on
 
     @Decorate(method = "runConfiguration", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;serverLinks()Lnet/minecraft/server/ServerLinks;"))

@@ -9,7 +9,7 @@ import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.objectweb.asm.Opcodes;
@@ -17,6 +17,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -29,32 +30,32 @@ public abstract class FallingBlockEntityMixin extends EntityMixin {
     @Shadow public static FallingBlockEntity fall(Level p_201972_, BlockPos p_201973_, BlockState p_201974_) { return null; }
     // @formatter:on
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/item/FallingBlockEntity;discard()V"))
+    @Inject(method = "tick", slice = @Slice(to = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;getBlock()Lnet/minecraft/world/level/block/Block;", ordinal = 0)), at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/item/FallingBlockEntity;discard()V"))
     private void arclight$despawn1(CallbackInfo ci) {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 2, target = "Lnet/minecraft/world/entity/item/FallingBlockEntity;discard()V"))
+    @Inject(method = "tick", slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;sendToTrackingPlayers(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/network/protocol/Packet;)V"), to = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Fallable;onLand(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/entity/item/FallingBlockEntity;)V")), at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/item/FallingBlockEntity;discard()V"))
     private void arclight$despawn2(CallbackInfo ci) {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 5, target = "Lnet/minecraft/world/entity/item/FallingBlockEntity;discard()V"))
+    @Inject(method = "tick", slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/FallingBlockEntity;callOnBrokenAfterFall(Lnet/minecraft/world/level/block/Block;Lnet/minecraft/core/BlockPos;)V", ordinal = 1, shift = At.Shift.AFTER), to = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/FallingBlockEntity;callOnBrokenAfterFall(Lnet/minecraft/world/level/block/Block;Lnet/minecraft/core/BlockPos;)V", ordinal = 2)), at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/item/FallingBlockEntity;discard()V"))
     private void arclight$despawn3(CallbackInfo ci) {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/entity/item/FallingBlockEntity;discard()V"))
+    @Inject(method = "tick", slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getMaxY()I")), at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/item/FallingBlockEntity;discard()V"))
     private void arclight$drop1(CallbackInfo ci) {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DROP);
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 3, target = "Lnet/minecraft/world/entity/item/FallingBlockEntity;discard()V"))
+    @Inject(method = "tick", slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Fallable;onLand(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/entity/item/FallingBlockEntity;)V", shift = At.Shift.AFTER), to = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/FallingBlockEntity;callOnBrokenAfterFall(Lnet/minecraft/world/level/block/Block;Lnet/minecraft/core/BlockPos;)V", ordinal = 1)), at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/item/FallingBlockEntity;discard()V"))
     private void arclight$drop2(CallbackInfo ci) {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DROP);
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", ordinal = 4, target = "Lnet/minecraft/world/entity/item/FallingBlockEntity;discard()V"))
+    @Inject(method = "tick", slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Fallable;onLand(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/entity/item/FallingBlockEntity;)V", shift = At.Shift.AFTER), to = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/FallingBlockEntity;callOnBrokenAfterFall(Lnet/minecraft/world/level/block/Block;Lnet/minecraft/core/BlockPos;)V", ordinal = 1)), at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/entity/item/FallingBlockEntity;discard()V"))
     private void arclight$drop3(CallbackInfo ci) {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DROP);
     }

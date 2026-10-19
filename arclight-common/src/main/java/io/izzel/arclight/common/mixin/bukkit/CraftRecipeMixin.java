@@ -5,9 +5,9 @@ import io.izzel.arclight.common.mod.inventory.ArclightSpecialIngredient;
 import net.minecraft.core.Holder;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.Ingredient;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
-import org.bukkit.craftbukkit.v.util.CraftMagicNumbers;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.inventory.CraftRecipe;
+import org.bukkit.craftbukkit.util.CraftMagicNumbers;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.RecipeChoice;
 import org.spongepowered.asm.mixin.Mixin;
@@ -41,7 +41,7 @@ public interface CraftRecipeMixin {
             throw new IllegalArgumentException("Unknown recipe stack instance " + bukkit);
         }
 
-        if (stack.getClass() == Ingredient.class && requireNotEmpty && stack.isEmpty()) {
+        if (!((IngredientBridge) (Object) stack).bridge$isCustom() && requireNotEmpty && stack.isEmpty()) {
             throw new IllegalArgumentException("Recipe requires at least one non-air choice!");
         } else {
             return stack;
@@ -54,7 +54,7 @@ public interface CraftRecipeMixin {
      */
     @Overwrite
     static RecipeChoice toBukkit(Ingredient list) {
-        if (list.getClass() != Ingredient.class) {
+        if (((IngredientBridge) (Object) list).bridge$isCustom()) {
             return new ArclightSpecialIngredient(list);
         }
         List<Holder<Item>> items = list.items().toList();

@@ -12,8 +12,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -26,12 +27,12 @@ public abstract class CropBlockMixin_Vanilla extends BlockMixin {
     @Redirect(method = "entityInside", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/gamerules/GameRules;get(Lnet/minecraft/world/level/gamerules/GameRule;)Ljava/lang/Object;"))
     public Object arclight$entityChangeBlock(GameRules instance, GameRule<Boolean> arg, BlockState state, Level world, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier, boolean steppingCarefully) {
         boolean result = ((WorldBridge) world).bridge$forge$mobGriefing(entity);
-        return !CraftEventFactory.callEntityChangeBlockEvent(entity, pos, state, result);
+        return CraftEventFactory.callEntityChangeBlockEvent(entity, pos, Blocks.AIR.defaultBlockState(), !result);
     }
 
     @Inject(method = "getGrowthSpeed", cancellable = true, at = @At("RETURN"))
     private static void arclight$spigotModifier(Block block, BlockGetter blockGetter, BlockPos pos, CallbackInfoReturnable<Float> cir) {
-        if (blockGetter instanceof WorldBridge bridge) {
+        if (!(block instanceof StemBlock) && blockGetter instanceof WorldBridge bridge) {
             int modifier;
             if (block == Blocks.BEETROOTS) {
                 modifier = bridge.bridge$spigotConfig().beetrootModifier;

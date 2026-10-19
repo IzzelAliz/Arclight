@@ -27,7 +27,8 @@ public class ArclightGameProvider extends MinecraftGameProvider {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        for (var lib : System.getProperty("arclight.fabric.classpath").split(File.pathSeparator)) {
+        var extraClasspath = System.getProperty("arclight.fabric.classpath", "");
+        if (!extraClasspath.isEmpty()) for (var lib : extraClasspath.split(File.pathSeparator)) {
             launcher.addToClassPath(Paths.get(lib));
         }
         super.initialize(launcher);
@@ -38,7 +39,7 @@ public class ArclightGameProvider extends MinecraftGameProvider {
         Arguments arguments = super.getArguments();
         String old = arguments.get(Arguments.ADD_MODS);
         var builtinMods = System.getProperty("arclight.fabric.builtinMods");
-        var path = this.modFile.toString() + File.pathSeparator + builtinMods;
+        var path = this.modFile.toString() + (builtinMods == null || builtinMods.isEmpty() ? "" : File.pathSeparator + builtinMods);
         if (old != null) {
             path = old + File.pathSeparator + path;
         }
@@ -57,14 +58,15 @@ public class ArclightGameProvider extends MinecraftGameProvider {
     private Path extract() throws Exception {
         var version = getArclightVersion();
         System.setProperty("arclight.version", version);
-        var path = getClass().getModule().getResourceAsStream("/common.jar");
         var dir = Paths.get(".arclight", "mod_file");
         if (!Files.exists(dir)) {
             Files.createDirectories(dir);
         }
         var mod = dir.resolve(version + ".jar");
         if (!Files.exists(mod) || Boolean.getBoolean("arclight.alwaysExtract")) {
-            try (var files = Files.list(dir)) {
+            try (var path = getClass().getResourceAsStream("/common.jar");
+                 var files = Files.list(dir)) {
+                if (path == null) throw new IllegalStateException("Arclight common.jar is missing");
                 for (Path old : files.toList()) {
                     Files.delete(old);
                 }

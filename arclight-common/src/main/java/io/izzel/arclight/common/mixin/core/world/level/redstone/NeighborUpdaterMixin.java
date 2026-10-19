@@ -11,8 +11,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.redstone.NeighborUpdater;
 import net.minecraft.world.level.redstone.Orientation;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.block.data.CraftBlockData;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,6 +22,10 @@ public interface NeighborUpdaterMixin {
 
     @Decorate(method = "executeUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;handleNeighborChanged(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;Lnet/minecraft/world/level/redstone/Orientation;Z)V"))
     private static void arclight$blockPhysicsEvent(BlockState instance, Level level, BlockPos pos, Block block, Orientation orientation, boolean movedByPiston) throws Throwable {
+        if (((WorldBridge) level).bridge$isPopulating()) {
+            DecorationOps.cancel().invoke();
+            return;
+        }
         var cworld = level.bridge$getWorld();
         if (cworld != null) {
             BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at(level, pos), CraftBlockData.fromData(instance));

@@ -3,12 +3,14 @@ package io.izzel.arclight.common.mixin.core.world.inventory;
 import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.inventory.PosContainerBridge;
 import net.minecraft.world.Container;
+import net.minecraft.world.level.block.entity.BannerPatternLayers;
+import java.util.List;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.LoomMenu;
-import org.bukkit.craftbukkit.v.inventory.CraftInventoryLoom;
-import org.bukkit.craftbukkit.v.inventory.view.CraftLoomView;
+import org.bukkit.craftbukkit.inventory.CraftInventoryLoom;
+import org.bukkit.craftbukkit.inventory.view.CraftLoomView;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -25,6 +27,13 @@ public abstract class LoomMenuMixin extends AbstractContainerMenuMixin implement
     @Shadow @Final private Container outputContainer;
     @Shadow @Final private ContainerLevelAccess access;
     // @formatter:on
+
+    @org.spongepowered.asm.mixin.injection.ModifyArg(method = "lambda$setupResultSlot$0", index = 0,
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/BannerPatternLayers$Builder;addAll(Lnet/minecraft/world/level/block/entity/BannerPatternLayers;)Lnet/minecraft/world/level/block/entity/BannerPatternLayers$Builder;"))
+    private static BannerPatternLayers arclight$capExistingPatterns(BannerPatternLayers layers) {
+        return layers.layers().size() > 20
+            ? new BannerPatternLayers(List.copyOf(layers.layers().subList(0, 20))) : layers;
+    }
 
     private CraftLoomView bukkitEntity;
     private Inventory playerInventory;

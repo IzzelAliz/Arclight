@@ -1,24 +1,23 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
-import io.izzel.arclight.common.mod.util.ArclightCaptures;
-import it.unimi.dsi.fastutil.objects.Object2FloatMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.ComposterBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.IntegerProperty;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.inventory.CraftBlockInventoryHolder;
-import org.bukkit.craftbukkit.v.util.DummyGeneratorAccess;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.inventory.CraftBlockInventoryHolder;
+import org.bukkit.craftbukkit.util.DummyGeneratorAccess;
 import org.jetbrains.annotations.Nullable;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -29,10 +28,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ComposterBlock.class)
 public abstract class ComposterBlockMixin {
 
+    private static final String INSERT_ITEM = "insertItem(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;";
+    private static final String ADD_ITEM = "addItem(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/level/block/state/BlockState;";
+
     // @formatter:off
-    @Shadow @Final public static IntegerProperty LEVEL;
-    @Shadow @Final public static Object2FloatMap<ItemLike> COMPOSTABLES;
-    @Shadow static BlockState empty(@Nullable Entity p_270236_, BlockState p_270873_, LevelAccessor p_270963_, BlockPos p_270211_) { return null; }
+    @Shadow static BlockState empty(@Nullable Entity sourceEntity, BlockState state, LevelAccessor level, BlockPos pos) { return null; }
     // @formatter:on
 
     @Redirect(method = "getContainer", at = @At(value = "NEW", target = "()Lnet/minecraft/world/level/block/ComposterBlock$EmptyContainer;"))
@@ -42,10 +42,49 @@ public abstract class ComposterBlockMixin {
         return inventory;
     }
 
-    @Inject(method = "insertItem", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/level/block/ComposterBlock;addItem(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/level/block/state/BlockState;"))
-    private static void arclight$changeBlockEvent(Entity entity, BlockState blockState, ServerLevel serverLevel, ItemStack itemStack, BlockPos blockPos, CallbackInfoReturnable<BlockState> cir) {
-        if (!ArclightCaptures.getLastEntityChangeBlockResult()) {
-            cir.setReturnValue(blockState);
+    private static boolean arclight$villagerInsert;
+
+    /** Keep the native proposal and random draw inside addItem. */
+    @WrapOperation(
+        method = INSERT_ITEM,
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/ComposterBlock;addItem(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/level/block/state/BlockState;"),
+        require = 1, expect = 1, allow = 1)
+    private static BlockState arclight$scopeInsertAddItem(Entity sourceEntity, BlockState state, LevelAccessor level, BlockPos pos, ItemStack itemStack,
+            Operation<BlockState> original) {
+        arclight$villagerInsert = sourceEntity instanceof Villager;
+        try {
+            return original.call(sourceEntity, state, level, pos, itemStack);
+        } finally {
+            arclight$villagerInsert = false;
+        }
+    }
+
+    /** Fire against the native proposal before the real write, without sampling or replaying addItem. */
+    @Inject(
+        method = ADD_ITEM,
+        cancellable = true,
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelAccessor;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"),
+        require = 1, expect = 1, allow = 1)
+    private static void arclight$villagerPrewriteEvent(Entity sourceEntity, BlockState state, LevelAccessor level, BlockPos pos, ItemStack itemStack,
+            CallbackInfoReturnable<BlockState> cir, @Local(name = "newState") BlockState proposedState) {
+        if (!arclight$villagerInsert) {
+            return;
+        }
+        if (!CraftEventFactory.callEntityChangeBlockEvent(sourceEntity, pos, proposedState)) {
+            cir.setReturnValue(state);
+        }
+    }
+
+    /** Only Villager no-op inserts skip consumption; other insertItem callers retain native behavior. */
+    @Inject(
+        method = INSERT_ITEM,
+        cancellable = true,
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;shrink(I)V"),
+        require = 1, expect = 1, allow = 1)
+    private static void arclight$noOpInsertDoesNotConsume(Entity sourceEntity, BlockState state, ServerLevel level, ItemStack itemStack, BlockPos pos,
+            CallbackInfoReturnable<BlockState> cir, @Local(name = "newState") BlockState insertedState) {
+        if (sourceEntity instanceof Villager && insertedState == state) {
+            cir.setReturnValue(state);
         }
     }
 

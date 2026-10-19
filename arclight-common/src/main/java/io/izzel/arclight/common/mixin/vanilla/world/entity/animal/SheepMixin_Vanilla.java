@@ -6,6 +6,7 @@ import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.animal.sheep.Sheep;
+import net.minecraft.world.item.ItemInstance;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootTable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,8 +17,8 @@ import java.util.function.BiConsumer;
 @Mixin(Sheep.class)
 public abstract class SheepMixin_Vanilla extends AnimalMixin {
 
-    @Decorate(method = "shear", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/sheep/Sheep;dropFromShearingLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/item/ItemStack;Ljava/util/function/BiConsumer;)V"))
-    private void arclight$forceDrop(Sheep sheep, ServerLevel level, ResourceKey<LootTable> lootTable, ItemStack stack, BiConsumer<ServerLevel, ItemStack> dropper) throws Throwable {
+    @Decorate(method = "shear", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/sheep/Sheep;dropFromShearingLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/item/ItemInstance;Ljava/util/function/BiConsumer;)V"))
+    private void arclight$forceDrop(Sheep sheep, ServerLevel level, ResourceKey<LootTable> lootTable, ItemInstance stack, BiConsumer<ServerLevel, ItemStack> dropper) throws Throwable {
         boolean previous = this.bridge$isForceDrops();
         this.bridge$setForceDrops(true);
         try {

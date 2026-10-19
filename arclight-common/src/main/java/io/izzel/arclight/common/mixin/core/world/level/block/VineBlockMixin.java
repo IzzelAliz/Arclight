@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.VineBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -39,7 +39,7 @@ public abstract class VineBlockMixin extends BlockMixin {
         if (!worldIn.getGameRules().get(GameRules.SPREAD_VINES)) {
             return;
         }
-        if (worldIn.random.nextInt(4) == 0 && worldIn.isLoaded(pos)) {
+        if (worldIn.getRandom().nextInt(4) == 0 && worldIn.isLoaded(pos)) {
             Direction direction = Direction.getRandom(random);
             BlockPos blockpos = pos.above();
             if (direction.getAxis().isHorizontal() && !state.getValue(getPropertyForFace(direction))) {
@@ -63,7 +63,7 @@ public abstract class VineBlockMixin extends BlockMixin {
                                 CraftEventFactory.handleBlockSpreadEvent(worldIn, pos, blockpos2, this.defaultBlockState().setValue(getPropertyForFace(direction1), Boolean.TRUE), 2);
                             } else if (flag1 && worldIn.isEmptyBlock(blockpos3) && isAcceptableNeighbour(worldIn, pos.relative(direction4), direction1)) {
                                 CraftEventFactory.handleBlockSpreadEvent(worldIn, pos, blockpos3, this.defaultBlockState().setValue(getPropertyForFace(direction1), Boolean.TRUE), 2);
-                            } else if ((double) worldIn.random.nextFloat() < 0.05D && isAcceptableNeighbour(worldIn, blockpos4.above(), Direction.UP)) {
+                            } else if ((double) worldIn.getRandom().nextFloat() < 0.05D && isAcceptableNeighbour(worldIn, blockpos4.above(), Direction.UP)) {
                                 CraftEventFactory.handleBlockSpreadEvent(worldIn, pos, blockpos4, this.defaultBlockState().setValue(UP, Boolean.TRUE), 2);
                             }
                         }

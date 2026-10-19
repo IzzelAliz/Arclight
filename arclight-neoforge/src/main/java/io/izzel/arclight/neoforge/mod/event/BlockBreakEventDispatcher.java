@@ -8,16 +8,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.level.block.BreakBlockEvent;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
+import org.bukkit.craftbukkit.block.CraftBlock;
 import org.bukkit.event.block.BlockBreakEvent;
 
 public class BlockBreakEventDispatcher {
 
     // todo
     @SubscribeEvent(receiveCanceled = true)
-    public void onBreakBlock(BlockEvent.BreakEvent event) {
+    public void onBreakBlock(BreakBlockEvent event) {
         if (DistValidate.isValid(event.getLevel())) {
             CraftBlock craftBlock = CraftBlock.at(event.getLevel(), event.getPos());
             BlockBreakEvent breakEvent = new BlockBreakEvent(craftBlock, ((ServerPlayerBridge) event.getPlayer()).bridge$getBukkitEntity());
@@ -29,6 +29,9 @@ public class BlockBreakEventDispatcher {
             breakEvent.setExpToDrop(EnchantmentHelper.processBlockExperience(level, tool, event.getState().getExpDrop(level, event.getPos(), blockEntity, event.getPlayer(), tool)));
             Bukkit.getPluginManager().callEvent(breakEvent);
             event.setCanceled(breakEvent.isCancelled());
+            if (breakEvent.isCancelled()) {
+                event.setNotifyClient(true);
+            }
         }
     }
 }

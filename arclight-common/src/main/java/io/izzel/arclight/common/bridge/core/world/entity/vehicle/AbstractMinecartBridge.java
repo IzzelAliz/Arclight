@@ -4,6 +4,8 @@ public interface AbstractMinecartBridge {
 
     Double bridge$getMaxSpeedOverride();
 
+    boolean bridge$isSlowWhenEmpty();
+
     default boolean bridge$forge$canUseRail() {
         return true;
     }

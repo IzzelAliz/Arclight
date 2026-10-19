@@ -16,8 +16,8 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.neoforged.neoforge.common.util.BlockSnapshot;
 import net.neoforged.neoforge.event.EventHooks;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.block.CraftBlock;
-import org.bukkit.craftbukkit.v.block.data.CraftBlockData;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.block.data.CraftBlockData;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,6 +33,13 @@ public abstract class LevelMixin_NeoForge implements WorldBridge {
     @Shadow(remap = false) public abstract void markAndNotifyBlock(BlockPos arg, @Nullable LevelChunk arg2, BlockState j, BlockState k, int j2, int k2);
     @Shadow public abstract ResourceKey<Level> dimension();
     @Shadow(remap = false) public boolean restoringBlockSnapshots;
+    @Shadow(remap = false) public boolean captureBlockSnapshots;
+
+    @Override
+    public boolean bridge$isCapturingBlockBreak() {
+        return this.captureBlockSnapshots;
+    }
+
     // @formatter:on
 
     @Inject(method = "markAndNotifyBlock", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;updateNeighbourShapes(Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;II)V"))

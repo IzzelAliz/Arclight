@@ -30,8 +30,6 @@ import org.objectweb.asm.tree.TypeInsnNode;
 import org.spongepowered.asm.util.Bytecode;
 
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
@@ -55,34 +53,10 @@ public class ArclightRedirectAdapter implements PluginTransformer {
     private static final Map<String, Func4<ClassLoaderRemapper, Method, Object, Object[], Object[]>> METHOD_TO_HANDLER = new ConcurrentHashMap<>();
 
     static {
-        redirect(Field.class, "getName", "fieldGetName");
-        redirect(Method.class, "getName", "methodGetName");
-        redirect(Class.class, "getCanonicalName", "classGetCanonicalName");
-        redirect(Class.class, "getSimpleName", "classGetSimpleName");
-        modify(Class.class, "getName", "classGetName");
-        modify(Package.class, "getName", "packageGetName");
-        redirect(Class.class, "forName", "classForName", String.class);
-        redirect(Class.class, "forName", "classForName", String.class, boolean.class, ClassLoader.class);
-        modify(Class.class, "getField", "classGetField", String.class);
-        modify(Class.class, "getDeclaredField", "classGetDeclaredField", String.class);
-        modify(Class.class, "getMethod", "classGetMethod", String.class, Class[].class);
-        modify(Class.class, "getDeclaredMethod", "classGetDeclaredMethod", String.class, Class[].class);
         redirect(Class.class, "getDeclaredMethods", "getDeclaredMethods");
         redirect(Class.class, "getMethods", "getMethods");
         redirect(Class.class, "getDeclaredFields", "getDeclaredFields");
         redirect(Class.class, "getFields", "getFields");
-        modify(MethodType.class, "fromMethodDescriptorString", "fromDescStr", String.class, ClassLoader.class);
-        modify(MethodHandles.Lookup.class, "findStatic", "lookupFindStatic", Class.class, String.class, MethodType.class);
-        modify(MethodHandles.Lookup.class, "findVirtual", "lookupFindVirtual", Class.class, String.class, MethodType.class);
-        modify(MethodHandles.Lookup.class, "findSpecial", "lookupFindSpecial", Class.class, String.class, MethodType.class, Class.class);
-        modify(MethodHandles.Lookup.class, "findGetter", "lookupFindGetter", Class.class, String.class, Class.class);
-        modify(MethodHandles.Lookup.class, "findSetter", "lookupFindSetter", Class.class, String.class, Class.class);
-        modify(MethodHandles.Lookup.class, "findStaticGetter", "lookupFindStaticGetter", Class.class, String.class, Class.class);
-        modify(MethodHandles.Lookup.class, "findStaticSetter", "lookupFindStaticSetter", Class.class, String.class, Class.class);
-        redirect(MethodHandles.Lookup.class, "findClass", "lookupFindClass", String.class);
-        modify(MethodHandles.Lookup.class, "findVarHandle", "lookupFindVarHandle", Class.class, String.class, Class.class);
-        modify(MethodHandles.Lookup.class, "findStaticVarHandle", "lookupFindStaticVarHandle", Class.class, String.class, Class.class);
-        modify(ClassLoader.class, "loadClass", "classLoaderLoadClass", String.class);
         redirect(Class.class, "getResource", "classGetResource", String.class);
         redirect(Class.class, "getResourceAsStream", "classGetResourceAsStream", String.class);
         redirect(ClassLoader.class, "getResource", "classLoaderGetResource", String.class);
@@ -101,7 +75,6 @@ public class ArclightRedirectAdapter implements PluginTransformer {
         modify(MethodHandles.Lookup.class, "defineClass", "lookupDefineClass", byte[].class);
         modify(MethodHandles.Lookup.class, "defineHiddenClass", "lookupDefineHiddenClass", byte[].class, boolean.class, MethodHandles.Lookup.ClassOption[].class);
         modify(MethodHandles.Lookup.class, "defineHiddenClassWithClassData", "lookupDefineHiddenClassWithClassData", byte[].class, Object.class, boolean.class, MethodHandles.Lookup.ClassOption[].class);
-        redirect(java.lang.reflect.Type.class, "getTypeName", "typeGetName");
     }
 
     public static Object[] runHandle(ClassLoaderRemapper remapper, Method method, Object src, Object[] param) {
@@ -166,8 +139,7 @@ public class ArclightRedirectAdapter implements PluginTransformer {
 
     @Override
     public void handleClass(ClassNode node, ClassLoaderRemapper remapper, ArclightRemapConfig config) {
-        // Don't transform for remap=false
-        // We don't have arc
+        // Retained hooks handle resources, dynamic classes and missing types, not names.
         if (config.remap()) {
             redirect(node, remapper);
         }

@@ -17,7 +17,7 @@ public class DispenserBlockMixin {
     @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
     private static boolean eventFired = false;
 
-    @Inject(method = "dispenseFrom", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/DispenserBlockEntity;setItem(ILnet/minecraft/world/item/ItemStack;)V"))
+    @Inject(method = "dispenseFrom", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/dispenser/DispenseItemBehavior;dispense(Lnet/minecraft/core/dispenser/BlockSource;Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/item/ItemStack;"))
     private void arclight$reset(ServerLevel serverLevel, BlockState blockState, BlockPos blockPos, CallbackInfo ci) {
         eventFired = false;
     }

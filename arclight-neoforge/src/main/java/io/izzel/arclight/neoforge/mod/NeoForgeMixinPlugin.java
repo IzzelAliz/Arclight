@@ -8,6 +8,7 @@ public class NeoForgeMixinPlugin extends ArclightMixinPlugin {
     @Override
     public void onLoad(String mixinPackage) {
         io.izzel.arclight.mixin.MixinTools.setup();
+        super.onLoad(mixinPackage);
         ArclightCommon.setInstance(new NeoForgeCommonImpl());
     }
 }

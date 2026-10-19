@@ -28,6 +28,15 @@ public abstract class EntityTypeMixin<T extends Entity> implements EntityTypeBri
     @Shadow @Nullable public abstract T create(ServerLevel p_262637_, @org.jetbrains.annotations.Nullable Consumer<T> p_262629_, BlockPos p_262595_, EntitySpawnReason p_262666_, boolean p_262685_, boolean p_262588_);
     // @formatter:on
 
+    @com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod(method = "spawn(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/EntitySpawnReason;ZZ)Lnet/minecraft/world/entity/Entity;")
+    private T arclight$spawnReasonLifetime(ServerLevel worldIn, ItemStack p_20594_, LivingEntity p_20595_, BlockPos p_20596_, EntitySpawnReason p_20597_, boolean p_20598_, boolean p_20599_, com.llamalad7.mixinextras.injector.wrapoperation.Operation<T> original) throws Throwable {
+        try {
+            return original.call(worldIn, p_20594_, p_20595_, p_20596_, p_20597_, p_20598_, p_20599_);
+        } finally {
+            ((IWorldWriterBridge) worldIn).bridge$pushAddEntityReason(null);
+        }
+    }
+
     @Inject(method = "spawn(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/EntitySpawnReason;ZZ)Lnet/minecraft/world/entity/Entity;",
         at = @At(value = "HEAD"))
     private void arclight$spawnReason(ServerLevel worldIn, ItemStack p_20594_, LivingEntity p_20595_, BlockPos p_20596_, EntitySpawnReason p_20597_, boolean p_20598_, boolean p_20599_, CallbackInfoReturnable<T> cir) {
@@ -43,6 +52,14 @@ public abstract class EntityTypeMixin<T extends Entity> implements EntityTypeBri
     private void arclight$returnIfSuccess(ServerLevel serverLevel, Consumer<T> consumer, BlockPos blockPos, EntitySpawnReason mobSpawnType, boolean bl, boolean bl2, CallbackInfoReturnable<T> cir, T t) {
         if (t != null) {
             cir.setReturnValue(t.isRemoved() ? null : t);
+        }
+    }
+
+    @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(method = "spawn(Lnet/minecraft/server/level/ServerLevel;Ljava/util/function/Consumer;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/EntitySpawnReason;ZZ)Lnet/minecraft/world/entity/Entity;",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;playAmbientSound()V"), require = 1, expect = 1, allow = 1)
+    private void arclight$ambientUnlessRemoved(net.minecraft.world.entity.Mob mob, com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original) {
+        if (!mob.isRemoved()) {
+            original.call(mob);
         }
     }
 

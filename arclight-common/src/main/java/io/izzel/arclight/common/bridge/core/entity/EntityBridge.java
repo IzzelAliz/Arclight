@@ -7,13 +7,14 @@ import io.izzel.tools.product.Product;
 import io.izzel.tools.product.Product4;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.entity.CraftEntity;
-import org.bukkit.craftbukkit.v.event.CraftPortalEvent;
+import org.bukkit.craftbukkit.entity.CraftEntity;
+import org.bukkit.craftbukkit.event.CraftPortalEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -22,6 +23,11 @@ import org.bukkit.projectiles.ProjectileSource;
 import java.util.List;
 
 public interface EntityBridge extends CommandSourceBridge, InjectEntityBridge {
+
+    /** Apply Bukkit's pair rule to an already evaluated native pushability result. */
+    default boolean bridge$canCollideWithBukkit(Entity other, boolean pushable) {
+        return pushable;
+    }
 
     void bridge$setOnFire(float seconds, boolean callEvent);
 
@@ -88,7 +94,7 @@ public interface EntityBridge extends CommandSourceBridge, InjectEntityBridge {
     }
 
     default Product4<Boolean /* Cancelled */, Double /* X */, Double /* Y */, Double /* Z */>
-    bridge$onEntityTeleportCommand(double x, double y, double z) {
+    bridge$onEntityTeleportCommand(ServerLevel level, double x, double y, double z) {
         return Product.of(false, x, y, z);
     }
 

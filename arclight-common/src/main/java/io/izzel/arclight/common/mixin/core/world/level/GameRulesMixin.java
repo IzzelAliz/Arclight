@@ -11,6 +11,7 @@ import net.minecraft.world.level.gamerules.GameRules;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.slf4j.Logger;
 
 import java.util.Set;
 
@@ -19,12 +20,17 @@ public abstract class GameRulesMixin implements GameRulesBridge {
 
     @Shadow
     @Final
+    private static Logger LOGGER;
+
+    @Shadow
+    @Final
     private GameRuleMap rules;
 
     // CraftWorld links against this Spigot-only, per-world overload.
     public <T> void set(GameRule<T> gameRule, T value, ServerLevel level) {
         if (!rules.has(gameRule)) {
-            throw new IllegalArgumentException("Tried to set invalid game rule");
+            LOGGER.warn("Tried to set invalid game rule '{}' to value '{}'", gameRule.getIdentifierWithFallback(), value);
+            return;
         }
         rules.set(gameRule, value);
         if (level == null) {
@@ -53,7 +59,17 @@ public abstract class GameRulesMixin implements GameRulesBridge {
             }
         } else if (gameRule == GameRules.SPAWN_MONSTERS) {
             level.setSpawnSettings(level.isSpawningMonsters());
+        } else if (gameRule == GameRules.ADVANCE_TIME) {
+            var manager = (io.izzel.arclight.common.bridge.core.world.clock.ServerClockOwnerBridge) level.clockManager();
+            for (ServerPlayer player : level.players()) {
+                player.connection.send(manager.createFullSyncPacket(player));
+            }
         }
+    }
+
+    @Override
+    public <T> void bridge$setWorldRule(GameRule<T> rule, T value, ServerLevel level) {
+        this.set(rule, value, level);
     }
 
     @Override

@@ -5,7 +5,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.storage.loot.LootTable;
-import org.bukkit.craftbukkit.v.block.CraftBlockEntityState;
+import org.bukkit.craftbukkit.block.CraftBlockEntityState;
 
 public interface StructurePieceBridge {
     boolean bridge$placeCraftBlockEntity(ServerLevelAccessor worldAccess, BlockPos position, CraftBlockEntityState<?> craftBlockEntityState, int i);

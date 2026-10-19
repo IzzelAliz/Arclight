@@ -20,11 +20,10 @@ import net.minecraft.world.inventory.ResultContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraft.world.item.crafting.RepairItemRecipe;
 import net.minecraft.server.level.ServerLevel;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.inventory.CraftInventoryCrafting;
-import org.bukkit.craftbukkit.v.inventory.CraftInventoryView;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.inventory.CraftInventoryCrafting;
+import org.bukkit.craftbukkit.inventory.CraftInventoryView;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -55,19 +54,17 @@ public abstract class CraftingMenuMixin extends AbstractCraftingMenuMixin implem
         ArclightCaptures.captureWorkbenchContainer((CraftingMenu) (Object) this);
     }
 
-    private static boolean arclight$isRepair;
-
     @Decorate(method = "slotChangedCraftingGrid", at = @At(value = "INVOKE", remap = false, target = "Ljava/util/Optional;isPresent()Z"))
-    private static boolean arclight$testRepair(Optional<RecipeHolder<CraftingRecipe>> optional, AbstractContainerMenu menu, ServerLevel level, Player player, CraftingContainer craftingContainer) throws Throwable {
+    private static boolean arclight$captureRecipe(Optional<RecipeHolder<CraftingRecipe>> optional, AbstractContainerMenu menu, ServerLevel level, Player player, CraftingContainer craftingContainer) throws Throwable {
         ((IInventoryBridge) craftingContainer).setCurrentRecipe(optional.orElse(null));
-        arclight$isRepair = optional.map(RecipeHolder::value).orElse(null) instanceof RepairItemRecipe;
         return (boolean) DecorationOps.callsite().invoke(optional);
     }
 
     @Decorate(method = "slotChangedCraftingGrid", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/ResultContainer;setItem(ILnet/minecraft/world/item/ItemStack;)V"))
     private static void arclight$preCraft(ResultContainer instance, int i, ItemStack itemStack, AbstractContainerMenu abstractContainerMenu, ServerLevel level, Player player, CraftingContainer craftingContainer, ResultContainer resultContainer, @Nullable RecipeHolder<CraftingRecipe> recipeHolder,
-                                          @Local(ordinal = -1) ItemStack stack) throws Throwable {
-        stack = CraftEventFactory.callPreCraftEvent(craftingContainer, instance, itemStack, ((AbstractContainerMenuBridge) abstractContainerMenu).bridge$getBukkitView(), Optional.ofNullable(recipeHolder));
+                                          @Local(ordinal = -1) ItemStack stack, @Local(ordinal = -1) Optional<RecipeHolder<CraftingRecipe>> matchedRecipe) throws Throwable {
+        // Keep the method-local match, not the hint or mutable inventory state, across plugin re-entry.
+        stack = CraftEventFactory.callPreCraftEvent(craftingContainer, instance, itemStack, ((AbstractContainerMenuBridge) abstractContainerMenu).bridge$getBukkitView(), matchedRecipe);
         DecorationOps.callsite().invoke(instance, i, stack);
     }
 

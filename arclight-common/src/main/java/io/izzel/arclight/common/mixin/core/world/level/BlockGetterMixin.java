@@ -27,7 +27,7 @@ public interface BlockGetterMixin extends BlockGetterBridge {
         BlockState blockstate = this.getBlockState(pos);
         FluidState ifluidstate = this.getFluidState(pos);
         Vec3 vec3d = context.getFrom();
-        Vec3 vec3d1 = context.getFrom();
+        Vec3 vec3d1 = context.getTo();
         VoxelShape voxelshape = context.getBlockShape(blockstate, (BlockGetter) this, pos);
         BlockHitResult blockraytraceresult = this.clipWithInteractionOverride(vec3d, vec3d1, pos, voxelshape, blockstate);
         VoxelShape voxelshape1 = context.getFluidShape(ifluidstate, (BlockGetter) this, pos);

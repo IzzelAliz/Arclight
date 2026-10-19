@@ -1,9 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
+import com.llamalad7.mixinextras.sugar.Local;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
-import io.izzel.arclight.mixin.Decorate;
-import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
@@ -14,29 +14,28 @@ import net.minecraft.world.item.ItemStack;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Sheep;
 import org.bukkit.event.entity.SheepDyeWoolEvent;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(DyeItem.class)
 public class DyeItemMixin {
 
-    // @formatter:off
-    @Shadow @Final private DyeColor dyeColor;
-    // @formatter:on
-
-    @Decorate(method = "interactLivingEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/sheep/Sheep;setColor(Lnet/minecraft/world/item/DyeColor;)V"))
-    private void arclight$sheepDyeWool(net.minecraft.world.entity.animal.sheep.Sheep sheepEntity, DyeColor color, ItemStack stack, Player playerIn, LivingEntity target, InteractionHand hand) throws Throwable {
-        byte bColor = (byte) this.dyeColor.getId();
+    @Inject(method = "interactLivingEntity(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;playSound(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V"),
+        cancellable = true, require = 1, expect = 1, allow = 1)
+    private void arclight$sheepDyeWool(ItemStack stack, Player playerIn, LivingEntity target, InteractionHand hand,
+                                      CallbackInfoReturnable<InteractionResult> cir, @Local LocalRef<DyeColor> color) {
+        // Native guards have accepted the stack's DYE component; veto before sound or mutation.
+        byte bColor = (byte) color.get().getId();
         SheepDyeWoolEvent event = new SheepDyeWoolEvent((Sheep) ((LivingEntityBridge) target).bridge$getBukkitEntity(), org.bukkit.DyeColor.getByWoolData(bColor), ((ServerPlayerBridge) playerIn).bridge$getBukkitEntity());
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
-            DecorationOps.cancel().invoke((InteractionResult) InteractionResult.PASS);
+            cir.setReturnValue(InteractionResult.PASS);
             return;
-        } else {
-            DecorationOps.callsite().invoke(sheepEntity, DyeColor.byId(event.getColor().getWoolData()));
         }
-        DecorationOps.blackhole().invoke();
+        // Write back the live local, retaining native sound/setColor/shrink calls and their Operations.
+        color.set(DyeColor.byId(event.getColor().getWoolData()));
     }
 }

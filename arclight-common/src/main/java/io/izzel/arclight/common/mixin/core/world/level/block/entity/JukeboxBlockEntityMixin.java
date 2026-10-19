@@ -6,11 +6,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.JukeboxSongPlayer;
+import net.minecraft.world.item.JukeboxSong;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.JukeboxBlockEntity;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -71,7 +72,7 @@ public abstract class JukeboxBlockEntityMixin extends BlockEntityMixin implement
         return new Location(level.bridge$getWorld(), worldPosition.getX(), worldPosition.getY(), worldPosition.getZ());
     }
 
-    @Redirect(method = "setSongItemWithoutPlaying", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;updateNeighborsAt(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;)V"))
+    @Redirect(method = "setSongItemWithoutPlaying(Lnet/minecraft/world/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;updateNeighborsAt(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Block;)V"))
     private void arclight$levelNullCheck(Level instance, BlockPos p_46673_, Block p_46674_) {
         if (instance != null) {
             instance.updateNeighborsAt(p_46673_, p_46674_);
@@ -79,10 +80,12 @@ public abstract class JukeboxBlockEntityMixin extends BlockEntityMixin implement
     }
 
     public void setSongItemWithoutPlaying(ItemStack itemstack, long ticksSinceSongStarted) {
-        this.jukeboxSongPlayer.song = null; // CraftBukkit - reset
-        this.setSongItemWithoutPlaying(itemstack);
-        if (this.jukeboxSongPlayer.song != null) {
-            this.jukeboxSongPlayer.ticksSinceSongStarted = ticksSinceSongStarted;
+        this.item = itemstack;
+        this.jukeboxSongPlayer.song = null;
+        JukeboxSong.fromStack(itemstack).ifPresent(song -> this.jukeboxSongPlayer.setSongWithoutPlaying(song, ticksSinceSongStarted));
+        if (this.level != null) {
+            this.level.updateNeighborsAt(this.getBlockPos(), this.getBlockState().getBlock());
         }
+        this.setChanged();
     }
 }

@@ -15,8 +15,8 @@ import net.minecraft.world.level.block.CaveVines;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.event.player.PlayerHarvestBlockEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -57,7 +57,7 @@ public interface CaveVinesMixin {
                     });
                 }
 
-                float f = Mth.randomBetween(serverLevel.random, 0.8F, 1.2F);
+                float f = Mth.randomBetween(serverLevel.getRandom(), 0.8F, 1.2F);
                 serverLevel.playSound(null, pos, SoundEvents.CAVE_VINES_PICK_BERRIES, SoundSource.BLOCKS, 1.0F, f);
                 var newState = state.setValue(CaveVines.BERRIES, Boolean.FALSE);
                 serverLevel.setBlock(pos, newState, 2);

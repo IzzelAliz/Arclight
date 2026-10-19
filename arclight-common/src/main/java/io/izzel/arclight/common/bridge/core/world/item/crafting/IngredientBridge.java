@@ -11,4 +11,9 @@ public interface IngredientBridge {
     List<ItemStack> bridge$getExactChoices();
 
     boolean bridge$isExact();
+
+    // Vanilla/Fabric have no native custom predicate; NeoForge overrides this bridge.
+    default boolean bridge$isCustom() {
+        return false;
+    }
 }

@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mod.server.world.item;
 
 import io.izzel.arclight.common.bridge.bukkit.CraftItemStackBridge;
 import net.minecraft.world.entity.item.ItemEntity;
-import org.bukkit.craftbukkit.v.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;

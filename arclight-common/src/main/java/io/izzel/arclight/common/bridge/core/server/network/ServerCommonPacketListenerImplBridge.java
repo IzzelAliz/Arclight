@@ -1,8 +1,8 @@
 package io.izzel.arclight.common.bridge.core.server.network;
 
 import net.minecraft.server.level.ServerPlayer;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 
 public interface ServerCommonPacketListenerImplBridge {
 

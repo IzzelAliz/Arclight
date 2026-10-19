@@ -23,7 +23,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.CommonHooks;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
 import net.neoforged.neoforge.event.level.BlockDropsEvent;
-import org.bukkit.craftbukkit.v.CraftWorld;
+import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -42,6 +42,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(CommonHooks.class)
 public abstract class CommonHooksMixin {
 
+    // Neo has already accepted the toss and restored captureDrops before this callsite.
+    @Decorate(method = "onPlayerTossEvent", remap = false, at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
+    private static boolean arclight$playerTossBeforeAdd(net.minecraft.world.level.Level level, Entity entity,
+            net.minecraft.world.entity.player.Player player, ItemStack stack, boolean dropAround, boolean includeName) throws Throwable {
+        if (!((io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge) player)
+            .bridge$callDropItemEvent((ItemEntity) entity, includeName)) {
+            // Returning false alone would be discarded by the native helper; return null from it.
+            return (boolean) DecorationOps.cancel().invoke((ItemEntity) null);
+        }
+        return (boolean) DecorationOps.callsite().invoke(level, entity);
+    }
+
     @Inject(method = "sendRecipes", remap = false, at = @At("RETURN"))
     private static void arclight$rememberRecipeContentTypes(ServerPlayer player, Set<RecipeType<?>> types,
                                                            RecipeMap recipes, CallbackInfo ci) {
@@ -50,6 +63,17 @@ public abstract class CommonHooksMixin {
 
 
     private static final ThreadLocal<Deque<BlockDropsScope>> arclight$blockDropsScopes = ThreadLocal.withInitial(ArrayDeque::new);
+
+    @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(
+        method = "onPlaceItemIntoWorld(Lnet/minecraft/world/item/context/UseOnContext;)Lnet/minecraft/world/InteractionResult;",
+        remap = false,
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;awardStat(Lnet/minecraft/stats/Stat;)V"),
+        require = 1, expect = 1, allow = 1)
+    private static void arclight$deferBonemealStat(net.minecraft.world.entity.player.Player player,
+            net.minecraft.stats.Stat<?> stat, Operation<Void> original) {
+        io.izzel.arclight.common.mod.util.BonemealTreeConsumer.award(
+            player, () -> original.call(player, stat));
+    }
 
     @Inject(method = "onPlaceItemIntoWorld", remap = false, at = @At("HEAD"))
     private static void arclight$captureHand(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {

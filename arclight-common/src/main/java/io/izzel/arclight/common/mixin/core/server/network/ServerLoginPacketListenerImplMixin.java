@@ -36,9 +36,9 @@ import net.minecraft.util.CryptException;
 import net.minecraft.util.StringUtil;
 import org.apache.commons.lang3.Validate;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v.CraftServer;
-import org.bukkit.craftbukkit.v.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v.util.Waitable;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.util.Waitable;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerPreLoginEvent;
 import org.slf4j.Logger;
@@ -275,17 +275,19 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
             disconnect("This server requires you to connect with Velocity.");
             return;
         }
-        callPlayerPreLoginEvents(gameProfile);
+        if (!callPlayerPreLoginEvents(gameProfile)) {
+            return;
+        }
         LOGGER.info("UUID of player {} is {}", gameProfile.name(), gameProfile.id());
         this.startClientVerification(gameProfile);
     }
 
-    private void callPlayerPreLoginEvents(GameProfile profile) throws Exception {
+    private boolean callPlayerPreLoginEvents(GameProfile profile) throws Exception {
         String playerName = profile.name();
         InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
         UUID uniqueId = profile.id();
         CraftServer craftServer = (CraftServer) Bukkit.getServer();
-        AsyncPlayerPreLoginEvent asyncEvent = new AsyncPlayerPreLoginEvent(playerName, address, uniqueId);
+        AsyncPlayerPreLoginEvent asyncEvent = new AsyncPlayerPreLoginEvent(playerName, address, uniqueId, this.transferred);
         craftServer.getPluginManager().callEvent(asyncEvent);
         if (PlayerPreLoginEvent.getHandlerList().getRegisteredListeners().length != 0) {
             PlayerPreLoginEvent event = new PlayerPreLoginEvent(playerName, address, uniqueId);
@@ -304,10 +306,13 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
             ((MinecraftServerBridge) server).bridge$queuedProcess(waitable);
             if (waitable.get() != PlayerPreLoginEvent.Result.ALLOWED) {
                 disconnect(event.getKickMessage());
+                return false;
             }
         } else if (asyncEvent.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) {
             disconnect(asyncEvent.getKickMessage());
+            return false;
         }
+        return true;
     }
 
     /*

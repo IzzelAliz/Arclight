@@ -19,7 +19,7 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.level.Level;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -48,7 +48,7 @@ public class TridentItemMixin {
             @Share("arclight$consume") LocalRef<Operation<ItemStack>> consume,
             @Cancellable CallbackInfoReturnable<Boolean> cir) {
         Projectile entityIn = original.call(factory, serverLevel, itemStack, livingEntity, xRot, velocity, inaccuracy);
-        if (entityIn.isRemoved()) {
+        if (entityIn.isRemoved() || !((io.izzel.arclight.common.bridge.core.world.entity.projectile.ProjectileSpawnBridge) entityIn).bridge$wasSpawnAccepted()) {
             if (entityLiving instanceof ServerPlayerBridge player) {
                 player.bridge$getBukkitEntity().updateInventory();
             }

@@ -1,86 +1,56 @@
 package io.izzel.arclight.common.mixin.core.world.entity.decoration;
 
-import net.minecraft.world.entity.decoration.BlockAttachedEntity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.level.Level;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import io.izzel.arclight.mixin.Local;
 import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Leashable;
 import net.minecraft.world.entity.decoration.LeashFenceKnotEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.level.gameevent.GameEvent;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LeashFenceKnotEntity.class)
-public abstract class LeashFenceKnotEntityMixin extends BlockAttachedEntity {
+public abstract class LeashFenceKnotEntityMixin {
 
-    protected LeashFenceKnotEntityMixin(EntityType<? extends BlockAttachedEntity> type, Level level) {
-        super(type, level);
+    @Decorate(method = "interact", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/Leashable;setLeashedTo(Lnet/minecraft/world/entity/Entity;Z)V"))
+    private void arclight$attach(Leashable leashable, Entity holder, boolean sendPacket, @Local(ordinal = 0) Player player, @Local(ordinal = 0) InteractionHand hand) throws Throwable {
+        if (leashable instanceof Entity entity && CraftEventFactory.callPlayerLeashEntityEvent(entity, holder, player, hand).isCancelled()) {
+            ((ServerPlayer) player).connection.send(new ClientboundSetEntityLinkPacket(entity, leashable.getLeashHolder()));
+            return;
+        }
+        DecorationOps.callsite().invoke(leashable, holder, sendPacket);
+        // Native attachedMob=true also runs on cancellation, preventing fallback detachment.
     }
 
-    /**
-     * @author IzzelAliz
-     * @reason
-     */
-    @SuppressWarnings("ConstantConditions")
-    @Overwrite
-    public InteractionResult interact(final Player entityhuman, final InteractionHand enumhand) {
-        if (this.level().isClientSide()) {
-            return InteractionResult.SUCCESS;
+    @Decorate(method = "interact", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/entity/Leashable;canHaveALeashAttachedTo(Lnet/minecraft/world/entity/Entity;)Z"))
+    private boolean arclight$allowDetach(Leashable leashable, Entity holder, @Local(ordinal = 0) Player player, @Local(ordinal = 0) InteractionHand hand) throws Throwable {
+        if (!(boolean) DecorationOps.callsite().invoke(leashable, holder)) {
+            return false;
         }
-        if (entityhuman.getItemInHand(enumhand).is(Items.SHEARS)) {
-            InteractionResult interactionresult = super.interact(entityhuman, enumhand);
+        return !(leashable instanceof Entity entity) || !CraftEventFactory.callPlayerUnleashEntityEvent(entity, player, hand).isCancelled();
+    }
 
-            if (interactionresult instanceof InteractionResult.Success interactionresult_success && interactionresult_success.wasItemInteraction()) {
-                return interactionresult;
-            }
+    @Decorate(method = "interact", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/world/entity/Leashable;setLeashedTo(Lnet/minecraft/world/entity/Entity;Z)V"))
+    private void arclight$transfer(Leashable leashable, Entity holder, boolean sendPacket, @Local(ordinal = 0) Player player, @Local(ordinal = 0) InteractionHand hand) throws Throwable {
+        if (leashable instanceof Entity entity && CraftEventFactory.callPlayerLeashEntityEvent(entity, (LeashFenceKnotEntity) (Object) this, player, hand).isCancelled()) {
+            ((ServerPlayer) player).connection.send(new ClientboundSetEntityLinkPacket(entity, leashable.getLeashHolder()));
+            return;
         }
+        DecorationOps.callsite().invoke(leashable, holder, sendPacket);
+        // Retain CraftBukkit's anyDropped=true after the second leash event is vetoed.
+    }
 
-        boolean flag = false;
-        for (var leashable : Leashable.leashableLeashedTo(entityhuman)) {
-            if (leashable.canHaveALeashAttachedTo((LeashFenceKnotEntity) (Object) this)) {
-                if (leashable instanceof Entity entity) {
-                    if (CraftEventFactory.callPlayerLeashEntityEvent(entity, (LeashFenceKnotEntity) (Object) this, entityhuman, enumhand).isCancelled()) {
-                        ((ServerPlayer) entityhuman).connection.send(new ClientboundSetEntityLinkPacket(entity, leashable.getLeashHolder()));
-                        flag = true;
-                        continue;
-                    }
-                }
-                leashable.setLeashedTo((LeashFenceKnotEntity) (Object) this, true);
-                flag = true;
-            }
-        }
-        boolean flag1 = false;
-        if (!flag && !entityhuman.isSecondaryUseActive()) {
-            for (var leashable : Leashable.leashableLeashedTo((LeashFenceKnotEntity) (Object) this)) {
-                if (leashable.canHaveALeashAttachedTo(entityhuman)) {
-                    if (leashable instanceof Entity entity) {
-                        if (CraftEventFactory.callPlayerUnleashEntityEvent(entity, entityhuman, enumhand).isCancelled()) {
-                            continue;
-                        }
-                        if (CraftEventFactory.callPlayerLeashEntityEvent(entity, (LeashFenceKnotEntity) (Object) this, entityhuman, enumhand).isCancelled()) {
-                            ((ServerPlayer) entityhuman).connection.send(new ClientboundSetEntityLinkPacket(entity, leashable.getLeashHolder()));
-                            flag1 = true;
-                            continue;
-                        }
-                    }
-                    leashable.setLeashedTo(entityhuman, true);
-                    flag1 = true;
-                }
-            }
-        }
-        if (flag || flag1) {
-            this.gameEvent(GameEvent.BLOCK_ATTACH, entityhuman);
-            this.playSound(SoundEvents.LEAD_TIED, 1.0F, 1.0F);
-            return InteractionResult.SUCCESS;
-        }
-        return super.interact(entityhuman, enumhand);
+    @Inject(method = "notifyLeasheeRemoved", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/LeashFenceKnotEntity;discard()V"))
+    private void arclight$removeCause(Leashable entity, CallbackInfo ci) {
+        ((EntityBridge) this).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DROP);
     }
 }

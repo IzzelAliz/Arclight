@@ -30,7 +30,8 @@ public class InventoryImplementer implements Implementer {
         this.maxStackSizeMethodName = switch (ArclightPlatform.current()) {
             case VANILLA, NEOFORGE -> "getMaxStackSize";
             case FORGE -> "m_6893_";
-            case FABRIC -> "method_5444";
+            // 26.1.2's intermediary mapping is empty; Fabric runs Mojang names.
+            case FABRIC -> "getMaxStackSize";
         };
     }
 

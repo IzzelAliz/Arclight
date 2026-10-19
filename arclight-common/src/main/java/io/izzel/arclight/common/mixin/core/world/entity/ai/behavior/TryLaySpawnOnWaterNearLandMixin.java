@@ -6,18 +6,19 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.behavior.BehaviorControl;
-import net.minecraft.world.entity.ai.behavior.TryLaySpawnOnWaterNearLand;
+import net.minecraft.world.entity.ai.behavior.TryLaySpawnOnFluidNearLand;
 import net.minecraft.world.entity.ai.behavior.declarative.BehaviorBuilder;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraft.world.level.material.Fluids;
-import org.bukkit.craftbukkit.v.event.CraftEventFactory;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.FluidTags;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-@Mixin(TryLaySpawnOnWaterNearLand.class)
+@Mixin(TryLaySpawnOnFluidNearLand.class)
 public class TryLaySpawnOnWaterNearLandMixin {
 
     /**
@@ -34,7 +35,8 @@ public class TryLaySpawnOnWaterNearLandMixin {
 
                         for (Direction direction : Direction.Plane.HORIZONTAL) {
                             BlockPos blockPos2 = blockPos.relative(direction);
-                            if (serverLevel.getBlockState(blockPos2).getCollisionShape(serverLevel, blockPos2).getFaceShape(Direction.UP).isEmpty() && serverLevel.getFluidState(blockPos2).is(Fluids.WATER)) {
+                            if (serverLevel.getBlockState(blockPos2).getCollisionShape(serverLevel, blockPos2).getFaceShape(Direction.UP).isEmpty() && (serverLevel.getFluidState(blockPos2).is(FluidTags.SUPPORTS_FROGSPAWN)
+                                || serverLevel.getBlockState(blockPos2).is(BlockTags.SUPPORTS_FROGSPAWN))) {
                                 BlockPos blockPos3 = blockPos2.above();
                                 if (serverLevel.getBlockState(blockPos3).isAir()) {
                                     BlockState blockState = block.defaultBlockState();
