@@ -73,7 +73,7 @@ public abstract class NetworkRegistryMixin {
         }
     }
 
-    @Inject(method = "onMinecraftRegister", at = @At("RETURN"))
+    @Inject(method = "onMinecraftRegister", at = @At(value = "INVOKE", target = "Ljava/util/Set;addAll(Ljava/util/Collection;)Z", shift = At.Shift.AFTER))
     private static void arclight$syncChannelRegister(Connection connection, Set<ResourceLocation> channels, CallbackInfo ci) {
         if (connection.getPacketListener() instanceof ServerCommonPacketListener listener) {
             var bridge = (ServerCommonPacketListenerImplBridge) listener;
