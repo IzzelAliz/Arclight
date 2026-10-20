@@ -77,6 +77,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.PositionMoveRotation;
@@ -92,6 +93,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.PiercingWeapon;
 import net.minecraft.world.item.component.WritableBookContent;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.gamerules.GameRules;
@@ -192,6 +194,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
     @Shadow private double firstGoodY;
     @Shadow private double firstGoodZ;
     @Shadow @Final private static Logger LOGGER;
+    @Shadow @Final private static int ATTACK_INDICATOR_TOLERANCE_TICKS;
     @Shadow private double lastGoodX;
     @Shadow private double lastGoodY;
     @Shadow private double lastGoodZ;
@@ -732,6 +735,20 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         this.player.resetLastActionTime();
         ServerboundPlayerActionPacket.Action packetplayinblockdig_enumplayerdigtype = packetplayinblockdig.getAction();
         switch (packetplayinblockdig_enumplayerdigtype) {
+            case STAB: {
+                if (this.player.isSpectator()) {
+                    return;
+                }
+                ItemStack itemInHand = this.player.getItemInHand(InteractionHand.MAIN_HAND);
+                if (this.player.cannotAttackWithItem(itemInHand, ATTACK_INDICATOR_TOLERANCE_TICKS)) {
+                    return;
+                }
+                PiercingWeapon piercingWeapon = itemInHand.get(DataComponents.PIERCING_WEAPON);
+                if (piercingWeapon != null) {
+                    piercingWeapon.attack(this.player, EquipmentSlot.MAINHAND);
+                }
+                return;
+            }
             case SWAP_ITEM_WITH_OFFHAND: {
                 if (!this.player.isSpectator()) {
                     // BetterCombat mixin compatibility
