@@ -74,6 +74,7 @@
     "server.dedicated.DedicatedServerMixin",
     "server.level.ChunkHolderMixin",
     "server.level.ChunkMap_TrackedEntityMixin",
+    "server.level.ChunkMap_TrackedEntityMixin_Vanishing",
     "server.level.ChunkMapMixin",
     "server.level.DistanceManager_ChunkTicketTrackerMixin",
     "server.level.DistanceManagerMixin",
