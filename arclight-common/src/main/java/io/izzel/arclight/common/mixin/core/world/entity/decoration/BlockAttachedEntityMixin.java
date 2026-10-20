@@ -39,6 +39,11 @@ public abstract class BlockAttachedEntityMixin extends EntityMixin {
 
     @Inject(method = "tick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/BlockAttachedEntity;discard()V"))
     private void arclight$hangingBreak(CallbackInfo ci) {
+        // Modded block-attached entities need not implement Bukkit Hanging.
+        if (!(this.getBukkitEntity() instanceof Hanging hanging)) {
+            this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DROP);
+            return;
+        }
         var state = this.level().getBlockState(new BlockPos(this.blockPosition()));
         HangingBreakEvent.RemoveCause cause;
         if (!state.isAir()) {
@@ -46,7 +51,7 @@ public abstract class BlockAttachedEntityMixin extends EntityMixin {
         } else {
             cause = HangingBreakEvent.RemoveCause.PHYSICS;
         }
-        HangingBreakEvent event = new HangingBreakEvent((Hanging) this.getBukkitEntity(), cause);
+        HangingBreakEvent event = new HangingBreakEvent(hanging, cause);
         Bukkit.getPluginManager().callEvent(event);
         if (this.isRemoved() || event.isCancelled()) {
             ci.cancel();
@@ -57,12 +62,16 @@ public abstract class BlockAttachedEntityMixin extends EntityMixin {
 
     @Inject(method = "hurtServer", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/BlockAttachedEntity;kill(Lnet/minecraft/server/level/ServerLevel;)V"))
     private void arclight$hangingBreakByAttack(ServerLevel level, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        // Modded block-attached entities need not implement Bukkit Hanging.
+        if (!(this.getBukkitEntity() instanceof Hanging hanging)) {
+            return;
+        }
         Entity damager = (source.isDirect()) ? source.getDirectEntity() : source.getEntity();
         HangingBreakEvent event;
         if (damager != null) {
-            event = new HangingBreakByEntityEvent((Hanging) this.getBukkitEntity(), damager.bridge$getBukkitEntity(), source.is(DamageTypeTags.IS_EXPLOSION) ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.ENTITY);
+            event = new HangingBreakByEntityEvent(hanging, damager.bridge$getBukkitEntity(), source.is(DamageTypeTags.IS_EXPLOSION) ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.ENTITY);
         } else {
-            event = new HangingBreakEvent((Hanging) this.getBukkitEntity(), source.is(DamageTypeTags.IS_EXPLOSION) ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.DEFAULT);
+            event = new HangingBreakEvent(hanging, source.is(DamageTypeTags.IS_EXPLOSION) ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.DEFAULT);
         }
         Bukkit.getPluginManager().callEvent(event);
         if (this.isRemoved() || event.isCancelled()) {
@@ -72,11 +81,15 @@ public abstract class BlockAttachedEntityMixin extends EntityMixin {
 
     @Inject(method = "move", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/BlockAttachedEntity;kill(Lnet/minecraft/server/level/ServerLevel;)V"))
     private void arclight$hangingBreakByMove(MoverType typeIn, Vec3 pos, CallbackInfo ci) {
+        // Modded block-attached entities need not implement Bukkit Hanging.
+        if (!(this.getBukkitEntity() instanceof Hanging hanging)) {
+            return;
+        }
         if (this.isRemoved()) {
             ci.cancel();
             return;
         }
-        HangingBreakEvent event = new HangingBreakEvent((Hanging) this.getBukkitEntity(), HangingBreakEvent.RemoveCause.PHYSICS);
+        HangingBreakEvent event = new HangingBreakEvent(hanging, HangingBreakEvent.RemoveCause.PHYSICS);
         Bukkit.getPluginManager().callEvent(event);
         if (this.isRemoved() || event.isCancelled()) {
             ci.cancel();
