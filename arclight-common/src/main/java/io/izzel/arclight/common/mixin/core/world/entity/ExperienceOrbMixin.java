@@ -5,6 +5,7 @@ import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -95,7 +96,17 @@ public abstract class ExperienceOrbMixin extends EntityMixin implements Experien
     @Decorate(method = "repairPlayerItems", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;setDamageValue(I)V"))
     private void arclight$itemMend(ServerPlayer serverPlayer, int i, @Local(ordinal = -1) ItemStack itemstack,
                                    @Local(ordinal = -1) Optional<EnchantedItemInUse> optional, @Local(ordinal = -1) int k) throws Throwable {
-        org.bukkit.event.player.PlayerItemMendEvent event = CraftEventFactory.callPlayerItemMendEvent(serverPlayer, (ExperienceOrb) (Object) this, itemstack, optional.get().inSlot(), k);
+        var slot = optional.get().inSlot();
+        // https://github.com/IzzelAliz/Arclight/issues/2155
+        // Bukkit cannot represent mod-only slots (e.g. Accessories uses ordinal -1).
+        // Skip only the Bukkit event; keep native mending and XP consumption intact.
+        if (slot != EquipmentSlot.MAINHAND && slot != EquipmentSlot.OFFHAND
+            && slot != EquipmentSlot.FEET && slot != EquipmentSlot.LEGS
+            && slot != EquipmentSlot.CHEST && slot != EquipmentSlot.HEAD
+            && slot != EquipmentSlot.BODY && slot != EquipmentSlot.SADDLE) {
+            return;
+        }
+        org.bukkit.event.player.PlayerItemMendEvent event = CraftEventFactory.callPlayerItemMendEvent(serverPlayer, (ExperienceOrb) (Object) this, itemstack, slot, k);
         k = event.getRepairAmount();
         if (event.isCancelled()) {
             DecorationOps.cancel().invoke(i);
