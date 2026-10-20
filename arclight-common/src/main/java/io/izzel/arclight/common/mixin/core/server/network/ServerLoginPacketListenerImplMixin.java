@@ -88,6 +88,9 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
     private static final java.util.regex.Pattern PROP_PATTERN = java.util.regex.Pattern.compile("\\w{0,16}");
 
     private ServerPlayer player;
+    // Shared by the authenticator and server tick; pending logins must not start another task.
+    @Unique private volatile boolean arclight$preLoginStarted;
+    @Unique private volatile boolean arclight$preLoginComplete;
     @Unique protected int arclight$velocityLoginId = -1;
 
     @Override
@@ -162,6 +165,33 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
             }
         }
         return gameProfile;
+    }
+
+    @Inject(method = "verifyLoginAndFinishConnectionSetup", at = @At("HEAD"), cancellable = true)
+    private void arclight$ensurePreLogin(GameProfile gameProfile, CallbackInfo ci) {
+        if (!this.connection.isConnected()) {
+            ci.cancel();
+            return;
+        }
+        if (this.arclight$preLoginComplete) {
+            return;
+        }
+        ci.cancel();
+        if (!this.arclight$preLoginStarted) {
+            // EasyAuth can set VERIFYING directly, bypassing both pre-login and startClientVerification.
+            // Retry on a later tick: blocking here would deadlock synchronous pre-login listeners.
+            this.arclight$preLoginStarted = true;
+            var thread = bridge$newHandleThread("User Authenticator #" + UNIQUE_THREAD_ID.incrementAndGet(), () -> {
+                try {
+                    bridge$preLogin(gameProfile);
+                } catch (Exception ex) {
+                    disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
+                    LOGGER.warn("Exception verifying {} ", gameProfile.name(), ex);
+                }
+            });
+            thread.setUncaughtExceptionHandler(new DefaultUncaughtExceptionHandler(LOGGER));
+            thread.start();
+        }
     }
 
     @Redirect(method = "verifyLoginAndFinishConnectionSetup", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;canPlayerLogin(Ljava/net/SocketAddress;Lnet/minecraft/server/players/NameAndId;)Lnet/minecraft/network/chat/Component;"))
@@ -271,15 +301,17 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
 
     @Unique
     public void bridge$preLogin(GameProfile gameProfile) throws Exception {
+        this.arclight$preLoginStarted = true;
         if (this.arclight$velocityLoginId == -1 && VelocitySupport.isEnabled()) {
             disconnect("This server requires you to connect with Velocity.");
             return;
         }
-        if (!callPlayerPreLoginEvents(gameProfile)) {
+        if (!callPlayerPreLoginEvents(gameProfile) || !this.connection.isConnected()) {
             return;
         }
         LOGGER.info("UUID of player {} is {}", gameProfile.name(), gameProfile.id());
         this.startClientVerification(gameProfile);
+        this.arclight$preLoginComplete = true;
     }
 
     private boolean callPlayerPreLoginEvents(GameProfile profile) throws Exception {
