@@ -35,6 +35,7 @@ import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MoverType;
@@ -806,9 +807,10 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     }
 
     @Redirect(method = "thunderHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;setSecondsOnFire(I)V"))
-    public void arclight$onStruckByLightning$EntityCombustByEntityEvent0(Entity entity, int seconds) {
+    public void arclight$onStruckByLightning$EntityCombustByEntityEvent0(Entity entity, int seconds, ServerLevel level, LightningBolt lightningBolt) {
         final org.bukkit.entity.Entity thisBukkitEntity = this.getBukkitEntity();
-        final org.bukkit.entity.Entity stormBukkitEntity = ((EntityBridge) entity).bridge$getBukkitEntity();
+        // The redirected receiver is the victim; the enclosing argument is the lightning bolt.
+        final org.bukkit.entity.Entity stormBukkitEntity = ((EntityBridge) lightningBolt).bridge$getBukkitEntity();
         final PluginManager pluginManager = Bukkit.getPluginManager();
         // CraftBukkit start - Call a combust event when lightning strikes
         EntityCombustByEntityEvent entityCombustEvent = new EntityCombustByEntityEvent(stormBukkitEntity, thisBukkitEntity, 8);
@@ -820,9 +822,10 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     }
 
     @Redirect(method = "thunderHit", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
-    public boolean arclight$onStruckByLightning$EntityCombustByEntityEvent1(Entity entity, DamageSource source, float amount) {
+    public boolean arclight$onStruckByLightning$EntityCombustByEntityEvent1(Entity entity, DamageSource source, float amount, ServerLevel level, LightningBolt lightningBolt) {
         final org.bukkit.entity.Entity thisBukkitEntity = this.getBukkitEntity();
-        final org.bukkit.entity.Entity stormBukkitEntity = ((EntityBridge) entity).bridge$getBukkitEntity();
+        // The redirected receiver is the victim; the enclosing argument is the lightning bolt.
+        final org.bukkit.entity.Entity stormBukkitEntity = ((EntityBridge) lightningBolt).bridge$getBukkitEntity();
         final PluginManager pluginManager = Bukkit.getPluginManager();
         if (thisBukkitEntity instanceof Hanging) {
             HangingBreakByEntityEvent hangingEvent = new HangingBreakByEntityEvent((Hanging) thisBukkitEntity, stormBukkitEntity);
@@ -836,7 +839,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         if (this.fireImmune()) {
             return false;
         }
-        CraftEventFactory.entityDamage = entity;
+        CraftEventFactory.entityDamage = lightningBolt;
         if (!this.hurt(this.damageSources().lightningBolt(), amount)) {
             CraftEventFactory.entityDamage = null;
             return false;
