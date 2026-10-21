@@ -33,7 +33,6 @@ import io.izzel.arclight.mixin.Local;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket;
@@ -62,7 +61,6 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.dimension.end.EndDragonFight;
 import net.minecraft.world.level.entity.PersistentEntitySectionManager;
-import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.saveddata.maps.MapId;
@@ -70,7 +68,6 @@ import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.level.storage.*;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.v.CraftWorld;
 import org.bukkit.craftbukkit.v.block.CraftBlockState;
@@ -78,14 +75,12 @@ import org.bukkit.craftbukkit.v.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.generator.CustomChunkGenerator;
 import org.bukkit.craftbukkit.v.generator.CustomWorldChunkManager;
-import org.bukkit.craftbukkit.v.util.CraftNamespacedKey;
 import org.bukkit.craftbukkit.v.util.WorldUUID;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.LightningStrike;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.server.MapInitializeEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
-import org.bukkit.event.world.GenericGameEvent;
 import org.bukkit.event.world.TimeSkipEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.jetbrains.annotations.Nullable;
@@ -268,17 +263,6 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
     private void arclight$savePdc(CallbackInfo ci) {
         var data = this.getDataStorage().computeIfAbsent(LevelPersistentData.factory(), "bukkit_pdc");
         data.save(this.world);
-    }
-
-    @Inject(method = "gameEvent", cancellable = true, at = @At("HEAD"))
-    private void arclight$gameEventEvent(Holder<GameEvent> holder, Vec3 pos, GameEvent.Context context, CallbackInfo ci) {
-        var entity = context.sourceEntity();
-        var i = holder.value().notificationRadius();
-        GenericGameEvent event = new GenericGameEvent(org.bukkit.GameEvent.getByKey(CraftNamespacedKey.fromMinecraft(BuiltInRegistries.GAME_EVENT.getKey(holder.value()))), new Location(this.getWorld(), pos.x(), pos.y(), pos.z()), (entity == null) ? null : entity.bridge$getBukkitEntity(), i, !Bukkit.isPrimaryThread());
-        Bukkit.getPluginManager().callEvent(event);
-        if (event.isCancelled()) {
-            ci.cancel();
-        }
     }
 
     public LevelChunk getChunkIfLoaded(int x, int z) {
