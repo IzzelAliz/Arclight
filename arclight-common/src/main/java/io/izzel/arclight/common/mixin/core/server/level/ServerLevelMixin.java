@@ -37,7 +37,6 @@ import io.izzel.arclight.mixin.Local;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket;
@@ -74,7 +73,6 @@ import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.level.storage.*;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.block.CraftBlockState;
@@ -82,13 +80,11 @@ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.craftbukkit.generator.CustomChunkGenerator;
 import org.bukkit.craftbukkit.generator.CustomWorldChunkManager;
-import org.bukkit.craftbukkit.util.CraftNamespacedKey;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.LightningStrike;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.server.MapInitializeEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
-import org.bukkit.event.world.GenericGameEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
@@ -283,17 +279,6 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
     private void arclight$savePdc(boolean sync, CallbackInfo ci) {
         var data = this.getDataStorage().computeIfAbsent(LevelPersistentData.TYPE);
         data.save(this.world);
-    }
-
-    @Inject(method = "gameEvent", cancellable = true, at = @At("HEAD"))
-    private void arclight$gameEventEvent(Holder<GameEvent> holder, Vec3 pos, GameEvent.Context context, CallbackInfo ci) {
-        var entity = context.sourceEntity();
-        var i = holder.value().notificationRadius();
-        GenericGameEvent event = new GenericGameEvent(org.bukkit.GameEvent.getByKey(CraftNamespacedKey.fromMinecraft(BuiltInRegistries.GAME_EVENT.getKey(holder.value()))), new Location(this.getWorld(), pos.x(), pos.y(), pos.z()), (entity == null) ? null : entity.bridge$getBukkitEntity(), i, !Bukkit.isPrimaryThread());
-        Bukkit.getPluginManager().callEvent(event);
-        if (event.isCancelled()) {
-            ci.cancel();
-        }
     }
 
     public LevelChunk getChunkIfLoaded(int x, int z) {
