@@ -174,6 +174,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     public CraftPlayer.TransferCookieConnection transferCookieConnection;
     public String displayName;
     public Component listName;
+    public int listOrder = 0;
     public org.bukkit.Location compassTarget;
     public int newExp = 0;
     public int newLevel = 0;
@@ -184,6 +185,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     public double maxHealthCache;
     public boolean joining = true;
     public boolean sentListPacket = false;
+    public String kickLeaveMessage = null;
     public long timeOffset = 0;
     public boolean relativeTime = true;
     public WeatherType weather = null;
@@ -749,6 +751,11 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         if (this.listName != null) {
             cir.setReturnValue(this.listName);
         }
+    }
+
+    @Inject(method = "getTabListOrder", cancellable = true, at = @At("HEAD"))
+    private void arclight$bukkitListOrder(CallbackInfoReturnable<Integer> cir) {
+        cir.setReturnValue(this.listOrder);
     }
 
     public void teleportTo(ServerLevel worldserver, double d0, double d1, double d2, float f, float f1, PlayerTeleportEvent.TeleportCause cause) {

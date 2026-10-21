@@ -19,6 +19,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketUtils;
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket;
+import net.minecraft.network.protocol.common.ServerboundCustomClickActionPacket;
 import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket;
 import net.minecraft.network.protocol.cookie.ServerboundCookieResponsePacket;
@@ -33,6 +34,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.CraftServer;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v.util.CraftChatMessage;
 import org.bukkit.craftbukkit.v.util.Waitable;
 import org.bukkit.event.player.PlayerKickEvent;
@@ -196,6 +198,13 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
     @Inject(method = "handleResourcePackResponse", at = @At("RETURN"))
     private void arclight$handleResourcePackStatus(ServerboundResourcePackPacket packetIn, CallbackInfo ci) {
         this.cserver.getPluginManager().callEvent(new PlayerResourcePackStatusEvent(this.getCraftPlayer(), packetIn.id(), PlayerResourcePackStatusEvent.Status.values()[packetIn.action().ordinal()]));
+    }
+
+    @Inject(method = "handleCustomClickAction", at = @At("RETURN"))
+    private void arclight$handleCustomClickAction(ServerboundCustomClickActionPacket packet, CallbackInfo ci) {
+        if (this.player != null) {
+            CraftEventFactory.callPlayerCustomClickEvent(packet.id(), packet.payload(), this.player);
+        }
     }
 
     @Inject(method = "handleCookieResponse", cancellable = true, at = @At("HEAD"))

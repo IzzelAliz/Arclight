@@ -5,7 +5,10 @@ import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.util.remapper.*;
 import io.izzel.arclight.common.util.Enumerations;
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.ClassRemapper;
+import org.objectweb.asm.commons.SimpleRemapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -144,11 +147,24 @@ public class ArclightReflectionHandler extends ClassLoader {
 
     // srg -> bukkit
     public static String handleClassGetName(String cl) {
+        int slash = cl.indexOf('/');
+        if (slash != -1) {
+            String base = cl.substring(0, slash);
+            String suffix = cl.substring(slash);
+            return remapper.toBukkitRemapper().mapType(base.replace('.', '/')).replace('/', '.') + suffix;
+        }
         return remapper.toBukkitRemapper().mapType(cl.replace('.', '/')).replace('/', '.');
     }
 
     // srg -> bukkit
     public static String redirectClassGetName(Class<?> cl) {
+        String name = cl.getName();
+        int slash = name.indexOf('/');
+        if (slash != -1) {
+            String base = name.substring(0, slash);
+            String suffix = name.substring(slash);
+            return remapper.toBukkitRemapper().mapType(base.replace('.', '/')).replace('/', '.') + suffix;
+        }
         String internalName = Type.getInternalName(cl);
         Type type = Type.getObjectType(remapper.toBukkitRemapper().mapType(internalName));
         return type.getInternalName().replace('/', '.');
@@ -610,32 +626,60 @@ public class ArclightReflectionHandler extends ClassLoader {
         return redirectDefineClass(loader, name, bytes, off, len, pd);
     }
 
+    private static byte[] fixHiddenClassPackageIfNeeded(MethodHandles.Lookup lookup, byte[] bytes) {
+        try {
+            ClassReader reader = new ClassReader(bytes);
+            String className = reader.getClassName();
+            int slash = className.lastIndexOf('/');
+            String classPkg = slash == -1 ? "" : className.substring(0, slash).replace('/', '.');
+            String lookupPkg = lookup.lookupClass().getPackageName();
+            if (!classPkg.equals(lookupPkg) && classPkg.startsWith(lookupPkg + ".") && classPkg.contains("$$Lambda")) {
+                String simpleName = slash == -1 ? className : className.substring(slash + 1);
+                String newInternalName = lookupPkg.isEmpty() ? simpleName : (lookupPkg.replace('.', '/') + "/" + simpleName);
+                ClassWriter writer = new ClassWriter(0);
+                ClassRemapper classRemapper = new ClassRemapper(writer, new SimpleRemapper(className, newInternalName));
+                reader.accept(classRemapper, 0);
+                return writer.toByteArray();
+            }
+        } catch (Throwable ignored) {
+        }
+        return bytes;
+    }
+
     public static Object[] handleLookupDefineClass(MethodHandles.Lookup lookup, byte[] bytes) {
-        return new Object[]{lookup, transformOrAdd(lookup.lookupClass().getClassLoader(), bytes)};
+        byte[] transform = transformOrAdd(lookup.lookupClass().getClassLoader(), bytes);
+        transform = fixHiddenClassPackageIfNeeded(lookup, transform);
+        return new Object[]{lookup, transform};
     }
 
     public static Class<?> redirectLookupDefineClass(MethodHandles.Lookup lookup, byte[] bytes) throws Throwable {
         byte[] transform = transformOrAdd(lookup.lookupClass().getClassLoader(), bytes);
+        transform = fixHiddenClassPackageIfNeeded(lookup, transform);
         MethodHandle mh = Unsafe.lookup().findVirtual(MethodHandles.Lookup.class, "defineClass", MethodType.methodType(Class.class, byte[].class));
         return (Class<?>) mh.invokeExact(lookup, transform);
     }
 
     public static Object[] handleLookupDefineHiddenClass(MethodHandles.Lookup lookup, byte[] bytes, boolean initialize, MethodHandles.Lookup.ClassOption[] options) {
-        return new Object[]{lookup, transformOrAdd(lookup.lookupClass().getClassLoader(), bytes), initialize, options};
+        byte[] transform = transformOrAdd(lookup.lookupClass().getClassLoader(), bytes);
+        transform = fixHiddenClassPackageIfNeeded(lookup, transform);
+        return new Object[]{lookup, transform, initialize, options};
     }
 
     public static MethodHandles.Lookup redirectLookupDefineHiddenClass(MethodHandles.Lookup lookup, byte[] bytes, boolean initialize, MethodHandles.Lookup.ClassOption[] options) throws IllegalAccessException {
         byte[] transform = transformOrAdd(lookup.lookupClass().getClassLoader(), bytes);
+        transform = fixHiddenClassPackageIfNeeded(lookup, transform);
         return lookup.defineHiddenClass(transform, initialize, options);
     }
 
     public static Object[] handleLookupDefineHiddenClassWithClassData(MethodHandles.Lookup lookup, byte[] bytes, Object classData, boolean initialize, MethodHandles.Lookup.ClassOption[] options) {
         byte[] transform = transformOrAdd(lookup.lookupClass().getClassLoader(), bytes);
+        transform = fixHiddenClassPackageIfNeeded(lookup, transform);
         return new Object[]{lookup, transform, classData, initialize, options};
     }
 
     public static MethodHandles.Lookup redirectLookupDefineHiddenClassWithClassData(MethodHandles.Lookup lookup, byte[] bytes, Object classData, boolean initialize, MethodHandles.Lookup.ClassOption[] options) throws IllegalAccessException {
         byte[] transform = transformOrAdd(lookup.lookupClass().getClassLoader(), bytes);
+        transform = fixHiddenClassPackageIfNeeded(lookup, transform);
         return lookup.defineHiddenClassWithClassData(transform, classData, initialize, options);
     }
 
