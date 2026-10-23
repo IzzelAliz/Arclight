@@ -154,17 +154,21 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
             uuid = UUIDUtil.createOfflinePlayerUUID(name);
         }
 
-        GameProfile gameProfile = new GameProfile(uuid, name);
+        var properties = com.google.common.collect.ImmutableMultimap
+            .<String, Property>builder();
 
         if (((ConnectionBridge) connection).bridge$getSpoofedProfile() != null) {
-            Property[] spoofedProfile;
-            for (int length = (spoofedProfile = ((ConnectionBridge) connection).bridge$getSpoofedProfile()).length, i = 0; i < length; ++i) {
-                final Property property = spoofedProfile[i];
+            for (Property property : ((ConnectionBridge) connection).bridge$getSpoofedProfile()) {
                 if (!PROP_PATTERN.matcher(property.name()).matches()) continue;
-                gameProfile.properties().put(property.name(), property);
+                properties.put(property.name(), property);
             }
         }
-        return gameProfile;
+
+        return new GameProfile(
+            uuid,
+            name,
+            new com.mojang.authlib.properties.PropertyMap(properties.build())
+        );
     }
 
     @Inject(method = "verifyLoginAndFinishConnectionSetup", at = @At("HEAD"), cancellable = true)
