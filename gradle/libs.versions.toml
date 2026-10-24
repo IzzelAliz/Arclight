@@ -31,9 +31,9 @@ minecraft = '26.1.2'
 parchment = '2025.12.20'
 forge = '61.1.5'
 full-forge = '1.21.11-61.1.5'
-fabric-loader = '0.19.5'
+fabric-loader = '0.20.1'
 fabric-api = '0.155.3+26.1.2'
-neoforge = '26.1.2.109'
+neoforge = '26.1.2.122'
 fabric-permissions-api = '0.7.0'
 
 # spigot dependencies (CHECK when migrating Spigot Versions)
