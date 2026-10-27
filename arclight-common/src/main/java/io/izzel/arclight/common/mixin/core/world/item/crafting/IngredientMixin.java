@@ -16,6 +16,13 @@ public abstract class IngredientMixin implements IngredientBridge {
 
     private List<ItemStack> exactChoices;
 
+    @io.izzel.arclight.common.mod.mixins.annotation.TransformAccess(org.objectweb.asm.Opcodes.ACC_PUBLIC | org.objectweb.asm.Opcodes.ACC_STATIC)
+    private static Ingredient ofStacks(List<ItemStack> stacks) {
+        Ingredient ingredient = Ingredient.of(stacks.stream().map(ItemStack::getItem));
+        ((IngredientBridge) (Object) ingredient).bridge$setExactChoices(stacks);
+        return ingredient;
+    }
+
     @Inject(method = "test(Lnet/minecraft/world/item/ItemStack;)Z", cancellable = true, at = @At("HEAD"))
     private void arclight$exactMatch(@Nullable ItemStack itemStack, CallbackInfoReturnable<Boolean> cir) {
         if (this.exactChoices != null) {

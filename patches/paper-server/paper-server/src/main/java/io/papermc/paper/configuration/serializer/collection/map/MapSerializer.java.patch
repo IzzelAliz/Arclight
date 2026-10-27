@@ -1,0 +1,20 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/configuration/serializer/collection/map/MapSerializer.java b/paper-server/src/main/java/io/papermc/paper/configuration/serializer/collection/map/MapSerializer.java
+index 4546b4cc43275f23bc45c6a6010c0959af603c5a..3f29b02243613dedb6ce5dd397d58c1c3b4c6c46 100644
+--- a/paper-server/src/main/java/io/papermc/paper/configuration/serializer/collection/map/MapSerializer.java
++++ b/paper-server/src/main/java/io/papermc/paper/configuration/serializer/collection/map/MapSerializer.java
+@@ -1,6 +1,5 @@
+ package io.papermc.paper.configuration.serializer.collection.map;
+ 
+-import com.mojang.logging.LogUtils;
+ import io.leangen.geantyref.TypeToken;
+ import java.lang.reflect.AnnotatedParameterizedType;
+ import java.lang.reflect.AnnotatedType;
+@@ -29,7 +28,7 @@ public class MapSerializer implements TypeSerializer.Annotated<Map<?, ?>> {
+ 
+     public static final TypeToken<Map<?, ?>> TYPE = new TypeToken<Map<?, ?>>() {};
+ 
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(MapSerializer.class.getSimpleName());
+ 
+     private final boolean clearInvalids;
+     private final TypeSerializer<Map<?, ?>> fallback;

@@ -1,0 +1,23 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftBlockInventoryHolder.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftBlockInventoryHolder.java
+index 1407ff1034e566d6e29cf441b7895f47eb998e9e..7fecc1c30ca9722728fbc5d4acb3d0358c698961 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftBlockInventoryHolder.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftBlockInventoryHolder.java
+@@ -1,5 +1,6 @@
+ package org.bukkit.craftbukkit.inventory;
+ 
++import io.izzel.arclight.common.bridge.core.world.inventory.ContainerLevelAccessBridge;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.world.Container;
+ import net.minecraft.world.level.LevelAccessor;
+@@ -19,8 +20,9 @@ public class CraftBlockInventoryHolder implements BlockInventoryHolder {
+     }
+     // Paper start - Add missing InventoryHolders
+     public CraftBlockInventoryHolder(net.minecraft.world.inventory.ContainerLevelAccess levelAccess, Inventory inventory) {
+-        com.google.common.base.Preconditions.checkArgument(levelAccess.isBlock());
+-        this.block = CraftBlock.at(levelAccess.getWorld(), levelAccess.getPosition());
++        com.google.common.base.Preconditions.checkArgument(levelAccess.evaluate((world, pos) -> true).orElse(false));
++        ContainerLevelAccessBridge bridge = (ContainerLevelAccessBridge) levelAccess;
++        this.block = CraftBlock.at(bridge.bridge$getWorld(), bridge.bridge$getPosition());
+         this.inventory = inventory;
+     }
+     // Paper end - Add missing InventoryHolders

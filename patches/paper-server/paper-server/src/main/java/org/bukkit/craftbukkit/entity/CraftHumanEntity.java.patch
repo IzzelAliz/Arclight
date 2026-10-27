@@ -1,0 +1,170 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
+@@ -201,7 +201,8 @@
+             return false;
+         }
+ 
+-        if (this.getHandle().startSleepInBed(pos, force).left().isPresent()) {
++        io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge player = this.getHandle();
++        if (player.bridge$trySleep(pos, force).left().isPresent()) {
+             return false;
+         }
+ 
+@@ -320,7 +321,13 @@
+ 
+     @Override
+     public InventoryView getOpenInventory() {
+-        return this.getHandle().containerMenu.getBukkitView();
++        net.minecraft.world.entity.player.Player handle = this.getHandle();
++        try {
++            io.izzel.arclight.common.mod.util.ArclightCaptures.captureContainerOwner(handle);
++            return ((io.izzel.arclight.common.bridge.core.world.inventory.AbstractContainerMenuBridge) handle.containerMenu).bridge$getBukkitView();
++        } finally {
++            io.izzel.arclight.common.mod.util.ArclightCaptures.popContainerOwner(handle);
++        }
+     }
+ 
+     @Override
+@@ -351,9 +358,9 @@
+ 
+         if (menuProvider != null) {
+             this.getHandle().openMenu(menuProvider);
+-        } else if (inventory instanceof CraftInventorySaddledMount craft && craft.getInventory().getOwner() instanceof CraftAbstractHorse horse) {
++        } else if (inventory instanceof CraftInventorySaddledMount craft && ((io.izzel.arclight.common.bridge.core.world.IInventoryBridge) craft.getInventory()).getOwner() instanceof CraftAbstractHorse horse) {
+             this.getHandle().openHorseInventory(horse.getHandle(), craft.getInventory());
+-        } else if (inventory instanceof CraftInventorySaddledMount craft && craft.getInventory().getOwner() instanceof CraftAbstractNautilus nautilus) {
++        } else if (inventory instanceof CraftInventorySaddledMount craft && ((io.izzel.arclight.common.bridge.core.world.IInventoryBridge) craft.getInventory()).getOwner() instanceof CraftAbstractNautilus nautilus) {
+             this.getHandle().openNautilusInventory(nautilus.getHandle(), craft.getInventory());
+         } else {
+             MenuType<?> container = CraftContainer.getNotchInventoryType(inventory);
+@@ -364,13 +371,13 @@
+             return null;
+         }
+         this.getHandle().containerMenu.checkReachable = false;
+-        return this.getHandle().containerMenu.getBukkitView();
++        return this.getOpenInventory();
+     }
+ 
+     private static void openCustomInventory(Inventory inventory, ServerPlayer player, MenuType<?> windowType) {
+         if (player.connection == null) return;
+         Preconditions.checkArgument(windowType != null, "Unknown windowType");
+-        AbstractContainerMenu container = new CraftContainer(inventory, player, player.nextContainerCounter());
++        AbstractContainerMenu container = new CraftContainer(inventory, player, ((io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge) player).bridge$nextContainerCounter());
+ 
+         // Paper start - Add titleOverride to InventoryOpenEvent
+         final com.mojang.datafixers.util.Pair<net.kyori.adventure.text.Component, AbstractContainerMenu> result = CraftEventFactory.callInventoryOpenEventWithTitle(player, container);
+@@ -378,13 +385,13 @@
+         // Paper end - Add titleOverride to InventoryOpenEvent
+         if (container == null) return;
+ 
+-        //String title = container.getBukkitView().getTitle(); // Paper - comment
+-        net.kyori.adventure.text.Component adventure$title = container.getBukkitView().title(); // Paper
+-        if (adventure$title == null) adventure$title = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(container.getBukkitView().getTitle()); // Paper
++        //String title = ((io.izzel.arclight.common.bridge.core.world.inventory.AbstractContainerMenuBridge) container).bridge$getBukkitView().getTitle(); // Paper - comment
++        net.kyori.adventure.text.Component adventure$title = ((io.izzel.arclight.common.bridge.core.world.inventory.AbstractContainerMenuBridge) container).bridge$getBukkitView().title(); // Paper
++        if (adventure$title == null) adventure$title = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(((io.izzel.arclight.common.bridge.core.world.inventory.AbstractContainerMenuBridge) container).bridge$getBukkitView().getTitle()); // Paper
+         if (result.getFirst() != null) adventure$title = result.getFirst(); // Paper - Add titleOverride to InventoryOpenEvent
+ 
+         //player.connection.send(new ClientboundOpenScreenPacket(container.containerId, windowType, CraftChatMessage.fromString(title)[0])); // Paper - comment
+-        if (!player.isImmobile()) player.connection.send(new ClientboundOpenScreenPacket(container.containerId, windowType, io.papermc.paper.adventure.PaperAdventure.asVanilla(adventure$title))); // Paper - Prevent opening inventories when frozen
++        if (!((io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge) player).bridge$isMovementBlocked()) player.connection.send(new ClientboundOpenScreenPacket(container.containerId, windowType, io.papermc.paper.adventure.PaperAdventure.asVanilla(adventure$title))); // Paper - Prevent opening inventories when frozen
+         player.containerMenu = container;
+         player.initMenu(container);
+     }
+@@ -404,7 +411,7 @@
+         if (force) {
+             this.getHandle().containerMenu.checkReachable = false;
+         }
+-        return this.getHandle().containerMenu.getBukkitView();
++        return this.getOpenInventory();
+     }
+ 
+     @Override
+@@ -437,7 +444,7 @@
+         if (force) {
+             this.getHandle().containerMenu.checkReachable = false;
+         }
+-        return this.getHandle().containerMenu.getBukkitView();
++        return this.getOpenInventory();
+     }
+ 
+     @Override
+@@ -455,7 +462,7 @@
+             container = ((CraftInventoryView) inventory).getHandle();
+             Preconditions.checkArgument(!(container instanceof InventoryMenu), "Can not open player's InventoryView");
+         } else {
+-            container = new CraftContainer(inventory, this.getHandle(), player.nextContainerCounter());
++            container = new CraftContainer(inventory, this.getHandle(), ((io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge) player).bridge$nextContainerCounter());
+         }
+ 
+         // Trigger an INVENTORY_OPEN event
+@@ -478,7 +485,7 @@
+         net.kyori.adventure.text.Component adventure$title = inventory.title(); // Paper
+         if (adventure$title == null) adventure$title = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(inventory.getTitle()); // Paper
+         if (result.getFirst() != null) adventure$title = result.getFirst(); // Paper - Add titleOverride to InventoryOpenEvent
+-        if (!player.isImmobile()) {
++        if (!((io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge) player).bridge$isMovementBlocked()) {
+             if (container instanceof AbstractMountInventoryMenu mountMenu) {
+                 player.connection.send(new ClientboundMountScreenOpenPacket(mountMenu.containerId, getMountInventoryColumns(mountMenu), mountMenu.mount.getId()));
+             } else {
+@@ -528,7 +535,7 @@
+         mcMerchant.setTradingPlayer(this.getHandle());
+         mcMerchant.openTradingScreen(this.getHandle(), name, level);
+ 
+-        return this.getHandle().containerMenu.getBukkitView();
++        return this.getOpenInventory();
+     }
+ 
+     @Override
+@@ -588,9 +595,11 @@
+         } else {
+             throw new IllegalArgumentException("Unsupported inventory type: " + material);
+         }
+-        this.getHandle().openMenu(block.getMenuProvider(null, this.getHandle().level(), new BlockPos(location.getBlockX(), location.getBlockY(), location.getBlockZ())));
++        if (this.getHandle().openMenu(block.defaultBlockState().getMenuProvider(this.getHandle().level(), new BlockPos(location.getBlockX(), location.getBlockY(), location.getBlockZ()))).isEmpty()) {
++            return null;
++        }
+         this.getHandle().containerMenu.checkReachable = !force;
+-        return this.getHandle().containerMenu.getBukkitView();
++        return this.getOpenInventory();
+     }
+ 
+     @Override
+@@ -773,7 +782,7 @@
+     @Override
+     public boolean dropItem(boolean dropAll) {
+         if (!(this.getHandle() instanceof ServerPlayer player)) return false;
+-        boolean success = player.drop(dropAll);
++        boolean success = ((io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge) player).bridge$dropSelectedItem(dropAll);
+         if (!success) {
+             return false;
+         }
+@@ -806,7 +815,7 @@
+         final net.minecraft.world.item.ItemStack dropContent = nmsItemStack.split(amount);
+ 
+         // This will return the itemstack back to its original amount in case events fail
+-        final ItemEntity droppedEntity = this.getHandle().drop(dropContent, throwRandomly, true, true, entityOperation);
++        final ItemEntity droppedEntity = ((io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge) this.getHandle()).bridge$dropInventoryItem(dropContent, throwRandomly, entityOperation);
+         return droppedEntity == null ? null : (Item) droppedEntity.getBukkitEntity();
+     }
+ 
+@@ -821,7 +830,7 @@
+         final net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+ 
+         // Do *not* call the event here, the item is not in the player inventory, they are not dropping it / do not need recovering logic (which would be a dupe).
+-        final ItemEntity droppedEntity = this.getHandle().drop(nmsItemStack, throwRandomly, true, false, entityOperation);
++        final ItemEntity droppedEntity = ((io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge) this.getHandle()).bridge$dropProvidedItem(nmsItemStack, throwRandomly, entityOperation);
+         return droppedEntity == null ? null : (Item) droppedEntity.getBukkitEntity();
+     }
+ 
+@@ -900,7 +909,8 @@
+         Preconditions.checkArgument(boosterItem != null, "boosterItem cannot be null");
+ 
+         FireworkRocketEntity fireworks = new FireworkRocketEntity(this.getHandle().level(), CraftItemStack.asNMSCopy(boosterItem), this.getHandle());
+-        boolean success = this.getHandle().level().addFreshEntity(fireworks, SpawnReason.CUSTOM);
++        io.izzel.arclight.common.bridge.core.world.level.WorldBridge level = this.getHandle().level();
++        boolean success = level.bridge$addEntity(fireworks, SpawnReason.CUSTOM);
+         return success ? (Firework) fireworks.getBukkitEntity() : null;
+     }
+ 

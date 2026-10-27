@@ -1,0 +1,32 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/configuration/PaperConfigurations.java b/paper-server/src/main/java/io/papermc/paper/configuration/PaperConfigurations.java
+--- a/paper-server/src/main/java/io/papermc/paper/configuration/PaperConfigurations.java
++++ b/paper-server/src/main/java/io/papermc/paper/configuration/PaperConfigurations.java
+@@ -2,7 +2,6 @@
+ 
+ import com.google.common.base.Suppliers;
+ import com.google.common.collect.Table;
+-import com.mojang.logging.LogUtils;
+ import io.leangen.geantyref.TypeToken;
+ import io.papermc.paper.configuration.legacy.RequiresSpigotInitialization;
+ import io.papermc.paper.configuration.mapping.Definition;
+@@ -90,7 +89,7 @@
+ @SuppressWarnings("Convert2Diamond")
+ public class PaperConfigurations extends Configurations<GlobalConfiguration, WorldConfiguration> {
+ 
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(PaperConfigurations.class.getSimpleName());
+     static final String GLOBAL_CONFIG_FILE_NAME = "paper-global.yml";
+     static final String WORLD_DEFAULTS_CONFIG_FILE_NAME = "paper-world-defaults.yml";
+     static final String WORLD_CONFIG_FILE_NAME = "paper-world.yml";
+@@ -348,7 +347,10 @@
+     }
+ 
+     private static ContextMap createWorldContextMap(ServerLevel level) {
+-        return createWorldContextMap(level.getServer().storageSource.getDimensionPath(level.dimension()), level.dimension().identifier(), level.spigotConfig, level.registryAccess(), level.getGameRules());
++        final Path directory = io.izzel.arclight.common.mod.server.world.BukkitWorldIdentity.getWorldFolder(
++            ((io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge) level).bridge$getConvertable(), level.dimension());
++        return createWorldContextMap(directory, level.dimension().identifier(),
++            ((io.izzel.arclight.common.bridge.core.world.level.WorldBridge) level).bridge$spigotConfig(), level.registryAccess(), level.getGameRules());
+     }
+ 
+     public static ContextMap createWorldContextMap(final Path dir, final Identifier worldKey, final SpigotWorldConfig spigotConfig, final RegistryAccess registryAccess, final GameRules gameRules) {

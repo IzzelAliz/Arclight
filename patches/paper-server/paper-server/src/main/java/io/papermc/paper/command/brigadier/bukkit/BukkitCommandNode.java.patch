@@ -1,0 +1,54 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/command/brigadier/bukkit/BukkitCommandNode.java b/paper-server/src/main/java/io/papermc/paper/command/brigadier/bukkit/BukkitCommandNode.java
+index 5c52b1563d20d7e977a5bb958c18b19dec5c365a..56f9b0938ac4cbb884bd1cfbeb4c82287137d5ad 100644
+--- a/paper-server/src/main/java/io/papermc/paper/command/brigadier/bukkit/BukkitCommandNode.java
++++ b/paper-server/src/main/java/io/papermc/paper/command/brigadier/bukkit/BukkitCommandNode.java
+@@ -8,6 +8,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
+ import com.mojang.brigadier.suggestion.Suggestions;
+ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+ import com.mojang.brigadier.tree.LiteralCommandNode;
++import io.izzel.arclight.common.bridge.core.commands.CommandSourceStackBridge;
+ import io.papermc.paper.command.brigadier.CommandSourceStack;
+ import java.util.ArrayList;
+ import net.kyori.adventure.text.Component;
+@@ -38,7 +39,7 @@ public class BukkitCommandNode extends LiteralCommandNode<CommandSourceStack> {
+                 if (source instanceof net.minecraft.commands.CommandSourceStack commandSourceStack && commandSourceStack.source == CommandSource.NULL) {
+                     return true;
+                 } else {
+-                    return command.testPermissionSilent(source.getSender());
++                    return command.testPermissionSilent(getSender(source));
+                 }
+             },
+             null, null, false
+@@ -62,6 +63,14 @@ public class BukkitCommandNode extends LiteralCommandNode<CommandSourceStack> {
+         return this.command;
+     }
+ 
++    public static CommandSender getSender(CommandSourceStack source) {
++        if (source instanceof CommandSourceStackBridge bridge) {
++            // The native bridge owns custom CommandSource fallback as well as real senders.
++            return bridge.bridge$getBukkitSender();
++        }
++        return source.getSender();
++    }
++
+     public static class BukkitBrigCommand implements com.mojang.brigadier.Command<CommandSourceStack> {
+ 
+         private final org.bukkit.command.Command command;
+@@ -74,7 +83,7 @@ public class BukkitCommandNode extends LiteralCommandNode<CommandSourceStack> {
+ 
+         @Override
+         public int run(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+-            CommandSender sender = context.getSource().getSender();
++            CommandSender sender = getSender(context.getSource());
+ 
+             String content = context.getRange().get(context.getInput());
+             String[] args = org.apache.commons.lang3.StringUtils.split(content, ' '); // fix adjacent spaces (from console/plugins) causing empty array elements
+@@ -100,7 +109,7 @@ public class BukkitCommandNode extends LiteralCommandNode<CommandSourceStack> {
+         @Override
+         public CompletableFuture<Suggestions> getSuggestions(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) throws CommandSyntaxException {
+             // Paper start
+-            org.bukkit.command.CommandSender sender = context.getSource().getSender();
++            CommandSender sender = getSender(context.getSource());
+             String[] args = builder.getRemaining().split(" ", -1); // We need the command included -- Set limit to -1, allow for trailing spaces
+ 
+             List<String> results = null;

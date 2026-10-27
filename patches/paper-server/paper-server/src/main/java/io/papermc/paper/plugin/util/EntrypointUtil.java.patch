@@ -1,0 +1,19 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/util/EntrypointUtil.java b/paper-server/src/main/java/io/papermc/paper/plugin/util/EntrypointUtil.java
+index 01c88a23755618b98c1a1cdeb8e404e79401940b..795115c6e84fcca245e702281e5b497b199a5af1 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/util/EntrypointUtil.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/util/EntrypointUtil.java
+@@ -1,13 +1,12 @@
+ package io.papermc.paper.plugin.util;
+ 
+-import com.mojang.logging.LogUtils;
+ import io.papermc.paper.plugin.entrypoint.LaunchEntryPointHandler;
+ import io.papermc.paper.plugin.provider.source.ProviderSource;
+ import org.slf4j.Logger;
+ 
+ public final class EntrypointUtil {
+ 
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(EntrypointUtil.class.getSimpleName());
+ 
+     public static <I, C> void registerProvidersFromSource(ProviderSource<I, C> source, I contextInput) {
+         try {

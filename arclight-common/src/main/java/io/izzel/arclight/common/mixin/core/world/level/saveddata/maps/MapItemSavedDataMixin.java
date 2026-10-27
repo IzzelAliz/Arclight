@@ -101,6 +101,28 @@ public abstract class MapItemSavedDataMixin implements MapItemSavedDataBridge {
     }
 
     @Override
+    public MapId bridge$getId() {
+        return this.id;
+    }
+
+    @Override
+    public UUID bridge$getUniqueId() {
+        return this.uniqueId;
+    }
+
+    @Override
+    public void bridge$setUniqueId(UUID uniqueId) {
+        this.uniqueId = uniqueId;
+    }
+
+    @Override
+    public void bridge$markCanvasDirty(int x, int y) {
+        for (MapItemSavedData.HoldingPlayer player : this.carriedBy) {
+            player.markColorsDirty(x, y);
+        }
+    }
+
+    @Override
     public void bridge$setId(MapId id) {
         this.id = id;
     }

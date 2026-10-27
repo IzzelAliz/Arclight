@@ -22,7 +22,7 @@ import net.minecraft.world.level.levelgen.structure.StructurePiece;
 import net.minecraft.world.level.storage.loot.LootTable;
 import org.bukkit.craftbukkit.CraftLootTable;
 import org.bukkit.craftbukkit.block.*;
-import org.bukkit.craftbukkit.util.TransformerGeneratorAccess;
+import org.bukkit.craftbukkit.util.TransformerLevelAccessor;
 import org.bukkit.entity.EntityType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -45,7 +45,7 @@ public abstract class StructurePieceMixin implements StructurePieceBridge {
     // Shift to after setBlock
     @Inject(method = "placeBlock", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/level/WorldGenLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     private void arclight$skipFluidIfPossible(WorldGenLevel level, BlockState p_73436_, int p_73437_, int p_73438_, int p_73439_, BoundingBox p_73440_, CallbackInfo ci, BlockPos pos) {
-        if (level instanceof TransformerGeneratorAccess) {
+        if (level instanceof TransformerLevelAccessor) {
             ci.cancel();
         }
     }
@@ -84,13 +84,17 @@ public abstract class StructurePieceMixin implements StructurePieceBridge {
 
     @Unique
     protected boolean placeCraftBlockEntity(ServerLevelAccessor worldAccess, BlockPos position, CraftBlockEntityState<?> craftBlockEntityState, int i) {
-        if (worldAccess instanceof TransformerGeneratorAccess transformerAccess) {
+        if (worldAccess instanceof TransformerLevelAccessor transformerAccess) {
             return transformerAccess.setCraftBlock(position, craftBlockEntityState, i);
         }
         boolean result = worldAccess.setBlock(position, craftBlockEntityState.getHandle(), i);
         var tileEntity = worldAccess.getBlockEntity(position);
         if (tileEntity != null) {
-            tileEntity.loadWithComponents(craftBlockEntityState.getSnapshotInput());
+            try (net.minecraft.util.ProblemReporter.ScopedCollector reporter = new net.minecraft.util.ProblemReporter.ScopedCollector(
+                () -> "StructurePiece@" + position.toShortString(), org.slf4j.LoggerFactory.getLogger(StructurePiece.class))) {
+                tileEntity.loadWithComponents(net.minecraft.world.level.storage.TagValueInput.create(
+                    reporter, craftBlockEntityState.getRegistryAccess(), craftBlockEntityState.getSnapshotNBT()));
+            }
         }
         return result;
     }
@@ -109,7 +113,7 @@ public abstract class StructurePieceMixin implements StructurePieceBridge {
         var tileEntity = worldAccess.getBlockEntity(position);
         if (tileEntity instanceof RandomizableContainerBlockEntity tileEntityLootable) {
             tileEntityLootable.setLootTable(loottableKey, randomSource.nextLong());
-            if (worldAccess instanceof TransformerGeneratorAccess transformerAccess) {
+            if (worldAccess instanceof TransformerLevelAccessor transformerAccess) {
                 transformerAccess.setCraftBlock(position, (CraftBlockState) CraftBlockStates.getBlockState(worldAccess, position, tileEntity.getBlockState(), tileEntityLootable.saveWithFullMetadata(worldAccess.registryAccess())), 3);
             }
         }

@@ -1,0 +1,25 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryCustom.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryCustom.java
+index 290c4229c86aacc99b179f76774a4fa9ff14e7ca..9f30f91b49b5976d77ed020ed08e1866174c63b8 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryCustom.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryCustom.java
+@@ -64,7 +64,7 @@ public class CraftInventoryCustom extends CraftInventory {
+         }
+     }
+ 
+-    static class MinecraftInventory implements Container {
++    static class MinecraftInventory implements Container, io.izzel.arclight.common.bridge.core.world.IInventoryBridge {
+         private final NonNullList<ItemStack> items;
+         private int maxStack = MAX_STACK;
+         private final List<HumanEntity> viewers;
+@@ -208,6 +208,11 @@ public class CraftInventoryCustom extends CraftInventory {
+             return this.owner;
+         }
+ 
++        @Override
++        public void setOwner(InventoryHolder owner) {
++            throw new UnsupportedOperationException("Custom inventory owner is fixed at construction");
++        }
++
+         @Override
+         public void clearContent() {
+             this.items.clear();

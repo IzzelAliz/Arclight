@@ -1,0 +1,30 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryLectern.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryLectern.java
+index ed89afb92e0dfbbc6597e691953dc87bcbf3b2cb..1cdfbcec8d81e506e349e498bdaaa91f1f1cab95 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryLectern.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryLectern.java
+@@ -2,7 +2,7 @@ package org.bukkit.craftbukkit.inventory;
+ 
+ import net.minecraft.world.Container;
+ import net.minecraft.world.MenuProvider;
+-import net.minecraft.world.level.block.entity.LecternBlockEntity;
++import io.izzel.arclight.common.bridge.core.world.inventory.LecternInventoryBridge;
+ import org.bukkit.block.Lectern;
+ import org.bukkit.inventory.LecternInventory;
+ 
+@@ -12,13 +12,13 @@ public class CraftInventoryLectern extends CraftInventory implements LecternInve
+ 
+     public CraftInventoryLectern(Container inventory) {
+         super(inventory);
+-        if (inventory instanceof LecternBlockEntity.LecternInventory) {
+-            this.provider = ((LecternBlockEntity.LecternInventory) inventory).getLectern();
++        if (inventory instanceof LecternInventoryBridge lecternInventory) {
++            this.provider = lecternInventory.bridge$getLectern();
+         }
+     }
+ 
+     @Override
+     public Lectern getHolder() {
+-        return (Lectern) this.inventory.getOwner();
++        return (Lectern) super.getHolder();
+     }
+ }

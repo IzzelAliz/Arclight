@@ -1,0 +1,35 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/loader/PaperClasspathBuilder.java b/paper-server/src/main/java/io/papermc/paper/plugin/loader/PaperClasspathBuilder.java
+index 4bef544df4dc3ee0c49e35223f2776ff89946eae..b5b05dfa79a70b016667bf1d611e2ddc772d881e 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/loader/PaperClasspathBuilder.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/loader/PaperClasspathBuilder.java
+@@ -1,5 +1,6 @@
+ package io.papermc.paper.plugin.loader;
+ 
++import io.izzel.arclight.common.mod.util.remapper.generated.RemappingURLClassLoader;
+ import io.papermc.paper.plugin.bootstrap.PluginProviderContext;
+ import io.papermc.paper.plugin.entrypoint.classloader.PaperPluginClassLoader;
+ import io.papermc.paper.plugin.loader.library.ClassPathLibrary;
+@@ -50,8 +51,21 @@ public class PaperClasspathBuilder implements PluginClasspathBuilder {
+         }
+ 
+         try {
+-            final URLClassLoader libraryLoader = new URLClassLoader(urls, this.getClass().getClassLoader());
+-            return new PaperPluginClassLoader(logger, source, jarFile, configuration, this.getClass().getClassLoader(), libraryLoader);
++            // Libraries retain their own defining/transformation context, not the plugin's dependency group.
++            final URLClassLoader libraryLoader = new RemappingURLClassLoader(configuration.getName() + "/L", urls, this.getClass().getClassLoader());
++            try {
++                return new PaperPluginClassLoader(logger, source, jarFile, configuration, this.getClass().getClassLoader(), libraryLoader);
++            } catch (IOException | RuntimeException | Error failure) {
++                // Ownership transfers only after the plugin classloader has been constructed successfully.
++                try {
++                    libraryLoader.close();
++                } catch (IOException | RuntimeException | Error closeFailure) {
++                    if (failure != closeFailure) {
++                        failure.addSuppressed(closeFailure);
++                    }
++                }
++                throw failure;
++            }
+         } catch (IOException exception) {
+             throw new RuntimeException(exception);
+         }

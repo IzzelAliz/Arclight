@@ -27,6 +27,8 @@ public class ServerLevel_EntityCallbacksMixin {
     private void arclight$valid(Entity entity, CallbackInfo ci) {
         ((EntityBridge) entity).bridge$setInWorld(true);
         ((EntityBridge) entity).bridge$setValid(true);
+        new com.destroystokyo.paper.event.entity.EntityAddToWorldEvent(((EntityBridge) entity).bridge$getBukkitEntity(),
+            ((io.izzel.arclight.common.bridge.core.world.level.WorldBridge) this.outerThis).bridge$getWorld()).callEvent();
     }
 
     @Inject(method = "onTrackingEnd(Lnet/minecraft/world/entity/Entity;)V", at = @At("HEAD"))
@@ -51,9 +53,11 @@ public class ServerLevel_EntityCallbacksMixin {
     private void arclight$invalid(Entity entity, CallbackInfo ci) {
         ((EntityBridge) entity).bridge$setValid(false);
         if (!(entity instanceof ServerPlayer)) {
-            for (var player : outerThis.players()) {
+            for (var player : outerThis.getServer().getPlayerList().getPlayers()) {
                 ((ServerPlayerBridge) player).bridge$getBukkitEntity().onEntityRemove(entity);
             }
         }
+        new com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent(((EntityBridge) entity).bridge$getBukkitEntity(),
+            ((io.izzel.arclight.common.bridge.core.world.level.WorldBridge) this.outerThis).bridge$getWorld()).callEvent();
     }
 }

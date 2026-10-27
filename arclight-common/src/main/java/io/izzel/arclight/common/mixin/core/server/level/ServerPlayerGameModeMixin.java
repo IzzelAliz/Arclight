@@ -12,6 +12,7 @@ import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
+import net.kyori.adventure.text.Component;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.Packet;
@@ -50,10 +51,12 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Slice;
@@ -61,6 +64,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
 @Mixin(ServerPlayerGameMode.class)
 public abstract class ServerPlayerGameModeMixin implements ServerPlayerGameModeBridge {
@@ -77,10 +81,37 @@ public abstract class ServerPlayerGameModeMixin implements ServerPlayerGameModeB
     public InteractionHand interactHand;
     public ItemStack interactItemStack;
 
+    @Unique private PlayerGameModeChangeEvent.Cause arclight$gameModeChangeCause = PlayerGameModeChangeEvent.Cause.UNKNOWN;
+    @Unique private @Nullable Component arclight$gameModeCancelMessage;
+    @Unique private @Nullable PlayerGameModeChangeEvent arclight$gameModeChangeEvent;
+
+    @Override
+    @Nullable
+    public PlayerGameModeChangeEvent bridge$withGameModeChange(PlayerGameModeChangeEvent.Cause cause, @Nullable Component cancelMessage, BooleanSupplier nativeChange) {
+        PlayerGameModeChangeEvent.Cause previousCause = this.arclight$gameModeChangeCause;
+        Component previousMessage = this.arclight$gameModeCancelMessage;
+        PlayerGameModeChangeEvent previousEvent = this.arclight$gameModeChangeEvent;
+        this.arclight$gameModeChangeCause = cause;
+        this.arclight$gameModeCancelMessage = cancelMessage;
+        this.arclight$gameModeChangeEvent = null;
+        try {
+            boolean changed = nativeChange.getAsBoolean();
+            PlayerGameModeChangeEvent event = this.arclight$gameModeChangeEvent;
+            // Keep a Bukkit veto (and its cancelMessage) for the caller, but do not
+            // turn a native/mod rejection after dispatch into a successful result.
+            return changed || (event != null && event.isCancelled()) ? event : null;
+        } finally {
+            this.arclight$gameModeChangeCause = previousCause;
+            this.arclight$gameModeCancelMessage = previousMessage;
+            this.arclight$gameModeChangeEvent = previousEvent;
+        }
+    }
+
     @Inject(method = "changeGameModeForPlayer", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayerGameMode;setGameModeForPlayer(Lnet/minecraft/world/level/GameType;Lnet/minecraft/world/level/GameType;)V"))
     private void arclight$gameModeEvent(GameType gameType, CallbackInfoReturnable<Boolean> cir) {
-        PlayerGameModeChangeEvent event = new PlayerGameModeChangeEvent(((ServerPlayerBridge) player).bridge$getBukkitEntity(), GameMode.getByValue(gameType.getId()));
+        PlayerGameModeChangeEvent event = new PlayerGameModeChangeEvent(((ServerPlayerBridge) player).bridge$getBukkitEntity(), GameMode.getByValue(gameType.getId()), this.arclight$gameModeChangeCause, this.arclight$gameModeCancelMessage);
         Bukkit.getPluginManager().callEvent(event);
+        this.arclight$gameModeChangeEvent = event;
         if (event.isCancelled()) {
             cir.setReturnValue(false);
         }
@@ -161,7 +192,7 @@ public abstract class ServerPlayerGameModeMixin implements ServerPlayerGameModeB
             }
             return;
         }
-        BlockDamageEvent blockEvent = CraftEventFactory.callBlockDamageEvent(this.player, blockPos, this.player.getInventory().getSelectedItem(), f >= 1.0f);
+        BlockDamageEvent blockEvent = CraftEventFactory.callBlockDamageEvent(this.player, blockPos, direction, this.player.getInventory().getSelectedItem(), f >= 1.0f);
         if (blockEvent.isCancelled()) {
             this.player.connection.send(new ClientboundBlockUpdatePacket(this.level, blockPos));
             return;

@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/console/BrigadierCommandCompleter.java b/paper-server/src/main/java/io/papermc/paper/console/BrigadierCommandCompleter.java
+index c2174c8ae594fe8ec7741ecdbb53e9acc2bbf5b2..1fcd50fa955dab1bb5fd59583cb21de18d254d47 100644
+--- a/paper-server/src/main/java/io/papermc/paper/console/BrigadierCommandCompleter.java
++++ b/paper-server/src/main/java/io/papermc/paper/console/BrigadierCommandCompleter.java
+@@ -46,7 +46,7 @@ public final class BrigadierCommandCompleter {
+         final ParseResults<CommandSourceStack> results = dispatcher.parse(new StringReader(line.line()), this.commandSourceStack.get());
+         this.addCandidates(
+             candidates,
+-            CompletableFuture.supplyAsync(() -> dispatcher.getCompletionSuggestions(results, line.cursor()), this.server::scheduleOnMain)
++            CompletableFuture.supplyAsync(() -> dispatcher.getCompletionSuggestions(results, line.cursor()), task -> this.server.schedule(this.server.wrapRunnable(task)))
+                 .thenCompose(Function.identity())
+                 .join()
+                 .getList(),

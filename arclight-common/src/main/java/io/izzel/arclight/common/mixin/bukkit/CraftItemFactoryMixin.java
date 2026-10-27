@@ -29,8 +29,7 @@ public class CraftItemFactoryMixin {
         return original.call(stack);
     }
 
-    @SuppressWarnings("AmbiguousMixinReference")
-    @Inject(method = "getItemMeta*", require = 0, expect = 0, cancellable = true, at = @At("HEAD"))
+    @Inject(method = "getItemMeta(Lorg/bukkit/Material;Lorg/bukkit/craftbukkit/inventory/CraftMetaItem;)Lorg/bukkit/inventory/meta/ItemMeta;", require = 1, cancellable = true, at = @At("HEAD"))
     private void arclight$getItemMeta(Material material, CraftMetaItem meta, CallbackInfoReturnable<ItemMeta> cir) {
         MaterialBridge bridge = (MaterialBridge) (Object) CraftLegacy.fromLegacy(material);
         if (bridge.bridge$getType() != MaterialPropertySpec.MaterialType.VANILLA) {

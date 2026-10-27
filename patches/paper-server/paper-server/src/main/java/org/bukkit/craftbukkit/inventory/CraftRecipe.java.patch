@@ -1,0 +1,41 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftRecipe.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftRecipe.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftRecipe.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftRecipe.java
+@@ -40,6 +40,8 @@
+             // Their impl of Ingredient.of() will error, ingredients need at least one entry.
+             // Callers running into this exception may have passed an incorrect empty() recipe choice to a non-empty slot or
+             // spigot calls this method in a wrong place.
++        } else if (bukkit instanceof io.izzel.arclight.common.mod.inventory.ArclightSpecialIngredient special) {
++            stack = special.getIngredient();
+         } else if (bukkit == RecipeChoice.empty()) {
+             throw new IllegalArgumentException("This ingredient cannot be empty");
+             // Paper end - support "empty" choices
+@@ -47,7 +49,7 @@
+             throw new IllegalArgumentException("Unknown recipe stack instance " + bukkit);
+         }
+ 
+-        if (requireNotEmpty) {
++        if (requireNotEmpty && !stack.bridge$isCustom()) {
+             Preconditions.checkArgument(!stack.isEmpty(), "Recipe requires at least one non-air choice");
+         }
+ 
+@@ -59,13 +61,16 @@
+     }
+ 
+     static RecipeChoice toChoice(Ingredient ingredient) {
++        if (ingredient.bridge$isCustom()) {
++            return new io.izzel.arclight.common.mod.inventory.ArclightSpecialIngredient(ingredient);
++        }
+         if (ingredient.isEmpty()) {
+             return RecipeChoice.empty(); // Paper - null breaks API contracts
+         }
+ 
+-        if (ingredient.isExact()) {
+-            List<org.bukkit.inventory.ItemStack> choices = new ArrayList<>(ingredient.itemStacks().size());
+-            for (net.minecraft.world.item.ItemStack i : ingredient.itemStacks()) {
++        if (ingredient.bridge$isExact()) {
++            List<org.bukkit.inventory.ItemStack> choices = new ArrayList<>(ingredient.bridge$getExactChoices().size());
++            for (net.minecraft.world.item.ItemStack i : ingredient.bridge$getExactChoices()) {
+                 choices.add(CraftItemStack.asBukkitCopy(i));
+             }
+ 

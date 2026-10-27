@@ -1,5 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.chunk.storage;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.world.level.chunk.storage.RegionFile;
@@ -13,6 +15,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
 @Mixin(RegionFile.class)
+@io.izzel.arclight.common.mod.mixins.annotation.LoadIfMod(modid = "moonrise",
+    condition = io.izzel.arclight.common.mod.mixins.annotation.LoadIfMod.ModCondition.ABSENT)
 public abstract class RegionFileMixin {
 
     // @formatter:off
@@ -70,12 +74,13 @@ public abstract class RegionFileMixin {
         return (int) sectors;
     }
 
-    @Decorate(method = "<init>(Lnet/minecraft/world/level/chunk/storage/RegionStorageInfo;Ljava/nio/file/Path;Ljava/nio/file/Path;Lnet/minecraft/world/level/chunk/storage/RegionFileVersion;Z)V",
+    @WrapOperation(method = "<init>(Lnet/minecraft/world/level/chunk/storage/RegionStorageInfo;Ljava/nio/file/Path;Ljava/nio/file/Path;Lnet/minecraft/world/level/chunk/storage/RegionFileVersion;Z)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/storage/RegionFile;getNumSectors(I)I"))
-    private int arclight$extendMaxLen(int i) throws Throwable {
-        int len = (int) DecorationOps.callsite().invoke(i);
+    private int arclight$extendMaxLen(int i, Operation<Integer> original) throws Throwable {
+        int len = original.call(i);
         return arclight$legacySectorCount(i, len, true);
     }
+
 
     @Decorate(method = "getChunkDataInputStream",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/storage/RegionFile;getNumSectors(I)I"))

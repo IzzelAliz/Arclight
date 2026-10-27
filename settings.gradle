@@ -12,8 +12,10 @@ rootProject.name = 'arclight'
 include 'installer'
 include 'i18n-config'
 
+include 'arclight-paper-api'
 include 'arclight-common'
 
+include 'arclight-forge'
 include 'arclight-neoforge'
 include 'arclight-fabric'
 

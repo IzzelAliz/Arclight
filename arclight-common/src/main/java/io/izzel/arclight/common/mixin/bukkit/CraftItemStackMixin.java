@@ -45,7 +45,7 @@ public abstract class CraftItemStackMixin extends org.bukkit.inventory.ItemStack
                 }
             }
 
-            this.setData(null);
+            this.setData((org.bukkit.material.MaterialData) null);
         }
     }
 

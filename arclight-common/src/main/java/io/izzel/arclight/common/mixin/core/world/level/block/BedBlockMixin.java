@@ -1,11 +1,12 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
+import io.papermc.paper.adventure.PaperAdventure;
 import net.minecraft.core.BlockPos;
 import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BedBlock;
@@ -79,7 +80,11 @@ public abstract class BedBlockMixin {
                 var maybeLeft = player.startSleepInBed(pos).left();
                 if (maybeLeft.isPresent()) {
                     final var problem = maybeLeft.get();
-                    if (level.environmentAttributes().getValue(EnvironmentAttributes.BED_RULE, pos).explodes()) {
+                    final var event = CraftEventFactory.callPlayerBedFailEnterEvent(player, pos, problem);
+                    if (event.isCancelled()) {
+                        return InteractionResult.SUCCESS_SERVER;
+                    }
+                    if (event.getWillExplode()) {
                         org.bukkit.block.BlockState bedSnapshot = CraftBlock.at(level, pos).getState();
                         level.removeBlock(pos, false);
                         BlockPos blockpos = pos.relative(state.getValue(FACING).getOpposite());
@@ -89,8 +94,10 @@ public abstract class BedBlockMixin {
 
                         Vec3 vec3d = pos.getCenter();
                         level.explode(null, ((DamageSourceBridge) level.damageSources().badRespawnPointExplosion(vec3d)).bridge$directBlockState(bedSnapshot), null, vec3d, 5.0F, true, Level.ExplosionInteraction.BLOCK);
-                    } else if (problem.message() != null) {
-                        player.sendOverlayMessage(problem.message());
+                    }
+                    final var message = event.getMessage();
+                    if (message != null) {
+                        player.sendOverlayMessage(PaperAdventure.asVanilla(message));
                     }
                 }
                 return InteractionResult.SUCCESS_SERVER;

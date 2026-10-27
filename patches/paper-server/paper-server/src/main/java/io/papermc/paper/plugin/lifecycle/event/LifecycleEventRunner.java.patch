@@ -1,0 +1,66 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/lifecycle/event/LifecycleEventRunner.java b/paper-server/src/main/java/io/papermc/paper/plugin/lifecycle/event/LifecycleEventRunner.java
+index 9146f18a6a8ecfb3a3580f15df6d917deec8a903..b0ebfc797576ec05b65909ba33c90319759f9076 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/lifecycle/event/LifecycleEventRunner.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/lifecycle/event/LifecycleEventRunner.java
+@@ -8,7 +8,10 @@ import io.papermc.paper.plugin.lifecycle.event.types.AbstractLifecycleEventType;
+ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEventType;
+ import io.papermc.paper.plugin.lifecycle.event.types.OwnerAwareLifecycleEvent;
+ import java.util.ArrayList;
++import java.util.Collections;
++import java.util.IdentityHashMap;
+ import java.util.List;
++import java.util.Set;
+ import java.util.function.Predicate;
+ import org.bukkit.plugin.Plugin;
+ import org.checkerframework.checker.nullness.qual.NonNull;
+@@ -21,7 +24,7 @@ public class LifecycleEventRunner {
+     public static final LifecycleEventRunner INSTANCE = new LifecycleEventRunner();
+ 
+     private final List<LifecycleEventType<?, ?, ?>> lifecycleEventTypes = new ArrayList<>();
+-    private boolean blockPluginReloading = false;
++    private final Set<LifecycleEventOwner> pluginReloadBlockers = Collections.newSetFromMap(new IdentityHashMap<>());
+ 
+     public <O extends LifecycleEventOwner> void checkRegisteredHandler(final O owner, final AbstractLifecycleEventType<O, ?, ?> eventType) {
+         /*
+@@ -30,12 +33,12 @@ public class LifecycleEventRunner {
+         running the reload logic (which would include places where these events should fire) and then re-enabling plugins.
+          */
+         if (eventType.blocksReloading(owner)) {
+-            this.blockPluginReloading = true;
++            this.pluginReloadBlockers.add(owner);
+         }
+     }
+ 
+     public boolean blocksPluginReloading() {
+-        return this.blockPluginReloading;
++        return !this.pluginReloadBlockers.isEmpty();
+     }
+ 
+     public <O extends LifecycleEventOwner, E extends LifecycleEvent, ET extends LifecycleEventType<O, E, ?>> void addEventType(final ET eventType) {
+@@ -75,14 +78,23 @@ public class LifecycleEventRunner {
+     }
+ 
+     public void unregisterAllEventHandlersFor(final Plugin plugin) {
++        final Predicate<LifecycleEventOwner> ownerPredicate = owner -> owner.getPluginMeta().getName().equals(plugin.getPluginMeta().getName());
+         for (final LifecycleEventType<?, ?, ?> lifecycleEventType : this.lifecycleEventTypes) {
+-            this.removeEventHandlersOwnedBy(lifecycleEventType, plugin);
++            this.removeEventHandlersOwnedBy(lifecycleEventType, ownerPredicate);
+         }
++        this.pluginReloadBlockers.removeIf(ownerPredicate);
+     }
+ 
+-    private <O extends LifecycleEventOwner> void removeEventHandlersOwnedBy(final LifecycleEventType<O, ?, ?> eventType, final Plugin possibleOwner) {
++    public void unregisterEventHandlersForOwner(final LifecycleEventOwner owner) {
++        for (final LifecycleEventType<?, ?, ?> lifecycleEventType : this.lifecycleEventTypes) {
++            this.removeEventHandlersOwnedBy(lifecycleEventType, possibleOwner -> possibleOwner == owner);
++        }
++        this.pluginReloadBlockers.remove(owner);
++    }
++
++    private <O extends LifecycleEventOwner> void removeEventHandlersOwnedBy(final LifecycleEventType<O, ?, ?> eventType, final Predicate<? super O> ownerPredicate) {
+         final AbstractLifecycleEventType<O, ?, ?> lifecycleEventType = (AbstractLifecycleEventType<O, ?, ?>) eventType;
+-        lifecycleEventType.removeMatching(registeredHandler -> registeredHandler.owner().getPluginMeta().getName().equals(possibleOwner.getPluginMeta().getName()));
++        lifecycleEventType.removeMatching(registeredHandler -> ownerPredicate.test(registeredHandler.owner()));
+     }
+ 
+     @SuppressWarnings("unchecked")

@@ -1,9 +1,16 @@
 package io.izzel.arclight.common.mod.util;
 
+import joptsimple.OptionDescriptor;
 import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static java.util.Arrays.asList;
 
@@ -112,6 +119,118 @@ public class BukkitOptionParser extends OptionParser {
             .defaultsTo(new File("spigot.yml"))
             .describedAs("Yml file");
 
+        accepts("add-plugin", "Additional plugin jar to load")
+            .withRequiredArg()
+            .ofType(File.class)
+            .describedAs("Jar file");
+
+        acceptsAll(asList("add-plugin-dir", "add-extra-plugin-dir"), "Additional plugin directories to load")
+            .withRequiredArg()
+            .ofType(File.class)
+            .defaultsTo(new File[] {})
+            .describedAs("Plugin directory");
+
         allowsUnrecognizedOptions();
+    }
+
+    public static String[] filterNativeArguments(OptionParser nativeParser, OptionSet bukkitOptions, String[] args) {
+        Map<String, OptionSpec<?>> nativeSpecs = nativeParser.recognizedOptions();
+        Map<String, OptionSpec<?>> bukkitSpecs = new BukkitOptionParser().recognizedOptions();
+        Set<OptionSpec<?>> parsedSpecs = new HashSet<>(bukkitOptions.specs());
+        ParsedOption[] bukkitArguments = new ParsedOption[args.length];
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equals("--")) {
+                break;
+            }
+            ParsedOption option = parseOption(bukkitSpecs, args[i]);
+            if (option != null && parsedSpecs.contains(option.spec())) {
+                // Track occurrences, not just names: another occurrence can be an option's value.
+                bukkitArguments[i] = option;
+                if (option.consumesNextArgument()) {
+                    i++;
+                }
+            }
+        }
+
+        var filtered = new ArrayList<String>(args.length);
+        for (int i = 0; i < args.length; i++) {
+            String argument = args[i];
+            if (argument.equals("--")) {
+                // A terminator consumed as a required value is handled below, not here.
+                for (; i < args.length; i++) {
+                    filtered.add(args[i]);
+                }
+                break;
+            }
+
+            ParsedOption nativeOption = parseOption(nativeSpecs, argument);
+            if (nativeOption != null) {
+                // Native-only options may take a Bukkit-looking token as their value.
+                filtered.add(argument);
+                if (nativeOption.consumesNextArgument() && i + 1 < args.length) {
+                    filtered.add(args[++i]);
+                }
+                continue;
+            }
+
+            ParsedOption bukkitOption = bukkitArguments[i];
+            if (bukkitOption != null) {
+                if (bukkitOption.consumesNextArgument() && i + 1 < args.length) {
+                    i++;
+                }
+            } else {
+                // Keep unknown tokens so the original strict parser still rejects them.
+                filtered.add(argument);
+            }
+        }
+        return filtered.toArray(String[]::new);
+    }
+
+    private static ParsedOption parseOption(Map<String, OptionSpec<?>> specs, String argument) {
+        if (!argument.startsWith("-") || argument.equals("-") || argument.equals("--")) {
+            return null;
+        }
+        int prefixLength = argument.startsWith("--") ? 2 : 1;
+        int equals = argument.indexOf('=', prefixLength);
+        String name = argument.substring(prefixLength, equals < 0 ? argument.length() : equals);
+        OptionSpec<?> spec = resolveOption(specs, name);
+        if (spec != null) {
+            return new ParsedOption(spec, equals < 0 && ((OptionDescriptor) spec).requiresArgument());
+        }
+        if (prefixLength == 2) {
+            return null;
+        }
+        // jopt-simple tries a whole short name before considering a short-option cluster.
+        for (int i = 1; i < argument.length(); i++) {
+            spec = resolveOption(specs, argument.substring(i, i + 1));
+            if (spec == null) {
+                return null;
+            }
+            OptionDescriptor descriptor = (OptionDescriptor) spec;
+            if (descriptor.acceptsArguments()) {
+                return new ParsedOption(spec, i == argument.length() - 1 && descriptor.requiresArgument());
+            }
+        }
+        return new ParsedOption(spec, false);
+    }
+
+    private static OptionSpec<?> resolveOption(Map<String, OptionSpec<?>> specs, String name) {
+        OptionSpec<?> exact = specs.get(name);
+        if (exact != null) {
+            return exact;
+        }
+        OptionSpec<?> abbreviated = null;
+        for (var entry : specs.entrySet()) {
+            if (entry.getKey().startsWith(name)) {
+                if (abbreviated != null) {
+                    return null;
+                }
+                abbreviated = entry.getValue();
+            }
+        }
+        return abbreviated;
+    }
+
+    private record ParsedOption(OptionSpec<?> spec, boolean consumesNextArgument) {
     }
 }

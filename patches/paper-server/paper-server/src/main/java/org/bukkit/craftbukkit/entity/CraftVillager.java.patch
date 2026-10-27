@@ -1,0 +1,124 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftVillager.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftVillager.java
+index d37de00e5b9acd1db9b2f7418aaee517b54518d5..8953e797698c09bf6fbec5043e032e528eab005e 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftVillager.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftVillager.java
+@@ -3,7 +3,9 @@ package org.bukkit.craftbukkit.entity;
+ import com.destroystokyo.paper.entity.villager.Reputation;
+ import com.destroystokyo.paper.entity.villager.ReputationType;
+ import com.google.common.base.Preconditions;
++import io.izzel.arclight.common.bridge.core.world.entity.npc.VillagerBridge;
+ import io.papermc.paper.util.OldEnumHolderable;
++import it.unimi.dsi.fastutil.objects.Object2IntMap;
+ import java.util.EnumMap;
+ import java.util.Map;
+ import java.util.UUID;
+@@ -12,8 +14,7 @@ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Holder;
+ import net.minecraft.core.registries.Registries;
+ import net.minecraft.server.level.ServerLevel;
+-import net.minecraft.world.entity.ai.gossip.GossipContainer;
+-import net.minecraft.world.entity.monster.zombie.Zombie;
++import net.minecraft.world.entity.ai.gossip.GossipType;
+ import net.minecraft.world.entity.npc.villager.VillagerData;
+ import net.minecraft.world.entity.npc.villager.VillagerProfession;
+ import net.minecraft.world.entity.npc.villager.VillagerType;
+@@ -26,7 +27,6 @@ import org.bukkit.craftbukkit.util.CraftLocation;
+ import org.bukkit.entity.Villager;
+ import org.bukkit.entity.ZombieVillager;
+ import org.bukkit.event.entity.CreatureSpawnEvent;
+-import org.bukkit.event.entity.EntityTransformEvent;
+ 
+ public class CraftVillager extends CraftAbstractVillager implements Villager {
+ 
+@@ -116,7 +116,7 @@ public class CraftVillager extends CraftAbstractVillager implements Villager {
+     @Override
+     public boolean addTrades(int amount) {
+         Preconditions.checkArgument(amount > 0, "Number of trades unlocked must be positive");
+-        return this.getHandle().updateTrades((ServerLevel) this.getHandle().level(), amount);
++        throw new UnsupportedOperationException("Unlocking a specified number of villager trades is not supported");
+     }
+ 
+     @Override
+@@ -161,7 +161,7 @@ public class CraftVillager extends CraftAbstractVillager implements Villager {
+ 
+     @Override
+     public ZombieVillager zombify() {
+-        net.minecraft.world.entity.monster.zombie.ZombieVillager zombie = Zombie.convertVillagerToZombieVillager(this.getHandle().level().getMinecraftWorld(), this.getHandle(), this.getHandle().blockPosition(), this.isSilent(), EntityTransformEvent.TransformReason.INFECTION, CreatureSpawnEvent.SpawnReason.CUSTOM);
++        net.minecraft.world.entity.monster.zombie.ZombieVillager zombie = ((VillagerBridge) this.getHandle()).bridge$zombify((ServerLevel) this.getHandle().level(), this.getHandle().blockPosition(), this.isSilent(), CreatureSpawnEvent.SpawnReason.CUSTOM);
+         return (zombie != null) ? (ZombieVillager) zombie.getBukkitEntity() : null;
+     }
+ 
+@@ -197,29 +197,52 @@ public class CraftVillager extends CraftAbstractVillager implements Villager {
+         }
+     }
+ 
+-    @Override
+-    public Reputation getReputation(UUID uniqueId) {
+-        GossipContainer.EntityGossips gossips = this.getHandle().getGossips().gossips.get(uniqueId);
+-        if (gossips == null) {
+-            return new Reputation(new EnumMap<>(ReputationType.class));
++    private static ReputationType toReputationType(GossipType type) {
++        return switch (type) {
++            case MAJOR_NEGATIVE -> ReputationType.MAJOR_NEGATIVE;
++            case MINOR_NEGATIVE -> ReputationType.MINOR_NEGATIVE;
++            case MINOR_POSITIVE -> ReputationType.MINOR_POSITIVE;
++            case MAJOR_POSITIVE -> ReputationType.MAJOR_POSITIVE;
++            case TRADING -> ReputationType.TRADING;
++        };
++    }
++
++    private static Reputation asReputation(Object2IntMap<GossipType> entries) {
++        Map<ReputationType, Integer> values = new EnumMap<>(ReputationType.class);
++        if (entries != null) {
++            for (Object2IntMap.Entry<GossipType> entry : entries.object2IntEntrySet()) {
++                values.put(toReputationType(entry.getKey()), entry.getIntValue());
++            }
+         }
++        return new Reputation(values);
++    }
+ 
+-        return gossips.asReputation();
++    @Override
++    public Reputation getReputation(UUID uniqueId) {
++        return asReputation(this.getHandle().getGossips().getGossipEntries().get(uniqueId));
+     }
+ 
+     @Override
+     public Map<UUID, Reputation> getReputations() {
+-        return this.getHandle().getGossips().gossips.entrySet()
++        return this.getHandle().getGossips().getGossipEntries().entrySet()
+             .stream()
+-            .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().asReputation()));
++            .collect(Collectors.toMap(Map.Entry::getKey, entry -> asReputation(entry.getValue())));
+     }
+ 
+     @Override
+     public void setReputation(UUID uniqueId, Reputation reputation) {
+-        GossipContainer.EntityGossips gossips = this.getHandle().getGossips().gossips.computeIfAbsent(
+-            uniqueId, _ -> new GossipContainer.EntityGossips()
+-        );
+-        gossips.assignFromReputation(reputation);
++        Object2IntMap<GossipType> entries = this.getHandle().getGossips().getOrCreate(uniqueId).entries;
++        for (GossipType type : GossipType.values()) {
++            ReputationType apiType = toReputationType(type);
++            if (reputation.hasReputationSet(apiType)) {
++                int value = reputation.getReputation(apiType);
++                if (value == 0) {
++                    entries.removeInt(type);
++                } else {
++                    entries.put(type, value);
++                }
++            }
++        }
+     }
+ 
+     @Override
+@@ -231,7 +254,7 @@ public class CraftVillager extends CraftAbstractVillager implements Villager {
+ 
+     @Override
+     public void clearReputations() {
+-        this.getHandle().getGossips().gossips.clear();
++        this.getHandle().getGossips().clear();
+     }
+ 
+     @Override

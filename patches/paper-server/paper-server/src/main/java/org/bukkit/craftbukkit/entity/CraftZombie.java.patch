@@ -1,0 +1,22 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftZombie.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftZombie.java
+index def476715af2d7800c03da9517ff85d6d03dfafd..24d13042a27d4eb2a787cd9fac838cf070c9ff63 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftZombie.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftZombie.java
+@@ -95,7 +95,7 @@ public class CraftZombie extends CraftMonster implements Zombie {
+ 
+     @Override
+     public void stopDrowning() {
+-        this.getHandle().stopDrowning();
++        this.setConversionTime(-1);
+     }
+ 
+     @Override
+@@ -115,7 +115,7 @@ public class CraftZombie extends CraftMonster implements Zombie {
+ 
+     @Override
+     public void setShouldBurnInDay(boolean shouldBurnInDay) {
+-        this.getHandle().setShouldBurnInDay(shouldBurnInDay);
++        throw new UnsupportedOperationException("Independent zombie daylight burning control is not supported by Arclight");
+     }
+ 
+     @Override

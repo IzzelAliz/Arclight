@@ -1,0 +1,51 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/command/brigadier/bukkit/BasicCommandNode.java b/paper-server/src/main/java/io/papermc/paper/command/brigadier/bukkit/BasicCommandNode.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..fd86e506983ff9d2fb476b49f388d4324985bdf7
+--- /dev/null
++++ b/paper-server/src/main/java/io/papermc/paper/command/brigadier/bukkit/BasicCommandNode.java
+@@ -0,0 +1,45 @@
++package io.papermc.paper.command.brigadier.bukkit;
++
++import com.mojang.brigadier.arguments.StringArgumentType;
++import com.mojang.brigadier.suggestion.SuggestionsBuilder;
++import com.mojang.brigadier.tree.LiteralCommandNode;
++import io.papermc.paper.command.brigadier.BasicCommand;
++import io.papermc.paper.command.brigadier.CommandSourceStack;
++import io.papermc.paper.command.brigadier.Commands;
++import java.util.Collection;
++import org.apache.commons.lang3.ArrayUtils;
++import org.apache.commons.lang3.StringUtils;
++
++/** The Bukkit-style argument adapter for commands registered through the Paper API. */
++public final class BasicCommandNode {
++
++    private BasicCommandNode() {
++    }
++
++    public static LiteralCommandNode<CommandSourceStack> of(final String label, final BasicCommand command) {
++        return Commands.literal(label)
++            .requires(source -> command.canUse(BukkitCommandNode.getSender(source)))
++            .then(
++                Commands.argument("args", StringArgumentType.greedyString())
++                    .suggests((context, builder) -> {
++                        String[] args = StringUtils.split(builder.getRemaining());
++                        if (builder.getRemaining().endsWith(" ")) {
++                            args = ArrayUtils.add(args, "");
++                        }
++                        final SuggestionsBuilder offsetBuilder = builder.createOffset(builder.getInput().lastIndexOf(' ') + 1);
++                        final Collection<String> suggestions = command.suggest(context.getSource(), args);
++                        suggestions.forEach(offsetBuilder::suggest);
++                        return offsetBuilder.buildFuture();
++                    })
++                    .executes(context -> {
++                        command.execute(context.getSource(), StringUtils.split(context.getArgument("args", String.class), ' '));
++                        return com.mojang.brigadier.Command.SINGLE_SUCCESS;
++                    })
++            )
++            .executes(context -> {
++                command.execute(context.getSource(), new String[0]);
++                return com.mojang.brigadier.Command.SINGLE_SUCCESS;
++            })
++            .build();
++    }
++}

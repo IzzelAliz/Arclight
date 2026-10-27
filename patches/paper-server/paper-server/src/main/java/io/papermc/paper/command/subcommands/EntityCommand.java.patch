@@ -1,0 +1,32 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/command/subcommands/EntityCommand.java b/paper-server/src/main/java/io/papermc/paper/command/subcommands/EntityCommand.java
+index a4212e9b0df55580b60666bc306d812d6f9531ba..44a951d70c03b21c8ab408555394ff3d4ca3ec1d 100644
+--- a/paper-server/src/main/java/io/papermc/paper/command/subcommands/EntityCommand.java
++++ b/paper-server/src/main/java/io/papermc/paper/command/subcommands/EntityCommand.java
+@@ -1,7 +1,6 @@
+ package io.papermc.paper.command.subcommands;
+ 
+ import com.google.common.collect.Maps;
+-import io.papermc.paper.FeatureHooks;
+ import io.papermc.paper.command.CommandUtil;
+ import io.papermc.paper.command.PaperSubcommand;
+ import io.papermc.paper.util.MCUtil;
+@@ -106,14 +105,17 @@ public final class EntityCommand implements PaperSubcommand {
+             ServerLevel level = ((CraftWorld) world).getHandle();
+             Map<Identifier, Integer> nonEntityTicking = new HashMap<>();
+             ServerChunkCache chunkProviderServer = level.getChunkSource();
+-            FeatureHooks.getAllEntities(level).forEach(e -> {
++            var sections = level.entityManager.sectionStorage;
++            sections.getAllChunksWithExistingSections().longStream()
++                .boxed().flatMap(sections::getExistingSectionsInChunk)
++                .flatMap(net.minecraft.world.level.entity.EntitySection::getEntities).forEach(e -> {
+                 Identifier key = EntityType.getKey(e.getType());
+ 
+                 MutablePair<Integer, Map<ChunkPos, Integer>> info = list.computeIfAbsent(key, k -> MutablePair.of(0, Maps.newHashMap()));
+                 ChunkPos chunk = e.chunkPosition();
+                 info.left++;
+                 info.right.put(chunk, info.right.getOrDefault(chunk, 0) + 1);
+-                if (!level.isPositionEntityTicking(e.blockPosition()) || (e instanceof net.minecraft.world.entity.Marker && !level.paperConfig().entities.markers.tick)) { // Paper - Configurable marker ticking
++                if (!level.isPositionEntityTicking(e.blockPosition())) { // Paper - Configurable marker ticking
+                     nonEntityTicking.merge(key, 1, Integer::sum);
+                 }
+             });

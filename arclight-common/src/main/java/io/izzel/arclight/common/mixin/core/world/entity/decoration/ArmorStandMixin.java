@@ -62,14 +62,57 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
         return false;
     }
 
-    @Inject(method = "kill", at = @At("HEAD"))
-    private void arclight$pushRemoveCause(CallbackInfo ci) {
+    private boolean arclight$preparedDeath;
+    private net.minecraft.world.entity.item.ItemEntity arclight$standDrop;
+
+    @Inject(method = "hurtServer", at = @At("HEAD"))
+    private void arclight$resetDeath(ServerLevel level, DamageSource source, float damage, CallbackInfoReturnable<Boolean> cir) {
+        this.arclight$preparedDeath = false;
+        this.arclight$standDrop = null;
+        ((io.izzel.arclight.common.bridge.core.world.entity.DeathEventBridge) this).bridge$resetDeathEvent();
+    }
+
+    @Inject(method = "kill", at = @At("HEAD"), cancellable = true)
+    private void arclight$pushRemoveCause(ServerLevel level, CallbackInfo ci) {
+        var death = (io.izzel.arclight.common.bridge.core.world.entity.DeathEventBridge) this;
+        if (!this.arclight$preparedDeath) {
+            death.bridge$resetDeathEvent();
+            CraftEventFactory.callEntityDeathEvent((net.minecraft.world.entity.LivingEntity) (Object) this, this.damageSources().genericKill());
+        }
+        this.arclight$preparedDeath = false;
+        if (death.bridge$deathCancelled()) {
+            ci.cancel();
+            return;
+        }
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DEATH);
+    }
+
+    @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(method = "brokenByPlayer", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/level/block/Block;popResource(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/item/ItemStack;)V"))
+    private void arclight$captureStand(Level level, BlockPos pos, ItemStack stack,
+            com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original) {
+        this.arclight$standDrop = this.arclight$spawnAtLocationNoAdd(stack);
+    }
+
+    @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(method = "brokenByAnything", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/entity/EntityEquipment;set(Lnet/minecraft/world/entity/EquipmentSlot;Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/item/ItemStack;"))
+    private ItemStack arclight$deferClear(net.minecraft.world.entity.EntityEquipment equipment,
+            net.minecraft.world.entity.EquipmentSlot slot, ItemStack stack,
+            com.llamalad7.mixinextras.injector.wrapoperation.Operation<ItemStack> original) {
+        ItemStack previous = equipment.get(slot);
+        ((io.izzel.arclight.common.bridge.core.world.entity.DeathEventBridge) this)
+            .bridge$deferDeathChange(() -> original.call(equipment, slot, stack));
+        return previous;
     }
 
     @Redirect(method = "brokenByAnything", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/ArmorStand;dropAllDeathLoot(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;)V"))
     private void arclight$dropLater(net.minecraft.world.entity.decoration.ArmorStand instance, ServerLevel serverLevel, DamageSource damageSource) {
-        ArclightCaptures.captureExtraDrops(new ArrayList<>(6));
+        var drops = new ArrayList<net.minecraft.world.entity.item.ItemEntity>(6);
+        if (this.arclight$standDrop != null) {
+            drops.add(this.arclight$standDrop);
+            this.arclight$standDrop = null;
+        }
+        ArclightCaptures.captureExtraDrops(drops);
     }
 
     @Decorate(method = "brokenByAnything", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;popResource(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/item/ItemStack;)V"))
@@ -85,6 +128,7 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
     @Inject(method = "brokenByAnything", at = @At("RETURN"))
     private void arclight$spawnLast(ServerLevel serverLevel, DamageSource damageSource, CallbackInfo ci) {
         this.dropAllDeathLoot(serverLevel, damageSource);
+        this.arclight$preparedDeath = true;
     }
 
     @Override

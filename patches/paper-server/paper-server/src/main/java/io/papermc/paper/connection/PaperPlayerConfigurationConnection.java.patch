@@ -1,0 +1,46 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/connection/PaperPlayerConfigurationConnection.java b/paper-server/src/main/java/io/papermc/paper/connection/PaperPlayerConfigurationConnection.java
+--- a/paper-server/src/main/java/io/papermc/paper/connection/PaperPlayerConfigurationConnection.java
++++ b/paper-server/src/main/java/io/papermc/paper/connection/PaperPlayerConfigurationConnection.java
+@@ -2,6 +2,7 @@
+ 
+ import com.destroystokyo.paper.profile.CraftPlayerProfile;
+ import com.destroystokyo.paper.profile.PlayerProfile;
++import io.izzel.arclight.common.mod.plugin.messaging.ArclightRawPayload;
+ import io.papermc.paper.adventure.PaperAdventure;
+ import io.papermc.paper.dialog.Dialog;
+ import io.papermc.paper.dialog.PaperDialog;
+@@ -27,7 +28,6 @@
+ import net.minecraft.network.protocol.common.ClientboundResourcePackPopPacket;
+ import net.minecraft.network.protocol.common.ClientboundResourcePackPushPacket;
+ import net.minecraft.network.protocol.common.ClientboundShowDialogPacket;
+-import net.minecraft.network.protocol.common.custom.DiscardedPayload;
+ import net.minecraft.network.protocol.configuration.ClientboundResetChatPacket;
+ import net.minecraft.resources.Identifier;
+ import net.minecraft.server.level.ClientInformation;
+@@ -61,7 +61,7 @@
+             final ResourcePackInfo pack = iter.next();
+             packs.add(new ClientboundResourcePackPushPacket(pack.id(), pack.uri().toASCIIString(), pack.hash(), request.required(), iter.hasNext() ? Optional.empty() : Optional.ofNullable(prompt)));
+             if (request.callback() != ResourcePackCallback.noOp()) {
+-                this.packetListener.packCallbacks.put(pack.id(), request.callback()); // just override if there is a previously existing callback
++                ((io.izzel.arclight.common.bridge.core.server.network.ServerCommonPacketListenerImplBridge) this.packetListener).bridge$registerResourcePackCallback(pack.id(), request.callback()); // just override if there is a previously existing callback
+             }
+         }
+         packs.forEach(this.packetListener::send);
+@@ -129,7 +129,7 @@
+ 
+     @Override
+     public Set<String> channels() {
+-        return this.packetListener.pluginMessagerChannels;
++        return ((io.izzel.arclight.common.bridge.core.server.network.ServerCommonPacketListenerImplBridge) this.packetListener).bridge$getCraftPlayer().channels();
+     }
+ 
+     @Override
+@@ -139,7 +139,7 @@
+         if (this.channels().contains(channel)) {
+             @SuppressWarnings("deprecation") // "not an API method" does not apply to us
+             Identifier id = Identifier.parse(StandardMessenger.validateAndCorrectChannel(channel));
+-            ClientboundCustomPayloadPacket packet = new ClientboundCustomPayloadPacket(new DiscardedPayload(id, message));
++            ClientboundCustomPayloadPacket packet = new ClientboundCustomPayloadPacket(new ArclightRawPayload(ArclightRawPayload.getType(id), message));
+             this.packetListener.send(packet);
+         }
+     }

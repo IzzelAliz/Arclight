@@ -1,0 +1,22 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/util/DummyLevelAccessor.java b/paper-server/src/main/java/org/bukkit/craftbukkit/util/DummyLevelAccessor.java
+index 1fb4ae84564045ebf332541c15a163285ce3acae..a554a4c5d15c125e5fd0c9a83005afcece165752 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/util/DummyLevelAccessor.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/util/DummyLevelAccessor.java
+@@ -213,17 +213,14 @@ public class DummyLevelAccessor implements WorldGenLevel {
+         return Fluids.EMPTY.defaultFluidState(); // SPIGOT-6634
+     }
+ 
+-    @Override
+     public ChunkAccess getChunkIfLoadedImmediately(int x, int z) {
+         throw new UnsupportedOperationException("Not supported yet.");
+     }
+ 
+-    @Override
+     public BlockState getBlockStateIfLoaded(BlockPos pos) {
+         throw new UnsupportedOperationException("Not supported yet.");
+     }
+ 
+-    @Override
+     public FluidState getFluidIfLoaded(BlockPos pos) {
+         throw new UnsupportedOperationException("Not supported yet.");
+     }

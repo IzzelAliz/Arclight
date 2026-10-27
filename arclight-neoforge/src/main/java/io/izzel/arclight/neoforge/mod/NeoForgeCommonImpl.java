@@ -4,7 +4,6 @@ import com.google.common.graph.Graph;
 import com.google.common.graph.Graphs;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.mod.ArclightCommon;
-import net.neoforged.fml.ModList;
 import org.objectweb.asm.ClassReader;
 
 import java.lang.invoke.MethodHandle;
@@ -39,7 +38,8 @@ public class NeoForgeCommonImpl implements ArclightCommon.Api {
 
     @Override
     public boolean isModLoaded(String modid) {
-        return ModList.get() != null && ModList.get().isLoaded(modid);
+        var loader = net.neoforged.fml.loading.FMLLoader.getCurrent();
+        return loader.getLoadingModList().getModFileById(modid) != null;
     }
 
     @Override

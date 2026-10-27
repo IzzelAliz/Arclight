@@ -21,6 +21,8 @@ public interface DistanceManagerBridge {
 
     void arclight$offerUpdate(ChunkHolder holder);
 
+    void bridge$runQueuedUpdates(net.minecraft.server.level.ChunkMap map);
+
     default boolean bridge$platform$isTicketForceTick(Ticket ticket) {
         return false;
     }

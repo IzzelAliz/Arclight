@@ -69,7 +69,7 @@ public abstract class BlockAttachedEntityMixin extends EntityMixin {
         Entity damager = (source.isDirect()) ? source.getDirectEntity() : source.getEntity();
         HangingBreakEvent event;
         if (damager != null) {
-            event = new HangingBreakByEntityEvent(hanging, damager.bridge$getBukkitEntity(), source.is(DamageTypeTags.IS_EXPLOSION) ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.ENTITY);
+            event = new HangingBreakByEntityEvent(hanging, damager.bridge$getBukkitEntity(), new org.bukkit.craftbukkit.damage.CraftDamageSource(source), source.is(DamageTypeTags.IS_EXPLOSION) ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.ENTITY);
         } else {
             event = new HangingBreakEvent(hanging, source.is(DamageTypeTags.IS_EXPLOSION) ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.DEFAULT);
         }

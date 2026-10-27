@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.vehicle.VehicleEntity;
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.damage.CraftDamageSource;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
@@ -28,7 +29,7 @@ public abstract class VehicleEntityMixin extends EntityMixin {
     private void arclight$vehicleDamage(ServerLevel level, DamageSource source, float amount) throws Throwable {
         Vehicle vehicle = (Vehicle) this.getBukkitEntity();
         org.bukkit.entity.Entity passenger = (source.getEntity() == null) ? null : source.getEntity().bridge$getBukkitEntity();
-        VehicleDamageEvent event = new VehicleDamageEvent(vehicle, passenger, amount);
+        VehicleDamageEvent event = new VehicleDamageEvent(vehicle, new CraftDamageSource(source), passenger, amount);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             DecorationOps.cancel().invoke(false);
@@ -42,7 +43,7 @@ public abstract class VehicleEntityMixin extends EntityMixin {
     private void arclight$playerDestroy(ServerLevel level, DamageSource source, float f, CallbackInfoReturnable<Boolean> cir) {
         Vehicle vehicle = (Vehicle) this.getBukkitEntity();
         org.bukkit.entity.Entity passenger = (source.getEntity() == null) ? null : source.getEntity().bridge$getBukkitEntity();
-        VehicleDestroyEvent destroyEvent = new VehicleDestroyEvent(vehicle, passenger);
+        VehicleDestroyEvent destroyEvent = new VehicleDestroyEvent(vehicle, new CraftDamageSource(source), passenger);
         Bukkit.getPluginManager().callEvent(destroyEvent);
 
         if (destroyEvent.isCancelled()) {
@@ -57,7 +58,7 @@ public abstract class VehicleEntityMixin extends EntityMixin {
     private void arclight$destroy(ServerLevel level, DamageSource source, float f, CallbackInfoReturnable<Boolean> cir) {
         Vehicle vehicle = (Vehicle) this.getBukkitEntity();
         org.bukkit.entity.Entity passenger = (source.getEntity() == null) ? null : source.getEntity().bridge$getBukkitEntity();
-        VehicleDestroyEvent destroyEvent = new VehicleDestroyEvent(vehicle, passenger);
+        VehicleDestroyEvent destroyEvent = new VehicleDestroyEvent(vehicle, new CraftDamageSource(source), passenger);
         Bukkit.getPluginManager().callEvent(destroyEvent);
 
         if (destroyEvent.isCancelled()) {

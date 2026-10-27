@@ -1,5 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
+import com.destroystokyo.paper.event.entity.ExperienceOrbMergeEvent;
+import com.destroystokyo.paper.event.player.PlayerPickupExperienceEvent;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.ExperienceOrbBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -47,9 +51,19 @@ public abstract class ExperienceOrbMixin extends EntityMixin implements Experien
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
     }
 
+    @Decorate(method = "merge(Lnet/minecraft/world/entity/ExperienceOrb;)V", inject = true, at = @At("HEAD"), require = 1, allow = 1)
+    private void arclight$mergeExperience(ExperienceOrb orb) throws Throwable {
+        // Admission-time merging already dispatches in CraftEventFactory; this is the native scan path.
+        if (!new ExperienceOrbMergeEvent((org.bukkit.entity.ExperienceOrb) this.getBukkitEntity(),
+            (org.bukkit.entity.ExperienceOrb) ((EntityBridge) orb).bridge$getBukkitEntity()).callEvent()) {
+            DecorationOps.cancel().invoke();
+            return;
+        }
+    }
+
     @Inject(method = "merge", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;discard()V"))
-    private void arclight$merge(CallbackInfo ci) {
-        this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.MERGE);
+    private void arclight$merge(ExperienceOrb orb, CallbackInfo ci) {
+        ((EntityBridge) orb).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.MERGE);
     }
 
     @Inject(method = "playerTouch", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;discard()V"))
@@ -85,17 +99,23 @@ public abstract class ExperienceOrbMixin extends EntityMixin implements Experien
 
     @Decorate(method = "playerTouch", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;giveExperiencePoints(I)V"))
     private void arclight$expChange(Player player, int amount) throws Throwable {
-        DecorationOps.callsite().invoke(player, CraftEventFactory.callPlayerExpChangeEvent((ServerPlayer) player, amount).getAmount());
+        DecorationOps.callsite().invoke(player, CraftEventFactory.callPlayerExpChangeEvent(player, (ExperienceOrb) (Object) this, amount).getAmount());
     }
 
-    @Decorate(method = "playerTouch", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/entity/player/Player;takeXpDelay:I"))
+    @Decorate(method = "playerTouch(Lnet/minecraft/world/entity/player/Player;)V", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/entity/player/Player;takeXpDelay:I"), require = 1, allow = 1)
     private void arclight$cooldown(Player instance, int value) throws Throwable {
+        // Native cooldown/type checks and NeoForge's pickup veto precede this write.
+        if (!new PlayerPickupExperienceEvent(((ServerPlayerBridge) instance).bridge$getBukkitEntity(),
+            (org.bukkit.entity.ExperienceOrb) this.getBukkitEntity()).callEvent()) {
+            DecorationOps.cancel().invoke();
+            return;
+        }
         DecorationOps.callsite().invoke(instance, CraftEventFactory.callPlayerXpCooldownEvent((ServerPlayer) instance, value, PlayerExpCooldownChangeEvent.ChangeReason.PICKUP_ORB).getNewCooldown());
     }
 
     @Decorate(method = "repairPlayerItems", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;setDamageValue(I)V"))
     private void arclight$itemMend(ServerPlayer serverPlayer, int i, @Local(ordinal = -1) ItemStack itemstack,
-                                   @Local(ordinal = -1) Optional<EnchantedItemInUse> optional, @Local(ordinal = -1) int k) throws Throwable {
+                                   @Local(ordinal = -1) Optional<EnchantedItemInUse> optional, @Local(ordinal = -2) int j, @Local(ordinal = -1) int k) throws Throwable {
         var slot = optional.get().inSlot();
         // https://github.com/IzzelAliz/Arclight/issues/2155
         // Bukkit cannot represent mod-only slots (e.g. Accessories uses ordinal -1).
@@ -106,7 +126,7 @@ public abstract class ExperienceOrbMixin extends EntityMixin implements Experien
             && slot != EquipmentSlot.BODY && slot != EquipmentSlot.SADDLE) {
             return;
         }
-        org.bukkit.event.player.PlayerItemMendEvent event = CraftEventFactory.callPlayerItemMendEvent(serverPlayer, (ExperienceOrb) (Object) this, itemstack, slot, k);
+        org.bukkit.event.player.PlayerItemMendEvent event = CraftEventFactory.callPlayerItemMendEvent(serverPlayer, (ExperienceOrb) (Object) this, itemstack, slot, k, k > 0 ? k * i / j : 0);
         k = event.getRepairAmount();
         if (event.isCancelled()) {
             DecorationOps.cancel().invoke(i);

@@ -14,7 +14,7 @@ public class ArclightBlockSnapshot extends CraftBlock {
     }
 
     @Override
-    public BlockState getNMS() {
+    public BlockState getBlockState() {
         return blockState;
     }
 

@@ -56,9 +56,6 @@ public abstract class LivingEntityMixin_Vanilla extends EntityMixin_Vanilla impl
         originalDamage = (float) event.getDamage();
         DecorationOps.blackhole().invoke(container, originalDamage);
 
-        if (damagesource.getEntity() instanceof net.minecraft.world.entity.player.Player) {
-            ((net.minecraft.world.entity.player.Player) damagesource.getEntity()).resetAttackStrengthTicker();
-        }
     }
 
     // Special handle; assuming shield cut out at most BLOCKING damage from original and g means the damage that will be used to calculate exact blocking.

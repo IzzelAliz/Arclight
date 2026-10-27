@@ -1,0 +1,16 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftAccessLocationInventoryViewBuilder.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftAccessLocationInventoryViewBuilder.java
+index 5c01bdeed3abf3b3c20de465508b02bca70f099d..61f9af5845cbb04843c64c46d33a686cf0804c68 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftAccessLocationInventoryViewBuilder.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftAccessLocationInventoryViewBuilder.java
+@@ -35,9 +35,9 @@ public class CraftAccessLocationInventoryViewBuilder<V extends InventoryView> ex
+             effectiveBlockState = block.defaultBlockState();
+         }
+ 
+-        final MenuProvider provider = block.getMenuProvider(effectiveBlockState, effectiveLevel, effectiveBlockPos);
++        final MenuProvider provider = block.withPropertiesOf(effectiveBlockState).getMenuProvider(effectiveLevel, effectiveBlockPos);
+         super.defaultTitle = provider.getDisplayName();
+-        return provider.createMenu(player.nextContainerCounter(), player.getInventory(), player);
++        return provider.createMenu(((io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge) player).bridge$nextContainerCounter(), player.getInventory(), player);
+     }
+ 
+     @Override

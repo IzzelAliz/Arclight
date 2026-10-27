@@ -8,6 +8,14 @@ import java.util.Map;
 import java.util.function.Function;
 
 public interface CommandsBridge {
+    interface RestrictedMarker {}
+
+    default com.mojang.brigadier.tree.RootCommandNode<net.minecraft.commands.CommandSourceStack> bridge$forge$filterCommandTree(
+            net.minecraft.server.level.ServerPlayer player,
+            com.mojang.brigadier.tree.RootCommandNode<net.minecraft.commands.CommandSourceStack> root) {
+        return root;
+    }
+
     default <S, T> void bridge$forge$mergeNode(CommandNode<S> sourceNode, CommandNode<T> resultNode,
                                        Map<CommandNode<S>, CommandNode<T>> sourceToResult,
                                        S canUse, Command<T> execute,

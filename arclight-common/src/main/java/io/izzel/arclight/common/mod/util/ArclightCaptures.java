@@ -19,13 +19,45 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.Block;
 import org.bukkit.TreeType;
 import org.bukkit.block.BlockState;
-import org.bukkit.craftbukkit.event.CraftPortalEvent;
+import org.bukkit.craftbukkit.event.PortalEventResult;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 
 import java.util.*;
 
 public class ArclightCaptures {
+
+    public static final class ShearDrops {
+        public final ServerLevel level;
+        public final net.minecraft.world.item.ItemStack tool;
+        public final net.minecraft.world.level.block.state.BlockState state;
+        public final BlockEntity blockEntity;
+        public final Entity entity;
+        public final BlockPos pos;
+        public final ArrayList<org.bukkit.inventory.ItemStack> drops = new ArrayList<>();
+        public java.util.function.BiConsumer<ServerLevel, net.minecraft.world.item.ItemStack> dropper;
+
+        public ShearDrops(ServerLevel level, net.minecraft.world.item.ItemStack tool, net.minecraft.world.level.block.state.BlockState state, BlockEntity blockEntity, Entity entity, BlockPos pos) {
+            this.level = level;
+            this.tool = tool;
+            this.state = state;
+            this.blockEntity = blockEntity;
+            this.entity = entity;
+            this.pos = pos.immutable();
+        }
+    }
+
+    public static final class WaterPotionSplashContext {
+        public final net.minecraft.world.phys.HitResult hitResult;
+        public io.papermc.paper.event.entity.WaterBottleSplashEvent event;
+        public boolean accepted;
+        public int damageCount;
+        public int cursor = -1;
+
+        public WaterPotionSplashContext(net.minecraft.world.phys.HitResult hitResult) {
+            this.hitResult = hitResult;
+        }
+    }
 
     private static OptionSet bukkitOptions;
 
@@ -126,24 +158,21 @@ public class ArclightCaptures {
         isPrimaryEvent = false;
     }
 
-    private static final ThreadLocal<Deque<BlockBreakExperienceScope>> vanillaBlockBreakExperienceScopes = ThreadLocal.withInitial(ArrayDeque::new);
+    private static final Deque<BlockBreakExperienceScope> vanillaBlockBreakExperienceScopes = new ArrayDeque<>();
 
     public static void pushVanillaBlockBreakExperienceSuppression(ServerLevel level, BlockPos pos) {
-        vanillaBlockBreakExperienceScopes.get().push(new BlockBreakExperienceScope(level, pos));
+        vanillaBlockBreakExperienceScopes.push(new BlockBreakExperienceScope(level, pos));
     }
 
     public static boolean shouldSuppressVanillaBlockBreakExperience(ServerLevel level, BlockPos pos) {
-        Deque<BlockBreakExperienceScope> scopes = vanillaBlockBreakExperienceScopes.get();
+        Deque<BlockBreakExperienceScope> scopes = vanillaBlockBreakExperienceScopes;
         return !scopes.isEmpty() && scopes.peek().matches(level, pos);
     }
 
     public static void popVanillaBlockBreakExperienceSuppression() {
-        Deque<BlockBreakExperienceScope> scopes = vanillaBlockBreakExperienceScopes.get();
+        Deque<BlockBreakExperienceScope> scopes = vanillaBlockBreakExperienceScopes;
         if (!scopes.isEmpty()) {
             scopes.pop();
-        }
-        if (scopes.isEmpty()) {
-            vanillaBlockBreakExperienceScopes.remove();
         }
     }
 
@@ -330,13 +359,13 @@ public class ArclightCaptures {
         }
     }
 
-    private static transient CraftPortalEvent craftPortalEvent;
+    private static transient PortalEventResult craftPortalEvent;
 
-    public static void captureCraftPortalEvent(CraftPortalEvent event) {
+    public static void captureCraftPortalEvent(PortalEventResult event) {
         craftPortalEvent = event;
     }
 
-    public static CraftPortalEvent getCraftPortalEvent() {
+    public static PortalEventResult getCraftPortalEvent() {
         try {
             return craftPortalEvent;
         } finally {
@@ -585,4 +614,124 @@ public class ArclightCaptures {
             return this.level == level && this.pos.equals(pos);
         }
     }
+
+    public static com.mojang.datafixers.util.Pair<net.minecraft.world.item.ItemStack, LivingEntity> crossbowNoConsume;
+    public static com.mojang.datafixers.util.Pair<Inventory, Integer> pickItemTarget;
+    public static net.minecraft.server.level.ServerPlayer gameModeSwitcher;
+    public static org.apache.commons.lang3.tuple.Triple<net.minecraft.world.item.ItemStack, LivingEntity, Boolean> itemDamage;
+    public static com.mojang.datafixers.util.Pair<org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason, Runnable> preCreatureSpawn;
+
+    public static org.bukkit.event.player.PlayerGameModeChangeEvent.Cause takeGameModeCause(net.minecraft.server.level.ServerPlayer player) {
+        if (gameModeSwitcher == player) {
+            gameModeSwitcher = null;
+            return org.bukkit.event.player.PlayerGameModeChangeEvent.Cause.GAMEMODE_SWITCHER;
+        }
+        return org.bukkit.event.player.PlayerGameModeChangeEvent.Cause.COMMAND;
+    }
+
+    public static boolean isItemDamageForced(net.minecraft.world.item.ItemStack stack, LivingEntity owner) {
+        return itemDamage != null && itemDamage.getLeft() == stack && itemDamage.getMiddle() == owner && itemDamage.getRight();
+    }
+
+    public static LivingEntity getItemDamageOwner(net.minecraft.world.item.ItemStack stack, LivingEntity nativeOwner) {
+        var damage = itemDamage;
+        if (damage != null && damage.getLeft() == stack && (damage.getMiddle() == nativeOwner
+            || nativeOwner == null && !(damage.getMiddle() instanceof net.minecraft.server.level.ServerPlayer))) {
+            return damage.getMiddle();
+        }
+        return null;
+    }
+
+    public static void withItemDamage(net.minecraft.world.item.ItemStack stack, LivingEntity owner, boolean force, Runnable action) {
+        var previous = itemDamage;
+        itemDamage = org.apache.commons.lang3.tuple.Triple.of(stack, owner, force);
+        try {
+            action.run();
+        } finally {
+            itemDamage = previous;
+        }
+    }
+
+    public static <T> T withPreCreatureSpawn(org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason reason,
+                                            Runnable onAbort, java.util.function.Supplier<T> action) {
+        var previous = preCreatureSpawn;
+        preCreatureSpawn = com.mojang.datafixers.util.Pair.of(reason, onAbort);
+        try {
+            return action.get();
+        } finally {
+            preCreatureSpawn = previous;
+        }
+    }
+
+    public static org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason getPreCreatureSpawnReason() {
+        return preCreatureSpawn == null ? org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.DEFAULT : preCreatureSpawn.getFirst();
+    }
+
+    public static org.apache.commons.lang3.tuple.Triple<net.minecraft.world.item.component.BlocksAttacks, net.minecraft.world.item.ItemStack,
+        com.mojang.datafixers.util.Pair<LivingEntity, LivingEntity>> shieldDisable;
+
+    public static org.apache.commons.lang3.tuple.Triple<net.minecraft.world.entity.animal.golem.SnowGolem,
+        net.minecraft.world.item.ItemInstance, java.util.List<net.minecraft.world.item.ItemStack>> snowGolemShearDrops;
+
+    public static io.izzel.arclight.common.mod.server.event.ArclightEventFactory.BlockDestruction blockDestruction;
+
+    public static com.mojang.datafixers.util.Pair<BlockPos,
+        org.apache.commons.lang3.tuple.Triple<net.minecraft.server.level.ServerPlayer, net.minecraft.world.item.ItemStack, Integer>> furnaceExtraction;
+    public static com.mojang.datafixers.util.Pair<BlockPos,
+        org.apache.commons.lang3.tuple.Triple<net.minecraft.server.level.ServerPlayer, net.minecraft.world.item.ItemStack, Integer>> furnaceExperience;
+
+    private static Deque<Map<Entity, Float>> fireDurations;
+    public static void pushFireDurations() {
+        Deque<Map<Entity, Float>> scopes = fireDurations;
+        if (scopes == null) {
+            scopes = new ArrayDeque<>();
+            fireDurations = scopes;
+        }
+        scopes.push(new IdentityHashMap<>());
+    }
+
+    public static void popFireDurations() {
+        Deque<Map<Entity, Float>> scopes = fireDurations;
+        scopes.pop();
+        if (scopes.isEmpty()) {
+            fireDurations = null;
+        }
+    }
+
+    public static void captureFireDuration(Entity entity, float duration) {
+        Deque<Map<Entity, Float>> scopes = fireDurations;
+        if (scopes != null && !scopes.isEmpty()) {
+            scopes.peek().put(entity, duration);
+        }
+    }
+
+    public static float consumeFireDuration(Entity entity, float fallback) {
+        Deque<Map<Entity, Float>> scopes = fireDurations;
+        if (scopes == null || scopes.isEmpty()) {
+            return fallback;
+        }
+        Float duration = scopes.peek().remove(entity);
+        return duration == null ? fallback : duration;
+    }
+
+    public static com.mojang.datafixers.util.Pair<LivingEntity, org.apache.commons.lang3.mutable.MutableBoolean> chorusPending;
+    public static com.mojang.datafixers.util.Pair<LivingEntity, org.apache.commons.lang3.mutable.MutableBoolean> chorusActive;
+
+    public static org.apache.commons.lang3.tuple.Triple<LivingEntity, net.minecraft.world.item.ItemInstance,
+        com.mojang.datafixers.util.Pair<net.minecraft.resources.ResourceKey<net.minecraft.world.level.storage.loot.LootTable>,
+            java.util.List<net.minecraft.world.item.ItemStack>>> forgeShearDrops;
+
+    public static Object nightLevel;
+    public static Object nightManager;
+    public static Object nightClock;
+    public static java.util.function.LongBinaryOperator nightProposal;
+    public static boolean nightCancelled;
+
+    public static final class NightSkipCancelled extends RuntimeException {
+        public NightSkipCancelled() {
+            super(null, null, false, false);
+        }
+    }
+
+    public static io.izzel.arclight.common.mod.server.event.ArclightEventFactory.SlimeSplit slimeSplit;
 }

@@ -53,7 +53,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 @Mixin(BeehiveBlockEntity.class)
-public abstract class BeehiveBlockEntityMixin extends BlockEntityMixin {
+public abstract class BeehiveBlockEntityMixin extends BlockEntityMixin implements io.izzel.arclight.common.bridge.core.world.level.block.entity.BeehiveBlockEntityBridge {
 
     // @formatter:off
     @Shadow private List<BeehiveBlockEntity.BeeData> stored;
@@ -62,6 +62,21 @@ public abstract class BeehiveBlockEntityMixin extends BlockEntityMixin {
     // @formatter:on
 
     public int maxBees = 3;
+
+    @Override
+    public int bridge$getMaxBees() {
+        return this.maxBees;
+    }
+
+    @Override
+    public void bridge$setMaxBees(int max) {
+        this.maxBees = max;
+    }
+
+    @Override
+    public void bridge$clearBees() {
+        this.stored.clear();
+    }
 
     /**
      * @author IzzelAliz
@@ -208,4 +223,9 @@ public abstract class BeehiveBlockEntityMixin extends BlockEntityMixin {
     private void arclight$writeMax(ValueOutput output, CallbackInfo ci) {
         output.putInt("Bukkit.MaxEntities", this.maxBees);
     }
+
+    public void clearBees() {
+        this.bridge$clearBees();
+    }
+
 }

@@ -2,8 +2,23 @@ package io.izzel.arclight.common.bridge.core.world.damagesource;
 
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+
+import javax.annotation.Nullable;
 
 public interface DamageSourceBridge {
+
+    @Nullable DamageCause bridge$knownCause();
+
+    DamageSource bridge$knownCause(@Nullable DamageCause cause);
+
+    DamageSource bridge$setKnownCause(@Nullable DamageCause cause);
+
+    boolean bridge$isCritical();
+
+    DamageSource bridge$critical();
+
+    DamageSource bridge$setCritical(boolean critical);
 
     boolean bridge$isSweep();
 
@@ -36,4 +51,17 @@ public interface DamageSourceBridge {
     DamageSource bridge$directBlockState(org.bukkit.block.BlockState block);
 
     DamageSource bridge$setDirectBlockState(org.bukkit.block.BlockState block);
+
+    default org.bukkit.block.Block eventBlockDamager() {
+        return this.bridge$directBlock();
+    }
+
+    default org.bukkit.block.BlockState causingBlockSnapshot() {
+        return this.bridge$directBlockState();
+    }
+
+    default boolean isCritical() {
+        return this.bridge$isCritical();
+    }
+
 }

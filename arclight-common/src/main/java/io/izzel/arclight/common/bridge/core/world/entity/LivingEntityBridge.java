@@ -24,6 +24,8 @@ import java.util.Optional;
 
 public interface LivingEntityBridge extends EntityBridge {
 
+    org.bukkit.craftbukkit.attribute.CraftAttributeMap bridge$getCraftAttributes();
+
     void bridge$setSlot(EquipmentSlot slotIn, ItemStack stack, boolean silent);
 
     void bridge$playEquipSound(EquipmentSlot slot, ItemStack oldItem, ItemStack newItem, boolean silent);
@@ -35,6 +37,10 @@ public interface LivingEntityBridge extends EntityBridge {
     void bridge$setExpToDrop(int amount);
 
     int bridge$getExpToDrop();
+
+    int bridge$getInvulnerableDuration();
+
+    void bridge$setInvulnerableDuration(int ticks);
 
     void bridge$pushHealReason(EntityRegainHealthEvent.RegainReason regainReason);
 
@@ -60,6 +66,11 @@ public interface LivingEntityBridge extends EntityBridge {
     void bridge$pushKnockbackCause(Entity attacker, EntityKnockbackEvent.KnockbackCause cause);
 
     @Override
+    default CraftLivingEntity getBukkitEntity() {
+        return bridge$getBukkitEntity();
+    }
+
+    @Override
     CraftLivingEntity bridge$getBukkitEntity();
 
     default int bridge$forge$getExperienceDrop(LivingEntity entity, Player attackingPlayer, int originalExperience) {
@@ -83,4 +94,29 @@ public interface LivingEntityBridge extends EntityBridge {
 
     @Nullable
     EntityDamageEvent arclight$fireEntityDamageEvent(DamageSource source, float original);
+
+    default org.bukkit.craftbukkit.entity.CraftLivingEntity getBukkitLivingEntity() {
+        return this.bridge$getBukkitEntity();
+    }
+
+    default void heal(float amount, org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason reason) {
+        this.bridge$heal(amount, reason);
+    }
+
+    default boolean addEffect(net.minecraft.world.effect.MobEffectInstance effect, org.bukkit.event.entity.EntityPotionEffectEvent.Cause cause) {
+        return this.bridge$addEffect(effect, cause);
+    }
+
+    default boolean removeEffect(net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> effect, org.bukkit.event.entity.EntityPotionEffectEvent.Cause cause) {
+        return this.bridge$removeEffect(effect, cause);
+    }
+
+    default boolean removeAllEffects(org.bukkit.event.entity.EntityPotionEffectEvent.Cause cause) {
+        return this.bridge$removeAllEffects(cause);
+    }
+
+    default void setItemSlot(net.minecraft.world.entity.EquipmentSlot slot, net.minecraft.world.item.ItemStack stack, boolean silent) {
+        this.bridge$setSlot(slot, stack, silent);
+    }
+
 }

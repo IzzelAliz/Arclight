@@ -37,6 +37,11 @@ public class CommandSource1Mixin implements CommandSourceBridge {
 
             }
 
+            @Override
+            public net.kyori.adventure.text.@NotNull Component name() {
+                return net.kyori.adventure.text.Component.text(getName());
+            }
+
             @NotNull
             @Override
             public String getName() {

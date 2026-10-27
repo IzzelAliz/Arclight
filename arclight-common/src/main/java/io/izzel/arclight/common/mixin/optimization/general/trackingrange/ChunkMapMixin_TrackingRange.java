@@ -13,10 +13,10 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 public class ChunkMapMixin_TrackingRange {
 
     @Unique
-    private static final boolean arclight$applyInactive = ArclightConfig.spec().getOptimization().useActivationAndTrackingRange();
+    private static final boolean arclight$applyTrackingRange = ArclightConfig.spec().getOptimization().useTrackingRange();
 
     @ModifyVariable(method = "addEntity", index = 3, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/EntityType;updateInterval()I"))
     private int trackingRange$updateRange(int defaultRange, Entity entity) {
-        return arclight$applyInactive ? TrackingRange.getEntityTrackingRange(entity, defaultRange) : defaultRange;
+        return arclight$applyTrackingRange ? TrackingRange.getEntityTrackingRange(entity, defaultRange) : defaultRange;
     }
 }

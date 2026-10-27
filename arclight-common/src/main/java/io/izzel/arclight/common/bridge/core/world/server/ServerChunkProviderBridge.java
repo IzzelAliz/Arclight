@@ -14,7 +14,20 @@ public interface ServerChunkProviderBridge {
 
     ThreadedLevelLightEngine bridge$getLightManager();
 
+    boolean bridge$getSpawnFriendlies();
+
+    void bridge$setSpawnFriendlies(boolean spawnFriendlies);
+
     void bridge$setViewDistance(int viewDistance);
 
     void bridge$setSimulationDistance(int simDistance);
+
+    default boolean isChunkLoaded(int x, int z) {
+        return this.bridge$isChunkLoaded(x, z);
+    }
+
+    default void purgeUnload() {
+        this.bridge$purgeUnload();
+    }
+
 }

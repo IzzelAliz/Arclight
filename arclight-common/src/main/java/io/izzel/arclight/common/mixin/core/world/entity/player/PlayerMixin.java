@@ -6,6 +6,7 @@ import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
+import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge;
 import io.izzel.arclight.common.bridge.core.world.food.FoodDataBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.LivingEntityMixin;
@@ -61,6 +62,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 
@@ -74,6 +76,25 @@ import java.util.Optional;
 
 @Mixin(net.minecraft.world.entity.player.Player.class)
 public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBridge {
+
+    public net.kyori.adventure.util.TriState flyingFallDamage = net.kyori.adventure.util.TriState.NOT_SET;
+
+    @com.llamalad7.mixinextras.injector.ModifyExpressionValue(
+        method = "causeFallDamage(DFLnet/minecraft/world/damagesource/DamageSource;)Z",
+        at = {
+            @At(value = "FIELD", opcode = Opcodes.GETFIELD, target = "Lnet/minecraft/world/entity/player/Abilities;mayfly:Z"),
+            @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;mayFly()Z", remap = false)
+        }, require = 1, allow = 1)
+    private boolean arclight$flyingFallDamage(boolean original, double fallDistance, float damageModifier, DamageSource damageSource) {
+        if (!original || !this.flyingFallDamage.toBooleanOrElse(false)) {
+            return original;
+        }
+        this.arclight$platform$notifyFlyableFall(damageModifier);
+        return false;
+    }
+
+    public void arclight$platform$notifyFlyableFall(float damageModifier) {
+    }
 
     private transient boolean arclight$interacting;
     private transient Entity arclight$cancelledCopperShear;
@@ -142,7 +163,76 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     @Shadow public abstract boolean tryToStartFallFlying();
     // @formatter:on
 
+    @Decorate(method = "getProjectile(Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/item/ItemStack;", inject = true, at = @At("HEAD"), require = 1)
+    private void arclight$beginReadyArrow(@Local(allocate = "arclightReadyArrowCancelled") org.apache.commons.lang3.mutable.MutableBoolean cancelled) throws Throwable {
+        cancelled = new org.apache.commons.lang3.mutable.MutableBoolean();
+        DecorationOps.blackhole().invoke(cancelled);
+    }
+
+    @Decorate(method = "getProjectile(Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/item/ItemStack;",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ProjectileWeaponItem;getHeldProjectile(Lnet/minecraft/world/entity/LivingEntity;Ljava/util/function/Predicate;)Lnet/minecraft/world/item/ItemStack;"), require = 1, allow = 1)
+    private ItemStack arclight$readyHeldArrow(LivingEntity player, java.util.function.Predicate<ItemStack> supportedProjectiles, ItemStack heldWeapon,
+                                            @Local(allocate = "arclightReadyArrowCancelled") org.apache.commons.lang3.mutable.MutableBoolean cancelled) throws Throwable {
+        // Keep the loader's predicate and native off-hand/main-hand selection order.
+        return (ItemStack) DecorationOps.callsite().invoke(player,
+            supportedProjectiles.and(arrow -> this.arclight$tryReadyArrow(heldWeapon, arrow, cancelled)));
+    }
+
+    @Decorate(method = "getProjectile(Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/item/ItemStack;",
+        at = @At(value = "INVOKE", target = "Ljava/util/function/Predicate;test(Ljava/lang/Object;)Z", remap = false), require = 1, allow = 1)
+    private boolean arclight$readyInventoryArrow(java.util.function.Predicate<ItemStack> supportedProjectiles, Object candidate, ItemStack heldWeapon,
+                                               @Local(allocate = "arclightReadyArrowCancelled") org.apache.commons.lang3.mutable.MutableBoolean cancelled) throws Throwable {
+        return (boolean) DecorationOps.callsite().invoke(supportedProjectiles, candidate)
+            && this.arclight$tryReadyArrow(heldWeapon, (ItemStack) candidate, cancelled);
+    }
+
+    @Unique
+    private boolean arclight$tryReadyArrow(ItemStack weapon, ItemStack arrow, org.apache.commons.lang3.mutable.MutableBoolean cancelled) {
+        if (!((Object) this instanceof ServerPlayer player)) {
+            return true;
+        }
+        var event = new com.destroystokyo.paper.event.player.PlayerReadyArrowEvent(
+            ((ServerPlayerBridge) player).bridge$getBukkitEntity(),
+            org.bukkit.craftbukkit.inventory.CraftItemStack.asCraftMirror(weapon),
+            org.bukkit.craftbukkit.inventory.CraftItemStack.asCraftMirror(arrow));
+        boolean allowed = event.callEvent();
+        if (!allowed) {
+            cancelled.setValue(true);
+        }
+        return allowed;
+    }
+
+    // Both hooks sit only on exhausted-scan fallbacks, before creative/mod ammo selection.
+    @org.spongepowered.asm.mixin.injection.Group(name = "arclight$readyArrowFallback", min = 1, max = 1)
+    @Decorate(method = "getProjectile(Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/item/ItemStack;", inject = true,
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;hasInfiniteMaterials()Z"), require = 0, allow = 1)
+    private void arclight$readyArrowVanillaFallback(@Local(allocate = "arclightReadyArrowCancelled") org.apache.commons.lang3.mutable.MutableBoolean cancelled) {
+        this.arclight$resyncReadyArrow(cancelled);
+    }
+
+    @org.spongepowered.asm.mixin.injection.Group(name = "arclight$readyArrowFallback", min = 1, max = 1)
+    @Decorate(method = "getProjectile(Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/item/ItemStack;", inject = true,
+        at = @At(value = "FIELD", opcode = Opcodes.GETFIELD, target = "Lnet/minecraft/world/entity/player/Abilities;instabuild:Z"), require = 0, allow = 1)
+    private void arclight$readyArrowNeoForgeFallback(@Local(allocate = "arclightReadyArrowCancelled") org.apache.commons.lang3.mutable.MutableBoolean cancelled) {
+        this.arclight$resyncReadyArrow(cancelled);
+    }
+
+    @Unique
+    private void arclight$resyncReadyArrow(org.apache.commons.lang3.mutable.MutableBoolean cancelled) {
+        if (cancelled.booleanValue() && !this.abilities.instabuild && (Object) this instanceof ServerPlayer player) {
+            var bukkitPlayer = ((ServerPlayerBridge) player).bridge$getBukkitEntity();
+            if (bukkitPlayer.canSee(this.getBukkitEntity())) {
+                // Paper resyncUsingItem resends only the authoritative use-item flags.
+                player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket(player.getId(),
+                    java.util.List.of(net.minecraft.network.syncher.SynchedEntityData.DataValue.create(
+                        DATA_LIVING_ENTITY_FLAGS, this.entityData.get(DATA_LIVING_ENTITY_FLAGS)))));
+            }
+        }
+    }
+
+
     public boolean fauxSleeping;
+
     public int oldLevel;
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -153,6 +243,11 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     }
 
     @Override
+    public void bridge$setFauxSleeping(boolean sleeping) {
+        this.fauxSleeping = sleeping;
+    }
+
+    @Override
     public boolean bridge$isFauxSleeping() {
         return fauxSleeping;
     }
@@ -160,6 +255,47 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     @Inject(method = "turtleHelmetTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;)Z"))
     private void arclight$turtleHelmet(CallbackInfo ci) {
         bridge$pushEffectCause(EntityPotionEffectEvent.Cause.TURTLE_HELMET);
+    }
+
+    @Unique private java.util.function.Consumer<org.bukkit.entity.Item> arclight$dropOperation;
+    @Unique private boolean arclight$inventoryDropEvent;
+
+    @Override
+    public ItemEntity bridge$dropProvidedItem(ItemStack stack, boolean randomly, java.util.function.Consumer<org.bukkit.entity.Item> operation) {
+        return this.arclight$dropApiItem(stack, randomly, operation, false);
+    }
+
+    @Override
+    public ItemEntity bridge$dropInventoryItem(ItemStack stack, boolean randomly, java.util.function.Consumer<org.bukkit.entity.Item> operation) {
+        return this.arclight$dropApiItem(stack, randomly, operation, true);
+    }
+
+    @Unique
+    private ItemEntity arclight$dropApiItem(ItemStack stack, boolean randomly, java.util.function.Consumer<org.bukkit.entity.Item> operation, boolean callEvent) {
+        var previousOperation = this.arclight$dropOperation;
+        boolean previousEvent = this.arclight$inventoryDropEvent;
+        this.arclight$dropOperation = operation;
+        this.arclight$inventoryDropEvent = callEvent;
+        try {
+            return ((net.minecraft.world.entity.player.Player) (Object) this).drop(stack, randomly, true);
+        } finally {
+            this.arclight$dropOperation = previousOperation;
+            this.arclight$inventoryDropEvent = previousEvent;
+        }
+    }
+
+    @Override
+    public ItemEntity bridge$prepareApiDrop(ItemEntity entity) {
+        var operation = this.arclight$dropOperation;
+        boolean callEvent = this.arclight$inventoryDropEvent;
+        this.arclight$dropOperation = null;
+        this.arclight$inventoryDropEvent = false;
+        if (entity == null) return null;
+        if (operation != null) {
+            operation.accept((org.bukkit.entity.Item) ((io.izzel.arclight.common.bridge.core.entity.EntityBridge) entity).bridge$getBukkitEntity());
+        }
+        if (callEvent && !this.bridge$callDropItemEvent(entity, true)) return null;
+        return entity;
     }
 
     private transient boolean arclight$skipDropItemEvent;
@@ -269,10 +405,6 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
         return !team.hasPlayer(Bukkit.getOfflinePlayer(this.getScoreboardName()));
     }
 
-    @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;onAttack()V"))
-    private void arclight$skipResetAttackStrength(net.minecraft.world.entity.player.Player instance) {
-    }
-
     @Decorate(method = "attack", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;deflectProjectile(Lnet/minecraft/world/entity/Entity;)Z"))
     private void arclight$nonLivingDamage(Entity entity, @Local(ordinal = -1) DamageSource damageSource, @Local(ordinal = 2) float enchantDamage) throws Throwable {
         if (entity.typeHolder().is(net.minecraft.tags.EntityTypeTags.REDIRECTABLE_PROJECTILE)
@@ -284,6 +416,18 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
         DecorationOps.blackhole().invoke();
     }
 
+    @Decorate(method = "attack(Lnet/minecraft/world/entity/Entity;)V", inject = true,
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;isSweepAttack(ZZZ)Z"), require = 1, allow = 1)
+    private void arclight$criticalDamageSource(@Local(ordinal = -1) DamageSource damageSource,
+                                               @Local(ordinal = 2) boolean criticalAttack) throws Throwable {
+        // Read the settled attack local: NeoForge has already applied CriticalHitEvent here.
+        // Its isSweepAttack argument may additionally include disableSweep and is not the critical state.
+        if (criticalAttack) {
+            damageSource = ((DamageSourceBridge) damageSource).bridge$critical();
+        }
+        DecorationOps.blackhole().invoke(damageSource);
+    }
+
     @Redirect(method = "doSweepAttack*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDD)V"),
         slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z")))
     private void arclight$skipKnockback(LivingEntity instance, double d, double e, double f) {
@@ -291,7 +435,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
 
     @Decorate(method = "doSweepAttack*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
     private boolean arclight$applyKnockback(LivingEntity instance, ServerLevel serverLevel, DamageSource damageSource, float f) throws Throwable {
-        var result = (boolean) DecorationOps.callsite().invoke(instance, serverLevel, damageSource, f);
+        var result = (boolean) DecorationOps.callsite().invoke(instance, serverLevel, ((DamageSourceBridge) damageSource).bridge$knownCause(org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK), f);
         if (!result) {
             throw DecorationOps.jumpToLoopStart();
         }
@@ -446,6 +590,10 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     @Override
     public double bridge$platform$getBlockReach() {
         return isCreative() ? 5 : 4.5;
+    }
+
+    public void closeContainer(org.bukkit.event.inventory.InventoryCloseEvent.Reason reason) {
+        this.bridge$closeContainer(reason);
     }
 
 }

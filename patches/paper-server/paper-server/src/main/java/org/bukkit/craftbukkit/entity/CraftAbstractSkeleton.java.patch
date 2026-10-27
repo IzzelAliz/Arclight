@@ -1,0 +1,18 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractSkeleton.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractSkeleton.java
+index 879f57922cc04b553328fa1fe2f83afb4663db0b..7160661ebc36a0100ae94963598e99daa6c759be 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractSkeleton.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractSkeleton.java
+@@ -22,11 +22,11 @@ public abstract class CraftAbstractSkeleton extends CraftMonster implements Abst
+ 
+     @Override
+     public boolean shouldBurnInDay() {
+-        return getHandle().shouldBurnInDay();
++        throw new UnsupportedOperationException("Independent skeleton daylight burning control is not supported by Arclight");
+     }
+ 
+     @Override
+     public void setShouldBurnInDay(boolean shouldBurnInDay) {
+-        getHandle().setShouldBurnInDay(shouldBurnInDay);
++        throw new UnsupportedOperationException("Independent skeleton daylight burning control is not supported by Arclight");
+     }
+ }

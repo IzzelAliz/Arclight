@@ -1,0 +1,35 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/util/CraftChatMessage.java b/paper-server/src/main/java/org/bukkit/craftbukkit/util/CraftChatMessage.java
+index 3f115c561f34a8b11e4baa47a76e6fb03cc6637b..d93713298c0738ad1639e39557c098f5d5d9ae49 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/util/CraftChatMessage.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/util/CraftChatMessage.java
+@@ -299,19 +299,27 @@ public final class CraftChatMessage {
+         }
+     }
+ 
++    private static java.util.stream.Stream<Component> componentStream(Component component) {
++        return java.util.stream.Stream.concat(java.util.stream.Stream.of(component),
++            component.getSiblings().stream().flatMap(CraftChatMessage::componentStream));
++    }
++
+     public static String fromComponent(Component component) {
+         if (component == null) return "";
+         if (component instanceof io.papermc.paper.adventure.AdventureComponent) component = ((io.papermc.paper.adventure.AdventureComponent) component).deepConverted();
+         StringBuilder out = new StringBuilder();
+ 
+         boolean hadFormat = false;
+-        for (Component c : component) {
++        var iterator = componentStream(component).iterator();
++        while (iterator.hasNext()) {
++            Component c = iterator.next();
+             Style modi = c.getStyle();
+             TextColor color = modi.getColor();
+             if (c.getContents() != PlainTextContents.EMPTY || color != null) {
+                 if (color != null) {
+-                    if (color.format != null) {
+-                        out.append(color.format);
++                    ChatFormatting format = ChatFormatting.getByName(color.serialize());
++                    if (format != null && format.isColor()) {
++                        out.append(format);
+                     } else {
+                         out.append(ChatColor.COLOR_CHAR).append("x");
+                         for (char magic : color.serialize().substring(1).toCharArray()) {

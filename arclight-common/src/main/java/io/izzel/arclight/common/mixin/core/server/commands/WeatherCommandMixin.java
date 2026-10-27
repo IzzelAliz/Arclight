@@ -15,7 +15,8 @@ public abstract class WeatherCommandMixin {
     private static void arclight$sourceWorld(MinecraftServer server, int clearTime, int rainTime, boolean raining, boolean thundering, CommandSourceStack source, int duration) {
         var trigger = source.getLevel();
         var weather = trigger.getWeatherData();
-        var token = WeatherDataBridge.bridge$pushWeatherScope(weather, trigger);
+        var weatherBridge = (WeatherDataBridge) (Object) weather;
+        var previous = weatherBridge.bridge$swapWeatherCause(com.mojang.datafixers.util.Pair.of(trigger, org.bukkit.event.weather.WeatherChangeEvent.Cause.COMMAND));
         try {
             weather.setClearWeatherTime(clearTime);
             weather.setRainTime(rainTime);
@@ -23,7 +24,7 @@ public abstract class WeatherCommandMixin {
             weather.setRaining(raining);
             weather.setThundering(thundering);
         } finally {
-            token.close();
+            weatherBridge.bridge$swapWeatherCause(previous);
         }
     }
 }

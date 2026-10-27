@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.BuddingAmethystBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -14,6 +15,6 @@ public class BuddingAmethystBlockMixin {
 
     @Redirect(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
     private boolean arclight$blockSpread(ServerLevel instance, BlockPos pos, BlockState state, BlockState p_220898_, ServerLevel p_220899_, BlockPos oldPos) {
-        return CraftEventFactory.handleBlockSpreadEvent(instance, oldPos, pos, state);
+        return CraftEventFactory.handleBlockSpreadEvent(instance, oldPos, pos, state, Block.UPDATE_ALL);
     }
 }

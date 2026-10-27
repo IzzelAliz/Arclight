@@ -7,7 +7,6 @@ import io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBrid
 import io.izzel.arclight.common.bridge.core.server.level.DistanceManagerBridge;
 import io.izzel.arclight.common.bridge.core.world.spawner.WorldEntitySpawnerBridge;
 import io.izzel.arclight.mixin.Decorate;
-import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.server.level.*;
@@ -49,10 +48,12 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
     @Accessor("lightEngine") public abstract ThreadedLevelLightEngine bridge$getLightManager();
     // @formatter:on
 
-    @WrapWithCondition(method = "getChunk(IILnet/minecraft/world/level/chunk/status/ChunkStatus;Z)Lnet/minecraft/world/level/chunk/ChunkAccess;",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerChunkCache;storeInCache(JLnet/minecraft/world/level/chunk/ChunkAccess;Lnet/minecraft/world/level/chunk/status/ChunkStatus;)V"))
-    private boolean arclight$cacheNonNull(ServerChunkCache cache, long position, ChunkAccess chunk, ChunkStatus status) {
-        return chunk != null;
+    @Inject(method = "storeInCache", at = @At("HEAD"), cancellable = true)
+    private void arclight$cacheNonNull(long position, ChunkAccess chunk, ChunkStatus status,
+            org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
+        if (chunk == null) {
+            ci.cancel();
+        }
     }
 
     public boolean isChunkLoaded(final int chunkX, final int chunkZ) {
@@ -112,6 +113,18 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
         return (ticksPer != 0L && gameTime % ticksPer == 0) ? 0 : 1;
     }
 
+    public boolean spawnFriendlies = true;
+
+    @Override
+    public boolean bridge$getSpawnFriendlies() {
+        return this.spawnFriendlies;
+    }
+
+    @Override
+    public void bridge$setSpawnFriendlies(boolean spawnFriendlies) {
+        this.spawnFriendlies = spawnFriendlies;
+    }
+
     @Redirect(method = "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;J)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/NaturalSpawner;getFilteredSpawningCategories(Lnet/minecraft/world/level/NaturalSpawner$SpawnState;ZZZ)Ljava/util/List;"))
     private List<MobCategory> arclight$filteredSpawningCategories(NaturalSpawner.SpawnState state, boolean spawnFriendlies, boolean spawnEnemies, boolean spawnPersistent) {
         LevelData levelData = this.level.getLevelData();
@@ -131,7 +144,7 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
             if (!spawnThisTick || limit == 0) {
                 continue;
             }
-            if ((spawnFriendlies || !mobCategory.isFriendly()) && (spawnEnemies || mobCategory.isFriendly()) && (spawnPersistent || !mobCategory.isPersistent())
+            if (((spawnFriendlies && this.spawnFriendlies) || !mobCategory.isFriendly()) && (spawnEnemies || mobCategory.isFriendly()) && (spawnPersistent || !mobCategory.isPersistent())
                 && ((WorldEntitySpawnerBridge.EntityDensityManagerBridge) state).bridge$canSpawn(mobCategory, null, limit)) {
                 list.add(mobCategory);
             }

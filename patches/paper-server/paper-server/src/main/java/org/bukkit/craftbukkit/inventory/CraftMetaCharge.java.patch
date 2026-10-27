@@ -1,0 +1,19 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaCharge.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaCharge.java
+index 29b1951adc39b5e894b546bd789067bdff080650..0c5ce76b92d9cac78c3eba261107f3fdf68bc14c 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaCharge.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaCharge.java
+@@ -11,12 +11,12 @@ import org.bukkit.configuration.serialization.DelegateDeserialization;
+ import org.bukkit.inventory.meta.FireworkEffectMeta;
+ 
+ @DelegateDeserialization(SerializableMeta.class)
+-class CraftMetaCharge extends CraftMetaItem implements FireworkEffectMeta {
++public class CraftMetaCharge extends CraftMetaItem implements FireworkEffectMeta {
+     static final ItemMetaKeyType<FireworkExplosion> EXPLOSION = new ItemMetaKeyType<>(DataComponents.FIREWORK_EXPLOSION, "firework-effect");
+ 
+     private FireworkEffect effect;
+ 
+-    CraftMetaCharge(CraftMetaItem meta) {
++    public CraftMetaCharge(CraftMetaItem meta) {
+         super(meta);
+ 
+         if (meta instanceof final CraftMetaCharge chargeMeta) {

@@ -9,7 +9,7 @@ import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 import org.bukkit.craftbukkit.CraftLootTable;
 import org.bukkit.craftbukkit.block.CraftBlockStates;
 import org.bukkit.craftbukkit.block.CraftBrushableBlock;
-import org.bukkit.craftbukkit.util.TransformerGeneratorAccess;
+import org.bukkit.craftbukkit.util.TransformerLevelAccessor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,7 +20,7 @@ public class DesertPyramidStructureMixin {
 
     @Inject(method = "placeSuspiciousSand", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/WorldGenLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     private static void arclight$customPlaceSuspiciousSand(BoundingBox aabb, WorldGenLevel level, BlockPos pos, CallbackInfo ci) {
-        if (level instanceof TransformerGeneratorAccess craftLevel) {
+        if (level instanceof TransformerLevelAccessor craftLevel) {
             CraftBrushableBlock brushable = (CraftBrushableBlock) CraftBlockStates.getBlockState(level, pos, Blocks.SUSPICIOUS_SAND.defaultBlockState(), null);
             brushable.setLootTable(CraftLootTable.minecraftToBukkit(BuiltInLootTables.DESERT_PYRAMID_ARCHAEOLOGY));
             brushable.setSeed(pos.asLong());

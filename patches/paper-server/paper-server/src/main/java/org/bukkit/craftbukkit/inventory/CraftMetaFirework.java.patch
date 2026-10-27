@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaFirework.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaFirework.java
+index 5dc32a5219910ed8ed1d75bd6814a5912474e657..4b3c348a23fb76e2d98cf766de346e49784635bf 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaFirework.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaFirework.java
+@@ -46,7 +46,7 @@ class CraftMetaFirework extends CraftMetaItem implements FireworkMeta {
+     private List<FireworkEffect> effects;
+     public Integer power;
+ 
+-    CraftMetaFirework(CraftMetaItem meta) {
++    public CraftMetaFirework(CraftMetaItem meta) {
+         super(meta);
+ 
+         if (!(meta instanceof CraftMetaFirework that)) {

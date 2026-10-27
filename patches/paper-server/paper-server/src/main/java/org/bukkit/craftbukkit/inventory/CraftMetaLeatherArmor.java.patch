@@ -1,0 +1,20 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaLeatherArmor.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaLeatherArmor.java
+index 0a975ed03263c1bf45786a158007dab9b7784e28..467aedeb8b0a47c64cffe78ff47a0e1a4944b9eb 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaLeatherArmor.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaLeatherArmor.java
+@@ -15,13 +15,13 @@ import org.bukkit.inventory.meta.LeatherArmorMeta;
+ import static org.bukkit.craftbukkit.inventory.CraftItemFactory.DEFAULT_LEATHER_COLOR;
+ 
+ @DelegateDeserialization(SerializableMeta.class)
+-class CraftMetaLeatherArmor extends CraftMetaItem implements LeatherArmorMeta {
++public class CraftMetaLeatherArmor extends CraftMetaItem implements LeatherArmorMeta {
+ 
+     static final ItemMetaKeyType<DyedItemColor> COLOR = new ItemMetaKeyType<>(DataComponents.DYED_COLOR, "color");
+ 
+     private Integer color; // Paper - keep color component consistent with vanilla (top byte is ignored)
+ 
+-    CraftMetaLeatherArmor(CraftMetaItem meta) {
++    public CraftMetaLeatherArmor(CraftMetaItem meta) {
+         super(meta);
+         if (!(meta instanceof CraftMetaLeatherArmor leatherMeta)) {
+             return;

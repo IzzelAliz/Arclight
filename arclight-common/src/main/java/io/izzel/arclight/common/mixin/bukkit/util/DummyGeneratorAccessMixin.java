@@ -2,11 +2,11 @@ package io.izzel.arclight.common.mixin.bukkit.util;
 
 import io.izzel.arclight.common.bridge.core.world.level.IWorldWriterBridge;
 import net.minecraft.world.entity.Entity;
-import org.bukkit.craftbukkit.util.DummyGeneratorAccess;
+import org.bukkit.craftbukkit.util.DummyLevelAccessor;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Mixin;
 
-@Mixin(DummyGeneratorAccess.class)
+@Mixin(DummyLevelAccessor.class)
 public class DummyGeneratorAccessMixin implements IWorldWriterBridge {
     @Override
     public boolean bridge$addEntity(Entity entity, CreatureSpawnEvent.SpawnReason reason) {

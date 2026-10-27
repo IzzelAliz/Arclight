@@ -1,0 +1,12 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryChiseledBookshelf.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryChiseledBookshelf.java
+index 8b7ec544546a918f4fe0745deda2b757db7e1d6a..81815a23b4a720535fad1035c2b4ffd48f977857 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryChiseledBookshelf.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryChiseledBookshelf.java
+@@ -25,6 +25,6 @@ public class CraftInventoryChiseledBookshelf extends CraftInventory implements C
+ 
+     @Override
+     public ChiseledBookshelf getHolder() {
+-        return (ChiseledBookshelf) this.inventory.getOwner();
++        return (ChiseledBookshelf) super.getHolder();
+     }
+ }

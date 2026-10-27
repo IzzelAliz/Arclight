@@ -1,0 +1,110 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/provider/source/FileProviderSource.java b/paper-server/src/main/java/io/papermc/paper/plugin/provider/source/FileProviderSource.java
+index 9661f033bbb2c00073f1c891e1411c2a9943a37a..49c6b5ad0b653ef2036d7555e400a8c6f3806c68 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/provider/source/FileProviderSource.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/provider/source/FileProviderSource.java
+@@ -1,10 +1,10 @@
+ package io.papermc.paper.plugin.provider.source;
+ 
+-import com.mojang.logging.LogUtils;
+-import io.papermc.paper.SparksFly;
+ import io.papermc.paper.plugin.PluginInitializerManager;
+-import io.papermc.paper.plugin.configuration.PluginMeta;
++import io.papermc.paper.plugin.entrypoint.Entrypoint;
+ import io.papermc.paper.plugin.entrypoint.EntrypointHandler;
++import io.papermc.paper.plugin.entrypoint.LaunchEntryPointHandler;
++import io.papermc.paper.plugin.provider.PluginProvider;
+ import io.papermc.paper.plugin.provider.type.PluginFileType;
+ import org.bukkit.plugin.InvalidPluginException;
+ import org.jetbrains.annotations.Nullable;
+@@ -19,14 +19,12 @@ import java.nio.file.attribute.BasicFileAttributes;
+ import java.util.Set;
+ import java.util.function.Function;
+ import java.util.jar.JarFile;
+-import org.slf4j.Logger;
+ 
+ /**
+  * Loads a plugin provider at the given plugin jar file path.
+  */
+ public class FileProviderSource implements ProviderSource<Path, Path> {
+ 
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
+     private final Function<Path, String> contextChecker;
+ 
+     public FileProviderSource(Function<Path, String> contextChecker) {
+@@ -59,29 +57,61 @@ public class FileProviderSource implements ProviderSource<Path, Path> {
+ 
+     @Override
+     public void registerProviders(EntrypointHandler entrypointHandler, Path context) throws Exception {
++        // All launch sources share this storage, including add-plugin and extra directories.
++        // Reload replaces the storage; runtime load attempts use their own handlers.
++        if (entrypointHandler instanceof LaunchEntryPointHandler launch) {
++            for (PluginProvider<?> provider : launch.get(Entrypoint.PLUGIN).getRegisteredProviders()) {
++                if (context.equals(provider.getSource()) || (Files.exists(provider.getSource()) && Files.isSameFile(context, provider.getSource()))) {
++                    return;
++                }
++            }
++        }
++
+         String source = this.contextChecker.apply(context);
+ 
+         JarFile file = new JarFile(context.toFile(), true, JarFile.OPEN_READ, JarFile.runtimeVersion());
+-        PluginFileType<?, ?> type = PluginFileType.guessType(file);
+-        if (type == null) {
+-            // Throw IAE wrapped in RE to prevent callers from considering this a "invalid parameter" as caller ignores IAE.
+-            // TODO: This needs some heavy rework, using illegal argument exception to signal an actual failure is less than ideal.
+-            if (file.getEntry("META-INF/versions.list") != null) {
+-                throw new RuntimeException(new IllegalArgumentException(context + " appears to be a server jar! Server jars do not belong in the plugin folder."));
++        class RegistrationHandler implements EntrypointHandler {
++            private boolean registrationAttempted;
++
++            @Override
++            public <T> void register(Entrypoint<T> entrypoint, PluginProvider<T> provider) {
++                entrypointHandler.validateRegistration(entrypoint, provider);
++                // A handler can retain the provider before throwing, and Paper providers share this jar.
++                this.registrationAttempted = true;
++                entrypointHandler.register(entrypoint, provider);
+             }
+ 
+-            throw new RuntimeException(
+-                new IllegalArgumentException(source + " does not contain a " + String.join(" or ", PluginFileType.getConfigTypes()) + "! Could not determine plugin type, cannot load a plugin from it!")
+-            );
++            @Override
++            public void enter(Entrypoint<?> entrypoint) {
++                entrypointHandler.enter(entrypoint);
++            }
+         }
++        RegistrationHandler registrationHandler = new RegistrationHandler();
++        try {
++            PluginFileType<?, ?> type = PluginFileType.guessType(file);
++            if (type == null) {
++                // Throw IAE wrapped in RE to prevent callers from considering this a "invalid parameter" as caller ignores IAE.
++                // TODO: This needs some heavy rework, using illegal argument exception to signal an actual failure is less than ideal.
++                if (file.getEntry("META-INF/versions.list") != null) {
++                    throw new RuntimeException(new IllegalArgumentException(context + " appears to be a server jar! Server jars do not belong in the plugin folder."));
++                }
+ 
+-        final PluginMeta config = type.getConfig(file);
+-        if ((config.getName().equals("spark") && config.getMainClass().equals("me.lucko.spark.bukkit.BukkitSparkPlugin")) && !SparksFly.isPluginPreferred()) {
+-            LOGGER.info("The spark plugin will not be loaded as this server bundles the spark profiler.");
+-            return;
+-        }
++                throw new RuntimeException(
++                    new IllegalArgumentException(source + " does not contain a " + String.join(" or ", PluginFileType.getConfigTypes()) + "! Could not determine plugin type, cannot load a plugin from it!")
++                );
++            }
+ 
+-        type.register(entrypointHandler, file, context);
++            type.register(registrationHandler, file, context);
++        } catch (Throwable failure) {
++            if (!registrationHandler.registrationAttempted) {
++                try {
++                    file.close();
++                } catch (Throwable closeFailure) {
++                    failure.addSuppressed(closeFailure);
++                }
++            }
++            throw failure;
++        }
+     }
+ 
+     /**

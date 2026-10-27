@@ -1,0 +1,21 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/strategy/modern/ModernPluginLoadingStrategy.java b/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/strategy/modern/ModernPluginLoadingStrategy.java
+index 9af388a8e56806ab44f8c3ef4f97086ce38ef3b4..f5250834eb308ca60657a4c7584ccdadee5f3133 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/strategy/modern/ModernPluginLoadingStrategy.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/strategy/modern/ModernPluginLoadingStrategy.java
+@@ -2,7 +2,6 @@ package io.papermc.paper.plugin.entrypoint.strategy.modern;
+ 
+ import com.google.common.collect.Maps;
+ import com.google.common.graph.GraphBuilder;
+-import com.mojang.logging.LogUtils;
+ import io.papermc.paper.plugin.configuration.PluginMeta;
+ import io.papermc.paper.plugin.entrypoint.dependency.GraphDependencyContext;
+ import io.papermc.paper.plugin.entrypoint.dependency.MetaDependencyTree;
+@@ -21,7 +20,7 @@ import java.util.Map;
+ @SuppressWarnings("UnstableApiUsage")
+ public class ModernPluginLoadingStrategy<T> implements ProviderLoadingStrategy<T> {
+ 
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ModernPluginLoadingStrategy.class.getSimpleName());
+     private final ProviderConfiguration<T> configuration;
+ 
+     public ModernPluginLoadingStrategy(ProviderConfiguration<T> onLoad) {

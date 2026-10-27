@@ -1,0 +1,46 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/world/saveddata/PaperLevelOverrides.java b/paper-server/src/main/java/io/papermc/paper/world/saveddata/PaperLevelOverrides.java
+index fb575b634de6e4fe94f3a59b288074266028e0ce..e3204cc5546d742db242eb453bf8347877b3b018 100644
+--- a/paper-server/src/main/java/io/papermc/paper/world/saveddata/PaperLevelOverrides.java
++++ b/paper-server/src/main/java/io/papermc/paper/world/saveddata/PaperLevelOverrides.java
+@@ -7,7 +7,6 @@ import net.minecraft.core.BlockPos;
+ import net.minecraft.resources.Identifier;
+ import net.minecraft.resources.ResourceKey;
+ import net.minecraft.util.Mth;
+-import net.minecraft.util.datafix.DataFixTypes;
+ import net.minecraft.world.Difficulty;
+ import net.minecraft.world.level.GameType;
+ import net.minecraft.world.level.Level;
+@@ -31,10 +30,10 @@ public final class PaperLevelOverrides extends SavedData implements ServerLevelD
+         LevelSettings.DifficultySettings.CODEC.fieldOf("difficulty_settings").forGetter(levelOverrides -> levelOverrides.difficultySettings)
+     ).apply(instance, PaperLevelOverrides::new));
+     public static final SavedDataType<PaperLevelOverrides> TYPE = new SavedDataType<>(
+-        Identifier.fromNamespaceAndPath(Identifier.PAPER_NAMESPACE, "level_overrides"),
++        Identifier.fromNamespaceAndPath("paper", "level_overrides"),
+         PaperLevelOverrides::new,
+         CODEC,
+-        DataFixTypes.NONE
++        null
+     );
+ 
+     private RespawnData respawnData;
+@@ -206,10 +205,16 @@ public final class PaperLevelOverrides extends SavedData implements ServerLevelD
+     private void setDifficultySettings(final LevelSettings.DifficultySettings difficultySettings) {
+         if (!this.difficultySettings.equals(difficultySettings)) {
+             this.difficultySettings = difficultySettings;
+-            this.syncRootData(rootData -> rootData.settings = rootData.settings
+-                .withDifficulty(difficultySettings.difficulty())
+-                .withHardcore(difficultySettings.hardcore())
+-                .withDifficultyLock(difficultySettings.locked()));
++            this.syncRootData(rootData -> {
++                final LevelSettings settings = rootData.settings;
++                rootData.settings = new LevelSettings(
++                    settings.levelName(),
++                    settings.gameType(),
++                    difficultySettings,
++                    settings.allowCommands(),
++                    settings.dataConfiguration()
++                );
++            });
+             this.setDirty();
+         }
+     }

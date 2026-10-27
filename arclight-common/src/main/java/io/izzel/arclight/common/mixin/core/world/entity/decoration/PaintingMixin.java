@@ -33,8 +33,8 @@ public abstract class PaintingMixin extends BlockAttachedEntityMixin {
         float f = 0.46875F;
         Vec3 vec3d = Vec3.atCenterOf(blockPos).relative(enumdirection, -0.46875D);
         // CraftBukkit start
-        double d0 = offsetForPaintingSize0(width);
-        double d1 = offsetForPaintingSize0(height);
+        double d0 = arclight$offsetForPaintingSize(width);
+        double d1 = arclight$offsetForPaintingSize(height);
         // CraftBukkit end
         Direction enumdirection1 = enumdirection.getCounterClockWise();
         Vec3 vec3d1 = vec3d.relative(enumdirection1, d0).relative(Direction.UP, d1);
@@ -48,7 +48,7 @@ public abstract class PaintingMixin extends BlockAttachedEntityMixin {
         return AABB.ofSize(vec3d1, d2, d3, d4);
     }
 
-    private static double offsetForPaintingSize0(int i) {
+    private static double arclight$offsetForPaintingSize(int i) {
         return i % 2 == 0 ? 0.5D : 0.0D;
     }
 }

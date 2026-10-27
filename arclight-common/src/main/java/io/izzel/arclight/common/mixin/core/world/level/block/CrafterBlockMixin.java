@@ -10,12 +10,10 @@ import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.NonNullList;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.CompoundContainer;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -46,41 +44,18 @@ public abstract class CrafterBlockMixin {
             Operation<ItemStack> original,
             @Local(argsOnly = true) BlockPos pos,
             @Local(argsOnly = true) ServerLevel level,
-            @Local CrafterBlockEntity crafter,
             @Local RecipeHolder<CraftingRecipe> recipeHolder,
-            @Share("arclight$crafterCraftEvent") LocalRef<CrafterCraftEvent> eventRef,
             @Cancellable org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
         ItemStack assembled = original.call(recipe, input);
-        CraftingInput craftingInput = (CraftingInput) input;
         CrafterCraftEvent event = CraftEventFactory.callCrafterCraftEvent(
-            pos, level, crafter, assembled, recipe.getRemainingItems(craftingInput), recipeHolder
+            pos, level, assembled, recipeHolder
         );
-        eventRef.set(event);
         if (event.isCancelled()) {
             // Fixed CraftBukkit returns from dispenseFrom here, before tick/state/output/consumption.
             ci.cancel();
             return ItemStack.EMPTY;
         }
         return CraftItemStack.asNMSCopy(event.getResult());
-    }
-
-    @WrapOperation(
-        method = DISPENSE_FROM,
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/crafting/CraftingRecipe;getRemainingItems(Lnet/minecraft/world/item/crafting/CraftingInput;)Lnet/minecraft/core/NonNullList;"),
-        require = 1, expect = 1, allow = 1
-    )
-    private NonNullList<ItemStack> arclight$editedRemainders(CraftingRecipe recipe, CraftingInput input,
-            Operation<NonNullList<ItemStack>> original,
-            @Share("arclight$crafterCraftEvent") LocalRef<CrafterCraftEvent> eventRef) {
-        CrafterCraftEvent event = eventRef.get();
-        if (event == null) {
-            return original.call(recipe, input);
-        }
-        // This is the native post-output getRemainingItems call. Replace only that value so the
-        // existing iteration/dispense/consumption tail runs over event-edited remainders.
-        NonNullList<ItemStack> edited = NonNullList.create();
-        edited.addAll(event.getRemainingItems().stream().map(CraftItemStack::asNMSCopy).toList());
-        return edited;
     }
 
     @WrapOperation(

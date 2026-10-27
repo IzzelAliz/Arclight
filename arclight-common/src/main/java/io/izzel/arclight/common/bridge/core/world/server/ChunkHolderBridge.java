@@ -5,6 +5,10 @@ import net.minecraft.world.level.chunk.LevelChunk;
 
 public interface ChunkHolderBridge {
 
+    default LevelChunk getFullChunkNow() {
+        return bridge$getFullChunkNow();
+    }
+
     int bridge$getOldTicketLevel();
 
     LevelChunk bridge$getFullChunkNow();
@@ -12,4 +16,6 @@ public interface ChunkHolderBridge {
     LevelChunk bridge$getFullChunkUnchecked();
 
     void bridge$callEventIfUnloading(ChunkMap manager);
+
+    void bridge$resetPendingUnload();
 }

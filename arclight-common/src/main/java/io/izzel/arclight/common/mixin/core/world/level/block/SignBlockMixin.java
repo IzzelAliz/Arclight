@@ -2,17 +2,24 @@ package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.level.block.SignBlockEditBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import io.papermc.paper.event.player.PlayerOpenSignEvent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.SignBlock;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
+import org.bukkit.block.sign.Side;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.block.CraftBlockStates;
+import org.bukkit.craftbukkit.block.CraftSign;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.player.PlayerSignOpenEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(SignBlock.class)
 public abstract class SignBlockMixin implements SignBlockEditBridge {
@@ -86,8 +93,8 @@ public abstract class SignBlockMixin implements SignBlockEditBridge {
         }
     }
 
-    @Inject(method = "openTextEdit(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/block/entity/SignBlockEntity;Z)V", cancellable = true, at = @At("HEAD"))
-    private void arclight$signEdit(Player player, SignBlockEntity signBlockEntity, boolean flag, CallbackInfo ci) {
+    @Decorate(method = "openTextEdit(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/block/entity/SignBlockEntity;Z)V", inject = true, at = @At("HEAD"))
+    private void arclight$signEdit(Player player, SignBlockEntity signBlockEntity, boolean flag) throws Throwable {
         boolean owned = arclight$edit != null && (arclight$editSign == null
             || (arclight$editPlayer == player && arclight$editSign == signBlockEntity && arclight$editFront == flag));
         var cause = owned ? arclight$edit : PlayerSignOpenEvent.Cause.UNKNOWN;
@@ -102,10 +109,23 @@ public abstract class SignBlockMixin implements SignBlockEditBridge {
         arclight$edit = null;
         arclight$editPlayer = null;
         arclight$editSign = null;
+        boolean allowed;
         try {
-            if (!CraftEventFactory.callPlayerSignOpenEvent(player, signBlockEntity, flag, cause)) {
-                ci.cancel();
-            }
+            var paperCause = switch (cause) {
+                case PLACE -> PlayerOpenSignEvent.Cause.PLACE;
+                case INTERACT -> PlayerOpenSignEvent.Cause.INTERACT;
+                case PLUGIN -> PlayerOpenSignEvent.Cause.PLUGIN;
+                case UNKNOWN -> PlayerOpenSignEvent.Cause.UNKNOWN;
+            };
+            var state = CraftBlockStates.getBlockState(CraftBlock.at(signBlockEntity.getLevel(), signBlockEntity.getBlockPos()));
+            org.bukkit.block.Sign sign = state instanceof org.bukkit.block.Sign placedSign ? placedSign
+                : new CraftSign<>(((WorldBridge) signBlockEntity.getLevel()).bridge$getWorld(), signBlockEntity);
+            var event = new PlayerOpenSignEvent(
+                (org.bukkit.entity.Player) ((EntityBridge) player).bridge$getBukkitEntity(), sign,
+                flag ? Side.FRONT : Side.BACK, paperCause);
+            allowed = event.callEvent()
+                && (PlayerSignOpenEvent.getHandlerList().getRegisteredListeners().length == 0
+                || CraftEventFactory.callPlayerSignOpenEvent(player, signBlockEntity, flag, cause));
         } finally {
             if (!owned) {
                 arclight$edit = pendingCause;
@@ -113,6 +133,10 @@ public abstract class SignBlockMixin implements SignBlockEditBridge {
                 arclight$editSign = pendingSign;
                 arclight$editFront = pendingFront;
             }
+        }
+        if (!allowed) {
+            DecorationOps.cancel().invoke();
+            return;
         }
     }
 }

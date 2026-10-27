@@ -1,0 +1,15 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/connection/PaperPlayerGameConnection.java b/paper-server/src/main/java/io/papermc/paper/connection/PaperPlayerGameConnection.java
+--- a/paper-server/src/main/java/io/papermc/paper/connection/PaperPlayerGameConnection.java
++++ b/paper-server/src/main/java/io/papermc/paper/connection/PaperPlayerGameConnection.java
+@@ -19,10 +19,7 @@
+ 
+     @Override
+     public void reenterConfiguration() {
+-        if (HorriblePlayerLoginEventHack.warnReenterConfiguration(this.packetListener.connection)) {
+-            return;
+-        }
+-        this.packetListener.switchToConfig();
++        throw new UnsupportedOperationException("Arclight does not support reentering the configuration phase");
+     }
+ 
+     @Override

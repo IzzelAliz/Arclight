@@ -1,0 +1,43 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMerchantRecipe.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMerchantRecipe.java
+index 1d381afe5c2d57d28fa777c983a60ed89635a8ae..654bdf1a23be1252ff5911a7e0a3f1c39051a42a 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMerchantRecipe.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMerchantRecipe.java
+@@ -37,6 +37,9 @@ public class CraftMerchantRecipe extends MerchantRecipe {
+     public CraftMerchantRecipe(ItemStack result, int uses, int maxUses, boolean experienceReward, int experience, float priceMultiplier, int demand, int specialPrice, boolean ignoreDiscounts) {
+         super(result, uses, maxUses, experienceReward, experience, priceMultiplier, demand, specialPrice, ignoreDiscounts);
+         // Paper end
++        if (ignoreDiscounts) {
++            throw new UnsupportedOperationException("Ignoring merchant discounts is not supported");
++        }
+         this.handle = new net.minecraft.world.item.trading.MerchantOffer(
+                 new ItemCost(Items.AIR),
+                 Optional.empty(),
+@@ -45,10 +48,10 @@ public class CraftMerchantRecipe extends MerchantRecipe {
+                 maxUses,
+                 experience,
+                 priceMultiplier,
+-                demand,
+-                ignoreDiscounts, // Paper - add ignoreDiscounts param
+-                this
++                demand
+         );
++        io.izzel.arclight.common.bridge.core.world.item.trading.MerchantOfferBridge bridge = this.handle;
++        bridge.bridge$setBukkitHandle(this);
+         this.setSpecialPrice(specialPrice);
+         this.setExperienceReward(experienceReward);
+     }
+@@ -126,12 +129,12 @@ public class CraftMerchantRecipe extends MerchantRecipe {
+     // Paper start
+     @Override
+     public boolean shouldIgnoreDiscounts() {
+-        return this.handle.ignoreDiscounts;
++        throw new UnsupportedOperationException("Ignoring merchant discounts is not supported");
+     }
+ 
+     @Override
+     public void setIgnoreDiscounts(boolean ignoreDiscounts) {
+-        this.handle.ignoreDiscounts = ignoreDiscounts;
++        throw new UnsupportedOperationException("Ignoring merchant discounts is not supported");
+     }
+     // Paper end
+ 

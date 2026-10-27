@@ -1,0 +1,21 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/datapack/PaperDatapackRegistrar.java b/paper-server/src/main/java/io/papermc/paper/datapack/PaperDatapackRegistrar.java
+index 404de41d5e07db7916299feb8cf9e8374b821eb3..a511180609db90e8f9e94dbadc4f3629e5b746af 100644
+--- a/paper-server/src/main/java/io/papermc/paper/datapack/PaperDatapackRegistrar.java
++++ b/paper-server/src/main/java/io/papermc/paper/datapack/PaperDatapackRegistrar.java
+@@ -2,7 +2,6 @@ package io.papermc.paper.datapack;
+ 
+ import com.google.common.base.Preconditions;
+ import com.google.common.collect.ImmutableMap;
+-import com.mojang.logging.LogUtils;
+ import io.papermc.paper.adventure.PaperAdventure;
+ import io.papermc.paper.plugin.bootstrap.BootstrapContext;
+ import io.papermc.paper.plugin.configuration.PluginMeta;
+@@ -35,7 +34,7 @@ import org.slf4j.Logger;
+ @NullMarked
+ public class PaperDatapackRegistrar implements PaperRegistrar<BootstrapContext>, DatapackRegistrar {
+ 
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(PaperDatapackRegistrar.class.getSimpleName());
+ 
+     private final PackDetector<Pack.ResourcesSupplier> detector;
+     public final Map<String, Pack> discoveredPacks;

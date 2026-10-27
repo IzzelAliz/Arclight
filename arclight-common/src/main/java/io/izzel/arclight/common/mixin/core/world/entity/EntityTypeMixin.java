@@ -1,7 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.entity;
 
+import com.destroystokyo.paper.event.entity.PreCreatureSpawnEvent;
 import io.izzel.arclight.common.bridge.core.world.entity.EntityTypeBridge;
 import io.izzel.arclight.common.bridge.core.world.level.IWorldWriterBridge;
+import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -9,9 +11,12 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import org.bukkit.craftbukkit.entity.CraftEntityType;
+import org.bukkit.craftbukkit.util.CraftLocation;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Slice;
@@ -47,6 +52,22 @@ public abstract class EntityTypeMixin<T extends Entity> implements EntityTypeBri
     }
 
     @Inject(method = "spawn(Lnet/minecraft/server/level/ServerLevel;Ljava/util/function/Consumer;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/EntitySpawnReason;ZZ)Lnet/minecraft/world/entity/Entity;",
+        at = @At("HEAD"), cancellable = true, require = 1, expect = 1, allow = 1)
+    private void arclight$preCreatureSpawn(ServerLevel level, Consumer<T> consumer, BlockPos pos, EntitySpawnReason reason, boolean tryMoveDown, boolean movedUp, CallbackInfoReturnable<T> cir) {
+        CreatureSpawnEvent.SpawnReason spawnReason = ((IWorldWriterBridge) level).bridge$getAddEntityReason();
+        if (!arclight$callPreCreatureSpawn(level, pos, spawnReason == null ? CreatureSpawnEvent.SpawnReason.DEFAULT : spawnReason)) {
+            cir.setReturnValue(null);
+        }
+    }
+
+    @Unique
+    private boolean arclight$callPreCreatureSpawn(ServerLevel level, BlockPos pos, CreatureSpawnEvent.SpawnReason spawnReason) {
+        // Only the spawn entry points dispatch; direct create callers own their pre-spawn events.
+        return new PreCreatureSpawnEvent(CraftLocation.toBukkit(pos, ((WorldBridge) level).bridge$getWorld()),
+            CraftEntityType.minecraftToBukkit((EntityType<?>) (Object) this), spawnReason).callEvent();
+    }
+
+    @Inject(method = "spawn(Lnet/minecraft/server/level/ServerLevel;Ljava/util/function/Consumer;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/EntitySpawnReason;ZZ)Lnet/minecraft/world/entity/Entity;",
         cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At("RETURN"),
         slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V")))
     private void arclight$returnIfSuccess(ServerLevel serverLevel, Consumer<T> consumer, BlockPos blockPos, EntitySpawnReason mobSpawnType, boolean bl, boolean bl2, CallbackInfoReturnable<T> cir, T t) {
@@ -68,6 +89,9 @@ public abstract class EntityTypeMixin<T extends Entity> implements EntityTypeBri
     }
 
     public T spawn(ServerLevel p_262704_, @Nullable Consumer<T> p_262621_, BlockPos p_262672_, EntitySpawnReason p_262644_, boolean p_262690_, boolean p_262590_, CreatureSpawnEvent.SpawnReason spawnReason) {
+        if (!arclight$callPreCreatureSpawn(p_262704_, p_262672_, spawnReason)) {
+            return null;
+        }
         T t = this.create(p_262704_, p_262621_, p_262672_, p_262644_, p_262690_, p_262590_);
         if (t != null) {
             ((IWorldWriterBridge) p_262704_).bridge$pushAddEntityReason(spawnReason);

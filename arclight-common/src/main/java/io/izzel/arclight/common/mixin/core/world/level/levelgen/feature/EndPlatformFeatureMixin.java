@@ -45,25 +45,22 @@ public class EndPlatformFeatureMixin {
     }
 
     @Decorate(method = "createEndPlatform", inject = true, at = @At("RETURN"))
-    private static void arclight$portalCreate(ServerLevelAccessor serverLevelAccessor,
+    private static void arclight$portalCreate(ServerLevelAccessor level, BlockPos pos, boolean dropResources,
                                               @Local(allocate = "blockList") BlockStateListPopulator blockList,
                                               @Local(allocate = "entity") Entity entity) {
         if (entity != null) {
-            var bworld = serverLevelAccessor.getLevel().bridge$getWorld();
-            PortalCreateEvent portalEvent = new PortalCreateEvent((List<org.bukkit.block.BlockState>) (List) blockList.getList(), bworld, entity.bridge$getBukkitEntity(), org.bukkit.event.world.PortalCreateEvent.CreateReason.END_PLATFORM);
+            var bworld = level.getLevel().bridge$getWorld();
+            PortalCreateEvent portalEvent = new PortalCreateEvent((List<org.bukkit.block.BlockState>) (List) blockList.getSnapshotBlocks(), bworld, entity.bridge$getBukkitEntity(), org.bukkit.event.world.PortalCreateEvent.CreateReason.END_PLATFORM);
 
             Bukkit.getPluginManager().callEvent(portalEvent);
-            if (!portalEvent.isCancelled()) {
-                blockList.updateList();
+            if (portalEvent.isCancelled()) {
+                return;
             }
         }
-    }
-
-    @Decorate(method = "createEndPlatform", inject = true, at = @At("TAIL"))
-    private static void arclight$dropItems(ServerLevelAccessor level, BlockPos pos, boolean flag, @Local(allocate = "blockList") BlockStateListPopulator blockList) {
-        if (flag) {
-            blockList.getList().forEach(state -> level.destroyBlock(state.getPosition(), true, null));
+        if (dropResources) {
+            blockList.placeBlocks(state -> level.destroyBlock(state.getPosition(), true, null));
+        } else {
+            blockList.placeBlocks();
         }
-        blockList.updateList();
     }
 }

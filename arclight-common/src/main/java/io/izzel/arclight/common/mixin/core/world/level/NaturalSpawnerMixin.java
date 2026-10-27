@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level;
 
+import com.destroystokyo.paper.event.entity.PreCreatureSpawnEvent;
 import io.izzel.arclight.common.bridge.core.world.level.IWorldWriterBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.spawner.WorldEntitySpawnerBridge;
@@ -7,6 +8,9 @@ import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.biome.MobSpawnSettings;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.entity.animal.feline.Ocelot;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -20,6 +24,8 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
+import org.bukkit.craftbukkit.entity.CraftEntityType;
+import org.bukkit.craftbukkit.util.CraftLocation;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,6 +40,18 @@ import java.util.List;
 
 @Mixin(NaturalSpawner.class)
 public abstract class NaturalSpawnerMixin {
+
+    @io.izzel.arclight.common.mod.mixins.annotation.TransformAccess(org.objectweb.asm.Opcodes.ACC_PUBLIC | org.objectweb.asm.Opcodes.ACC_STATIC)
+    private static int globalLimitForCategory(ServerLevel level, MobCategory category, int chunks) {
+        int limit = category.getMaxInstancesPerChunk();
+        var spawnCategory = org.bukkit.craftbukkit.util.CraftSpawnCategory.toBukkit(category);
+        if (org.bukkit.craftbukkit.util.CraftSpawnCategory.isValidForLimits(spawnCategory)) {
+            limit = ((WorldBridge) level).bridge$getWorld().getSpawnLimit(spawnCategory);
+        }
+        if (limit < 1) return limit;
+        int diameter = NaturalSpawner.SPAWN_DISTANCE_CHUNK * 2 + 1;
+        return limit * chunks / (diameter * diameter);
+    }
 
     // @formatter:off
     @Shadow @Final private static MobCategory[] SPAWNING_CATEGORIES;
@@ -53,6 +71,24 @@ public abstract class NaturalSpawnerMixin {
                     ((WorldEntitySpawnerBridge.EntityDensityManagerBridge) state)::bridge$updateDensity);
             }
         }
+    }
+
+    @Decorate(method = "spawnCategoryForPosition(Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkAccess;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/NaturalSpawner$SpawnPredicate;Lnet/minecraft/world/level/NaturalSpawner$AfterSpawnCallback;)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/NaturalSpawner;isValidSpawnPostitionForType(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/world/level/StructureManager;Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/world/level/biome/MobSpawnSettings$SpawnerData;Lnet/minecraft/core/BlockPos$MutableBlockPos;D)Z"),
+        require = 1, allow = 1)
+    private static boolean arclight$preCreatureNaturalSpawn(ServerLevel level, MobCategory category, StructureManager structures,
+                                                            ChunkGenerator generator, MobSpawnSettings.SpawnerData data,
+                                                            BlockPos.MutableBlockPos pos, double playerDistanceSquared) throws Throwable {
+        var event = new PreCreatureSpawnEvent(
+            CraftLocation.toBukkit(pos, ((WorldBridge) level).bridge$getWorld()),
+            CraftEntityType.minecraftToBukkit(data.type()), CreatureSpawnEvent.SpawnReason.NATURAL);
+        if (!event.callEvent()) {
+            if (event.shouldAbortSpawn()) {
+                return (boolean) DecorationOps.cancel().invoke();
+            }
+            return false;
+        }
+        return (boolean) DecorationOps.callsite().invoke(level, category, structures, generator, data, pos, playerDistanceSquared);
     }
 
     @com.llamalad7.mixinextras.expression.Definition(id="cluster", local=@com.llamalad7.mixinextras.sugar.Local(type=int.class,index=11))

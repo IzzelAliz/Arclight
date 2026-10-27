@@ -1,0 +1,31 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/command/subcommands/VersionCommand.java b/paper-server/src/main/java/io/papermc/paper/command/subcommands/VersionCommand.java
+index 58ca24715eafd1ac3cc9657b1cc235049d69bb59..9c92f4aa40d164e0ebb321445e340a4863b1c20b 100644
+--- a/paper-server/src/main/java/io/papermc/paper/command/subcommands/VersionCommand.java
++++ b/paper-server/src/main/java/io/papermc/paper/command/subcommands/VersionCommand.java
+@@ -1,21 +1,20 @@
+ package io.papermc.paper.command.subcommands;
+ 
+ import io.papermc.paper.command.PaperSubcommand;
+-import net.minecraft.server.MinecraftServer;
+-import org.bukkit.command.Command;
+ import org.bukkit.command.CommandSender;
+ import org.checkerframework.checker.nullness.qual.NonNull;
+-import org.checkerframework.checker.nullness.qual.Nullable;
+ import org.checkerframework.framework.qual.DefaultQualifier;
+ 
+ @DefaultQualifier(NonNull.class)
+ public final class VersionCommand implements PaperSubcommand {
+     @Override
+     public boolean execute(final CommandSender sender, final String subCommand, final String[] args) {
+-        final @Nullable Command redirect = MinecraftServer.getServer().server.getCommandMap().getCommand("version");
+-        if (redirect != null) {
+-            redirect.execute(sender, "paper", new String[0]);
++        if (!sender.hasPermission("bukkit.command.version")) {
++            sender.sendMessage("You do not have permission to view the server version.");
++            return true;
+         }
++        sender.sendMessage(org.bukkit.Bukkit.getName() + " version " + org.bukkit.Bukkit.getVersion()
++            + " (Implementing API version " + org.bukkit.Bukkit.getBukkitVersion() + ")");
+         return true;
+     }
+ }

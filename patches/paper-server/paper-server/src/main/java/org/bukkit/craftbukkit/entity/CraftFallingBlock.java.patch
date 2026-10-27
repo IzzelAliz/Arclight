@@ -1,0 +1,17 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftFallingBlock.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftFallingBlock.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftFallingBlock.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftFallingBlock.java
+@@ -123,11 +123,11 @@
+ 
+     @Override
+     public boolean doesAutoExpire() {
+-        return this.getHandle().autoExpire;
++        throw new UnsupportedOperationException("Independent falling block expiry control is not supported by Arclight");
+     }
+ 
+     @Override
+     public void shouldAutoExpire(boolean autoExpires) {
+-        this.getHandle().autoExpire = autoExpires;
++        throw new UnsupportedOperationException("Independent falling block expiry control is not supported by Arclight");
+     }
+ }

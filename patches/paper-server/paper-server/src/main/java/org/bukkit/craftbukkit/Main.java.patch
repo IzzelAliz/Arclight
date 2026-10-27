@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/Main.java b/paper-server/src/main/java/org/bukkit/craftbukkit/Main.java
+index 8ce8de8eedfe8557848b0508857744a5b9641239..07f48632e67a6e7fc07c6d9eccb3a99f7bc47c15 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/Main.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/Main.java
+@@ -201,7 +201,7 @@ public class Main {
+                 System.setProperty("library.jansi.version", "Paper"); // Paper - set meaningless jansi version to prevent git builds from crashing on Windows
+                 System.setProperty("jdk.console", "java.base"); // Paper - revert default console provider back to java.base so we can have our own jline
+ 
+-                io.papermc.paper.PaperBootstrap.boot(options);
++                throw new UnsupportedOperationException("Direct CraftBukkit startup is not supported; launch the packaged Arclight server JAR instead");
+             } catch (Throwable t) {
+                 t.printStackTrace();
+             }

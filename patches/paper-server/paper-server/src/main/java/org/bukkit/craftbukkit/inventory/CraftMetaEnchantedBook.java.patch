@@ -1,0 +1,19 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaEnchantedBook.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaEnchantedBook.java
+index aa57ad022d3baf22371e5f521d0ec5031d931fad..438bdaf6987400503a6852c6a8397e7075a69ad6 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaEnchantedBook.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaEnchantedBook.java
+@@ -12,12 +12,12 @@ import org.bukkit.enchantments.Enchantment;
+ import org.bukkit.inventory.meta.EnchantmentStorageMeta;
+ 
+ @DelegateDeserialization(SerializableMeta.class)
+-class CraftMetaEnchantedBook extends CraftMetaItem implements EnchantmentStorageMeta {
++public class CraftMetaEnchantedBook extends CraftMetaItem implements EnchantmentStorageMeta {
+     static final ItemMetaKeyType<ItemEnchantments> STORED_ENCHANTMENTS = new ItemMetaKeyType<>(DataComponents.STORED_ENCHANTMENTS, "stored-enchants");
+ 
+     private Map<Enchantment, Integer> enchantments;
+ 
+-    CraftMetaEnchantedBook(CraftMetaItem meta) {
++    public CraftMetaEnchantedBook(CraftMetaItem meta) {
+         super(meta);
+ 
+         if (!(meta instanceof final CraftMetaEnchantedBook enchantedBookMeta)) {

@@ -1,0 +1,12 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftGhast.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftGhast.java
+index 9f699fdbd2f58b7a58c260681beb5b5e18aa4721..e89c345749f3af3e784d309b9e58c567f362be0c 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftGhast.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftGhast.java
+@@ -32,6 +32,6 @@ public class CraftGhast extends CraftMob implements Ghast, CraftEnemy {
+     @Override
+     public void setExplosionPower(int explosionPower) {
+         com.google.common.base.Preconditions.checkArgument(explosionPower >= 0 && explosionPower <= 127, "The explosion power has to be between 0 and 127");
+-        this.getHandle().setExplosionPower(explosionPower);
++        this.getHandle().explosionPower = explosionPower;
+     }
+ }

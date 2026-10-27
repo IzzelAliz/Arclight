@@ -1,0 +1,30 @@
+package io.izzel.arclight.forge.mixin.core.commands;
+
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
+import com.mojang.brigadier.tree.CommandNode;
+import io.izzel.arclight.common.bridge.core.commands.CommandsBridge;
+import net.minecraft.commands.Commands;
+import net.minecraftforge.server.command.CommandHelper;
+import org.spongepowered.asm.mixin.Mixin;
+
+import java.util.Map;
+import java.util.function.Function;
+
+@Mixin(Commands.class)
+public abstract class CommandsMixin_Forge implements CommandsBridge {
+    @Override
+    public com.mojang.brigadier.tree.RootCommandNode<net.minecraft.commands.CommandSourceStack> bridge$forge$filterCommandTree(
+            net.minecraft.server.level.ServerPlayer player,
+            com.mojang.brigadier.tree.RootCommandNode<net.minecraft.commands.CommandSourceStack> root) {
+        return CommandHelper.filterCommandList(player.connection.getConnection(), root);
+    }
+
+    @Override
+    public <S, T> void bridge$forge$mergeNode(CommandNode<S> sourceNode, CommandNode<T> resultNode,
+                                              Map<CommandNode<S>, CommandNode<T>> sourceToResult,
+                                              S canUse, Command<T> execute,
+                                              Function<SuggestionProvider<S>, SuggestionProvider<T>> sourceToResultSuggestion) {
+        CommandHelper.mergeCommandNode(sourceNode, resultNode, sourceToResult, canUse, execute, sourceToResultSuggestion);
+    }
+}

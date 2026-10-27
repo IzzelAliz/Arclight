@@ -7,7 +7,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.CraftServer;
-import org.bukkit.craftbukkit.command.BukkitCommandWrapper;
+import io.papermc.paper.command.brigadier.bukkit.BukkitCommandNode;
 import org.bukkit.craftbukkit.command.VanillaCommandWrapper;
 
 public class BukkitDispatcher extends CommandDispatcher<CommandSourceStack> {
@@ -21,8 +21,8 @@ public class BukkitDispatcher extends CommandDispatcher<CommandSourceStack> {
     @Override
     public LiteralCommandNode<CommandSourceStack> register(LiteralArgumentBuilder<CommandSourceStack> command) {
         LiteralCommandNode<CommandSourceStack> node = command.build();
-        if (!(node.getCommand() instanceof BukkitCommandWrapper)) {
-            VanillaCommandWrapper wrapper = new VanillaCommandWrapper(this.commands, node);
+        if (!((Object) node.getCommand() instanceof BukkitCommandNode.BukkitBrigCommand)) {
+            VanillaCommandWrapper wrapper = new VanillaCommandWrapper(node);
             ((CraftServer) Bukkit.getServer()).getCommandMap().register("forge", wrapper);
         }
         getRoot().addChild(node);

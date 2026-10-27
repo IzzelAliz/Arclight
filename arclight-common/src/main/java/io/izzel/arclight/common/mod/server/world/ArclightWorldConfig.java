@@ -17,7 +17,7 @@ public class ArclightWorldConfig {
      * Default world config. Used for logic world.
      * @see LevelMixin#bridge$spigotConfig()
      */
-    public static final SpigotWorldConfig DEFAULT = new SpigotWorldConfig(DEFAULT_MARKER);
+    public static final SpigotWorldConfig DEFAULT = SpigotWorldConfig.forDefaults(DEFAULT_MARKER);
 
     private ArclightWorldConfig() {}
 }

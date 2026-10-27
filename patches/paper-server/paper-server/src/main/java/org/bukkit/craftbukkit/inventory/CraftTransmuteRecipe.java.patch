@@ -1,0 +1,54 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftTransmuteRecipe.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftTransmuteRecipe.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftTransmuteRecipe.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftTransmuteRecipe.java
+@@ -11,10 +11,36 @@
+ 
+ public class CraftTransmuteRecipe extends TransmuteRecipe implements CraftRecipe {
+ 
++    private final net.minecraft.world.item.ItemStackTemplate resultTemplate;
++    private final net.minecraft.advancements.criterion.MinMaxBounds.Ints materialCount;
++    private final boolean addMaterialCountToResult;
++
+     public CraftTransmuteRecipe(NamespacedKey key, Material result, RecipeChoice input, RecipeChoice material) {
+-        super(key, result, input, material);
++        this(key, CraftItemStack.asTemplate(new org.bukkit.inventory.ItemStack(result)), input, material,
++            net.minecraft.world.item.crafting.TransmuteRecipe.DEFAULT_MATERIAL_COUNT, false);
+     }
+ 
++    public CraftTransmuteRecipe(NamespacedKey key, net.minecraft.world.item.ItemStackTemplate result, RecipeChoice input, RecipeChoice material,
++                               net.minecraft.advancements.criterion.MinMaxBounds.Ints materialCount, boolean addMaterialCountToResult) {
++        super(key, CraftItemStack.asCraftMirror(result.create()).getType(), input, material);
++        this.resultTemplate = result;
++        this.materialCount = materialCount;
++        this.addMaterialCountToResult = addMaterialCountToResult;
++    }
++
++    @Override
++    public org.bukkit.inventory.ItemStack getResult() {
++        return CraftItemStack.asCraftMirror(this.resultTemplate.create());
++    }
++
++    public int getMinimumMaterialCount() {
++        return this.materialCount.min().orElse(1);
++    }
++
++    public int getMaximumMaterialCount() {
++        return this.materialCount.max().orElse(8);
++    }
++
+     public static CraftTransmuteRecipe fromBukkitRecipe(TransmuteRecipe recipe) {
+         if (recipe instanceof CraftTransmuteRecipe) {
+             return (CraftTransmuteRecipe) recipe;
+@@ -32,9 +58,9 @@
+             new net.minecraft.world.item.crafting.CraftingRecipe.CraftingBookInfo(CraftRecipe.getCategory(this.getCategory()), this.getGroup()),
+             CraftRecipe.toIngredient(this.getInput(), true),
+             CraftRecipe.toIngredient(this.getMaterial(), true),
+-            net.minecraft.world.item.crafting.TransmuteRecipe.DEFAULT_MATERIAL_COUNT,
+-            CraftItemStack.asTemplate(this.getResult()),
+-            false
++            this.materialCount,
++            this.resultTemplate,
++            this.addMaterialCountToResult
+         );
+         MinecraftServer.getServer().getRecipeManager().addRecipe(new RecipeHolder<>(CraftNamespacedKey.toResourceKey(Registries.RECIPE, this.getKey()), recipe));
+     }

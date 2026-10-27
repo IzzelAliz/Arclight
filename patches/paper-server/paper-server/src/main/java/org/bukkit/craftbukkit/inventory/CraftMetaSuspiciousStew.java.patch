@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSuspiciousStew.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSuspiciousStew.java
+index 2c1dad444a0f37eb670ff5c6ef1101e8eee66c96..b1289e3ec92dccd78012fc7626e333abb7646b2d 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSuspiciousStew.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSuspiciousStew.java
+@@ -24,7 +24,7 @@ public class CraftMetaSuspiciousStew extends CraftMetaItem implements Suspicious
+ 
+     private List<io.papermc.paper.potion.SuspiciousEffectEntry> customEffects;
+ 
+-    CraftMetaSuspiciousStew(CraftMetaItem meta) {
++    public CraftMetaSuspiciousStew(CraftMetaItem meta) {
+         super(meta);
+         if (!(meta instanceof CraftMetaSuspiciousStew suspiciousStewMeta)) {
+             return;

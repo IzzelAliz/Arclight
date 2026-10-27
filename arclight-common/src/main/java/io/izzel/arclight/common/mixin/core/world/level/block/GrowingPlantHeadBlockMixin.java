@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.level.block;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
@@ -37,6 +38,6 @@ public class GrowingPlantHeadBlockMixin {
 
     @Redirect(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
     private boolean arclight$blockGrow(ServerLevel world, BlockPos to, BlockState state, BlockState state1, ServerLevel worldIn, BlockPos from, RandomSource random) {
-        return CraftEventFactory.handleBlockSpreadEvent(world, from, to, state);
+        return CraftEventFactory.handleBlockSpreadEvent(world, from, to, state, Block.UPDATE_ALL);
     }
 }

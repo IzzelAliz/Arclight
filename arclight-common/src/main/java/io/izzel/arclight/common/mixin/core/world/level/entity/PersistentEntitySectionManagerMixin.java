@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.level.entity;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.common.bridge.core.world.level.entity.PersistentEntitySectionManagerBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.Local;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -33,7 +34,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Mixin(PersistentEntitySectionManager.class)
-public abstract class PersistentEntitySectionManagerMixin<T extends EntityAccess> {
+public abstract class PersistentEntitySectionManagerMixin<T extends EntityAccess> implements PersistentEntitySectionManagerBridge {
 
     // @formatter:off
     @Shadow public abstract void close() throws IOException;
@@ -42,6 +43,7 @@ public abstract class PersistentEntitySectionManagerMixin<T extends EntityAccess
     @Shadow @Final private Long2ObjectMap<PersistentEntitySectionManager.ChunkLoadStatus> chunkLoadStatuses;
     // @formatter:on
 
+    @Override
     public void close(boolean save) throws IOException {
         if (save) {
             this.close();
@@ -50,11 +52,21 @@ public abstract class PersistentEntitySectionManagerMixin<T extends EntityAccess
         }
     }
 
+    @Override
     public List<Entity> getEntities(ChunkPos chunkCoordIntPair) {
         return sectionStorage.getExistingSectionsInChunk(chunkCoordIntPair.pack())
             .flatMap(EntitySection::getEntities).map(o -> (Entity) o).collect(Collectors.toList());
     }
 
+    @Override
+    public List<Entity> bridge$getExistingEntities() {
+        return this.sectionStorage.getAllChunksWithExistingSections().longStream()
+            .mapToObj(this.sectionStorage::getExistingSectionsInChunk)
+            .flatMap(sections -> sections)
+            .flatMap(EntitySection::getEntities).map(entity -> (Entity) entity).collect(Collectors.toList());
+    }
+
+    @Override
     public boolean isPending(long cord) {
         return this.chunkLoadStatuses.get(cord) == PersistentEntitySectionManager.ChunkLoadStatus.PENDING;
     }

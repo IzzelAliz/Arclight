@@ -11,6 +11,10 @@ import org.jetbrains.annotations.Nullable;
 
 public interface MobBridge extends LivingEntityBridge {
 
+    net.minecraft.world.entity.ai.goal.GoalSelector bridge$goalSelector();
+
+    net.minecraft.world.entity.ai.goal.GoalSelector bridge$targetSelector();
+
     void bridge$pushGoalTargetReason(EntityTargetEvent.TargetReason reason, boolean fireEvent);
 
     void bridge$pushTransformReason(EntityTransformEvent.TransformReason transformReason);

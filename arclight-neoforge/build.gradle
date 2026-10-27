@@ -20,10 +20,10 @@ dependencies {
     implementation libs.arclight.api
     implementation libs.mixin.tools
 
-    implementation(libs.bundles.spigot.shade) { transitive = false }
-    shadowBundle(libs.bundles.spigot.shade) { transitive = false }
-    implementation rootProject.ext.generatedSpigot
-    shadowBundle rootProject.ext.generatedSpigot
+    implementation project(':arclight-paper-api')
+    shadowBundle(project(':arclight-paper-api')) { transitive = false }
+    implementation libs.jline
+    shadowBundle(libs.jline) { transitive = false }
 
     // XXX: for compiling (arclight-api): NeoForgeArclightServer#registerForgeEvent
     compileOnly("net.minecraftforge:eventbus:4.0.0") { transitive = false }
@@ -46,6 +46,8 @@ processResources {
 shadowJar {
     exclude 'fabric.mod.json'
     exclude 'architectury.common.json'
+    exclude 'arclight.accesswidener'
+    from(loom.accessWidenerPath)
 
     configurations = [project.configurations.shadowBundle]
     archiveClassifier = 'dev-shadow'

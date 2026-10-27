@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.item;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import io.izzel.arclight.common.mod.util.SignPlacementScope;
+import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -23,6 +23,6 @@ public abstract class SignItemMixin {
                                          Operation<Void> original, BlockPos pos, Level level, Player placingPlayer,
                                          ItemStack stack, BlockState state) {
         // Native server/player/no-custom-NBT/sign gates have already run at this callsite.
-        SignPlacementScope.defer(block, player, sign, front, original, pos, level, stack);
+        ArclightEventFactory.deferSignEditor(block, player, sign, front, original, pos, level, stack);
     }
 }

@@ -22,4 +22,9 @@ public class LevelChunkSectionMixin implements LevelChunkSectionBridge {
     public void bridge$setBiome(int x, int y, int z, Holder<Biome> biome) {
         this.setBiome(x, y, z, biome);
     }
+
+    public void setNoiseBiome(int x, int y, int z, net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> biome) {
+        this.bridge$setBiome(x, y, z, biome);
+    }
+
 }

@@ -1,0 +1,15 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftSkull.java b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftSkull.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftSkull.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftSkull.java
+@@ -88,9 +88,9 @@
+             return false;
+         }
+ 
+-        GameProfile profile = MinecraftServer.getServer().services().paper().filledProfileCache().getIfCached(name);
++        GameProfile profile = ((io.izzel.arclight.common.bridge.core.server.players.ProfileResolverCachedBridge) MinecraftServer.getServer().services().profileResolver()).bridge$getIfCached(name);
+         if (profile == null) {
+-            profile = MinecraftServer.getServer().services().nameToIdCache().get(name).map(NameAndId::toUncompletedGameProfile).orElse(null);
++            profile = MinecraftServer.getServer().services().nameToIdCache().get(name).map(identity -> new GameProfile(identity.id(), identity.name())).orElse(null);
+         }
+         if (profile == null) {
+             return false;

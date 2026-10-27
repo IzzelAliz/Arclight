@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.server;
 
 import io.izzel.arclight.api.Unsafe;
+import io.papermc.paper.plugin.entrypoint.LaunchEntryPointHandler;
 import net.minecraft.server.Bootstrap;
 import org.bukkit.craftbukkit.legacy.CraftLegacy;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,6 +15,12 @@ import java.util.Set;
 
 @Mixin(Bootstrap.class)
 public class BootstrapMixin {
+
+    @Inject(method = "bootStrap", at = @At(value = "INVOKE", target = "Ljava/time/Instant;now()Ljava/time/Instant;", ordinal = 0, shift = At.Shift.AFTER, remap = false))
+    private static void arclight$enterBootstrappers(CallbackInfo ci) {
+        // The first timestamp is inside the native first-bootstrap branch, before registry initialization.
+        LaunchEntryPointHandler.enterBootstrappers();
+    }
 
     @Inject(method = "bootStrap", at = @At("HEAD"))
     private static void arclight$replaceWhitelist(CallbackInfo ci) {

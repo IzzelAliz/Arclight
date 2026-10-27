@@ -26,14 +26,7 @@ public class FungusBlockMixin {
         }
     }
 
-    @com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod(method = "performBonemeal")
-    private void arclight$scopedType(ServerLevel level, RandomSource random, BlockPos pos,
-            BlockState state, com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original) {
-        try (var frame = io.izzel.arclight.common.mod.util.TreeGrowthContext.enter(level)) {
-            original.call(level, random, pos, state);
-            frame.returnedNormally();
-        }
-    }
+
 
     // Native Optional lambda is reached only for the final, eligible nonnull net.minecraft.core.Holder.
     // Keep opaque placement continuation and every argument exactly once; native discards its boolean.
@@ -42,7 +35,7 @@ public class FungusBlockMixin {
     private static boolean arclight$finalHolder(net.minecraft.world.level.levelgen.feature.ConfiguredFeature<?, ?> feature, net.minecraft.world.level.WorldGenLevel level,
             net.minecraft.world.level.chunk.ChunkGenerator generator, RandomSource random, BlockPos pos, com.llamalad7.mixinextras.injector.wrapoperation.Operation<Boolean> original,
             @com.llamalad7.mixinextras.sugar.Local(argsOnly = true) net.minecraft.core.Holder<net.minecraft.world.level.levelgen.feature.ConfiguredFeature<?, ?>> holder) {
-        io.izzel.arclight.common.mod.util.TreeGrowthContext.selected((ServerLevel) level, io.izzel.arclight.common.mod.util.TreeGrowthContext.Site.FUNGUS, holder);
+        io.izzel.arclight.common.mod.util.TreeCapture.selectGrowth(holder, false);
         return original.call(feature, level, generator, random, pos);
     }
 }

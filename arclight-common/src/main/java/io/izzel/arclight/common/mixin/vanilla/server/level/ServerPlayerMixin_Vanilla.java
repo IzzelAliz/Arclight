@@ -56,4 +56,10 @@ public abstract class ServerPlayerMixin_Vanilla extends Player implements Server
     private Either<Player.BedSleepingProblem, Unit> arclight$invokeParentSleep(BlockPos pos) {
         return super.startSleepInBed(pos);
     }
+    @io.izzel.arclight.mixin.Decorate(method = "drop(Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;drop(Lnet/minecraft/world/item/ItemStack;ZZ)Lnet/minecraft/world/entity/item/ItemEntity;"))
+    private net.minecraft.world.entity.item.ItemEntity arclight$recordSelectedDrop(ServerPlayer player, net.minecraft.world.item.ItemStack stack, boolean randomly, boolean thrownFromHand) throws Throwable {
+        var dropped = (net.minecraft.world.entity.item.ItemEntity) io.izzel.arclight.mixin.DecorationOps.callsite().invoke(player, stack, randomly, thrownFromHand);
+        ((ServerPlayerBridge) player).bridge$recordSelectedDrop(dropped);
+        return dropped;
+    }
 }

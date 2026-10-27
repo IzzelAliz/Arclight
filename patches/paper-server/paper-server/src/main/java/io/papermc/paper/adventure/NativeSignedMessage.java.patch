@@ -1,0 +1,53 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/adventure/NativeSignedMessage.java b/paper-server/src/main/java/io/papermc/paper/adventure/NativeSignedMessage.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..35231ed3ba965c6b796300e94425b4030babffe9
+--- /dev/null
++++ b/paper-server/src/main/java/io/papermc/paper/adventure/NativeSignedMessage.java
+@@ -0,0 +1,47 @@
++package io.papermc.paper.adventure;
++
++import java.time.Instant;
++import java.util.Objects;
++import net.kyori.adventure.chat.SignedMessage;
++import net.kyori.adventure.identity.Identity;
++import net.kyori.adventure.text.Component;
++import net.minecraft.network.chat.PlayerChatMessage;
++import org.jspecify.annotations.Nullable;
++
++public record NativeSignedMessage(PlayerChatMessage playerChatMessage) implements SignedMessage {
++    public NativeSignedMessage {
++        Objects.requireNonNull(playerChatMessage, "playerChatMessage");
++    }
++
++    @Override
++    public Instant timestamp() {
++        return this.playerChatMessage.timeStamp();
++    }
++
++    @Override
++    public long salt() {
++        return this.playerChatMessage.salt();
++    }
++
++    @Override
++    public @Nullable Signature signature() {
++        var signature = this.playerChatMessage.signature();
++        return signature == null ? null : signature::bytes;
++    }
++
++    @Override
++    public @Nullable Component unsignedContent() {
++        var content = this.playerChatMessage.unsignedContent();
++        return content == null ? null : PaperAdventure.asAdventure(content);
++    }
++
++    @Override
++    public String message() {
++        return this.playerChatMessage.signedContent();
++    }
++
++    @Override
++    public Identity identity() {
++        return Identity.identity(this.playerChatMessage.sender());
++    }
++}

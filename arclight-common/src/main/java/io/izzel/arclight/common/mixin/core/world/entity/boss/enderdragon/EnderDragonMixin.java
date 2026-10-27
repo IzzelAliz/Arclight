@@ -64,8 +64,18 @@ public abstract class EnderDragonMixin extends MobMixin {
         }
     }
 
-    @Inject(method = "kill", at = @At("HEAD"))
+    @Inject(method = "kill", at = @At("HEAD"), cancellable = true)
     private void arclight$killed(CallbackInfo ci) {
+        var death = (io.izzel.arclight.common.bridge.core.world.entity.DeathEventBridge) this;
+        death.bridge$resetDeathEvent();
+        death.bridge$setSilentDeath(true);
+        var event = org.bukkit.craftbukkit.event.CraftEventFactory.callEntityDeathEvent(
+            (net.minecraft.world.entity.LivingEntity) (Object) this, this.damageSources().genericKill());
+        if (event.isCancelled()) {
+            death.bridge$setSilentDeath(false);
+            ci.cancel();
+            return;
+        }
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DEATH);
     }
 
@@ -128,15 +138,15 @@ public abstract class EnderDragonMixin extends MobMixin {
                 }
                 final CraftBlock craftBlock = (CraftBlock) block2;
                 final BlockPos blockposition2 = craftBlock.getPosition();
-                final net.minecraft.world.level.block.Block nmsBlock = craftBlock.getNMS().getBlock();
+                final net.minecraft.world.level.block.Block nmsBlock = craftBlock.getBlockState().getBlock();
                 if (nmsBlock.dropFromExplosion(this.explosionSource)) {
-                    BlockEntity tileentity = craftBlock.getNMS().hasBlockEntity() ? this.level().getBlockEntity(blockposition2) : null;
+                    BlockEntity tileentity = craftBlock.getBlockState().hasBlockEntity() ? this.level().getBlockEntity(blockposition2) : null;
                     LootParams.Builder loottableinfo_builder = new LootParams.Builder((ServerLevel) this.level()).withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(blockposition2)).withParameter(LootContextParams.TOOL, ItemStack.EMPTY).withParameter(LootContextParams.EXPLOSION_RADIUS, 1.0f / event.getYield()).withOptionalParameter(LootContextParams.BLOCK_ENTITY, tileentity);
-                    for (ItemStack stack : craftBlock.getNMS().getDrops(loottableinfo_builder)) {
+                    for (ItemStack stack : craftBlock.getBlockState().getDrops(loottableinfo_builder)) {
                         Block.popResource(this.level(), blockposition2, stack);
                     }
-                    craftBlock.getNMS().spawnAfterBreak((ServerLevel) this.level(), blockposition2, ItemStack.EMPTY, false);
-                    // net.minecraft.block.Block.spawnDrops(craftBlock.getNMS(), loottableinfo_builder);
+                    craftBlock.getBlockState().spawnAfterBreak((ServerLevel) this.level(), blockposition2, ItemStack.EMPTY, false);
+                    // net.minecraft.block.Block.spawnDrops(craftBlock.getBlockState(), loottableinfo_builder);
                 }
                 nmsBlock.wasExploded(serverLevel, blockposition2, this.explosionSource);
                 this.level().removeBlock(blockposition2, false);

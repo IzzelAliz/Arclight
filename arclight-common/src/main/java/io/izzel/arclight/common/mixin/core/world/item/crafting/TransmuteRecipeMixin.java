@@ -25,6 +25,7 @@ public class TransmuteRecipeMixin implements RecipeBridge {
     @Shadow @Final private Ingredient input;
     @Shadow @Final private Ingredient material;
     @Shadow @Final private ItemStackTemplate result;
+    @Shadow @Final private net.minecraft.advancements.criterion.MinMaxBounds.Ints materialCount;
     @Shadow @Final private boolean addMaterialCountToResult;
     @Shadow private int minMaterialCount() { throw new AssertionError(); }
     @Shadow private int maxMaterialCount() { throw new AssertionError(); }
@@ -43,9 +44,9 @@ public class TransmuteRecipeMixin implements RecipeBridge {
 
     @Override
     public Recipe bridge$toBukkitRecipe(NamespacedKey id) {
-        CraftTransmuteRecipe recipe = new CraftTransmuteRecipe(id, CraftItemStack.asCraftMirror(this.result),
-            CraftRecipe.toBukkit(this.input), CraftRecipe.toBukkit(this.material),
-            this.minMaterialCount(), this.maxMaterialCount(), this.addMaterialCountToResult);
+        CraftTransmuteRecipe recipe = new CraftTransmuteRecipe(id, this.result,
+            CraftRecipe.toChoice(this.input), CraftRecipe.toChoice(this.material),
+            this.materialCount, this.addMaterialCountToResult);
         recipe.setGroup(((TransmuteRecipe) (Object) this).group());
         recipe.setCategory(CraftRecipe.getCategory(((TransmuteRecipe) (Object) this).category()));
         return recipe;

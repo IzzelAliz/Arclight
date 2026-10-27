@@ -1,0 +1,204 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
+@@ -310,16 +310,18 @@
+             }
+         }
+ 
+-        return this.entity.teleport(new TeleportTransition(
++        TeleportTransition transition = new TeleportTransition(
+             ((CraftWorld) location.getWorld()).getHandle(),
+             CraftLocation.toVec3(location),
+             Vec3.ZERO,
+             location.getYaw(),
+             location.getPitch(),
+             relativeFlags,
+-            TeleportTransition.DO_NOTHING,
+-            cause
+-        )) != null;
++            TeleportTransition.DO_NOTHING
++        );
++        io.izzel.arclight.common.bridge.core.world.level.portal.DimensionTransitionBridge transitionBridge = transition;
++        transitionBridge.bridge$setTeleportCause(cause);
++        return entity.teleport(transition) != null;
+     }
+ 
+     public static net.minecraft.world.entity.Relative deltaRelativeToNMS(TeleportFlag.Relative apiFlag) {
+@@ -413,7 +415,10 @@
+     @Override
+     public void setVisualFire(final TriState fire) {
+         Preconditions.checkArgument(fire != null, "TriState cannot be null");
+-        this.getHandle().visualFire = fire;
++        if (fire == TriState.FALSE) {
++            throw new UnsupportedOperationException("Forced visual fire suppression is not supported by Arclight");
++        }
++        this.getHandle().hasVisualFire = fire == TriState.TRUE;
+     }
+ 
+     @Override
+@@ -423,7 +428,7 @@
+ 
+     @Override
+     public TriState getVisualFire() {
+-        return this.getHandle().visualFire;
++        return this.getHandle().hasVisualFire ? TriState.TRUE : TriState.NOT_SET;
+     }
+ 
+     @Override
+@@ -450,18 +455,18 @@
+ 
+     @Override
+     public boolean isFreezeTickingLocked() {
+-        return this.entity.freezeLocked;
++        throw new UnsupportedOperationException("Freeze ticking locks are not supported by Arclight");
+     }
+ 
+     @Override
+     public void lockFreezeTicks(boolean locked) {
+-        this.entity.freezeLocked = locked;
++        throw new UnsupportedOperationException("Freeze ticking locks are not supported by Arclight");
+     }
+ 
+     @Override
+     public void remove() {
+-        this.entity.pluginRemoved = true;
+-        this.entity.discard(this.getHandle().generation ? null : EntityRemoveEvent.Cause.PLUGIN);
++        io.izzel.arclight.common.bridge.core.entity.EntityBridge bridge = this.entity;
++        bridge.bridge$removeFromPlugin();
+     }
+ 
+     @Override
+@@ -1052,7 +1057,7 @@
+                 this.getHandle().registryAccess()
+             );
+ 
+-            tagValueOutput.putString(Entity.TAG_ID, this.getHandle().getEncodeId(true));
++            tagValueOutput.putString(Entity.TAG_ID, this.getHandle().typeHolder().unwrapKey().orElseThrow(() -> new IllegalStateException("Unregistered entity")).identifier().toString());
+             this.getHandle().saveWithoutId(tagValueOutput);
+ 
+             return tagValueOutput.buildResult();
+@@ -1061,35 +1066,17 @@
+ 
+     // re-sends the spawn entity packet to updated values which cannot be updated otherwise
+     protected void update() {
+-        if (!this.getHandle().isAlive()) {
+-            return;
+-        }
+-
++        if (!this.getHandle().isAlive()) return;
+         ServerLevel world = ((CraftWorld) this.getWorld()).getHandle();
+-        ChunkMap.TrackedEntity entityTracker = world.getChunkSource().chunkMap.entityMap.get(this.getEntityId());
+-
+-        if (entityTracker == null) {
+-            return;
+-        }
+-
+-        for (final ServerPlayerConnection connection : entityTracker.seenBy) {
+-            this.getHandle().resendPossiblyDesyncedEntityData(connection.getPlayer());
+-        }
++        io.izzel.arclight.common.bridge.core.server.level.ChunkMapBridge tracker = world.getChunkSource().chunkMap;
++        tracker.bridge$resendEntityPairingData(this.getHandle());
+     }
+ 
+     public void update(ServerPlayer player) {
+-        if (!this.getHandle().isAlive()) {
+-            return;
+-        }
+-
++        if (!this.getHandle().isAlive()) return;
+         ServerLevel world = ((CraftWorld) this.getWorld()).getHandle();
+-        ChunkMap.TrackedEntity entityTracker = world.getChunkSource().chunkMap.entityMap.get(this.getEntityId());
+-
+-        if (entityTracker == null) {
+-            return;
+-        }
+-
+-        player.connection.send(this.getHandle().getAddEntityPacket(entityTracker.serverEntity));
++        io.izzel.arclight.common.bridge.core.server.level.ChunkMapBridge tracker = world.getChunkSource().chunkMap;
++        tracker.bridge$sendEntitySpawnPacket(this.getHandle(), player);
+     }
+ 
+     private static PermissibleBase getPermissibleBase() {
+@@ -1117,28 +1104,7 @@
+         Preconditions.checkArgument(location.getWorld() != null, "Target world cannot be null");
+         Preconditions.checkState(!this.entity.generation, "Cannot teleport entity to an other world during world generation");
+         location.checkFinite();
+-        Location locationClone = location.clone(); // clone so we don't need to worry about mutations after this call.
+-
+-        ServerLevel world = ((CraftWorld)locationClone.getWorld()).getHandle();
+-        CompletableFuture<Boolean> ret = new CompletableFuture<>();
+-
+-        world.loadChunksForMoveAsync(this.getHandle().getBoundingBoxAt(locationClone.getX(), locationClone.getY(), locationClone.getZ()),
+-            this instanceof CraftPlayer ? ca.spottedleaf.concurrentutil.util.Priority.HIGHER : ca.spottedleaf.concurrentutil.util.Priority.NORMAL, (chunks) -> {
+-                MinecraftServer.getServer().scheduleOnMain(() -> {
+-                    final ServerChunkCache chunkCache = world.getChunkSource();
+-                    for (final net.minecraft.world.level.chunk.ChunkAccess chunk : chunks) {
+-                        chunkCache.addTicketAtLevel(TicketType.POST_TELEPORT, chunk.getPos(), ChunkLevel.FULL_CHUNK_LEVEL);
+-                    }
+-                    try {
+-                        ret.complete(CraftEntity.this.teleport0(locationClone, cause, teleportFlags) ? Boolean.TRUE : Boolean.FALSE);
+-                    } catch (Throwable throwable) {
+-                        MinecraftServer.LOGGER.error("Failed to teleport entity {}", CraftEntity.this, throwable);
+-                        ret.completeExceptionally(throwable);
+-                    }
+-                });
+-            });
+-
+-        return ret;
++        throw new UnsupportedOperationException("Asynchronous teleportation is not supported by Arclight");
+     }
+     // Paper end - more teleport API / async chunk API
+ 
+@@ -1167,26 +1133,17 @@
+ 
+     @Override
+     public Location getOrigin() {
+-        if (this.getHandle().origin == null) {
+-            return null;
+-        }
+-
+-        World world = this.getWorld();
+-        if (this.getHandle().originWorld != null) {
+-            world = org.bukkit.Bukkit.getWorld(this.getHandle().originWorld);
+-        }
+-
+-        return CraftVector.toBukkit(this.getHandle().origin).toLocation(world);
++        throw new UnsupportedOperationException("Entity origin tracking is not supported");
+     }
+ 
+     @Override
+     public boolean fromMobSpawner() {
+-        return this.getHandle().spawnedViaMobSpawner;
++        throw new UnsupportedOperationException("Persistent mob spawner origin tracking is not supported");
+     }
+ 
+     @Override
+     public org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason getEntitySpawnReason() {
+-        return this.getHandle().spawnReason;
++        throw new UnsupportedOperationException("Initial entity spawn reason tracking is not supported");
+     }
+ 
+     @Override
+@@ -1206,7 +1163,8 @@
+ 
+     @Override
+     public boolean isTicking() {
+-        return this.getHandle().isTicking();
++        Entity handle = this.getHandle();
++        return ((ServerLevel) handle.level()).isPositionEntityTicking(handle.blockPosition());
+     }
+ 
+     @Override
+@@ -1231,10 +1189,10 @@
+         this.entity.setLevel(((CraftWorld) location.getWorld()).getHandle());
+         this.entity.setPos(location.getX(), location.getY(), location.getZ());
+         this.entity.setRot(location.getYaw(), location.getPitch());
+-        final boolean spawned = !this.entity.valid && this.entity.level().addFreshEntity(this.entity, reason);
++        final boolean spawned = !this.entity.valid && ((io.izzel.arclight.common.bridge.core.world.level.IWorldWriterBridge) this.entity.level()).bridge$addEntity(this.entity, reason);
+         if (!spawned) return false; // Do not attempt to spawn rest if root was not spawned in
+         // Like net.minecraft.world.level.ServerLevelAccessor.addFreshEntityWithPassengers(net.minecraft.world.entity.Entity, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason)
+-        this.entity.getIndirectPassengers().forEach(e -> e.level().addFreshEntity(e, reason));
++        this.entity.getIndirectPassengers().forEach(e -> ((io.izzel.arclight.common.bridge.core.world.level.IWorldWriterBridge) e.level()).bridge$addEntity(e, reason));
+         return true;
+     }
+ 

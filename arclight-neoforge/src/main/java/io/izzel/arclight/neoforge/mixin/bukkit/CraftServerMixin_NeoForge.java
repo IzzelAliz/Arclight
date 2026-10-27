@@ -34,7 +34,7 @@ public abstract class CraftServerMixin_NeoForge {
         } else if (sender == Bukkit.getConsoleSender()) {
             commandSource = ArclightServer.getMinecraftServer().createCommandSourceStack();
         } else if (sender instanceof CraftBlockCommandSender) {
-            commandSource = ((CraftBlockCommandSender) sender).getWrapper();
+            commandSource = ((CraftBlockCommandSender) sender).getSourceStack();
         } else {
             return commandLine;
         }

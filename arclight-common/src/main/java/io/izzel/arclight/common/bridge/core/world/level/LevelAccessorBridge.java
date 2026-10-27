@@ -5,6 +5,36 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.LevelAccessor;
 
 public interface LevelAccessorBridge {
+    default net.minecraft.world.level.block.state.BlockState getBlockStateIfLoaded(net.minecraft.core.BlockPos pos) {
+        return this.bridge$getBlockStateIfLoaded(pos);
+    }
+
+    default net.minecraft.world.level.material.FluidState getFluidIfLoaded(net.minecraft.core.BlockPos pos) {
+        return this.bridge$getFluidIfLoaded(pos);
+    }
+
+    default net.minecraft.world.level.chunk.ChunkAccess getChunkIfLoadedImmediately(int x, int z) {
+        return this.bridge$getChunkIfLoadedImmediately(x, z);
+    }
+
+    default net.minecraft.world.level.block.state.BlockState bridge$getBlockStateIfLoaded(net.minecraft.core.BlockPos pos) {
+        var chunk = this.getChunkIfLoadedImmediately(pos.getX() >> 4, pos.getZ() >> 4);
+        return chunk == null ? null : chunk.getBlockState(pos);
+    }
+
+    default net.minecraft.world.level.material.FluidState bridge$getFluidIfLoaded(net.minecraft.core.BlockPos pos) {
+        var chunk = this.getChunkIfLoadedImmediately(pos.getX() >> 4, pos.getZ() >> 4);
+        return chunk == null ? null : chunk.getFluidState(pos);
+    }
+
+    default net.minecraft.world.level.chunk.ChunkAccess bridge$getChunkIfLoadedImmediately(int x, int z) {
+        throw new UnsupportedOperationException("Immediate chunk access is not supported by " + this.getClass().getName());
+    }
+
+    default ServerLevel getMinecraftWorld() {
+        return this.bridge$getMinecraftWorld();
+    }
+
     static LevelAccessorBridge from(LevelAccessor world) {
         final var result = (LevelAccessorBridge) world;
         return result.arclight$isActual() ? result : null;

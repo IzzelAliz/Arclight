@@ -1,0 +1,31 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/command/PaperCommands.java b/paper-server/src/main/java/io/papermc/paper/command/PaperCommands.java
+index 6dfd0b1a85d518828b15158c01472ae4383b8882..baa5fdee7d928978f56c1a080f6ec61356716a6a 100644
+--- a/paper-server/src/main/java/io/papermc/paper/command/PaperCommands.java
++++ b/paper-server/src/main/java/io/papermc/paper/command/PaperCommands.java
+@@ -1,10 +1,12 @@
+ package io.papermc.paper.command;
+ 
+ import com.mojang.brigadier.tree.LiteralCommandNode;
++import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
+ import io.papermc.paper.command.brigadier.CommandRegistrationFlag;
+ import io.papermc.paper.command.brigadier.CommandSourceStack;
+ import net.minecraft.server.MinecraftServer;
+ import org.bukkit.command.Command;
++import org.bukkit.craftbukkit.CraftServer;
+ 
+ import java.util.HashMap;
+ import java.util.List;
+@@ -22,11 +24,12 @@ public final class PaperCommands {
+     private static final Map<String, Command> COMMANDS = new HashMap<>();
+ 
+     public static void registerCommands(final MinecraftServer server) {
++        final CraftServer craftServer = ((MinecraftServerBridge) server).bridge$getServer();
+         COMMANDS.put("paper", new PaperCommand("paper"));
+         COMMANDS.put("mspt", new MSPTCommand("mspt"));
+ 
+         COMMANDS.forEach((s, command) -> {
+-            server.server.getCommandMap().register(s, "Paper", command);
++            craftServer.getCommandMap().register(s, "Paper", command);
+         });
+     }
+ 

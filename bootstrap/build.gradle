@@ -7,6 +7,14 @@ apply plugin: 'maven-publish'
 
 sourceSets {
     applaunch {}
+    forge {
+        java {
+            compileClasspath += main.output
+            compileClasspath += main.compileClasspath
+            runtimeClasspath += main.output
+            runtimeClasspath += main.runtimeClasspath
+        }
+    }
     neoforge {
         java {
             compileClasspath += main.output
@@ -19,8 +27,13 @@ sourceSets {
 }
 
 configurations {
-    installer
-    installerFabric
+    installer {
+        attributes.attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
+    }
+    installerFabric {
+        extendsFrom installer
+        attributes.attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
+    }
     embedCommon
     embedFabric
     embed
@@ -29,33 +42,12 @@ configurations {
     implementation.extendsFrom(embed, gson)
 }
 
-def installerLibs = [/*"org.spongepowered:mixin:$mixinVersion", */ 'org.yaml:snakeyaml:2.2',
-                     'org.xerial:sqlite-jdbc:3.42.0.1', 'com.mysql:mysql-connector-j:8.1.0',
-                     /*'commons-lang:commons-lang:2.6',*/ 'com.googlecode.json-simple:json-simple:1.1.1',
-                     'org.apache.logging.log4j:log4j-jul:2.19.0', 'net.md-5:SpecialSource:1.11.3',
-                     'org.jline:jline-terminal-jansi:3.12.1',/* 'org.fusesource.jansi:jansi:1.18',*/
-                     /*'org.jline:jline-terminal:3.12.1', 'org.jline:jline-reader:3.12.1',*/
-                     'jline:jline:2.12.1', 'org.apache.maven:maven-resolver-provider:3.8.5',
-                     'org.apache.maven.resolver:maven-resolver-connector-basic:1.7.3', 'org.apache.maven.resolver:maven-resolver-transport-http:1.7.3',
-                     'org.apache.maven:maven-model:3.8.5', 'org.codehaus.plexus:plexus-utils:3.3.0',
-                     'org.apache.maven:maven-model-builder:3.8.5', 'org.codehaus.plexus:plexus-interpolation:1.26',
-                     'org.eclipse.sisu:org.eclipse.sisu.inject:0.3.4', 'org.apache.maven:maven-builder-support:3.8.5',
-                     'org.apache.maven:maven-repository-metadata:3.8.5', 'org.apache.maven.resolver:maven-resolver-api:1.6.3',
-                     'org.apache.maven.resolver:maven-resolver-spi:1.6.3', 'org.apache.maven.resolver:maven-resolver-util:1.6.3',
-                     'org.apache.maven.resolver:maven-resolver-impl:1.6.3', 'org.apache.httpcomponents:httpclient:4.5.13',
-                     'org.apache.httpcomponents:httpcore:4.4.14', 'commons-codec:commons-codec:1.15',
-                     'org.slf4j:jcl-over-slf4j:1.7.30', /*'org.apache.logging.log4j:log4j-slf4j18-impl:2.14.1',*/
-                     'org.spongepowered:configurate-hocon:3.6.1', 'org.spongepowered:configurate-core:3.6.1',
-                     'com.typesafe:config:1.3.1', 'javax.inject:javax.inject:1']
-
-def installerLibsFabric = [
-        'net.minecrell:terminalconsoleappender:1.2.0',
-        'org.jline:jline-terminal:3.12.1',
-        'org.jline:jline-reader:3.12.1',
-        'org.fusesource.jansi:jansi:1.18',
-        'org.apache.maven:maven-artifact:3.8.5',
-        "net.fabricmc.fabric-api:fabric-api:${libs.versions.fabric.api.get()}"
+def installerLibs = [
+        libs.paper.snakeyaml, libs.mysql.connectorj, libs.sqlite.jdbc, libs.json.simple,
+        libs.log4j.jul, libs.specialsource, libs.commons.lang3
 ]
+
+def installerLibsFabric = []
 
 dependencies {
     implementation 'com.google.guava:guava:32.1.2-jre'
@@ -68,21 +60,39 @@ dependencies {
     implementation 'org.spongepowered:mixin:0.8.5'
     implementation 'org.apache.logging.log4j:log4j-jul:2.22.1'
 
+    forgeImplementation "net.minecraftforge:fmlloader:${libs.versions.full.forge.get()}"
+    forgeImplementation 'net.minecraftforge:securemodules:2.2.24'
+    forgeImplementation 'net.minecraftforge:modlauncher:10.2.6'
+    forgeImplementation 'net.minecraftforge:forgespi:8.0.0'
+    forgeImplementation 'net.minecraftforge:bootstrap:2.1.8'
+    forgeImplementation 'net.minecraftforge:bootstrap-api:2.1.8'
+
     neoforgeImplementation 'net.neoforged.fancymodloader:loader:11.0.15'
 
     fabricImplementation "net.fabricmc:fabric-loader:${libs.versions.fabric.loader.get()}"
 
     for (def lib : installerLibs) {
-        installer lib
+        installer(lib) { exclude group: 'junit', module: 'junit' }
     }
     for (def lib : installerLibsFabric) {
         installerFabric lib
     }
 
+    installerFabric(libs.fabric.api) { transitive = false }
+    installerFabric(libs.terminalconsoleappender) { exclude group: 'org.apache.logging.log4j', module: 'log4j-core' }
+    installer project(':arclight-paper-api')
+    installer libs.configurate.yaml
+    installer platform(libs.adventure.bom)
+    installer libs.adventure.ansi
+
     gson libs.gson
 
     embedCommon libs.izzel.tools
     embedCommon libs.arclight.api
+    // Configurate 3 uses ninja.leaping packages; keep it separate from Paper's 4.x graph.
+    embedCommon(libs.configurate.hocon) { transitive = false }
+    embedCommon(libs.configurate.legacy.core) { transitive = false }
+    embedCommon(libs.typesafe.config) { transitive = false }
 
     embedCommon 'commons-lang:commons-lang:2.6@jar'
     embedCommon(project(':i18n-config')) { transitive = false }
@@ -100,6 +110,38 @@ jar {
         exclude 'META-INF/services/**'
         exclude 'org/apache/commons/lang/enum/**'
     }
+}
+
+tasks.register('forgeJar', Jar) {
+    archiveBaseName.set "arclight-forge-${libs.versions.minecraft.get()}"
+    manifest.attributes 'Main-Class': 'io.izzel.arclight.server.Launcher'
+    manifest.attributes 'Implementation-Title': 'Arclight'
+    manifest.attributes 'Implementation-Version': "arclight-${libs.versions.minecraft.get()}-${project.version}-$gitHash"
+    manifest.attributes 'Implementation-Vendor': 'Arclight Team'
+    manifest.attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd HH:mm:ss")
+    manifest.attributes 'Automatic-Module-Name': 'arclight.boot'
+    from(configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }) {
+        exclude 'META-INF/MANIFEST.MF'
+        exclude 'META-INF/*.SF'
+        exclude 'META-INF/*.DSA'
+        exclude 'META-INF/*.RSA'
+        exclude 'LICENSE.txt'
+        exclude 'META-INF/services/**'
+        exclude 'org/apache/commons/lang/enum/**'
+    }
+    into('/') {
+        it.from(project(':arclight-forge').tasks.named('shadowJar').flatMap { it.archiveFile })
+        it.rename { name -> 'common.jar' }
+    }
+    into('/') {
+        it.from(configurations.gson.collect())
+        it.rename { name -> 'gson.jar' }
+    }
+    from sourceSets.applaunch.output
+    from sourceSets.main.output
+    from sourceSets.forge.output
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn(project(':arclight-forge').tasks.build)
 }
 
 tasks.register('neoforgeJar', Jar) {
@@ -171,6 +213,12 @@ tasks.register('generateInstallerInfo', GenerateInstallerInfo) {
 project.sourceSets.main.output.dir file('build/arclight_installer'), builtBy: tasks.generateInstallerInfo
 project.sourceSets.fabric.output.dir file('build/arclight_installer'), builtBy: tasks.generateInstallerInfo
 
+project.sourceSets.forge.output.dir file('build/forge_async_catcher'), builtBy: tasks.register('forgeAsyncCatcher', RenameAsyncCatcherTask) {
+    inputFile.set project.file('async_catcher.json')
+    mapping.set 'official'
+    outputs.file('build/forge_async_catcher/async_catcher.json')
+}
+
 project.sourceSets.neoforge.output.dir file('build/neoforge_async_catcher'), builtBy: tasks.register('neoforgeAsyncCatcher', RenameAsyncCatcherTask) {
     inputFile.set project.file('async_catcher.json')
     mapping.set 'official'
@@ -191,6 +239,26 @@ compileJava {
 
 compileApplaunchJava {
     sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks.register('runProdForge', JavaExec) {
+    classpath = files(tasks.forgeJar)
+    // systemProperties 'bsl.debug': 'true'
+    systemProperties 'terminal.ansi': 'true'
+    systemProperties 'mixin.debug.export': 'true'
+    systemProperties 'mixin.dumpTargetOnFailure': 'true'
+    systemProperties 'arclight.alwaysExtract': 'true'
+    systemProperties 'arclight.remapper.dump': './.mixin.out/plugin_classes'
+    systemProperties 'sun.stdout.encoding': 'UTF-8'
+    systemProperties 'sun.stderr.encoding': 'UTF-8'
+    workingDir System.env.ARCLIGHT_PROD_DIR ?: file('run_prod/forge')
+    maxHeapSize '4G'
+    args 'nogui'
+    standardInput System.in
+    javaLauncher.convention(javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    })
+    dependsOn project.tasks.forgeJar
 }
 
 tasks.register('runProdNeoforge', JavaExec) {

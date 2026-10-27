@@ -20,6 +20,9 @@ config="mixins.arclight.core.json"
 config="mixins.arclight.bukkit.json"
 
 [[mixins]]
+config="mixins.arclight.compat.json"
+
+[[mixins]]
 config="mixins.arclight.neoforge.json"
 
 [[mixins]]

@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal.allay;
 
 import io.izzel.arclight.common.mixin.core.world.entity.MobMixin;
+import io.izzel.arclight.common.bridge.core.world.entity.animal.AllayBridge;
 import io.izzel.arclight.common.mod.mixins.annotation.RenameInto;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import io.izzel.arclight.mixin.Decorate;
@@ -19,7 +20,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(Allay.class)
-public abstract class AllayMixin extends MobMixin {
+public abstract class AllayMixin extends MobMixin implements AllayBridge {
 
     @org.spongepowered.asm.mixin.injection.Inject(method = "aiStep", at = @org.spongepowered.asm.mixin.injection.At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/allay/Allay;heal(F)V"))
     private void arclight$localHealReason(org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
@@ -40,6 +41,7 @@ public abstract class AllayMixin extends MobMixin {
         }
     }
 
+    @Override
     public void setCanDuplicate(boolean canDuplicate) {
         this.entityData.set(DATA_CAN_DUPLICATE, canDuplicate);
     }
@@ -73,6 +75,11 @@ public abstract class AllayMixin extends MobMixin {
 
     @RenameInto("duplicateAllay")
     public Allay bukkit$duplicateAllay() {
+        return this.bridge$duplicateAllay();
+    }
+
+    @Override
+    public Allay bridge$duplicateAllay() {
         Allay allay = EntityType.ALLAY.create(this.level(), EntitySpawnReason.BREEDING);
         if (allay != null) {
             allay.snapTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());

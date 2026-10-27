@@ -41,6 +41,21 @@ public abstract class ProjectileMixin extends EntityMixin implements io.izzel.ar
     }
 
 
+    @org.spongepowered.asm.mixin.Unique
+    private java.util.function.BooleanSupplier arclight$launchEvent;
+
+    @Override
+    public void bridge$setLaunchEvent(java.util.function.BooleanSupplier event) {
+        this.arclight$launchEvent = event;
+    }
+
+    @Override
+    public boolean bridge$callLaunchEvent() {
+        var event = this.arclight$launchEvent;
+        this.arclight$launchEvent = null;
+        return event == null || event.getAsBoolean();
+    }
+
     // @formatter:off
     @Shadow @Nullable public abstract Entity getOwner();
     @Shadow protected void onHit(HitResult result) { }

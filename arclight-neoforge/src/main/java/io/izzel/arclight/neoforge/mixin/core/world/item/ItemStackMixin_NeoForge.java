@@ -1,8 +1,13 @@
 package io.izzel.arclight.neoforge.mixin.core.world.item;
 
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.item.ItemStackBridge;
-import io.izzel.arclight.common.mod.util.SignPlacementScope;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import io.papermc.paper.event.entity.EntityDamageItemEvent;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.core.BlockPos;
@@ -42,19 +47,40 @@ public abstract class ItemStackMixin_NeoForge implements ItemStackBridge, IItemS
         at = @At(value = "INVOKE", remap = false, target = "Lnet/neoforged/neoforge/common/CommonHooks;onPlaceItemIntoWorld(Lnet/minecraft/world/item/context/UseOnContext;)Lnet/minecraft/world/InteractionResult;"))
     private InteractionResult arclight$signPlacement(UseOnContext context, Operation<InteractionResult> original) {
         // Neo's phase-event cancellation returns before this call; native placement veto returns FAIL.
-        return io.izzel.arclight.common.mod.util.BonemealTreeConsumer.useOn(
-            (ItemStack) (Object) this, context, () -> SignPlacementScope.use(context, original));
+        return io.izzel.arclight.common.mod.util.TreeCapture.useOn(
+            (ItemStack) (Object) this, context, () -> ArclightEventFactory.useSignItem(context, original));
+    }
+
+    @Override
+    public void bridge$platform$hurtAndBreak(int amount, ServerLevel level, LivingEntity owner, Consumer<Item> onBreak) {
+        ((ItemStack) (Object) this).hurtAndBreak(amount, level, owner, onBreak);
+    }
+
+    @Decorate(method = "processDurabilityChange(ILnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;)I",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hasInfiniteMaterials()Z"))
+    private boolean arclight$forceItemDamage(LivingEntity owner) throws Throwable {
+        boolean infiniteMaterials = (boolean) DecorationOps.callsite().invoke(owner);
+        return infiniteMaterials && !ArclightCaptures.isItemDamageForced((ItemStack) (Object) this, owner);
     }
 
     @WrapOperation(method = "hurtAndBreak(ILnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Ljava/util/function/Consumer;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;processDurabilityChange(ILnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;)I"))
     private int arclight$itemDamage(ItemStack stack, int amount, ServerLevel level, LivingEntity damager, Operation<Integer> original) {
         // Preserve the existing event gate, but do not eventize hurtWithoutBreaking.
+        LivingEntity apiOwner = ArclightCaptures.getItemDamageOwner(stack, damager);
         boolean eventEligible = amount > 0 && stack.isDamageableItem()
             && damager != null && !damager.hasInfiniteMaterials();
         int result = original.call(stack, amount, level, damager);
-        if (eventEligible && damager instanceof ServerPlayer) {
-            PlayerItemDamageEvent event = new PlayerItemDamageEvent(((ServerPlayerBridge) damager).bridge$getBukkitEntity(), CraftItemStack.asCraftMirror(stack), result);
+        if (apiOwner != null && !(apiOwner instanceof ServerPlayer)) {
+            if (result > 0) {
+                EntityDamageItemEvent event = new EntityDamageItemEvent(((LivingEntityBridge) apiOwner).bridge$getBukkitEntity(), CraftItemStack.asCraftMirror(stack), result);
+                return event.callEvent() ? event.getDamage() : 0;
+            }
+            return result;
+        }
+        if (damager instanceof ServerPlayer && (apiOwner != null ? result > 0 : eventEligible)) {
+            // amount is the actual result of Item.damageItem, before enchantment reduction.
+            PlayerItemDamageEvent event = new PlayerItemDamageEvent(((ServerPlayerBridge) damager).bridge$getBukkitEntity(), CraftItemStack.asCraftMirror(stack), result, amount);
             event.getPlayer().getServer().getPluginManager().callEvent(event);
             if (result != event.getDamage() || event.isCancelled()) {
                 event.getPlayer().updateInventory();

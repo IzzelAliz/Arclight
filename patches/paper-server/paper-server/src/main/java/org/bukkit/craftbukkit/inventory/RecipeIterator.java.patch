@@ -1,0 +1,45 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/RecipeIterator.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/RecipeIterator.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/RecipeIterator.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/RecipeIterator.java
+@@ -1,18 +1,22 @@
+ package org.bukkit.craftbukkit.inventory;
+ 
++import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeManagerBridge;
++import net.minecraft.server.MinecraftServer;
+ import java.util.Iterator;
+ import java.util.Map;
+-import net.minecraft.server.MinecraftServer;
+ import net.minecraft.world.item.crafting.RecipeHolder;
+ import net.minecraft.world.item.crafting.RecipeType;
+ import org.bukkit.inventory.Recipe;
+ 
+ public class RecipeIterator implements Iterator<Recipe> {
++    private final RecipeManagerBridge recipeManager;
+     private final Iterator<Map.Entry<RecipeType<?>, RecipeHolder<?>>> recipes;
+     private RecipeHolder<?> currentRecipe;
+ 
+     public RecipeIterator() {
+-        this.recipes = MinecraftServer.getServer().getRecipeManager().recipes.byType.entries().iterator();
++        var manager = MinecraftServer.getServer().getRecipeManager();
++        this.recipeManager = manager;
++        this.recipes = manager.recipes.byType.entries().iterator();
+     }
+ 
+     @Override
+@@ -28,9 +32,12 @@
+ 
+     @Override
+     public void remove() {
+-        MinecraftServer.getServer().getRecipeManager().recipes.byKey.remove(this.currentRecipe.id());
+-        this.recipes.remove();
+-        MinecraftServer.getServer().getRecipeManager().finalizeRecipeLoading();
+-        MinecraftServer.getServer().getPlayerList().reloadRecipes();
++        if (this.currentRecipe == null) {
++            throw new IllegalStateException("next() must be called before remove()");
++        }
++        RecipeHolder<?> recipe = this.currentRecipe;
++        this.currentRecipe = null;
++        // RecipeMap is immutable; the native bridge replaces it and refreshes recipes and clients.
++        this.recipeManager.removeRecipe(recipe.id());
+     }
+ }

@@ -1,0 +1,21 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftEntitySnapshot.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftEntitySnapshot.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftEntitySnapshot.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftEntitySnapshot.java
+@@ -68,7 +68,7 @@
+         try (final ProblemReporter.ScopedCollector problemReporter = new ProblemReporter.ScopedCollector(
+             () -> "EntitySnapshot#createEntity", LOGGER
+         )) {
+-            internal.load(TagValueInput.createGlobal(problemReporter, this.data));
++            internal.load(TagValueInput.create(problemReporter, level.registryAccess(), this.data));
+         }
+ 
+         return internal;
+@@ -107,7 +107,7 @@
+             () -> "create", LOGGER
+         )) {
+             EntityType type = net.minecraft.world.entity.EntityType.by(
+-                TagValueInput.createGlobal(problemReporter, tag)
++                TagValueInput.create(problemReporter, CraftRegistry.getMinecraftRegistry(), tag)
+             ).map(CraftEntityType::minecraftToBukkit).orElse(null);
+             return CraftEntitySnapshot.create(tag, type);
+         }

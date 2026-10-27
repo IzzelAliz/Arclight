@@ -1,0 +1,28 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/PaperPluginClassLoader.java b/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/PaperPluginClassLoader.java
+index 18401ede9cd1fc7094c6b74859929938e01795ca..9d520fe2962e27bfcfac01320099afab396bb845 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/PaperPluginClassLoader.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/PaperPluginClassLoader.java
+@@ -197,8 +197,23 @@ public class PaperPluginClassLoader extends PaperSimplePluginClassLoader impleme
+ 
+     @Override
+     public void close() throws IOException {
++        Throwable closeFailure = null;
+         try (this.jar; this.libraryLoader) {
+             super.close();
++        } catch (IOException | RuntimeException | Error failure) {
++            closeFailure = failure;
++            throw failure;
++        } finally {
++            try {
++                PaperClassLoaderStorage.instance().unregisterClassloader(this);
++            } catch (RuntimeException | Error unregisterFailure) {
++                if (closeFailure == null) {
++                    throw unregisterFailure;
++                }
++                if (closeFailure != unregisterFailure) {
++                    closeFailure.addSuppressed(unregisterFailure);
++                }
++            }
+         }
+     }
+ 

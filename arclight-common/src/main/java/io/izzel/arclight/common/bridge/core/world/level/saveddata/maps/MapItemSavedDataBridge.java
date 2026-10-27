@@ -17,5 +17,13 @@ public interface MapItemSavedDataBridge {
 
     void bridge$setId(MapId id);
 
+    MapId bridge$getId();
+
+    UUID bridge$getUniqueId();
+
+    void bridge$setUniqueId(UUID uniqueId);
+
+    void bridge$markCanvasDirty(int x, int y);
+
     List<MapItemSavedData.HoldingPlayer> bridge$getCarriedBy();
 }

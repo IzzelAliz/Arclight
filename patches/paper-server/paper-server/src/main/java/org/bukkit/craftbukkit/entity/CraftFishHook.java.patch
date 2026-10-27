@@ -1,0 +1,17 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftFishHook.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftFishHook.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftFishHook.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftFishHook.java
+@@ -247,6 +247,12 @@
+         final ItemStack itemInHand = playerOwner.getItemInHand(hand);
+         Preconditions.checkState(itemInHand.is(Items.FISHING_ROD), "Item in slot is not a FISHING_ROD");
+ 
+-        return fishingHook.retrieve(itemInHand, hand);
++        io.izzel.arclight.common.bridge.core.world.entity.projectile.FishingHookBridge bridge = fishingHook;
++        final InteractionHand previous = bridge.bridge$swapRetrieveHand(hand);
++        try {
++            return fishingHook.retrieve(itemInHand);
++        } finally {
++            bridge.bridge$swapRetrieveHand(previous);
++        }
+     }
+ }

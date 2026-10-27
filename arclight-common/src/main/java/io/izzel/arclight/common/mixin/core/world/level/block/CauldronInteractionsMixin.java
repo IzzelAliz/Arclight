@@ -185,7 +185,7 @@ public abstract class CauldronInteractionsMixin {
     private static BlockState arclight$prepareChange(Level level, BlockPos pos, Player player,
             BlockState requested, CauldronLevelChangeEvent.ChangeReason reason) {
         CraftBlockState proposed = CraftBlockStates.getBlockState(level, pos);
-        proposed.setData(requested);
+        proposed.setBlock(requested);
         CauldronLevelChangeEvent event = new CauldronLevelChangeEvent(CraftBlock.at(level, pos),
                 ((EntityBridge) player).bridge$getBukkitEntity(), reason, proposed);
         Bukkit.getPluginManager().callEvent(event);

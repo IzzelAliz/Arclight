@@ -85,7 +85,7 @@ public abstract class LevelMixin_Vanilla implements LevelAccessor, WorldBridge {
 
             // CraftBukkit start - capture blockstates
             if (this.captureBlockStates && !this.bridge$getCapturedBlockState().containsKey(blockPos)) {
-                var blockstate = CapturedBlockState.getBlockState((Level) (Object) this, blockPos, i);
+                var blockstate = new CapturedBlockState(org.bukkit.craftbukkit.block.CraftBlock.at((Level) (Object) this, blockPos), i, false);
                 this.bridge$getCapturedBlockState().put(blockPos.immutable(), blockstate);
             }
             // CraftBukkit end
@@ -139,7 +139,7 @@ public abstract class LevelMixin_Vanilla implements LevelAccessor, WorldBridge {
     private void arclight$callBlockPhysics(BlockPos pos, BlockState state, int i, int j, CallbackInfoReturnable<Boolean> cir) {
         try {
             if (this.bridge$getWorld() != null) {
-                BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at(this, pos), CraftBlockData.fromData(state));
+                BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at(this, pos), CraftBlockData.createData(state));
                 Bukkit.getPluginManager().callEvent(event);
                 if (event.isCancelled()) {
                     cir.setReturnValue(true);

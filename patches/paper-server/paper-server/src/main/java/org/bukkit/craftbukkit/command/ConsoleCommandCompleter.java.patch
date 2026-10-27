@@ -1,0 +1,30 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/command/ConsoleCommandCompleter.java b/paper-server/src/main/java/org/bukkit/craftbukkit/command/ConsoleCommandCompleter.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/command/ConsoleCommandCompleter.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/command/ConsoleCommandCompleter.java
+@@ -26,7 +26,7 @@
+     // Paper start - Change method signature for JLine update
+     @Override
+     public void complete(LineReader reader, ParsedLine line, List<Candidate> candidates) {
+-        final CraftServer server = this.server.server;
++        final CraftServer server = ((io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge) this.server).bridge$getServer();
+         final String buffer = "/" + line.line();
+         // Async Tab Complete
+         final com.destroystokyo.paper.event.server.AsyncTabCompleteEvent event =
+@@ -48,7 +48,7 @@
+                         return syncEvent.callEvent() ? syncEvent.getCompletions() : com.google.common.collect.ImmutableList.of();
+                     }
+                 };
+-                server.getServer().processQueue.add(syncCompletions);
++                this.server.processQueue.add(syncCompletions);
+                 try {
+                     final List<String> legacyCompletions = syncCompletions.get();
+                     completions.removeIf(it -> !legacyCompletions.contains(it.suggestion())); // remove any suggestions that were removed
+@@ -80,7 +80,7 @@
+                 return tabEvent.isCancelled() ? Collections.emptyList() : tabEvent.getCompletions();
+             }
+         };
+-        server.getServer().processQueue.add(waitable); // Paper - Remove "this."
++        this.server.processQueue.add(waitable); // Paper - Remove "this."
+         try {
+             List<String> offers = waitable.get();
+             if (offers == null) {

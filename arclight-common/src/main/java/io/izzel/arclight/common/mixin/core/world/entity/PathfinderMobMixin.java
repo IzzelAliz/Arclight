@@ -9,6 +9,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PathfinderMob.class)
-public abstract class PathfinderMobMixin extends MobMixin {
+public abstract class PathfinderMobMixin extends MobMixin implements io.izzel.arclight.common.bridge.core.world.entity.PathfinderMobBridge {
+
+    public net.minecraft.core.BlockPos movingTarget;
+    @Override public net.minecraft.core.BlockPos bridge$getMovingTarget() { return this.movingTarget; }
+    @Override public void bridge$setMovingTarget(net.minecraft.core.BlockPos pos) { this.movingTarget = pos; }
 
 }

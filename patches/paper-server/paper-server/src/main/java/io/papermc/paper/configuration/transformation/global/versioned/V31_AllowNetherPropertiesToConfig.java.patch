@@ -1,0 +1,16 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/configuration/transformation/global/versioned/V31_AllowNetherPropertiesToConfig.java b/paper-server/src/main/java/io/papermc/paper/configuration/transformation/global/versioned/V31_AllowNetherPropertiesToConfig.java
+--- a/paper-server/src/main/java/io/papermc/paper/configuration/transformation/global/versioned/V31_AllowNetherPropertiesToConfig.java
++++ b/paper-server/src/main/java/io/papermc/paper/configuration/transformation/global/versioned/V31_AllowNetherPropertiesToConfig.java
+@@ -24,9 +24,10 @@
+             final ConfigurationNode node = root.node("misc", "enable-nether");
+             node.set(raw.equals("true"));
+             server.settings.update((config) -> {
+-                final Properties newProps = new Properties(config.properties);
++                final Properties newProps = new Properties();
++                newProps.putAll(config.properties);
+                 newProps.remove("allow-nether");
+-                return config.reload(server.registryAccess(), newProps, server.options);
++                return new net.minecraft.server.dedicated.DedicatedServerProperties(newProps);
+             });
+         }
+     }

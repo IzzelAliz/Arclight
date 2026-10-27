@@ -12,6 +12,9 @@ public interface ServerClockOwnerBridge {
 
     ServerLevel arclight$owner();
 
-    void arclight$commandAdd(net.minecraft.core.Holder<net.minecraft.world.clock.WorldClock> clock, Runnable original);
+    void bridge$addTicks(net.minecraft.core.Holder<net.minecraft.world.clock.WorldClock> clock, long ticks);
+
+    java.util.OptionalLong bridge$timeMarker(net.minecraft.core.Holder<net.minecraft.world.clock.WorldClock> clock,
+        net.minecraft.resources.ResourceKey<net.minecraft.world.clock.ClockTimeMarker> marker);
 
 }

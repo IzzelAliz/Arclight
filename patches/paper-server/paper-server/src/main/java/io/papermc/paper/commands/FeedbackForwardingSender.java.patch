@@ -1,0 +1,28 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/commands/FeedbackForwardingSender.java b/paper-server/src/main/java/io/papermc/paper/commands/FeedbackForwardingSender.java
+index b84c2c663e9b26b3a8ff13367b69287f6dab3017..5263a69446c156b14e37dd614f54d384b1b94fbb 100644
+--- a/paper-server/src/main/java/io/papermc/paper/commands/FeedbackForwardingSender.java
++++ b/paper-server/src/main/java/io/papermc/paper/commands/FeedbackForwardingSender.java
+@@ -82,7 +82,7 @@ public final class FeedbackForwardingSender extends ServerCommandSender {
+         );
+     }
+ 
+-    private record Source(FeedbackForwardingSender sender) implements CommandSource {
++    private record Source(FeedbackForwardingSender sender) implements CommandSource, io.izzel.arclight.common.bridge.core.command.CommandSourceBridge {
+         @Override
+         public void sendSystemMessage(final net.minecraft.network.chat.Component message) {
+             this.sender.sendMessage(Identity.nil(), PaperAdventure.asAdventure(message));
+@@ -103,9 +103,13 @@ public final class FeedbackForwardingSender extends ServerCommandSender {
+             return false;
+         }
+ 
+-        @Override
+         public CommandSender getBukkitSender(final CommandSourceStack stack) {
+             return this.sender;
+         }
++
++        @Override
++        public CommandSender bridge$getBukkitSender(final CommandSourceStack stack) {
++            return this.sender;
++        }
+     }
+ }

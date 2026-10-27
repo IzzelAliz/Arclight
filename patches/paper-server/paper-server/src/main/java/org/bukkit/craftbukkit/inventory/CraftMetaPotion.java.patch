@@ -1,0 +1,22 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaPotion.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaPotion.java
+index 75b0fec7929bb4168372e3e15f1e008489f99e27..0f9eccfe023def080bcb97ed2cf55a42bd61ba27 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaPotion.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaPotion.java
+@@ -29,7 +29,7 @@ import org.bukkit.potion.PotionType;
+ import org.jetbrains.annotations.NotNull;
+ 
+ @DelegateDeserialization(SerializableMeta.class)
+-class CraftMetaPotion extends CraftMetaItem implements PotionMeta {
++public class CraftMetaPotion extends CraftMetaItem implements PotionMeta {
+ 
+     @ItemMetaKey.Specific(ItemMetaKey.Specific.To.NBT)
+     static final ItemMetaKeyType<PotionContents> POTION_CONTENTS = new ItemMetaKeyType<>(DataComponents.POTION_CONTENTS);
+@@ -43,7 +43,7 @@ class CraftMetaPotion extends CraftMetaItem implements PotionMeta {
+     private Integer color; // Paper - keep color component consistent with vanilla (top byte is ignored)
+     private String customName;
+ 
+-    CraftMetaPotion(CraftMetaItem meta) {
++    public CraftMetaPotion(CraftMetaItem meta) {
+         super(meta);
+         if (!(meta instanceof CraftMetaPotion potionMeta)) {
+             return;

@@ -1,0 +1,24 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractArrow.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractArrow.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractArrow.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractArrow.java
+@@ -184,12 +184,17 @@
+     // Paper start - Fix PickupStatus getting reset - Copy of CraftProjectile#setShooter, calling setOwner(Entity,boolean)
+     @Override
+     public void setShooter(org.bukkit.projectiles.ProjectileSource shooter, boolean resetPickupStatus) {
++        final net.minecraft.world.entity.projectile.arrow.AbstractArrow handle = this.getHandle();
++        final net.minecraft.world.entity.projectile.arrow.AbstractArrow.Pickup pickup = handle.pickup;
+         if (shooter instanceof CraftEntity craftEntity) {
+-            this.getHandle().setOwner(craftEntity.getHandle(), resetPickupStatus);
++            handle.setOwner(craftEntity.getHandle());
+         } else {
+-            this.getHandle().setOwner(null, resetPickupStatus);
++            handle.setOwner((net.minecraft.world.entity.Entity) null);
+         }
+-        this.getHandle().projectileSource = shooter;
++        if (!resetPickupStatus) {
++            handle.pickup = pickup;
++        }
++        handle.projectileSource = shooter;
+     }
+     // Paper end - Fix PickupStatus getting reset
+ }

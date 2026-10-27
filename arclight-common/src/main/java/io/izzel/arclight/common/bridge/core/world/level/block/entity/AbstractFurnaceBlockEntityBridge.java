@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface AbstractFurnaceBlockEntityBridge {
 
+    net.minecraft.world.item.crafting.RecipeType<? extends net.minecraft.world.item.crafting.AbstractCookingRecipe> bridge$getRecipeType();
+
     List<RecipeHolder<?>> bridge$dropExp(ServerPlayer entity, ItemStack itemStack, int amount);
 
     int bridge$getBurnDuration(ItemStack stack);

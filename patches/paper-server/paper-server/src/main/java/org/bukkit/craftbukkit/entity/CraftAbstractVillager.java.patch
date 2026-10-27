@@ -1,0 +1,41 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractVillager.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractVillager.java
+index 6add47c0e3e0d1383d6a1079d47c310f3a2b0ac9..be682ac46a75ce24fe625ff711ff3c3415462e4d 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractVillager.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractVillager.java
+@@ -1,6 +1,7 @@
+ package org.bukkit.craftbukkit.entity;
+ 
+-import net.minecraft.world.entity.npc.villager.Villager;
++import net.minecraft.server.level.ServerLevel;
++import net.minecraft.world.item.trading.MerchantOffers;
+ import net.minecraft.world.item.trading.Merchant;
+ import org.bukkit.craftbukkit.CraftServer;
+ import org.bukkit.craftbukkit.inventory.CraftInventory;
+@@ -9,7 +10,7 @@ import org.bukkit.entity.AbstractVillager;
+ import org.bukkit.inventory.Inventory;
+ import org.bukkit.inventory.InventoryHolder;
+ 
+-public abstract class CraftAbstractVillager extends CraftAgeable implements CraftMerchant, AbstractVillager, InventoryHolder {
++public class CraftAbstractVillager extends CraftAgeable implements CraftMerchant, AbstractVillager, InventoryHolder {
+ 
+     public CraftAbstractVillager(CraftServer server, net.minecraft.world.entity.npc.villager.AbstractVillager entity) {
+         super(server, entity);
+@@ -17,7 +18,7 @@ public abstract class CraftAbstractVillager extends CraftAgeable implements Craf
+ 
+     @Override
+     public net.minecraft.world.entity.npc.villager.AbstractVillager getHandle() {
+-        return (Villager) this.entity;
++        return (net.minecraft.world.entity.npc.villager.AbstractVillager) this.entity;
+     }
+ 
+     @Override
+@@ -32,6 +33,8 @@ public abstract class CraftAbstractVillager extends CraftAgeable implements Craf
+ 
+     @Override
+     public void resetOffers() {
+-        getHandle().resetOffers();
++        var handle = getHandle();
++        handle.offers = new MerchantOffers();
++        handle.updateTrades((ServerLevel) handle.level());
+     }
+ }

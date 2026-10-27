@@ -1,0 +1,24 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/world/migration/WorldMigrationSupport.java b/paper-server/src/main/java/io/papermc/paper/world/migration/WorldMigrationSupport.java
+index f961539a3e38b8fedc882aa8ee66766193ac4ccb..83b11a71f21fa8b4a177e03ddb74ce6801e632c7 100644
+--- a/paper-server/src/main/java/io/papermc/paper/world/migration/WorldMigrationSupport.java
++++ b/paper-server/src/main/java/io/papermc/paper/world/migration/WorldMigrationSupport.java
+@@ -1,6 +1,5 @@
+ package io.papermc.paper.world.migration;
+ 
+-import com.mojang.logging.LogUtils;
+ import com.mojang.serialization.Dynamic;
+ import io.papermc.paper.world.saveddata.PaperWorldPDC;
+ import java.io.DataInputStream;
+@@ -23,10 +22,11 @@ import net.minecraft.world.level.storage.LevelSummary;
+ import org.jspecify.annotations.NullMarked;
+ import org.jspecify.annotations.Nullable;
+ import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
+ 
+ @NullMarked
+ final class WorldMigrationSupport {
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = LoggerFactory.getLogger(WorldMigrationSupport.class.getSimpleName());
+     static final List<String> DIMENSION_DIRECTORIES = List.of("region", "entities", "poi");
+     static final String PAPER_WORLD_CONFIG = "paper-world.yml";
+     static final String LEGACY_UID_FILE_NAME = "uid.dat";

@@ -1,0 +1,83 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/boss/CraftDragonBattle.java b/paper-server/src/main/java/org/bukkit/craftbukkit/boss/CraftDragonBattle.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/boss/CraftDragonBattle.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/boss/CraftDragonBattle.java
+@@ -76,27 +76,30 @@
+     }
+ 
+     @Override
+-    public boolean initiateRespawn(Collection<EnderCrystal> crystals) { // todo doesn't seems to work without crystals
++    public boolean initiateRespawn(Collection<EnderCrystal> crystals) {
++        List<EndCrystal> filteredCrystals = new ArrayList<>();
++        if (crystals != null) {
++            for (EnderCrystal crystal : crystals) {
++                if (crystal == null) continue;
++                EndCrystal handle = ((CraftEnderCrystal) crystal).getHandle();
++                if (handle.level() == this.handle.level && !handle.isRemoved() && handle.isAlive()
++                    && handle.valid) {
++                    filteredCrystals.add(handle);
++                }
++            }
++        }
++        if (filteredCrystals.isEmpty()) {
++            throw new UnsupportedOperationException("Dragon respawn without usable crystals is not supported");
++        }
+         if (this.hasBeenPreviouslyKilled() && this.getRespawnPhase() == RespawnPhase.NONE) {
+-            // Copy from EnderDragonFight#tryRespawn for generate exit portal if not exists
+             if (this.handle.exitPortalLocation == null) {
+                 BlockPattern.BlockPatternMatch match = this.handle.findExitPortal();
+                 if (match == null) {
+                     this.handle.spawnExitPortal(true);
+                 }
+             }
+-
+-            List<EnderCrystal> filteredCrystals = crystals != null ? new ArrayList<>(crystals) : new ArrayList<>();
+-            filteredCrystals.removeIf(crystal -> {
+-                if (crystal == null) {
+-                    return true;
+-                }
+-                return !((CraftWorld) crystal.getWorld()).getHandle().equals(this.handle.level);
+-            });
+-
+-            return this.handle.respawnDragon(
+-                Lists.transform(filteredCrystals, crystal -> ((CraftEnderCrystal) crystal).getHandle())
+-            );
++            io.izzel.arclight.common.bridge.core.world.level.dimension.end.EnderDragonFightBridge bridge = this.handle;
++            return bridge.bridge$respawnDragon(filteredCrystals);
+         }
+         return false;
+     }
+@@ -148,7 +151,9 @@
+ 
+     @Override
+     public boolean spawnNewGateway() {
+-        return this.handle.spawnNewGateway();
++        boolean available = !this.handle.gateways.isEmpty();
++        this.handle.spawnNewGateway();
++        return available;
+     }
+ 
+     @Override
+@@ -158,7 +163,7 @@
+ 
+     @Override
+     public List<EnderCrystal> getRespawnCrystals() {
+-        if (this.handle.respawnCrystals.isEmpty()) {
++        if (this.handle.respawnStage == null || this.handle.respawnCrystals.isEmpty()) {
+             return Collections.emptyList();
+         }
+ 
+@@ -175,9 +180,11 @@
+     @Override
+     public List<EnderCrystal> getHealingCrystals() {
+         final List<EnderCrystal> enderCrystals = new ArrayList<>();
+-        for (final EndCrystal crystal : this.handle.getSpikeCrystals()) {
+-            if (!crystal.isRemoved() && crystal.isAlive() && crystal.valid) {
+-                enderCrystals.add(((EnderCrystal) crystal.getBukkitEntity()));
++        for (final var spike : net.minecraft.world.level.levelgen.feature.EndSpikeFeature.getSpikesForLevel(this.handle.level)) {
++            for (final EndCrystal crystal : this.handle.level.getEntitiesOfClass(EndCrystal.class, spike.getTopBoundingBox())) {
++                if (!crystal.isRemoved() && crystal.isAlive() && crystal.valid) {
++                    enderCrystals.add(((EnderCrystal) crystal.getBukkitEntity()));
++                }
+             }
+         }
+         return Collections.unmodifiableList(enderCrystals);

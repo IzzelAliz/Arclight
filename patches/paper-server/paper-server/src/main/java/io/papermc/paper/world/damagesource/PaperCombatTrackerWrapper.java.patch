@@ -1,0 +1,12 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/world/damagesource/PaperCombatTrackerWrapper.java b/paper-server/src/main/java/io/papermc/paper/world/damagesource/PaperCombatTrackerWrapper.java
+--- a/paper-server/src/main/java/io/papermc/paper/world/damagesource/PaperCombatTrackerWrapper.java
++++ b/paper-server/src/main/java/io/papermc/paper/world/damagesource/PaperCombatTrackerWrapper.java
+@@ -38,7 +38,7 @@
+ 
+     @Override
+     public @Nullable CombatEntry computeMostSignificantFall() {
+-        final net.minecraft.world.damagesource.CombatEntry combatEntry = this.handle.getMostSignificantFall();
++        final net.minecraft.world.damagesource.CombatEntry combatEntry = ((io.izzel.arclight.common.bridge.core.world.damagesource.CombatTrackerBridge) this.handle).bridge$getMostSignificantFall();
+         return combatEntry == null ? null : new PaperCombatEntryWrapper(combatEntry);
+     }
+ 

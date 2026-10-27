@@ -1,0 +1,34 @@
+diff --git a/paper-server/src/main/java/com/destroystokyo/paper/entity/ai/MobGoalHelper.java b/paper-server/src/main/java/com/destroystokyo/paper/entity/ai/MobGoalHelper.java
+--- a/paper-server/src/main/java/com/destroystokyo/paper/entity/ai/MobGoalHelper.java
++++ b/paper-server/src/main/java/com/destroystokyo/paper/entity/ai/MobGoalHelper.java
+@@ -217,11 +217,11 @@
+     }
+ 
+     public static GoalType vanillaToPaper(Goal.Flag type) {
++        if (type.name().equals("UNKNOWN_BEHAVIOR")) return GoalType.UNKNOWN_BEHAVIOR;
+         return switch (type) {
+             case MOVE -> GoalType.MOVE;
+             case LOOK -> GoalType.LOOK;
+             case JUMP -> GoalType.JUMP;
+-            case UNKNOWN_BEHAVIOR -> GoalType.UNKNOWN_BEHAVIOR;
+             case TARGET -> GoalType.TARGET;
+         };
+     }
+@@ -239,12 +239,16 @@
+             case MOVE -> Goal.Flag.MOVE;
+             case LOOK -> Goal.Flag.LOOK;
+             case JUMP -> Goal.Flag.JUMP;
+-            case UNKNOWN_BEHAVIOR -> Goal.Flag.UNKNOWN_BEHAVIOR;
++            case UNKNOWN_BEHAVIOR -> Goal.Flag.valueOf("UNKNOWN_BEHAVIOR");
+             case TARGET -> Goal.Flag.TARGET;
+         };
+     }
+ 
+     public static <T extends Mob> GoalKey<T> getKey(Class<? extends Goal> goalClass) {
++        if (!goalClass.getName().startsWith("net.minecraft.")) {
++            String path = goalClass.getName().replaceAll("[^a-zA-Z0-9/._-]", "_").toLowerCase(java.util.Locale.ROOT);
++            return GoalKey.of((Class<T>) Mob.class, new NamespacedKey("arclight", path));
++        }
+         Class<T> type = getGenericType(goalClass);
+ 
+         String name = goalClass.getName();

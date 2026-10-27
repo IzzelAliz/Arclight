@@ -1,0 +1,21 @@
+diff --git a/paper-server/src/main/java/org/spigotmc/SpigotConfig.java b/paper-server/src/main/java/org/spigotmc/SpigotConfig.java
+index 025ec3f3e84a3367b4d709c8c3ecd98f6dfecab4..cab5dc0b9fbbe2c90c9eb5020a98846e99067011 100644
+--- a/paper-server/src/main/java/org/spigotmc/SpigotConfig.java
++++ b/paper-server/src/main/java/org/spigotmc/SpigotConfig.java
+@@ -16,7 +16,6 @@ import java.util.Set;
+ import java.util.logging.Level;
+ import net.minecraft.core.registries.BuiltInRegistries;
+ import net.minecraft.resources.Identifier;
+-import net.minecraft.server.MinecraftServer;
+ import net.minecraft.world.entity.ai.attributes.Attributes;
+ import net.minecraft.world.entity.ai.attributes.RangedAttribute;
+ import org.apache.logging.log4j.LogManager;
+@@ -75,7 +74,7 @@ public class SpigotConfig {
+ 
+     public static void registerCommands() {
+         for (Map.Entry<String, Command> entry : SpigotConfig.commands.entrySet()) {
+-            MinecraftServer.getServer().server.getCommandMap().register(entry.getKey(), "Spigot", entry.getValue());
++            Bukkit.getCommandMap().register(entry.getKey(), "Spigot", entry.getValue());
+         }
+     }
+ 

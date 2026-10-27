@@ -1,0 +1,31 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftRaid.java b/paper-server/src/main/java/org/bukkit/craftbukkit/CraftRaid.java
+index c4d4e2b35ea9dbf3380bec8f899db722f915377f..409b53cbbba6acb850727d0877be723a2d40bab5 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftRaid.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/CraftRaid.java
+@@ -102,7 +102,7 @@ public final class CraftRaid implements Raid {
+ 
+     @Override
+     public List<Raider> getRaiders() {
+-        return this.handle.getRaiders().stream().map(entityRaider -> (Raider) entityRaider.getBukkitEntity()).collect(ImmutableList.toImmutableList());
++        return this.handle.getAllRaiders().stream().map(entityRaider -> (Raider) entityRaider.getBukkitEntity()).collect(ImmutableList.toImmutableList());
+     }
+ 
+     public net.minecraft.world.entity.raid.Raid getHandle() {
+@@ -111,7 +111,7 @@ public final class CraftRaid implements Raid {
+ 
+     @Override
+     public int getId() {
+-        return this.handle.idOrNegativeOne;
++        throw new UnsupportedOperationException("Stable raid IDs are not supported in this initial Paper compatibility release");
+     }
+ 
+     @Override
+@@ -121,7 +121,7 @@ public final class CraftRaid implements Raid {
+ 
+     @Override
+     public PersistentDataContainer getPersistentDataContainer() {
+-        return this.handle.persistentDataContainer;
++        throw new UnsupportedOperationException("Raid persistent data is not supported in this initial Paper compatibility release");
+     }
+ 
+     @Override

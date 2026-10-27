@@ -8,9 +8,11 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 
 import javax.annotation.Nullable;
 
@@ -32,6 +34,42 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
     private boolean poison;
     private Entity customEntityDamager = null;
     private Entity customCausingEntityDamager = null;
+
+    @Unique @Nullable private DamageCause arclight$knownCause;
+    @Unique private boolean arclight$critical;
+
+    @Override
+    @Nullable
+    public DamageCause bridge$knownCause() {
+        return this.arclight$knownCause;
+    }
+
+    @Override
+    public DamageSource bridge$knownCause(@Nullable DamageCause cause) {
+        return ((DamageSourceBridge) this.cloneInstance()).bridge$setKnownCause(cause);
+    }
+
+    @Override
+    public DamageSource bridge$setKnownCause(@Nullable DamageCause cause) {
+        this.arclight$knownCause = cause;
+        return (DamageSource) (Object) this;
+    }
+
+    @Override
+    public boolean bridge$isCritical() {
+        return this.arclight$critical;
+    }
+
+    @Override
+    public DamageSource bridge$critical() {
+        return ((DamageSourceBridge) this.cloneInstance()).bridge$setCritical(true);
+    }
+
+    @Override
+    public DamageSource bridge$setCritical(boolean critical) {
+        this.arclight$critical = critical;
+        return (DamageSource) (Object) this;
+    }
 
     public boolean isSweep() {
         return withSweep;
@@ -198,6 +236,8 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
         br.bridge$setDirectBlockState(this.bridge$directBlockState());
         br.bridge$setCustomCausingEntity(this.customEntityDamager);
         br.bridge$setCustomCausingEntityDamager(this.customCausingEntityDamager);
+        br.bridge$setKnownCause(this.arclight$knownCause);
+        br.bridge$setCritical(this.arclight$critical);
         if (this.withSweep) {
             br.bridge$sweep();
         }
@@ -209,4 +249,17 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
         }
         return damageSource;
     }
+
+    public org.bukkit.block.Block eventBlockDamager() {
+        return this.bridge$directBlock();
+    }
+
+    public org.bukkit.block.BlockState causingBlockSnapshot() {
+        return this.bridge$directBlockState();
+    }
+
+    public boolean isCritical() {
+        return this.bridge$isCritical();
+    }
+
 }

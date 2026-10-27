@@ -1,0 +1,45 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/manager/RuntimePluginEntrypointHandler.java b/paper-server/src/main/java/io/papermc/paper/plugin/manager/RuntimePluginEntrypointHandler.java
+index 5d50d1d312388e979c0e1cd53a6bf5977ca6e549..4b8c2e5253bf08d6a3b0e33e3118a0cf1d6d01ed 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/manager/RuntimePluginEntrypointHandler.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/manager/RuntimePluginEntrypointHandler.java
+@@ -4,6 +4,7 @@ import com.destroystokyo.paper.util.SneakyThrow;
+ import io.papermc.paper.plugin.entrypoint.Entrypoint;
+ import io.papermc.paper.plugin.entrypoint.EntrypointHandler;
+ import io.papermc.paper.plugin.provider.PluginProvider;
++import io.papermc.paper.plugin.provider.type.paper.PaperPluginParent;
+ import io.papermc.paper.plugin.storage.ProviderStorage;
+ import org.bukkit.plugin.InvalidPluginException;
+ import org.bukkit.plugin.java.JavaPlugin;
+@@ -22,13 +23,31 @@ class RuntimePluginEntrypointHandler<T extends ProviderStorage<JavaPlugin>> impl
+         this.providerStorage = providerStorage;
+     }
+ 
++    /**
++     * Reject known unsupported providers before any storage callback can retain them.
++     * Other storage implementations still own the outcome once register is called.
++     */
+     @Override
+-    public <T> void register(Entrypoint<T> entrypoint, PluginProvider<T> provider) {
++    public <T> void validateRegistration(Entrypoint<T> entrypoint, PluginProvider<T> provider) {
+         if (!entrypoint.equals(Entrypoint.PLUGIN)) {
+             SneakyThrow.sneaky(new InvalidPluginException("Plugin cannot register entrypoints other than PLUGIN during runtime. Tried registering %s!".formatted(entrypoint)));
+             // We have to throw an invalid plugin exception for legacy reasons
+         }
+ 
++        // MultiRuntimePluginProviderStorage otherwise skips this provider without retaining it;
++        // SingularRuntimePluginProviderStorage retains it before rejecting it. Neither supports it.
++        // Do not infer the registration contract of an arbitrary ProviderStorage or subclass.
++        Class<?> storageType = this.providerStorage.getClass();
++        if (provider instanceof PaperPluginParent.PaperServerPluginProvider
++            && (storageType == SingularRuntimePluginProviderStorage.class || storageType == MultiRuntimePluginProviderStorage.class)) {
++            throw new IllegalStateException("Cannot register paper plugins during runtime!");
++        }
++    }
++
++    @Override
++    public <T> void register(Entrypoint<T> entrypoint, PluginProvider<T> provider) {
++        this.validateRegistration(entrypoint, provider);
++        // A storage callback can retain the provider before throwing; discovery must not close its jar then.
+         this.providerStorage.register((PluginProvider<JavaPlugin>) provider);
+     }
+ 

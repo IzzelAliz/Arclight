@@ -1,0 +1,90 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java b/paper-server/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
+index 74ffdc823e66fc5ec027c4b7c462382bcbfe2be2..aab8efdaba14f893b987f1ad1ba747a7831b35df 100644
+--- a/paper-server/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
++++ b/paper-server/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
+@@ -1,7 +1,9 @@
+ package io.papermc.paper;
+ 
+ import com.google.common.base.Strings;
+-import io.papermc.paper.util.JarManifests;
++import java.io.IOException;
++import java.io.InputStream;
++import java.net.URL;
+ import java.time.Instant;
+ import java.time.temporal.ChronoUnit;
+ import java.util.Optional;
+@@ -9,8 +11,6 @@ import java.util.OptionalInt;
+ import java.util.jar.Manifest;
+ import net.kyori.adventure.key.Key;
+ import net.minecraft.SharedConstants;
+-import org.bukkit.craftbukkit.CraftServer;
+-import org.bukkit.craftbukkit.Main;
+ import org.jetbrains.annotations.NotNull;
+ 
+ public record ServerBuildInfoImpl(
+@@ -30,21 +30,22 @@ public record ServerBuildInfoImpl(
+     private static final String ATTRIBUTE_GIT_BRANCH = "Git-Branch";
+     private static final String ATTRIBUTE_GIT_COMMIT = "Git-Commit";
+ 
+-    private static final String BRAND_PAPER_NAME = "Paper";
++    private static final Key BRAND_ARCLIGHT_ID = Key.key("arclight", "arclight");
++    private static final String BRAND_ARCLIGHT_NAME = "Arclight";
+ 
+     private static final String BUILD_DEV = "DEV";
+ 
+     public ServerBuildInfoImpl() {
+-        this(JarManifests.manifest(CraftServer.class));
++        this(readManifest());
+     }
+ 
+     private ServerBuildInfoImpl(final Manifest manifest) {
+         this(
+             getManifestAttribute(manifest, ATTRIBUTE_BRAND_ID)
+                 .map(Key::key)
+-                .orElse(BRAND_PAPER_ID),
++                .orElse(BRAND_ARCLIGHT_ID),
+             getManifestAttribute(manifest, ATTRIBUTE_BRAND_NAME)
+-                .orElse(BRAND_PAPER_NAME),
++                .orElse(BRAND_ARCLIGHT_NAME),
+             SharedConstants.getCurrentVersion().id(),
+             SharedConstants.getCurrentVersion().name(),
+             getManifestAttribute(manifest, ATTRIBUTE_BUILD_NUMBER)
+@@ -53,7 +54,7 @@ public record ServerBuildInfoImpl(
+                 .orElse(OptionalInt.empty()),
+             getManifestAttribute(manifest, ATTRIBUTE_BUILD_TIME)
+                 .map(Instant::parse)
+-                .orElse(Main.BOOT_TIME),
++                .orElse(Instant.EPOCH),
+             getManifestAttribute(manifest, ATTRIBUTE_GIT_BRANCH),
+             getManifestAttribute(manifest, ATTRIBUTE_GIT_COMMIT)
+         );
+@@ -91,12 +92,28 @@ public record ServerBuildInfoImpl(
+         if (representation == StringRepresentation.VERSION_FULL) {
+             sb.append(' ');
+             sb.append('(');
+-            sb.append(this.buildTime.truncatedTo(ChronoUnit.SECONDS));
++            sb.append(this.buildTime.equals(Instant.EPOCH) ? "unknown" : this.buildTime.truncatedTo(ChronoUnit.SECONDS));
+             sb.append(')');
+         }
+         return sb.toString();
+     }
+ 
++    private static Manifest readManifest() {
++        // API and implementation archives may share a class loader; do not cache its first manifest.
++        final String classLocation = "/" + ServerBuildInfoImpl.class.getName().replace('.', '/') + ".class";
++        final URL resource = ServerBuildInfoImpl.class.getResource(classLocation);
++        if (resource == null) {
++            return null;
++        }
++        final String classFilePath = resource.toExternalForm().replace("\\", "/");
++        final String archivePath = classFilePath.substring(0, classFilePath.length() - classLocation.length());
++        try (final InputStream stream = new URL(archivePath + "/META-INF/MANIFEST.MF").openStream()) {
++            return new Manifest(stream);
++        } catch (final IOException ex) {
++            return null;
++        }
++    }
++
+     private static Optional<String> getManifestAttribute(final Manifest manifest, final String name) {
+         final String value = manifest != null ? manifest.getMainAttributes().getValue(name) : null;
+         return Optional.ofNullable(Strings.emptyToNull(value));

@@ -21,9 +21,6 @@ public class ConfigSpec {
     @Setting("async-catcher")
     private AsyncCatcherSpec asyncCatcherSpec;
 
-    @Setting("velocity")
-    private VelocitySpec velocitySpec;
-
     @Setting("experimental")
     private ExperimentalSpec experimentalSpec;
 
@@ -45,10 +42,6 @@ public class ConfigSpec {
 
     public AsyncCatcherSpec getAsyncCatcher() {
         return asyncCatcherSpec;
-    }
-
-    public VelocitySpec getVelocity() {
-        return velocitySpec;
     }
 
     public ExperimentalSpec getExperimental() {

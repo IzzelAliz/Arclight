@@ -1,0 +1,12 @@
+diff --git a/paper-server/src/main/java/com/destroystokyo/paper/entity/ai/PaperCustomGoal.java b/paper-server/src/main/java/com/destroystokyo/paper/entity/ai/PaperCustomGoal.java
+--- a/paper-server/src/main/java/com/destroystokyo/paper/entity/ai/PaperCustomGoal.java
++++ b/paper-server/src/main/java/com/destroystokyo/paper/entity/ai/PaperCustomGoal.java
+@@ -14,7 +14,7 @@
+ 
+         this.setFlags(MobGoalHelper.paperToVanilla(handle.getTypes()));
+         if (this.getFlags().size() == 0) {
+-            this.addFlag(Flag.UNKNOWN_BEHAVIOR);
++            this.addFlag(Flag.valueOf("UNKNOWN_BEHAVIOR"));
+         }
+     }
+ 

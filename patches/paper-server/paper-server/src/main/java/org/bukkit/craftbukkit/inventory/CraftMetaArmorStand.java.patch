@@ -1,0 +1,12 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaArmorStand.java
+@@ -25,7 +25,7 @@
+ 
+     CompoundTag entityTag;
+ 
+-    CraftMetaArmorStand(CraftMetaItem meta) {
++    public CraftMetaArmorStand(CraftMetaItem meta) {
+         super(meta);
+ 
+         if (!(meta instanceof CraftMetaArmorStand)) {

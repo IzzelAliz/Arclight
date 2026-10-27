@@ -4,36 +4,36 @@ import io.izzel.arclight.common.bridge.core.world.level.IWorldWriterBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.WorldGenLevel;
-import org.bukkit.craftbukkit.util.DelegatedGeneratorAccess;
+import org.bukkit.craftbukkit.util.DelegatedLevelAccessor;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(DelegatedGeneratorAccess.class)
+@Mixin(DelegatedLevelAccessor.class)
 public abstract class DelegatedGeneratorAccessMixin implements IWorldWriterBridge {
-    @Shadow public abstract WorldGenLevel getHandle();
+    @Shadow public abstract WorldGenLevel getDelegate();
 
     @Override
     public boolean bridge$addEntity(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
-        if (getHandle() != (Object) this) {
-            return ((IWorldWriterBridge) getHandle()).bridge$addEntity(entity, reason);
+        if (getDelegate() != (Object) this) {
+            return ((IWorldWriterBridge) getDelegate()).bridge$addEntity(entity, reason);
         } else {
             this.bridge$pushAddEntityReason(reason);
-            return getHandle().addFreshEntity(entity);
+            return getDelegate().addFreshEntity(entity);
         }
     }
 
     @Override
     public void bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason reason) {
-        if (getHandle() != (Object) this) {
-            ((IWorldWriterBridge) getHandle()).bridge$pushAddEntityReason(reason);
+        if (getDelegate() != (Object) this) {
+            ((IWorldWriterBridge) getDelegate()).bridge$pushAddEntityReason(reason);
         }
     }
 
     @Override
     public CreatureSpawnEvent.SpawnReason bridge$getAddEntityReason() {
-        if (getHandle() != (Object) this) {
-            return ((IWorldWriterBridge) getHandle()).bridge$getAddEntityReason();
+        if (getDelegate() != (Object) this) {
+            return ((IWorldWriterBridge) getDelegate()).bridge$getAddEntityReason();
         }
         return null;
     }

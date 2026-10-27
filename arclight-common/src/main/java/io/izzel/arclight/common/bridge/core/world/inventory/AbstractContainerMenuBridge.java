@@ -7,15 +7,68 @@ import org.bukkit.inventory.InventoryView;
 
 public interface AbstractContainerMenuBridge {
 
-    void bridge$startOpen();
+    default void bridge$startOpen() {
+        throw new UnsupportedOperationException("Implemented by AbstractContainerMenuMixin");
+    }
 
-    InventoryView bridge$getBukkitView();
+    default void bridge$broadcastCarriedItem() {
+        throw new UnsupportedOperationException("Implemented by AbstractContainerMenuMixin");
+    }
 
-    void bridge$transferTo(AbstractContainerMenu other, CraftHumanEntity player);
+    default void bridge$forceSlot(net.minecraft.world.Container container, int slot) {
+        throw new UnsupportedOperationException("Implemented by AbstractContainerMenuMixin");
+    }
 
-    Component bridge$getTitle();
+    default InventoryView getBukkitView() {
+        throw new UnsupportedOperationException("Implemented by AbstractContainerMenuMixin");
+    }
 
-    void bridge$setTitle(Component title);
+    default InventoryView bridge$getBukkitView() {
+        throw new UnsupportedOperationException("Implemented by AbstractContainerMenuMixin");
+    }
 
-    boolean bridge$isCheckReachable();
+    default void bridge$transferTo(AbstractContainerMenu other, CraftHumanEntity player) {
+        throw new UnsupportedOperationException("Implemented by AbstractContainerMenuMixin");
+    }
+
+    default Component bridge$getTitle() {
+        throw new UnsupportedOperationException("Implemented by AbstractContainerMenuMixin");
+    }
+
+    default void bridge$setTitle(Component title) {
+        throw new UnsupportedOperationException("Implemented by AbstractContainerMenuMixin");
+    }
+
+    default boolean bridge$isCheckReachable() {
+        throw new UnsupportedOperationException("Implemented by AbstractContainerMenuMixin");
+    }
+
+    default void bridge$setCheckReachable(boolean checkReachable) {
+        throw new UnsupportedOperationException("Implemented by AbstractContainerMenuMixin");
+    }
+
+    default void broadcastCarriedItem() {
+        this.bridge$broadcastCarriedItem();
+    }
+
+    default void forceSlot(net.minecraft.world.Container container, int slot) {
+        this.bridge$forceSlot(container, slot);
+    }
+
+    default net.minecraft.network.chat.Component getTitle() {
+        return this.bridge$getTitle();
+    }
+
+    default void setTitle(net.minecraft.network.chat.Component title) {
+        this.bridge$setTitle(title);
+    }
+
+    default void transferTo(net.minecraft.world.inventory.AbstractContainerMenu other, org.bukkit.craftbukkit.entity.CraftHumanEntity player) {
+        this.bridge$transferTo(other, player);
+    }
+
+    default void startOpen() {
+        this.bridge$startOpen();
+    }
+
 }

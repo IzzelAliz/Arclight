@@ -1,6 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
 import io.izzel.arclight.common.bridge.core.world.entity.animal.FoxBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import io.papermc.paper.event.entity.EntityToggleSitEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.animal.fox.Fox;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -13,6 +16,7 @@ import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -22,6 +26,30 @@ public abstract class FoxMixin extends AnimalMixin implements FoxBridge {
     // @formatter:off
     @Invoker("addTrustedEntity") @Override public abstract void bridge$addTrustedEntity(LivingEntity entity);
     // @formatter:on
+
+    @Unique private boolean arclight$skipSitEvent;
+
+    @Decorate(method = "setSitting(Z)V", inject = true, at = @At("HEAD"), require = 1, allow = 1)
+    private void arclight$toggleSit(boolean value) throws Throwable {
+        // Keep the load-time sitting bypass independent of the fox's sleeping state.
+        boolean callEvent = !this.arclight$skipSitEvent;
+        this.arclight$skipSitEvent = false;
+        if (callEvent && !new EntityToggleSitEvent(this.getBukkitEntity(), value).callEvent()) {
+            DecorationOps.cancel().invoke();
+            return;
+        }
+    }
+
+    @Decorate(method = "readAdditionalSaveData(Lnet/minecraft/world/level/storage/ValueInput;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/fox/Fox;setSitting(Z)V"), require = 1, allow = 1)
+    private void arclight$restoreSitting(Fox fox, boolean value) throws Throwable {
+        boolean previous = this.arclight$skipSitEvent;
+        this.arclight$skipSitEvent = true;
+        try {
+            DecorationOps.callsite().invoke(fox, value);
+        } finally {
+            this.arclight$skipSitEvent = previous;
+        }
+    }
 
     @WrapOperation(method = "pickUpItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/fox/Fox;canHoldItem(Lnet/minecraft/world/item/ItemStack;)Z"))
     private boolean arclight$pickupEvent(Fox foxEntity, ItemStack stack, Operation<Boolean> original,

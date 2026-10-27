@@ -1,0 +1,18 @@
+diff --git a/paper-server/src/main/java/com/destroystokyo/paper/console/TerminalConsoleCommandSender.java b/paper-server/src/main/java/com/destroystokyo/paper/console/TerminalConsoleCommandSender.java
+index 8f07539a82f449ad217e316a7513a1708781fb63..9c424ca320fe136019e6347ba6d539647dd2d12e 100644
+--- a/paper-server/src/main/java/com/destroystokyo/paper/console/TerminalConsoleCommandSender.java
++++ b/paper-server/src/main/java/com/destroystokyo/paper/console/TerminalConsoleCommandSender.java
+@@ -12,6 +12,13 @@ public class TerminalConsoleCommandSender extends CraftConsoleCommandSender {
+ 
+     private static final ComponentLogger LOGGER = ComponentLogger.logger(LogManager.getRootLogger().getName());
+ 
++    @Override
++    public void sendMessage(String message) {
++        if (!this.conversationTracker.isConversingModaly()) {
++            this.sendRawMessage(message);
++        }
++    }
++
+     @Override
+     public void sendRawMessage(String message) {
+         final Component msg = LegacyComponentSerializer.legacySection().deserialize(message);

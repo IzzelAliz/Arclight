@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftScoreboard.java b/paper-server/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftScoreboard.java
+index f2878a49fdca9725854bc6ce88031f8a611c96e4..e1a6d0340b3d3b048ca8e76c32a46449498f29b0 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftScoreboard.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftScoreboard.java
+@@ -42,7 +42,7 @@ public final class CraftScoreboard implements org.bukkit.scoreboard.Scoreboard {
+         Preconditions.checkArgument(this.getHandle().getObjective(name) == null, "An objective of name '%s' already exists", name);
+         // Paper start - lazily track plugin scoreboards
+         if (((CraftCriteria) criteria).criteria != net.minecraft.world.scores.criteria.ObjectiveCriteria.DUMMY && !this.registeredGlobally) {
+-            net.minecraft.server.MinecraftServer.getServer().server.getScoreboardManager().registerScoreboardForVanilla(this);
++            ((org.bukkit.craftbukkit.CraftServer) Bukkit.getServer()).getScoreboardManager().registerScoreboardForVanilla(this);
+             this.registeredGlobally = true;
+         }
+         // Paper end - lazily track plugin scoreboards

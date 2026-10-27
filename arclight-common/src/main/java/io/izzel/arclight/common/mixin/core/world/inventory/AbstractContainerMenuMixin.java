@@ -2,6 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.inventory;
 
 import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.world.inventory.AbstractContainerMenuBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.ContainerListenerInventorySlotBridge;
 import io.izzel.arclight.common.mod.server.world.inventory.ArclightInventoryView;
 import io.izzel.arclight.common.mod.util.Blackhole;
 import io.izzel.arclight.mixin.Decorate;
@@ -16,6 +17,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickAction;
 import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.ContainerListener;
 import net.minecraft.world.inventory.ContainerSynchronizer;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.RemoteSlot;
@@ -52,6 +54,8 @@ public abstract class AbstractContainerMenuMixin implements AbstractContainerMen
     @Shadow @javax.annotation.Nullable private ContainerSynchronizer synchronizer;
     @Shadow public abstract void setCarried(ItemStack p_150439_);
     @Shadow public NonNullList<Slot> slots;
+    @Shadow public NonNullList<RemoteSlot> remoteSlots;
+    @Shadow public abstract java.util.OptionalInt findSlot(net.minecraft.world.Container container, int slot);
     @Shadow protected abstract SlotAccess createCarriedSlotAccess();
     @Shadow private boolean suppressRemoteUpdates;
 
@@ -64,6 +68,19 @@ public abstract class AbstractContainerMenuMixin implements AbstractContainerMen
     @Shadow protected abstract boolean tryItemClickBehaviourOverride(Player arg, ClickAction arg2, Slot arg3, ItemStack arg4, ItemStack arg5);
     @Shadow private static void dropOrPlaceInInventory(Player player, ItemStack carried) { throw new AssertionError(); }
     // @formatter:on
+
+    @Override
+    public void bridge$forceSlot(net.minecraft.world.Container container, int slot) {
+        int index = this.findSlot(container, slot).orElse(-1);
+        if (index == -1) {
+            return;
+        }
+        ItemStack item = this.slots.get(index).getItem();
+        this.remoteSlots.get(index).force(item);
+        if (this.synchronizer != null) {
+            this.synchronizer.sendSlotChange((AbstractContainerMenu) (Object) this, index, item.copy());
+        }
+    }
 
     protected boolean opened;
 
@@ -119,11 +136,38 @@ public abstract class AbstractContainerMenuMixin implements AbstractContainerMen
         }
     }
 
+    @Override
+    public void bridge$broadcastCarriedItem() {
+        this.broadcastCarriedItem();
+    }
+
     public void broadcastCarriedItem() {
         ItemStack carried = this.getCarried().copy();
         this.remoteCarried.force(carried);
         if (this.synchronizer != null) {
             this.synchronizer.sendCarriedChange((AbstractContainerMenu) (Object) this, carried);
+        }
+    }
+
+    @Decorate(method = "triggerSlotListeners(ILnet/minecraft/world/item/ItemStack;Ljava/util/function/Supplier;)V",
+        require = 1, allow = 1,
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/ContainerListener;slotChanged(Lnet/minecraft/world/inventory/AbstractContainerMenu;ILnet/minecraft/world/item/ItemStack;)V"))
+    private void arclight$inventorySlotCallback(ContainerListener listener, AbstractContainerMenu container, int rawSlot, ItemStack stack,
+                                                @Local(ordinal = 1) ItemStack previous) throws Throwable {
+        // The native method already stored newItem in lastSlots. Capture its
+        // localExpected (ItemStack ordinal 1), not that newly committed value.
+        ContainerListenerInventorySlotBridge bridge = listener instanceof ContainerListenerInventorySlotBridge inventoryListener
+            ? inventoryListener : null;
+        ContainerListenerInventorySlotBridge.SlotChange enclosing = bridge == null ? null
+            : bridge.bridge$swapInventorySlotChange(new ContainerListenerInventorySlotBridge.SlotChange(container, rawSlot, previous));
+        try {
+            // Preserve every native/mod listener, including the player listener;
+            // its dedicated mixin consumes only the advancement decision.
+            DecorationOps.callsite().invoke(listener, container, rawSlot, stack);
+        } finally {
+            if (bridge != null) {
+                bridge.bridge$swapInventorySlotChange(enclosing);
+            }
         }
     }
 
@@ -217,6 +261,11 @@ public abstract class AbstractContainerMenuMixin implements AbstractContainerMen
     }
 
     @Override
+    public void bridge$setCheckReachable(boolean checkReachable) {
+        this.checkReachable = checkReachable;
+    }
+
+    @Override
     public InventoryView bridge$getBukkitView() {
         return getBukkitView();
     }
@@ -235,4 +284,9 @@ public abstract class AbstractContainerMenuMixin implements AbstractContainerMen
     public void bridge$setTitle(Component title) {
         setTitle(title);
     }
+
+    public void forceSlot(net.minecraft.world.Container container, int slot) {
+        this.bridge$forceSlot(container, slot);
+    }
+
 }

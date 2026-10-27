@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/util/CraftMenus.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/util/CraftMenus.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/util/CraftMenus.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/util/CraftMenus.java
+@@ -50,7 +50,8 @@
+ 
+     // This is a temporary measure that will likely be removed with the rewrite of HumanEntity#open[] methods
+     public static void openMerchantMenu(final ServerPlayer player, final MerchantMenu merchant) {
+-        final Merchant minecraftMerchant = ((CraftMerchant) merchant.getBukkitView().getMerchant()).getMerchant();
++        final io.izzel.arclight.common.bridge.core.world.inventory.AbstractContainerMenuBridge bridge = (io.izzel.arclight.common.bridge.core.world.inventory.AbstractContainerMenuBridge) merchant;
++        final Merchant minecraftMerchant = ((CraftMerchant) ((MerchantView) bridge.bridge$getBukkitView()).getMerchant()).getMerchant();
+         int level = 1;
+         if (minecraftMerchant instanceof final Villager villager) {
+             level = villager.getVillagerData().level();

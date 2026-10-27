@@ -1,0 +1,114 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
+@@ -136,7 +136,9 @@
+ 
+         // during world generation, we don't want to run logic for dropping items and xp
+         if (this.getHandle().generation && health == 0) {
+-            this.getHandle().discard(null); // Add Bukkit remove cause
++            io.izzel.arclight.common.bridge.core.entity.EntityBridge bridge = this.getHandle();
++            bridge.bridge$pushEntityRemoveCause(null);
++            this.getHandle().discard();
+             return;
+         }
+ 
+@@ -273,13 +275,54 @@
+         return rayTrace == null ? null : new org.bukkit.util.RayTraceResult(org.bukkit.craftbukkit.util.CraftVector.toBukkit(rayTrace.getLocation()), rayTrace.getEntity().getBukkitEntity());
+     }
+ 
++    private net.minecraft.world.phys.EntityHitResult traceTargetEntity(int maxDistance) {
++        if (maxDistance < 1 || maxDistance > 120) {
++            throw new IllegalArgumentException("maxDistance must be between 1-120");
++        }
++        var handle = this.getHandle();
++        var start = handle.getEyePosition(1.0F);
++        var direction = handle.getLookAngle();
++        var end = start.add(direction.x * maxDistance, direction.y * maxDistance, direction.z * maxDistance);
++        var candidates = handle.level().getEntities(handle,
++            handle.getBoundingBox().expandTowards(direction.x * maxDistance, direction.y * maxDistance, direction.z * maxDistance).inflate(1.0),
++            net.minecraft.world.entity.EntitySelector.NO_SPECTATORS.and(net.minecraft.world.entity.Entity::isPickable));
++        double distance = 0.0;
++        net.minecraft.world.phys.EntityHitResult result = null;
++        for (net.minecraft.world.entity.Entity candidate : candidates) {
++            double radius = candidate.getPickRadius();
++            var box = candidate.getBoundingBox().inflate(radius, radius, radius);
++            var intersection = box.clip(start, end);
++            if (intersection.isPresent()) {
++                var hit = intersection.get();
++                double distanceTo = start.distanceToSqr(hit);
++                if (distanceTo < distance || distance == 0.0) {
++                    result = new net.minecraft.world.phys.EntityHitResult(candidate, hit);
++                    distance = distanceTo;
++                }
++            }
++        }
++        return result;
++    }
++
++    private net.minecraft.world.phys.HitResult traceTargetBlocks(int maxDistance, net.minecraft.world.level.ClipContext.Fluid fluidCollisionOption) {
++        if (maxDistance < 1 || maxDistance > 120) {
++            throw new IllegalArgumentException("maxDistance must be between 1-120");
++        }
++        var handle = this.getHandle();
++        var start = new net.minecraft.world.phys.Vec3(handle.getX(), handle.getY() + handle.getEyeHeight(), handle.getZ());
++        var direction = this.getLocation().getDirection().multiply(maxDistance);
++        var end = new net.minecraft.world.phys.Vec3(start.x + direction.getX(), start.y + direction.getY(), start.z + direction.getZ());
++        return handle.level().clip(new net.minecraft.world.level.ClipContext(start, end,
++            net.minecraft.world.level.ClipContext.Block.OUTLINE, fluidCollisionOption, handle));
++    }
++
+     public net.minecraft.world.phys.EntityHitResult rayTraceEntity(int maxDistance, boolean ignoreBlocks) {
+-        net.minecraft.world.phys.EntityHitResult rayTrace = getHandle().getTargetEntity(maxDistance);
++        net.minecraft.world.phys.EntityHitResult rayTrace = this.traceTargetEntity(maxDistance);
+         if (rayTrace == null) {
+             return null;
+         }
+         if (!ignoreBlocks) {
+-            net.minecraft.world.phys.HitResult rayTraceBlocks = getHandle().getRayTrace(maxDistance, net.minecraft.world.level.ClipContext.Fluid.NONE);
++            net.minecraft.world.phys.HitResult rayTraceBlocks = this.traceTargetBlocks(maxDistance, net.minecraft.world.level.ClipContext.Fluid.NONE);
+             if (rayTraceBlocks != null) {
+                 net.minecraft.world.phys.Vec3 eye = getHandle().getEyePosition(1.0F);
+                 if (eye.distanceToSqr(rayTraceBlocks.getLocation()) <= eye.distanceToSqr(rayTrace.getLocation())) {
+@@ -690,7 +733,7 @@
+             return false; // Return early if the distance is greater than 128 blocks
+         }
+ 
+-        return this.getHandle().level().clipDirect(start, end, net.minecraft.world.phys.shapes.CollisionContext.of(this.getHandle())) == net.minecraft.world.phys.HitResult.Type.MISS;
++        return this.getHandle().level().clip(new net.minecraft.world.level.ClipContext(start, end, net.minecraft.world.level.ClipContext.Block.COLLIDER, net.minecraft.world.level.ClipContext.Fluid.NONE, net.minecraft.world.phys.shapes.CollisionContext.of(this.getHandle()))).getType() == net.minecraft.world.phys.HitResult.Type.MISS;
+     }
+ 
+     @Override
+@@ -962,7 +1005,7 @@
+ 
+     @Override
+     public ItemStack getActiveItem() {
+-        return this.getHandle().getUseItem().asBukkitMirror();
++        return CraftItemStack.asCraftMirror(this.getHandle().getUseItem());
+     }
+ 
+     @Override
+@@ -1077,13 +1120,13 @@
+     @org.jetbrains.annotations.NotNull
+     @Override
+     public net.kyori.adventure.util.TriState getFrictionState() {
+-        return this.getHandle().frictionState;
++        throw new UnsupportedOperationException("Friction overrides are not supported by Arclight");
+     }
+ 
+     @Override
+     public void setFrictionState(@org.jetbrains.annotations.NotNull net.kyori.adventure.util.TriState state) {
+         Preconditions.checkArgument(state != null, "state may not be null");
+-        this.getHandle().frictionState = state;
++        throw new UnsupportedOperationException("Friction overrides are not supported by Arclight");
+     }
+ 
+     @Override
+@@ -1103,7 +1146,7 @@
+ 
+     @Override
+     public CombatTracker getCombatTracker() {
+-        return this.getHandle().getCombatTracker().paperCombatTracker;
++        return ((io.izzel.arclight.common.bridge.core.world.damagesource.CombatTrackerBridge) this.getHandle().getCombatTracker()).bridge$getPaperCombatTracker();
+     }
+ 
+     @Override

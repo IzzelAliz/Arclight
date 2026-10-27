@@ -39,7 +39,7 @@ public class ArclightSpecialRecipe extends CraftComplexRecipe {
     }
 
     @Override
-    public void addToCraftingManager() {
+    public void addToRecipeManager() {
         ((RecipeManagerBridge) ArclightServer.getMinecraftServer().getRecipeManager()).bridge$addRecipe(new RecipeHolder<>(ResourceKey.create(Registries.RECIPE, CraftNamespacedKey.toMinecraft(this.getKey())), this.recipe));
     }
 }

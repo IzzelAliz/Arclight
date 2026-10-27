@@ -1,0 +1,20 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/provider/source/PluginFlagProviderSource.java b/paper-server/src/main/java/io/papermc/paper/plugin/provider/source/PluginFlagProviderSource.java
+index ac55ae0e30119556f01e2e36c20fc63a111fae5f..9f4a344ae65014fb316c73eb751e0c7b0301617f 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/provider/source/PluginFlagProviderSource.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/provider/source/PluginFlagProviderSource.java
+@@ -1,6 +1,5 @@
+ package io.papermc.paper.plugin.provider.source;
+ 
+-import com.mojang.logging.LogUtils;
+ import io.papermc.paper.plugin.entrypoint.EntrypointHandler;
+ import java.nio.file.Path;
+ import java.util.ArrayList;
+@@ -15,7 +14,7 @@ public class PluginFlagProviderSource implements ProviderSource<List<Path>, List
+ 
+     public static final PluginFlagProviderSource INSTANCE = new PluginFlagProviderSource();
+     private static final FileProviderSource FILE_PROVIDER_SOURCE = new FileProviderSource("File '%s' specified through 'add-plugin' argument"::formatted);
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(PluginFlagProviderSource.class.getSimpleName());
+ 
+     @Override
+     public List<Path> prepareContext(List<Path> context) {

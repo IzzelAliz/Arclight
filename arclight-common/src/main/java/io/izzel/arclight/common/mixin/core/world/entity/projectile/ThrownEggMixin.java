@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
+import com.destroystokyo.paper.event.entity.ThrownEggHatchEvent;
 import io.izzel.arclight.common.bridge.bukkit.world.entity.EntityTypeBridge;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
@@ -48,10 +49,16 @@ public abstract class ThrownEggMixin extends ThrowableProjectileMixin {
             if (shooter instanceof ServerPlayer) {
                 PlayerEggThrowEvent event = new PlayerEggThrowEvent(((ServerPlayerBridge) shooter).bridge$getBukkitEntity(), (Egg) this.getBukkitEntity(), hatching, b0, hatchingType);
                 Bukkit.getPluginManager().callEvent(event);
-                b0 = event.getNumHatches();
                 hatching = event.isHatching();
+                b0 = hatching ? event.getNumHatches() : 0;
                 hatchingType = event.getHatchingType();
             }
+            // Paper receives the settled player decision for every server-side egg impact.
+            ThrownEggHatchEvent hatchEvent = new ThrownEggHatchEvent((Egg) this.getBukkitEntity(), hatching, b0, hatchingType);
+            Bukkit.getPluginManager().callEvent(hatchEvent);
+            hatching = hatchEvent.isHatching();
+            b0 = hatching ? hatchEvent.getNumHatches() : 0;
+            hatchingType = hatchEvent.getHatchingType();
             if (hatching) {
                 for (int i = 0; i < b0; ++i) {
                     // TrickOrTreatMod compat https://github.com/IzzelAliz/Arclight/issues/1178

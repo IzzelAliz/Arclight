@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.server.network;
 
 import com.google.gson.Gson;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
 import com.mojang.authlib.properties.Property;
 import com.mojang.util.UndashedUuid;
 import io.izzel.arclight.common.bridge.core.network.ConnectionBridge;
@@ -40,8 +42,9 @@ public abstract class ServerHandshakePacketListenerImplMixin {
     // See the corresponding mixin on Forge side
     @Inject(method = "handleIntention", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/handshake/ClientIntentionPacket;intention()Lnet/minecraft/network/protocol/handshake/ClientIntent;"))
     private void arclight$setHostName(ClientIntentionPacket packet, CallbackInfo ci) {
-        // TODO
-        ((ConnectionBridge) this.connection).bridge$setHostname(packet.hostName() + ":" + packet.port());
+        ConnectionBridge bridge = (ConnectionBridge) this.connection;
+        bridge.bridge$setHandshakeMetadata(packet.protocolVersion(), com.destroystokyo.paper.network.PaperNetworkClient.prepareVirtualHost(packet.hostName(), packet.port()));
+        bridge.bridge$setHostname(packet.hostName() + ":" + packet.port());
     }
 
     @Inject(method = "beginLogin", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/network/Connection;setupOutboundProtocol(Lnet/minecraft/network/ProtocolInfo;)V"))
@@ -72,7 +75,11 @@ public abstract class ServerHandshakePacketListenerImplMixin {
     }
 
     @Inject(method = "beginLogin", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/network/Connection;setupInboundProtocol(Lnet/minecraft/network/ProtocolInfo;Lnet/minecraft/network/PacketListener;)V"))
-    private void arclight$proxySupport(ClientIntentionPacket packet, boolean bl, CallbackInfo ci) {
+    private void arclight$proxySupport(ClientIntentionPacket packet, boolean bl, CallbackInfo ci,
+                                      @Share(value = "handled", namespace = "arclight:player-handshake") LocalBooleanRef handled) {
+        if (handled.get()) {
+            return;
+        }
         if (!VelocitySupport.isEnabled()) {
             String[] split = packet.hostName().split("\00");
             if (SpigotConfig.bungee) {

@@ -18,6 +18,7 @@ import net.neoforged.neoforge.common.extensions.IEntityExtension;
 import net.neoforged.neoforge.entity.PartEntity;
 import net.neoforged.neoforge.event.EventHooks;
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.damage.CraftDamageSource;
 import org.bukkit.entity.Hanging;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -71,7 +72,7 @@ public abstract class EntityMixin_NeoForge implements EntityBridge, IEntityExten
     private void arclight$lightningDamage(Entity entity, DamageSource source, float amount, ServerLevel level, LightningBolt lightning) throws Throwable {
         var victim = this.bridge$getBukkitEntity();
         if (victim instanceof Hanging hanging) {
-            var event = new HangingBreakByEntityEvent(hanging, ((EntityBridge) lightning).bridge$getBukkitEntity());
+            var event = new HangingBreakByEntityEvent(hanging, ((EntityBridge) lightning).bridge$getBukkitEntity(), new CraftDamageSource(source));
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) return;
         }

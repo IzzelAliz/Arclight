@@ -73,10 +73,10 @@ public abstract class InventoryMixin implements Container, IInventoryBridge, Inv
 
     @Override
     public List<ItemStack> getContents() {
-        List<ItemStack> combined = new ArrayList<>(this.items.size() + 5);
-        combined.addAll(this.items);
-        combined.addAll(this.getArmorContents());
-        combined.addAll(this.getExtraContents());
+        List<ItemStack> combined = new ArrayList<>(this.getContainerSize());
+        for (int slot = 0; slot < this.getContainerSize(); slot++) {
+            combined.add(this.getItem(slot));
+        }
         return combined;
     }
 

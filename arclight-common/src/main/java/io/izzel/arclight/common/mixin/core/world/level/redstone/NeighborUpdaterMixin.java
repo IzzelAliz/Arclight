@@ -28,7 +28,7 @@ public interface NeighborUpdaterMixin {
         }
         var cworld = level.bridge$getWorld();
         if (cworld != null) {
-            BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at(level, pos), CraftBlockData.fromData(instance));
+            BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at(level, pos), CraftBlockData.createData(instance));
             Bukkit.getPluginManager().callEvent(event);
 
             if (event.isCancelled()) {

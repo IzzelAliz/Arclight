@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server.network;
 
+import io.izzel.arclight.common.bridge.core.network.ConnectionBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.server.network.ServerCommonPacketListenerImplBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
@@ -10,6 +11,7 @@ import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.netty.channel.ChannelFutureListener;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.Connection;
 import net.minecraft.network.ConnectionProtocol;
@@ -41,6 +43,7 @@ import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -66,8 +69,15 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
     // @formatter:on
 
     protected ServerPlayer player;
-    protected CraftServer cserver;
+    public CraftServer cserver;
+
     public boolean processedDisconnect;
+    @Unique private PlayerKickEvent.Cause arclight$kickCause = PlayerKickEvent.Cause.UNKNOWN;
+
+    @Override
+    public void bridge$registerResourcePackCallback(java.util.UUID id, net.kyori.adventure.resource.ResourcePackCallback callback) {
+        ((ConnectionBridge) this.connection).bridge$getResourcePackCallbacks().register(id, callback);
+    }
 
     public CraftPlayer getCraftPlayer() {
         return (this.player == null) ? null : ((ServerPlayerBridge) this.player).bridge$getBukkitEntity();
@@ -82,6 +92,11 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
         this.player = player;
         ((ServerPlayerBridge) player).bridge$setTransferCookieConnection(this);
         this.cserver = (CraftServer) Bukkit.getServer(); // TODO: Use MinecraftServerBridge.bridge$getServer()
+    }
+
+    @Override
+    public Connection bridge$getConnection() {
+        return this.connection;
     }
 
     @Override
@@ -138,6 +153,35 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
         disconnect(s);
     }
 
+    @Override
+    public void bridge$disconnect(Component component, PlayerKickEvent.Cause cause) {
+        if (!this.cserver.isPrimaryThread()) {
+            Waitable<?> waitable = new Waitable<>() {
+                @Override
+                protected Object evaluate() {
+                    bridge$disconnect(component, cause);
+                    return null;
+                }
+            };
+            ((MinecraftServerBridge) this.server).bridge$queuedProcess(waitable);
+            try {
+                waitable.get();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+            return;
+        }
+        PlayerKickEvent.Cause previousCause = this.arclight$kickCause;
+        this.arclight$kickCause = cause;
+        try {
+            this.disconnect(component);
+        } finally {
+            this.arclight$kickCause = previousCause;
+        }
+    }
+
     @Decorate(method = "disconnect(Lnet/minecraft/network/DisconnectionDetails;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Connection;send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;)V"))
     private void arclight$kickEvent(Connection instance, Packet<?> packet, ChannelFutureListener listener, DisconnectionDetails disconnectionDetails) throws Throwable {
         if (this.processedDisconnect) {
@@ -165,8 +209,12 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
             DecorationOps.cancel().invoke();
             return;
         }
+        // Consume before callbacks so an ordinary reentrant disconnect remains UNKNOWN.
+        PlayerKickEvent.Cause cause = this.arclight$kickCause;
+        this.arclight$kickCause = PlayerKickEvent.Cause.UNKNOWN;
         String leaveMessage = ChatFormatting.YELLOW + this.player.getScoreboardName() + " left the game.";
-        PlayerKickEvent event = new PlayerKickEvent(getCraftPlayer(), CraftChatMessage.fromComponent(disconnectionDetails.reason()), leaveMessage);
+        var serializer = LegacyComponentSerializer.legacySection();
+        PlayerKickEvent event = new PlayerKickEvent(getCraftPlayer(), serializer.deserialize(CraftChatMessage.fromComponent(disconnectionDetails.reason())), serializer.deserialize(leaveMessage), cause);
         if (this.cserver.getServer().isRunning()) {
             this.cserver.getPluginManager().callEvent(event);
         }
@@ -195,13 +243,24 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
 
     @Inject(method = "handleResourcePackResponse", at = @At("RETURN"))
     private void arclight$handleResourcePackStatus(ServerboundResourcePackPacket packetIn, CallbackInfo ci) {
-        this.cserver.getPluginManager().callEvent(new PlayerResourcePackStatusEvent(this.getCraftPlayer(), packetIn.id(), PlayerResourcePackStatusEvent.Status.values()[packetIn.action().ordinal()]));
+        var callback = ((ConnectionBridge) this.connection).bridge$getResourcePackCallbacks()
+            .response(packetIn.id(), packetIn.action().isTerminal());
+        if (callback != null) {
+            net.kyori.adventure.audience.Audience audience = (Object) this instanceof net.minecraft.server.network.ServerConfigurationPacketListenerImpl configurationListener
+                ? ((io.izzel.arclight.common.bridge.core.server.network.ServerConfigurationPacketListenerImplBridge) configurationListener).bridge$getConfigurationConnection().getAudience()
+                : this.getCraftPlayer();
+            callback.packEventReceived(packetIn.id(), net.kyori.adventure.resource.ResourcePackStatus.valueOf(packetIn.action().name()), audience);
+        }
+        var status = PlayerResourcePackStatusEvent.Status.valueOf(packetIn.action().name());
+        ((io.izzel.arclight.common.bridge.core.network.ConnectionBridge) this.connection).bridge$setResourcePackStatus(status);
+        this.cserver.getPluginManager().callEvent(new PlayerResourcePackStatusEvent(this.getCraftPlayer(), packetIn.id(), status));
     }
 
     @Inject(method = "handleCookieResponse", cancellable = true, at = @At("HEAD"))
     private void arclight$handleCookie(ServerboundCookieResponsePacket serverboundCookieResponsePacket, CallbackInfo ci) {
         PacketUtils.ensureRunningOnSameThread(serverboundCookieResponsePacket, (ServerCommonPacketListenerImpl) (Object) this, this.server.packetProcessor());
-        if (((CraftPlayer) this.player.bridge$getBukkitEntity()).handleCookieResponse(serverboundCookieResponsePacket)) {
+        if (((io.izzel.arclight.common.bridge.core.network.ConnectionBridge) this.connection).bridge$getCookieRequests()
+            .handleResponse(serverboundCookieResponsePacket.key(), serverboundCookieResponsePacket.payload())) {
             ci.cancel();
         }
     }
@@ -229,4 +288,13 @@ public abstract class ServerCommonPacketListenerImplMixin implements ServerCommo
     public void kickPlayer(Component component) {
         disconnect(component);
     }
+
+    public void disconnect(net.minecraft.network.chat.Component component, org.bukkit.event.player.PlayerKickEvent.Cause cause) {
+        this.bridge$disconnect(component, cause);
+    }
+
+    public void disconnect(net.kyori.adventure.text.Component component, org.bukkit.event.player.PlayerKickEvent.Cause cause) {
+        this.bridge$disconnect(io.papermc.paper.adventure.PaperAdventure.asVanilla(component), cause);
+    }
+
 }

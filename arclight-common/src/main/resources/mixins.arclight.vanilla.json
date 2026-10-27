@@ -16,6 +16,8 @@
   "mixinPriority": 555,
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "world.level.block.FireBlockLegacyTntPrimeEventMixin_Vanilla",
+    "world.level.block.BlockDestructionExperienceMixin_Vanilla",
     "server.Main_ServerShutdownThreadMixin_Vanilla",
     "world.level.ServerLevelWorldGenMixin_Vanilla",
     "server.dedicated.DedicatedServer_ServerInputThreadMixin_Vanilla",
@@ -29,7 +31,6 @@
     "world.entity.LivingEntityChorusTeleportMixin_Vanilla",
     "world.entity.animal.FoxMixin_Vanilla",
     "world.entity.animal.MushroomCowMixin_Vanilla",
-    "world.entity.animal.SheepMixin_Vanilla",
     "world.entity.animal.SnowGolemMixin_Vanilla",
     "world.entity.animal.WolfMixin_Vanilla",
     "world.entity.animal.frog.TadpoleMixin_Vanilla",

@@ -1,0 +1,25 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftGoat.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftGoat.java
+index 1fcab60ca6bd0ed390fd8b6eefa8da7ee33196c2..11a56bcf56505677c307fb7bfe88c3abf6283195 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftGoat.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftGoat.java
+@@ -1,5 +1,7 @@
+ package org.bukkit.craftbukkit.entity;
+ 
++import net.minecraft.world.entity.ai.memory.MemoryModuleType;
++import net.minecraft.world.entity.schedule.Activity;
+ import org.bukkit.craftbukkit.CraftServer;
+ import org.bukkit.entity.Goat;
+ 
+@@ -46,6 +48,11 @@ public class CraftGoat extends CraftAnimals implements Goat {
+ 
+     @Override
+     public void ram(@org.jetbrains.annotations.NotNull org.bukkit.entity.LivingEntity entity) {
+-        this.getHandle().ram(((CraftLivingEntity) entity).getHandle());
++        var brain = this.getHandle().getBrain();
++        brain.setMemory(MemoryModuleType.RAM_TARGET, ((CraftLivingEntity) entity).getHandle().position());
++        brain.eraseMemory(MemoryModuleType.RAM_COOLDOWN_TICKS);
++        brain.eraseMemory(MemoryModuleType.BREED_TARGET);
++        brain.eraseMemory(MemoryModuleType.TEMPTING_PLAYER);
++        brain.setActiveActivityIfPossible(Activity.RAM);
+     }
+ }

@@ -1,0 +1,136 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java b/paper-server/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java
+index 30a11ae7e872d0aeaa61da8a8ddddee512e34721..caf2b341560e3d4cf4206aa5d3a906d0686f1b4d 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java
+@@ -7,6 +7,7 @@ import com.mojang.authlib.properties.Property;
+ import com.mojang.authlib.properties.PropertyMap;
+ import com.mojang.authlib.yggdrasil.ProfileResult;
+ import com.mojang.datafixers.util.Either;
++import com.mojang.serialization.JavaOps;
+ import io.papermc.paper.profile.MutablePropertyMap;
+ import java.util.ArrayList;
+ import java.util.Iterator;
+@@ -46,6 +47,9 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+ 
+     private final PropertyMap properties = new MutablePropertyMap();
+     private final CraftPlayerTextures textures = new CraftPlayerTextures(this);
++    // Resource-pack overrides are independent of the URL-based textures property.
++    // The native record is immutable, so copies can safely retain it unchanged.
++    private PlayerSkin.Patch skinPatch = PlayerSkin.Patch.EMPTY;
+ 
+     private CraftPlayerProfile(@Nullable UUID uniqueId, @Nullable String name, boolean applyPreconditions) {
+         if (applyPreconditions) {
+@@ -70,6 +74,7 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+             false
+         );
+         this.properties.putAll(resolvableProfile.partialProfile().properties());
++        this.skinPatch = resolvableProfile.skinPatch();
+     }
+ 
+     // The Map of properties of the given GameProfile is not immutable. This captures a snapshot of the properties of
+@@ -80,9 +85,10 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+     }
+ 
+     private CraftPlayerProfile(CraftPlayerProfile other) {
+-        this(other.uniqueId, other.name);
++        this(other.uniqueId, other.name, false);
+         this.properties.putAll(other.properties);
+         this.textures.copyFrom(other.textures);
++        this.skinPatch = other.skinPatch;
+     }
+ 
+     @Override
+@@ -148,19 +154,21 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+         // If missing, look up the uuid by name:
+         if (profile.id().equals(Util.NIL_UUID)) {
+             profile = server.services().nameToIdCache().get(profile.name())
+-                .map(NameAndId::toUncompletedGameProfile)
++                .map(value -> new GameProfile(value.id(), value.name()))
+                 .orElse(profile);
+         }
+ 
+         // Look up properties such as the textures:
+         if (!profile.id().equals(Util.NIL_UUID)) {
+-            ProfileResult newProfile = server.services().sessionService().fetchProfile(profile.id(), true);
++            ProfileResult newProfile = com.destroystokyo.paper.profile.PaperMinecraftSessionService.fetchProfile(server.services().sessionService(), profile, true);
+             if (newProfile != null) {
+                 profile = newProfile.profile();
+             }
+         }
+ 
+-        return new CraftPlayerProfile(profile);
++        CraftPlayerProfile updated = new CraftPlayerProfile(profile);
++        updated.skinPatch = this.skinPatch;
++        return updated;
+     }
+ 
+     // This always returns a new GameProfile instance to ensure that property changes to the original or previously
+@@ -169,8 +177,8 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+     public ResolvableProfile buildResolvableProfile() {
+         this.rebuildDirtyProperties();
+         return this.properties.isEmpty() && (name == null) != (uniqueId == null) // Heuristic copied from net.minecraft.world.item.component.ResolvableProfile.create
+-            ? new ResolvableProfile.Dynamic(name == null ? Either.right(uniqueId) : Either.left(name), PlayerSkin.Patch.EMPTY)
+-            : ResolvableProfile.createResolved(this.buildGameProfile());
++            ? new ResolvableProfile.Dynamic(name == null ? Either.right(uniqueId) : Either.left(name), this.skinPatch)
++            : new ResolvableProfile.Static(Either.left(this.buildGameProfile()), this.skinPatch);
+     }
+ 
+     // This always returns a new GameProfile instance to ensure that property changes to the original or previously
+@@ -195,6 +203,8 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+         builder.append(this.getName());
+         builder.append(", properties=");
+         builder.append(this.properties);
++        builder.append(", skinPatch=");
++        builder.append(this.skinPatch);
+         builder.append("]");
+         return builder.toString();
+     }
+@@ -209,6 +219,7 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+         this.rebuildDirtyProperties();
+         other.rebuildDirtyProperties();
+         if (!CraftPlayerProfile.equals(this.properties, other.properties)) return false;
++        if (!this.skinPatch.equals(other.skinPatch)) return false;
+         return true;
+     }
+ 
+@@ -236,6 +247,7 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+         result = 31 * result + Objects.hashCode(this.uniqueId);
+         result = 31 * result + Objects.hashCode(this.name);
+         result = 31 * result + CraftPlayerProfile.hashCode(this.properties);
++        result = 31 * result + this.skinPatch.hashCode();
+         return result;
+     }
+ 
+@@ -267,6 +279,11 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+             this.properties.forEach((propertyName, property) -> propertiesData.add(CraftProfileProperty.serialize(property)));
+             map.put("properties", propertiesData);
+         }
++        if (!this.skinPatch.equals(PlayerSkin.Patch.EMPTY)) {
++            // Keep resource texture keys and the model separate from URL-based properties.
++            map.put("skinPatch", PlayerSkin.Patch.MAP_CODEC.codec().encodeStart(JavaOps.INSTANCE, this.skinPatch)
++                .getOrThrow(message -> new IllegalStateException("Could not serialize profile skinPatch: " + message)));
++        }
+         return map;
+     }
+ 
+@@ -274,8 +291,18 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+         UUID uniqueId = ConfigSerializationUtil.getUuid(map, "uniqueId", true);
+         String name = ConfigSerializationUtil.getString(map, "name", true);
+ 
+-        // This also validates the deserialized unique id and name (ensures that not both are null):
+-        CraftPlayerProfile profile = new CraftPlayerProfile(uniqueId, name);
++        PlayerSkin.Patch skinPatch = PlayerSkin.Patch.EMPTY;
++        if (map.containsKey("skinPatch")) {
++            Object skinPatchData = map.get("skinPatch");
++            Preconditions.checkArgument(skinPatchData instanceof Map, "Skin patch data (%s) is not a valid Map", skinPatchData);
++            skinPatch = PlayerSkin.Patch.MAP_CODEC.codec().parse(JavaOps.INSTANCE, skinPatchData)
++                .getOrThrow(message -> new IllegalArgumentException("Invalid profile skinPatch: " + message));
++        }
++
++        // Component profiles may contain only a skin patch. Keep the legacy identity
++        // requirement when there is no patch, and retain name validation in both cases.
++        CraftPlayerProfile profile = new CraftPlayerProfile(uniqueId, name, skinPatch.equals(PlayerSkin.Patch.EMPTY));
++        profile.skinPatch = skinPatch;
+ 
+         if (map.containsKey("properties")) {
+             for (Object propertyData : (List<?>) map.get("properties")) {

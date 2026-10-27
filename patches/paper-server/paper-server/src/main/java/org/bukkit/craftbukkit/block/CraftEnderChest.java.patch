@@ -1,0 +1,35 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftEnderChest.java b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftEnderChest.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftEnderChest.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftEnderChest.java
+@@ -20,12 +20,13 @@
+     @Override
+     public void open() {
+         this.requirePlaced();
++        io.izzel.arclight.common.bridge.core.world.level.block.entity.ContainerOpenersCounterBridge bridge = this.getBlockEntity().openersCounter;
+         if (!this.getBlockEntity().openersCounter.opened && this.getWorldHandle() instanceof net.minecraft.world.level.Level level) {
+             BlockState block = this.getBlockEntity().getBlockState();
+             int openCount = this.getBlockEntity().openersCounter.getOpenerCount();
+ 
+-            this.getBlockEntity().openersCounter.onOpenAPI(level, this.getPosition(), block);
+-            this.getBlockEntity().openersCounter.openerCountChangedAPI(level, this.getPosition(), block, openCount, openCount + 1);
++            bridge.onAPIOpen(level, this.getPosition(), block);
++            bridge.openerAPICountChanged(level, this.getPosition(), block, openCount, openCount + 1);
+         }
+         this.getBlockEntity().openersCounter.opened = true;
+     }
+@@ -33,12 +34,13 @@
+     @Override
+     public void close() {
+         this.requirePlaced();
++        io.izzel.arclight.common.bridge.core.world.level.block.entity.ContainerOpenersCounterBridge bridge = this.getBlockEntity().openersCounter;
+         if (this.getBlockEntity().openersCounter.opened && this.getWorldHandle() instanceof net.minecraft.world.level.Level level) {
+             BlockState block = this.getBlockEntity().getBlockState();
+             int openCount = this.getBlockEntity().openersCounter.getOpenerCount();
+ 
+-            this.getBlockEntity().openersCounter.onCloseAPI(level, this.getPosition(), block);
+-            this.getBlockEntity().openersCounter.openerCountChangedAPI(level, this.getPosition(), block, openCount, 0);
++            bridge.onAPIClose(level, this.getPosition(), block);
++            bridge.openerAPICountChanged(level, this.getPosition(), block, openCount, 0);
+         }
+         this.getBlockEntity().openersCounter.opened = false;
+     }

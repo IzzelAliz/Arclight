@@ -15,6 +15,8 @@ import java.util.List;
 
 public interface PlayerListBridge {
 
+    net.minecraft.stats.ServerStatsCounter bridge$getPlayerStats(GameProfile profile);
+
     void bridge$preparePlayerData(net.minecraft.network.Connection connection, ServerPlayer player, java.util.Optional<net.minecraft.nbt.CompoundTag> data);
 
     void bridge$setPlayers(List<ServerPlayer> players);

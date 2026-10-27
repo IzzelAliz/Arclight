@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
+import com.destroystokyo.paper.event.player.PlayerLaunchProjectileEvent;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Cancellable;
@@ -7,7 +8,7 @@ import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import io.izzel.arclight.common.bridge.core.world.entity.projectile.ThrownTridentBridge;
-import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
 import io.izzel.arclight.common.mod.util.DistValidate;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -38,7 +39,7 @@ public class TridentItemMixin {
     private ItemStack arclight$deferConsumption(ItemStack stack, int amount, LivingEntity entity, Operation<ItemStack> original,
             @Share("arclight$consume") LocalRef<Operation<ItemStack>> consume) {
         consume.set(original);
-        return stack;
+        return stack.copyWithCount(amount);
     }
 
     @WrapOperation(method = "releaseUsing", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/Projectile;spawnProjectileFromRotation(Lnet/minecraft/world/entity/projectile/Projectile$ProjectileFactory;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;FFF)Lnet/minecraft/world/entity/projectile/Projectile;"))
@@ -47,17 +48,35 @@ public class TridentItemMixin {
             ItemStack stack, Level worldIn, LivingEntity entityLiving, int timeLeft,
             @Share("arclight$consume") LocalRef<Operation<ItemStack>> consume,
             @Cancellable CallbackInfoReturnable<Boolean> cir) {
-        Projectile entityIn = original.call(factory, serverLevel, itemStack, livingEntity, xRot, velocity, inaccuracy);
-        if (entityIn.isRemoved() || !((io.izzel.arclight.common.bridge.core.world.entity.projectile.ProjectileSpawnBridge) entityIn).bridge$wasSpawnAccepted()) {
-            if (entityLiving instanceof ServerPlayerBridge player) {
-                player.bridge$getBukkitEntity().updateInventory();
+        Player player = (Player) entityLiving;
+        Projectile entityIn;
+        var launch = new org.apache.commons.lang3.mutable.MutableObject<PlayerLaunchProjectileEvent>();
+        var createdProjectile = new org.apache.commons.lang3.mutable.MutableObject<Projectile>();
+        try {
+            entityIn = original.call((Projectile.ProjectileFactory<Projectile>) (spawnLevel, shooter, item) -> {
+            Projectile created = factory.create(spawnLevel, shooter, item);
+            createdProjectile.setValue(created);
+            ArclightEventFactory.prepareProjectileLaunch(created, player, stack, launch::setValue);
+            return created;
+            }, serverLevel, itemStack, livingEntity, xRot, velocity, inaccuracy);
+        } finally {
+            if (createdProjectile.getValue() != null) {
+                ((io.izzel.arclight.common.bridge.core.world.entity.projectile.ProjectileSpawnBridge) createdProjectile.getValue()).bridge$setLaunchEvent(null);
             }
+        }
+        PlayerLaunchProjectileEvent event = launch.getValue();
+        if (!ArclightEventFactory.wasProjectileAccepted(entityIn)) {
+            ArclightEventFactory.resyncProjectileItem(player, player.getUsedItemHand());
             cir.setReturnValue(false);
             return entityIn;
         }
-        stack.hurtWithoutBreaking(1, (Player) entityLiving);
-        ItemStack consumed = consume.get().call(stack, 1, entityLiving);
-        ((ThrownTridentBridge) entityIn).bridge$setThrownStack(consumed.copy());
+        if (event == null || event.shouldConsume()) {
+            itemStack.hurtWithoutBreaking(1, player);
+        }
+        ((ThrownTridentBridge) entityIn).bridge$setThrownStack(itemStack.copy());
+        if (event == null || event.shouldConsume()) {
+            consume.get().call(stack, 1, entityLiving);
+        }
         return entityIn;
     }
 

@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.izzel.arclight.common.bridge.core.world.entity.animal.AnimalBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.animal.AnimalFertilizeEggBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.AgeableMobMixin;
 import net.minecraft.advancements.CriteriaTriggers;
@@ -26,6 +27,7 @@ import org.bukkit.event.entity.EntityEnterLoveModeEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -34,7 +36,7 @@ import javax.annotation.Nullable;
 import java.util.Optional;
 
 @Mixin(Animal.class)
-public abstract class AnimalMixin extends AgeableMobMixin implements AnimalBridge {
+public abstract class AnimalMixin extends AgeableMobMixin implements AnimalBridge, AnimalFertilizeEggBridge {
 
     // @formatter:off
     @Shadow public InteractionResult mobInteract(Player playerIn, InteractionHand hand) { return null; }
@@ -83,6 +85,15 @@ public abstract class AnimalMixin extends AgeableMobMixin implements AnimalBridg
         return breedItem;
     }
 
+    @Unique private Integer arclight$fertilizeEggExperience;
+
+    @Override
+    public @Nullable Integer bridge$setFertilizeEggExperience(@Nullable Integer experience) {
+        Integer previous = this.arclight$fertilizeEggExperience;
+        this.arclight$fertilizeEggExperience = experience;
+        return previous;
+    }
+
     private transient boolean arclight$breedCancelled;
 
     @WrapMethod(method = "spawnChildFromBreeding")
@@ -114,7 +125,12 @@ public abstract class AnimalMixin extends AgeableMobMixin implements AnimalBridg
         Optional<ServerPlayer> cause = Optional.ofNullable(this.getLoveCause()).or(() -> {
             return Optional.ofNullable(entityanimal.getLoveCause());
         });
-        int experience = this.random.nextInt(7) + 1;
+        Integer fertilizeExperience = null;
+        if (entityageable == null) {
+            fertilizeExperience = this.arclight$fertilizeEggExperience;
+            this.arclight$fertilizeEggExperience = null;
+        }
+        int experience = fertilizeExperience == null ? this.random.nextInt(7) + 1 : fertilizeExperience;
         if (entityageable != null) {
             org.bukkit.event.entity.EntityBreedEvent entityBreedEvent = CraftEventFactory.callEntityBreedEvent(entityageable, (Animal) (Object) this, entityanimal, cause.orElse(null), this.breedItem, experience);
             if (entityBreedEvent.isCancelled()) {

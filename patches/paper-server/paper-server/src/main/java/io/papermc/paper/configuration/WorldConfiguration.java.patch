@@ -1,0 +1,47 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/configuration/WorldConfiguration.java b/paper-server/src/main/java/io/papermc/paper/configuration/WorldConfiguration.java
+--- a/paper-server/src/main/java/io/papermc/paper/configuration/WorldConfiguration.java
++++ b/paper-server/src/main/java/io/papermc/paper/configuration/WorldConfiguration.java
+@@ -2,8 +2,6 @@
+ 
+ import com.google.common.collect.HashBasedTable;
+ import com.google.common.collect.Table;
+-import com.mojang.logging.LogUtils;
+-import io.papermc.paper.FeatureHooks;
+ import io.papermc.paper.configuration.legacy.MaxEntityCollisionsInitializer;
+ import io.papermc.paper.configuration.legacy.RequiresSpigotInitialization;
+ import io.papermc.paper.configuration.mapping.MergeMap;
+@@ -69,7 +67,7 @@
+ 
+ @SuppressWarnings({"FieldCanBeLocal", "FieldMayBeFinal", "NotNullFieldNotInitialized", "InnerClassMayBeStatic"})
+ public class WorldConfiguration extends ConfigurationPart {
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(WorldConfiguration.class);
+     static final int CURRENT_VERSION = 31; // (when you change the version, change the comment, so it conflicts on rebases): migrate spawn loaded configs to gamerule
+ 
+     private final transient SpigotWorldConfig spigotConfig;
+@@ -358,11 +356,11 @@
+                 } else if (entity instanceof HangingEntity || entity instanceof ItemEntity || entity instanceof ExperienceOrb) {
+                     return misc.or(def);
+                 }
+-                switch (entity.activationType) {
+-                    case ANIMAL, WATER, VILLAGER -> {
++                switch (io.izzel.arclight.common.mod.util.TrackingCategory.of(entity)) {
++                    case ANIMAL -> {
+                         return animal.or(def);
+                     }
+-                    case MONSTER, FLYING_MONSTER, RAIDER -> {
++                    case MONSTER -> {
+                         return monster.or(def);
+                     }
+                     default -> {
+@@ -523,10 +521,6 @@
+         });
+         public boolean flushRegionsOnSave = false;
+ 
+-        @PostProcess
+-        private void postProcess() {
+-            FeatureHooks.setPlayerChunkUnloadDelay(this.delayChunkUnloadsBy.ticks());
+-        }
+     }
+ 
+     public FishingTimeRange fishingTimeRange;

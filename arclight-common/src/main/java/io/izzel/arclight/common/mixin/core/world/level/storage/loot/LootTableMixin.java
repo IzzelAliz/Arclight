@@ -39,7 +39,7 @@ public abstract class LootTableMixin implements LootTableBridge {
     @Shadow protected abstract void shuffleAndSplitItems(ObjectArrayList<ItemStack> p_230925_, int p_230926_, RandomSource p_230927_);
     // @formatter:on
 
-    @Unique public CraftLootTable craftLootTable;
+    public CraftLootTable craftLootTable;
 
     @Override
     public void bridge$setCraftLootTable(CraftLootTable lootTable) {
@@ -70,7 +70,12 @@ public abstract class LootTableMixin implements LootTableBridge {
     }
 
     public void fillInventory(Container inv, LootParams lootparams, long i, boolean plugin) {
-        LootContext context = (new LootContext.Builder(lootparams)).withOptionalRandomSeed(i).create(this.randomSequence);
+        this.bridge$fillInventory(inv, lootparams, i == 0L ? null : RandomSource.create(i), plugin);
+    }
+
+    @Override
+    public void bridge$fillInventory(Container inv, LootParams lootparams, @Nullable RandomSource random, boolean plugin) {
+        LootContext context = (new LootContext.Builder(lootparams)).withOptionalRandomSource(random).create(this.randomSequence);
         ObjectArrayList<ItemStack> objectarraylist = this.getRandomItems(context);
         RandomSource randomsource = context.getRandom();
         if (((LootTableBridge) this).bridge$getCraftLootTable() != null) {

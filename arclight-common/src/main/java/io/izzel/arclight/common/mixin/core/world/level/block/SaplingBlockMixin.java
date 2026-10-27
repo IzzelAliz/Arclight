@@ -36,22 +36,22 @@ public abstract class SaplingBlockMixin {
             original.call(sapling, level, pos, state, random);
             return;
         }
-        var observer = io.izzel.arclight.common.mod.util.TreeGrowthContext.observe(level);
+        var previousGrowth = io.izzel.arclight.common.mod.util.TreeCapture.growth;
+        var growth = new io.izzel.arclight.common.mod.util.TreeCapture.Growth();
+        io.izzel.arclight.common.mod.util.TreeCapture.growth = growth;
         io.izzel.arclight.common.mod.util.TreeCapture.JoinResult<Void> capture;
         try {
             capture = ((io.izzel.arclight.common.bridge.core.world.level.TreeCaptureBridge) level)
                 .bridge$captureTreeOrJoin(() -> original.call(sapling, level, pos, state, random));
         } finally {
-            observer.close();
+            io.izzel.arclight.common.mod.util.TreeCapture.growth = previousGrowth;
         }
-        var result = observer.result();
         if (!capture.ownedRoot() || capture.states().isEmpty()) return;
-        if (result == null) throw new IllegalStateException("Missing same-invocation tree provenance");
         java.util.List<org.bukkit.block.BlockState> blocks = new java.util.ArrayList<>(capture.states());
         org.bukkit.event.world.StructureGrowEvent event = null;
-        if (result.kind() != io.izzel.arclight.common.mod.util.TreeGrowthContext.Kind.EMPTY) {
-            org.bukkit.TreeType type = result.kind() == io.izzel.arclight.common.mod.util.TreeGrowthContext.Kind.KNOWN
-                ? result.selection().type() : io.izzel.arclight.common.mod.ArclightConstants.MOD;
+        if (growth.selected) {
+            org.bukkit.TreeType type = growth.type != null
+                ? growth.type : io.izzel.arclight.common.mod.ArclightConstants.MOD;
             event = new org.bukkit.event.world.StructureGrowEvent(
                 org.bukkit.craftbukkit.util.CraftLocation.toBukkit(pos, ((WorldBridge) level).bridge$getWorld()),
                 type, false, null, blocks);
@@ -59,7 +59,7 @@ public abstract class SaplingBlockMixin {
         }
         if (event == null || !event.isCancelled()) {
             for (org.bukkit.block.BlockState block : blocks) {
-                org.bukkit.craftbukkit.block.CapturedBlockState.setBlockState(block);
+                io.izzel.arclight.common.mod.util.TreeCapture.apply(block);
             }
         }
     }

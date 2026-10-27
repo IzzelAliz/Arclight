@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryBrewer.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryBrewer.java
+index fa3a302283b668cfc2c1d3f3e97ccc4827367417..70c6ad45d57ea2d763bb6365fec1ab9d2e8c5a81 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryBrewer.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryBrewer.java
+@@ -22,7 +22,7 @@ public class CraftInventoryBrewer extends CraftInventory implements BrewerInvent
+ 
+     @Override
+     public BrewingStand getHolder() {
+-        return (BrewingStand) this.inventory.getOwner();
++        return (BrewingStand) super.getHolder();
+     }
+ 
+     @Override

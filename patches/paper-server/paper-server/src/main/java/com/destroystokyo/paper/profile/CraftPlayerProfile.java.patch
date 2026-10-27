@@ -1,0 +1,85 @@
+diff --git a/paper-server/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java b/paper-server/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
+--- a/paper-server/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
++++ b/paper-server/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
+@@ -8,6 +8,8 @@
+ import com.mojang.authlib.GameProfile;
+ import com.mojang.authlib.properties.Property;
+ import com.mojang.authlib.properties.PropertyMap;
++import io.izzel.arclight.common.bridge.core.server.players.CachedUserNameToIdResolverBridge;
++import io.izzel.arclight.common.bridge.core.server.players.ProfileResolverCachedBridge;
+ import io.papermc.paper.profile.MutablePropertyMap;
+ import net.minecraft.util.ExtraCodecs;
+ import net.minecraft.util.Util;
+@@ -225,16 +227,23 @@
+     }
+ 
+     public boolean completeFromCache(boolean lookupUUID, boolean onlineMode) {
++        return this.completeFromCache(lookupUUID, onlineMode, false);
++    }
++
++    private boolean completeFromCache(boolean lookupUUID, boolean onlineMode, boolean allowNetworkLookup) {
+         MinecraftServer server = MinecraftServer.getServer();
+         String name = profile.name();
+         if (this.getId() == null) {
+             GameProfile profile;
+             if (onlineMode) {
+-                profile = server.services().paper().filledProfileCache().getIfCached(name);
++                profile = ((ProfileResolverCachedBridge) server.services().profileResolver()).bridge$getIfCached(name);
+                 if (profile == null && lookupUUID) {
+-                    NameAndId nameAndId = server.services().nameToIdCache().get(name).orElse(null);
++                    // Only complete(...) may invoke the native name resolver on a cache miss.
++                    NameAndId nameAndId = allowNetworkLookup
++                        ? server.services().nameToIdCache().get(name).orElse(null)
++                        : ((CachedUserNameToIdResolverBridge) server.services().nameToIdCache()).bridge$getIfCached(name);
+                     if (nameAndId != null) {
+-                        profile = nameAndId.toUncompletedGameProfile();
++                        profile = new GameProfile(nameAndId.id(), nameAndId.name());
+                     }
+                 }
+             } else {
+@@ -252,11 +261,11 @@
+         }
+ 
+         if ((profile.name().isEmpty() || !hasTextures()) && this.getId() != null) {
+-            GameProfile profile = server.services().paper().filledProfileCache().getIfCached(this.profile.id());
++            GameProfile profile = ((ProfileResolverCachedBridge) server.services().profileResolver()).bridge$getIfCached(this.profile.id());
+             if (profile == null) {
+                 final Optional<NameAndId> nameAndId = server.services().nameToIdCache().get(this.profile.id());
+                 if (nameAndId.isPresent()) {
+-                    profile = nameAndId.get().toUncompletedGameProfile();
++                    profile = new GameProfile(nameAndId.get().id(), nameAndId.get().name());
+                 }
+             }
+             if (profile != null) {
+@@ -285,15 +294,15 @@
+         }
+ 
+         MinecraftServer server = MinecraftServer.getServer();
+-        boolean isCompleteFromCache = this.completeFromCache(true, onlineMode);
++        boolean isCompleteFromCache = this.completeFromCache(true, onlineMode, true);
+         if (onlineMode && (!isCompleteFromCache || (textures && !hasTextures()))) {
+-            ProfileResult result = server.services().sessionService().fetchProfile(this.profile.id(), true);
++            ProfileResult result = com.destroystokyo.paper.profile.PaperMinecraftSessionService.fetchProfile(server.services().sessionService(), this.profile, true);
+             if (result != null && result.profile() != null) {
+                 copyProfileProperties(result.profile(), this.profile, true);
+             }
+             if (this.isComplete()) {
+                 GameProfile copy = new GameProfile(this.profile.id(), this.profile.name(), new PropertyMap(this.profile.properties())); // Guard mutating profiles in the cache
+-                server.services().paper().filledProfileCache().add(copy);
++                ((ProfileResolverCachedBridge) server.services().profileResolver()).bridge$add(copy);
+             }
+         }
+         return this.isComplete() && (!onlineMode || !textures || hasTextures());
+@@ -314,9 +323,9 @@
+             return;
+         }
+ 
+-        for (Property property : sourceProperties.values()) {
+-            targetProperties.removeAll(property.name());
+-            targetProperties.put(property.name(), property);
++        for (String propertyName : sourceProperties.keySet()) {
++            targetProperties.removeAll(propertyName);
++            targetProperties.putAll(propertyName, sourceProperties.get(propertyName));
+         }
+     }
+ 

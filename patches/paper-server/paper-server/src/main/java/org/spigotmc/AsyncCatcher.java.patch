@@ -1,0 +1,22 @@
+diff --git a/paper-server/src/main/java/org/spigotmc/AsyncCatcher.java b/paper-server/src/main/java/org/spigotmc/AsyncCatcher.java
+index 7e7a0ed944961af5ab7a49bc659da2862d2e2c82..f2f4ac0dd305cdd94b42e0148cf1854526f9ffe5 100644
+--- a/paper-server/src/main/java/org/spigotmc/AsyncCatcher.java
++++ b/paper-server/src/main/java/org/spigotmc/AsyncCatcher.java
+@@ -1,12 +1,14 @@
+ package org.spigotmc;
+ 
+-import net.minecraft.server.MinecraftServer;
++import io.izzel.arclight.common.mod.server.ArclightServer;
+ 
+ public class AsyncCatcher {
+ 
++    public static boolean enabled = true;
++
+     public static void catchOp(String reason) {
+-        if (!ca.spottedleaf.moonrise.common.util.TickThread.isTickThread()) { // Paper - chunk system
+-            MinecraftServer.LOGGER.error("Thread {} failed main thread check: {}", Thread.currentThread().getName(), reason, new Throwable()); // Paper
++        if (enabled && !ArclightServer.isPrimaryThread()) {
++            ArclightServer.LOGGER.error("Thread {} failed main thread check: {}", Thread.currentThread().getName(), reason, new Throwable()); // Paper
+             throw new IllegalStateException("Asynchronous " + reason + "!");
+         }
+     }

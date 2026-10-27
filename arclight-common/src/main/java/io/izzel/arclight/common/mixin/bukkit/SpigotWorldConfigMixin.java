@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = SpigotWorldConfig.class, remap = false)
 public class SpigotWorldConfigMixin {
 
-    @Shadow @Final private String worldName;
+    @Shadow private String worldName;
     @Shadow @Final @Mutable private YamlConfiguration config;
 
     @Inject(method = "init()V", at = @At("HEAD"))

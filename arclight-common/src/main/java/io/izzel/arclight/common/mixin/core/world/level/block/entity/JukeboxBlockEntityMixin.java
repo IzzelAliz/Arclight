@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Mixin(JukeboxBlockEntity.class)
-public abstract class JukeboxBlockEntityMixin extends BlockEntityMixin implements IInventoryBridge, Container {
+public abstract class JukeboxBlockEntityMixin extends BlockEntityMixin implements IInventoryBridge, Container, io.izzel.arclight.common.bridge.core.world.level.block.entity.JukeboxBlockEntityBridge {
 
     // @formatter:off
     @Shadow private ItemStack item;
@@ -79,6 +79,7 @@ public abstract class JukeboxBlockEntityMixin extends BlockEntityMixin implement
         }
     }
 
+    @Override
     public void setSongItemWithoutPlaying(ItemStack itemstack, long ticksSinceSongStarted) {
         this.item = itemstack;
         this.jukeboxSongPlayer.song = null;

@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.clock;
 import io.izzel.arclight.common.bridge.core.world.clock.ServerClockOwnerBridge;
 import io.izzel.arclight.common.bridge.core.world.clock.ClockInstanceBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
-import io.izzel.arclight.common.mod.util.NightSkipScope;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -38,89 +38,56 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * World ownership and scoped prewrite NIGHT_SKIP veto; unscoped mutation policy is unchanged.
- * The parent level integration must load TYPE from that level's SavedDataStorage and call
- * init(ServerLevel) once; the native MinecraftServer init/packet path remains a fallback.
- */
+/** World/global clock ownership with player-specific synchronization and scoped sleep events. */
 @Mixin(ServerClockManager.class)
 public abstract class ServerClockManagerMixin implements ServerClockOwnerBridge {
     @Shadow public abstract void init(MinecraftServer server);
     @Shadow public abstract PackedClockStates packState();
     @Shadow public abstract void setTotalTicks(Holder<WorldClock> clock, long totalTicks);
 
-    // Invocation-local reason bridge. The original setter still owns its write, partial reset
-    // and native-once update tail; no extra mutation or global event policy is introduced.
-    @Unique private static final ThreadLocal<Object[]> arclight$customMutation = new ThreadLocal<>();
+    @Shadow private MinecraftServer server;
 
     @Override
-    public void arclight$commandAdd(Holder<WorldClock> clock, Runnable original) {
-        try {
-            arclight$customMutation.set(new Object[] {this, clock, TimeSkipEvent.SkipReason.COMMAND, null, null});
-            original.run();
-        } finally {
-            arclight$customMutation.remove();
-        }
+    public void bridge$addTicks(Holder<WorldClock> clock, long ticks) {
+        ((ServerClockManagerAccessor) this).arclight$modifyClock(clock, instance -> {
+            ClockInstanceBridge state = (ClockInstanceBridge) instance;
+            state.bridge$totalTicks(Math.max(state.bridge$totalTicks() + ticks, 0L));
+        });
     }
 
-    public void setTotalTicks(Holder<WorldClock> clock, long totalTicks, TimeSkipEvent.SkipReason reason) {
-        try {
-            arclight$customMutation.set(new Object[] {this, clock, reason, null, null});
-            this.setTotalTicks(clock, totalTicks);
-        } finally {
-            arclight$customMutation.remove();
-        }
+    @Override
+    public java.util.OptionalLong bridge$timeMarker(Holder<WorldClock> clock,
+            net.minecraft.resources.ResourceKey<net.minecraft.world.clock.ClockTimeMarker> marker) {
+        ClockInstanceBridge instance = (ClockInstanceBridge) java.util.Objects.requireNonNull(((ServerClockManagerAccessor) this).arclight$clocks().get(clock), "No clock initialized for definition: " + clock);
+        var value = instance.bridge$timeMarkers().get(marker);
+        return value == null ? java.util.OptionalLong.empty()
+            : java.util.OptionalLong.of(value.resolveTimeToMoveTo(instance.bridge$totalTicks()));
     }
-
-    @WrapOperation(method = "modifyClock(Lnet/minecraft/core/Holder;Ljava/util/function/Consumer;)V",
-        at = @At(value = "INVOKE", target = "Ljava/util/function/Consumer;accept(Ljava/lang/Object;)V"),
-        require = 1, expect = 1, allow = 1)
-    private void arclight$customAction(Consumer<Object> action, Object instance, Operation<Void> original,
-                                      Holder<WorldClock> clock, Consumer<?> ignored) {
-        Object[] mutation = arclight$customMutation.get();
-        if (mutation == null || mutation[0] != this || mutation[1] != clock) {
-            original.call(action, instance);
-            return;
-        }
-        mutation[3] = instance;
-        long before = ((ClockInstanceBridge) instance).bridge$totalTicks();
-        original.call(action, instance);
-        long delta = ((ClockInstanceBridge) instance).bridge$totalTicks() - before;
-        ServerLevel owner = this.arclight$owner;
-        if (delta != 0 && mutation[2] != null && owner != null
-            && owner.dimensionType().defaultClock().map(clock::is).orElse(false)) {
-            TimeSkipEvent event = new TimeSkipEvent(((WorldBridge) owner).bridge$getWorld(),
-                (TimeSkipEvent.SkipReason) mutation[2], delta);
-            Bukkit.getPluginManager().callEvent(event);
-            if (!event.isCancelled()) {
-                @SuppressWarnings("unchecked")
-                Consumer<Long> write = (Consumer<Long>) mutation[4];
-                write.accept(before + event.getSkipAmount());
-            }
-        }
-    }
-
 
     /** Run the supplied native/mod mutation once. Veto exits before partialTick and update tail. */
     @WrapMethod(method = "modifyClock(Lnet/minecraft/core/Holder;Ljava/util/function/Consumer;)V", require = 1, expect = 1, allow = 1)
     private void arclight$nightMutation(Holder<WorldClock> clock, Consumer<?> action, Operation<Void> original) {
         var manager = ((ServerClockManager) (Object) this);
-        ServerLevel owner = ((ServerClockOwnerBridge) this).arclight$owner();
+        ServerLevel owner = (ServerLevel) ArclightCaptures.nightLevel;
         boolean sleep = owner != null && owner.dimensionType().defaultClock().map(clock::is).orElse(false);
-        try (var scope = NightSkipScope.mutation(manager, clock, sleep ? (before, proposed) -> {
+        ArclightCaptures.nightProposal = sleep && ArclightCaptures.nightManager == manager && ArclightCaptures.nightClock == clock ? (before, proposed) -> {
             TimeSkipEvent event = new TimeSkipEvent(((WorldBridge) owner).bridge$getWorld(),
                 TimeSkipEvent.SkipReason.NIGHT_SKIP, proposed - before);
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
-                NightSkipScope.veto();
+                ArclightCaptures.nightCancelled = true;
+                throw new ArclightCaptures.NightSkipCancelled();
             }
             return before + event.getSkipAmount();
-        } : null)) {
+        } : null;
+        try {
             try {
                 original.call(clock, action);
-            } catch (NightSkipScope.Veto ignored) {
+            } catch (ArclightCaptures.NightSkipCancelled ignored) {
                 // The sleep event rejected this clock mutation.
             }
+        } finally {
+            ArclightCaptures.nightProposal = null;
         }
     }
 
@@ -132,11 +99,8 @@ public abstract class ServerClockManagerMixin implements ServerClockOwnerBridge 
         "lambda$addTicks$0(ILnet/minecraft/world/clock/ServerClockManager$ClockInstance;)V"
     }, at = @At(value = "FIELD", target = "Lnet/minecraft/world/clock/ServerClockManager$ClockInstance;totalTicks:J", opcode = Opcodes.PUTFIELD), require = 3, expect = 3, allow = 3)
     private static void arclight$nightWrite(@Coerce Object instance, long proposed, Operation<Void> original) {
-        Object[] mutation = arclight$customMutation.get();
-        if (mutation != null && mutation[3] == instance) {
-            mutation[4] = (Consumer<Long>) ticks -> original.call(instance, ticks);
-        }
-        long ticks = NightSkipScope.propose(((ClockInstanceBridge) instance).bridge$totalTicks(), proposed);
+        long ticks = ArclightCaptures.nightProposal == null ? proposed
+            : ArclightCaptures.nightProposal.applyAsLong(((ClockInstanceBridge) instance).bridge$totalTicks(), proposed);
         original.call(instance, ticks);
     }
 
@@ -187,14 +151,14 @@ public abstract class ServerClockManagerMixin implements ServerClockOwnerBridge 
     }
 
     // Native modifyClock still performs mutation, dirty marking and cache invalidation exactly once.
-    // Only replace its global broadcast with player-specific packets for an owned world.
+    // Send player-specific packets to the selected owner scope.
     @Redirect(method = "modifyClock", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;broadcastAll(Lnet/minecraft/network/protocol/Packet;)V"))
     private void arclight$worldBroadcast(PlayerList list, Packet<?> packet) {
-        if (this.arclight$owner == null || !(packet instanceof ClientboundSetTimePacket time)) {
+        if (!(packet instanceof ClientboundSetTimePacket time)) {
             list.broadcastAll(packet);
             return;
         }
-        for (ServerPlayer player : this.arclight$owner.players()) {
+        for (ServerPlayer player : this.arclight$owner == null ? list.getPlayers() : this.arclight$owner.players()) {
             Map<Holder<WorldClock>, ClockNetworkState> updates = new HashMap<>();
             for (Holder<WorldClock> clock : time.clockUpdates().keySet()) {
                 ClockState state = this.packState().clocks().get(clock);
@@ -202,7 +166,7 @@ public abstract class ServerClockManagerMixin implements ServerClockOwnerBridge 
                     updates.put(clock, this.arclight$networkState(clock, state, player));
                 }
             }
-            player.connection.send(new ClientboundSetTimePacket(this.arclight$owner.getGameTime(), updates));
+            player.connection.send(new ClientboundSetTimePacket(this.arclight$gameTime(), updates));
         }
     }
 
@@ -213,29 +177,31 @@ public abstract class ServerClockManagerMixin implements ServerClockOwnerBridge 
 
     @Override
     public ClientboundSetTimePacket createFullSyncPacket(ServerPlayer player) {
-        if (this.arclight$owner == null) {
-            throw new IllegalStateException("Per-player clock packet requires an initialized world owner");
-        }
-        if (player.level() != this.arclight$owner) {
+        if (this.arclight$owner != null && player.level() != this.arclight$owner) {
             throw new IllegalArgumentException("Clock sync player belongs to a different world");
         }
         Map<Holder<WorldClock>, ClockNetworkState> clockUpdates = new HashMap<>();
         this.packState().clocks().forEach((clock, state) ->
             clockUpdates.put(clock, this.arclight$networkState(clock, state, player)));
-        return new ClientboundSetTimePacket(this.arclight$owner.getGameTime(), clockUpdates);
+        return new ClientboundSetTimePacket(this.arclight$gameTime(), clockUpdates);
     }
 
     @Unique
     private ClockNetworkState arclight$networkState(Holder<WorldClock> clock, ClockState state, ServerPlayer player) {
         // Neo's ClockInstance.ticking(boolean) uses these two tags; applying the same
         // gates here avoids incorrectly freezing mod clocks when ADVANCE_TIME is false.
-        boolean advance = player.level().getGameRules().get(GameRules.ADVANCE_TIME);
+        boolean advance = this.arclight$worldAdvanceRule(this.server).get(GameRules.ADVANCE_TIME);
         boolean ticking = (!state.paused() || (arclight$neoClockTags && clock.is(arclight$ignoresPause)))
             && (advance || (arclight$neoClockTags && clock.is(arclight$ignoresAdvance)));
         boolean defaultClock = player.level().dimensionType().defaultClock()
             .map(clock::is).orElse(false);
         long ticks = defaultClock ? arclight$playerTime(player, state.totalTicks()) : state.totalTicks();
-        return new ClockNetworkState(ticks, state.partialTick(), ticking ? state.rate() : 0.0F);
+        return new ClockNetworkState(ticks, state.partialTick(), ticking && (!defaultClock || player.relativeTime) ? state.rate() : 0.0F);
+    }
+
+    @Unique
+    private long arclight$gameTime() {
+        return this.arclight$owner == null ? this.server.overworld().getGameTime() : this.arclight$owner.getGameTime();
     }
 
     @Unique

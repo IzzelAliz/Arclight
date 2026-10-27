@@ -1,0 +1,40 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftBanner.java b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftBanner.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftBanner.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftBanner.java
+@@ -4,6 +4,9 @@
+ import io.papermc.paper.registry.RegistryKey;
+ import java.util.ArrayList;
+ import java.util.List;
++import net.minecraft.core.component.DataComponentMap;
++import net.minecraft.core.component.DataComponentPatch;
++import net.minecraft.core.component.DataComponents;
+ import net.minecraft.world.level.block.AbstractBannerBlock;
+ import net.minecraft.world.level.block.entity.BannerBlockEntity;
+ import net.minecraft.world.level.block.entity.BannerPatternLayers;
+@@ -103,7 +106,9 @@
+         for (Pattern p : this.patterns) {
+             newPatterns.add(new net.minecraft.world.level.block.entity.BannerPatternLayers.Layer(CraftPatternType.bukkitToMinecraftHolder(p.getPattern()), net.minecraft.world.item.DyeColor.byId(p.getColor().getWoolData())));
+         }
+-        blockEntity.setPatterns(new BannerPatternLayers(newPatterns));
++        var patch = DataComponentPatch.builder().set(blockEntity.collectComponents());
++        patch.set(DataComponents.BANNER_PATTERNS, new BannerPatternLayers(newPatterns));
++        blockEntity.applyComponents(DataComponentMap.EMPTY, patch.build());
+     }
+ 
+     @Override
+@@ -123,7 +128,14 @@
+ 
+     @Override
+     public void customName(net.kyori.adventure.text.Component customName) {
+-        this.getSnapshot().name = customName == null ? null : io.papermc.paper.adventure.PaperAdventure.asVanilla(customName);
++        var snapshot = this.getSnapshot();
++        var patch = DataComponentPatch.builder().set(snapshot.collectComponents());
++        if (customName == null) {
++            patch.remove(DataComponents.CUSTOM_NAME);
++        } else {
++            patch.set(DataComponents.CUSTOM_NAME, io.papermc.paper.adventure.PaperAdventure.asVanilla(customName));
++        }
++        snapshot.applyComponents(DataComponentMap.EMPTY, patch.build());
+     }
+ 
+     @Override

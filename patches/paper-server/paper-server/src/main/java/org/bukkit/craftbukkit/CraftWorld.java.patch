@@ -1,0 +1,689 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftWorld.java b/paper-server/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+@@ -1,12 +1,11 @@
+ package org.bukkit.craftbukkit;
+ 
+-import ca.spottedleaf.moonrise.common.list.ReferenceList;
+-import ca.spottedleaf.moonrise.common.util.CoordinateUtils;
+ import com.google.common.base.Preconditions;
+ import com.google.common.base.Predicates;
+ import com.google.common.collect.Lists;
++import com.google.common.collect.ImmutableList;
++import com.google.common.collect.ImmutableMap;
+ import com.mojang.datafixers.util.Pair;
+-import io.papermc.paper.FeatureHooks;
+ import io.papermc.paper.entity.poi.PaperPoiSearchResult;
+ import io.papermc.paper.entity.poi.PaperPoiType;
+ import io.papermc.paper.entity.poi.PoiSearchResult;
+@@ -24,6 +23,7 @@
+ import java.util.Collection;
+ import java.util.Collections;
+ import java.util.HashSet;
++import java.util.HashMap;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Objects;
+@@ -55,6 +55,7 @@
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.server.level.TicketType;
++import net.minecraft.server.level.Ticket;
+ import net.minecraft.sounds.SoundEvent;
+ import net.minecraft.sounds.SoundEvents;
+ import net.minecraft.sounds.SoundSource;
+@@ -188,52 +189,56 @@
+     private final Environment environment;
+     private WorldBorder worldBorder;
+     // Paper start - void damage configuration
+-    private boolean voidDamageEnabled;
+-    private float voidDamageAmount;
+-    private double voidDamageMinBuildHeightOffset;
+ 
+     @Override
+     public boolean isVoidDamageEnabled() {
+-        return this.voidDamageEnabled;
++        throw new UnsupportedOperationException("Arclight does not expose configurable world void damage");
+     }
+ 
+     @Override
+     public void setVoidDamageEnabled(final boolean enabled) {
+-        this.voidDamageEnabled = enabled;
++        throw new UnsupportedOperationException("Arclight does not expose configurable world void damage");
+     }
+ 
+     @Override
+     public float getVoidDamageAmount() {
+-        return this.voidDamageAmount;
++        throw new UnsupportedOperationException("Arclight does not expose configurable world void damage");
+     }
+ 
+     @Override
+     public void setVoidDamageAmount(float voidDamageAmount) {
+-        this.voidDamageAmount = voidDamageAmount;
++        throw new UnsupportedOperationException("Arclight does not expose configurable world void damage");
+     }
+ 
+     @Override
+     public double getVoidDamageMinBuildHeightOffset() {
+-        return this.voidDamageMinBuildHeightOffset;
++        throw new UnsupportedOperationException("Arclight does not expose configurable world void damage");
+     }
+ 
+     @Override
+     public void setVoidDamageMinBuildHeightOffset(double minBuildHeightOffset) {
+-        this.voidDamageMinBuildHeightOffset = minBuildHeightOffset;
++        throw new UnsupportedOperationException("Arclight does not expose configurable world void damage");
+     }
+     // Paper end - void damage configuration
+ 
+     // Paper start - Provide fast information methods
+     @Override
+     public int getEntityCount() {
+-        return this.world.getEntityCount();
++        int count = 0;
++        for (net.minecraft.world.entity.Entity entity : this.world.getAllEntities()) {
++            if (entity.getBukkitEntity().isValid()) {
++                ++count;
++            }
++        }
++        return count;
+     }
+ 
+     @Override
+     public int getTileEntityCount() {
+         // We don't use the full world block entity list, so we must iterate chunks
+         int size = 0;
+-        for (ChunkHolder playerchunk : ca.spottedleaf.moonrise.common.PlatformHooks.get().getVisibleChunkHolders(this.world)) {
++        io.izzel.arclight.common.bridge.core.server.level.ChunkMapBridge chunkMap = this.world.getChunkSource().chunkMap;
++        for (ChunkHolder playerchunk : chunkMap.bridge$getLoadedChunksIterable()) {
+             net.minecraft.world.level.chunk.LevelChunk chunk = playerchunk.getTickingChunk();
+             if (chunk == null) {
+                 continue;
+@@ -250,7 +255,14 @@
+ 
+     @Override
+     public int getChunkCount() {
+-        return this.world.getChunkSource().getFullChunksCount();
++        int count = 0;
++        io.izzel.arclight.common.bridge.core.server.level.ChunkMapBridge chunkMap = this.world.getChunkSource().chunkMap;
++        for (ChunkHolder holder : chunkMap.bridge$getLoadedChunksIterable()) {
++            if (holder.getFullChunkNow() != null) {
++                ++count;
++            }
++        }
++        return count;
+     }
+ 
+     @Override
+@@ -309,19 +321,6 @@
+         this.biomeProvider = biomeProvider;
+ 
+         this.environment = environment;
+-        // Paper start - per world spawn limits
+-        for (SpawnCategory spawnCategory : SpawnCategory.values()) {
+-            if (CraftSpawnCategory.isValidForLimits(spawnCategory)) {
+-                setSpawnLimit(spawnCategory, this.world.paperConfig().entities.spawning.spawnLimits.getInt(CraftSpawnCategory.toNMS(spawnCategory)));
+-            }
+-        }
+-        // Paper end - per world spawn limits
+-
+-        // Paper start - per world void damage height
+-        this.voidDamageEnabled = this.world.paperConfig().environment.voidDamageAmount.enabled();
+-        this.voidDamageMinBuildHeightOffset = this.world.paperConfig().environment.voidDamageMinBuildHeightOffset;
+-        this.voidDamageAmount = (float) this.world.paperConfig().environment.voidDamageAmount.or(0);
+-        // Paper end - per world void damage height
+     }
+ 
+     @Override
+@@ -369,7 +368,7 @@
+             if (plugin != null) {
+                 plugin.getLogger().warning("Plugin is %s at (%s, %s), this might cause issues.".formatted(reason, x, z));
+             }
+-            if (net.minecraft.server.MinecraftServer.getServer().isDebugging()) {
++            if (io.izzel.arclight.common.mod.server.ArclightServer.LOGGER.isDebugEnabled()) {
+                 io.papermc.paper.util.TraceUtil.dumpTraceForThread("Dangerous chunk retrieval");
+             }
+         }
+@@ -407,47 +406,32 @@
+ 
+     @Override
+     public boolean isChunkGenerated(int x, int z) {
+-        // Paper start - Fix this method
+-        if (!Bukkit.isPrimaryThread()) {
+-            return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+-                return CraftWorld.this.isChunkGenerated(x, z);
+-            }, world.getChunkSource().mainThreadProcessor).join();
++        if (!this.world.getServer().isSameThread()) {
++            return java.util.concurrent.CompletableFuture.supplyAsync(
++                () -> this.isChunkGenerated(x, z), this.world.getServer()).join();
+         }
+-        ChunkAccess chunk = world.getChunkSource().getChunkAtImmediately(x, z);
++        io.izzel.arclight.common.bridge.core.server.level.ChunkMapBridge chunkMap = this.world.getChunkSource().chunkMap;
++        ChunkHolder holder = chunkMap.bridge$chunkHolderAt(ChunkPos.pack(x, z));
++        ChunkAccess chunk = holder == null ? null : holder.getLatestChunk();
+         if (chunk != null) {
+-            return chunk instanceof ImposterProtoChunk || chunk instanceof net.minecraft.world.level.chunk.LevelChunk;
++            return chunk.getPersistedStatus() == ChunkStatus.FULL;
+         }
+-        final java.util.concurrent.CompletableFuture<ChunkAccess> future = new java.util.concurrent.CompletableFuture<>();
+-        ca.spottedleaf.moonrise.common.PlatformHooks.get().scheduleChunkLoad(
+-            this.world, x, z, false, ChunkStatus.EMPTY, true, ca.spottedleaf.concurrentutil.util.Priority.NORMAL, future::complete
+-        );
+-        world.getChunkSource().mainThreadProcessor.managedBlock(future::isDone);
+-        return future.thenApply(c -> {
+-            if (c != null) {
+-                return c.getPersistedStatus() == ChunkStatus.FULL;
+-            }
+-            return false;
+-        }).join();
+-        // Paper end - Fix this method
++        return chunkMap.bridge$readChunk(new ChunkPos(x, z)).join()
++            .map(tag -> net.minecraft.world.level.chunk.storage.SerializableChunkData.getChunkStatusFromTag(tag) == ChunkStatus.FULL)
++            .orElse(false);
+     }
+ 
+     @Override
+     public Chunk[] getLoadedChunks() {
+-        ServerChunkCache serverChunkCache = this.getHandle().chunkSource;
+-        ReferenceList<Chunk> chunks = new ReferenceList<>(new Chunk[serverChunkCache.fullChunks.size()]);
+-
+-        for (PrimitiveIterator.OfLong iterator = serverChunkCache.fullChunks.keyIterator(); iterator.hasNext();) {
+-            long chunk = iterator.nextLong();
+-            chunks.add(new CraftChunk(this.world, CoordinateUtils.getChunkX(chunk), CoordinateUtils.getChunkZ(chunk)));
++        List<Chunk> chunks = new ArrayList<>();
++        io.izzel.arclight.common.bridge.core.server.level.ChunkMapBridge chunkMap = this.world.getChunkSource().chunkMap;
++        for (net.minecraft.server.level.ChunkHolder holder : chunkMap.bridge$getLoadedChunksIterable()) {
++            LevelChunk chunk = holder.getFullChunkNow();
++            if (chunk != null) {
++                chunks.add(new CraftChunk(chunk));
++            }
+         }
+-
+-        Chunk[] raw = chunks.getRawDataUnchecked();
+-        int size = chunks.size();
+-        if (raw.length == size) {
+-            // always true when on main
+-            return raw;
+-        }
+-        return Arrays.copyOf(raw, size);
++        return chunks.toArray(Chunk[]::new);
+     }
+ 
+     @Override
+@@ -459,7 +443,7 @@
+     public boolean unloadChunkRequest(int x, int z) {
+         org.spigotmc.AsyncCatcher.catchOp("chunk unload"); // Spigot
+         if (this.isChunkLoaded(x, z)) {
+-            this.world.getChunkSource().removeTicketWithRadius(TicketType.PLUGIN, new ChunkPos(x, z), 1);
++            this.world.getChunkSource().removeTicketWithRadius(io.izzel.arclight.common.bridge.core.server.level.TicketTypeBridge.bridge$plugin(), new ChunkPos(x, z), 1);
+         }
+ 
+         return true;
+@@ -486,17 +470,20 @@
+         ChunkHolder playerChunk = this.world.getChunkSource().chunkMap.getVisibleChunkIfPresent(ChunkPos.pack(x, z));
+         if (playerChunk == null) return false;
+ 
+-        // Paper start - chunk system
+-        net.minecraft.world.level.chunk.LevelChunk chunk = playerChunk.getChunkToSend();
++        LevelChunk chunk = playerChunk.getChunkToSend();
+         if (chunk == null) {
+             return false;
+         }
+-        // Paper end - chunk system
+-                List<ServerPlayer> playersInRange = playerChunk.playerProvider.getPlayers(playerChunk.getPos(), false);
+-                if (playersInRange.isEmpty()) return true; // Paper - chunk system
++        List<ServerPlayer> playersInRange = playerChunk.playerProvider.getPlayers(playerChunk.getPos(), false);
++        if (playersInRange.isEmpty()) return true;
+ 
+-                FeatureHooks.sendChunkRefreshPackets(playersInRange, chunk);
+-        // Paper - chunk system
++        var packet = new net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket(
++            chunk, this.world.getChunkSource().getLightEngine(), null, null);
++        for (ServerPlayer player : playersInRange) {
++            if (player.connection != null) {
++                player.connection.send(packet);
++            }
++        }
+ 
+         return true;
+     }
+@@ -544,7 +531,7 @@
+         }
+ 
+         if (chunk instanceof LevelChunk) {
+-            this.world.getChunkSource().addTicketWithRadius(TicketType.PLUGIN, new ChunkPos(x, z), 1);
++            this.world.getChunkSource().addTicketWithRadius(io.izzel.arclight.common.bridge.core.server.level.TicketTypeBridge.bridge$plugin(), new ChunkPos(x, z), 1);
+             return true;
+         }
+ 
+@@ -571,8 +558,8 @@
+         Preconditions.checkArgument(plugin != null, "null plugin");
+         Preconditions.checkArgument(plugin.isEnabled(), "plugin is not enabled");
+ 
+-        final DistanceManager distanceManager = this.world.getChunkSource().chunkMap.distanceManager;
+-        if (distanceManager.ticketStorage.addPluginRegionTicket(new ChunkPos(x, z), plugin)) {
++        final io.izzel.arclight.common.bridge.core.server.level.DistanceManagerBridge distanceManager = this.world.getChunkSource().chunkMap.getDistanceManager();
++        if (distanceManager.bridge$addTicketAtLevel(io.izzel.arclight.common.bridge.core.server.level.TicketTypeBridge.bridge$pluginTicket(), new ChunkPos(x, z), ChunkMap.FORCED_TICKET_LEVEL, plugin)) {
+             this.getChunkAt(x, z); // ensure it's loaded
+             return true;
+         }
+@@ -584,26 +571,47 @@
+     public boolean removePluginChunkTicket(int x, int z, Plugin plugin) {
+         Preconditions.checkNotNull(plugin, "null plugin");
+ 
+-        final DistanceManager distanceManager = this.world.getChunkSource().chunkMap.distanceManager;
+-        return distanceManager.ticketStorage.removePluginRegionTicket(new ChunkPos(x, z), plugin);
++        final io.izzel.arclight.common.bridge.core.server.level.DistanceManagerBridge distanceManager = this.world.getChunkSource().chunkMap.getDistanceManager();
++        return distanceManager.bridge$removeTicketAtLevel(io.izzel.arclight.common.bridge.core.server.level.TicketTypeBridge.bridge$pluginTicket(), new ChunkPos(x, z), ChunkMap.FORCED_TICKET_LEVEL, plugin);
+     }
+ 
+     @Override
+     public void removePluginChunkTickets(Plugin plugin) {
+         Preconditions.checkNotNull(plugin, "null plugin");
+ 
+-        DistanceManager chunkDistanceManager = this.world.getChunkSource().chunkMap.distanceManager;
+-        chunkDistanceManager.ticketStorage.removeAllPluginRegionTickets(TicketType.PLUGIN_TICKET, ChunkMap.FORCED_TICKET_LEVEL, plugin);
++        io.izzel.arclight.common.bridge.core.server.level.DistanceManagerBridge chunkDistanceManager = this.world.getChunkSource().chunkMap.getDistanceManager();
++        chunkDistanceManager.bridge$removeAllTicketsFor(io.izzel.arclight.common.bridge.core.server.level.TicketTypeBridge.bridge$pluginTicket(), ChunkMap.FORCED_TICKET_LEVEL, plugin);
+     }
+ 
+     @Override
+     public Collection<Plugin> getPluginChunkTickets(int x, int z) {
+-        return FeatureHooks.getPluginChunkTickets(this.world, x, z); // Paper - chunk system
++        ImmutableList.Builder<Plugin> plugins = ImmutableList.builder();
++        for (Ticket ticket : this.world.getChunkSource().ticketStorage.getTickets(ChunkPos.pack(x, z))) {
++            if (ticket.getType() == io.izzel.arclight.common.bridge.core.server.level.TicketTypeBridge.bridge$pluginTicket()) {
++                io.izzel.arclight.common.bridge.core.server.level.TicketBridge keyedTicket = ticket;
++                plugins.add((Plugin) keyedTicket.bridge$getKey());
++            }
++        }
++        return plugins.build();
+     }
+ 
+     @Override
+     public Map<Plugin, Collection<Chunk>> getPluginChunkTickets() {
+-        return FeatureHooks.getPluginChunkTickets(this.world); // Paper - chunk system
++        Map<Plugin, ImmutableList.Builder<Chunk>> result = new HashMap<>();
++        for (var entry : this.world.getChunkSource().ticketStorage.tickets.long2ObjectEntrySet()) {
++            Chunk chunk = null;
++            for (Ticket ticket : entry.getValue()) {
++                if (ticket.getType() != io.izzel.arclight.common.bridge.core.server.level.TicketTypeBridge.bridge$pluginTicket()) {
++                    continue;
++                }
++                if (chunk == null) {
++                    chunk = new CraftChunk(this.world, ChunkPos.getX(entry.getLongKey()), ChunkPos.getZ(entry.getLongKey()));
++                }
++                io.izzel.arclight.common.bridge.core.server.level.TicketBridge keyedTicket = ticket;
++                result.computeIfAbsent((Plugin) keyedTicket.bridge$getKey(), key -> ImmutableList.builder()).add(chunk);
++            }
++        }
++        return result.entrySet().stream().collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, entry -> entry.getValue().build()));
+     }
+ 
+     @NotNull
+@@ -662,7 +670,8 @@
+         if (function != null) {
+             function.accept(itemEntity);
+         }
+-        this.world.addFreshEntity(entity, SpawnReason.CUSTOM);
++        io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge level = this.world;
++        level.bridge$addEntity(entity, SpawnReason.CUSTOM);
+         return itemEntity;
+     }
+ 
+@@ -717,8 +726,9 @@
+ 
+         LightningBolt lightning = EntityType.LIGHTNING_BOLT.create(this.world, EntitySpawnReason.COMMAND);
+         lightning.snapTo(loc.getX(), loc.getY(), loc.getZ());
+-        lightning.isEffect = isVisual; // Paper - Properly handle lightning effects api
+-        this.world.strikeLightning(lightning, LightningStrikeEvent.Cause.CUSTOM);
++        lightning.setVisualOnly(isVisual);
++        io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge level = this.world;
++        level.bridge$strikeLightning(lightning, LightningStrikeEvent.Cause.CUSTOM);
+         return (LightningStrike) lightning.getBukkitEntity();
+     }
+ 
+@@ -734,8 +744,16 @@
+ 
+     @Override
+     public Location findLightningTarget(Location location) {
+-        final BlockPos pos = this.world.findLightningTargetAround(CraftLocation.toBlockPos(location), true);
+-        return pos == null ? null : CraftLocation.toBukkit(pos, this.world);
++        final BlockPos center = this.world.getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, CraftLocation.toBlockPos(location));
++        final var rod = this.world.findLightningRod(center);
++        if (rod.isPresent()) {
++            return CraftLocation.toBukkit(rod.get(), this.world);
++        }
++        final AABB search = AABB.encapsulatingFullBlocks(center, center.atY(this.world.getMaxY() + 1)).inflate(3.0);
++        final var entities = this.world.getEntitiesOfClass(net.minecraft.world.entity.LivingEntity.class, search,
++            entity -> entity.isAlive() && this.world.canSeeSky(entity.blockPosition()) && !entity.isSpectator());
++        return entities.isEmpty() ? null : CraftLocation.toBukkit(
++            entities.get(this.world.getRandom().nextInt(entities.size())).blockPosition(), this.world);
+     }
+     // Paper end - Add methods to find targets for lightning strikes
+ 
+@@ -746,31 +764,26 @@
+ 
+     @Override
+     public boolean generateTree(Location loc, TreeType type, BlockChangeDelegate delegate) {
+-        this.world.captureTreeGeneration = true;
+-        this.world.captureBlockStates = true;
+-        boolean grownTree = this.generateTree(loc, type);
+-        this.world.captureBlockStates = false;
+-        this.world.captureTreeGeneration = false;
+-        if (grownTree) { // Copy block data to delegate
+-            for (BlockState blockstate : this.world.capturedBlockStates.values()) {
+-                BlockPos position = ((CraftBlockState) blockstate).getPosition();
+-                net.minecraft.world.level.block.state.BlockState oldBlock = this.world.getBlockState(position);
+-                int flags = ((CraftBlockState) blockstate).getFlags();
+-                delegate.setBlockData(blockstate.getX(), blockstate.getY(), blockstate.getZ(), blockstate.getBlockData());
+-                net.minecraft.world.level.block.state.BlockState newBlock = this.world.getBlockState(position);
+-                this.world.notifyAndUpdatePhysics(position, null, oldBlock, newBlock, newBlock, flags, net.minecraft.world.level.block.Block.UPDATE_LIMIT);
+-            }
+-            this.world.capturedBlockStates.clear();
+-            return true;
+-        } else {
+-            this.world.capturedBlockStates.clear();
++        io.izzel.arclight.common.bridge.core.world.level.TreeCaptureBridge capture = this.world;
++        var result = capture.bridge$captureTree(() -> this.generateTree(loc, type));
++        if (!result.value()) {
+             return false;
+         }
++        io.izzel.arclight.common.bridge.core.world.level.WorldBridge level = this.world;
++        for (CraftBlockState state : result.states()) {
++            BlockPos position = state.getPosition();
++            net.minecraft.world.level.block.state.BlockState oldBlock = this.world.getBlockState(position);
++            delegate.setBlockData(state.getX(), state.getY(), state.getZ(), state.getBlockData());
++            net.minecraft.world.level.block.state.BlockState newBlock = this.world.getBlockState(position);
++            level.bridge$forge$notifyAndUpdatePhysics(position, null, oldBlock, newBlock,
++                state.getFlags(), net.minecraft.world.level.block.Block.UPDATE_LIMIT);
++        }
++        return true;
+     }
+ 
+     @Override
+     public String getName() {
+-        return this.world.bukkitName;
++        return ((net.minecraft.world.level.storage.ServerLevelData) this.world.getLevelData()).getLevelName();
+     }
+ 
+     @Override
+@@ -838,32 +851,23 @@
+ 
+     @Override
+     public boolean createExplosion(double x, double y, double z, float power, boolean setFire, boolean breakBlocks, Entity source) {
+-        // Paper start - expand explosion API
+-        return this.createExplosion(x, y, z, power, setFire, breakBlocks, source, null);
++        net.minecraft.world.level.Level.ExplosionInteraction interaction = !breakBlocks
++            ? Level.ExplosionInteraction.NONE
++            : source == null ? io.izzel.arclight.common.mod.ArclightConstants.STANDARD
++            : source instanceof org.bukkit.entity.minecart.ExplosiveMinecart || source instanceof org.bukkit.entity.TNTPrimed
++                ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.MOB;
++        net.minecraft.world.entity.Entity entity = source == null ? null : ((CraftEntity) source).getHandle();
++        io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge level = this.world;
++        return level.bridge$createExplosion(entity, x, y, z, power, setFire, interaction);
+     }
+ 
+-    private boolean createExplosion(double x, double y, double z, float power, boolean setFire, boolean breakBlocks, Entity source, Consumer<net.minecraft.world.level.ServerExplosion> configurator) {
+-        // Paper end - expand explosion API
+-        net.minecraft.world.level.Level.ExplosionInteraction explosionType;
+-        if (!breakBlocks) {
+-            explosionType = net.minecraft.world.level.Level.ExplosionInteraction.NONE; // Don't break blocks
+-        } else if (source == null) {
+-            explosionType = net.minecraft.world.level.Level.ExplosionInteraction.STANDARD; // Break blocks, don't decay drops
+-        } else if (source instanceof org.bukkit.entity.minecart.ExplosiveMinecart || source instanceof org.bukkit.entity.TNTPrimed) {
+-            explosionType = net.minecraft.world.level.Level.ExplosionInteraction.TNT;
+-        } else {
+-            explosionType = net.minecraft.world.level.Level.ExplosionInteraction.MOB; // Respect mobGriefing gamerule
+-        }
+-
+-        net.minecraft.world.entity.Entity entity = (source == null) ? null : ((CraftEntity) source).getHandle();
+-        return !this.world.explode0(entity, Explosion.getDefaultDamageSource(this.world, entity), null, x, y, z, power, setFire, explosionType, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER, Level.DEFAULT_EXPLOSION_BLOCK_PARTICLES, SoundEvents.GENERIC_EXPLODE, configurator).wasCanceled; // Paper - expand explosion API
+-    }
+-    // Paper start
+     @Override
+     public boolean createExplosion(Entity source, Location loc, float power, boolean setFire, boolean breakBlocks, boolean excludeSourceFromDamage) {
+-        return this.createExplosion(loc.x(), loc.getY(), loc.getZ(), power, setFire, breakBlocks, source, e -> e.excludeSourceFromDamage = excludeSourceFromDamage);
++        if (!excludeSourceFromDamage && source != null) {
++            throw new UnsupportedOperationException("Including the explosion source in damage is not supported");
++        }
++        return this.createExplosion(loc, power, setFire, breakBlocks, source);
+     }
+-    // Paper end
+ 
+     @Override
+     public boolean createExplosion(Location loc, float power, boolean setFire, boolean breakBlocks, Entity source) {
+@@ -950,12 +954,14 @@
+ 
+     @Override
+     public void addEntityToWorld(net.minecraft.world.entity.Entity entity, SpawnReason reason) {
+-        this.getHandle().addFreshEntity(entity, reason);
++        io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge level = this.getHandle();
++        level.bridge$addEntity(entity, reason);
+     }
+ 
+     @Override
+     public void addEntityWithPassengers(net.minecraft.world.entity.Entity entity, SpawnReason reason) {
+-        this.getHandle().tryAddFreshEntityWithPassengers(entity, reason);
++        io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge level = this.getHandle();
++        level.bridge$addAllEntitiesSafely(entity, reason);
+     }
+ 
+     @Override
+@@ -1052,7 +1058,24 @@
+         Vector dir = direction.clone().normalize().multiply(maxDistance);
+         Vec3 startPos = io.papermc.paper.util.MCUtil.toVec3(start); // Paper - Add predicate for blocks when raytracing
+         Vec3 endPos = startPos.add(dir.getX(), dir.getY(), dir.getZ());
+-        HitResult hitResult = this.getHandle().clip(new ClipContext(startPos, endPos, ClipContext.Block.values()[blockCollisionMode.ordinal()], CraftFluidCollisionMode.toFluid(fluidCollisionMode), CollisionContext.empty()), canCollide);
++        ClipContext context = new ClipContext(startPos, endPos, ClipContext.Block.values()[blockCollisionMode.ordinal()], CraftFluidCollisionMode.toFluid(fluidCollisionMode), CollisionContext.empty());
++        HitResult hitResult = net.minecraft.world.level.BlockGetter.traverseBlocks(startPos, endPos, context, (clip, pos) -> {
++            if (canCollide != null && !canCollide.test(CraftBlock.at(this.world, pos))) {
++                return null;
++            }
++            var state = this.world.getBlockState(pos);
++            var fluid = this.world.getFluidState(pos);
++            var blockHit = this.world.clipWithInteractionOverride(clip.getFrom(), clip.getTo(), pos,
++                clip.getBlockShape(state, this.world, pos), state);
++            var fluidHit = clip.getFluidShape(fluid, this.world, pos).clip(clip.getFrom(), clip.getTo(), pos);
++            double blockDistance = blockHit == null ? Double.MAX_VALUE : clip.getFrom().distanceToSqr(blockHit.getLocation());
++            double fluidDistance = fluidHit == null ? Double.MAX_VALUE : clip.getFrom().distanceToSqr(fluidHit.getLocation());
++            return blockDistance <= fluidDistance ? blockHit : fluidHit;
++        }, clip -> {
++            Vec3 delta = clip.getFrom().subtract(clip.getTo());
++            return net.minecraft.world.phys.BlockHitResult.miss(clip.getTo(),
++                net.minecraft.core.Direction.getApproximateNearest(delta.x, delta.y, delta.z), BlockPos.containing(clip.getTo()));
++        });
+ 
+         return CraftRayTraceResult.convertFromInternal(this.getHandle(), hitResult);
+     }
+@@ -1159,7 +1182,8 @@
+ 
+     @Override
+     public void setDifficulty(Difficulty difficulty) {
+-        this.getHandle().getServer().setDifficulty(this.getHandle(), CraftDifficulty.toMinecraft(difficulty), null, true);
++        ((io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge) this.world.getServer())
++            .bridge$setDifficulty(this.world, net.minecraft.world.Difficulty.byId(difficulty.getValue()), null, true);
+     }
+ 
+     @Override
+@@ -1169,12 +1193,12 @@
+ 
+     @Override
+     public int getViewDistance() {
+-        return FeatureHooks.getViewDistance(this.world); // Paper - chunk system
++        return this.world.getChunkSource().chunkMap.serverViewDistance;
+     }
+ 
+     @Override
+     public int getSimulationDistance() {
+-        return FeatureHooks.getSimulationDistance(this.world); // Paper - chunk system
++        return this.world.getChunkSource().chunkMap.getDistanceManager().simulationDistance;
+     }
+ 
+     public BlockMetadataStore getBlockMetadata() {
+@@ -1188,7 +1212,7 @@
+ 
+     @Override
+     public void setStorm(boolean hasStorm) {
+-        this.world.getWeatherData().setRaining(hasStorm, WeatherChangeEvent.Cause.PLUGIN);
++        this.world.getWeatherData().setRaining(hasStorm);
+         this.setWeatherDuration(0); // Reset weather duration (legacy behaviour)
+         this.setClearWeatherDuration(0); // Reset clear weather duration (reset "/weather clear" commands)
+     }
+@@ -1210,7 +1234,7 @@
+ 
+     @Override
+     public void setThundering(boolean thundering) {
+-        this.world.getWeatherData().setThundering(thundering, ThunderChangeEvent.Cause.PLUGIN);
++        this.world.getWeatherData().setThundering(thundering);
+         this.setThunderDuration(0); // Reset weather duration (legacy behaviour)
+         this.setClearWeatherDuration(0); // Reset clear weather duration (reset "/weather clear" commands)
+     }
+@@ -1306,7 +1330,8 @@
+         FallingBlockEntity entity = new FallingBlockEntity(this.world, location.getX(), location.getY(), location.getZ(), CraftBlockType.bukkitToMinecraft(material).defaultBlockState()); // Paper
+         entity.time = 1;
+ 
+-        this.world.addFreshEntity(entity, SpawnReason.CUSTOM);
++        io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge level = this.world;
++        level.bridge$addEntity(entity, SpawnReason.CUSTOM);
+         // Paper end - restore API behavior for spawning falling blocks
+         return (FallingBlock) entity.getBukkitEntity();
+     }
+@@ -1320,7 +1345,8 @@
+         FallingBlockEntity entity = new FallingBlockEntity(this.world, location.getX(), location.getY(), location.getZ(), ((CraftBlockData) data).getState());
+         entity.time = 1;
+ 
+-        this.world.addFreshEntity(entity, SpawnReason.CUSTOM);
++        io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge level = this.world;
++        level.bridge$addEntity(entity, SpawnReason.CUSTOM);
+         // Paper end - restore API behavior for spawning falling blocks
+         return (FallingBlock) entity.getBukkitEntity();
+     }
+@@ -1332,7 +1358,8 @@
+ 
+     @Override
+     public void setSpawnFlags(boolean allowMonsters, boolean allowAnimals) {
+-        this.world.getChunkSource().setSpawnSettings(allowMonsters, allowAnimals);
++        this.world.getChunkSource().setSpawnSettings(allowMonsters);
++        this.world.getChunkSource().spawnFriendlies = allowAnimals;
+     }
+ 
+     @Override
+@@ -1464,12 +1491,14 @@
+ 
+     @Override
+     public boolean canGenerateStructures() {
+-        return this.world.worldGenSettings.options().generateStructures();
++        io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge level = this.world;
++        return level.getWorldGenSettings().options().generateStructures();
+     }
+ 
+     @Override
+     public boolean hasBonusChest() {
+-        return this.world.worldGenSettings.options().generateBonusChest();
++        io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge level = this.world;
++        return level.getWorldGenSettings().options().generateBonusChest();
+     }
+ 
+     @Override
+@@ -1479,7 +1508,13 @@
+ 
+     @Override
+     public void setHardcore(boolean hardcore) {
+-        this.world.serverLevelData.setHardcore(hardcore);
++        var data = this.world.getLevelData();
++        Object owner = data instanceof io.izzel.arclight.common.bridge.core.world.level.storage.DerivedLevelDataBridge bridge ? bridge.bridge$getWorldData() : data;
++        // Primary settings must be live; Derived hardcore reads its metadata owner.
++        var settings = owner instanceof io.izzel.arclight.common.bridge.core.world.level.storage.PrimaryLevelDataBridge bridge
++            ? bridge.bridge$getWorldSettings()
++            : ((io.izzel.arclight.common.bridge.core.world.level.storage.PrimaryLevelDataBridge) ((io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge) this.world).bridge$getPrimaryLevelData()).bridge$getWorldSettings();
++        settings.difficultySettings().hardcore = hardcore;
+     }
+ 
+     @Override
+@@ -1751,17 +1786,15 @@
+         if (data != null) {
+             Preconditions.checkArgument(particle.getDataType().isInstance(data), "data (%s) should be %s", data.getClass(), particle.getDataType());
+         }
+-        this.getHandle().sendParticlesSource(
+-                receivers == null ? this.getHandle().players() : Lists.transform(receivers, player -> ((CraftPlayer) player).getHandle()), // Paper -  Particle API
+-                sender != null ? ((CraftPlayer) sender).getHandle() : null, // Sender // Paper - Particle API
+-                CraftParticle.createParticleParam(particle, data), // Particle
+-                force,
+-                false,
+-                x, y, z, // Position
+-                count, // Count
+-                offsetX, offsetY, offsetZ, // Random offset
+-                extra // Speed?
+-        );
++        var options = CraftParticle.createParticleParam(particle, data);
++        var targets = receivers == null ? this.getHandle().players()
++            : Lists.transform(receivers, player -> ((CraftPlayer) player).getHandle());
++        for (var target : targets) {
++            if (sender == null || target.getBukkitEntity().canSee(sender)) {
++                this.getHandle().sendParticles(target, options, force, false, x, y, z,
++                    count, offsetX, offsetY, offsetZ, extra);
++            }
++        }
+ 
+     }
+ 
+@@ -2010,48 +2043,35 @@
+     // Paper start
+     @Override
+     public void getChunkAtAsync(int x, int z, boolean gen, boolean urgent, @NotNull Consumer<? super Chunk> cb) {
+-        warnUnsafeChunk("getting a faraway chunk async", x, z); // Paper
+-        ca.spottedleaf.moonrise.common.PlatformHooks.get().scheduleChunkLoad(
+-            this.getHandle(), x, z, gen, ChunkStatus.FULL, true,
+-            urgent ? ca.spottedleaf.concurrentutil.util.Priority.HIGHER : ca.spottedleaf.concurrentutil.util.Priority.NORMAL,
+-            (ChunkAccess chunk) -> {
+-                cb.accept(chunk == null ? null : new CraftChunk((net.minecraft.world.level.chunk.LevelChunk)chunk));
+-            }
+-        );
+-
++        throw new UnsupportedOperationException("Asynchronous chunk loading is not supported by Arclight");
+     }
+ 
+     @Override
+     public void getChunksAtAsync(int minX, int minZ, int maxX, int maxZ, boolean urgent, Runnable cb) {
+-        warnUnsafeChunk("getting a faraway chunk async", minX, minZ); // Paper
+-        warnUnsafeChunk("getting a faraway chunk async", maxX, maxZ); // Paper
+-        this.getHandle().loadChunks(
+-            minX, minZ, maxX, maxZ,
+-            urgent ? ca.spottedleaf.concurrentutil.util.Priority.HIGHER : ca.spottedleaf.concurrentutil.util.Priority.NORMAL,
+-            (List<ChunkAccess> chunks) -> {
+-                cb.run();
+-            }
+-        );
++        throw new UnsupportedOperationException("Asynchronous chunk loading is not supported by Arclight");
+     }
+ 
+     @Override
+     public void setViewDistance(final int viewDistance) {
+-        FeatureHooks.setViewDistance(this.world, viewDistance); // Paper - chunk system
++        Preconditions.checkArgument(viewDistance >= 2 && viewDistance <= 32, "View distance must be in [2, 32]");
++        io.izzel.arclight.common.bridge.core.server.level.ChunkMapBridge chunkMap = this.world.getChunkSource().chunkMap;
++        chunkMap.bridge$setViewDistance(viewDistance);
+     }
+ 
+     @Override
+     public void setSimulationDistance(final int simulationDistance) {
+-        FeatureHooks.setSimulationDistance(this.world, simulationDistance); // Paper - chunk system
++        Preconditions.checkArgument(simulationDistance >= 2 && simulationDistance <= 32, "Simulation distance must be in [2, 32]");
++        this.world.getChunkSource().chunkMap.getDistanceManager().updateSimulationDistance(simulationDistance);
+     }
+ 
+     @Override
+     public int getSendViewDistance() {
+-        return FeatureHooks.getSendViewDistance(this.world); // Paper - chunk system
++        return this.world.getChunkSource().chunkMap.serverViewDistance;
+     }
+ 
+     @Override
+     public void setSendViewDistance(final int viewDistance) {
+-        FeatureHooks.setSendViewDistance(this.world, viewDistance); // Paper - chunk system
++        throw new UnsupportedOperationException("Arclight does not support a world send view distance independent of its view distance");
+     }
+ 
+     // Paper start - implement pointers

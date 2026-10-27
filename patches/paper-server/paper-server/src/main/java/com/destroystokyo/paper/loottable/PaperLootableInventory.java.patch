@@ -1,0 +1,22 @@
+diff --git a/paper-server/src/main/java/com/destroystokyo/paper/loottable/PaperLootableInventory.java b/paper-server/src/main/java/com/destroystokyo/paper/loottable/PaperLootableInventory.java
+index 9e7c22ef49f1699df298f7121d50d27b4cb0923f..72b685282cf6cb683976a89f542dc2b12f63c420 100644
+--- a/paper-server/src/main/java/com/destroystokyo/paper/loottable/PaperLootableInventory.java
++++ b/paper-server/src/main/java/com/destroystokyo/paper/loottable/PaperLootableInventory.java
+@@ -21,7 +21,7 @@ public interface PaperLootableInventory extends PaperLootable, LootableInventory
+     /* LootableInventory */
+     @Override
+     default boolean isRefillEnabled() {
+-        return this.getNMSWorld().paperConfig().lootables.autoReplenish;
++        throw new UnsupportedOperationException("Loot replenishment and player loot history are not supported by Arclight");
+     }
+ 
+     @Override
+@@ -36,7 +36,7 @@ public interface PaperLootableInventory extends PaperLootable, LootableInventory
+ 
+     @Override
+     default boolean canPlayerLoot(final UUID player) {
+-        return this.lootableDataForAPI().canPlayerLoot(player, this.getNMSWorld().paperConfig());
++        throw new UnsupportedOperationException("Loot replenishment and player loot history are not supported by Arclight");
+     }
+ 
+     @Override

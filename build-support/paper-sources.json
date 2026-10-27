@@ -1,0 +1,30 @@
+{
+  "commit": "e4e17fc90d31c3dca6de8bebc87c741749f8f3df",
+  "groups": {
+    "paper-api": {
+      "roots": [
+        "paper-api/src/main/java",
+        "paper-api/src/generated/java",
+        "LICENSE.md",
+        "licenses"
+      ]
+    },
+    "paper-server": {
+      "roots": [
+        "paper-server/src/main/java",
+        "paper-server/src/generated/java",
+        "paper-server/src/main/resources",
+        "LICENSE.md",
+        "licenses"
+      ],
+      "exclude": [
+        "**/net/minecraft/**",
+        "**/ca/spottedleaf/moonrise/**",
+        "**/io/papermc/paper/antixray/**",
+        "**/io/papermc/paper/SparksFly.java",
+        "**/io/papermc/paper/PaperBootstrap.java",
+        "**/META-INF/services/ca.spottedleaf.moonrise.*"
+      ]
+    }
+  }
+}

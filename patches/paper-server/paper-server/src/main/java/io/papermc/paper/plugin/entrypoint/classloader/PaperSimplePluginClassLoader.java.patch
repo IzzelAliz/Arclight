@@ -1,0 +1,61 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/PaperSimplePluginClassLoader.java b/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/PaperSimplePluginClassLoader.java
+index d97f63347cda6ad398709dd584c9b623b01f1284..11a80fd690b4f771a28a26a9cc4d4b89e3b32c8a 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/PaperSimplePluginClassLoader.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/PaperSimplePluginClassLoader.java
+@@ -1,5 +1,9 @@
+ package io.papermc.paper.plugin.entrypoint.classloader;
+ 
++import io.izzel.arclight.common.mod.util.remapper.ArclightRemapConfig;
++import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
++import io.izzel.arclight.common.mod.util.remapper.ClassLoaderRemapper;
++import io.izzel.arclight.common.mod.util.remapper.RemappingClassLoader;
+ import io.papermc.paper.plugin.configuration.PluginMeta;
+ import io.papermc.paper.plugin.util.NamespaceChecker;
+ import org.jetbrains.annotations.ApiStatus;
+@@ -21,7 +25,7 @@ import java.util.jar.Manifest;
+  * Represents a simple classloader used for paper plugin bootstrappers.
+  */
+ @ApiStatus.Internal
+-public class PaperSimplePluginClassLoader extends URLClassLoader {
++public class PaperSimplePluginClassLoader extends URLClassLoader implements RemappingClassLoader {
+ 
+     static {
+         ClassLoader.registerAsParallelCapable();
+@@ -32,6 +36,7 @@ public class PaperSimplePluginClassLoader extends URLClassLoader {
+     protected final Manifest jarManifest;
+     protected final URL jarUrl;
+     protected final JarFile jar;
++    private ClassLoaderRemapper remapper;
+ 
+     public PaperSimplePluginClassLoader(Path source, JarFile file, PluginMeta configuration, ClassLoader parentLoader) throws IOException {
+         super(source.getFileName().toString(), new URL[]{source.toUri().toURL()}, parentLoader);
+@@ -43,6 +48,19 @@ public class PaperSimplePluginClassLoader extends URLClassLoader {
+         this.jar = file;
+     }
+ 
++    @Override
++    public synchronized ClassLoaderRemapper getRemapper() {
++        if (this.remapper == null) {
++            this.remapper = ArclightRemapper.createClassLoaderRemapper(this);
++        }
++        return this.remapper;
++    }
++
++    @Override
++    public ArclightRemapConfig getRemapConfig() {
++        return ArclightRemapConfig.PLUGIN;
++    }
++
+     @Override
+     public URL getResource(String name) {
+         return this.findResource(name);
+@@ -80,7 +98,8 @@ public class PaperSimplePluginClassLoader extends URLClassLoader {
+             throw new ClassNotFoundException(name, ex);
+         }
+ 
+-        classBytes = ClassloaderBytecodeModifier.bytecodeModifier().modify(this.configuration, classBytes);
++        // Bootstrap and main reuse this defining loader; conversion must not depend on Bukkit being initialized.
++        classBytes = ClassloaderBytecodeModifier.bytecodeModifier().modify(this.configuration, name, classBytes, this);
+ 
+         int dot = name.lastIndexOf('.');
+         if (dot != -1) {

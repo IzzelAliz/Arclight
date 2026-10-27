@@ -2,7 +2,7 @@ package io.izzel.arclight.neoforge.mixin.core.world.clock;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import io.izzel.arclight.common.mod.util.NightSkipScope;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.clock.ServerClockManager;
@@ -17,8 +17,13 @@ public abstract class ServerLevelNightSkipMixin_NeoForge {
     @WrapOperation(method = "tick(Ljava/util/function/BooleanSupplier;)V", at = @At(value = "INVOKE", target = "Lnet/neoforged/neoforge/common/util/ClockAdjustment;apply(Lnet/minecraft/world/clock/ServerClockManager;Lnet/minecraft/core/Holder;)V"), require = 1, expect = 1, allow = 1)
     private void arclight$nightAdjustment(ClockAdjustment adjustment, ServerClockManager manager,
                                           Holder<WorldClock> clock, Operation<Void> original) {
-        try (var scope = NightSkipScope.adjustment(manager, clock)) {
+        ArclightCaptures.nightManager = manager;
+        ArclightCaptures.nightClock = clock;
+        try {
             original.call(adjustment, manager, clock);
+        } finally {
+            ArclightCaptures.nightManager = null;
+            ArclightCaptures.nightClock = null;
         }
     }
 }

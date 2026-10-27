@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.ChangeOverTimeBlock;
@@ -31,7 +32,7 @@ public interface ChangeOverTimeBlockMixin<T extends Enum<T>> {
 
         if (random.nextFloat() < f) {
             this.arclight$getNextState(state, level, pos, random).ifPresent((nextState) -> {
-                CraftEventFactory.handleBlockFormEvent(level, pos, nextState);
+                CraftEventFactory.handleBlockFormEvent(level, pos, nextState, Block.UPDATE_ALL);
             });
         }
 

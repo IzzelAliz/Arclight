@@ -1,0 +1,28 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/connection/PaperCommonConnection.java b/paper-server/src/main/java/io/papermc/paper/connection/PaperCommonConnection.java
+--- a/paper-server/src/main/java/io/papermc/paper/connection/PaperCommonConnection.java
++++ b/paper-server/src/main/java/io/papermc/paper/connection/PaperCommonConnection.java
+@@ -72,12 +72,12 @@
+ 
+     @Override
+     public void disconnect(final Component component) {
+-        this.packetListener.disconnect(PaperAdventure.asVanilla(component), DisconnectionReason.UNKNOWN);
++        this.packetListener.disconnect(PaperAdventure.asVanilla(component));
+     }
+ 
+     @Override
+     public boolean isTransferred() {
+-        return this.packetListener.isTransferred();
++        return ((org.bukkit.craftbukkit.entity.CraftPlayer.TransferCookieConnection) this.packetListener).isTransferred();
+     }
+ 
+     @Override
+@@ -97,7 +97,8 @@
+ 
+     @Override
+     public @Nullable InetSocketAddress getHAProxyAddress() {
+-        return this.packetListener.connection.haProxyAddress instanceof final InetSocketAddress inetSocketAddress ? inetSocketAddress : null;
++        // The native connection has no Proxy Protocol handler; the API defines null for this case.
++        return null;
+     }
+ 
+     @Override

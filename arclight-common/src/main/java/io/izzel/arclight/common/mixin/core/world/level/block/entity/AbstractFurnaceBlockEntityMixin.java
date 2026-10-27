@@ -5,7 +5,8 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
-import io.izzel.arclight.common.mod.util.FurnaceEventHooks;
+import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.common.bridge.core.world.level.block.entity.AbstractFurnaceBlockEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeHolderBridge;
 import io.izzel.arclight.mixin.Decorate;
@@ -57,6 +58,19 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
 
     public List<HumanEntity> transaction = new ArrayList<>();
     private int maxStack = MAX_STACK;
+    private net.minecraft.world.item.crafting.RecipeType<? extends net.minecraft.world.item.crafting.AbstractCookingRecipe> arclight$recipeType;
+
+    @org.spongepowered.asm.mixin.injection.Inject(method = "<init>", at = @At("RETURN"))
+    private void arclight$captureRecipeType(net.minecraft.world.level.block.entity.BlockEntityType<?> type, BlockPos pos, BlockState state,
+            net.minecraft.world.item.crafting.RecipeType<? extends net.minecraft.world.item.crafting.AbstractCookingRecipe> recipeType,
+            org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
+        this.arclight$recipeType = recipeType;
+    }
+
+    @Override
+    public net.minecraft.world.item.crafting.RecipeType<? extends net.minecraft.world.item.crafting.AbstractCookingRecipe> bridge$getRecipeType() {
+        return this.arclight$recipeType;
+    }
 
     @Decorate(method = "serverTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;getBurnDuration(Lnet/minecraft/world/level/block/entity/FuelValues;Lnet/minecraft/world/item/ItemStack;)I"))
     private static int arclight$setBurnTime(AbstractFurnaceBlockEntity furnace, FuelValues fuelValues, ItemStack fuel,
@@ -76,7 +90,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
     // may consume fuel and start cooking only if the event also says it is burning.
     @Decorate(method = "serverTick", inject = true, at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD,
         target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;litTotalTime:I", shift = At.Shift.AFTER))
-    private static void arclight$burningGate(@Local(ordinal = -1) int newLitTime,
+    private static void arclight$applyBurningState(@Local(ordinal = -1) int newLitTime,
                                             @Local(allocate = "arclightFurnaceBurn") FurnaceBurnEvent event) throws Throwable {
         if (!event.isBurning()) {
             newLitTime = 0;
@@ -110,15 +124,26 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
     // awards, crafted criteria and clearing belong to the award/drop entry point.
     public List<RecipeHolder<?>> getRecipesToAwardAndPopExperience(ServerLevel world, Vec3 vec, BlockPos pos,
                                                                   ServerPlayer entity, ItemStack itemStack, int amount) {
-        try (var scope = FurnaceEventHooks.beginExtraction(pos, entity, itemStack, amount)) {
+        var previous = ArclightCaptures.furnaceExtraction;
+        ArclightCaptures.furnaceExtraction = com.mojang.datafixers.util.Pair.of(pos, org.apache.commons.lang3.tuple.Triple.of(entity, itemStack, amount));
+        try {
             return this.getRecipesToAwardAndPopExperience(world, vec);
+        } finally {
+            ArclightCaptures.furnaceExtraction = previous;
         }
     }
 
     @WrapMethod(method = "getRecipesToAwardAndPopExperience(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/phys/Vec3;)Ljava/util/List;")
     private List<RecipeHolder<?>> arclight$experienceScope(ServerLevel world, Vec3 vec, Operation<List<RecipeHolder<?>>> original) {
-        try (var scope = FurnaceEventHooks.beginCollection(this.worldPosition)) {
+        var previous = ArclightCaptures.furnaceExperience;
+        var request = ArclightCaptures.furnaceExtraction;
+        ArclightCaptures.furnaceExtraction = null;
+        ArclightCaptures.furnaceExperience = request != null ? request : com.mojang.datafixers.util.Pair.of(this.worldPosition,
+            org.apache.commons.lang3.tuple.Triple.of(null, null, 0));
+        try {
             return original.call(world, vec);
+        } finally {
+            ArclightCaptures.furnaceExperience = previous;
         }
     }
 
@@ -139,7 +164,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
 
     @WrapOperation(method = "createExperience", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;award(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/phys/Vec3;I)V"))
     private static void arclight$expEvent(ServerLevel level, Vec3 vec3, int amount, Operation<Void> original) {
-        original.call(level, vec3, FurnaceEventHooks.experienceToDrop(level, amount));
+        original.call(level, vec3, ArclightEventFactory.experienceToDrop(level, amount));
     }
 
     @Override

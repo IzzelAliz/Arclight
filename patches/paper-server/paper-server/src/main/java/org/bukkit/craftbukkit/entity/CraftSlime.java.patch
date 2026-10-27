@@ -1,0 +1,18 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftSlime.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftSlime.java
+index 214e636701a51029e46cfaf4d374d1d21f92cf3d..fbd374a075fcbb6be4b45c730535876a73084f9c 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftSlime.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftSlime.java
+@@ -26,11 +26,11 @@ public class CraftSlime extends CraftMob implements Slime, CraftEnemy {
+ 
+     @Override
+     public boolean canWander() {
+-        return this.getHandle().canWander();
++        throw new UnsupportedOperationException("Independent slime wandering control is not supported by Arclight");
+     }
+ 
+     @Override
+     public void setWander(boolean canWander) {
+-        this.getHandle().setWander(canWander);
++        throw new UnsupportedOperationException("Independent slime wandering control is not supported by Arclight");
+     }
+ }

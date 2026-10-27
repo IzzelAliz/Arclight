@@ -1,0 +1,66 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/command/subcommands/MobcapsCommand.java b/paper-server/src/main/java/io/papermc/paper/command/subcommands/MobcapsCommand.java
+--- a/paper-server/src/main/java/io/papermc/paper/command/subcommands/MobcapsCommand.java
++++ b/paper-server/src/main/java/io/papermc/paper/command/subcommands/MobcapsCommand.java
+@@ -16,7 +16,6 @@
+ import net.kyori.adventure.text.format.TextColor;
+ import net.minecraft.core.registries.BuiltInRegistries;
+ import net.minecraft.server.level.ServerLevel;
+-import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.world.entity.MobCategory;
+ import net.minecraft.world.level.NaturalSpawner;
+ import org.bukkit.Bukkit;
+@@ -24,7 +23,6 @@
+ import org.bukkit.World;
+ import org.bukkit.command.CommandSender;
+ import org.bukkit.craftbukkit.CraftWorld;
+-import org.bukkit.craftbukkit.entity.CraftPlayer;
+ import org.bukkit.entity.Player;
+ import org.checkerframework.checker.nullness.qual.NonNull;
+ import org.checkerframework.checker.nullness.qual.Nullable;
+@@ -128,14 +126,19 @@
+             ));
+ 
+             sender.sendMessage(createMobcapsComponent(
++                category -> NaturalSpawner.globalLimitForCategory(level, category, chunks),
+                 category -> {
+-                    if (state == null) {
+-                        return 0;
+-                    } else {
+-                        return state.getMobCategoryCounts().getOrDefault(category, 0);
++                    int limit = category.getMaxInstancesPerChunk();
++                    final org.bukkit.entity.SpawnCategory spawnCategory = org.bukkit.craftbukkit.util.CraftSpawnCategory.toBukkit(category);
++                    if (org.bukkit.craftbukkit.util.CraftSpawnCategory.isValidForLimits(spawnCategory)) {
++                        limit = world.getSpawnLimit(spawnCategory);
+                     }
+-                },
+-                category -> NaturalSpawner.globalLimitForCategory(level, category, chunks)
++                    if (limit < 1) {
++                        return limit;
++                    }
++                    final int diameter = NaturalSpawner.SPAWN_DISTANCE_CHUNK * 2 + 1;
++                    return limit * chunks / (diameter * diameter);
++                }
+             ));
+         }
+     }
+@@ -161,19 +164,7 @@
+             return;
+         }
+ 
+-        final ServerPlayer serverPlayer = ((CraftPlayer) player).getHandle();
+-        final ServerLevel level = serverPlayer.level();
+-
+-        if (!level.paperConfig().entities.spawning.perPlayerMobSpawns) {
+-            sender.sendMessage(Component.text("Use '/paper mobcaps' for worlds where per-player mob spawning is disabled.", NamedTextColor.RED));
+-            return;
+-        }
+-
+-        sender.sendMessage(Component.join(JoinConfiguration.noSeparators(), Component.text("Mobcaps for player: "), Component.text(player.getName(), NamedTextColor.GREEN)));
+-        sender.sendMessage(createMobcapsComponent(
+-            category -> level.chunkSource.chunkMap.getMobCountNear(serverPlayer, category),
+-            category -> level.getWorld().getSpawnLimitUnsafe(org.bukkit.craftbukkit.util.CraftSpawnCategory.toBukkit(category))
+-        ));
++        sender.sendMessage(Component.text("Per-player mobcaps are not supported on Arclight. Use '/paper mobcaps' for global mobcaps.", NamedTextColor.RED));
+     }
+ 
+     private static Component createMobcapsComponent(final ToIntFunction<MobCategory> countGetter, final ToIntFunction<MobCategory> limitGetter) {

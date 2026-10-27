@@ -1,0 +1,70 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/group/LockingClassLoaderGroup.java b/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/group/LockingClassLoaderGroup.java
+index aae50ebba6ba1579b75af5370c8b020d2a927b2c..fb8fce33421fa731ff235039e4d7ef34c147e179 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/group/LockingClassLoaderGroup.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/group/LockingClassLoaderGroup.java
+@@ -14,7 +14,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
+ @ApiStatus.Internal
+ public class LockingClassLoaderGroup implements PluginClassLoaderGroup {
+ 
+-    private final PluginClassLoaderGroup parent;
++    private volatile PluginClassLoaderGroup parent;
+     private final Map<String, ClassLockEntry> classLoadLock = new HashMap<>();
+ 
+     public LockingClassLoaderGroup(PluginClassLoaderGroup parent) {
+@@ -23,6 +23,10 @@ public class LockingClassLoaderGroup implements PluginClassLoaderGroup {
+ 
+     @Override
+     public @Nullable Class<?> getClassByName(String name, boolean resolve, ConfiguredPluginClassLoader requester) {
++        if (this.parent == ClosedGroup.INSTANCE) {
++            return null;
++        }
++
+         // make MT safe
+         ClassLockEntry lock;
+         synchronized (this.classLoadLock) {
+@@ -31,6 +35,7 @@ public class LockingClassLoaderGroup implements PluginClassLoaderGroup {
+         }
+         lock.reentrantReadWriteLock.writeLock().lock();
+         try {
++            PluginClassLoaderGroup parent = this.parent;
+             return parent.getClassByName(name, resolve, requester);
+         } finally {
+             synchronized (this.classLoadLock) {
+@@ -59,8 +64,36 @@ public class LockingClassLoaderGroup implements PluginClassLoaderGroup {
+         return this.parent.getAccess();
+     }
+ 
++    void close() {
++        // Detach only this owner's view, never clear a shared global group. In-flight
++        // lookups release their own name locks in finally, even after retirement.
++        this.parent = ClosedGroup.INSTANCE;
++    }
++
+     public PluginClassLoaderGroup getParent() {
+-        return parent;
++        return this.parent;
++    }
++
++    private enum ClosedGroup implements PluginClassLoaderGroup {
++        INSTANCE;
++
++        @Override
++        public @Nullable Class<?> getClassByName(String name, boolean resolve, ConfiguredPluginClassLoader requester) {
++            return null;
++        }
++
++        @Override
++        public void remove(ConfiguredPluginClassLoader classLoader) {
++        }
++
++        @Override
++        public void add(ConfiguredPluginClassLoader classLoader) {
++        }
++
++        @Override
++        public ClassLoaderAccess getAccess() {
++            return classLoader -> false;
++        }
+     }
+ 
+     record ClassLockEntry(AtomicInteger count, ReentrantReadWriteLock reentrantReadWriteLock) {

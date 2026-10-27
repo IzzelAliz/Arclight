@@ -30,7 +30,7 @@ public class GameEventDispatcherMixin {
             return;
         }
         var entity = context.sourceEntity();
-        GenericGameEvent event = new GenericGameEvent(CraftGameEvent.minecraftToBukkit(holder.value()),
+        GenericGameEvent event = new GenericGameEvent(CraftGameEvent.minecraftHolderToBukkit(holder),
             new Location(this.level.bridge$getWorld(), vec3.x(), vec3.y(), vec3.z()), (entity == null) ? null : entity.bridge$getBukkitEntity(), i, !Bukkit.isPrimaryThread());
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {

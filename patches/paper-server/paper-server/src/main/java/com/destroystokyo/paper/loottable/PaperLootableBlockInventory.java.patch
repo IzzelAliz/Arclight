@@ -1,0 +1,20 @@
+diff --git a/paper-server/src/main/java/com/destroystokyo/paper/loottable/PaperLootableBlockInventory.java b/paper-server/src/main/java/com/destroystokyo/paper/loottable/PaperLootableBlockInventory.java
+index 0699c60920333ea1fec04e3c94d952244d2abeae..462db78012600d8d28248ac0ddfdf3c539a29476 100644
+--- a/paper-server/src/main/java/com/destroystokyo/paper/loottable/PaperLootableBlockInventory.java
++++ b/paper-server/src/main/java/com/destroystokyo/paper/loottable/PaperLootableBlockInventory.java
+@@ -1,6 +1,5 @@
+ package com.destroystokyo.paper.loottable;
+ 
+-import java.util.Objects;
+ import net.minecraft.core.BlockPos;
+ import org.bukkit.block.Block;
+ import org.bukkit.craftbukkit.block.CraftBlock;
+@@ -13,7 +12,7 @@ public interface PaperLootableBlockInventory extends LootableBlockInventory, Pap
+     /* PaperLootableInventory */
+     @Override
+     default PaperLootableInventoryData lootableDataForAPI() {
+-        return Objects.requireNonNull(this.getRandomizableContainer().lootableData(), "Can only manage loot tables on tile entities with lootableData");
++        throw new UnsupportedOperationException("Loot replenishment and player loot history are not supported by Arclight");
+     }
+ 
+     /* LootableBlockInventory */

@@ -82,16 +82,17 @@ public abstract class ShapelessRecipeMixin implements RecipeBridge {
 
     @Override
     public Recipe bridge$toBukkitRecipe(NamespacedKey id) {
-        if (this.result.create().isEmpty()) {
+        ItemStack output = this.result.create();
+        if (output.isEmpty()) {
             return new ArclightSpecialRecipe(id, (ShapelessRecipe) (Object) this);
         }
-        CraftItemStack result = CraftItemStack.asCraftMirror(this.result);
+        CraftItemStack result = CraftItemStack.asCraftMirror(output);
         CraftShapelessRecipe recipe = new CraftShapelessRecipe(id, result, (ShapelessRecipe) (Object) this);
         // These final getters are inherited from NormalCraftingRecipe, not shadow targets here.
         recipe.setGroup(((ShapelessRecipe) (Object) this).group());
         recipe.setCategory(CraftRecipe.getCategory(((ShapelessRecipe) (Object) this).category()));
         for (Ingredient list : this.ingredients) {
-            recipe.addIngredient(CraftRecipe.toBukkit(list));
+            recipe.addIngredient(CraftRecipe.toChoice(list));
         }
         return recipe;
     }

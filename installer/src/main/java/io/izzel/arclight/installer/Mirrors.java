@@ -9,7 +9,11 @@ public class Mirrors {
 
     private static final String[] MAVEN_REPO = {
         "https://arclight.hypertention.cn/",
-        "https://repo.spongepowered.org/maven/"
+        "https://repo.spongepowered.org/maven/",
+        "https://repo.maven.apache.org/maven2/",
+        "https://repo.papermc.io/repository/maven-public/",
+        "https://libraries.minecraft.net/",
+        "https://maven.fabricmc.net/"
     };
 
     private static final String[] MOJANG_MIRROR = {

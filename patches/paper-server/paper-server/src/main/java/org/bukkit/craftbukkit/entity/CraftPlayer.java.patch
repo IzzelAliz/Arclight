@@ -1,0 +1,641 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -6,9 +6,14 @@
+ import com.google.common.collect.ImmutableSet;
+ import com.google.common.io.BaseEncoding;
+ import com.mojang.authlib.GameProfile;
++import net.minecraft.network.ConnectionProtocol;
++import net.minecraft.network.protocol.Packet;
++import net.minecraft.network.protocol.cookie.ClientboundCookieRequestPacket;
++import net.minecraft.network.protocol.cookie.ServerboundCookieResponsePacket;
++import net.minecraft.network.protocol.common.ClientboundStoreCookiePacket;
++import net.minecraft.network.protocol.common.ClientboundTransferPacket;
++import net.minecraft.world.level.ChunkPos;
+ import com.mojang.datafixers.util.Pair;
+-import com.mojang.logging.LogUtils;
+-import io.papermc.paper.FeatureHooks;
+ import io.papermc.paper.connection.PlayerGameConnection;
+ import io.papermc.paper.connection.PluginMessageBridgeImpl;
+ import io.papermc.paper.datacomponent.DataComponentTypes;
+@@ -20,8 +25,6 @@
+ import io.papermc.paper.entity.PlayerGiveResult;
+ import io.papermc.paper.math.Position;
+ import io.papermc.paper.util.MCUtil;
+-import it.unimi.dsi.fastutil.shorts.ShortArraySet;
+-import it.unimi.dsi.fastutil.shorts.ShortSet;
+ import java.io.ByteArrayOutputStream;
+ import java.io.IOException;
+ import java.lang.ref.WeakReference;
+@@ -64,11 +67,9 @@
+ import net.minecraft.network.chat.PlayerChatMessage;
+ import net.minecraft.network.chat.ResolutionContext;
+ import net.minecraft.network.protocol.common.ClientboundClearDialogPacket;
+-import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
+ import net.minecraft.network.protocol.common.ClientboundResourcePackPopPacket;
+ import net.minecraft.network.protocol.common.ClientboundResourcePackPushPacket;
+ import net.minecraft.network.protocol.common.ClientboundServerLinksPacket;
+-import net.minecraft.network.protocol.common.custom.DiscardedPayload;
+ import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;
+ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+ import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
+@@ -224,7 +225,8 @@
+ 
+ @DelegateDeserialization(CraftOfflinePlayer.class)
+ public class CraftPlayer extends CraftHumanEntity implements Player, PluginMessageBridgeImpl {
+-    private static final org.slf4j.Logger LOGGER = LogUtils.getClassLogger();
++    private final Set<String> channels = new HashSet<>();
++    private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(CraftPlayer.class.getSimpleName());
+     private static final PointersSupplier<Player> POINTERS_SUPPLIER = PointersSupplier.<Player>builder()
+         .parent(CraftEntity.POINTERS_SUPPLIER)
+         .resolving(Identity.NAME, Player::getName)
+@@ -336,27 +338,63 @@
+     public @Nullable InetSocketAddress getHAProxyAddress() {
+         if (this.getHandle().connection == null) return null;
+ 
+-        return this.getHandle().connection.connection.haProxyAddress instanceof final InetSocketAddress inetSocketAddress ? inetSocketAddress : null;
++        return null;
+     }
+     // Paper end - Add API to get player's proxy address
++    public interface TransferCookieConnection {
++
++        net.minecraft.network.Connection bridge$getConnection();
++
++        boolean isTransferred();
++
++        ConnectionProtocol getProtocol();
++
++        void sendPacket(Packet<?> packet);
++
++        void kickPlayer(Component reason);
++    }
++
++    public boolean isAwaitingCookies() {
++        return ((io.izzel.arclight.common.bridge.core.network.ConnectionBridge) getHandle().bridge$getTransferCookieConnection().bridge$getConnection())
++            .bridge$getCookieRequests().isAwaitingCookies();
++    }
++
++    public boolean handleCookieResponse(ServerboundCookieResponsePacket response) {
++        return ((io.izzel.arclight.common.bridge.core.network.ConnectionBridge) getHandle().bridge$getTransferCookieConnection().bridge$getConnection())
++            .bridge$getCookieRequests().handleResponse(response.key(), response.payload());
++    }
++
+     @Override
+     public boolean isTransferred() {
+-        return this.getHandle().connection.playerGameConnection.isTransferred();
++        return getHandle().bridge$getTransferCookieConnection().isTransferred();
+     }
+ 
+     @Override
+-    public CompletableFuture<byte @Nullable []> retrieveCookie(final NamespacedKey key) {
+-        return this.getHandle().connection.playerGameConnection.retrieveCookie(key);
++    public CompletableFuture<byte[]> retrieveCookie(NamespacedKey key) {
++        Preconditions.checkArgument(key != null, "Cookie key cannot be null");
++
++        Identifier nms = CraftNamespacedKey.toMinecraft(key);
++        TransferCookieConnection connection = getHandle().bridge$getTransferCookieConnection();
++        return ((io.izzel.arclight.common.bridge.core.network.ConnectionBridge) connection.bridge$getConnection()).bridge$getCookieRequests()
++            .request(nms, () -> connection.sendPacket(new ClientboundCookieRequestPacket(nms)));
+     }
+ 
+     @Override
+     public void storeCookie(NamespacedKey key, byte[] value) {
+-        this.getHandle().connection.playerGameConnection.storeCookie(key, value);
++        Preconditions.checkArgument(key != null, "Cookie key cannot be null");
++        Preconditions.checkArgument(value != null, "Cookie value cannot be null");
++        Preconditions.checkArgument(value.length <= 5120, "Cookie value too large, must be smaller than 5120 bytes");
++        Preconditions.checkState(getHandle().bridge$getTransferCookieConnection().getProtocol() == ConnectionProtocol.CONFIGURATION || getHandle().bridge$getTransferCookieConnection().getProtocol() == ConnectionProtocol.PLAY, "Can only store cookie in CONFIGURATION or PLAY protocol.");
++
++        getHandle().bridge$getTransferCookieConnection().sendPacket(new ClientboundStoreCookiePacket(CraftNamespacedKey.toMinecraft(key), value));
+     }
+ 
+     @Override
+     public void transfer(String host, int port) {
+-        this.getHandle().connection.playerGameConnection.transfer(host, port);
++        Preconditions.checkArgument(host != null, "Host cannot be null");
++        Preconditions.checkState(getHandle().bridge$getTransferCookieConnection().getProtocol() == ConnectionProtocol.CONFIGURATION || getHandle().bridge$getTransferCookieConnection().getProtocol() == ConnectionProtocol.PLAY, "Can only transfer in CONFIGURATION or PLAY protocol.");
++
++        getHandle().bridge$getTransferCookieConnection().sendPacket(new ClientboundTransferPacket(host, port));
+     }
+ 
+     // Paper start - Implement NetworkClient
+@@ -687,16 +725,28 @@
+         } else if (com.destroystokyo.paper.ClientOption.ALLOW_SERVER_LISTINGS == type) {
+             return type.getType().cast(this.getHandle().allowsListing());
+         } else if (com.destroystokyo.paper.ClientOption.PARTICLE_VISIBILITY == type) {
+-            return type.getType().cast(com.destroystokyo.paper.ClientOption.ParticleVisibility.valueOf(this.getHandle().particleStatus.name()));
++            return type.getType().cast(com.destroystokyo.paper.ClientOption.ParticleVisibility.valueOf(this.getHandle().clientInformation().particleStatus().name()));
+         }
+         throw new RuntimeException("Unknown settings type");
+     }
+ 
++    private static void sendPermissionLevelPacket(ServerPlayer player, LevelBasedPermissionSet permissions) {
++        if (player.connection == null) return;
++        byte eventId = switch (permissions.level()) {
++            case ALL -> net.minecraft.world.entity.EntityEvent.PERMISSION_LEVEL_ALL;
++            case MODERATORS -> net.minecraft.world.entity.EntityEvent.PERMISSION_LEVEL_MODERATORS;
++            case GAMEMASTERS -> net.minecraft.world.entity.EntityEvent.PERMISSION_LEVEL_GAMEMASTERS;
++            case ADMINS -> net.minecraft.world.entity.EntityEvent.PERMISSION_LEVEL_ADMINS;
++            case OWNERS -> net.minecraft.world.entity.EntityEvent.PERMISSION_LEVEL_OWNERS;
++        };
++        player.connection.send(new net.minecraft.network.protocol.game.ClientboundEntityEventPacket(player, eventId));
++    }
++
+     @Override
+     public void sendOpLevel(byte level) {
+         Preconditions.checkArgument(level >= PermissionLevel.ALL.id() && level <= PermissionLevel.OWNERS.id(), "Level must be within [%s, %s]", PermissionLevel.ALL.id(), PermissionLevel.OWNERS.id());
+ 
+-        this.server.getServer().getPlayerList().sendPlayerPermissionLevel(this.getHandle(), LevelBasedPermissionSet.forLevel(PermissionLevel.byId(level)), false);
++        sendPermissionLevelPacket(this.getHandle(), LevelBasedPermissionSet.forLevel(PermissionLevel.byId(level)));
+     }
+ 
+     @Override
+@@ -748,7 +798,8 @@
+             this.getHandle().connection.disconnect(Component.translatable("multiplayer.disconnect.illegal_characters"), org.bukkit.event.player.PlayerKickEvent.Cause.ILLEGAL_CHARACTERS); // Paper - kick event causes
+         } else {
+             if (msg.startsWith("/")) {
+-                this.getHandle().connection.handleCommand(msg);
++                io.izzel.arclight.common.bridge.core.server.network.ServerGamePacketListenerImplBridge bridge = this.getHandle().connection;
++                bridge.bridge$handleUnsignedCommand(msg);
+             } else {
+                 final PlayerChatMessage playerChatMessage = PlayerChatMessage.system(msg).withUnsignedContent(Component.literal(msg));
+                 // TODO chat decorating
+@@ -943,7 +994,14 @@
+             SectionPos sectionPos = entry.getKey();
+             it.unimi.dsi.fastutil.shorts.Short2ObjectMap<net.minecraft.world.level.block.state.BlockState> blockData = entry.getValue();
+ 
+-            net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket packet = new net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket(sectionPos, blockData);
++            short[] positions = new short[blockData.size()];
++            net.minecraft.world.level.block.state.BlockState[] states = new net.minecraft.world.level.block.state.BlockState[blockData.size()];
++            int index = 0;
++            for (var change : blockData.short2ObjectEntrySet()) {
++                positions[index] = change.getShortKey();
++                states[index++] = change.getValue();
++            }
++            ClientboundSectionBlocksUpdatePacket packet = createSectionChangesPacket(sectionPos, positions, states);
+             this.getHandle().connection.send(packet);
+         }
+     }
+@@ -974,15 +1032,32 @@
+         // Construct the packets using the data allocated above and send then to the players
+         for (Map.Entry<SectionPos, ChunkSectionChanges> entry : changes.entrySet()) {
+             ChunkSectionChanges chunkChanges = entry.getValue();
+-            ClientboundSectionBlocksUpdatePacket packet = new ClientboundSectionBlocksUpdatePacket(entry.getKey(), chunkChanges.positions(), chunkChanges.blockData().toArray(net.minecraft.world.level.block.state.BlockState[]::new));
++            ClientboundSectionBlocksUpdatePacket packet = createSectionChangesPacket(entry.getKey(), chunkChanges.positions().toShortArray(), chunkChanges.blockData().toArray(net.minecraft.world.level.block.state.BlockState[]::new));
+             this.getHandle().connection.send(packet);
+         }
+     }
+ 
+-    private record ChunkSectionChanges(ShortSet positions, List<net.minecraft.world.level.block.state.BlockState> blockData) {
++    private static ClientboundSectionBlocksUpdatePacket createSectionChangesPacket(SectionPos sectionPos, short[] positions, net.minecraft.world.level.block.state.BlockState[] states) {
++        Preconditions.checkArgument(positions.length == states.length, "Block positions and states must have matching lengths");
++        net.minecraft.network.FriendlyByteBuf buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
++        try {
++            SectionPos.STREAM_CODEC.encode(buffer, sectionPos);
++            buffer.writeVarInt(positions.length);
++            for (int i = 0; i < positions.length; i++) {
++                int stateId = net.minecraft.world.level.block.Block.BLOCK_STATE_REGISTRY.getId(java.util.Objects.requireNonNull(states[i]));
++                Preconditions.checkArgument(stateId >= 0, "Unregistered block state");
++                buffer.writeVarLong(((long) stateId << 12) | (positions[i] & 0xFFFL));
++            }
++            return ClientboundSectionBlocksUpdatePacket.STREAM_CODEC.decode(buffer);
++        } finally {
++            buffer.release();
++        }
++    }
+ 
++    private record ChunkSectionChanges(it.unimi.dsi.fastutil.shorts.ShortList positions, List<net.minecraft.world.level.block.state.BlockState> blockData) {
++
+         public ChunkSectionChanges() {
+-            this(new ShortArraySet(), new ArrayList<>());
++            this(new it.unimi.dsi.fastutil.shorts.ShortArrayList(), new ArrayList<>());
+         }
+     }
+ 
+@@ -1537,7 +1612,7 @@
+             return;
+         }
+ 
+-        this.getHandle().connection.send(level.clockManager().createFullSyncPacket(this.getHandle()));
++        this.getHandle().connection.send(((io.izzel.arclight.common.bridge.core.world.clock.ServerClockOwnerBridge) level.clockManager()).createFullSyncPacket(this.getHandle()));
+     }
+ 
+     @Override
+@@ -1689,7 +1764,6 @@
+         if (!itemstack.isEmpty() && itemstack.getItem().components().has(net.minecraft.core.component.DataComponents.MAX_DAMAGE)) {
+             net.minecraft.world.entity.ExperienceOrb orb = net.minecraft.world.entity.EntityType.EXPERIENCE_ORB.create(handle.level(), net.minecraft.world.entity.EntitySpawnReason.COMMAND);
+             orb.setValue(amount);
+-            orb.spawnReason = org.bukkit.entity.ExperienceOrb.SpawnReason.CUSTOM;
+             orb.setPosRaw(handle.getX(), handle.getY(), handle.getZ());
+ 
+             final int toRepairFromXpAmount = net.minecraft.world.item.enchantment.EnchantmentHelper.modifyDurabilityToRepairFromXp(
+@@ -1699,7 +1773,9 @@
+             final int consumedExperience = repair > 0 ? repair * amount / toRepairFromXpAmount : toRepairFromXpAmount; // Paper - prevent division by 0
+             org.bukkit.event.player.PlayerItemMendEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callPlayerItemMendEvent(handle, orb, itemstack, selected.get().inSlot(), repair, consumedExperience);
+             repair = event.getRepairAmount();
+-            orb.discard(org.bukkit.event.entity.EntityRemoveEvent.Cause.DESPAWN);
++            io.izzel.arclight.common.bridge.core.entity.EntityBridge orbBridge = orb;
++            orbBridge.bridge$pushEntityRemoveCause(org.bukkit.event.entity.EntityRemoveEvent.Cause.DESPAWN);
++            orb.discard();
+             if (!event.isCancelled()) {
+                 amount -= consumedExperience; // Use previously computed variable to reduce diff on change.
+                 itemstack.setDamageValue(itemstack.getDamageValue() - repair);
+@@ -2034,7 +2110,7 @@
+         handle.onUpdateAbilities();
+         connection.internalTeleport(net.minecraft.world.entity.PositionMoveRotation.of(this.getHandle()), java.util.Collections.emptySet());
+         net.minecraft.server.players.PlayerList playerList = this.server.getServer().getPlayerList();
+-        playerList.sendPlayerPermissionLevel(handle, false);
++        sendPermissionLevelPacket(handle, this.server.getServer().getProfilePermissions(handle.nameAndId()));
+         playerList.sendLevelInfo(handle, level);
+         playerList.sendAllPlayerInfo(handle);
+ 
+@@ -2220,8 +2296,8 @@
+     }
+ 
+     private void sendCustomPayload(Identifier id, byte[] message) {
+-        ClientboundCustomPayloadPacket packet = new ClientboundCustomPayloadPacket(new DiscardedPayload(id, message));
+-        this.getHandle().connection.send(packet);
++        io.izzel.arclight.common.bridge.bukkit.MessengerBridge messenger = (io.izzel.arclight.common.bridge.bukkit.MessengerBridge) this.server.getMessenger();
++        messenger.arclight$sendCustomPayload(null, this, id, message);
+     }
+ 
+     @Override
+@@ -2291,7 +2367,8 @@
+             final net.kyori.adventure.resource.ResourcePackInfo pack = iter.next();
+             packs.add(new ClientboundResourcePackPushPacket(pack.id(), pack.uri().toASCIIString(), pack.hash(), request.required(), iter.hasNext() ? Optional.empty() : Optional.ofNullable(prompt)));
+             if (request.callback() != net.kyori.adventure.resource.ResourcePackCallback.noOp()) {
+-                this.getHandle().connection.packCallbacks.put(pack.id(), request.callback()); // just override if there is a previously existing callback
++                io.izzel.arclight.common.bridge.core.server.network.ServerCommonPacketListenerImplBridge bridge = this.getHandle().connection;
++                bridge.bridge$registerResourcePackCallback(pack.id(), request.callback());
+             }
+         }
+         this.sendBundle(packs);
+@@ -2355,9 +2432,7 @@
+ 
+     @Override
+     public Set<String> channels() {
+-        if (this.getHandle().connection == null) return new HashSet<>();
+-
+-        return this.getHandle().connection.pluginMessagerChannels;
++        return this.channels;
+     }
+ 
+     @Override
+@@ -2381,7 +2456,7 @@
+                 }
+             }
+ 
+-            this.sendCustomPayload(ServerGamePacketListenerImpl.CUSTOM_REGISTER, stream.toByteArray());
++            this.sendCustomPayload(Identifier.withDefaultNamespace("register"), stream.toByteArray());
+         }
+     }
+ 
+@@ -2596,14 +2671,8 @@
+     @Override
+     public void sendHealthUpdate() {
+         FoodData foodData = this.getHandle().getFoodData();
+-        // Paper start - cancellable death event
+         ClientboundSetHealthPacket packet = new ClientboundSetHealthPacket(this.getScaledHealth(), foodData.getFoodLevel(), foodData.getSaturationLevel());
+-        if (this.getHandle().queueHealthUpdatePacket) {
+-            this.getHandle().queuedHealthUpdatePacket = packet;
+-        } else {
+-            this.getHandle().connection.send(packet);
+-        }
+-        // Paper end
++        this.getHandle().connection.send(packet);
+     }
+ 
+     public void injectScaledMaxHealth(Collection<AttributeInstance> collection, boolean force) {
+@@ -2696,7 +2765,8 @@
+     // Paper start
+     @Override
+     public java.util.Locale locale() {
+-        return getHandle().adventure$locale;
++        return java.util.Objects.requireNonNullElse(
++            net.kyori.adventure.translation.Translator.parseLocale(this.getLocale()), java.util.Locale.US);
+     }
+     // Paper end
+ 
+@@ -2716,12 +2786,12 @@
+ 
+     // Paper start
+     public void setAffectsSpawning(boolean affects) {
+-        this.getHandle().affectsSpawning = affects;
++        throw new UnsupportedOperationException("Per-player spawning influence is not supported");
+     }
+ 
+     @Override
+     public boolean getAffectsSpawning() {
+-        return this.getHandle().affectsSpawning;
++        throw new UnsupportedOperationException("Per-player spawning influence is not supported");
+     }
+     // Paper end
+ 
+@@ -2776,13 +2846,17 @@
+         this.getHandle().connection.send(new net.minecraft.network.protocol.game.ClientboundDeleteChatPacket(new net.minecraft.network.chat.MessageSignature.Packed(sig)));
+     }
+ 
++    private net.kyori.adventure.text.@Nullable Component adventure$render(final net.kyori.adventure.text.@Nullable Component component) {
++        return component == null ? null : net.kyori.adventure.translation.GlobalTranslator.render(component, this.locale());
++    }
++
+     private net.minecraft.network.chat.ChatType.Bound toHandle(net.kyori.adventure.chat.ChatType.Bound boundChatType) {
+         net.minecraft.core.Registry<net.minecraft.network.chat.ChatType> chatTypeRegistry = this.getHandle().level().registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.CHAT_TYPE);
+ 
+         return new net.minecraft.network.chat.ChatType.Bound(
+             chatTypeRegistry.getOrThrow(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.CHAT_TYPE, io.papermc.paper.adventure.PaperAdventure.asVanilla(boundChatType.type().key()))),
+-            io.papermc.paper.adventure.PaperAdventure.asVanilla(boundChatType.name()),
+-            Optional.ofNullable(io.papermc.paper.adventure.PaperAdventure.asVanilla(boundChatType.target()))
++            io.papermc.paper.adventure.PaperAdventure.asVanilla(this.adventure$render(boundChatType.name())),
++            Optional.ofNullable(io.papermc.paper.adventure.PaperAdventure.asVanilla(this.adventure$render(boundChatType.target())))
+         );
+     }
+ 
+@@ -2790,7 +2864,7 @@
+     public void sendMessage(net.kyori.adventure.text.Component message, net.kyori.adventure.chat.ChatType.Bound boundChatType) {
+         if (getHandle().connection == null) return;
+ 
+-        net.minecraft.network.chat.Component component = io.papermc.paper.adventure.PaperAdventure.asVanilla(message);
++        net.minecraft.network.chat.Component component = io.papermc.paper.adventure.PaperAdventure.asVanilla(this.adventure$render(message));
+         this.getHandle().sendChatMessage(new net.minecraft.network.chat.OutgoingChatMessage.Disguised(component), this.getHandle().isTextFilteringEnabled(), this.toHandle(boundChatType));
+     }
+ 
+@@ -2798,7 +2872,7 @@
+     public void sendMessage(net.kyori.adventure.chat.SignedMessage signedMessage, net.kyori.adventure.chat.ChatType.Bound boundChatType) {
+         if (getHandle().connection == null) return;
+ 
+-        if (signedMessage instanceof PlayerChatMessage.AdventureView view) {
++        if (signedMessage instanceof io.papermc.paper.adventure.NativeSignedMessage view) {
+             this.getHandle().sendChatMessage(net.minecraft.network.chat.OutgoingChatMessage.create(view.playerChatMessage()), this.getHandle().isTextFilteringEnabled(), this.toHandle(boundChatType));
+             return;
+         }
+@@ -2824,12 +2898,12 @@
+     public void sendMessage(final net.kyori.adventure.identity.Identity identity, final net.kyori.adventure.text.Component message, final net.kyori.adventure.audience.MessageType type) {
+         if (getHandle().connection == null) return;
+         final net.minecraft.core.Registry<net.minecraft.network.chat.ChatType> chatTypeRegistry = this.getHandle().level().registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.CHAT_TYPE);
+-        this.getHandle().connection.send(new net.minecraft.network.protocol.game.ClientboundSystemChatPacket(message, false));
++        this.getHandle().connection.send(new net.minecraft.network.protocol.game.ClientboundSystemChatPacket(io.papermc.paper.adventure.PaperAdventure.asVanilla(this.adventure$render(message)), false));
+     }
+ 
+     @Override
+     public void sendActionBar(final net.kyori.adventure.text.Component message) {
+-        final net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket packet = new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(io.papermc.paper.adventure.PaperAdventure.asVanillaNullToEmpty(message));
++        final net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket packet = new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(io.papermc.paper.adventure.PaperAdventure.asVanillaNullToEmpty(this.adventure$render(message)));
+         this.getHandle().connection.send(packet);
+     }
+ 
+@@ -2869,9 +2943,9 @@
+         if (times != null) {
+             connection.send(new ClientboundSetTitlesAnimationPacket(ticks(times.fadeIn()), ticks(times.stay()), ticks(times.fadeOut())));
+         }
+-        final ClientboundSetSubtitleTextPacket sp = new ClientboundSetSubtitleTextPacket(io.papermc.paper.adventure.PaperAdventure.asVanilla(title.subtitle()));
++        final ClientboundSetSubtitleTextPacket sp = new ClientboundSetSubtitleTextPacket(io.papermc.paper.adventure.PaperAdventure.asVanilla(this.adventure$render(title.subtitle())));
+         connection.send(sp);
+-        final ClientboundSetTitleTextPacket tp = new ClientboundSetTitleTextPacket(io.papermc.paper.adventure.PaperAdventure.asVanilla(title.title()));
++        final ClientboundSetTitleTextPacket tp = new ClientboundSetTitleTextPacket(io.papermc.paper.adventure.PaperAdventure.asVanilla(this.adventure$render(title.title())));
+         connection.send(tp);
+     }
+ 
+@@ -2880,10 +2954,10 @@
+         Preconditions.checkArgument(part != null, "part cannot be null");
+         Preconditions.checkArgument(value != null, "value cannot be null");
+         if (part == net.kyori.adventure.title.TitlePart.TITLE) {
+-            final ClientboundSetTitleTextPacket tp = new ClientboundSetTitleTextPacket(io.papermc.paper.adventure.PaperAdventure.asVanilla((net.kyori.adventure.text.Component) value));
++            final ClientboundSetTitleTextPacket tp = new ClientboundSetTitleTextPacket(io.papermc.paper.adventure.PaperAdventure.asVanilla(this.adventure$render((net.kyori.adventure.text.Component) value)));
+             this.getHandle().connection.send(tp);
+         } else if (part == net.kyori.adventure.title.TitlePart.SUBTITLE) {
+-            final ClientboundSetSubtitleTextPacket sp = new ClientboundSetSubtitleTextPacket(io.papermc.paper.adventure.PaperAdventure.asVanilla((net.kyori.adventure.text.Component) value));
++            final ClientboundSetSubtitleTextPacket sp = new ClientboundSetSubtitleTextPacket(io.papermc.paper.adventure.PaperAdventure.asVanilla(this.adventure$render((net.kyori.adventure.text.Component) value)));
+             this.getHandle().connection.send(sp);
+         } else if (part == net.kyori.adventure.title.TitlePart.TIMES) {
+             final net.kyori.adventure.title.Title.Times times = (net.kyori.adventure.title.Title.Times) value;
+@@ -3024,14 +3098,17 @@
+ 
+         @Override
+         public InetSocketAddress getRawAddress() {
+-            return (InetSocketAddress) CraftPlayer.this.getHandle().connection.getRawAddress();
++            return (InetSocketAddress) CraftPlayer.this.getHandle().connection.connection.channel.remoteAddress();
+         }
+ 
+         @Override
+         public void respawn() {
+             if (CraftPlayer.this.getHealth() <= 0 && CraftPlayer.this.isOnline()) {
+-                CraftPlayer.this.server.getServer().getPlayerList().respawn(CraftPlayer.this.getHandle(), false, Entity.RemovalReason.KILLED, org.bukkit.event.player.PlayerRespawnEvent.RespawnReason.PLUGIN);
+-                CraftPlayer.this.getHandle().connection.restartClientLoadTimerAfterRespawn();
++                var playerList = CraftPlayer.this.server.getServer().getPlayerList();
++                ((io.izzel.arclight.common.bridge.core.server.players.PlayerListBridge) playerList).bridge$pushRespawnCause(org.bukkit.event.player.PlayerRespawnEvent.RespawnReason.PLUGIN);
++                ServerPlayer player = playerList.respawn(CraftPlayer.this.getHandle(), false, Entity.RemovalReason.KILLED);
++                player.connection.resetPosition();
++                player.connection.restartClientLoadTimerAfterRespawn();
+             }
+         }
+ 
+@@ -3086,7 +3163,7 @@
+         public void sendMessage(net.md_5.bungee.api.ChatMessageType position, UUID sender, BaseComponent... components) {
+             if (CraftPlayer.this.getHandle().connection == null) return;
+ 
+-            CraftPlayer.this.getHandle().connection.send(new net.minecraft.network.protocol.game.ClientboundSystemChatPacket(components, position == net.md_5.bungee.api.ChatMessageType.ACTION_BAR));
++            CraftPlayer.this.getHandle().connection.send(new net.minecraft.network.protocol.game.ClientboundSystemChatPacket(CraftChatMessage.bungeeToVanilla(components), position == net.md_5.bungee.api.ChatMessageType.ACTION_BAR));
+         }
+ 
+         // Paper start
+@@ -3100,7 +3177,10 @@
+     // Paper start - brand support
+     @Override
+     public String getClientBrandName() {
+-        return getHandle().connection.playerBrand;
++        var listener = this.getHandle().connection;
++        if (listener == null) return null;
++        var connection = ((io.izzel.arclight.common.bridge.core.server.network.ServerCommonPacketListenerImplBridge) listener).bridge$getConnection();
++        return ((io.izzel.arclight.common.bridge.core.network.ConnectionBridge) connection).bridge$getClientBrandName();
+     }
+     // Paper end
+ 
+@@ -3112,37 +3192,37 @@
+ 
+     @Override
+     public int getWardenWarningCooldown() {
+-        return this.getHandle().wardenSpawnTracker.cooldownTicks;
++        return this.getHandle().getWardenSpawnTracker().map(tracker -> tracker.cooldownTicks).orElse(0);
+     }
+ 
+     @Override
+     public void setWardenWarningCooldown(int cooldown) {
+-        this.getHandle().wardenSpawnTracker.cooldownTicks = Math.max(cooldown, 0);
++        this.getHandle().getWardenSpawnTracker().ifPresent(tracker -> tracker.cooldownTicks = Math.max(cooldown, 0));
+     }
+ 
+     @Override
+     public int getWardenTimeSinceLastWarning() {
+-        return this.getHandle().wardenSpawnTracker.ticksSinceLastWarning;
++        return this.getHandle().getWardenSpawnTracker().map(tracker -> tracker.ticksSinceLastWarning).orElse(0);
+     }
+ 
+     @Override
+     public void setWardenTimeSinceLastWarning(int time) {
+-        this.getHandle().wardenSpawnTracker.ticksSinceLastWarning = time;
++        this.getHandle().getWardenSpawnTracker().ifPresent(tracker -> tracker.ticksSinceLastWarning = time);
+     }
+ 
+     @Override
+     public int getWardenWarningLevel() {
+-        return this.getHandle().wardenSpawnTracker.getWarningLevel();
++        return this.getHandle().getWardenSpawnTracker().map(tracker -> tracker.getWarningLevel()).orElse(0);
+     }
+ 
+     @Override
+     public void setWardenWarningLevel(int warningLevel) {
+-        this.getHandle().wardenSpawnTracker.setWarningLevel(warningLevel);
++        this.getHandle().getWardenSpawnTracker().ifPresent(tracker -> tracker.setWarningLevel(warningLevel));
+     }
+ 
+     @Override
+     public void increaseWardenWarningLevel() {
+-        this.getHandle().wardenSpawnTracker.increaseWarningLevel();
++        this.getHandle().getWardenSpawnTracker().ifPresent(tracker -> tracker.increaseWarningLevel());
+     }
+     // Paper end
+ 
+@@ -3162,19 +3242,36 @@
+     @Override
+     public Set<java.lang.Long> getSentChunkKeys() {
+         org.spigotmc.AsyncCatcher.catchOp("accessing sent chunks");
+-        return FeatureHooks.getSentChunkKeys(this.getHandle());
++        final ServerPlayer player = this.getHandle();
++        final Set<Long> keys = new java.util.HashSet<>();
++        if (player.connection != null) {
++            final var chunkMap = player.level().getChunkSource().chunkMap;
++            player.getChunkTrackingView().forEach(pos -> {
++                if (chunkMap.isChunkTracked(player, pos.x(), pos.z())) {
++                    keys.add(pos.pack());
++                }
++            });
++        }
++        return java.util.Collections.unmodifiableSet(keys);
+     }
+ 
+     @Override
+     public Set<org.bukkit.Chunk> getSentChunks() {
+         org.spigotmc.AsyncCatcher.catchOp("accessing sent chunks");
+-        return FeatureHooks.getSentChunks(this.getHandle());
++        final ServerPlayer player = this.getHandle();
++        final Set<org.bukkit.Chunk> chunks = new java.util.HashSet<>();
++        for (long key : this.getSentChunkKeys()) {
++            chunks.add(new org.bukkit.craftbukkit.CraftChunk(player.level(), ChunkPos.getX(key), ChunkPos.getZ(key)));
++        }
++        return java.util.Collections.unmodifiableSet(chunks);
+     }
+ 
+     @Override
+     public boolean isChunkSent(final long chunkKey) {
+         org.spigotmc.AsyncCatcher.catchOp("accessing sent chunks");
+-        return FeatureHooks.isChunkSent(this.getHandle(), chunkKey);
++        final ServerPlayer player = this.getHandle();
++        return player.connection != null && player.level().getChunkSource().chunkMap.isChunkTracked(
++            player, ChunkPos.getX(chunkKey), ChunkPos.getZ(chunkKey));
+     }
+     // Paper end
+ 
+@@ -3185,32 +3282,37 @@
+ 
+     @Override
+     public int getViewDistance() {
+-        return ca.spottedleaf.moonrise.common.PlatformHooks.get().getViewDistance(this.getHandle());
++        return this.getHandle().level().getChunkSource().chunkMap.serverViewDistance;
+     }
+ 
+     @Override
+     public void setViewDistance(final int viewDistance) {
+-        FeatureHooks.setViewDistance(this.getHandle(), viewDistance); // Paper - chunk system
++        throw new UnsupportedOperationException("Arclight does not support a player view distance independent of its world");
+     }
+ 
+     @Override
+     public int getSimulationDistance() {
+-        return ca.spottedleaf.moonrise.common.PlatformHooks.get().getTickViewDistance(this.getHandle());
++        return this.getHandle().level().getChunkSource().chunkMap.getDistanceManager().simulationDistance;
+     }
+ 
+     @Override
+     public void setSimulationDistance(final int simulationDistance) {
+-        FeatureHooks.setSimulationDistance(this.getHandle(), simulationDistance); // Paper - chunk system
++        throw new UnsupportedOperationException("Arclight does not support a player simulation distance independent of its world");
+     }
+ 
+     @Override
+     public int getSendViewDistance() {
+-        return ca.spottedleaf.moonrise.common.PlatformHooks.get().getSendViewDistance(this.getHandle());
++        final ServerPlayer player = this.getHandle();
++        if (player.getChunkTrackingView() instanceof net.minecraft.server.level.ChunkTrackingView.Positioned view) {
++            return view.viewDistance();
++        }
++        return net.minecraft.util.Mth.clamp(player.requestedViewDistance(), 2,
++            player.level().getChunkSource().chunkMap.serverViewDistance);
+     }
+ 
+     @Override
+     public void setSendViewDistance(final int viewDistance) {
+-        FeatureHooks.setSendViewDistance(this.getHandle(), viewDistance); // Paper - chunk system
++        throw new UnsupportedOperationException("Arclight does not support an independently configured player send view distance");
+     }
+ 
+     // Paper start - entity effect API
+@@ -3288,26 +3390,44 @@
+ 
+     @Override
+     public org.bukkit.entity.Entity releaseLeftShoulderEntity() {
+-        if (!getHandle().getShoulderEntityLeft().isEmpty()) {
+-            Entity entity = getHandle().releaseLeftShoulderEntity();
+-            if (entity != null) {
+-                return entity.getBukkitEntity();
+-            }
+-        }
+-
+-        return null;
++        return this.releaseShoulderEntity(true);
+     }
+ 
+     @Override
+     public org.bukkit.entity.Entity releaseRightShoulderEntity() {
+-        if (!getHandle().getShoulderEntityRight().isEmpty()) {
+-            Entity entity = getHandle().releaseRightShoulderEntity();
+-            if (entity != null) {
+-                return entity.getBukkitEntity();
++        return this.releaseShoulderEntity(false);
++    }
++
++    private org.bukkit.entity.Entity releaseShoulderEntity(boolean left) {
++        var player = this.getHandle();
++        var tag = left ? player.getShoulderEntityLeft() : player.getShoulderEntityRight();
++        if (tag.isEmpty()) {
++            return null;
++        }
++        try (var reporter = new ProblemReporter.ScopedCollector(player.problemPath(), LOGGER)) {
++            var entity = net.minecraft.world.entity.EntityType.create(
++                TagValueInput.create(reporter.forChild(() -> ".shoulder"), player.registryAccess(), tag.copy()),
++                player.level(), EntitySpawnReason.LOAD
++            ).orElse(null);
++            if (entity == null) {
++                return null;
+             }
++            if (entity instanceof net.minecraft.world.entity.TamableAnimal animal) {
++                animal.setOwner(player);
++            }
++            entity.setPos(player.getX(), player.getY() + 0.7F, player.getZ());
++            io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge level = player.level();
++            if (!level.bridge$addEntitySerialized(entity, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.SHOULDER_ENTITY)) {
++                return null;
++            }
++            if (left) {
++                player.setShoulderEntityLeft(new CompoundTag());
++            } else {
++                player.setShoulderEntityRight(new CompoundTag());
++            }
++            io.izzel.arclight.common.bridge.core.entity.EntityBridge bridge = entity;
++            return bridge.bridge$getBukkitEntity();
+         }
+-
+-        return null;
+     }
+ 
+     @Override

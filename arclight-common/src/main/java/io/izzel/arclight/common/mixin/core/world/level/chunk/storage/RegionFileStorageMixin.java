@@ -18,6 +18,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Mixin(RegionFileStorage.class)
+@io.izzel.arclight.common.mod.mixins.annotation.LoadIfMod(modid = "moonrise",
+    condition = io.izzel.arclight.common.mod.mixins.annotation.LoadIfMod.ModCondition.ABSENT)
 public abstract class RegionFileStorageMixin {
 
     // @formatter:off

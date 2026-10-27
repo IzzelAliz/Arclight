@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/com/destroystokyo/paper/loottable/PaperLootableEntityInventory.java b/paper-server/src/main/java/com/destroystokyo/paper/loottable/PaperLootableEntityInventory.java
+index 5c57acc95f638a8bcb351ae44e9434a056835470..04d1245dde71b47b89326f4a02b7f802abbca8da 100644
+--- a/paper-server/src/main/java/com/destroystokyo/paper/loottable/PaperLootableEntityInventory.java
++++ b/paper-server/src/main/java/com/destroystokyo/paper/loottable/PaperLootableEntityInventory.java
+@@ -16,7 +16,7 @@ public interface PaperLootableEntityInventory extends LootableEntityInventory, P
+ 
+     @Override
+     default PaperLootableInventoryData lootableDataForAPI() {
+-        return this.getHandle().lootableData();
++        throw new UnsupportedOperationException("Loot replenishment and player loot history are not supported by Arclight");
+     }
+ 
+     /* LootableEntityInventory */

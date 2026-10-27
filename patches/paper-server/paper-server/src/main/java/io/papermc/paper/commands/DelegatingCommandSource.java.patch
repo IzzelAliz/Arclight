@@ -1,0 +1,28 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/commands/DelegatingCommandSource.java b/paper-server/src/main/java/io/papermc/paper/commands/DelegatingCommandSource.java
+index 01a2bc1feec808790bb93618ce46adb9bea5a9c8..63e850f5c6dd018ef143d50ed002ec365339aa1e 100644
+--- a/paper-server/src/main/java/io/papermc/paper/commands/DelegatingCommandSource.java
++++ b/paper-server/src/main/java/io/papermc/paper/commands/DelegatingCommandSource.java
+@@ -7,7 +7,7 @@ import org.bukkit.command.CommandSender;
+ 
+ import java.util.UUID;
+ 
+-public class DelegatingCommandSource implements CommandSource {
++public class DelegatingCommandSource implements CommandSource, io.izzel.arclight.common.bridge.core.command.CommandSourceBridge {
+ 
+     private final CommandSource delegate;
+ 
+@@ -35,8 +35,12 @@ public class DelegatingCommandSource implements CommandSource {
+         return delegate.shouldInformAdmins();
+     }
+ 
+-    @Override
+     public CommandSender getBukkitSender(CommandSourceStack wrapper) {
+-        return delegate.getBukkitSender(wrapper);
++        return ((io.izzel.arclight.common.bridge.core.command.CommandSourceBridge) this.delegate).bridge$getBukkitSender(wrapper);
++    }
++
++    @Override
++    public CommandSender bridge$getBukkitSender(CommandSourceStack wrapper) {
++        return this.getBukkitSender(wrapper);
+     }
+ }

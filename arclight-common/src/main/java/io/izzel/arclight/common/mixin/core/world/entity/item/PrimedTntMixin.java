@@ -30,15 +30,6 @@ public abstract class PrimedTntMixin extends EntityMixin {
     public float yield;
     public boolean isIncendiary;
 
-    private static final class Arclight$PendingTntDiscard {
-        private final PrimedTnt receiver;
-        private final Operation<Void> operation;
-
-        private Arclight$PendingTntDiscard(PrimedTnt receiver, Operation<Void> operation) {
-            this.receiver = receiver;
-            this.operation = operation;
-        }
-    }
 
     @Inject(method = "<init>(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/level/Level;)V", at = @At("RETURN"))
     private void arclight$init(EntityType<? extends PrimedTnt> type, Level worldIn, CallbackInfo ci) {
@@ -54,23 +45,23 @@ public abstract class PrimedTntMixin extends EntityMixin {
 
     @WrapOperation(method = "tick()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/PrimedTnt;discard()V"), require = 1, expect = 1, allow = 1)
     private void arclight$deferTntDiscard(PrimedTnt tnt, Operation<Void> discard,
-            @Share(value = "arclight$pendingTntDiscard", namespace = "arclight:primedtnt") LocalRef<Arclight$PendingTntDiscard> pendingDiscard) {
+            @Share(value = "arclight$pendingTntDiscard", namespace = "arclight:primedtnt") LocalRef<com.mojang.datafixers.util.Pair<PrimedTnt, Operation<Void>>> pendingDiscard) {
         if (tnt.level().isClientSide()) {
             ((EntityBridge) tnt).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.EXPLODE);
             discard.call(tnt);
         } else {
-            pendingDiscard.set(new Arclight$PendingTntDiscard(tnt, discard));
+            pendingDiscard.set(com.mojang.datafixers.util.Pair.of(tnt, discard));
         }
     }
 
     @WrapOperation(method = "tick()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/PrimedTnt;explode()V"), require = 1, expect = 1, allow = 1)
     private void arclight$explodeBeforeTntDiscard(PrimedTnt tnt, Operation<Void> explode,
-            @Share(value = "arclight$pendingTntDiscard", namespace = "arclight:primedtnt") LocalRef<Arclight$PendingTntDiscard> pendingDiscard) {
+            @Share(value = "arclight$pendingTntDiscard", namespace = "arclight:primedtnt") LocalRef<com.mojang.datafixers.util.Pair<PrimedTnt, Operation<Void>>> pendingDiscard) {
         explode.call(tnt);
-        Arclight$PendingTntDiscard deferredDiscard = pendingDiscard.get();
+        var deferredDiscard = pendingDiscard.get();
         if (deferredDiscard != null) {
-            ((EntityBridge) deferredDiscard.receiver).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.EXPLODE);
-            deferredDiscard.operation.call(deferredDiscard.receiver);
+            ((EntityBridge) deferredDiscard.getFirst()).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.EXPLODE);
+            deferredDiscard.getSecond().call(deferredDiscard.getFirst());
             pendingDiscard.set(null);
         }
     }

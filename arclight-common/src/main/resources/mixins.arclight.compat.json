@@ -1,0 +1,29 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "mixinextras": {
+    "minVersion": "0.5.0-beta.1"
+  },
+  "package": "io.izzel.arclight.common.mixin.compat",
+  "target": "@env(DEFAULT)",
+  "setSourceFile": true,
+  "plugin": "io.izzel.arclight.common.mod.ArclightMixinPlugin",
+  "injectors": {
+    "maxShiftBy": 2,
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "conformVisibility": true,
+    "requireAnnotations": false
+  },
+  "mixinPriority": 500,
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "moonrise.BaseChunkSystemHooksMixin",
+    "moonrise.TicketStorageAccessor",
+    "moonrise.DistanceManagerMixin",
+    "moonrise.MinecraftServerMixin",
+    "moonrise.CraftChunkMixin",
+    "moonrise.PlatformHooksMixin"
+  ]
+}

@@ -1,0 +1,171 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaEntityScheduler.java b/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaEntityScheduler.java
+index 811b8efd155540beac19b70afa1885bff570cd3e..9964dc4ccbc11cb72ced26c5b6a9f68f14039161 100644
+--- a/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaEntityScheduler.java
++++ b/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaEntityScheduler.java
+@@ -1,6 +1,6 @@
+ package io.papermc.paper.threadedregions.scheduler;
+ 
+-import ca.spottedleaf.concurrentutil.util.ConcurrentUtil;
++import java.lang.invoke.MethodHandles;
+ import net.minecraft.world.entity.Entity;
+ import org.bukkit.craftbukkit.entity.CraftEntity;
+ import org.bukkit.plugin.IllegalPluginAccessException;
+@@ -14,35 +14,25 @@ import java.util.logging.Level;
+ public final class FoliaEntityScheduler implements EntityScheduler {
+ 
+     private final CraftEntity entity;
++    private final java.util.Set<EntityScheduledTask> tasks = java.util.concurrent.ConcurrentHashMap.newKeySet();
+ 
+-    public FoliaEntityScheduler(final CraftEntity entity) {
+-        this.entity = entity;
+-    }
+-
+-    private static Consumer<? extends Entity> wrap(final Plugin plugin, final Runnable runnable) {
++    public void cancelTasks(final Plugin plugin) {
+         Objects.requireNonNull(plugin, "Plugin may not be null");
+-        Objects.requireNonNull(runnable, "Runnable may not be null");
++        for (var task : this.tasks) {
++            if (task.plugin == plugin) task.cancel();
++        }
++        this.entity.taskScheduler.cancelTasks(plugin);
++    }
+ 
+-        return (final Entity nmsEntity) -> {
+-            if (!plugin.isEnabled()) {
+-                // don't execute if the plugin is disabled
+-                return;
+-            }
+-            try {
+-                runnable.run();
+-            } catch (final Throwable throwable) {
+-                plugin.getLogger().log(Level.WARNING, "Entity task for " + plugin.getDescription().getFullName() + " generated an exception", throwable);
+-            }
+-        };
++    public FoliaEntityScheduler(final CraftEntity entity) {
++        this.entity = entity;
+     }
+ 
+     @Override
+     public boolean execute(final Plugin plugin, final Runnable run, final Runnable retired,
+                            final long delay) {
+-        final Consumer<? extends Entity> runNMS = wrap(plugin, run);
+-        final Consumer<? extends Entity> runRetired = retired == null ? null : wrap(plugin, retired);
+-
+-        return this.entity.taskScheduler.schedule(runNMS, runRetired, delay);
++        Objects.requireNonNull(run, "Runnable may not be null");
++        return this.runDelayed(plugin, task -> run.run(), retired, Math.max(1L, delay)) != null;
+     }
+ 
+     @Override
+@@ -65,7 +55,9 @@ public final class FoliaEntityScheduler implements EntityScheduler {
+ 
+         final EntityScheduledTask ret = new EntityScheduledTask(plugin, -1, task, retired);
+ 
++        this.tasks.add(ret);
+         if (!this.scheduleInternal(ret, delayTicks)) {
++            ret.cancel();
+             return null;
+         }
+ 
+@@ -95,7 +87,9 @@ public final class FoliaEntityScheduler implements EntityScheduler {
+ 
+         final EntityScheduledTask ret = new EntityScheduledTask(plugin, periodTicks, task, retired);
+ 
++        this.tasks.add(ret);
+         if (!this.scheduleInternal(ret, initialDelayTicks)) {
++            ret.cancel();
+             return null;
+         }
+ 
+@@ -125,7 +119,15 @@ public final class FoliaEntityScheduler implements EntityScheduler {
+         private Runnable retired;
+         private volatile int state;
+ 
+-        private static final VarHandle STATE_HANDLE = ConcurrentUtil.getVarHandle(EntityScheduledTask.class, "state", int.class);
++        private static final VarHandle STATE_HANDLE;
++
++        static {
++            try {
++                STATE_HANDLE = MethodHandles.lookup().findVarHandle(EntityScheduledTask.class, "state", int.class);
++            } catch (ReflectiveOperationException exception) {
++                throw new ExceptionInInitializerError(exception);
++            }
++        }
+ 
+         private EntityScheduledTask(final Plugin plugin, final long repeatDelay, final Consumer<ScheduledTask> run, final Runnable retired) {
+             this.plugin = plugin;
+@@ -135,7 +137,7 @@ public final class FoliaEntityScheduler implements EntityScheduler {
+         }
+ 
+         private final int getStateVolatile() {
+-            return (int)STATE_HANDLE.get(this);
++            return (int)STATE_HANDLE.getVolatile(this);
+         }
+ 
+         private final int compareAndExchangeStateVolatile(final int expect, final int update) {
+@@ -150,7 +152,7 @@ public final class FoliaEntityScheduler implements EntityScheduler {
+         public void accept(final Entity entity) {
+             if (!this.plugin.isEnabled()) {
+                 // don't execute if the plugin is disabled
+-                this.setStateVolatile(STATE_CANCELLED);
++                this.cancel();
+                 return;
+             }
+ 
+@@ -160,7 +162,7 @@ public final class FoliaEntityScheduler implements EntityScheduler {
+                 return;
+             }
+ 
+-            final boolean retired = entity.isRemoved();
++            final boolean retired = FoliaEntityScheduler.this.entity.taskScheduler.isRetired() || entity.isRemoved();
+ 
+             try {
+                 if (!retired) {
+@@ -171,24 +173,31 @@ public final class FoliaEntityScheduler implements EntityScheduler {
+                     }
+                 }
+             } catch (final Throwable throwable) {
+-                this.plugin.getLogger().log(Level.WARNING, "Entity task for " + this.plugin.getDescription().getFullName() + " generated an exception", throwable);
++                this.plugin.getLogger().log(Level.WARNING, "Entity task for " + this.plugin.getPluginMeta().getDisplayName() + " generated an exception", throwable);
+             } finally {
+                 boolean reschedule = false;
+-                 if (!repeating && !retired) {
++                if (!repeating && !retired) {
+                     this.setStateVolatile(STATE_FINISHED);
+                 } else if (retired || !this.plugin.isEnabled()) {
+-                     this.setStateVolatile(STATE_CANCELLED);
++                    this.setStateVolatile(STATE_CANCELLED);
+                 } else if (STATE_EXECUTING == this.compareAndExchangeStateVolatile(STATE_EXECUTING, STATE_IDLE)) {
+                     reschedule = true;
+-                } // else: cancelled repeating task
++                } else {
++                    // Cancellation stopped future executions; the current invocation has now returned.
++                    this.setStateVolatile(STATE_CANCELLED);
++                }
+ 
+                 if (!reschedule) {
+                     this.run = null;
+                     this.retired = null;
++                    FoliaEntityScheduler.this.tasks.remove(this);
+                 } else {
+                     if (!FoliaEntityScheduler.this.scheduleInternal(this, this.repeatDelay)) {
+                         // the task itself must have removed the entity, so in this case we need to mark as cancelled
+                         this.setStateVolatile(STATE_CANCELLED);
++                        this.run = null;
++                        this.retired = null;
++                        FoliaEntityScheduler.this.tasks.remove(this);
+                     }
+                 }
+             }
+@@ -210,9 +219,10 @@ public final class FoliaEntityScheduler implements EntityScheduler {
+                 switch (curr) {
+                     case STATE_IDLE: {
+                         if (STATE_IDLE == (curr = this.compareAndExchangeStateVolatile(STATE_IDLE, STATE_CANCELLED))) {
+-                            this.state = STATE_CANCELLED;
+                             this.run = null;
+                             this.retired = null;
++                            FoliaEntityScheduler.this.tasks.remove(this);
++                            FoliaEntityScheduler.this.entity.taskScheduler.removeTask(this);
+                             return CancelledState.CANCELLED_BY_CALLER;
+                         }
+                         // try again

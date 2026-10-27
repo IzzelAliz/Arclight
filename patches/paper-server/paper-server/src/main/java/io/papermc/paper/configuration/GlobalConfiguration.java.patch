@@ -1,0 +1,49 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java b/paper-server/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+index 232bc5e8b7cbb528b96f8048ba683705cddc436e..6f4e9645b605b899365ef1eeb329aa3c9670d51f 100644
+--- a/paper-server/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
++++ b/paper-server/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+@@ -209,7 +209,7 @@ public class GlobalConfiguration extends ConfigurationPart {
+         public boolean saveEmptyScoreboardTeams = true;
+     }
+ 
+-    @SuppressWarnings("unused") // used in postProcess
++    @SuppressWarnings("unused")
+     public ChunkSystem chunkSystem;
+ 
+     public class ChunkSystem extends ConfigurationPart {
+@@ -217,10 +217,6 @@ public class GlobalConfiguration extends ConfigurationPart {
+         public int ioThreads = -1;
+         public int workerThreads = -1;
+ 
+-        @PostProcess
+-        private void postProcess() {
+-            ca.spottedleaf.moonrise.common.util.MoonriseCommon.adjustWorkerThreads(this.workerThreads, this.ioThreads);
+-        }
+     }
+ 
+     public ItemValidation itemValidation;
+@@ -304,8 +300,7 @@ public class GlobalConfiguration extends ConfigurationPart {
+ 
+             @PostProcess
+             private void postProcess() {
+-                //noinspection ConstantConditions
+-                if (net.minecraft.server.MinecraftServer.getServer() == null) return; // In testing env, this will be null here
++                if (!(org.bukkit.Bukkit.getServer() instanceof org.bukkit.craftbukkit.CraftServer)) return;
+                 int _chatExecutorMaxSize = (this.chatExecutorMaxSize <= 0) ? Integer.MAX_VALUE : this.chatExecutorMaxSize; // This is somewhat dumb, but, this is the default, do we cap this?;
+                 int _chatExecutorCoreSize = Math.max(this.chatExecutorCoreSize, 0);
+ 
+@@ -313,7 +308,13 @@ public class GlobalConfiguration extends ConfigurationPart {
+                     _chatExecutorMaxSize = _chatExecutorCoreSize;
+                 }
+ 
+-                java.util.concurrent.ThreadPoolExecutor executor = (java.util.concurrent.ThreadPoolExecutor) net.minecraft.server.MinecraftServer.getServer().chatExecutor;
++                var chatExecutor = io.izzel.arclight.common.mod.server.ArclightServer.getChatExecutor();
++                if (!(chatExecutor instanceof java.util.concurrent.ThreadPoolExecutor executor)) {
++                    throw new IllegalStateException("Arclight chat executor is not a ThreadPoolExecutor");
++                }
++                if (_chatExecutorMaxSize > executor.getMaximumPoolSize()) {
++                    executor.setMaximumPoolSize(_chatExecutorMaxSize);
++                }
+                 executor.setCorePoolSize(_chatExecutorCoreSize);
+                 executor.setMaximumPoolSize(_chatExecutorMaxSize);
+             }

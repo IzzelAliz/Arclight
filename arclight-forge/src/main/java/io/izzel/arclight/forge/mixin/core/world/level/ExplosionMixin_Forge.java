@@ -1,0 +1,58 @@
+package io.izzel.arclight.forge.mixin.core.world.level;
+
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import io.izzel.arclight.mixin.Local;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerExplosion;
+import net.minecraft.world.phys.Vec3;
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import io.papermc.paper.event.entity.EntityKnockbackEvent;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+
+import java.util.List;
+
+@Mixin(ServerExplosion.class)
+public abstract class ExplosionMixin_Forge {
+
+    @Shadow @Final private Entity source;
+    @Shadow @Final private DamageSource damageSource;
+
+    @Decorate(method = "hurtEntities(Ljava/util/List;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
+    private boolean arclight$handleMultiPart(Entity entity, ServerLevel level, DamageSource damageSource, float damage,
+                                             @Local(ordinal = -1) List<Entity> entities) throws Throwable {
+        // Special case multipart entities: only give knockback if the damage was not cancelled.
+        if (((EntityBridge) entity).bridge$forge$isPartEntity()) {
+            throw DecorationOps.jumpToLoopStart();
+        }
+
+        ((EntityBridge) entity).bridge$setLastDamageCancelled(false);
+        boolean result = false;
+        var parts = ((EntityBridge) entity).bridge$forge$getParts();
+        if (parts != null) {
+            for (var part : parts) {
+                if (entities.contains(part)) {
+                    part.hurtServer(level, damageSource, damage);
+                    result = true;
+                }
+            }
+        } else {
+            result = (boolean) DecorationOps.callsite().invoke(entity, level, damageSource, damage);
+        }
+
+        if (((EntityBridge) entity).bridge$isLastDamageCancelled()) {
+            throw DecorationOps.jumpToLoopStart();
+        }
+        return result;
+    }
+
+}

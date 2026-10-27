@@ -1,0 +1,18 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/CraftBrewingStandView.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/CraftBrewingStandView.java
+index 1691a8b4775bbacdb0692f5c005d3eb0f70f404d..d7fbbc55d4eb4fd5072263310cbf2935a7021afd 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/CraftBrewingStandView.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/CraftBrewingStandView.java
+@@ -39,11 +39,11 @@ public class CraftBrewingStandView extends CraftInventoryView<BrewingStandMenu,
+     @Override
+     public void setRecipeBrewTime(int recipeBrewTime) {
+         com.google.common.base.Preconditions.checkArgument(recipeBrewTime > 0, "recipeBrewTime must be positive");
+-        this.container.brewingStandData.set(2, recipeBrewTime);
++        throw new UnsupportedOperationException("Recipe brewing duration overrides are not supported");
+     }
+ 
+     @Override
+     public int getRecipeBrewTime() {
+-        return this.container.brewingStandData.get(2);
++        throw new UnsupportedOperationException("Recipe brewing duration overrides are not supported");
+     }
+ }

@@ -30,10 +30,14 @@ public abstract class ShapedRecipeMixin implements RecipeBridge {
 
     @Override
     public Recipe bridge$toBukkitRecipe(NamespacedKey id) {
-        if (this.getWidth() < 1 || this.getWidth() > 3 || this.getHeight() < 1 || this.getHeight() > 3 || this.result.create().isEmpty()) {
+        if (this.getWidth() < 1 || this.getWidth() > 3 || this.getHeight() < 1 || this.getHeight() > 3) {
             return new ArclightSpecialRecipe(id, (net.minecraft.world.item.crafting.Recipe<?>) this);
         }
-        CraftItemStack result = CraftItemStack.asCraftMirror(this.result);
+        var output = this.result.create();
+        if (output.isEmpty()) {
+            return new ArclightSpecialRecipe(id, (net.minecraft.world.item.crafting.Recipe<?>) this);
+        }
+        CraftItemStack result = CraftItemStack.asCraftMirror(output);
         CraftShapedRecipe recipe = new CraftShapedRecipe(id, result, (ShapedRecipe) (Object) this);
         // Metadata getters are inherited from NormalCraftingRecipe, not declared shadow targets.
         ShapedRecipe self = (ShapedRecipe) (Object) this;
@@ -84,8 +88,8 @@ public abstract class ShapedRecipeMixin implements RecipeBridge {
         char c = 'a';
         for (Optional<Ingredient> optional : this.pattern.ingredients()) {
             if (optional.isPresent()) {
-                RecipeChoice choice = CraftRecipe.toBukkit(optional.get());
-                if (choice != null) {
+                RecipeChoice choice = CraftRecipe.toChoice(optional.get());
+                if (choice != null && choice != RecipeChoice.empty()) {
                     recipe.setIngredient(c, choice);
                 }
             }

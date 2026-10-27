@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/connection/PluginMessageBridgeImpl.java b/paper-server/src/main/java/io/papermc/paper/connection/PluginMessageBridgeImpl.java
+index db1f63a3a6cd9c7b5759961ba47a66c39f6d5a15..0598402bdb611af05dda15e861172a074f19a476 100644
+--- a/paper-server/src/main/java/io/papermc/paper/connection/PluginMessageBridgeImpl.java
++++ b/paper-server/src/main/java/io/papermc/paper/connection/PluginMessageBridgeImpl.java
+@@ -15,7 +15,7 @@ public interface PluginMessageBridgeImpl {
+     boolean DISABLE_CHANNEL_LIMIT = System.getProperty("paper.disableChannelLimit") != null; // Paper - add a flag to disable the channel limit
+ 
+     default boolean addChannel(String channel) {
+-        Preconditions.checkState(DISABLE_CHANNEL_LIMIT || this.channels().size() < 128, "Cannot register channel. Too many channels registered!"); // Paper - flag to disable channel limit
++        Preconditions.checkState(DISABLE_CHANNEL_LIMIT || this.channels().size() < 2048, "Cannot register channel. Too many channels registered!"); // Paper - flag to disable channel limit
+         channel = StandardMessenger.validateAndCorrectChannel(channel);
+         if (channels().add(channel)) {
+             if (this instanceof CraftPlayer player) {

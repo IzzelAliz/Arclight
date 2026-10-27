@@ -1,0 +1,32 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/PaperClassloaderBytecodeModifier.java b/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/PaperClassloaderBytecodeModifier.java
+index f9a2c55a354c877749db3f92956de802ae575788..94fdcb4dc1439b4cbf3fefb1a98092b93e0796a2 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/PaperClassloaderBytecodeModifier.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/PaperClassloaderBytecodeModifier.java
+@@ -1,12 +1,24 @@
+ package io.papermc.paper.plugin.entrypoint.classloader;
+ 
++import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
++import io.izzel.arclight.common.mod.util.remapper.ClassRepoWrapper;
++import io.izzel.arclight.common.mod.util.remapper.GlobalClassRepo;
++import io.izzel.arclight.common.mod.util.remapper.RemappingClassLoader;
+ import io.papermc.paper.plugin.configuration.PluginMeta;
+ 
+-// Stub, implement in future.
+ public class PaperClassloaderBytecodeModifier implements ClassloaderBytecodeModifier {
+ 
+     @Override
+-    public byte[] modify(PluginMeta configuration, byte[] bytecode) {
+-        return bytecode;
++    public byte[] modify(PluginMeta configuration, String className, byte[] bytecode, ClassLoader owner) throws ClassNotFoundException {
++        if (!(owner instanceof RemappingClassLoader remappingLoader)) {
++            throw new ClassNotFoundException("No Arclight transformation context for " + className + " in " + owner);
++        }
++        try {
++            byte[] fixedBytecode = ArclightRemapper.SWITCH_TABLE_FIXER.apply(bytecode);
++            return remappingLoader.getRemapper().remapClassFile(fixedBytecode,
++                new ClassRepoWrapper(GlobalClassRepo.INSTANCE, remappingLoader.getRemapConfig()));
++        } catch (RuntimeException exception) {
++            throw new ClassNotFoundException("Could not transform " + className + " from plugin " + configuration.getName(), exception);
++        }
+     }
+ }

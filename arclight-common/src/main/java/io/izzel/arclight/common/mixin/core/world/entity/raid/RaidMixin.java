@@ -50,36 +50,36 @@ public class RaidMixin implements RaidBridge {
     // Tick-only callsites: CraftRaid.stop() owns PLUGIN separately.
     @Inject(method = "tick(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/raid/Raid;stop()V", ordinal = 0))
     private void arclight$peace(ServerLevel level, CallbackInfo ci) {
-        CraftEventFactory.callRaidStopEvent((Raid) (Object) this, level, RaidStopEvent.Reason.PEACE);
+        CraftEventFactory.callRaidStopEvent(level, (Raid) (Object) this, RaidStopEvent.Reason.PEACE);
     }
 
     // Tick-only callsites: CraftRaid.stop() owns PLUGIN separately.
     @Inject(method = "tick(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/raid/Raid;stop()V", ordinal = 1))
     private void arclight$notInVillage(ServerLevel level, CallbackInfo ci) {
-        CraftEventFactory.callRaidStopEvent((Raid) (Object) this, level, RaidStopEvent.Reason.NOT_IN_VILLAGE);
+        CraftEventFactory.callRaidStopEvent(level, (Raid) (Object) this, RaidStopEvent.Reason.NOT_IN_VILLAGE);
     }
 
     // Tick-only callsites: CraftRaid.stop() owns PLUGIN separately.
     @Inject(method = "tick(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/raid/Raid;stop()V", ordinal = 2))
     private void arclight$timeout(ServerLevel level, CallbackInfo ci) {
-        CraftEventFactory.callRaidStopEvent((Raid) (Object) this, level, RaidStopEvent.Reason.TIMEOUT);
+        CraftEventFactory.callRaidStopEvent(level, (Raid) (Object) this, RaidStopEvent.Reason.TIMEOUT);
     }
 
     // Tick-only callsites: CraftRaid.stop() owns PLUGIN separately.
     @Inject(method = "tick(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/raid/Raid;stop()V", ordinal = 3))
     private void arclight$unspawnable(ServerLevel level, CallbackInfo ci) {
-        CraftEventFactory.callRaidStopEvent((Raid) (Object) this, level, RaidStopEvent.Reason.UNSPAWNABLE);
+        CraftEventFactory.callRaidStopEvent(level, (Raid) (Object) this, RaidStopEvent.Reason.UNSPAWNABLE);
     }
 
     // Tick-only callsites: CraftRaid.stop() owns PLUGIN separately.
     @Inject(method = "tick(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/raid/Raid;stop()V", ordinal = 4))
     private void arclight$finished(ServerLevel level, CallbackInfo ci) {
-        CraftEventFactory.callRaidStopEvent((Raid) (Object) this, level, RaidStopEvent.Reason.FINISHED);
+        CraftEventFactory.callRaidStopEvent(level, (Raid) (Object) this, RaidStopEvent.Reason.FINISHED);
     }
 
     @Inject(method = "tick(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/raid/Raid;status:Lnet/minecraft/world/entity/raid/Raid$RaidStatus;", opcode = 181, ordinal = 0, shift = At.Shift.AFTER))
     private void arclight$loss(ServerLevel level, CallbackInfo ci) {
-        CraftEventFactory.callRaidFinishEvent((Raid) (Object) this, level, new ArrayList<>());
+        CraftEventFactory.callRaidFinishEvent(level, (Raid) (Object) this, new ArrayList<>());
     }
 
     @Inject(method = "tick(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/raid/Raid;status:Lnet/minecraft/world/entity/raid/Raid$RaidStatus;", opcode = 181, ordinal = 1, shift = At.Shift.AFTER))
@@ -97,7 +97,7 @@ public class RaidMixin implements RaidBridge {
     @Inject(method = "tick(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/raid/Raid;setDirty(Lnet/minecraft/server/level/ServerLevel;)V"))
     private void arclight$victoryFinish(ServerLevel level, CallbackInfo ci, @Share("raidWinners") LocalRef<List<Player>> winners) {
         if (winners.get() != null) {
-            CraftEventFactory.callRaidFinishEvent((Raid) (Object) this, level, winners.get());
+            CraftEventFactory.callRaidFinishEvent(level, (Raid) (Object) this, winners.get());
         }
     }
 
@@ -125,7 +125,7 @@ public class RaidMixin implements RaidBridge {
 
     @Inject(method = "spawnGroup(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;)V", at = @At("RETURN"))
     private void arclight$waveFinish(ServerLevel level, BlockPos pos, CallbackInfo ci, @Share("waveLeader") LocalRef<Raider> leader, @Share("waveRaiders") LocalRef<List<Raider>> raiders) {
-        CraftEventFactory.callRaidSpawnWaveEvent((Raid) (Object) this, level, leader.get(), raiders.get());
+        CraftEventFactory.callRaidSpawnWaveEvent(level, (Raid) (Object) this, leader.get(), raiders.get());
     }
 
     @WrapOperation(method = "joinRaid(Lnet/minecraft/server/level/ServerLevel;ILnet/minecraft/world/entity/raid/Raider;Lnet/minecraft/core/BlockPos;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V"))

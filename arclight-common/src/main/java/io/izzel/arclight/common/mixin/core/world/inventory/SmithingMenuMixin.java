@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
 import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.inventory.PrepareResultMenuBridge;
 import io.izzel.arclight.common.bridge.core.world.inventory.ContainerLevelAccessBridge;
 import io.izzel.arclight.common.mod.server.world.inventory.ArclightSmithingView;
 import io.izzel.arclight.mixin.Decorate;
@@ -27,12 +28,18 @@ public abstract class SmithingMenuMixin extends ItemCombinerMenuMixin {
         final CraftInventoryView<SmithingMenu, ?> craft = getBukkitView();
         if (craft instanceof ArclightSmithingView) {
             // Call preparing event; preserve injection logic
-            PrepareSmithingEvent event = new PrepareSmithingEvent(craft, CraftItemStack.asCraftMirror(stack).clone());
-            Bukkit.getServer().getPluginManager().callEvent(event);
-            DecorationOps.callsite().invoke(craftResultInventory, index, CraftItemStack.asNMSCopy(event.getResult()));
+            if (!((PrepareResultMenuBridge) this).bridge$isPrepareResultDeferred()) {
+                PrepareSmithingEvent event = new PrepareSmithingEvent(craft, CraftItemStack.asCraftMirror(stack).clone());
+                Bukkit.getServer().getPluginManager().callEvent(event);
+                stack = CraftItemStack.asNMSCopy(event.getResult());
+            }
+            DecorationOps.callsite().invoke(craftResultInventory, index, stack);
         } else {
             // Run plugin custom logic
             CraftEventFactory.callPrepareSmithingEvent(craft, stack);
+            if (!((PrepareResultMenuBridge) this).bridge$isPrepareResultDeferred()) {
+                CraftEventFactory.callPrepareResultEvent((SmithingMenu) (Object) this, SmithingMenu.RESULT_SLOT);
+            }
         }
     }
 

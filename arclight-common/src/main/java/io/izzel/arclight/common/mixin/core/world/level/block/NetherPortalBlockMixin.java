@@ -6,6 +6,10 @@ import io.izzel.arclight.common.bridge.core.world.level.portal.PortalForcerBridg
 import io.izzel.arclight.common.bridge.core.world.level.portal.DimensionTransitionBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
+import io.izzel.arclight.mixin.Local;
+import io.papermc.paper.event.entity.EntityPortalReadyEvent;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.BlockUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -49,17 +53,31 @@ public class NetherPortalBlockMixin {
         Bukkit.getPluginManager().callEvent(event);
     }
 
+    @Decorate(method = "getPortalDestination(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/portal/TeleportTransition;",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;getLevel(Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/server/level/ServerLevel;"), require = 1, allow = 1)
+    private ServerLevel arclight$portalReady(MinecraftServer server, ResourceKey<Level> dimension,
+                                            @Local(ordinal = 0) Entity entity) throws Throwable {
+        ServerLevel target = (ServerLevel) DecorationOps.callsite().invoke(server, dimension);
+        var event = new EntityPortalReadyEvent(entity.bridge$getBukkitEntity(), target == null ? null : target.bridge$getWorld(), org.bukkit.PortalType.NETHER);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            entity.portalProcess = null;
+            return null;
+        }
+        return event.getTargetWorld() == null ? null : ((CraftWorld) event.getTargetWorld()).getHandle();
+    }
+
     @Decorate(method = "getPortalDestination", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/NetherPortalBlock;getExitPortal(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/BlockPos;ZLnet/minecraft/world/level/border/WorldBorder;)Lnet/minecraft/world/level/portal/TeleportTransition;"))
     private TeleportTransition arclight$createPortalEvent(NetherPortalBlock instance, ServerLevel serverLevel, Entity entity, BlockPos blockPos, BlockPos blockPos2, boolean bl, WorldBorder worldBorder) throws Throwable {
         var event = ((EntityBridge) entity).bridge$callPortalEvent(entity, CraftLocation.toBukkit(blockPos2, serverLevel.bridge$getWorld()), PlayerTeleportEvent.TeleportCause.NETHER_PORTAL, bl ? 16 : 128, 16);
         if (event == null) {
             return null;
         }
-        serverLevel = ((CraftWorld) event.getTo().getWorld()).getHandle();
+        serverLevel = ((CraftWorld) event.to().getWorld()).getHandle();
         worldBorder = serverLevel.getWorldBorder();
-        blockPos2 = worldBorder.clampToBounds(event.getTo().getX(), event.getTo().getY(), event.getTo().getZ());
-        ((PortalForcerBridge) serverLevel.getPortalForcer()).bridge$pushSearchRadius(event.getSearchRadius());
-        ((PortalForcerBridge) serverLevel.getPortalForcer()).bridge$pushPortalCreate(entity, event.getCreationRadius());
+        blockPos2 = worldBorder.clampToBounds(event.to().getX(), event.to().getY(), event.to().getZ());
+        ((PortalForcerBridge) serverLevel.getPortalForcer()).bridge$pushSearchRadius(event.searchRadius());
+        ((PortalForcerBridge) serverLevel.getPortalForcer()).bridge$pushPortalCreate(entity, event.createRadius());
         var result = (TeleportTransition) DecorationOps.callsite().invoke(instance, serverLevel, entity, blockPos, blockPos2, bl, worldBorder);
         ((PortalForcerBridge) serverLevel.getPortalForcer()).bridge$pushSearchRadius(-1);
         ((PortalForcerBridge) serverLevel.getPortalForcer()).bridge$pushPortalCreate(null, -1);

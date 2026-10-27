@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftSculkSensor.java b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftSculkSensor.java
+index 2b5ce9e8be2d4c731e1e6d1c0902d869429920ba..3cf0b8f971d1af5c4d6eabd6f7371dafb405187e 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftSculkSensor.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftSculkSensor.java
+@@ -46,7 +46,7 @@ public class CraftSculkSensor<T extends SculkSensorBlockEntity> extends CraftBlo
+     @Override
+     public void setListenerRange(int range) {
+         Preconditions.checkArgument(range > 0, "Vibration listener range must be greater than 0");
+-        this.getSnapshot().rangeOverride = range;
++        throw new UnsupportedOperationException("Vibration listener range overrides are not supported");
+     }
+     // Paper end
+ }

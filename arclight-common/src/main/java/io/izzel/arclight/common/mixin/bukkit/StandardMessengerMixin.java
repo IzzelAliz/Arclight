@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.SetMultimap;
 import io.izzel.arclight.common.bridge.bukkit.MessengerBridge;
@@ -38,10 +39,8 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
     @Unique
     private PacketRecorder arclight$recorder;
 
-    @ModifyConstant(
-            method = "validateAndCorrectChannel",
-            constant = @Constant(intValue = Messenger.MAX_CHANNEL_SIZE)
-    )
+    @ModifyExpressionValue(method = "validateAndCorrectChannel", at = @At(value = "FIELD",
+            target = "Lorg/bukkit/plugin/messaging/Messenger;MAX_CHANNEL_SIZE:I"))
     private static int arclight$modifyMaxChannelSize(int original) {
         return 256;
     }
@@ -58,7 +57,7 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
             }
             if (first) {
                 ArclightServer.LOGGER.warn("A plugin is sending message on a channel that's registered as outgoing by other plugins but itself!");
-                ArclightServer.LOGGER.warn("Plugin: [{}], on channel: {}", src.getDescription().getFullName(), channel);
+                ArclightServer.LOGGER.warn("Plugin: [{}], on channel: {}", src.getPluginMeta().getDisplayName(), channel);
                 ArclightServer.LOGGER.warn("This warning will only be displayed once for every plugin and channel.");
             }
         }
@@ -71,7 +70,7 @@ public abstract class StandardMessengerMixin implements Messenger, MessengerBrid
         if (arclight != null && !arclight.getOutgoing().isEmpty()) {
             return;
         }
-        var fullName = src == null ? "Unknown" : src.getDescription().getFullName();
+        var fullName = src == null ? "Unknown" : src.getPluginMeta().getDisplayName();
         if (src == null) {
             arclight$registerAnonymousOutgoing(channel);
         } else {

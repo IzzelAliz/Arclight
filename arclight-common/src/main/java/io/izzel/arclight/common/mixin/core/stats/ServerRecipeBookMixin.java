@@ -12,6 +12,7 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.display.RecipeDisplayId;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.event.player.PlayerRecipeDiscoverEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -43,11 +44,15 @@ public abstract class ServerRecipeBookMixin extends RecipeBook {
 
         for (RecipeHolder<?> recipeholder : recipes) {
             ResourceKey<Recipe<?>> resourcekey = recipeholder.id();
-            if (!this.known.contains(resourcekey) && !recipeholder.value().isSpecial() && CraftEventFactory.handlePlayerRecipeListUpdateEvent(player, resourcekey.identifier())) {
+            if (!this.known.contains(resourcekey) && !recipeholder.value().isSpecial()) {
+                PlayerRecipeDiscoverEvent event = CraftEventFactory.callPlayerRecipeListUpdateEvent(player, recipeholder);
+                if (event.isCancelled()) {
+                    continue;
+                }
                 this.add(resourcekey);
                 this.addHighlight(resourcekey);
                 this.displayResolver.displaysForRecipe(resourcekey, (recipedisplayentry) -> {
-                    list.add(new ClientboundRecipeBookAddPacket.Entry(recipedisplayentry, recipeholder.value().showNotification(), true));
+                    list.add(new ClientboundRecipeBookAddPacket.Entry(recipedisplayentry, event.shouldShowNotification(), true));
                 });
                 CriteriaTriggers.RECIPE_UNLOCKED.trigger(player, recipeholder);
             }

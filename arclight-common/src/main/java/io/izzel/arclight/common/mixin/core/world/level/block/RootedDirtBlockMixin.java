@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.RootedDirtBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -15,6 +16,6 @@ public class RootedDirtBlockMixin {
 
     @Redirect(method = "performBonemeal", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
     private boolean arclight$blockSpread(ServerLevel instance, BlockPos pos, BlockState state) {
-        return CraftEventFactory.handleBlockSpreadEvent(instance, pos.above(), pos, state);
+        return CraftEventFactory.handleBlockSpreadEvent(instance, pos.above(), pos, state, Block.UPDATE_ALL);
     }
 }

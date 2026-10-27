@@ -8,4 +8,9 @@ public interface PlayerDataStorageBridge {
     File bridge$getPlayerDir();
 
     CompoundTag bridge$getPlayerData(String uuid);
+
+    default java.io.File getPlayerDir() {
+        return this.bridge$getPlayerDir();
+    }
+
 }

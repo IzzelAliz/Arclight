@@ -1,0 +1,28 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/adventure/PaperAdventure.java b/paper-server/src/main/java/io/papermc/paper/adventure/PaperAdventure.java
+--- a/paper-server/src/main/java/io/papermc/paper/adventure/PaperAdventure.java
++++ b/paper-server/src/main/java/io/papermc/paper/adventure/PaperAdventure.java
+@@ -135,7 +135,10 @@
+             return decoded.toString();
+         }
+     };
+-    public static final ComponentSerializer<Component, Component, net.minecraft.network.chat.Component> WRAPPER_AWARE_SERIALIZER = new WrapperAwareSerializer(() -> CraftRegistry.getMinecraftRegistry().createSerializationContext(JavaOps.INSTANCE));
++    public static final ComponentSerializer<Component, Component, net.minecraft.network.chat.Component> WRAPPER_AWARE_SERIALIZER = new WrapperAwareSerializer(() -> {
++        final var registry = CraftRegistry.getMinecraftRegistry();
++        return registry == null ? JavaOps.INSTANCE : registry.createSerializationContext(JavaOps.INSTANCE);
++    });
+ 
+     private PaperAdventure() {
+     }
+@@ -265,7 +268,11 @@
+             css.bypassSelectorPermissions = true;
+         }
+         try {
+-            final ResolutionContext resoutionContext = ResolutionContext.builder().withSource(css).withEntityOverride(scoreboardSubject == null ? null : ((CraftEntity) scoreboardSubject).getHandle()).build();
++            final ResolutionContext.Builder builder = ResolutionContext.builder();
++            if (css != null) {
++                builder.withSource(css);
++            }
++            final ResolutionContext resoutionContext = builder.withEntityOverride(scoreboardSubject == null ? null : ((CraftEntity) scoreboardSubject).getHandle()).build();
+             return asAdventure(ComponentUtils.resolve(resoutionContext, asVanilla(component), 0));
+         } catch (final CommandSyntaxException e) {
+             throw new IOException(e);

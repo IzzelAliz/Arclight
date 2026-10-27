@@ -1,0 +1,43 @@
+diff --git a/paper-server/src/main/java/org/spigotmc/SpigotWorldConfig.java b/paper-server/src/main/java/org/spigotmc/SpigotWorldConfig.java
+index 339832e312578ee385bbf3c9d5c131435abe7d7a..f2e17caa14fedb3735c193611b9be833eb6e2370 100644
+--- a/paper-server/src/main/java/org/spigotmc/SpigotWorldConfig.java
++++ b/paper-server/src/main/java/org/spigotmc/SpigotWorldConfig.java
+@@ -10,6 +10,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
+ public class SpigotWorldConfig {
+ 
+     private final String legacyWorldName;
++    private final boolean defaultsOnly;
+     private String worldName;
+     private final YamlConfiguration config;
+     private boolean verbose;
+@@ -17,13 +18,29 @@ public class SpigotWorldConfig {
+     public SpigotWorldConfig(String legacyWorldName, Key worldKey) {
+         this.legacyWorldName = legacyWorldName;
+         this.worldName = worldKey.asString();
++        this.defaultsOnly = false;
++        this.config = SpigotConfig.config;
++        this.init();
++    }
++
++    public static SpigotWorldConfig forDefaults(String marker) {
++        if (!"default".equals(marker)) {
++            throw new IllegalArgumentException("Default configuration marker must be default");
++        }
++        return new SpigotWorldConfig(marker);
++    }
++
++    private SpigotWorldConfig(String marker) {
++        this.legacyWorldName = marker;
++        this.worldName = marker;
++        this.defaultsOnly = true;
+         this.config = SpigotConfig.config;
+         this.init();
+     }
+ 
+     public void init() {
+         this.verbose = this.getBoolean("verbose", false); // Paper
+-        if (SpigotConfig.version <= 12) {
++        if (!this.defaultsOnly && SpigotConfig.version <= 12) {
+             ConfigurationSection section = this.config.getConfigurationSection("world-settings." + this.legacyWorldName);
+             if (section != null) {
+                 this.config.set("world-settings." + this.legacyWorldName, null);

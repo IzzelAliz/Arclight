@@ -1,13 +1,17 @@
 package io.izzel.arclight.common.mixin.core.world.entity.player;
 
 import io.izzel.arclight.common.bridge.core.world.entity.player.BedSleepingProblemBridge;
+import net.minecraft.world.attribute.BedRule;
 import net.minecraft.world.entity.player.Player;
 import org.bukkit.event.player.PlayerBedEnterEvent;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(Player.BedSleepingProblem.class)
 public abstract class Player_BedSleepingProblemMixin implements BedSleepingProblemBridge {
     private PlayerBedEnterEvent.BedEnterResult arclight$bedResult;
+    @Nullable
+    private BedRule arclight$bedRule;
 
     public PlayerBedEnterEvent.BedEnterResult bukkit() {
         if (arclight$bedResult != null) return arclight$bedResult;
@@ -19,5 +23,16 @@ public abstract class Player_BedSleepingProblemMixin implements BedSleepingProbl
     @Override
     public void bridge$setBedResult(PlayerBedEnterEvent.BedEnterResult result) {
         this.arclight$bedResult = result;
+    }
+
+    @Override
+    @Nullable
+    public BedRule bridge$getBedRule() {
+        return this.arclight$bedRule;
+    }
+
+    @Override
+    public void bridge$setBedRule(@Nullable BedRule bedRule) {
+        this.arclight$bedRule = bedRule;
     }
 }

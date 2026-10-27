@@ -1,0 +1,35 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftVault.java b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftVault.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftVault.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftVault.java
+@@ -126,13 +126,29 @@
+     @Override
+     public boolean addRewardedPlayer(final UUID playerUUID) {
+         Preconditions.checkArgument(playerUUID != null, "playerUUID must not be null");
+-        return this.getSnapshot().serverData.addToRewardedPlayers(playerUUID);
++        var data = this.getSnapshot().serverData;
++        var rewarded = data.getRewardedPlayers();
++        boolean added = rewarded.add(playerUUID);
++        if (rewarded.size() > 128) {
++            var iterator = rewarded.iterator();
++            if (iterator.hasNext()) {
++                iterator.next();
++                iterator.remove();
++            }
++        }
++        data.markChanged();
++        return added;
+     }
+ 
+     @Override
+     public boolean removeRewardedPlayer(final UUID playerUUID) {
+         Preconditions.checkArgument(playerUUID != null, "playerUUID must not be null");
+-        return this.getSnapshot().serverData.removeFromRewardedPlayers(playerUUID);
++        var data = this.getSnapshot().serverData;
++        if (data.getRewardedPlayers().remove(playerUUID)) {
++            data.markChanged();
++            return true;
++        }
++        return false;
+     }
+ 
+     @Override

@@ -1,0 +1,12 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftMerchantInventoryViewBuilder.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftMerchantInventoryViewBuilder.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftMerchantInventoryViewBuilder.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftMerchantInventoryViewBuilder.java
+@@ -55,7 +55,7 @@
+             this.merchant = this.title == null ? new CraftMerchantCustom().getMerchant() : new CraftMerchantCustom(title).getMerchant();
+         }
+ 
+-        container = new MerchantMenu(serverPlayer.nextContainerCounter(), serverPlayer.getInventory(), this.merchant);
++        container = new MerchantMenu(((io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge) serverPlayer).bridge$nextContainerCounter(), serverPlayer.getInventory(), this.merchant);
+ 
+         container.checkReachable = super.checkReachable;
+         setDefaultTitle(this.merchant);

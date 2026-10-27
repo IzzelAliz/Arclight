@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mod.util;
 import com.google.common.net.InetAddresses;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import io.izzel.arclight.i18n.ArclightConfig;
+import io.papermc.paper.configuration.GlobalConfiguration;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.login.custom.CustomQueryPayload;
@@ -21,11 +21,10 @@ import java.util.UUID;
 
 // Codes from paper, GPLv3/MIT
 // https://github.com/PaperMC/Paper/blob/master/patches/server/0832-Add-Velocity-IP-Forwarding-Support.patch
-// Changes are made to use Arclight configuration system
 public class VelocitySupport {
 
     public static boolean isEnabled() {
-        return ArclightConfig.spec().getVelocity().isEnable();
+        return GlobalConfiguration.get().proxies.velocity.enabled;
     }
 
     private static final int SUPPORTED_FORWARDING_VERSION = 1;
@@ -63,7 +62,7 @@ public class VelocitySupport {
 
         try {
             final Mac mac = Mac.getInstance("HmacSHA256");
-            mac.init(new SecretKeySpec(ArclightConfig.spec().getVelocity().getSecret().getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256"));
+            mac.init(new SecretKeySpec(GlobalConfiguration.get().proxies.velocity.secret.getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256"));
             final byte[] mySignature = mac.doFinal(data);
             if (!MessageDigest.isEqual(signature, mySignature)) {
                 return false;

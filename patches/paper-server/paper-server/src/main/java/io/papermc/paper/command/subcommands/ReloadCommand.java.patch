@@ -1,0 +1,15 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/command/subcommands/ReloadCommand.java b/paper-server/src/main/java/io/papermc/paper/command/subcommands/ReloadCommand.java
+index bd68139ae635f2ad7ec8e7a21e0056a139c4c62e..b8b05bf29d7b42a44ca34ded095a34e93fd53e6e 100644
+--- a/paper-server/src/main/java/io/papermc/paper/command/subcommands/ReloadCommand.java
++++ b/paper-server/src/main/java/io/papermc/paper/command/subcommands/ReloadCommand.java
+@@ -25,8 +25,8 @@ public final class ReloadCommand implements PaperSubcommand {
+         Command.broadcastCommandMessage(sender, text("If you encounter any issues please use the /stop command to restart your server.", RED));
+ 
+         MinecraftServer server = ((CraftServer) sender.getServer()).getServer();
+-        server.paperConfigurations.reloadConfigs(server);
+-        server.server.reloadCount++;
++        io.izzel.arclight.common.mod.server.ArclightServer.getPaperConfigurations().reloadConfigs(server);
++        ((CraftServer) sender.getServer()).reloadCount++;
+ 
+         Command.broadcastCommandMessage(sender, text("Paper config reload complete.", GREEN));
+     }

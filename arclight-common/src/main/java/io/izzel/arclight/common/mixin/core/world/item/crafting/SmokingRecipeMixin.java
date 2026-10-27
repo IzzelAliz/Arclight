@@ -23,11 +23,12 @@ public abstract class SmokingRecipeMixin extends AbstractCookingRecipe implement
 
     @Override
     public Recipe bridge$toBukkitRecipe(NamespacedKey id) {
-        if (this.result().create().isEmpty()) {
+        var output = this.result().create();
+        if (output.isEmpty()) {
             return new ArclightSpecialRecipe(id, this);
         }
-        CraftItemStack result = CraftItemStack.asCraftMirror(this.result());
-        CraftSmokingRecipe recipe = new CraftSmokingRecipe(id, result, CraftRecipe.toBukkit(this.input()), this.experience(), this.cookingTime());
+        CraftItemStack result = CraftItemStack.asCraftMirror(output);
+        CraftSmokingRecipe recipe = new CraftSmokingRecipe(id, result, CraftRecipe.toChoice(this.input()), this.experience(), this.cookingTime());
         recipe.setGroup(this.group());
         recipe.setCategory(CraftRecipe.getCategory(this.category()));
         return recipe;

@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(value = CraftWorld.class, remap = false)
 public abstract class CraftWorldMixin_NeoForge {
 
-    @Redirect(method = "getHumidity(III)D", at = @At(value = "FIELD", remap = true, target = "Lnet/minecraft/world/level/biome/Biome;climateSettings:Lnet/minecraft/world/level/biome/Biome$ClimateSettings;"))
+    @Redirect(method = "getHumidity(III)D", at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/biome/Biome;climateSettings:Lnet/minecraft/world/level/biome/Biome$ClimateSettings;"))
     private Biome.ClimateSettings arclight$useForgeSetting(Biome instance) {
         return instance.getModifiedClimateSettings();
     }

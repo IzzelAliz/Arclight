@@ -1,11 +1,15 @@
 package io.izzel.arclight.common.mixin.core.server;
 
+import com.destroystokyo.paper.event.server.ServerTickEndEvent;
+import com.destroystokyo.paper.event.server.ServerTickStartEvent;
 import com.mojang.datafixers.DataFixer;
 import io.izzel.arclight.api.ArclightVersion;
 import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
 import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
+import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
+import io.izzel.arclight.common.bridge.core.world.level.entity.PersistentEntitySectionManagerBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.mixins.annotation.TransformAccess;
 import io.izzel.arclight.common.mod.server.ArclightServer;
@@ -18,6 +22,7 @@ import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
+import io.papermc.paper.threadedregions.EntityScheduler;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import joptsimple.OptionSet;
 import net.minecraft.CrashReport;
@@ -80,6 +85,8 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.net.Proxy;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
@@ -105,6 +112,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Shadow public MinecraftServer.ReloadableResources resources;
     @Shadow public abstract LayeredRegistryAccess<RegistryLayer> registries();
     @Shadow public abstract Iterable<ServerLevel> getAllLevels();
+    @Shadow public abstract void halt(boolean waitForServer);
     @Shadow @Final public LevelLoadListener levelLoadListener;
     @Shadow private void updateEffectiveRespawnData() { }
     // @formatter:on
@@ -117,16 +125,22 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
 
     public WorldLoader.DataLoadContext worldLoader;
     private boolean forceTicks;
+
     public CraftServer server;
+
     public OptionSet options;
 
     @Override
     public OptionSet bridge$getOptions() {
         return this.options;
     }
+
     public ConsoleCommandSender console;
+
     public RemoteConsoleCommandSender remoteConsole;
+
     public java.util.Queue<Runnable> processQueue = new java.util.concurrent.ConcurrentLinkedQueue<>();
+
     public int autosavePeriod;
 
     @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(method = "forceGameTimeSynchronization", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;broadcastAll(Lnet/minecraft/network/protocol/Packet;)V"))
@@ -141,24 +155,64 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(method = "tickChildren", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/clock/ServerClockManager;tick()V"))
     private void arclight$tickWorldClocks(net.minecraft.world.clock.ServerClockManager global,
             com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original) {
-        var levels = ((MinecraftServer) (Object) this).getAllLevels();
-        boolean any = false;
-        for (ServerLevel level : levels) {
-            original.call(level.clockManager());
-            any = true;
-        }
-        if (!any) {
+        if (io.papermc.paper.configuration.GlobalConfiguration.get().time.affectsAllWorlds) {
             original.call(global);
+        } else {
+            for (ServerLevel level : ((MinecraftServer) (Object) this).getAllLevels()) {
+                original.call(level.clockManager());
+            }
         }
     }
 
+
+    @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(method = "onGameRuleChanged",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;broadcastAll(Lnet/minecraft/network/protocol/Packet;)V"))
+    private void arclight$clockRuleSync(net.minecraft.server.players.PlayerList list, net.minecraft.network.protocol.Packet<?> packet,
+            com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original) {
+        if (packet instanceof net.minecraft.network.protocol.game.ClientboundSetTimePacket) {
+            var clocks = (io.izzel.arclight.common.bridge.core.world.clock.ServerClockOwnerBridge)
+                ((MinecraftServer) (Object) this).clockManager();
+            for (net.minecraft.server.level.ServerPlayer player : list.getPlayers()) {
+                player.connection.send(clocks.createFullSyncPacket(player));
+            }
+        } else {
+            original.call(list, packet);
+        }
+    }
 
     @Override
     public void bridge$setAutosavePeriod(int period) {
         this.autosavePeriod = period;
     }
+
     public Commands vanillaCommandDispatcher;
     private boolean hasStopped = false;
+    @Unique private volatile boolean arclight$restarting;
+    @Shadow private int emptyTicks;
+    @Shadow protected abstract int pauseWhenEmptySeconds();
+    @Unique private int arclight$currentTick;
+    @Unique private long arclight$currentTickStartNanos;
+
+    @Override
+    public int bridge$getCurrentTick() {
+        return this.arclight$currentTick;
+    }
+
+    @Override
+    public boolean bridge$isTickPaused() {
+        return this.emptyTicks > 0 && this.emptyTicks >= this.pauseWhenEmptySeconds() * 20;
+    }
+
+    @Decorate(method = "runServer()V", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;isPaused()Z"), require = 1, allow = 1)
+    private void arclight$recordTickStart() {
+        // Paper measures from the loop iteration, including scheduling and queued packets.
+        this.arclight$currentTickStartNanos = System.nanoTime();
+    }
+
+    @Inject(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;processPacketsAndTick(Z)V"))
+    private void arclight$countServerIteration(CallbackInfo ci) {
+        ++this.arclight$currentTick;
+    }
     private final Object stopLock = new Object();
 
     private static final int TPS = 20;
@@ -166,7 +220,14 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     private static final int SAMPLE_INTERVAL = 100;
     @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
     private static int currentTick = (int) (System.currentTimeMillis() / 50);
+
     public final double[] recentTps = new double[3];
+
+    @Override
+    public double[] bridge$getRecentTps() {
+        return this.recentTps.clone();
+    }
+
     @Unique
     private long arclight$tpsTickSection;
     @Unique
@@ -181,6 +242,18 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Override
     public boolean bridge$hasStopped() {
         return this.hasStopped();
+    }
+
+    @Override
+    public void bridge$safeShutdown(boolean waitForServer, boolean restarting) {
+        // Publish the restart intent before the native server loop begins shutdown.
+        this.arclight$restarting = restarting;
+        this.halt(waitForServer);
+    }
+
+    @Override
+    public boolean bridge$isRestarting() {
+        return this.arclight$restarting;
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -243,7 +316,11 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Inject(method = "stopServer", at = @At(value = "INVOKE", remap = false, ordinal = 0, shift = At.Shift.AFTER, target = "Lorg/slf4j/Logger;info(Ljava/lang/String;)V"))
     public void arclight$unloadPlugins(CallbackInfo ci) {
         if (this.server != null) {
-            this.server.disablePlugins();
+            try {
+                this.server.disablePlugins();
+            } finally {
+                this.server.shutdownPaperSchedulers();
+            }
         }
     }
 
@@ -333,10 +410,15 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     public final void prepareLevels() {
         for (ServerLevel serverWorld : this.levels.values()) {
             this.prepareLevels(serverWorld);
-            serverWorld.entityManager.tick(); // Make pending entities available to WorldLoadEvent listeners.
+            this.arclight$tickPendingEntities(serverWorld);
             Bukkit.getPluginManager().callEvent(new WorldLoadEvent(serverWorld.bridge$getWorld()));
         }
         this.updateEffectiveRespawnData();
+    }
+
+    @Unique
+    private void arclight$tickPendingEntities(ServerLevel level) {
+        level.entityManager.tick(); // Make pending entities available to WorldLoadEvent listeners.
     }
 
     @Unique
@@ -444,6 +526,31 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
             failure = ex;
         }
         try {
+            // Include queued schedulers and idle wrappers before callbacks can mutate either source.
+            Set<EntityScheduler> schedulers = Collections.newSetFromMap(new IdentityHashMap<>());
+            Collections.addAll(schedulers, this.server.getEntitySchedulerTickList().getAllSchedulers());
+            for (var entity : ((PersistentEntitySectionManagerBridge) level.entityManager).bridge$getExistingEntities()) {
+                var wrapper = ((EntityBridge) entity).bridge$peekBukkitEntity();
+                if (wrapper != null) {
+                    schedulers.add(wrapper.taskScheduler);
+                }
+            }
+            for (var scheduler : schedulers) {
+                try {
+                    // A previous retired callback may have transferred this wrapper to another world.
+                    if (scheduler.entity.getHandleRaw().level() == level && !scheduler.isRetired()) {
+                        scheduler.retire();
+                    }
+                } catch (RuntimeException | Error ex) {
+                    if (failure == null) failure = ex;
+                    else if (failure != ex) failure.addSuppressed(ex);
+                }
+            }
+        } catch (RuntimeException | Error ex) {
+            if (failure == null) failure = ex;
+            else if (failure != ex) failure.addSuppressed(ex);
+        }
+        try {
             this.bridge$forge$markLevelsDirty();
         } catch (RuntimeException | Error ex) {
             if (failure == null) failure = ex;
@@ -463,10 +570,28 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         }
     }
 
+    @Override
+    public void bridge$removeLevel(ServerLevel level) {
+        this.removeLevel(level);
+    }
+
+    public boolean isIteratingOverLevels;
+
+    @Inject(method = "tickChildren(Ljava/util/function/BooleanSupplier;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;updateEffectiveRespawnData()V", shift = At.Shift.AFTER), require = 1)
+    private void arclight$beginWorldIteration(BooleanSupplier haveTime, CallbackInfo ci) {
+        this.isIteratingOverLevels = true;
+    }
+
+    @Inject(method = "tickChildren(Ljava/util/function/BooleanSupplier;)V", at = @At(value = "INVOKE_STRING", target = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V", args = "ldc=connection"), require = 1)
+    private void arclight$endWorldIteration(BooleanSupplier haveTime, CallbackInfo ci) {
+        this.isIteratingOverLevels = false;
+    }
+
     @Inject(method = "tickChildren", at = @At("HEAD"))
     public void arclight$runScheduler(BooleanSupplier hasTimeLeft, CallbackInfo ci) {
         ArclightConstants.currentTick = (int) (System.currentTimeMillis() / 50);
         this.server.getScheduler().mainThreadHeartbeat();
+        this.server.tickPaperSchedulers();
         this.bridge$drainQueuedTasks();
     }
 
@@ -512,9 +637,30 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         }
     }
 
+    @Decorate(method = "tickServer(Ljava/util/function/BooleanSupplier;)V", inject = true,
+        at = @At(value = "FIELD", target = "Lnet/minecraft/server/MinecraftServer;tickCount:I", opcode = Opcodes.GETFIELD, ordinal = 0), require = 1, allow = 1)
+    private void arclight$serverTickStart() {
+        // This edge is after the empty-server return, immediately before the native increment.
+        new ServerTickStartEvent(this.tickCount + 1).callEvent();
+    }
+
+    @Decorate(method = "tickServer(Ljava/util/function/BooleanSupplier;)V", inject = true,
+        at = @At(value = "INVOKE_STRING", target = "Lnet/minecraft/util/profiling/ProfilerFiller;push(Ljava/lang/String;)V", args = "ldc=tallying"), require = 1, allow = 1)
+    private void arclight$serverTickEnd() {
+        long endTime = System.nanoTime();
+        // Native deadlines use Util's clock, which mods may replace independently of nanoTime.
+        long remaining = this.nextTickTimeNanos - Util.getNanos();
+        new ServerTickEndEvent(this.tickCount, (double) (endTime - this.arclight$currentTickStartNanos) / 1_000_000D, remaining).callEvent();
+    }
+
     @Inject(method = "tickServer", at = @At("HEAD"))
     private void arclight$tickWatchdog(CallbackInfo ci) {
         arclight$tickSpigotWatchdogInternal();
+    }
+
+    @Override
+    public ConsoleCommandSender bridge$getConsole() {
+        return this.console;
     }
 
     @Override
@@ -566,7 +712,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
 
     @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
     private static MinecraftServer getServer() {
-        return Bukkit.getServer() instanceof CraftServer ? ((CraftServer) Bukkit.getServer()).getServer() : null;
+        return ArclightServer.getMinecraftServer();
     }
 
     @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
@@ -574,5 +720,26 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     private static RegistryAccess getDefaultRegistryAccess() {
         return CraftRegistry.getMinecraftRegistry();
     }
+
+    public double[] getTPS() {
+        return this.bridge$getRecentTps();
+    }
+
+    public net.kyori.adventure.text.Component motd() {
+        return this.bridge$getMotd();
+    }
+
+    public void motd(net.kyori.adventure.text.Component motd) {
+        this.bridge$setMotd(motd);
+    }
+
+    public boolean isTickPaused() {
+        return this.bridge$isTickPaused();
+    }
+
+    public void safeShutdown(boolean waitForServer, boolean restarting) {
+        this.bridge$safeShutdown(waitForServer, restarting);
+    }
+
 }
 

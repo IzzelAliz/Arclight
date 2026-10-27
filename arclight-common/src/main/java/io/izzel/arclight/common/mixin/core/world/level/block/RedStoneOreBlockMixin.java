@@ -33,7 +33,7 @@ public abstract class RedStoneOreBlockMixin {
     // @formatter:on
 
     // Scoped to the actual interact invocation, including third-party Operation wrappers.
-    private static final ThreadLocal<Entity> arclight$entity = new ThreadLocal<>();
+    private static Entity arclight$entity;
 
     @WrapOperation(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/RedStoneOreBlock;interact(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)V"))
     private void arclight$interact1(BlockState state, Level world, BlockPos pos, Operation<Void> original,
@@ -67,16 +67,12 @@ public abstract class RedStoneOreBlockMixin {
     }
 
     private static void arclight$withEntity(BlockState state, Level world, BlockPos pos, Entity entity, Operation<Void> original) {
-        Entity previous = arclight$entity.get();
-        arclight$entity.set(entity);
+        Entity previous = arclight$entity;
+        arclight$entity = entity;
         try {
             original.call(state, world, pos);
         } finally {
-            if (previous == null) {
-                arclight$entity.remove();
-            } else {
-                arclight$entity.set(previous);
-            }
+            arclight$entity = previous;
         }
     }
 
@@ -88,22 +84,18 @@ public abstract class RedStoneOreBlockMixin {
     }
 
     private static void interact(BlockState blockState, Level world, BlockPos blockPos, Entity entity) {
-        Entity previous = arclight$entity.get();
-        arclight$entity.set(entity);
+        Entity previous = arclight$entity;
+        arclight$entity = entity;
         try {
             interact(blockState, world, blockPos);
         } finally {
-            if (previous == null) {
-                arclight$entity.remove();
-            } else {
-                arclight$entity.set(previous);
-            }
+            arclight$entity = previous;
         }
     }
 
     @WrapOperation(method = "interact(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     private static boolean arclight$entityChangeBlock(Level world, BlockPos pos, BlockState state, int flags, Operation<Boolean> original) {
-        return CraftEventFactory.callEntityChangeBlockEvent(arclight$entity.get(), pos, state)
+        return CraftEventFactory.callEntityChangeBlockEvent(arclight$entity, pos, state)
             && original.call(world, pos, state, flags);
     }
 }

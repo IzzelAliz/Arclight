@@ -119,7 +119,16 @@ public abstract class LevelChunkMixin extends ChunkAccessMixin implements LevelC
         unloadCallback();
     }
 
+    @Override
+    public void bridge$loadCallback(java.util.function.Consumer<LevelChunk> entityLoadCallback) {
+        loadCallback(entityLoadCallback);
+    }
+
     public void loadCallback() {
+        loadCallback(null);
+    }
+
+    private void loadCallback(java.util.function.Consumer<LevelChunk> entityLoadCallback) {
         org.bukkit.Server server = Bukkit.getServer();
         if (server != null) {
             /*
@@ -130,6 +139,9 @@ public abstract class LevelChunkMixin extends ChunkAccessMixin implements LevelC
 
             var bukkitChunk = new CraftChunk((ServerLevel) this.level, this.chunkPos.x(), this.chunkPos.z());
             server.getPluginManager().callEvent(new ChunkLoadEvent(bukkitChunk, this.needsDecoration));
+            if (entityLoadCallback != null) {
+                entityLoadCallback.accept((LevelChunk) (Object) this);
+            }
 
             if (this.needsDecoration) {
                 this.needsDecoration = false;
@@ -158,7 +170,7 @@ public abstract class LevelChunkMixin extends ChunkAccessMixin implements LevelC
     public void unloadCallback() {
         org.bukkit.Server server = Bukkit.getServer();
         var bukkitChunk = new CraftChunk((ServerLevel) this.level, this.chunkPos.x(), this.chunkPos.z());
-        org.bukkit.event.world.ChunkUnloadEvent unloadEvent = new org.bukkit.event.world.ChunkUnloadEvent(bukkitChunk, this.isUnsaved());
+        org.bukkit.event.world.ChunkUnloadEvent unloadEvent = new org.bukkit.event.world.ChunkUnloadEvent(bukkitChunk, true);
         server.getPluginManager().callEvent(unloadEvent);
         // note: saving can be prevented, but not forced if no saving is actually required
         this.mustNotSave = !unloadEvent.isSaveChunk();

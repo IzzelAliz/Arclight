@@ -2,7 +2,7 @@ package io.izzel.arclight.common.mixin.core.world.item;
 
 import io.izzel.arclight.api.ArclightPlatform;
 import io.izzel.arclight.common.mod.mixins.annotation.OnlyInPlatform;
-import io.izzel.arclight.common.mod.util.ChorusTeleportContext;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.world.entity.LivingEntity;
@@ -15,15 +15,17 @@ import org.spongepowered.asm.mixin.injection.At;
 public class ChorusFruitItemMixin {
     @Decorate(method = "apply", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;randomTeleport(DDDZ)Z"))
     private boolean arclight$randomTeleport(LivingEntity user, double x, double y, double z, boolean showParticles) throws Throwable {
-        ChorusTeleportContext.Scope scope = ChorusTeleportContext.push(user);
+        var previous = ArclightCaptures.chorusPending;
+        var chorus = com.mojang.datafixers.util.Pair.of(user, new org.apache.commons.lang3.mutable.MutableBoolean());
+        ArclightCaptures.chorusPending = chorus;
         boolean result;
         try {
             result = (boolean) DecorationOps.callsite().invoke(user, x, y, z, showParticles);
         } finally {
-            ChorusTeleportContext.pop(scope);
+            ArclightCaptures.chorusPending = previous;
         }
         // Cancel after releasing the scope: Decorate early-return is bytecode control flow.
-        if (scope.cancelled()) {
+        if (chorus.getSecond().booleanValue()) {
             return (boolean) DecorationOps.cancel().invoke(false);
         }
         return result;

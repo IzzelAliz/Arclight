@@ -1,0 +1,15 @@
+diff --git a/paper-server/src/main/java/org/spigotmc/SpigotCommand.java b/paper-server/src/main/java/org/spigotmc/SpigotCommand.java
+--- a/paper-server/src/main/java/org/spigotmc/SpigotCommand.java
++++ b/paper-server/src/main/java/org/spigotmc/SpigotCommand.java
+@@ -38,9 +38,9 @@
+         MinecraftServer console = MinecraftServer.getServer();
+         org.spigotmc.SpigotConfig.init((File) console.options.valueOf("spigot-settings"));
+         for (ServerLevel world : console.getAllLevels()) {
+-            world.spigotConfig.init();
++            ((io.izzel.arclight.common.bridge.core.world.level.WorldBridge) world).bridge$spigotConfig().init();
+         }
+-        console.server.reloadCount++;
++        ((io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge) console).bridge$getServer().reloadCount++;
+ 
+         Command.broadcastCommandMessage(sender, text("Reload complete.", NamedTextColor.GREEN));
+         

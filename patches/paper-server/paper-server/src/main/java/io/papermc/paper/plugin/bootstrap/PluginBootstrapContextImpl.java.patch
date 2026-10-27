@@ -1,0 +1,26 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/bootstrap/PluginBootstrapContextImpl.java b/paper-server/src/main/java/io/papermc/paper/plugin/bootstrap/PluginBootstrapContextImpl.java
+index 0bb7694188d5fb75bb756ce75d0060ea980027ee..74d2596ded15f8eaa599b828487baef15d3476ed 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/bootstrap/PluginBootstrapContextImpl.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/bootstrap/PluginBootstrapContextImpl.java
+@@ -4,6 +4,7 @@ import io.papermc.paper.plugin.configuration.PluginMeta;
+ import io.papermc.paper.plugin.lifecycle.event.LifecycleEventManager;
+ import io.papermc.paper.plugin.lifecycle.event.PaperLifecycleEventManager;
+ import io.papermc.paper.plugin.provider.PluginProvider;
++import io.papermc.paper.plugin.provider.type.paper.PaperPluginParent;
+ import java.nio.file.Path;
+ import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+ import org.jetbrains.annotations.NotNull;
+@@ -29,7 +30,12 @@ public final class PluginBootstrapContextImpl implements BootstrapContext {
+     public static PluginBootstrapContextImpl create(PluginProvider<?> provider, Path pluginFolder) {
+         Path dataFolder = pluginFolder.resolve(provider.getMeta().getName());
+ 
+-        return new PluginBootstrapContextImpl(provider.getMeta(), dataFolder, provider.getLogger(), provider.getSource());
++        PluginBootstrapContextImpl context = new PluginBootstrapContextImpl(provider.getMeta(), dataFolder, provider.getLogger(), provider.getSource());
++        if (provider instanceof PaperPluginParent.PaperBootstrapProvider paperProvider) {
++            // Keep the exact lifecycle owner until main-plugin creation transfers the shared loader.
++            paperProvider.setBootstrapContext(context);
++        }
++        return context;
+     }
+ 
+     @Override

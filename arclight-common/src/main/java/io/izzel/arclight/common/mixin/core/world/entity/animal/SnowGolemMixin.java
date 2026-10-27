@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourcesBridge;
 import io.izzel.arclight.common.bridge.core.world.level.LevelAccessorBridge;
 import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.resources.ResourceKey;
@@ -24,6 +25,7 @@ import net.minecraft.world.entity.animal.golem.SnowGolem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.List;
 import java.util.function.BiConsumer;
 
 @Mixin(SnowGolem.class)
@@ -53,7 +55,20 @@ public abstract class SnowGolemMixin extends PathfinderMobMixin {
         boolean previous = this.forceDrops;
         this.forceDrops = true;
         try {
-            original.call(snowGolem, level, lootTable, tool, dropper);
+            var selection = ArclightCaptures.snowGolemShearDrops;
+            List<ItemStack> drops = null;
+            if (selection != null && selection.getLeft() == snowGolem && selection.getMiddle() == tool
+                && net.minecraft.world.level.storage.loot.BuiltInLootTables.SHEAR_SNOW_GOLEM.equals(lootTable)) {
+                drops = selection.getRight();
+                ArclightCaptures.snowGolemShearDrops = null;
+            }
+            if (drops == null) {
+                original.call(snowGolem, level, lootTable, tool, dropper);
+            } else {
+                for (ItemStack drop : drops) {
+                    dropper.accept(level, drop);
+                }
+            }
         } finally {
             this.forceDrops = previous;
         }

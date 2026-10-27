@@ -1,0 +1,21 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSkull.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSkull.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSkull.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSkull.java
+@@ -27,7 +27,7 @@
+ import org.jetbrains.annotations.Nullable;
+ 
+ @DelegateDeserialization(SerializableMeta.class)
+-class CraftMetaSkull extends CraftMetaItem implements SkullMeta {
++public class CraftMetaSkull extends CraftMetaItem implements SkullMeta {
+ 
+     @ItemMetaKey.Specific(ItemMetaKey.Specific.To.NBT)
+     static final ItemMetaKeyType<ResolvableProfile> SKULL_PROFILE = new ItemMetaKeyType<>(DataComponents.PROFILE, "SkullProfile");
+@@ -42,7 +42,7 @@
+     private ResolvableProfile profile;
+     private Identifier noteBlockSound;
+ 
+-    CraftMetaSkull(CraftMetaItem meta) {
++    public CraftMetaSkull(CraftMetaItem meta) {
+         super(meta);
+         if (!(meta instanceof CraftMetaSkull skullMeta)) {
+             return;

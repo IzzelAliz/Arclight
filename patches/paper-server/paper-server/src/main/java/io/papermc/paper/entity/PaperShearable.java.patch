@@ -1,0 +1,25 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/entity/PaperShearable.java b/paper-server/src/main/java/io/papermc/paper/entity/PaperShearable.java
+index b02e2f2ea4f83615897cb4c66be8b29948097815..82201471d52a6418c034a4ccb72d574a5d17ace8 100644
+--- a/paper-server/src/main/java/io/papermc/paper/entity/PaperShearable.java
++++ b/paper-server/src/main/java/io/papermc/paper/entity/PaperShearable.java
+@@ -3,6 +3,7 @@ package io.papermc.paper.entity;
+ import io.papermc.paper.adventure.PaperAdventure;
+ import net.kyori.adventure.sound.Sound;
+ import net.minecraft.server.level.ServerLevel;
++import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.entity.Shearable;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.Items;
+@@ -19,7 +20,10 @@ public interface PaperShearable extends io.papermc.paper.entity.Shearable {
+ 
+     @Override
+     default void shear(@NotNull Sound.Source source) {
+-        if (!(this.getHandle().level() instanceof final ServerLevel serverLevel)) return;
+-        this.getHandle().shear(serverLevel, PaperAdventure.asVanilla(source), new ItemStack(Items.SHEARS));
++        final Shearable handle = this.getHandle();
++        // Craft implementations return native entities that also implement Shearable.
++        final Entity entity = (Entity) handle;
++        if (!(entity.level() instanceof final ServerLevel serverLevel)) return;
++        handle.shear(serverLevel, PaperAdventure.asVanilla(source), new ItemStack(Items.SHEARS));
+     }
+ }

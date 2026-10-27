@@ -1,0 +1,12 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSpawnEgg.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSpawnEgg.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSpawnEgg.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaSpawnEgg.java
+@@ -27,7 +27,7 @@
+ 
+     private CompoundTag entityTag;
+ 
+-    CraftMetaSpawnEgg(CraftMetaItem meta) {
++    public CraftMetaSpawnEgg(CraftMetaItem meta) {
+         super(meta);
+ 
+         if (!(meta instanceof CraftMetaSpawnEgg spawnEggMeta)) {

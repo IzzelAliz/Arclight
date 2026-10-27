@@ -15,11 +15,17 @@ public interface ChunkMapBridge {
 
     void bridge$tickEntityTracker();
 
+    void bridge$resendEntityPairingData(net.minecraft.world.entity.Entity entity);
+
+    void bridge$sendEntitySpawnPacket(net.minecraft.world.entity.Entity entity, net.minecraft.server.level.ServerPlayer player);
+
     ArclightCallbackExecutor bridge$getCallbackExecutor();
 
     ChunkHolder bridge$chunkHolderAt(long chunkPos);
 
     void bridge$setViewDistance(int i);
+
+    java.util.concurrent.CompletableFuture<java.util.Optional<net.minecraft.nbt.CompoundTag>> bridge$readChunk(ChunkPos pos);
 
     void bridge$setChunkGenerator(ChunkGenerator generator);
 }

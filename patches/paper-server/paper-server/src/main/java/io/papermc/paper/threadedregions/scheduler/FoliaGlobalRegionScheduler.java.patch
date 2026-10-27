@@ -1,0 +1,163 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaGlobalRegionScheduler.java b/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaGlobalRegionScheduler.java
+index 14ffbcb66006878eacf310547dad53718f8308eb..ec26fad2556351bc37b8563e85849f8e70a15d25 100644
+--- a/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaGlobalRegionScheduler.java
++++ b/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaGlobalRegionScheduler.java
+@@ -1,6 +1,6 @@
+ package io.papermc.paper.threadedregions.scheduler;
+ 
+-import ca.spottedleaf.concurrentutil.util.ConcurrentUtil;
++import java.lang.invoke.MethodHandles;
+ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+ import org.bukkit.plugin.IllegalPluginAccessException;
+ import org.bukkit.plugin.Plugin;
+@@ -13,6 +13,7 @@ import java.util.logging.Level;
+ 
+ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+ 
++    private final java.util.Set<GlobalScheduledTask> tasks = java.util.concurrent.ConcurrentHashMap.newKeySet();
+     private long tickCount = 0L;
+     private final Object stateLock = new Object();
+     private final Long2ObjectOpenHashMap<List<GlobalScheduledTask>> tasksByDeadline = new Long2ObjectOpenHashMap<>();
+@@ -66,6 +67,7 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+ 
+         final GlobalScheduledTask ret = new GlobalScheduledTask(plugin, -1, task);
+ 
++        this.tasks.add(ret);
+         this.scheduleInternal(ret, delayTicks);
+ 
+         if (!plugin.isEnabled()) {
+@@ -93,6 +95,7 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+ 
+         final GlobalScheduledTask ret = new GlobalScheduledTask(plugin, periodTicks, task);
+ 
++        this.tasks.add(ret);
+         this.scheduleInternal(ret, initialDelayTicks);
+ 
+         if (!plugin.isEnabled()) {
+@@ -107,32 +110,33 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+     public void cancelTasks(final Plugin plugin) {
+         Objects.requireNonNull(plugin, "Plugin may not be null");
+ 
+-        final List<GlobalScheduledTask> toCancel = new ArrayList<>();
+-        synchronized (this.stateLock) {
+-            for (final List<GlobalScheduledTask> tasks : this.tasksByDeadline.values()) {
+-                for (int i = 0, len = tasks.size(); i < len; ++i) {
+-                    final GlobalScheduledTask task = tasks.get(i);
+-                    if (task.plugin == plugin) {
+-                        toCancel.add(task);
+-                    }
+-                }
+-            }
+-        }
+-
+-        for (int i = 0, len = toCancel.size(); i < len; ++i) {
+-            toCancel.get(i).cancel();
++        for (var task : this.tasks) {
++            if (task.plugin == plugin) task.cancel();
+         }
+     }
+ 
+     private void scheduleInternal(final GlobalScheduledTask task, final long delay) {
+         // note: delay > 0
+         synchronized (this.stateLock) {
+-            this.tasksByDeadline.computeIfAbsent(this.tickCount + delay, (final long keyInMap) -> {
++            if (task.getStateVolatile() != GlobalScheduledTask.STATE_IDLE) {
++                return;
++            }
++            task.scheduledTick = this.tickCount + delay;
++            this.tasksByDeadline.computeIfAbsent(task.scheduledTick, (final long keyInMap) -> {
+                 return new ArrayList<>();
+             }).add(task);
+         }
+     }
+ 
++    private void removeFromSchedule(final GlobalScheduledTask task) {
++        synchronized (this.stateLock) {
++            final List<GlobalScheduledTask> tasks = this.tasksByDeadline.get(task.scheduledTick);
++            if (tasks != null && tasks.remove(task) && tasks.isEmpty()) {
++                this.tasksByDeadline.remove(task.scheduledTick);
++            }
++        }
++    }
++
+     private final class GlobalScheduledTask implements ScheduledTask, Runnable {
+ 
+         private static final int STATE_IDLE                = 0;
+@@ -143,10 +147,19 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+ 
+         private final Plugin plugin;
+         private final long repeatDelay; // in ticks
++        private long scheduledTick; // guarded by the scheduler's stateLock
+         private Consumer<ScheduledTask> run;
+         private volatile int state;
+ 
+-        private static final VarHandle STATE_HANDLE = ConcurrentUtil.getVarHandle(GlobalScheduledTask.class, "state", int.class);
++        private static final VarHandle STATE_HANDLE;
++
++        static {
++            try {
++                STATE_HANDLE = MethodHandles.lookup().findVarHandle(GlobalScheduledTask.class, "state", int.class);
++            } catch (ReflectiveOperationException exception) {
++                throw new ExceptionInInitializerError(exception);
++            }
++        }
+ 
+         private GlobalScheduledTask(final Plugin plugin, final long repeatDelay, final Consumer<ScheduledTask> run) {
+             this.plugin = plugin;
+@@ -155,7 +168,7 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+         }
+ 
+         private final int getStateVolatile() {
+-            return (int)STATE_HANDLE.get(this);
++            return (int)STATE_HANDLE.getVolatile(this);
+         }
+ 
+         private final int compareAndExchangeStateVolatile(final int expect, final int update) {
+@@ -168,6 +181,10 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+ 
+         @Override
+         public void run() {
++            if (!this.plugin.isEnabled()) {
++                this.cancel();
++                return;
++            }
+             final boolean repeating = this.isRepeatingTask();
+             if (STATE_IDLE != this.compareAndExchangeStateVolatile(STATE_IDLE, STATE_EXECUTING)) {
+                 // cancelled
+@@ -177,17 +194,23 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+             try {
+                 this.run.accept(this);
+             } catch (final Throwable throwable) {
+-                this.plugin.getLogger().log(Level.WARNING, "Global task for " + this.plugin.getDescription().getFullName() + " generated an exception", throwable);
++                this.plugin.getLogger().log(Level.WARNING, "Global task for " + this.plugin.getPluginMeta().getDisplayName() + " generated an exception", throwable);
+             } finally {
+                 boolean reschedule = false;
+                 if (!repeating) {
+                     this.setStateVolatile(STATE_FINISHED);
++                } else if (!this.plugin.isEnabled()) {
++                    this.setStateVolatile(STATE_CANCELLED);
+                 } else if (STATE_EXECUTING == this.compareAndExchangeStateVolatile(STATE_EXECUTING, STATE_IDLE)) {
+                     reschedule = true;
+-                } // else: cancelled repeating task
++                } else {
++                    // The cancelled repeating callback is no longer executing.
++                    this.setStateVolatile(STATE_CANCELLED);
++                }
+ 
+                 if (!reschedule) {
+                     this.run = null;
++                    FoliaGlobalRegionScheduler.this.tasks.remove(this);
+                 } else {
+                     FoliaGlobalRegionScheduler.this.scheduleInternal(this, this.repeatDelay);
+                 }
+@@ -210,8 +233,9 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+                 switch (curr) {
+                     case STATE_IDLE: {
+                         if (STATE_IDLE == (curr = this.compareAndExchangeStateVolatile(STATE_IDLE, STATE_CANCELLED))) {
+-                            this.state = STATE_CANCELLED;
+                             this.run = null;
++                            FoliaGlobalRegionScheduler.this.removeFromSchedule(this);
++                            FoliaGlobalRegionScheduler.this.tasks.remove(this);
+                             return CancelledState.CANCELLED_BY_CALLER;
+                         }
+                         // try again

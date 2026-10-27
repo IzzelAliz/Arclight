@@ -1,0 +1,318 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/threadedregions/EntityScheduler.java b/paper-server/src/main/java/io/papermc/paper/threadedregions/EntityScheduler.java
+index 6f580f7b1708cda1cb63aea6607e369a6d771d1a..167b2c4e831fb5783e3a7351b3028341d85be031 100644
+--- a/paper-server/src/main/java/io/papermc/paper/threadedregions/EntityScheduler.java
++++ b/paper-server/src/main/java/io/papermc/paper/threadedregions/EntityScheduler.java
+@@ -1,7 +1,5 @@
+ package io.papermc.paper.threadedregions;
+ 
+-import ca.spottedleaf.moonrise.common.list.ReferenceList;
+-import ca.spottedleaf.moonrise.common.util.TickThread;
+ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+ import net.minecraft.world.entity.Entity;
+ import org.bukkit.craftbukkit.entity.CraftEntity;
+@@ -10,8 +8,6 @@ import java.util.ArrayDeque;
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.Objects;
+-import java.util.concurrent.atomic.AtomicLong;
+-import java.util.concurrent.locks.StampedLock;
+ import java.util.function.Consumer;
+ 
+ /**
+@@ -50,6 +46,8 @@ public final class EntityScheduler {
+     private boolean insideScheduledList;
+ 
+     private final ArrayDeque<ScheduledTask> currentlyExecuting = new ArrayDeque<>();
++    private ScheduledTask executingTask;
++    private boolean retiring;
+ 
+     public EntityScheduler(final CraftEntity entity) {
+         this.entity = Objects.requireNonNull(entity);
+@@ -57,7 +55,19 @@ public final class EntityScheduler {
+ 
+     // must own state lock
+     private boolean hasTasks() {
+-        return !this.currentlyExecuting.isEmpty() || !this.oneTimeDelayed.isEmpty();
++        return this.retiring || this.executingTask != null || !this.currentlyExecuting.isEmpty() || !this.oneTimeDelayed.isEmpty();
++    }
++
++    // must own state lock
++    private void removeFromScheduledListIfEmpty() {
++        if (this.insideScheduledList && !this.hasTasks()) {
++            if (this.tickCount == RETIRED_TICK_COUNT) {
++                this.registerTo(null);
++            } else {
++                this.scheduledList.remove(this);
++                this.insideScheduledList = false;
++            }
++        }
+     }
+ 
+     public void registerTo(final EntitySchedulerTickList newTickList) {
+@@ -88,6 +98,46 @@ public final class EntityScheduler {
+         }
+     }
+ 
++    public void cancelTasks(final org.bukkit.plugin.Plugin plugin) {
++        Objects.requireNonNull(plugin, "Plugin may not be null");
++        final List<io.papermc.paper.threadedregions.scheduler.ScheduledTask> cancelled = new ArrayList<>();
++        final java.util.function.Predicate<ScheduledTask> remove = task -> {
++            if (task.run instanceof io.papermc.paper.threadedregions.scheduler.ScheduledTask scheduled
++                && scheduled.getOwningPlugin() == plugin) {
++                cancelled.add(scheduled);
++                return true;
++            }
++            return false;
++        };
++        synchronized (this.stateLock) {
++            for (final List<ScheduledTask> tasks : this.oneTimeDelayed.values()) {
++                tasks.removeIf(remove);
++            }
++            this.oneTimeDelayed.values().removeIf(List::isEmpty);
++            this.currentlyExecuting.removeIf(remove);
++            if (this.executingTask != null) {
++                remove.test(this.executingTask);
++            }
++            this.removeFromScheduledListIfEmpty();
++        }
++        // Do not call task cancellation (which unlinks itself) while holding the queue lock.
++        for (final io.papermc.paper.threadedregions.scheduler.ScheduledTask task : cancelled) {
++            task.cancel();
++        }
++    }
++
++    // Unlink a task after its public cancellation state has been published.
++    public void removeTask(final Consumer<? extends Entity> run) {
++        synchronized (this.stateLock) {
++            for (final List<ScheduledTask> tasks : this.oneTimeDelayed.values()) {
++                tasks.removeIf(task -> task.run == run);
++            }
++            this.oneTimeDelayed.values().removeIf(List::isEmpty);
++            this.currentlyExecuting.removeIf(task -> task.run == run);
++            this.removeFromScheduledListIfEmpty();
++        }
++    }
++
+     /**
+      * Returns whether this scheduler is retired.
+      *
+@@ -97,7 +147,9 @@ public final class EntityScheduler {
+      * @return whether this scheduler is retired.
+      */
+     public boolean isRetired() {
+-        return this.tickCount == RETIRED_TICK_COUNT;
++        synchronized (this.stateLock) {
++            return this.tickCount == RETIRED_TICK_COUNT;
++        }
+     }
+ 
+     /**
+@@ -111,37 +163,66 @@ public final class EntityScheduler {
+      * @throws IllegalStateException If the scheduler is already retired.
+      */
+     public void retire() {
++        if (!org.bukkit.Bukkit.isPrimaryThread()) {
++            throw new IllegalStateException("May not retire entity scheduler asynchronously");
++        }
+         synchronized (this.stateLock) {
+             if (this.tickCount == RETIRED_TICK_COUNT) {
+                 throw new IllegalStateException("Already retired");
+             }
+             this.tickCount = RETIRED_TICK_COUNT;
+-            this.registerTo(null);
++            // Stay visible to plugin-disable cleanup while retired callbacks are running.
++            this.retiring = true;
++            for (final List<ScheduledTask> tasks : this.oneTimeDelayed.values()) {
++                this.currentlyExecuting.addAll(tasks);
++            }
++            this.oneTimeDelayed.clear();
+         }
+ 
+         final Entity thisEntity = this.entity.getHandleRaw();
+ 
+         // correctly handle and order retiring while running executeTick
+-        for (int i = 0, len = this.currentlyExecuting.size(); i < len; ++i) {
+-            final ScheduledTask task = this.currentlyExecuting.pollFirst();
+-            final Consumer<Entity> retireTask = (Consumer<Entity>)task.retired;
+-            if (retireTask == null) {
+-                continue;
+-            }
+-
+-            retireTask.accept(thisEntity);
+-        }
+-
+-        for (final List<ScheduledTask> tasks : this.oneTimeDelayed.values()) {
+-            for (int i = 0, len = tasks.size(); i < len; ++i) {
+-                final ScheduledTask task = tasks.get(i);
++        Throwable failure = null;
++        try {
++            for (;;) {
++                final ScheduledTask task;
++                synchronized (this.stateLock) {
++                    task = this.currentlyExecuting.pollFirst();
++                }
++                if (task == null) {
++                    break;
++                }
+                 final Consumer<Entity> retireTask = (Consumer<Entity>)task.retired;
+                 if (retireTask == null) {
+                     continue;
+                 }
+-
+-                retireTask.accept(thisEntity);
++                try {
++                    retireTask.accept(thisEntity);
++                } catch (final Throwable throwable) {
++                    if (failure == null) {
++                        failure = throwable;
++                    } else if (failure != throwable) {
++                        failure.addSuppressed(throwable);
++                    }
++                }
+             }
++        } finally {
++            synchronized (this.stateLock) {
++                this.retiring = false;
++                // An enclosing run callback must remain discoverable until it returns, too.
++                if (this.executingTask == null) {
++                    this.registerTo(null);
++                }
++            }
++        }
++        if (failure instanceof RuntimeException runtimeException) {
++            throw runtimeException;
++        }
++        if (failure instanceof Error error) {
++            throw error;
++        }
++        if (failure != null) {
++            throw new RuntimeException(failure);
+         }
+     }
+ 
+@@ -161,7 +242,7 @@ public final class EntityScheduler {
+ 
+         final Entity handle = this.entity.getHandleRaw();
+ 
+-        if (!TickThread.isTickThreadFor(handle)) {
++        if (!org.bukkit.Bukkit.isPrimaryThread()) {
+             return Boolean.valueOf(this.schedule(run, null, 1L));
+         }
+ 
+@@ -206,6 +287,13 @@ public final class EntityScheduler {
+             if (this.tickCount == RETIRED_TICK_COUNT) {
+                 return false;
+             }
++            // Cancellation unlinks under this same lock, so it cannot race a late repeat insertion.
++            if (run instanceof io.papermc.paper.threadedregions.scheduler.ScheduledTask scheduled && scheduled.isCancelled()) {
++                return false;
++            }
++            if (this.scheduledList == null) {
++                this.registerTo(((org.bukkit.craftbukkit.CraftServer) this.entity.getServer()).getEntitySchedulerTickList());
++            }
+             this.oneTimeDelayed.computeIfAbsent(this.tickCount + Math.max(1L, delay), (final long keyInMap) -> {
+                 return new ArrayList<>();
+             }).add(task);
+@@ -225,58 +313,52 @@ public final class EntityScheduler {
+      * @throws IllegalStateException If the scheduler is retired.
+      */
+     public void executeTick() {
+-        final Entity thisEntity = this.entity.getHandleRaw();
+-
+-        TickThread.ensureTickThread(thisEntity, "May not tick entity scheduler asynchronously");
+-        final List<ScheduledTask> toRun;
++        if (!org.bukkit.Bukkit.isPrimaryThread()) {
++            throw new IllegalStateException("May not tick entity scheduler asynchronously");
++        }
++        final int taskCount;
+         synchronized (this.stateLock) {
+             if (this.tickCount == RETIRED_TICK_COUNT) {
+                 throw new IllegalStateException("Ticking retired scheduler");
+             }
+             ++this.tickCount;
+ 
+-            if (this.scheduledList != null && !this.hasTasks()) {
+-                this.scheduledList.remove(this);
+-                this.insideScheduledList = false;
+-            }
+-
+-            if (this.oneTimeDelayed.isEmpty()) {
+-                toRun = null;
+-            } else {
+-                toRun = this.oneTimeDelayed.remove(this.tickCount);
+-            }
+-        }
+-
+-        if (toRun != null) {
+-            for (int i = 0, len = toRun.size(); i < len; ++i) {
+-                this.currentlyExecuting.addLast(toRun.get(i));
++            final List<ScheduledTask> toRun = this.oneTimeDelayed.remove(this.tickCount);
++            if (toRun != null) {
++                this.currentlyExecuting.addAll(toRun);
+             }
++            taskCount = this.currentlyExecuting.size();
++            this.removeFromScheduledListIfEmpty();
+         }
+ 
+         // Note: It is allowed for the tasks executed to retire the entity in a given task.
+-        for (int i = 0, len = this.currentlyExecuting.size(); i < len; ++i) {
+-            if (!TickThread.isTickThreadFor(thisEntity)) {
+-                // tp has been queued sync by one of the tasks
+-                // in this case, we need to delay the tasks for next tick
+-                break;
++        for (int i = 0; i < taskCount; ++i) {
++            final ScheduledTask task;
++            synchronized (this.stateLock) {
++                if (this.tickCount == RETIRED_TICK_COUNT || this.entity.getHandleRaw().isRemoved()) {
++                    // A queued teleport delays the remaining tasks until the next tick.
++                    break;
++                }
++                task = this.currentlyExecuting.pollFirst();
++                if (task == null) {
++                    break;
++                }
++                this.executingTask = task;
+             }
+-            final ScheduledTask task = this.currentlyExecuting.pollFirst();
+-
+-            if (this.tickCount != RETIRED_TICK_COUNT) {
+-                ((Consumer<Entity>)task.run).accept(thisEntity);
+-            } else {
+-                // retired synchronously
+-                // note: here task is null
+-                break;
++            try {
++                ((Consumer<Entity>)task.run).accept(this.entity.getHandleRaw());
++            } finally {
++                synchronized (this.stateLock) {
++                    this.executingTask = null;
++                    this.removeFromScheduledListIfEmpty();
++                }
+             }
+         }
+     }
+ 
+     public static final class EntitySchedulerTickList {
+ 
+-        private static final EntityScheduler[] ENTITY_SCHEDULER_ARRAY = new EntityScheduler[0];
+-
+-        private final ReferenceList<EntityScheduler> entitySchedulers = new ReferenceList<>(ENTITY_SCHEDULER_ARRAY);
++        private final java.util.Set<EntityScheduler> entitySchedulers = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+ 
+         public boolean add(final EntityScheduler scheduler) {
+             synchronized (this) {
+@@ -291,13 +373,8 @@ public final class EntityScheduler {
+         }
+ 
+         public EntityScheduler[] getAllSchedulers() {
+-            EntityScheduler[] ret = new EntityScheduler[this.entitySchedulers.size()];
+             synchronized (this) {
+-                if (ret.length != this.entitySchedulers.size()) {
+-                    ret = new EntityScheduler[this.entitySchedulers.size()];
+-                }
+-                System.arraycopy(this.entitySchedulers.getRawDataUnchecked(), 0, ret, 0, this.entitySchedulers.size());
+-                return ret;
++                return this.entitySchedulers.toArray(EntityScheduler[]::new);
+             }
+         }
+     }

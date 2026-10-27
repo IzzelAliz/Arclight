@@ -1,0 +1,65 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/command/brigadier/argument/SignedMessageResolverImpl.java b/paper-server/src/main/java/io/papermc/paper/command/brigadier/argument/SignedMessageResolverImpl.java
+index 07a23be2cd7b4592108dee0ae223e71b1d00cec9..c338c53823378af4fb766c4b4432977015bcbbb2 100644
+--- a/paper-server/src/main/java/io/papermc/paper/command/brigadier/argument/SignedMessageResolverImpl.java
++++ b/paper-server/src/main/java/io/papermc/paper/command/brigadier/argument/SignedMessageResolverImpl.java
+@@ -2,10 +2,15 @@ package io.papermc.paper.command.brigadier.argument;
+ 
+ import com.mojang.brigadier.context.CommandContext;
+ import com.mojang.brigadier.exceptions.CommandSyntaxException;
++import io.papermc.paper.adventure.NativeSignedMessage;
+ import java.util.concurrent.CompletableFuture;
++import java.util.function.Consumer;
+ import net.kyori.adventure.chat.SignedMessage;
++import net.minecraft.commands.CommandSigningContext;
+ import net.minecraft.commands.CommandSourceStack;
+ import net.minecraft.commands.arguments.MessageArgument;
++import net.minecraft.network.chat.Component;
++import net.minecraft.network.chat.PlayerChatMessage;
+ import org.jspecify.annotations.NullMarked;
+ 
+ @NullMarked
+@@ -19,12 +24,39 @@ public record SignedMessageResolverImpl(MessageArgument.Message message) impleme
+     @SuppressWarnings({"rawtypes", "unchecked"})
+     @Override
+     public CompletableFuture<SignedMessage> resolveSignedMessage(final String argumentName, final CommandContext erased) throws CommandSyntaxException {
+-        final CompletableFuture<SignedMessage> future = new CompletableFuture<>();
++        final Resolution future = new Resolution();
+ 
+-        final MessageArgument.Message response = ((CommandContext<CommandSourceStack>) erased).getArgument(argumentName, SignedMessageResolverImpl.class).message;
+-        MessageArgument.resolveChatMessage(response, erased, argumentName, (message) -> {
+-            future.complete(message.adventureView());
+-        });
++        final CommandContext<CommandSourceStack> context = (CommandContext<CommandSourceStack>) erased;
++        final MessageArgument.Message response = context.getArgument(argumentName, SignedMessageResolverImpl.class).message;
++        final CommandSourceStack sender = context.getSource();
++        final Component formatted = response.resolveComponent(sender);
++        final CommandSigningContext signingContext = sender.getSigningContext();
++        final PlayerChatMessage signedArgument = signingContext.getArgument(argumentName);
++
++        try {
++            if (signedArgument != null) {
++                MessageArgument.resolveSignedMessage(future, sender, signedArgument.withUnsignedContent(formatted));
++            } else {
++                MessageArgument.resolveDisguisedMessage(future, sender, PlayerChatMessage.system(response.text()).withUnsignedContent(formatted));
++            }
++        } catch (final RuntimeException | Error failure) {
++            future.completeExceptionally(failure);
++        }
+         return future;
+     }
++
++    // The async MessageArgument adapter can fail/cancel this same future before
++    // the native TaskChainer consumes a failure or skips a cancelled message.
++    private static final class Resolution extends CompletableFuture<SignedMessage> implements Consumer<PlayerChatMessage> {
++
++        @Override
++        public void accept(final PlayerChatMessage message) {
++            try {
++                this.complete(new NativeSignedMessage(message));
++            } catch (final RuntimeException | Error failure) {
++                this.completeExceptionally(failure);
++                throw failure;
++            }
++        }
++    }
+ }

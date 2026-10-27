@@ -1,0 +1,41 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/block/data/CraftBlockData.java b/paper-server/src/main/java/org/bukkit/craftbukkit/block/data/CraftBlockData.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/block/data/CraftBlockData.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/block/data/CraftBlockData.java
+@@ -53,6 +53,7 @@
+ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.bukkit.craftbukkit.inventory.CraftItemType;
+ import org.bukkit.craftbukkit.util.CraftLocation;
++import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+ import org.bukkit.craftbukkit.util.CraftVoxelShape;
+ import org.bukkit.inventory.ItemStack;
+ import org.jetbrains.annotations.Unmodifiable;
+@@ -453,7 +454,7 @@
+     public static void reloadCache() {
+         ENCODER_CACHE.clear();
+         Block.BLOCK_STATE_REGISTRY.forEach(state -> {
+-            CraftBlockData data = state.asBlockData();
++            CraftBlockData data = createData(state);
+             ENCODER_CACHE.put(data.getAsString(), data);
+         });
+     }
+@@ -484,7 +485,7 @@
+             throw new IllegalArgumentException("Could not parse data: " + serializedData, ex);
+         }
+ 
+-        CraftBlockData data = result.blockState().asBlockData();
++        CraftBlockData data = createData(result.blockState());
+         List<Property.Value<?>> parsed = new ArrayList<>(result.properties().size());
+         result.properties().forEach((property, value) -> {
+             parsed.add(StateHolder.createValue(property, value));
+@@ -494,11 +495,6 @@
+         return data;
+     }
+ 
+-    static {
+-        // Initialize cached data for all BlockState instances after registration
+-        Block.BLOCK_STATE_REGISTRY.forEach(BlockState::asBlockData);
+-    }
+-
+     public static CraftBlockData createData(BlockState state) {
+         return INSTANCE_CREATOR.getOrDefault(state.getBlock().getClass(), CraftBlockData::new).apply(state);
+     }

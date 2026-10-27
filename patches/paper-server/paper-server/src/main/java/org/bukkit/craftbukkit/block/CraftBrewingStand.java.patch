@@ -1,0 +1,19 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftBrewingStand.java b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftBrewingStand.java
+index 0c697d964012c2ccdc4aaad31b186282739a0beb..75c6ab73a9e608dbbecec3ca6266861eca6e661a 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftBrewingStand.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftBrewingStand.java
+@@ -45,12 +45,12 @@ public class CraftBrewingStand extends CraftContainer<BrewingStandBlockEntity> i
+     @Override
+     public void setRecipeBrewTime(int recipeBrewTime) {
+         com.google.common.base.Preconditions.checkArgument(recipeBrewTime > 0, "recipeBrewTime must be positive");
+-        this.getSnapshot().recipeBrewTime = recipeBrewTime;
++        throw new UnsupportedOperationException("Recipe brewing duration overrides are not supported");
+     }
+ 
+     @Override
+     public int getRecipeBrewTime() {
+-        return this.getSnapshot().recipeBrewTime;
++        throw new UnsupportedOperationException("Recipe brewing duration overrides are not supported");
+     }
+     // Paper end - Add recipeBrewTime
+ 

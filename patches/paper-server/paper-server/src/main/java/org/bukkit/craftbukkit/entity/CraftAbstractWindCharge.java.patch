@@ -1,0 +1,20 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractWindCharge.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractWindCharge.java
+index ebb86537367288fd50c71cf37e2efe9179decd82..cfa9770d4af885fcdde8c894dacbe528644a19b2 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractWindCharge.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractWindCharge.java
+@@ -1,5 +1,6 @@
+ package org.bukkit.craftbukkit.entity;
+ 
++import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
+ import org.bukkit.craftbukkit.CraftServer;
+ import org.bukkit.entity.AbstractWindCharge;
+ import org.bukkit.event.entity.EntityRemoveEvent;
+@@ -17,6 +18,7 @@ public abstract class CraftAbstractWindCharge extends CraftFireball implements A
+     @Override
+     public void explode() {
+         this.getHandle().explode(this.getHandle().position());
+-        this.getHandle().discard(EntityRemoveEvent.Cause.EXPLODE); // SPIGOT-7577 - explode doesn't discard the entity, this happens only in tick and onHitBlock
++        ((EntityBridge) this.getHandle()).bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.EXPLODE);
++        this.getHandle().discard(); // SPIGOT-7577 - explode doesn't discard the entity, this happens only in tick and onHitBlock
+     }
+ }

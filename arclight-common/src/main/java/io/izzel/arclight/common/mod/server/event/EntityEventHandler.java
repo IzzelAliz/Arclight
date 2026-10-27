@@ -51,6 +51,10 @@ public class EntityEventHandler {
                 // Already respect vanilla behaviours by using entity capture
                 List<org.bukkit.inventory.ItemStack> loot = container.initDecorate(drops);
                 event = ArclightEventFactory.callPlayerDeathEvent(player, source, loot, expReward, dmsgOrig, original == null);
+                if (event.isCancelled()) {
+                    drops.clear();
+                    return true;
+                }
                 if (event.getKeepInventory()) {
                     original = null;
                 }
@@ -79,6 +83,10 @@ public class EntityEventHandler {
             try (final var container = new EntityDropContainer()) {
                 List<ItemStack> itemStackList = container.initDecorate(drops);
                 event = ArclightEventFactory.callEntityDeathEvent(living, source, itemStackList);
+                if (event.isCancelled()) {
+                    drops.clear();
+                    return true;
+                }
                 container.convert(itemStackList, drops, ((EntityBridge) living)::arclight$spawnAtLocationNoAdd);
             }
             bridge.bridge$setExpToDrop(event.getDroppedExp());

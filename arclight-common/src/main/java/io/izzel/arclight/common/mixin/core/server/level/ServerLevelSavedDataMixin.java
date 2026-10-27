@@ -101,16 +101,18 @@ public abstract class ServerLevelSavedDataMixin implements ServerLevelSavedDataB
     // call clockManager() while updating sky brightness/initializing attachments.
     // A RETURN hook is too late: computeIfAbsent may already have cached an empty
     // world clock, so publishing the old file then would silently lose the import.
-    @Inject(method = "<init>", at = @At(value = "FIELD",
+    @io.izzel.arclight.mixin.Decorate(method = "<init>", inject = true, at = @At(value = "FIELD",
         target = "Lnet/minecraft/server/level/ServerLevel;chunkSource:Lnet/minecraft/server/level/ServerChunkCache;",
         opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER))
     private void arclight$importClockBeforeWorldInitialization(MinecraftServer server, java.util.concurrent.Executor executor,
             LevelStorageSource.LevelStorageAccess access, net.minecraft.world.level.storage.ServerLevelData levelData,
             net.minecraft.resources.ResourceKey<Level> dimension, net.minecraft.world.level.dimension.LevelStem stem,
             boolean debug, long seed, java.util.List<net.minecraft.world.level.CustomSpawner> spawners,
-            boolean ticking, CallbackInfo ci) {
-        this.arclight$prepareClockImport(access);
-        this.bridge$getClockManager();
+            boolean ticking) {
+        if (!io.papermc.paper.configuration.GlobalConfiguration.get().time.affectsAllWorlds) {
+            this.arclight$prepareClockImport(access);
+            this.bridge$getClockManager();
+        }
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -125,6 +127,9 @@ public abstract class ServerLevelSavedDataMixin implements ServerLevelSavedDataB
     }
 
     public ServerClockManager bridge$getClockManager() {
+        if (io.papermc.paper.configuration.GlobalConfiguration.get().time.affectsAllWorlds) {
+            return this.getServer().clockManager();
+        }
         if (this.arclight$clockManager == null) {
             ServerClockManager manager = this.getDataStorage().computeIfAbsent(ServerClockManager.TYPE);
             ((ServerClockOwnerBridge) manager).init((ServerLevel) (Object) this);
@@ -136,7 +141,8 @@ public abstract class ServerLevelSavedDataMixin implements ServerLevelSavedDataB
     @Inject(method = "clockManager", at = @At("HEAD"), cancellable = true)
     private void arclight$worldClock(CallbackInfoReturnable<ServerClockManager> cir) {
         if (this.chunkSource != null) {
-            cir.setReturnValue(this.bridge$getClockManager());
+            cir.setReturnValue(io.papermc.paper.configuration.GlobalConfiguration.get().time.affectsAllWorlds
+                ? this.getServer().clockManager() : this.arclight$clockManager);
         }
     }
 

@@ -6,5 +6,9 @@ public interface BeeBridge {
 
     void bridge$setHasStung(boolean stung);
 
+    boolean bridge$isRolling();
+
+    void bridge$setRolling(boolean rolling);
+
     int bridge$getCannotEnterHiveTicks();
 }

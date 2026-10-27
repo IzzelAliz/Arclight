@@ -1,5 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
+import com.destroystokyo.paper.event.entity.EntityJumpEvent;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import io.papermc.paper.event.entity.EntityToggleSitEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.animal.panda.Panda;
@@ -10,12 +14,32 @@ import org.bukkit.event.entity.EntityRemoveEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(Panda.class)
 public abstract class PandaMixin extends AnimalMixin {
 
     @Shadow private static boolean canPickUpAndEat(ItemEntity itemEntity) {
         return false;
+    }
+
+    @Decorate(method = "sit(Z)V", inject = true, at = @At("HEAD"), require = 1, allow = 1)
+    private void arclight$toggleSit(boolean value) throws Throwable {
+        if (!new EntityToggleSitEvent(this.getBukkitEntity(), value).callEvent()) {
+            DecorationOps.cancel().invoke();
+            return;
+        }
+    }
+
+    @Decorate(method = "afterSneeze()V", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/entity/animal/panda/Panda;jumpFromGround()V"), require = 1, allow = 1)
+    private void arclight$entityJump(Panda panda) throws Throwable {
+        // Paper uses the sneezer for the event and veto, but the nearby panda for the jump.
+        if (this.level().isClientSide() || new EntityJumpEvent(this.getBukkitEntity()).callEvent()) {
+            DecorationOps.callsite().invoke(panda);
+        } else {
+            ((Panda) (Object) this).setJumping(false);
+        }
     }
 
     /**

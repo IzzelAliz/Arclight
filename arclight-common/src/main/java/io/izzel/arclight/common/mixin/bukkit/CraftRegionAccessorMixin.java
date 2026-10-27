@@ -22,12 +22,8 @@ public abstract class CraftRegionAccessorMixin {
     @Shadow public abstract <T extends Entity> T addEntity(net.minecraft.world.entity.Entity entity, CreatureSpawnEvent.SpawnReason reason, Consumer<T> function, boolean randomizeData) throws IllegalArgumentException;
     // @formatter:on
 
-    @Inject(method = "spawnEntity(Lorg/bukkit/Location;Lorg/bukkit/entity/EntityType;)Lorg/bukkit/entity/Entity;", cancellable = true, at = @At("HEAD"))
-    private void arclight$useFactory(Location loc, EntityType entityType, CallbackInfoReturnable<Entity> cir) {
-        Function<Location, ? extends net.minecraft.world.entity.Entity> factory = ((EntityTypeBridge) (Object) entityType).bridge$entityFactory();
-        if (factory != null) {
-            cir.setReturnValue(this.addEntity(factory.apply(loc), CreatureSpawnEvent.SpawnReason.CUSTOM, null, true));
-        }
+    public Entity spawnEntity(Location loc, EntityType entityType) {
+        return ((CraftRegionAccessor) (Object) this).spawnEntity(loc, entityType, true);
     }
 
     @Inject(method = "spawnEntity(Lorg/bukkit/Location;Lorg/bukkit/entity/EntityType;Z)Lorg/bukkit/entity/Entity;", cancellable = true, at = @At("HEAD"))

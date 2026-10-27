@@ -1,0 +1,35 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftBeacon.java b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftBeacon.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftBeacon.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftBeacon.java
+@@ -41,7 +41,9 @@
+         if (blockEntity instanceof BeaconBlockEntity) {
+             BeaconBlockEntity beacon = (BeaconBlockEntity) blockEntity;
+ 
+-            Collection<Player> nms = BeaconBlockEntity.getHumansInRange(beacon.getLevel(), beacon.getBlockPos(), beacon.levels, beacon); // Paper - Custom beacon ranges
++            double range = beacon.levels * 10 + 10;
++            var bounds = new net.minecraft.world.phys.AABB(beacon.getBlockPos()).inflate(range).expandTowards(0.0D, beacon.getLevel().getHeight(), 0.0D);
++            Collection<Player> nms = beacon.getLevel().getEntitiesOfClass(Player.class, bounds);
+             Collection<LivingEntity> bukkit = new ArrayList<>(nms.size());
+ 
+             for (Player human : nms) {
+@@ -150,17 +152,17 @@
+     // Paper start
+     @Override
+     public double getEffectRange() {
+-        return this.getSnapshot().getEffectRange();
++        return this.getSnapshot().levels * 10 + 10;
+     }
+ 
+     @Override
+     public void setEffectRange(double range) {
+-        this.getSnapshot().setEffectRange(range);
++        throw new UnsupportedOperationException("Custom beacon effect ranges are not supported");
+     }
+ 
+     @Override
+     public void resetEffectRange() {
+-        this.getSnapshot().resetEffectRange();
++        throw new UnsupportedOperationException("Custom beacon effect ranges are not supported");
+     }
+     // Paper end
+ }

@@ -7,6 +7,9 @@ import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import io.izzel.arclight.common.bridge.core.world.entity.BeeBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.BeePollinateGoalBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import net.kyori.adventure.util.TriState;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
@@ -28,11 +31,25 @@ public abstract class BeeMixin extends AnimalMixin implements BeeBridge {
 
     @Shadow private int stayOutOfHiveCountdown;
 
+    public TriState rollingOverride = TriState.NOT_SET;
+
     @Invoker("setHasNectar")
     @Override public abstract void bridge$setHasNectar(boolean nectar);
 
     @Invoker("setHasStung")
     @Override public abstract void bridge$setHasStung(boolean stung);
+
+    @Invoker("isRolling")
+    @Override public abstract boolean bridge$isRolling();
+
+    @Invoker("setRolling")
+    @Override public abstract void bridge$setRolling(boolean rolling);
+
+    @Decorate(method = "setRolling(Z)V", inject = true, at = @At("HEAD"))
+    private void arclight$applyRollingOverride(boolean rolling) throws Throwable {
+        rolling = this.rollingOverride.toBooleanOrElse(rolling);
+        DecorationOps.blackhole().invoke(rolling);
+    }
 
     @Override
     public int bridge$getCannotEnterHiveTicks() {

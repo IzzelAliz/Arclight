@@ -1,0 +1,21 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/paper-server/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+@@ -83,7 +83,7 @@
+ 
+     @Override
+     public com.destroystokyo.paper.profile.PlayerProfile getPlayerProfile() { // Paper
+-        return com.destroystokyo.paper.profile.CraftPlayerProfile.asBukkitCopy(this.nameAndId.toUncompletedGameProfile()); // Paper
++        return com.destroystokyo.paper.profile.CraftPlayerProfile.asBukkitCopy(new com.mojang.authlib.GameProfile(this.nameAndId.id(), this.nameAndId.name())); // Paper
+     }
+ 
+     public Server getServer() {
+@@ -385,7 +385,7 @@
+     }
+ 
+     private ServerStatsCounter getStatisticManager() {
+-        return this.server.getHandle().getPlayerStats(this.nameAndId.toUncompletedGameProfile());
++        return ((io.izzel.arclight.common.bridge.core.server.players.PlayerListBridge) this.server.getHandle()).bridge$getPlayerStats(new com.mojang.authlib.GameProfile(this.nameAndId.id(), this.nameAndId.name()));
+     }
+ 
+     @Override

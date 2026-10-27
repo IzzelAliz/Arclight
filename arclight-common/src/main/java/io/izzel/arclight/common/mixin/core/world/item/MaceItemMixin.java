@@ -10,7 +10,7 @@ import net.minecraft.world.item.MaceItem;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
-import org.bukkit.event.entity.EntityKnockbackEvent;
+import io.papermc.paper.event.entity.EntityKnockbackEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -31,14 +31,13 @@ public abstract class MaceItemMixin {
                                                        @Local(argsOnly = true, index = 1) Entity attacker,
                                                        @Local(index = 4) double strength) {
         Vec3 pushIncrement = new Vec3(x, y, z);
-        Vec3 rawVelocity = attacker.getDeltaMovement().add(pushIncrement);
         CraftLivingEntity bukkitNearby = (CraftLivingEntity) ((LivingEntityBridge) nearby).bridge$getBukkitEntity();
         EntityKnockbackEvent event = CraftEventFactory.callEntityKnockbackEvent(
-            bukkitNearby, attacker, EntityKnockbackEvent.KnockbackCause.ENTITY_ATTACK,
-            strength, rawVelocity, x, y, z
+            bukkitNearby, attacker, attacker, EntityKnockbackEvent.Cause.ENTITY_ATTACK,
+            strength, pushIncrement
         );
         if (!event.isCancelled()) {
-            var finalKnockback = event.getFinalKnockback();
+            var finalKnockback = event.getKnockback();
             original.call(nearby, finalKnockback.getX(), finalKnockback.getY(), finalKnockback.getZ());
         }
     }

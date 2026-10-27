@@ -1,0 +1,19 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/CraftAnvilView.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/CraftAnvilView.java
+index 2b3844f5ecc1bfbf3f5dab1c00d06f8be27f39e9..93fb350ea93edba85cea0338b68d9c13341e428e 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/CraftAnvilView.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/CraftAnvilView.java
+@@ -52,12 +52,12 @@ public class CraftAnvilView extends CraftInventoryView<AnvilMenu, AnvilInventory
+ 
+     @Override
+     public boolean bypassesEnchantmentLevelRestriction() {
+-        return this.container.bypassEnchantmentLevelRestriction;
++        throw new UnsupportedOperationException("Bypassing enchantment level restrictions is not supported");
+     }
+ 
+     @Override
+     public void bypassEnchantmentLevelRestriction(final boolean bypassEnchantmentLevelRestriction) {
+-        this.container.bypassEnchantmentLevelRestriction = bypassEnchantmentLevelRestriction;
++        throw new UnsupportedOperationException("Bypassing enchantment level restrictions is not supported");
+     }
+ 
+     public void updateFromLegacy(CraftInventoryAnvil legacy) {

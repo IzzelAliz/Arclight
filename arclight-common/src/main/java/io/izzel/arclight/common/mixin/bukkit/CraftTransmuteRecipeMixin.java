@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = CraftTransmuteRecipe.class, remap = false)
 public abstract class CraftTransmuteRecipeMixin {
 
-    @Inject(method = "addToCraftingManager", at = @At("HEAD"))
+    @Inject(method = "addToRecipeManager", at = @At("HEAD"))
     private void arclight$validateMaterialCount(CallbackInfo ci) {
         CraftTransmuteRecipe recipe = (CraftTransmuteRecipe) (Object) this;
         arclight$validateBounds(recipe.getMinimumMaterialCount(), recipe.getMaximumMaterialCount());

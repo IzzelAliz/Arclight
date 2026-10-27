@@ -1,0 +1,12 @@
+diff --git a/paper-api/src/main/java/io/papermc/paper/datacomponent/DataComponentTypes.java b/paper-api/src/main/java/io/papermc/paper/datacomponent/DataComponentTypes.java
+index c126cbf5f3533352230c803f2fb6de40b5916f93..200a1aac1487176c9e7cb64f94a09e215bb5679e 100644
+--- a/paper-api/src/main/java/io/papermc/paper/datacomponent/DataComponentTypes.java
++++ b/paper-api/src/main/java/io/papermc/paper/datacomponent/DataComponentTypes.java
+@@ -126,6 +126,7 @@ public final class DataComponentTypes {
+     public static final DataComponentType.Valued<Component> CUSTOM_NAME = valued("custom_name");
+     public static final DataComponentType.Valued<Float> MINIMUM_ATTACK_CHARGE = valued("minimum_attack_charge");
+     public static final DataComponentType.Valued<DamageType> DAMAGE_TYPE = valued("damage_type");
++    public static final DataComponentType.Valued<Integer> ADDITIONAL_TRADE_COST = valued("additional_trade_cost");
+     /**
+      * When present, replaces default item name with contained chat component.
+      * <p>

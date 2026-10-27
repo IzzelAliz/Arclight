@@ -29,10 +29,10 @@ dependencies {
     mixinProcessorSupport libs.asm.util
     mixinProcessorSupport libs.asm.tree
 
-    implementation(libs.bundles.spigot.shade) { transitive = false }
-    shadowBundle(libs.bundles.spigot.shade) { transitive = false }
-    implementation rootProject.ext.generatedSpigot
-    shadowBundle rootProject.ext.generatedSpigot
+    implementation project(':arclight-paper-api')
+    shadowBundle(project(':arclight-paper-api')) { transitive = false }
+    implementation libs.jline
+    shadowBundle(libs.jline) { transitive = false }
 
     implementation libs.fabric.permissions.api
     include libs.fabric.permissions.api

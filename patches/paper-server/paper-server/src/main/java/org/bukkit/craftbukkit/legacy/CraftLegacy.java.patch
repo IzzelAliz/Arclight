@@ -1,0 +1,21 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/legacy/CraftLegacy.java b/paper-server/src/main/java/org/bukkit/craftbukkit/legacy/CraftLegacy.java
+index 883a92b134da33c3a6c34df1077382fac647289e..e9b1992d8ce8e75316bd667227dd795b4e28aa98 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/legacy/CraftLegacy.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/legacy/CraftLegacy.java
+@@ -15,7 +15,6 @@ import net.minecraft.nbt.NbtOps;
+ import net.minecraft.nbt.Tag;
+ import net.minecraft.resources.Identifier;
+ import net.minecraft.server.Bootstrap;
+-import net.minecraft.server.MinecraftServer;
+ import net.minecraft.util.datafix.DataFixers;
+ import net.minecraft.util.datafix.fixes.BlockStateData;
+ import net.minecraft.util.datafix.fixes.ItemIdFix;
+@@ -261,7 +260,7 @@ public final class CraftLegacy {
+ 
+     static {
+         LOGGER.warn("Initializing Legacy Material Support. Unless you have legacy plugins and/or data this is a bug!"); // Paper - Improve logging and errors; doesn't need to be an error
+-        if (MinecraftServer.getServer() != null && MinecraftServer.getServer().isDebugging()) {
++        if (LOGGER.isDebugEnabled()) {
+             new Exception().printStackTrace();
+         }
+ 

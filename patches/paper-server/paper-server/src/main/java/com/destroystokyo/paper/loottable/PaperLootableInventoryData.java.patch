@@ -1,0 +1,39 @@
+diff --git a/paper-server/src/main/java/com/destroystokyo/paper/loottable/PaperLootableInventoryData.java b/paper-server/src/main/java/com/destroystokyo/paper/loottable/PaperLootableInventoryData.java
+index 901a538fde2f4188cbbab38db55b611a7deb76b8..b3f9e307f51c18254350c9d02b27affd146c9f46 100644
+--- a/paper-server/src/main/java/com/destroystokyo/paper/loottable/PaperLootableInventoryData.java
++++ b/paper-server/src/main/java/com/destroystokyo/paper/loottable/PaperLootableInventoryData.java
+@@ -102,7 +102,7 @@ public class PaperLootableInventoryData {
+     public static final LootTableInterface<RandomizableContainer> CONTAINER = new LootTableInterface<>() {
+         @Override
+         public WorldConfiguration paperConfig(final RandomizableContainer holder) {
+-            return Objects.requireNonNull(holder.getLevel(), "Can only manager loot replenishment on block entities in a world").paperConfig();
++            throw new UnsupportedOperationException("Loot replenishment is not supported by Arclight");
+         }
+ 
+         @Override
+@@ -117,14 +117,14 @@ public class PaperLootableInventoryData {
+ 
+         @Override
+         public LootableInventory getInventoryForEvent(final RandomizableContainer holder) {
+-            return holder.getLootableInventory();
++            throw new UnsupportedOperationException("Loot replenishment is not supported by Arclight");
+         }
+     };
+ 
+     public static final LootTableInterface<ContainerEntity> ENTITY = new LootTableInterface<>() {
+         @Override
+         public WorldConfiguration paperConfig(final ContainerEntity holder) {
+-            return holder.level().paperConfig();
++            throw new UnsupportedOperationException("Loot replenishment is not supported by Arclight");
+         }
+ 
+         @Override
+@@ -139,7 +139,7 @@ public class PaperLootableInventoryData {
+ 
+         @Override
+         public LootableInventory getInventoryForEvent(final ContainerEntity holder) {
+-            return holder.getLootableInventory();
++            throw new UnsupportedOperationException("Loot replenishment is not supported by Arclight");
+         }
+     };
+ 

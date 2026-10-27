@@ -25,7 +25,7 @@ public abstract class VibrationListenerMixin {
     private boolean arclight$gameEvent(VibrationSystem.User instance, ServerLevel serverLevel, BlockPos pos, Holder<GameEvent> gameEventHolder, GameEvent.Context context, @Local(ordinal = 1) Vec3 destination) throws Throwable {
         var defaultCancel = !(boolean) DecorationOps.callsite().invoke(instance, serverLevel, pos, gameEventHolder, context);
         Entity entity = context.sourceEntity();
-        BlockReceiveGameEvent event = new BlockReceiveGameEvent(CraftGameEvent.minecraftToBukkit(gameEventHolder.value()), CraftBlock.at(serverLevel, BlockPos.containing(destination)), (entity == null) ? null : entity.bridge$getBukkitEntity());
+        BlockReceiveGameEvent event = new BlockReceiveGameEvent(CraftGameEvent.minecraftHolderToBukkit(gameEventHolder), CraftBlock.at(serverLevel, BlockPos.containing(destination)), (entity == null) ? null : entity.bridge$getBukkitEntity());
         event.setCancelled(defaultCancel);
         Bukkit.getPluginManager().callEvent(event);
         return !event.isCancelled();

@@ -42,6 +42,7 @@ import java.util.function.Supplier;
 public abstract class ChunkMapMixin implements ChunkMapBridge {
 
     // @formatter:off
+    @Shadow @Final public it.unimi.dsi.fastutil.ints.Int2ObjectMap<ChunkMap.TrackedEntity> entityMap;
     @Shadow @Nullable protected abstract ChunkHolder getUpdatingChunkIfPresent(long chunkPosIn);
     @Shadow @Final private Long2ObjectLinkedOpenHashMap<ChunkHolder> visibleChunkMap;
     @Shadow protected abstract void tick();
@@ -51,6 +52,7 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
     @Shadow @Final @Mutable private WorldGenContext worldGenContext;
     @Invoker("tick") public abstract void bridge$tick(BooleanSupplier hasMoreTime);
     @Invoker("setServerViewDistance") public abstract void bridge$setViewDistance(int i);
+    @Invoker("readChunk") public abstract java.util.concurrent.CompletableFuture<java.util.Optional<net.minecraft.nbt.CompoundTag>> bridge$readChunk(net.minecraft.world.level.ChunkPos pos);
     // @formatter:on
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -78,6 +80,29 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
                 .getKey(net.minecraft.world.level.chunk.status.ChunkStatus.SPAWN).toString());
         }
         return upgraded;
+    }
+
+    @Override
+    public void bridge$resendEntityPairingData(net.minecraft.world.entity.Entity entity) {
+        if (!entity.isAlive()) return;
+        var tracker = this.entityMap.get(entity.getId());
+        if (tracker == null) return;
+        for (var connection : tracker.seenBy) {
+            var player = connection.getPlayer();
+            if (!player.getBukkitEntity().canSee(entity.getBukkitEntity())) continue;
+            var packets = new java.util.ArrayList<net.minecraft.network.protocol.Packet<? super net.minecraft.network.protocol.game.ClientGamePacketListener>>();
+            tracker.serverEntity.sendPairingData(player, packets::add);
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundBundlePacket(packets));
+        }
+    }
+
+    @Override
+    public void bridge$sendEntitySpawnPacket(net.minecraft.world.entity.Entity entity, net.minecraft.server.level.ServerPlayer player) {
+        if (!entity.isAlive()) return;
+        var tracker = this.entityMap.get(entity.getId());
+        if (tracker != null) {
+            player.connection.send(entity.getAddEntityPacket(tracker.serverEntity));
+        }
     }
 
     public final ArclightCallbackExecutor callbackExecutor = new ArclightCallbackExecutor();

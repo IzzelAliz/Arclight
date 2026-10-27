@@ -1,0 +1,12 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAllay.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAllay.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAllay.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAllay.java
+@@ -78,7 +78,7 @@
+ 
+     @Override
+     public org.bukkit.entity.Allay duplicateAllay() {
+-        Allay allay = this.getHandle().duplicateAllay();
++        Allay allay = ((io.izzel.arclight.common.bridge.core.world.entity.animal.AllayBridge) this.getHandle()).bridge$duplicateAllay();
+         return (allay != null) ? (org.bukkit.entity.Allay) allay.getBukkitEntity() : null;
+     }
+ 

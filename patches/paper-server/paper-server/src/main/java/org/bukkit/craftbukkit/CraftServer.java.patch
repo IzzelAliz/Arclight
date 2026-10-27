@@ -1,0 +1,707 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/paper-server/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -1,6 +1,5 @@
+ package org.bukkit.craftbukkit;
+ 
+-import ca.spottedleaf.moonrise.common.time.TickData;
+ import com.google.common.base.Function;
+ import com.google.common.base.Joiner;
+ import com.google.common.base.Preconditions;
+@@ -13,7 +12,6 @@
+ import io.papermc.paper.configuration.GlobalConfiguration;
+ import io.papermc.paper.configuration.PaperServerConfiguration;
+ import io.papermc.paper.configuration.ServerConfiguration;
+-import io.papermc.paper.world.PaperWorldLoader;
+ import io.papermc.paper.world.migration.WorldFolderMigration;
+ import io.papermc.paper.world.saveddata.PaperLevelOverrides;
+ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+@@ -301,9 +299,41 @@
+     public static Exception excessiveVelEx;
+     private final io.papermc.paper.logging.SysoutCatcher sysoutCatcher = new io.papermc.paper.logging.SysoutCatcher();
+     private final io.papermc.paper.potion.PaperPotionBrewer potionBrewer;
+-    public final io.papermc.paper.SparksFly spark;
+     private final ServerConfiguration serverConfig = new PaperServerConfiguration();
+ 
++    private final io.papermc.paper.threadedregions.EntityScheduler.EntitySchedulerTickList entitySchedulers = new io.papermc.paper.threadedregions.EntityScheduler.EntitySchedulerTickList();
++
++    public io.papermc.paper.threadedregions.EntityScheduler.EntitySchedulerTickList getEntitySchedulerTickList() {
++        return this.entitySchedulers;
++    }
++
++    public void tickPaperSchedulers() {
++        this.globalRegionScheduler.tick();
++        for (var scheduler : this.entitySchedulers.getAllSchedulers()) {
++            var handle = scheduler.entity.getHandleRaw();
++            if (!scheduler.isRetired() && !handle.isRemoved()
++                && (handle instanceof ServerPlayer player
++                    ? this.playerList.getPlayers().contains(player)
++                    : handle.valid)) {
++                scheduler.executeTick();
++            }
++        }
++    }
++
++    public void shutdownPaperSchedulers() {
++        for (var plugin : this.getPluginManager().getPlugins()) {
++            this.globalRegionScheduler.cancelTasks(plugin);
++            this.cancelEntityTasks(plugin);
++        }
++        this.asyncScheduler.shutdown();
++    }
++
++    public void cancelEntityTasks(org.bukkit.plugin.Plugin plugin) {
++        for (var scheduler : this.entitySchedulers.getAllSchedulers()) {
++            ((io.papermc.paper.threadedregions.scheduler.FoliaEntityScheduler) scheduler.entity.getScheduler()).cancelTasks(plugin);
++        }
++    }
++
+     // Paper start - Folia region threading API
+     private final io.papermc.paper.threadedregions.scheduler.FallbackRegionScheduler regionizedScheduler = new io.papermc.paper.threadedregions.scheduler.FallbackRegionScheduler();
+     private final io.papermc.paper.threadedregions.scheduler.FoliaAsyncScheduler asyncScheduler = new io.papermc.paper.threadedregions.scheduler.FoliaAsyncScheduler();
+@@ -326,63 +356,49 @@
+ 
+     @Override
+     public final boolean isOwnedByCurrentRegion(World world, io.papermc.paper.math.Position position) {
+-        return ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(
+-            ((CraftWorld) world).getHandle(), position.blockX() >> 4, position.blockZ() >> 4
+-        );
++        return this.isPrimaryThread();
+     }
+ 
+     @Override
+     public final boolean isOwnedByCurrentRegion(World world, io.papermc.paper.math.Position position, int squareRadiusChunks) {
+-        return ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(
+-            ((CraftWorld) world).getHandle(), position.blockX() >> 4, position.blockZ() >> 4, squareRadiusChunks
+-        );
++        return this.isPrimaryThread();
+     }
+ 
+     @Override
+     public final boolean isOwnedByCurrentRegion(Location location) {
+         World world = location.getWorld();
+-        return ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(
+-            ((CraftWorld) world).getHandle(), location.getBlockX() >> 4, location.getBlockZ() >> 4
+-        );
++        return this.isPrimaryThread();
+     }
+ 
+     @Override
+     public final boolean isOwnedByCurrentRegion(Location location, int squareRadiusChunks) {
+         World world = location.getWorld();
+-        return ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(
+-            ((CraftWorld) world).getHandle(), location.getBlockX() >> 4, location.getBlockZ() >> 4, squareRadiusChunks
+-        );
++        return this.isPrimaryThread();
+     }
+ 
+     @Override
+     public final boolean isOwnedByCurrentRegion(World world, int chunkX, int chunkZ) {
+-        return ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(
+-            ((CraftWorld) world).getHandle(), chunkX, chunkZ
+-        );
++        return this.isPrimaryThread();
+     }
+ 
+     @Override
+     public final boolean isOwnedByCurrentRegion(World world, int chunkX, int chunkZ, int squareRadiusChunks) {
+-        return ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(
+-            ((CraftWorld) world).getHandle(), chunkX, chunkZ, squareRadiusChunks
+-        );
++        return this.isPrimaryThread();
+     }
+ 
+     @Override
+     public final boolean isOwnedByCurrentRegion(World world, int minChunkX, int minChunkZ, int maxChunkX, int maxChunkZ) {
+-        return ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(
+-            ((CraftWorld) world).getHandle(), minChunkX, minChunkZ, maxChunkX, maxChunkZ
+-        );
++        return this.isPrimaryThread();
+     }
+ 
+     @Override
+     public final boolean isOwnedByCurrentRegion(Entity entity) {
+-        return ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(((org.bukkit.craftbukkit.entity.CraftEntity) entity).getHandleRaw());
++        return this.isPrimaryThread();
+     }
+ 
+     @Override
+     public final boolean isGlobalTickThread() {
+-        return ca.spottedleaf.moonrise.common.util.TickThread.isTickThread();
++        return this.isPrimaryThread();
+     }
+     // Paper end - Folia reagion threading API
+ 
+@@ -470,7 +486,8 @@
+         this.overrideSpawnLimits();
+         console.autosavePeriod = this.configuration.getInt("ticks-per.autosave");
+         this.warningState = WarningState.value(this.configuration.getString("settings.deprecated-verbose"));
+-        TicketType.PLUGIN_TYPE_TIMEOUT = this.configuration.getInt("chunk-gc.period-in-ticks");
++        io.izzel.arclight.common.bridge.core.server.level.TicketTypeBridge pluginTicketType = io.izzel.arclight.common.bridge.core.server.level.TicketTypeBridge.bridge$plugin();
++        pluginTicketType.bridge$setPluginTimeout(this.configuration.getInt("chunk-gc.period-in-ticks"));
+         this.minimumAPI = ApiVersion.getOrCreateVersion(this.configuration.getString("settings.minimum-api"));
+         this.loadIcon();
+         this.loadCompatibilities();
+@@ -482,7 +499,6 @@
+         }
+         this.potionBrewer = new io.papermc.paper.potion.PaperPotionBrewer(console); // Paper - custom potion mixes
+         datapackManager = new io.papermc.paper.datapack.PaperDatapackManager(console.getPackRepository()); // Paper
+-        this.spark = new io.papermc.paper.SparksFly(this); // Paper - spark
+     }
+ 
+     public boolean getCommandBlockOverride(String command) {
+@@ -549,13 +565,25 @@
+         }
+     }
+ 
++    private io.papermc.paper.plugin.storage.ProviderStorage<org.bukkit.plugin.java.JavaPlugin> loadedPluginProviders;
++
+     public void loadPlugins() {
+-        io.papermc.paper.plugin.entrypoint.LaunchEntryPointHandler.INSTANCE.enter(io.papermc.paper.plugin.entrypoint.Entrypoint.PLUGIN); // Paper - replace implementation
++        final var entrypoints = io.papermc.paper.plugin.entrypoint.LaunchEntryPointHandler.INSTANCE;
++        final var providers = entrypoints.get(io.papermc.paper.plugin.entrypoint.Entrypoint.PLUGIN);
++        if (this.loadedPluginProviders == providers) {
++            return;
++        }
++        // Discovery/bootstrap already ran before native bootstrap. Both descriptor types
++        // are created and receive onLoad only through this storage and its shared manager.
++        // Mark before entering so plugin callbacks cannot re-enter the same generation.
++        // Reload replaces the storage, allowing the new generation to load normally.
++        this.loadedPluginProviders = providers;
++        entrypoints.enter(io.papermc.paper.plugin.entrypoint.Entrypoint.PLUGIN);
+     }
+ 
+     @Override
+     public File getPluginsFolder() {
+-        return this.console.getPluginsFolder();
++        return (File) this.console.options.valueOf("plugins");
+     }
+ 
+     private List<File> extraPluginJars() {
+@@ -581,16 +609,17 @@
+     }
+ 
+     public void enablePlugins(PluginLoadOrder type) {
++        final boolean loadPermissionsBeforePlugins = GlobalConfiguration.get().misc.loadPermissionsYmlBeforePlugins;
+         if (type == PluginLoadOrder.STARTUP) {
+             this.helpMap.clear();
+             this.helpMap.initializeGeneralTopics();
+-            if (io.papermc.paper.configuration.GlobalConfiguration.get().misc.loadPermissionsYmlBeforePlugins) loadCustomPermissions(); // Paper
++            if (loadPermissionsBeforePlugins) this.loadCustomPermissions();
+         }
+ 
+         Plugin[] plugins = this.pluginManager.getPlugins();
+ 
+         for (Plugin plugin : plugins) {
+-            if ((!plugin.isEnabled()) && (plugin.getDescription().getLoad() == type)) {
++            if ((!plugin.isEnabled()) && (plugin.getPluginMeta().getLoadOrder() == type)) {
+                 this.enablePlugin(plugin);
+             }
+         }
+@@ -601,7 +630,13 @@
+             // Spigot end
+             DefaultPermissions.registerCorePermissions();
+             CraftDefaultPermissions.registerCorePermissions();
+-            if (!io.papermc.paper.configuration.GlobalConfiguration.get().misc.loadPermissionsYmlBeforePlugins) this.loadCustomPermissions(); // Paper
++            if (!loadPermissionsBeforePlugins) this.loadCustomPermissions();
++            io.izzel.arclight.common.mod.util.PaperCommandLifecycle.plugins(
++                this.reloadCount == 0
++                    ? io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent.Cause.INITIAL
++                    : io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent.Cause.RELOAD);
++            this.commandMap.registerServerAliases();
++            this.helpMap.initializeCommands();
+             this.syncCommands();
+         }
+     }
+@@ -621,14 +656,14 @@
+ 
+     private void enablePlugin(Plugin plugin) {
+         try {
+-            List<Permission> perms = plugin.getDescription().getPermissions();
++            List<Permission> perms = plugin.getPluginMeta().getPermissions();
+             List<Permission> permsToLoad = new ArrayList<>(); // Paper
+             for (Permission perm : perms) {
+                 // Paper start
+                 if (this.paperPluginManager.getPermission(perm.getName()) == null) {
+                     permsToLoad.add(perm);
+                 } else {
+-                    this.getLogger().log(Level.WARNING, "Plugin " + plugin.getDescription().getFullName() + " tried to register permission '" + perm.getName() + "' but it's already registered");
++                    this.getLogger().log(Level.WARNING, "Plugin " + plugin.getPluginMeta().getDisplayName() + " tried to register permission '" + perm.getName() + "' but it's already registered");
+                 // Paper end
+                 }
+             }
+@@ -636,7 +671,7 @@
+ 
+             this.pluginManager.enablePlugin(plugin);
+         } catch (Throwable ex) {
+-            Logger.getLogger(CraftServer.class.getName()).log(Level.SEVERE, ex.getMessage() + " loading " + plugin.getDescription().getFullName() + " (Is it up to date?)", ex);
++            Logger.getLogger(CraftServer.class.getName()).log(Level.SEVERE, ex.getMessage() + " loading " + plugin.getPluginMeta().getDisplayName() + " (Is it up to date?)", ex);
+         }
+     }
+ 
+@@ -930,7 +965,11 @@
+         com.mojang.brigadier.CommandDispatcher<CommandSourceStack> dispatcher = commands.getDispatcher();
+         com.mojang.brigadier.ParseResults<CommandSourceStack> results = dispatcher.parse(command, sourceStack);
+ 
+-        CommandSender sender = sourceStack.getBukkitSender();
++        io.izzel.arclight.common.bridge.core.commands.CommandSourceStackBridge source = sourceStack;
++        CommandSender sender = source.getBukkitSender();
++        if (command.isEmpty()) {
++            return false;
++        }
+         String[] args = org.apache.commons.lang3.StringUtils.split(command, ' '); // Paper - fix adjacent spaces (from console/plugins) causing empty array elements
+         Command target = this.commandMap.getCommand(args[0].toLowerCase(java.util.Locale.ENGLISH));
+ 
+@@ -939,7 +978,17 @@
+                 return false;
+             }
+             Commands.validateParseResults(results);
+-            commands.performCommand(results, command, true);
++            var chain = com.mojang.brigadier.context.ContextChain.tryFlatten(results.getContext().build(command))
++                .orElseThrow(() -> com.mojang.brigadier.exceptions.CommandSyntaxException.BUILT_IN_EXCEPTIONS
++                    .dispatcherUnknownCommand().createWithContext(results.getReader()));
++            net.minecraft.util.profiling.Profiler.get().push(() -> "/" + command);
++            try {
++                Commands.executeCommandInContext(sourceStack, context ->
++                    net.minecraft.commands.execution.ExecutionContext.queueInitialCommandExecution(
++                        context, command, chain, sourceStack, net.minecraft.commands.CommandResultCallback.EMPTY));
++            } finally {
++                net.minecraft.util.profiling.Profiler.get().pop();
++            }
+             return true;
+         } catch (CommandException ex) {
+             new com.destroystokyo.paper.event.server.ServerExceptionEvent(new com.destroystokyo.paper.exception.ServerCommandException(ex, target, sender, args)).callEvent(); // Paper
+@@ -963,13 +1012,14 @@
+         this.configuration = YamlConfiguration.loadConfiguration(this.getConfigFile());
+         this.commandsConfiguration = YamlConfiguration.loadConfiguration(this.getCommandsConfigFile());
+ 
+-        this.console.settings = new DedicatedServerSettings(this.console.options);
+-        DedicatedServerProperties config = this.console.settings.getProperties();
++        io.izzel.arclight.common.bridge.core.server.dedicated.DedicatedServerBridge dedicated = this.console;
++        DedicatedServerProperties config = dedicated.bridge$reloadProperties();
+ 
+         this.console.setMotd(config.motd.get());
+         this.overrideSpawnLimits();
+         this.warningState = WarningState.value(this.configuration.getString("settings.deprecated-verbose"));
+-        TicketType.PLUGIN_TYPE_TIMEOUT = this.configuration.getInt("chunk-gc.period-in-ticks");
++        io.izzel.arclight.common.bridge.core.server.level.TicketTypeBridge pluginTicketType = io.izzel.arclight.common.bridge.core.server.level.TicketTypeBridge.bridge$plugin();
++        pluginTicketType.bridge$setPluginTimeout(this.configuration.getInt("chunk-gc.period-in-ticks"));
+         this.minimumAPI = ApiVersion.getOrCreateVersion(this.configuration.getString("settings.minimum-api"));
+         this.printSaveWarning = false;
+         this.console.autosavePeriod = this.configuration.getInt("ticks-per.autosave");
+@@ -989,8 +1039,9 @@
+         }
+ 
+         org.spigotmc.SpigotConfig.init((File) this.console.options.valueOf("spigot-settings")); // Spigot
+-        this.console.paperConfigurations.reloadConfigs(this.console);
++        io.izzel.arclight.common.mod.server.ArclightServer.getPaperConfigurations().reloadConfigs(this.console);
+         for (ServerLevel world : this.console.getAllLevels()) {
++            io.izzel.arclight.common.bridge.core.world.level.WorldBridge worldBridge = world;
+             // world.serverLevelData.setDifficulty(config.difficulty); // Paper - per level difficulty
+             world.setSpawnSettings(world.isSpawningMonsters()); // Paper - per level difficulty (from MinecraftServer#setDifficulty(ServerLevel, Difficulty, boolean))
+ 
+@@ -1004,7 +1055,7 @@
+                     }
+                 }
+             }
+-            world.spigotConfig.init(); // Spigot
++            worldBridge.bridge$spigotConfig().init(); // Spigot
+         }
+ 
+         Plugin[] pluginClone = pluginManager.getPlugins().clone(); // Paper
+@@ -1021,7 +1072,6 @@
+         this.reloadData();
+         org.spigotmc.SpigotConfig.registerCommands(); // Spigot
+         io.papermc.paper.command.PaperCommands.registerCommands(this.console); // Paper
+-        this.spark.registerCommandBeforePlugins(this); // Paper - spark
+         this.overrideAllCommandBlockCommands = this.commandsConfiguration.getStringList("command-block-overrides").contains("*");
+         this.ignoreVanillaPermissions = this.commandsConfiguration.getBoolean("ignore-vanilla-permissions");
+ 
+@@ -1044,19 +1094,12 @@
+                 plugin.getDescription().getFullName(),
+                 "This plugin is not properly shutting down its async tasks when it is being reloaded.  This may cause conflicts with the newly loaded version of the plugin"
+             ));
+-            if (console.isDebugging()) io.papermc.paper.util.TraceUtil.dumpTraceForThread(worker.getThread(), "still running"); // Paper - Debugging
++            if (io.izzel.arclight.common.mod.server.ArclightServer.LOGGER.isDebugEnabled()) io.papermc.paper.util.TraceUtil.dumpTraceForThread(worker.getThread(), "still running"); // Paper - Debugging
+         }
+         io.papermc.paper.plugin.PluginInitializerManager.reload(this.console); // Paper
+         this.loadPlugins();
+         this.enablePlugins(PluginLoadOrder.STARTUP);
+         this.enablePlugins(PluginLoadOrder.POSTWORLD);
+-        this.spark.registerCommandAfterPlugins(this); // Paper - spark
+-        // Paper start - brigadier command API
+-        io.papermc.paper.command.brigadier.PaperCommands.INSTANCE.setValid(); // to clear invalid state for event fire below
+-        io.papermc.paper.plugin.lifecycle.event.LifecycleEventRunner.INSTANCE.callReloadableRegistrarEvent(io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents.COMMANDS, io.papermc.paper.command.brigadier.PaperCommands.INSTANCE, org.bukkit.plugin.Plugin.class, io.papermc.paper.plugin.lifecycle.event.registrar.ReloadableRegistrarEvent.Cause.RELOAD); // call commands event for regular plugins
+-        this.helpMap.initializeCommands();
+-        this.syncCommands(); // Refresh commands after event
+-        // Paper end - brigadier command API
+         new ServerLoadEvent(ServerLoadEvent.LoadType.RELOAD).callEvent();
+         org.spigotmc.WatchdogThread.hasStarted = true; // Paper - Disable watchdog early timeout on reload
+     }
+@@ -1082,14 +1125,31 @@
+                 plugin.getPluginMeta().getDisplayName(),
+                 "This plugin is not properly shutting down its async tasks when it is being shut down. This task may throw errors during the final shutdown logs and might not complete before process dies."
+             ));
+-            if (console.isDebugging()) io.papermc.paper.util.TraceUtil.dumpTraceForThread(worker.getThread(), "still running"); // Paper - Debugging
++            if (io.izzel.arclight.common.mod.server.ArclightServer.LOGGER.isDebugEnabled()) io.papermc.paper.util.TraceUtil.dumpTraceForThread(worker.getThread(), "still running"); // Paper - Debugging
+         }
+     }
+     // Paper end - Wait for Async Tasks during shutdown
+ 
+     @Override
+     public void reloadData() {
+-        ReloadCommand.reload(this.console);
++        org.spigotmc.AsyncCatcher.catchOp("Resource reload");
++        var repository = this.console.getPackRepository();
++        java.util.Collection<String> selected = new ArrayList<>(repository.getSelectedIds());
++        repository.reload();
++        var disabled = this.console.getWorldData().getDataConfiguration().dataPacks().getDisabled();
++        for (String id : repository.getAvailableIds()) {
++            if (!disabled.contains(id) && !selected.contains(id)) {
++                selected.add(id);
++            }
++        }
++        this.console.reloadResources(selected).thenRunAsync(() -> {
++            org.bukkit.craftbukkit.block.data.CraftBlockData.reloadCache();
++            new io.papermc.paper.event.server.ServerResourcesReloadedEvent(
++                io.papermc.paper.event.server.ServerResourcesReloadedEvent.Cause.PLUGIN).callEvent();
++        }, this.console).exceptionally(failure -> {
++            this.logger.log(Level.SEVERE, "Failed to reload server resources", failure);
++            return null;
++        });
+     }
+ 
+     // Paper start - API for updating recipes on clients
+@@ -1100,7 +1160,13 @@
+ 
+     @Override
+     public void updateRecipes() {
+-        this.playerList.reloadRecipes();
++        var recipes = this.console.getRecipeManager();
++        var packet = new net.minecraft.network.protocol.game.ClientboundUpdateRecipesPacket(
++            recipes.getSynchronizedItemProperties(), recipes.getSynchronizedStonecutterRecipes());
++        for (ServerPlayer player : this.playerList.getPlayers()) {
++            player.connection.send(packet);
++            player.getRecipeBook().sendInitialRecipeBook(player);
++        }
+     }
+     // Paper end - API for updating recipes on clients
+ 
+@@ -1170,146 +1236,7 @@
+ 
+     @Override
+     public World createWorld(WorldCreator creator) {
+-        Preconditions.checkState(this.console.getAllLevels().iterator().hasNext(), "Cannot create additional worlds on STARTUP");
+-        //Preconditions.checkState(!this.console.isIteratingOverLevels, "Cannot create a world while worlds are being ticked"); // Paper - Cat - Temp disable. We'll see how this goes.
+-        Preconditions.checkArgument(creator != null, "WorldCreator cannot be null");
+-
+-        String name = creator.name();
+-        ChunkGenerator chunkGenerator = creator.generator();
+-        BiomeProvider biomeProvider = creator.biomeProvider();
+-
+-        World world = this.getWorld(name);
+-        World worldByKey = this.getWorld(creator.key());
+-        if (world != null || worldByKey != null) {
+-            if (world == worldByKey) {
+-                return world;
+-            }
+-            throw new IllegalArgumentException("Cannot create a world with key " + creator.key() + " and name " + name + " one (or both) already match a world that exists");
+-        }
+-
+-        if (chunkGenerator == null) {
+-            chunkGenerator = this.getGenerator(name);
+-        }
+-
+-        if (biomeProvider == null) {
+-            biomeProvider = this.getBiomeProvider(name);
+-        }
+-
+-        ResourceKey<LevelStem> actualDimension = switch (creator.environment()) {
+-            case NORMAL -> LevelStem.OVERWORLD;
+-            case NETHER -> LevelStem.NETHER;
+-            case THE_END -> LevelStem.END;
+-            default -> throw new IllegalArgumentException("Illegal dimension (" + creator.environment() + ")");
+-        };
+-
+-        final ResourceKey<net.minecraft.world.level.Level> dimensionKey = PaperWorldLoader.dimensionKey(creator.key());
+-        WorldLoader.DataLoadContext context = this.console.worldLoaderContext;
+-        RegistryAccess.Frozen registryAccess = context.datapackDimensions();
+-        net.minecraft.core.Registry<LevelStem> contextLevelStemRegistry = registryAccess.lookupOrThrow(Registries.LEVEL_STEM);
+-        final LevelStem configuredStem = this.console.registryAccess().lookupOrThrow(Registries.LEVEL_STEM).getValue(actualDimension);
+-        if (configuredStem == null) {
+-            throw new IllegalStateException("Missing configured level stem " + actualDimension);
+-        }
+-        try {
+-            WorldFolderMigration.migrateApiWorld(
+-                this.console.storageSource,
+-                this.console.registryAccess(),
+-                name,
+-                actualDimension,
+-                dimensionKey
+-            );
+-        } catch (final IOException ex) {
+-            throw new RuntimeException("Failed to migrate legacy world " + name, ex);
+-        }
+-        PaperWorldLoader.LoadedWorldData loadedWorldData = PaperWorldLoader.loadWorldData(
+-            this.console,
+-            dimensionKey,
+-            name
+-        );
+-        final PrimaryLevelData primaryLevelData = (PrimaryLevelData) this.console.getWorldData();
+-        WorldGenSettings worldGenSettings = LevelStorageSource.readExistingSavedData(this.console.storageSource, dimensionKey, this.console.registryAccess(), WorldGenSettings.TYPE)
+-            .result()
+-            .orElse(null);
+-        if (worldGenSettings == null) {
+-            WorldOptions worldOptions = new WorldOptions(creator.seed(), creator.generateStructures(), creator.bonusChest());
+-
+-            DedicatedServerProperties.WorldDimensionData properties = new DedicatedServerProperties.WorldDimensionData(GsonHelper.parse((creator.generatorSettings().isEmpty()) ? "{}" : creator.generatorSettings()), creator.type().name().toLowerCase(Locale.ROOT));
+-            WorldDimensions worldDimensions = properties.create(context.datapackWorldgen());
+-
+-            WorldDimensions.Complete complete = worldDimensions.bake(contextLevelStemRegistry);
+-            if (complete.dimensions().getValue(actualDimension) == null) {
+-                throw new IllegalStateException("Missing generated level stem " + actualDimension + " for world " + name);
+-            }
+-
+-            worldGenSettings = new WorldGenSettings(worldOptions, worldDimensions);
+-            registryAccess = complete.dimensionsRegistryAccess();
+-            loadedWorldData.levelOverrides().setHardcore(creator.hardcore());
+-            loadedWorldData = new PaperWorldLoader.LoadedWorldData(
+-                loadedWorldData.bukkitName(),
+-                loadedWorldData.uuid(),
+-                loadedWorldData.pdc(),
+-                loadedWorldData.levelOverrides()
+-            );
+-        }
+-        final WorldGenSettings genSettingsFinal = worldGenSettings;
+-
+-        contextLevelStemRegistry = registryAccess.lookupOrThrow(Registries.LEVEL_STEM);
+-
+-        if (this.console.options.has("forceUpgrade")) {
+-            net.minecraft.server.Main.forceUpgrade(this.console.storageSource, DataFixers.getDataFixer(), this.console.options.has("eraseCache"), () -> true, registryAccess, this.console.options.has("recreateRegionFiles"));
+-        }
+-
+-        long biomeZoomSeed = BiomeManager.obfuscateSeed(genSettingsFinal.options().seed());
+-        LevelStem customStem = genSettingsFinal.dimensions().get(actualDimension).orElse(null);
+-        if (customStem == null) {
+-            customStem = contextLevelStemRegistry.getValue(actualDimension);
+-        }
+-        if (customStem == null) {
+-            throw new IllegalStateException("Missing level stem for world " + name + " using key " + actualDimension);
+-        }
+-
+-        WorldInfo worldInfo = new CraftWorldInfo(loadedWorldData.bukkitName(), CraftNamespacedKey.fromMinecraft(dimensionKey.identifier()), genSettingsFinal.options().seed(), primaryLevelData.enabledFeatures(), creator.environment(), customStem.type().value(), customStem.generator(), this.getHandle().getServer().registryAccess(), loadedWorldData.uuid());
+-        if (biomeProvider == null && chunkGenerator != null) {
+-            biomeProvider = chunkGenerator.getDefaultBiomeProvider(worldInfo);
+-        }
+-
+-        final SavedDataStorage savedDataStorage = new SavedDataStorage(this.console.storageSource.getDimensionPath(dimensionKey).resolve(LevelResource.DATA.id()), this.console.getFixerUpper(), this.console.registryAccess());
+-        savedDataStorage.set(WorldGenSettings.TYPE, new WorldGenSettings(genSettingsFinal.options(), genSettingsFinal.dimensions()));
+-        List<CustomSpawner> list = ImmutableList.of(
+-            new PhantomSpawner(), new PatrolSpawner(), new CatSpawner(), new VillageSiege(), new WanderingTraderSpawner(savedDataStorage)
+-        );
+-
+-        ServerLevel serverLevel = new ServerLevel(
+-            this.console,
+-            this.console.executor,
+-            this.console.storageSource,
+-            genSettingsFinal,
+-            dimensionKey,
+-            customStem,
+-            primaryLevelData.isDebugWorld(),
+-            biomeZoomSeed,
+-            creator.environment() == Environment.NORMAL ? list : ImmutableList.of(),
+-            true,
+-            actualDimension,
+-            creator.environment(),
+-            chunkGenerator,
+-            biomeProvider,
+-            savedDataStorage,
+-            loadedWorldData
+-        );
+-
+-        if (!(this.worlds.containsKey(name.toLowerCase(Locale.ROOT)))) {
+-            return null;
+-        }
+-
+-        this.console.addLevel(serverLevel);
+-        this.console.initWorld(serverLevel, creator);
+-
+-        serverLevel.setSpawnSettings(true);
+-
+-        this.getServer().prepareLevel(serverLevel);
+-
+-        return serverLevel.getWorld();
++        return ((io.izzel.arclight.common.bridge.bukkit.CraftServerBridge) (Object) this).bridge$createWorld(creator);
+     }
+ 
+     @Override
+@@ -1348,8 +1275,17 @@
+                 handle.save(null, true, false); // Paper - Fix saving in unloadWorld
+             }
+ 
+-            handle.getChunkSource().close(save);
+-            io.papermc.paper.FeatureHooks.closeEntityManager(handle, save); // SPIGOT-6722: close entityManager // Paper - chunk system
++            ((io.izzel.arclight.common.bridge.core.world.server.ServerChunkProviderBridge) handle.getChunkSource()).bridge$close(save);
++            try {
++                ((io.izzel.arclight.common.bridge.core.world.level.entity.PersistentEntitySectionManagerBridge) handle.entityManager).close(save);
++            } catch (java.io.IOException exception) {
++                throw new RuntimeException("Failed to close entity manager", exception);
++            }
++            LevelStorageSource.LevelStorageAccess access = ((io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge) handle).bridge$getConvertable();
++            // Only typed Bukkit-created accesses own the session; native dimensions share their access.
++            if (((io.izzel.arclight.common.bridge.core.world.level.storage.LevelStorageSourceBridge.LevelStorageAccessBridge) access).bridge$getTypeKey() != null) {
++                access.close();
++            }
+         } catch (Exception ex) {
+             this.getLogger().log(Level.SEVERE, null, ex);
+         }
+@@ -1368,8 +1304,7 @@
+     public void setRespawnWorld(final World world) {
+         Preconditions.checkArgument(world != null, "world cannot be null");
+ 
+-        ((PrimaryLevelData) this.console.getWorldData()).respawnDimension = ((CraftWorld) world).getHandle().dimension();
+-        this.console.updateEffectiveRespawnData();
++        throw new UnsupportedOperationException("An independent respawn world selector is not supported by Arclight");
+     }
+ 
+     public DedicatedServer getServer() {
+@@ -1473,7 +1408,7 @@
+         toAdd.addToRecipeManager();
+         // Paper start - API for updating recipes on clients
+         if (true || resendRecipes) { // Always needs to be resent now... TODO
+-            this.playerList.reloadRecipes();
++            this.updateRecipes();
+         }
+         // Paper end - API for updating recipes on clients
+         return true;
+@@ -1508,7 +1443,6 @@
+     private CraftingContainer createCraftingContainer() {
+         // Create a players Crafting Inventory
+         AbstractContainerMenu container = new AbstractContainerMenu(null, -1) {
+-            @Override
+             public InventoryView getBukkitView() {
+                 return null;
+             }
+@@ -1613,7 +1547,7 @@
+             }
+         });
+ 
+-        for (int i = 0; i < craftingContainer.getContents().size(); i++) {
++        for (int i = 0; i < craftingContainer.getContainerSize(); i++) {
+             craftItemResult.setResultMatrix(i, CraftItemStack.asBukkitCopy(craftingContainer.getItem(i)));
+         }
+ 
+@@ -1655,7 +1589,7 @@
+         final ResourceKey<net.minecraft.world.item.crafting.Recipe<?>> id = CraftNamespacedKey.toResourceKey(Registries.RECIPE, recipeKey);
+         final boolean removed = this.getServer().getRecipeManager().removeRecipe(id);
+         if (removed/* && resendRecipes*/) { // TODO Always need to resend them rn - deprecate this method?
+-            this.playerList.reloadRecipes();
++            this.updateRecipes();
+         }
+         return removed;
+         // Paper end - resend recipes on successful removal
+@@ -1964,7 +1898,7 @@
+ 
+         OfflinePlayer result = getPlayerExact(name);
+         if (result == null) {
+-            NameAndId profile = this.console.services().nameToIdCache().getIfCached(name);
++            NameAndId profile = ((io.izzel.arclight.common.bridge.core.server.players.CachedUserNameToIdResolverBridge) this.console.services().nameToIdCache()).bridge$getIfCached(name);
+ 
+             if (profile != null) {
+                 result = getOfflinePlayer(profile);
+@@ -2306,7 +2240,7 @@
+ 
+     @Override
+     public boolean isPrimaryThread() {
+-        return ca.spottedleaf.moonrise.common.util.TickThread.isTickThread(); // Paper - rewrite chunk system
++        return this.console.isSameThread();
+     }
+ 
+     @Override
+@@ -2499,13 +2433,13 @@
+         Preconditions.checkArgument(key != null, "key cannot be null");
+ 
+         AdvancementHolder advancement = this.console.getAdvancements().get(CraftNamespacedKey.toMinecraft(key));
+-        return (advancement == null) ? null : advancement.toBukkit();
++        return (advancement == null) ? null : new org.bukkit.craftbukkit.advancement.CraftAdvancement(advancement);
+     }
+ 
+     @Override
+     public Iterator<org.bukkit.advancement.Advancement> advancementIterator() {
+         return Iterators.unmodifiableIterator(Iterators.transform(
+-            this.console.getAdvancements().getAllAdvancements().iterator(), AdvancementHolder::toBukkit)
++            this.console.getAdvancements().getAllAdvancements().iterator(), org.bukkit.craftbukkit.advancement.CraftAdvancement::new)
+         );
+     }
+ 
+@@ -2660,12 +2594,12 @@
+         Preconditions.checkArgument(selector != null, "selector cannot be null");
+         Preconditions.checkArgument(sender != null, "CommandSender sender cannot be null");
+ 
+-        EntityArgument arg = EntityArgument.entities();
++        io.izzel.arclight.common.bridge.core.commands.arguments.EntityArgumentBridge arg = EntityArgument.entities();
+         List<? extends net.minecraft.world.entity.Entity> entities;
+ 
+         try {
+             StringReader reader = new StringReader(selector);
+-            entities = arg.parse(reader, true, true).findEntities(VanillaCommandWrapper.getListener(sender));
++            entities = arg.bridge$parse(reader, true).findEntities(VanillaCommandWrapper.getListener(sender));
+             Preconditions.checkArgument(!reader.canRead(), "Spurious trailing data in selector: %s", selector);
+         } catch (CommandSyntaxException ex) {
+             throw new IllegalArgumentException("Could not parse selector: " + selector, ex);
+@@ -2692,14 +2626,12 @@
+ 
+     @Override
+     public long[] getTickTimes() {
+-        final TickData.MSPTData reportData = this.getServer().getMSPTData5s();
+-        return reportData == null ? new long[0] : reportData.rawData().clone();
++        return this.console.getTickTimesNanos().clone();
+     }
+ 
+     @Override
+     public double getAverageTickTime() {
+-        final TickData.MSPTData reportData = this.getServer().getMSPTData5s();
+-        return reportData == null ? 0.0 : reportData.avg();
++        return this.console.getAverageTickTimeNanos() * 1.0E-6D;
+     }
+ 
+     private final org.bukkit.Server.Spigot spigot = new org.bukkit.Server.Spigot() {
+@@ -2722,7 +2654,7 @@
+ 
+         @Override
+         public YamlConfiguration getPaperConfig() {
+-            return CraftServer.this.console.paperConfigurations.createLegacyObject(CraftServer.this.console);
++            return io.izzel.arclight.common.mod.server.ArclightServer.getPaperConfigurations().createLegacyObject(CraftServer.this.console);
+         }
+ 
+         @Override
+@@ -2926,7 +2858,7 @@
+ 
+     @Override
+     public int getCurrentTick() {
+-        return net.minecraft.server.MinecraftServer.currentTick;
++        return ((io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge) this.console).bridge$getCurrentTick();
+     }
+ 
+     @Override
+@@ -2934,11 +2866,9 @@
+         return net.minecraft.server.MinecraftServer.getServer().hasStopped();
+     }
+ 
+-    private com.destroystokyo.paper.entity.ai.MobGoals mobGoals = new com.destroystokyo.paper.entity.ai.PaperMobGoals();
+-
+     @Override
+     public com.destroystokyo.paper.entity.ai.MobGoals getMobGoals() {
+-        return mobGoals;
++        throw new UnsupportedOperationException("Paper MobGoals API is not supported on Arclight");
+     }
+ 
+     @Override
+@@ -2958,6 +2888,6 @@
+ 
+     @Override
+     public void allowPausing(final Plugin plugin, final boolean value) {
+-        this.console.addPluginAllowingSleep(plugin.getName(), value);
++        throw new UnsupportedOperationException("Per-plugin server pausing control is not supported");
+     }
+ }

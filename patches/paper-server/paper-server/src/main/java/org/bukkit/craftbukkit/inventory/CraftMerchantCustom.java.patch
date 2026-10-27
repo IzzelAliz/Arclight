@@ -1,0 +1,46 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMerchantCustom.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMerchantCustom.java
+index 6f8f42d359ffa90c4c6edc5e068ef4a94da45e36..ba5838f660c92f96806fca8ab81a8cf85d09d7d3 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMerchantCustom.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMerchantCustom.java
+@@ -62,8 +62,12 @@ public class CraftMerchantCustom implements CraftMerchant {
+         }
+         // Paper end
+ 
+-        @Override
+         public CraftMerchant getCraftMerchant() {
++            return this.bridge$getCraftMerchant();
++        }
++
++        @Override
++        public CraftMerchant bridge$getCraftMerchant() {
+             return this.craftMerchant;
+         }
+ 
+@@ -83,7 +87,6 @@ public class CraftMerchantCustom implements CraftMerchant {
+         }
+ 
+         // Paper start - Add PlayerTradeEvent and PlayerPurchaseEvent
+-        @Override
+         public void processTrade(MerchantOffer offer, io.papermc.paper.event.player.@Nullable PlayerPurchaseEvent event) { // The MerchantRecipe passed in here is the one set by the PlayerPurchaseEvent
+             /* Based on {@link net.minecraft.world.entity.npc.villager.AbstractVillager#processTrade(MerchantOffer, io.papermc.paper.event.player.PlayerPurchaseEvent)} */
+             if (getTradingPlayer() instanceof net.minecraft.server.level.ServerPlayer) {
+@@ -91,16 +94,15 @@ public class CraftMerchantCustom implements CraftMerchant {
+                     offer.increaseUses();
+                 }
+                 if (event == null || event.isRewardingExp()) {
+-                    this.tradingPlayer.level().addFreshEntity(new net.minecraft.world.entity.ExperienceOrb(this.tradingPlayer.level(), this.tradingPlayer.getX(), this.tradingPlayer.getY(), this.tradingPlayer.getZ(), offer.getXp(), org.bukkit.entity.ExperienceOrb.SpawnReason.VILLAGER_TRADE, this.tradingPlayer, null));
++                    this.tradingPlayer.level().addFreshEntity(new net.minecraft.world.entity.ExperienceOrb(this.tradingPlayer.level(), this.tradingPlayer.getX(), this.tradingPlayer.getY(), this.tradingPlayer.getZ(), offer.getXp()));
+                 }
+             }
+-            this.notifyTrade(offer);
++
+         }
+         // Paper end - Add PlayerTradeEvent and PlayerPurchaseEvent
+         @Override
+         public void notifyTrade(MerchantOffer offer) {
+-            // increase recipe's uses
+-            // offer.increaseUses(); // Paper - Add PlayerTradeEvent and PlayerPurchaseEvent; handled above in processTrade
++            offer.increaseUses();
+         }
+ 
+         @Override

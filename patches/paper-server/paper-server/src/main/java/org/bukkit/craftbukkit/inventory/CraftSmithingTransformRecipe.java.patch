@@ -1,0 +1,18 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftSmithingTransformRecipe.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftSmithingTransformRecipe.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftSmithingTransformRecipe.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftSmithingTransformRecipe.java
+@@ -33,9 +33,11 @@
+             CraftRecipe.toPossibleIngredient(this.getTemplate(), false),
+             CraftRecipe.toIngredient(this.getBase(), false),
+             CraftRecipe.toPossibleIngredient(this.getAddition(), false),
+-            CraftItemStack.asTemplate(this.getResult()),
+-            this.willCopyDataComponents()
++            CraftItemStack.asTemplate(this.getResult())
+         );
+-        MinecraftServer.getServer().getRecipeManager().addRecipe(new RecipeHolder<>(CraftNamespacedKey.toResourceKey(Registries.RECIPE, this.getKey()), recipe)); // Paper - Option to prevent data components copy
++        io.izzel.arclight.common.bridge.core.world.item.crafting.SmithingTransformRecipeBridge bridge = recipe;
++        bridge.bridge$setCopyDataComponents(this.willCopyDataComponents());
++        io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeManagerBridge manager = MinecraftServer.getServer().getRecipeManager();
++        manager.bridge$addRecipe(new RecipeHolder<>(CraftNamespacedKey.toResourceKey(Registries.RECIPE, this.getKey()), recipe)); // Paper - Option to prevent data components copy
+     }
+ }

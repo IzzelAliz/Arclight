@@ -1,0 +1,37 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventory.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventory.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventory.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventory.java
+@@ -443,8 +443,8 @@
+     // Paper start
+     @Override
+     public int close() {
+-        int count = this.inventory.getViewers().size();
+-        com.google.common.collect.Lists.newArrayList(this.inventory.getViewers()).forEach(HumanEntity::closeInventory);
++        int count = ((io.izzel.arclight.common.bridge.core.world.IInventoryBridge) this.inventory).getViewers().size();
++        com.google.common.collect.Lists.newArrayList(((io.izzel.arclight.common.bridge.core.world.IInventoryBridge) this.inventory).getViewers()).forEach(HumanEntity::closeInventory);
+         return count;
+     }
+     // Paper end
+@@ -514,7 +514,7 @@
+             return InventoryType.SHULKER_BOX;
+         } else if (this.inventory instanceof BarrelBlockEntity) {
+             return InventoryType.BARREL;
+-        } else if (this.inventory instanceof LecternBlockEntity.LecternInventory) {
++        } else if (this.inventory instanceof io.izzel.arclight.common.bridge.core.world.inventory.LecternInventoryBridge) {
+             return InventoryType.LECTERN;
+         } else if (this.inventory instanceof ChiseledBookShelfBlockEntity) {
+             return InventoryType.CHISELED_BOOKSHELF;
+@@ -549,7 +549,12 @@
+     // Paper start - getHolder without snapshot
+     @Override
+     public InventoryHolder getHolder(boolean useSnapshot) {
+-        return this.inventory instanceof net.minecraft.world.level.block.entity.BlockEntity blockEntity ? blockEntity.getOwner(useSnapshot) : getHolder();
++        if (this.inventory instanceof net.minecraft.world.level.block.entity.BlockEntity blockEntity) {
++            if (blockEntity.getLevel() == null) return null;
++            org.bukkit.block.BlockState state = org.bukkit.craftbukkit.block.CraftBlock.at(blockEntity.getLevel(), blockEntity.getBlockPos()).getState(useSnapshot);
++            return state instanceof InventoryHolder holder ? holder : null;
++        }
++        return getHolder();
+     }
+     // Paper end
+ 

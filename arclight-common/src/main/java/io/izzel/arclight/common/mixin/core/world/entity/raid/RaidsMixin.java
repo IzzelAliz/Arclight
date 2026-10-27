@@ -21,7 +21,7 @@ public class RaidsMixin {
     private Raid arclight$raidTrigger(Raid raid, ServerPlayer player, BlockPos pos,
             @Cancellable CallbackInfoReturnable<Raid> cir) {
         if ((!raid.isStarted() || ((!raid.isStopped() && !raid.isOver()) && raid.getRaidOmenLevel() < raid.getMaxRaidOmenLevel()))
-                && !CraftEventFactory.callRaidTriggerEvent(raid, player.level(), player)) {
+                && !CraftEventFactory.callRaidTriggerEvent(player.level(), raid, player)) {
             player.removeEffect(MobEffects.RAID_OMEN);
             cir.setReturnValue(null);
         }

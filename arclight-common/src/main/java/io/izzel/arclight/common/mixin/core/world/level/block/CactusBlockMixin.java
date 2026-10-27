@@ -4,6 +4,7 @@ import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridg
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.mixin.Eject;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
@@ -43,7 +44,7 @@ public class CactusBlockMixin {
 
     @Eject(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
     private boolean arclight$blockGrow(ServerLevel serverWorld, BlockPos pos, BlockState state, CallbackInfo ci) {
-        if (!CraftEventFactory.handleBlockGrowEvent(serverWorld, pos, state)) {
+        if (!CraftEventFactory.handleBlockGrowEvent(serverWorld, pos, state, Block.UPDATE_ALL)) {
             ci.cancel();
         }
         return true;

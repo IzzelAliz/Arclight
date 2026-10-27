@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.item;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.level.LevelAccessorBridge;
 import io.izzel.arclight.common.mod.util.DistValidate;
-import io.izzel.arclight.common.mod.util.SignPlacementScope;
+import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -41,7 +41,7 @@ public abstract class BlockItemMixin {
 
     @WrapMethod(method = "place(Lnet/minecraft/world/item/context/BlockPlaceContext;)Lnet/minecraft/world/InteractionResult;")
     private InteractionResult arclight$signPlacement(BlockPlaceContext context, Operation<InteractionResult> original) {
-        return SignPlacementScope.place(context, original);
+        return ArclightEventFactory.placeSign(context, original);
     }
 
     @WrapOperation(method = "place(Lnet/minecraft/world/item/context/BlockPlaceContext;)Lnet/minecraft/world/InteractionResult;",
@@ -49,7 +49,7 @@ public abstract class BlockItemMixin {
     private boolean arclight$signTag(BlockItem item, BlockPos pos, Level level,
                                      net.minecraft.world.entity.player.Player player,
                                      net.minecraft.world.item.ItemStack stack, BlockState state, Operation<Boolean> original) {
-        return SignPlacementScope.tag(pos, level, player, stack, original, item, state);
+        return ArclightEventFactory.tagSign(pos, level, player, stack, original, item, state);
     }
 
     @Inject(method = "place", locals = LocalCapture.CAPTURE_FAILHARD,
@@ -67,7 +67,7 @@ public abstract class BlockItemMixin {
         arclight$state = null;
         BlockPos pos = context1.getClickedPos();
         if (LevelAccessorBridge.from(context1.getLevel()) instanceof LevelAccessorBridge bridge && state != null) {
-            org.bukkit.event.block.BlockPlaceEvent placeEvent = CraftEventFactory.callBlockPlaceEvent(bridge.bridge$getMinecraftWorld(), context1.getPlayer(), context1.getHand(), state, pos.getX(), pos.getY(), pos.getZ());
+            org.bukkit.event.block.BlockPlaceEvent placeEvent = CraftEventFactory.callBlockPlaceEvent(bridge.bridge$getMinecraftWorld(), context1.getPlayer(), context1.getHand(), state, pos);
             if (placeEvent != null && (placeEvent.isCancelled() || !placeEvent.canBuild())) {
                 state.update(true, false);
                 if ((Object) this instanceof SolidBucketItem) {
@@ -86,7 +86,7 @@ public abstract class BlockItemMixin {
     @Inject(method = "canPlace", cancellable = true, at = @At("RETURN"))
     private void arclight$blockCanBuild(BlockPlaceContext context, BlockState state, CallbackInfoReturnable<Boolean> cir) {
         Player player = (context.getPlayer() instanceof ServerPlayerBridge) ? ((ServerPlayerBridge) context.getPlayer()).bridge$getBukkitEntity() : null;
-        BlockCanBuildEvent event = new BlockCanBuildEvent(CraftBlock.at(context.getLevel(), context.getClickedPos()), player, CraftBlockData.fromData(state), cir.getReturnValue());
+        BlockCanBuildEvent event = new BlockCanBuildEvent(CraftBlock.at(context.getLevel(), context.getClickedPos()), player, CraftBlockData.createData(state), cir.getReturnValue());
         if (DistValidate.isValid(context)) Bukkit.getPluginManager().callEvent(event);
         cir.setReturnValue(event.isBuildable());
     }

@@ -51,6 +51,7 @@ public class ArclightConfig {
         HoconConfigurationLoader loader = HoconConfigurationLoader.builder().setPath(path).build();
         CommentedConfigurationNode cur = loader.load();
         cur.mergeValuesFrom(node);
+        cur.removeChild("velocity");
         cur.getNode("locale", "current").setValue(ArclightLocale.getInstance().getCurrent());
         fillComments(cur, ArclightLocale.getInstance());
         instance = new ArclightConfig(cur);

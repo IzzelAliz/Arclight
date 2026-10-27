@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/block/bed/BedEnterActionBridgeImpl.java b/paper-server/src/main/java/io/papermc/paper/block/bed/BedEnterActionBridgeImpl.java
+index 8527db6c2b4a237c8eba4447b842e58b3c7dea6b..08d093cf0252f4f835db19b1bcb19b3d682b5e83 100644
+--- a/paper-server/src/main/java/io/papermc/paper/block/bed/BedEnterActionBridgeImpl.java
++++ b/paper-server/src/main/java/io/papermc/paper/block/bed/BedEnterActionBridgeImpl.java
+@@ -23,7 +23,7 @@ public class BedEnterActionBridgeImpl implements BedEnterActionBridge {
+ 
+     @Override
+     public BedEnterProblem createExplosionProblem() {
+-        return new BedEnterProblemImpl(Player.BedSleepingProblem.EXPLOSION);
++        return () -> null;
+     }
+ 
+     @Override

@@ -26,7 +26,12 @@ import java.util.List;
 import java.util.Objects;
 
 @Mixin(ConduitBlockEntity.class)
-public abstract class ConduitBlockEntityMixin extends BlockEntityMixin {
+public abstract class ConduitBlockEntityMixin extends BlockEntityMixin implements io.izzel.arclight.common.bridge.core.world.level.block.entity.ConduitBlockEntityBridge {
+
+    @Override
+    public void bridge$updateTarget(ServerLevel level, BlockPos pos, BlockState state, boolean active) {
+        updateAndAttackTarget(level, pos, state, (ConduitBlockEntity) (Object) this, active, false);
+    }
 
     @Shadow
     private static EntityReference<LivingEntity> updateDestroyTarget(EntityReference<LivingEntity> target, ServerLevel level, BlockPos pos, boolean isActive) {

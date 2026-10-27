@@ -8,12 +8,16 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
+import java.util.List;
 
 @Mixin(targets = "org.bukkit.plugin.java.LibraryLoader", remap = false)
 public class LibraryLoaderMixin {
 
-    @Redirect(method = "createLoader", at = @At(value = "NEW", target = "java/net/URLClassLoader"))
-    private URLClassLoader arclight$useRemapped(URL[] urls, ClassLoader loader, PluginDescriptionFile desc) {
+    // Replace only the default loader; leave Paper's custom factory branch in control.
+    @Redirect(method = "createLoader(Lorg/bukkit/plugin/PluginDescriptionFile;Ljava/util/List;)Ljava/lang/ClassLoader;",
+        at = @At(value = "NEW", target = "([Ljava/net/URL;Ljava/lang/ClassLoader;)Ljava/net/URLClassLoader;"))
+    private URLClassLoader arclight$useRemapped(URL[] urls, ClassLoader loader, PluginDescriptionFile desc, List<Path> paperLibraryPaths) {
         return new RemappingURLClassLoader(String.format("%s/L", desc.getName()), urls, loader);
     }
 }

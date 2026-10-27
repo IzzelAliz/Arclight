@@ -1,0 +1,100 @@
+diff --git a/paper-server/src/main/java/com/destroystokyo/paper/profile/PaperMinecraftSessionService.java b/paper-server/src/main/java/com/destroystokyo/paper/profile/PaperMinecraftSessionService.java
+index a108682bfa34878abbcc3b4f34dc8b868cf2eec8..c8f39ae15937cbee9078906d13dea56224f89eb0 100644
+--- a/paper-server/src/main/java/com/destroystokyo/paper/profile/PaperMinecraftSessionService.java
++++ b/paper-server/src/main/java/com/destroystokyo/paper/profile/PaperMinecraftSessionService.java
+@@ -2,21 +2,35 @@ package com.destroystokyo.paper.profile;
+ 
+ import com.destroystokyo.paper.event.profile.FillProfileEvent;
+ import com.destroystokyo.paper.event.profile.PreFillProfileEvent;
+-import com.mojang.authlib.Environment;
+ import com.mojang.authlib.GameProfile;
++import com.mojang.authlib.exceptions.AuthenticationException;
++import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
++import com.mojang.authlib.minecraft.InsecurePublicKeyException;
++import com.mojang.authlib.minecraft.MinecraftProfileTextures;
++import com.mojang.authlib.minecraft.MinecraftSessionService;
++import com.mojang.authlib.properties.Property;
+ import com.mojang.authlib.yggdrasil.ProfileResult;
+-import com.mojang.authlib.yggdrasil.ServicesKeySet;
+-import com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService;
+-
+-import java.net.Proxy;
++import java.net.InetAddress;
+ import java.util.Collections;
++import java.util.Objects;
+ import java.util.UUID;
+ import org.jetbrains.annotations.Nullable;
+ 
+-public class PaperMinecraftSessionService extends YggdrasilMinecraftSessionService {
++public class PaperMinecraftSessionService implements MinecraftSessionService {
++
++    private final MinecraftSessionService delegate;
+ 
+-    protected PaperMinecraftSessionService(ServicesKeySet servicesKeySet, Proxy proxy, Environment environment) {
+-        super(servicesKeySet, proxy, environment);
++    public PaperMinecraftSessionService(MinecraftSessionService delegate) {
++        this.delegate = Objects.requireNonNull(delegate, "session service");
++    }
++
++    // Callers that already own the real profile must retain it for PreFill.
++    // A UUID-only request has no genuine name/properties to expose before I/O.
++    public static @Nullable ProfileResult fetchProfile(MinecraftSessionService service, GameProfile profile, boolean requireSecure) {
++        if (service instanceof PaperMinecraftSessionService paper) {
++            return paper.fetchProfile(profile, requireSecure);
++        }
++        return service.fetchProfile(profile.id(), requireSecure);
+     }
+ 
+     public @Nullable ProfileResult fetchProfile(GameProfile profile, final boolean requireSecure) {
+@@ -26,7 +40,10 @@ public class PaperMinecraftSessionService extends YggdrasilMinecraftSessionServi
+         if (profile.properties().containsKey("textures")) {
+             return new ProfileResult(profile, Collections.emptySet());
+         }
+-        ProfileResult result = super.fetchProfile(profile.id(), requireSecure);
++        return fireFillProfileEvent(this.delegate.fetchProfile(profile.id(), requireSecure));
++    }
++
++    private static @Nullable ProfileResult fireFillProfileEvent(@Nullable ProfileResult result) {
+         if (result != null) {
+             final FillProfileEvent event = new FillProfileEvent(CraftPlayerProfile.asBukkitCopy(result.profile()));
+             event.callEvent();
+@@ -37,6 +54,38 @@ public class PaperMinecraftSessionService extends YggdrasilMinecraftSessionServi
+ 
+     @Override @Deprecated
+     public @Nullable ProfileResult fetchProfile(final UUID profileId, final boolean requireSecure) {
+-        return super.fetchProfile(profileId, requireSecure);
++        // No genuine name/properties exist before this UUID-only request. Do not
++        // manufacture PreFill input; post Fill can use the authentic response.
++        return fireFillProfileEvent(this.delegate.fetchProfile(profileId, requireSecure));
++    }
++
++    @Override
++    public void joinServer(UUID profileId, String authenticationToken, String serverId) throws AuthenticationException {
++        this.delegate.joinServer(profileId, authenticationToken, serverId);
++    }
++
++    @Override
++    public @Nullable ProfileResult hasJoinedServer(String profileName, String serverId, @Nullable InetAddress address) throws AuthenticationUnavailableException {
++        return this.delegate.hasJoinedServer(profileName, serverId, address);
++    }
++
++    @Override
++    public @Nullable Property getPackedTextures(GameProfile profile) {
++        return this.delegate.getPackedTextures(profile);
++    }
++
++    @Override
++    public MinecraftProfileTextures unpackTextures(Property property) {
++        return this.delegate.unpackTextures(property);
++    }
++
++    @Override
++    public MinecraftProfileTextures getTextures(GameProfile profile) {
++        return this.delegate.getTextures(profile);
++    }
++
++    @Override
++    public String getSecurePropertyValue(Property property) throws InsecurePublicKeyException {
++        return this.delegate.getSecurePropertyValue(property);
+     }
+ }

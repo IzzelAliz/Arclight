@@ -88,7 +88,7 @@ public class SpongeBlockMixin {
             }
         });
         // CraftBukkit start
-        List<CraftBlockState> blocks = blockList.getList(); // Is a clone
+        List<CraftBlockState> blocks = blockList.getSnapshotBlocks();
         if (!blocks.isEmpty()) {
             final org.bukkit.block.Block bblock = CraftBlock.at(world, blockposition);
 
@@ -105,17 +105,19 @@ public class SpongeBlockMixin {
                 FluidState fluid = world.getFluidState(blockposition1);
 
                 if (fluid.is(FluidTags.WATER)) {
-                    if (iblockdata.getBlock() instanceof BucketPickup && !((BucketPickup) iblockdata.getBlock()).pickupBlock(null, blockList, blockposition1, iblockdata).isEmpty()) {
+                    if (iblockdata.getBlock() instanceof BucketPickup && !((BucketPickup) iblockdata.getBlock()).pickupBlock(null, world, blockposition1, iblockdata).isEmpty()) {
                         // NOP
                     } else if (iblockdata.getBlock() instanceof LiquidBlock) {
                         // NOP
                     } else if (iblockdata.is(Blocks.KELP) || iblockdata.is(Blocks.KELP_PLANT) || iblockdata.is(Blocks.SEAGRASS) || iblockdata.is(Blocks.TALL_SEAGRASS)) {
                         BlockEntity tileentity = iblockdata.hasBlockEntity() ? world.getBlockEntity(blockposition1) : null;
 
-                        dropResources(iblockdata, world, blockposition1, tileentity);
+                        if (block.getHandle().isAir()) {
+                            dropResources(iblockdata, world, blockposition1, tileentity);
+                        }
                     }
                 }
-                world.setBlock(blockposition1, block.getHandle(), block.getFlag());
+                block.place(block.getFlags());
             }
 
             return true;

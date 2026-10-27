@@ -1,0 +1,22 @@
+diff --git a/paper-server/src/main/java/org/spigotmc/RestartCommand.java b/paper-server/src/main/java/org/spigotmc/RestartCommand.java
+--- a/paper-server/src/main/java/org/spigotmc/RestartCommand.java
++++ b/paper-server/src/main/java/org/spigotmc/RestartCommand.java
+@@ -1,8 +1,8 @@
+ package org.spigotmc;
+ 
++import net.minecraft.server.MinecraftServer;
+ import java.io.File;
+ import java.util.Locale;
+-import net.minecraft.server.MinecraftServer;
+ import net.minecraft.server.level.ServerPlayer;
+ import org.bukkit.command.Command;
+ import org.bukkit.command.CommandSender;
+@@ -82,7 +82,7 @@
+ 
+             // Check if we've actually hit a state where the server is going to safely shutdown
+             // if we have, let the server stop as usual
+-            if (MinecraftServer.getServer().isStopped()) return;
++            if (((io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge) net.minecraft.server.MinecraftServer.getServer()).bridge$hasStopped()) return;
+ 
+             // If the server hasn't stopped by now, assume worse case and kill
+             closeSocket();

@@ -12,10 +12,14 @@ import org.spongepowered.asm.mixin.injection.At;
 public abstract class BedRuleMixin {
     @ModifyReturnValue(method = "asProblem", at = @At("RETURN"))
     private Player.BedSleepingProblem arclight$bedResult(Player.BedSleepingProblem problem) {
+        BedRule bedRule = (BedRule) (Object) this;
+        BedSleepingProblemBridge bridge = (BedSleepingProblemBridge) (Object) problem;
+        bridge.bridge$setBedRule(bedRule);
         PlayerBedEnterEvent.BedEnterResult result = PlayerBedEnterEvent.BedEnterResult.OTHER_PROBLEM;
-        if ((Object) this == BedRule.CAN_SLEEP_WHEN_DARK) result = PlayerBedEnterEvent.BedEnterResult.NOT_POSSIBLE_NOW;
-        else if ((Object) this == BedRule.EXPLODES) result = PlayerBedEnterEvent.BedEnterResult.NOT_POSSIBLE_HERE;
-        ((BedSleepingProblemBridge) (Object) problem).bridge$setBedResult(result);
+        if (bedRule.explodes()) result = PlayerBedEnterEvent.BedEnterResult.EXPLOSION;
+        else if (bedRule.canSleep() == BedRule.Rule.NEVER) result = PlayerBedEnterEvent.BedEnterResult.NOT_POSSIBLE_HERE;
+        else if (bedRule.canSleep() == BedRule.Rule.WHEN_DARK) result = PlayerBedEnterEvent.BedEnterResult.NOT_POSSIBLE_NOW;
+        bridge.bridge$setBedResult(result);
         return problem;
     }
 }

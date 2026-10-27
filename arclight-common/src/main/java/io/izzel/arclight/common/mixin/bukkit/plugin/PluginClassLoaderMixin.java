@@ -1,123 +1,62 @@
 package io.izzel.arclight.common.mixin.bukkit.plugin;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
 import com.google.common.io.ByteStreams;
-import io.izzel.arclight.common.bridge.bukkit.JavaPluginLoaderBridge;
 import io.izzel.arclight.common.bridge.bukkit.PluginClassLoaderBridge;
-import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
-import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
 import io.izzel.arclight.common.mod.util.remapper.ArclightRemapConfig;
 import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
 import io.izzel.arclight.common.mod.util.remapper.ClassLoaderRemapper;
 import io.izzel.arclight.common.mod.util.remapper.RemappingClassLoader;
 import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.tools.product.Product2;
+import io.papermc.paper.plugin.entrypoint.classloader.group.LockingClassLoaderGroup;
+import io.papermc.paper.plugin.entrypoint.classloader.group.SpigotPluginClassLoaderGroup;
+import io.papermc.paper.plugin.provider.classloader.ConfiguredPluginClassLoader;
+import io.papermc.paper.plugin.provider.classloader.PluginClassLoaderGroup;
+import io.papermc.paper.plugin.provider.entrypoint.DependencyContext;
 import org.bukkit.Bukkit;
-import org.bukkit.plugin.InvalidPluginException;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.SimplePluginManager;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.plugin.java.JavaPluginLoader;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.security.CodeSource;
-import java.util.*;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.jar.JarFile;
 import java.util.jar.Manifest;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Mixin(targets = "org.bukkit.plugin.java.PluginClassLoader", remap = false)
 public abstract class PluginClassLoaderMixin extends URLClassLoader implements RemappingClassLoader, PluginClassLoaderBridge {
 
     // @formatter:off
-    @Mutable @Shadow @Final private Map<String, Class<?>> classes;
-    @Mutable @Shadow @Final private JavaPluginLoader loader;
-    @Mutable @Shadow @Final private PluginDescriptionFile description;
-    @Mutable @Shadow @Final private Manifest manifest;
-    @Mutable @Shadow @Final private URL url;
-    @Mutable @Shadow @Final private File dataFolder;
-    @Mutable @Shadow @Final private File file;
-    @Mutable @Shadow @Final private JarFile jar;
-    @Mutable @Shadow @Final private ClassLoader libraryLoader;
-    @Mutable @Shadow @Final private JavaPlugin plugin;
-    @Mutable @Shadow @Final private Set<String> seenIllegalAccess;
+    @Shadow @Final private Map<String, Class<?>> classes;
+    @Shadow @Final private PluginDescriptionFile description;
+    @Shadow @Final private Manifest manifest;
+    @Shadow @Final private URL url;
+    @Shadow @Final private ClassLoader libraryLoader;
+    @Shadow private PluginClassLoaderGroup classLoaderGroup;
+    @Shadow public DependencyContext dependencyContext;
+    @Shadow abstract void setClass(@NotNull String name, @NotNull Class<?> clazz);
     // @formatter:on
 
-    @Shadow
-    abstract void initialize(@NotNull JavaPlugin javaPlugin);
-
+    @Unique
     private ClassLoaderRemapper remapper;
 
-    @ShadowConstructor.Super
-    public void arclight$constructor$super(String name, URL[] urls, ClassLoader parent) {
-        throw new AbstractMethodError();
-    }
-
-    @CreateConstructor
-    public void arclight$constructor(String name, @NotNull JavaPluginLoader loader, @Nullable ClassLoader parent, @NotNull PluginDescriptionFile description, @NotNull File dataFolder, @NotNull File file, @Nullable ClassLoader libraryLoader) throws IOException, InvalidPluginException {
-        arclight$constructor$super(name, new URL[]{file.toURI().toURL()}, parent);
-        Preconditions.checkArgument(loader != null, "Loader cannot be null");
-        this.classes = new ConcurrentHashMap<>();
-        this.seenIllegalAccess = Collections.newSetFromMap(new ConcurrentHashMap<>());
-        this.loader = loader;
-        this.description = description;
-        this.dataFolder = dataFolder;
-        this.file = file;
-        this.jar = new JarFile(file);
-        this.manifest = this.jar.getManifest();
-        this.url = file.toURI().toURL();
-        this.libraryLoader = libraryLoader;
-
-        Class<?> jarClass;
-        try {
-            jarClass = Class.forName(description.getMain(), true, this);
-        } catch (ClassNotFoundException ex) {
-            throw new InvalidPluginException("Cannot find main class `" + description.getMain() + "'", ex);
-        }
-
-        Class<? extends JavaPlugin> pluginClass;
-        try {
-            pluginClass = jarClass.asSubclass(JavaPlugin.class);
-        } catch (ClassCastException ex) {
-            throw new InvalidPluginException("main class `" + description.getMain() + "' must extend JavaPlugin", ex);
-        }
-
-        Constructor<? extends JavaPlugin> pluginConstructor;
-        try {
-            pluginConstructor = pluginClass.getDeclaredConstructor();
-        } catch (NoSuchMethodException ex) {
-            throw new InvalidPluginException("main class `" + description.getMain() + "' must have a public no-args constructor", ex);
-        }
-
-        try {
-            this.plugin = pluginConstructor.newInstance();
-        } catch (IllegalAccessException ex) {
-            throw new InvalidPluginException("main class `" + description.getMain() + "' constructor must be public", ex);
-        } catch (InstantiationException ex) {
-            throw new InvalidPluginException("main class `" + description.getMain() + "' must not be abstract", ex);
-        } catch (IllegalArgumentException ex) {
-            throw new InvalidPluginException("Could not invoke main class `" + description.getMain() + "' constructor", ex);
-        } catch (InvocationTargetException | ExceptionInInitializerError ex) {
-            throw new InvalidPluginException("Exception initializing main class `" + description.getMain() + "'", ex);
-        }
-    }
-
     @Override
-    public ClassLoaderRemapper getRemapper() {
+    public synchronized ClassLoaderRemapper getRemapper() {
         if (remapper == null) {
             remapper = ArclightRemapper.createClassLoaderRemapper(this);
         }
@@ -141,12 +80,12 @@ public abstract class PluginClassLoaderMixin extends URLClassLoader implements R
 
     @Override
     public SimplePluginManager arclight$getPluginManager() {
-        return (SimplePluginManager) ((JavaPluginLoaderBridge) (Object) loader).arclight$server().getPluginManager();
+        return (SimplePluginManager) Bukkit.getPluginManager();
     }
 
     @Override
     public Logger arclight$systemLogger() {
-        return ((JavaPluginLoaderBridge)(Object) loader).arclight$server().getLogger();
+        return Bukkit.getLogger();
     }
 
     public PluginClassLoaderMixin(URL[] urls) {
@@ -155,63 +94,43 @@ public abstract class PluginClassLoaderMixin extends URLClassLoader implements R
 
     /**
      * @author InitAuther97
-     * @reason add skip super for Adventure
+     * @reason Preserve Arclight isolation with Paper's dependency groups
      */
     @Overwrite
     Class<?> loadClass0(String name, boolean resolve, boolean checkGlobal, boolean checkLibraries) throws ClassNotFoundException {
         synchronized (getClassLoadingLock(name)) {
-            // First, check if the class has already been loaded
             Class<?> c = findLoadedClass(name);
-            if (c != null) {
-                if (resolve) resolveClass(c);
-                return c;
-            }
-            if (!ArclightConfig.spec().getCompat().isAdventureIsolatedFromML() || !name.startsWith("net.kyori.adventure.")) {
+            if (c == null && getParent() != null && (!ArclightConfig.spec().getCompat().isAdventureIsolatedFromML() || !name.startsWith("net.kyori.adventure."))) {
                 try {
                     c = getParent().loadClass(name);
-                    if (resolve) resolveClass(c);
-                    return c;
-                } catch (ClassNotFoundException e) {
-                    // ClassNotFoundException thrown if class not found
-                    // from the non-null parent class loader
+                } catch (ClassNotFoundException ignored) {
                 }
             }
 
             if (c == null) {
-                // If still not found, then invoke findClass in order
-                // to find the class.
                 try {
                     c = findClass(name);
-                    if (resolve) resolveClass(c);
-                    return c;
-                } catch (ClassNotFoundException e) {
-                    // There's no such class
+                } catch (ClassNotFoundException ignored) {
                 }
+            }
+            // Do not leak an already initiated dependency/library class into a
+            // lookup whose group explicitly disabled that classpath (SPIGOT-6749).
+            if (c != null && (checkGlobal || c.getClassLoader() == this)) {
+                if (resolve) resolveClass(c);
+                return c;
             }
         }
 
         if (checkLibraries && this.libraryLoader != null) {
             try {
                 return this.libraryLoader.loadClass(name);
-            } catch (ClassNotFoundException var7) {
+            } catch (ClassNotFoundException ignored) {
             }
         }
 
         if (checkGlobal) {
-            Class<?> result = ((JavaPluginLoaderBridge)(Object) loader).arclight$getClassByName(name, resolve, this.description);
+            Class<?> result = arclight$loadFromGroup(name, resolve);
             if (result != null) {
-                if (result.getClassLoader() instanceof PluginClassLoaderBridge cl) {
-                    PluginDescriptionFile provider = cl.arclight$desc();
-                    if (provider != this.description && !this.seenIllegalAccess.contains(provider.getName()) && !cl.arclight$getPluginManager().isTransitiveDepend(this.description, provider)) {
-                        this.seenIllegalAccess.add(provider.getName());
-                        if (this.plugin != null) {
-                            this.plugin.getLogger().log(Level.WARNING, "Loaded class {0} from {1} which is not a depend or softdepend of this plugin.", new Object[]{name, provider.getFullName()});
-                        } else {
-                            arclight$systemLogger().log(Level.WARNING, "[{0}] Loaded class {1} from {2} which is not a depend or softdepend of this plugin.", new Object[]{this.description.getName(), name, provider.getFullName()});
-                        }
-                    }
-                }
-
                 return result;
             }
         }
@@ -219,43 +138,64 @@ public abstract class PluginClassLoaderMixin extends URLClassLoader implements R
         throw new ClassNotFoundException(String.format("Plugin %s cannot load class %s", description.getName(), name));
     }
 
+    @Unique
+    private Class<?> arclight$loadFromGroup(String name, boolean resolve) {
+        ConfiguredPluginClassLoader requester = (ConfiguredPluginClassLoader) (Object) this;
+        if (!ArclightConfig.spec().getCompat().isIsolatedPluginClassLoaders(name)) {
+            return this.classLoaderGroup.getClassByName(name, resolve, requester);
+        }
+
+        // Filter before loading: rejecting the first global result afterwards
+        // would hide a later dependency providing the same class.
+        // Follow only this owner's live Spigot view, never an independent global
+        // cache that could remain accessible after storage unregisters the loader.
+        if (this.classLoaderGroup instanceof LockingClassLoaderGroup lockingGroup
+            && lockingGroup.getParent() instanceof SpigotPluginClassLoaderGroup spigotGroup) {
+            for (ConfiguredPluginClassLoader candidate : spigotGroup.getClassLoaders()) {
+                if (candidate == requester || this.dependencyContext.isTransitiveDependency(this.description, candidate.getConfiguration())) {
+                    try {
+                        return candidate.loadClass(name, resolve, false, true);
+                    } catch (ClassNotFoundException ignored) {
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     /**
      * @author IzzelAliz
-     * @reason
+     * @reason Keep resources local to the plugin and its own libraries
      */
     @Overwrite
     @Override
     public URL getResource(String name) {
         Objects.requireNonNull(name);
-        URL url = findResource(name);
-        if (url == null) {
-            if (getParent() != null) {
-                url = getParent().getResource(name);
-            }
+        URL resource = findResource(name);
+        if (resource == null && this.libraryLoader != null) {
+            resource = this.libraryLoader.getResource(name);
         }
-        return url;
+        return resource;
     }
 
     /**
      * @author IzzelAliz
-     * @reason
+     * @reason Keep resource enumeration local to the plugin and its own libraries
      */
     @Overwrite
     @Override
     public Enumeration<URL> getResources(String name) throws IOException {
         Objects.requireNonNull(name);
-        @SuppressWarnings("unchecked")
-        Enumeration<URL>[] tmp = (Enumeration<URL>[]) new Enumeration<?>[2];
-        if (getParent() != null) {
-            tmp[1] = getParent().getResources(name);
+        List<URL> resources = Collections.list(findResources(name));
+        if (this.libraryLoader != null) {
+            resources.addAll(Collections.list(this.libraryLoader.getResources(name)));
         }
-        tmp[0] = findResources(name);
-        return Iterators.asEnumeration(Iterators.concat(Iterators.forEnumeration(tmp[0]), Iterators.forEnumeration(tmp[1])));
+        return Collections.enumeration(resources);
     }
 
     /**
      * @author IzzelAliz
-     * @reason
+     * @reason Transform plugin bytecode before definition and retain Paper serialization registration
      */
     @Overwrite
     protected Class<?> findClass(String name) throws ClassNotFoundException {
@@ -269,7 +209,6 @@ public abstract class PluginClassLoaderMixin extends URLClassLoader implements R
             URL url = this.findResource(path);
 
             if (url != null) {
-
                 URLConnection connection;
                 Callable<byte[]> byteSource;
                 try {
@@ -314,8 +253,8 @@ public abstract class PluginClassLoaderMixin extends URLClassLoader implements R
                 result = super.findClass(name);
             }
 
-            ((JavaPluginLoaderBridge) (Object) loader).bridge$setClass(name, result);
             classes.put(name, result);
+            this.setClass(name, result);
         }
 
         return result;

@@ -16,6 +16,7 @@ public class ArclightConnector implements IMixinConnector {
         MixinTools.setup();
         Mixins.addConfiguration("mixins.arclight.core.json");
         Mixins.addConfiguration("mixins.arclight.bukkit.json");
+        Mixins.addConfiguration("mixins.arclight.compat.json");
         switch (ArclightPlatform.current()) {
             case VANILLA -> Mixins.addConfiguration("mixins.arclight.vanilla.json");
             case FORGE -> Mixins.addConfiguration("mixins.arclight.forge.json");

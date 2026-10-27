@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class FireBlockMixin_Vanilla {
 
     /** Handoff belongs to one wrapped tick call and may be claimed only once. */
-    @Unique private static final ThreadLocal<FireBurnContext> arclight$fireBurnContext = new ThreadLocal<>();
+    @Unique private static FireBurnContext arclight$fireBurnContext;
 
     @Unique
     private static final class FireBurnContext {
@@ -56,25 +56,21 @@ public abstract class FireBlockMixin_Vanilla {
     private void arclight$wrapBurnTarget(FireBlock fire, Level level, BlockPos targetPos, int chance,
             RandomSource random, int age, Operation<Void> original,
             @Local(argsOnly = true) BlockPos sourcePos) {
-        FireBurnContext previous = arclight$fireBurnContext.get();
+        FireBurnContext previous = arclight$fireBurnContext;
         FireBurnContext current = new FireBurnContext(level, targetPos.immutable(), sourcePos.immutable());
-        arclight$fireBurnContext.set(current);
+        arclight$fireBurnContext = current;
         try {
             // Preserve the native call and its RNG stream exactly once.
             original.call(fire, level, targetPos, chance, random, age);
         } finally {
-            if (previous == null) {
-                arclight$fireBurnContext.remove();
-            } else {
-                arclight$fireBurnContext.set(previous);
-            }
+            arclight$fireBurnContext = previous;
         }
     }
 
     /** Claim before dispatch: direct listener re-entry cannot inherit this source/call. */
     @Unique
     private static BlockPos arclight$claimBurnSource(Level level, BlockPos targetPos) {
-        FireBurnContext context = arclight$fireBurnContext.get();
+        FireBurnContext context = arclight$fireBurnContext;
         if (context == null || context.claimed || context.level != level
                 || !context.targetPos.equals(targetPos)) {
             return null;

@@ -1,6 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal.camel;
 
 import io.izzel.arclight.common.mixin.core.world.entity.animal.horse.AbstractHorseMixin;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import io.papermc.paper.event.entity.EntityToggleSitEvent;
 import net.minecraft.world.entity.animal.camel.Camel;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,5 +36,26 @@ public abstract class CamelMixin extends AbstractHorseMixin {
 
     // @formatter:off
     @Shadow public abstract void standUpInstantly();
+    @Shadow public abstract boolean isCamelSitting();
     // @formatter:on
+
+    @Decorate(method = "sitDown()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/camel/Camel;isCamelSitting()Z"), require = 1, allow = 1)
+    private boolean arclight$sitDown(Camel camel) throws Throwable {
+        boolean sitting = (boolean) DecorationOps.callsite().invoke(camel);
+        return sitting || !new EntityToggleSitEvent(this.getBukkitEntity(), true).callEvent();
+    }
+
+    @Decorate(method = "standUp()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/camel/Camel;isCamelSitting()Z"), require = 1, allow = 1)
+    private boolean arclight$standUp(Camel camel) throws Throwable {
+        boolean sitting = (boolean) DecorationOps.callsite().invoke(camel);
+        return sitting && new EntityToggleSitEvent(this.getBukkitEntity(), false).callEvent();
+    }
+
+    @Decorate(method = "standUpInstantly()V", inject = true, at = @At("HEAD"), require = 1, allow = 1)
+    private void arclight$standUpInstantly() throws Throwable {
+        if (this.isCamelSitting() && !new EntityToggleSitEvent(this.getBukkitEntity(), false).callEvent()) {
+            DecorationOps.cancel().invoke();
+            return;
+        }
+    }
 }

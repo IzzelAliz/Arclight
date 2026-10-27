@@ -1,0 +1,24 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/AbstractProjectile.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/AbstractProjectile.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/AbstractProjectile.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/AbstractProjectile.java
+@@ -48,17 +48,17 @@
+ 
+     @Override
+     public boolean canHitEntity(org.bukkit.entity.Entity entity) {
+-        return this.getHandle().canHitEntityPublic(((CraftEntity) entity).getHandle());
++        return this.getHandle().canHitEntity(((CraftEntity) entity).getHandle());
+     }
+ 
+     @Override
+     public void hitEntity(org.bukkit.entity.Entity entity) {
+-        this.getHandle().preHitTargetOrDeflectSelf(new net.minecraft.world.phys.EntityHitResult(((CraftEntity) entity).getHandle()));
++        this.getHandle().hitTargetOrDeflectSelf(new net.minecraft.world.phys.EntityHitResult(((CraftEntity) entity).getHandle()));
+     }
+ 
+     @Override
+     public void hitEntity(org.bukkit.entity.Entity entity, org.bukkit.util.Vector vector) {
+-        this.getHandle().preHitTargetOrDeflectSelf(new net.minecraft.world.phys.EntityHitResult(((CraftEntity) entity).getHandle(), new net.minecraft.world.phys.Vec3(vector.getX(), vector.getY(), vector.getZ())));
++        this.getHandle().hitTargetOrDeflectSelf(new net.minecraft.world.phys.EntityHitResult(((CraftEntity) entity).getHandle(), new net.minecraft.world.phys.Vec3(vector.getX(), vector.getY(), vector.getZ())));
+     }
+ 
+     @Override

@@ -1,0 +1,14 @@
+diff --git a/paper-api/src/main/java/org/bukkit/Bukkit.java b/paper-api/src/main/java/org/bukkit/Bukkit.java
+index de21023e1e0ea9d22f6beb8ef50715809c10058a..7f75da780b50b649d55c95e514507168bb5f4915 100644
+--- a/paper-api/src/main/java/org/bukkit/Bukkit.java
++++ b/paper-api/src/main/java/org/bukkit/Bukkit.java
+@@ -122,8 +122,7 @@ public final class Bukkit {
+       */
+     @NotNull
+     public static String getVersionMessage() {
+-        final io.papermc.paper.ServerBuildInfo version = io.papermc.paper.ServerBuildInfo.buildInfo();
+-        return "This server is running " + getName() + " version " + version.asString(io.papermc.paper.ServerBuildInfo.StringRepresentation.VERSION_FULL) + " (Implementing API version " + getBukkitVersion() + ")";
++        return "This server is running " + getName() + " version " + getVersion() + " (Implementing API version " + getBukkitVersion() + ")";
+         // Paper end
+     }
+ 

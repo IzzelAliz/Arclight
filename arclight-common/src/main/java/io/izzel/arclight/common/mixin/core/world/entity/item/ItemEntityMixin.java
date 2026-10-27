@@ -1,7 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.item;
 
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
-import io.izzel.arclight.common.bridge.core.world.entity.item.ItemEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.player.InventoryBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
@@ -14,6 +13,7 @@ import io.izzel.arclight.mixin.Local;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -23,6 +23,7 @@ import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.entity.Item;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
+import org.bukkit.event.player.PlayerAttemptPickupItemEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -37,7 +38,26 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.UUID;
 
 @Mixin(ItemEntity.class)
-public abstract class ItemEntityMixin extends EntityMixin implements ItemEntityBridge {
+public abstract class ItemEntityMixin extends EntityMixin {
+
+    @Override
+    public void bridge$inactiveTick() {
+        super.bridge$inactiveTick();
+        if (this.pickupDelay > 0 && this.pickupDelay != 32767) --this.pickupDelay;
+        if (this.age != -32768) ++this.age;
+        if (!this.level().isClientSide() && this.arclight$inactiveItemExpired()) {
+            if (CraftEventFactory.callItemDespawnEvent((ItemEntity) (Object) this).isCancelled()) {
+                this.age = 0;
+                return;
+            }
+            this.discard(EntityRemoveEvent.Cause.DESPAWN);
+        }
+    }
+
+    protected boolean arclight$inactiveItemExpired() {
+        return this.age >= ((WorldBridge) this.level()).bridge$spigotConfig().itemDespawnRate;
+    }
+
 
     // @formatter:off
     @Shadow @Final private static EntityDataAccessor<ItemStack> DATA_ITEM;
@@ -72,18 +92,38 @@ public abstract class ItemEntityMixin extends EntityMixin implements ItemEntityB
     }
 
     @Decorate(method = "playerTouch", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/item/ItemStack;getCount()I"))
-    private int arclight$playerPickup(ItemStack instance, Player entity, @Local(ordinal = -1) ItemStack itemstack) throws Throwable {
+    private int arclight$playerPickup(ItemStack instance, Player entity, @Local(ordinal = -1) ItemStack itemstack,
+                                     @Local(allocate = "pickupFlyAtPlayer") boolean flyAtPlayer) throws Throwable {
         var count = (int) DecorationOps.callsite().invoke(instance);
 
         final int canHold = ((InventoryBridge) entity.getInventory()).bridge$canHold(itemstack);
         final int remaining = count - canHold;
+        // Preserve native animation if a loader admits pickup without either Bukkit event.
+        flyAtPlayer = true;
+        // Attempt also fires for a full inventory, before the legacy event shrinks the stack.
+        if (this.pickupDelay <= 0) {
+            final PlayerAttemptPickupItemEvent attemptEvent = new PlayerAttemptPickupItemEvent(((ServerPlayerBridge) entity).bridge$getBukkitEntity(), (Item) this.getBukkitEntity(), remaining);
+            Bukkit.getPluginManager().callEvent(attemptEvent);
+            flyAtPlayer = attemptEvent.getFlyAtPlayer();
+            if (attemptEvent.isCancelled()) {
+                if (flyAtPlayer) {
+                    entity.take((ItemEntity) (Object) this, count);
+                }
+                return (int) DecorationOps.cancel().invoke();
+            }
+        }
         if (this.pickupDelay <= 0 && canHold > 0) {
             itemstack.setCount(canHold);
             final PlayerPickupItemEvent playerEvent = new PlayerPickupItemEvent(((ServerPlayerBridge) entity).bridge$getBukkitEntity(), (Item) this.getBukkitEntity(), remaining);
             playerEvent.setCancelled(!((PlayerBridge) entity).bridge$canPickUpLoot());
             Bukkit.getPluginManager().callEvent(playerEvent);
+            // Paper lets the legacy event override the attempt's animation decision.
+            flyAtPlayer = playerEvent.getFlyAtPlayer();
             if (playerEvent.isCancelled()) {
                 itemstack.setCount(canHold + remaining);
+                if (flyAtPlayer) {
+                    entity.take((ItemEntity) (Object) this, count);
+                }
                 return (int) DecorationOps.cancel().invoke();
             }
             final EntityPickupItemEvent entityEvent = new EntityPickupItemEvent(((LivingEntityBridge) entity).bridge$getBukkitEntity(), (Item) this.getBukkitEntity(), remaining);
@@ -103,8 +143,18 @@ public abstract class ItemEntityMixin extends EntityMixin implements ItemEntityB
         } else if (this.pickupDelay == 0) {
             this.pickupDelay = -1;
         }
-        DecorationOps.blackhole().invoke(itemstack);
+        DecorationOps.blackhole().invoke(itemstack, flyAtPlayer);
         return count;
+    }
+
+    // Only gate the native success animation, not the earlier cancellation animations.
+    @Decorate(method = "playerTouch", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;take(Lnet/minecraft/world/entity/Entity;I)V"),
+        slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;add(Lnet/minecraft/world/item/ItemStack;)Z")))
+    private void arclight$pickupAnimation(Player player, Entity item, int count,
+                                         @Local(allocate = "pickupFlyAtPlayer") boolean flyAtPlayer) throws Throwable {
+        if (flyAtPlayer) {
+            DecorationOps.callsite().invoke(player, item, count);
+        }
     }
 
     @Inject(method = "playerTouch", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V"))

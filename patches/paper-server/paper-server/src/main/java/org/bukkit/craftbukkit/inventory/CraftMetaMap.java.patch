@@ -1,0 +1,22 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaMap.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaMap.java
+index 634d01855c5d878661c642c25927f9870229518a..6e70429bc34d93f2fac8aa034d253bb589bb1f8c 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaMap.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaMap.java
+@@ -16,7 +16,7 @@ import org.bukkit.inventory.meta.MapMeta;
+ import org.bukkit.map.MapView;
+ 
+ @DelegateDeserialization(SerializableMeta.class)
+-class CraftMetaMap extends CraftMetaItem implements MapMeta {
++public class CraftMetaMap extends CraftMetaItem implements MapMeta {
+     @ItemMetaKey.Specific(ItemMetaKey.Specific.To.NBT)
+     static final ItemMetaKeyType<MapPostProcessing> MAP_POST_PROCESSING = new ItemMetaKeyType<>(DataComponents.MAP_POST_PROCESSING);
+     static final ItemMetaKey MAP_SCALING = new ItemMetaKey("scaling");
+@@ -32,7 +32,7 @@ class CraftMetaMap extends CraftMetaItem implements MapMeta {
+     private byte scaling = CraftMetaMap.SCALING_EMPTY;
+     private Integer color; // Paper - keep color component consistent with vanilla (top byte is ignored)
+ 
+-    CraftMetaMap(CraftMetaItem meta) {
++    public CraftMetaMap(CraftMetaItem meta) {
+         super(meta);
+ 
+         if (!(meta instanceof final CraftMetaMap mapMeta)) {

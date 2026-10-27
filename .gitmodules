@@ -1,0 +1,3 @@
+[submodule "upstream/Paper"]
+	path = upstream/Paper
+	url = https://github.com/PaperMC/Paper.git

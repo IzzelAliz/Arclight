@@ -12,6 +12,7 @@ import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.damage.CraftDamageSource;
 import org.bukkit.entity.Hanging;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -47,7 +48,7 @@ public abstract class EntityMixin_Fabric implements EntityBridge {
         final org.bukkit.entity.Entity thisBukkitEntity = this.bridge$getBukkitEntity();
         final org.bukkit.entity.Entity stormBukkitEntity = ((EntityBridge) lightning).bridge$getBukkitEntity();
         if (thisBukkitEntity instanceof Hanging hanging) {
-            HangingBreakByEntityEvent hangingEvent = new HangingBreakByEntityEvent(hanging, stormBukkitEntity);
+            HangingBreakByEntityEvent hangingEvent = new HangingBreakByEntityEvent(hanging, stormBukkitEntity, new CraftDamageSource(source));
             Bukkit.getPluginManager().callEvent(hangingEvent);
             if (hangingEvent.isCancelled()) {
                 return false;

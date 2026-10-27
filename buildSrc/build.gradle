@@ -20,6 +20,9 @@ dependencies {
     implementation gradleApi()
     implementation localGroovy()
 
+    implementation libs.jgit
+    implementation libs.diff4j
+    implementation libs.gson
     implementation libs.bundles.asm
     implementation libs.commons.io
 

@@ -1,6 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.entity.boss.wither;
 
 import io.izzel.arclight.common.mixin.core.world.entity.PathfinderMobMixin;
+import io.izzel.arclight.common.bridge.core.world.entity.boss.WitherBossBridge;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import org.spongepowered.asm.mixin.Unique;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -25,7 +28,19 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(WitherBoss.class)
-public abstract class WitherBossMixin extends PathfinderMobMixin {
+public abstract class WitherBossMixin extends PathfinderMobMixin implements WitherBossBridge {
+
+    @Unique private boolean arclight$canPortal;
+
+    @Override
+    public void setCanTravelThroughPortals(boolean value) {
+        this.arclight$canPortal = value;
+    }
+
+    @ModifyReturnValue(method = "canUsePortal", at = @At("RETURN"))
+    private boolean arclight$canUsePortal(boolean original) {
+        return this.arclight$canPortal;
+    }
 
     @Inject(method = "checkDespawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/boss/wither/WitherBoss;discard()V"))
     private void arclight$despawn(CallbackInfo ci) {

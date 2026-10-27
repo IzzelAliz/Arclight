@@ -24,16 +24,26 @@ public abstract class WeatherDataMixin implements WeatherDataBridge {
         this.arclight$world = world;
     }
 
+    private com.mojang.datafixers.util.Pair<ServerLevel, WeatherChangeEvent.Cause> arclight$weatherCause;
+
+    @Override
+    public com.mojang.datafixers.util.Pair<ServerLevel, WeatherChangeEvent.Cause> bridge$swapWeatherCause(
+            com.mojang.datafixers.util.Pair<ServerLevel, WeatherChangeEvent.Cause> cause) {
+        var previous = this.arclight$weatherCause;
+        this.arclight$weatherCause = cause;
+        return previous;
+    }
+
     @Inject(method = "setRaining", at = @At("HEAD"), cancellable = true)
     private void arclight$rain(boolean value, CallbackInfo ci) {
         if (this.raining == value) {
             ci.cancel();
             return;
         }
-        var world = WeatherDataBridge.bridge$resolveWeatherWorld(
-            (WeatherData) (Object) this, this.arclight$world);
+        var world = this.arclight$weatherCause == null ? this.arclight$world : this.arclight$weatherCause.getFirst();
         if (world != null && world.bridge$getWorld() != null) {
-            var event = new WeatherChangeEvent(world.bridge$getWorld(), value);
+            var event = new WeatherChangeEvent(world.bridge$getWorld(), value,
+                (this.arclight$weatherCause == null ? WeatherChangeEvent.Cause.UNKNOWN : this.arclight$weatherCause.getSecond()));
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
                 ci.cancel();
@@ -47,10 +57,10 @@ public abstract class WeatherDataMixin implements WeatherDataBridge {
             ci.cancel();
             return;
         }
-        var world = WeatherDataBridge.bridge$resolveWeatherWorld(
-            (WeatherData) (Object) this, this.arclight$world);
+        var world = this.arclight$weatherCause == null ? this.arclight$world : this.arclight$weatherCause.getFirst();
         if (world != null && world.bridge$getWorld() != null) {
-            var event = new ThunderChangeEvent(world.bridge$getWorld(), value);
+            var event = new ThunderChangeEvent(world.bridge$getWorld(), value,
+                ThunderChangeEvent.Cause.valueOf((this.arclight$weatherCause == null ? WeatherChangeEvent.Cause.UNKNOWN : this.arclight$weatherCause.getSecond()).name()));
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
                 ci.cancel();

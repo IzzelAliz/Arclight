@@ -1,10 +1,15 @@
 package io.izzel.arclight.common.mixin.core.world.inventory;
 
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.inventory.LecternMenuBridge;
 import io.izzel.arclight.common.bridge.core.world.inventory.LecternInventoryBridge;
 import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
 import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import io.izzel.arclight.mixin.Local;
+import io.papermc.paper.event.player.PlayerLecternPageChangeEvent;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -51,6 +56,27 @@ public abstract class LecternMenuMixin extends AbstractContainerMenuMixin implem
     public void arclight$constructor(int i, Container inventory, ContainerData intArray, Inventory playerInventory) {
         arclight$constructor(i, inventory, intArray);
         this.playerInventory = playerInventory;
+    }
+
+    @Decorate(method = "clickMenuButton(Lnet/minecraft/world/entity/player/Player;I)Z", require = 3, allow = 3,
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/LecternMenu;setData(II)V"))
+    private void arclight$changePage(LecternMenu menu, int dataId, int newPage, @Local(ordinal = 0) Player player,
+                                    @Local(ordinal = 0) int buttonId, @Local(ordinal = 1) int currentPage) throws Throwable {
+        // Paper only emits this event for the arrows, not the page-jump buttons.
+        if (buttonId == LecternMenu.BUTTON_PREV_PAGE || buttonId == LecternMenu.BUTTON_NEXT_PAGE) {
+            CraftInventoryLectern inventory = (CraftInventoryLectern) getBukkitView().getTopInventory();
+            var direction = buttonId == LecternMenu.BUTTON_PREV_PAGE
+                ? PlayerLecternPageChangeEvent.PageChangeDirection.LEFT
+                : PlayerLecternPageChangeEvent.PageChangeDirection.RIGHT;
+            var event = new PlayerLecternPageChangeEvent((org.bukkit.entity.Player) ((PlayerBridge) player).bridge$getBukkitEntity(),
+                inventory.getHolder(), inventory.getBook(), direction, currentPage, newPage);
+            if (!event.callEvent()) {
+                DecorationOps.cancel().invoke(false);
+                return;
+            }
+            newPage = event.getNewPage();
+        }
+        DecorationOps.callsite().invoke(menu, dataId, newPage);
     }
 
     @Inject(method = "clickMenuButton", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/Container;removeItemNoUpdate(I)Lnet/minecraft/world/item/ItemStack;"))

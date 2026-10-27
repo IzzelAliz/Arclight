@@ -12,7 +12,7 @@ import net.minecraft.world.level.ServerExplosion;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
-import org.bukkit.event.entity.EntityKnockbackEvent;
+import io.papermc.paper.event.entity.EntityKnockbackEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,6 +24,7 @@ import java.util.List;
 public abstract class ExplosionMixin_Fabric {
 
     @Shadow @Final private Entity source;
+    @Shadow @Final private DamageSource damageSource;
 
     @Decorate(method = "hurtEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
     private boolean arclight$handleMultiPart(Entity entity, ServerLevel level, DamageSource damageSource, float damage,
@@ -57,11 +58,10 @@ public abstract class ExplosionMixin_Fabric {
     private Vec3 arclight$knockBack(Vec3 direction, double scale, @Local(ordinal = -1) Entity entity) throws Throwable {
         var knockback = (Vec3) DecorationOps.callsite().invoke(direction, scale);
         if (entity instanceof LivingEntity) {
-            var result = entity.getDeltaMovement().add(knockback);
             var event = CraftEventFactory.callEntityKnockbackEvent((CraftLivingEntity) ((EntityBridge) entity).bridge$getBukkitEntity(), this.source,
-                EntityKnockbackEvent.KnockbackCause.EXPLOSION, knockback.length(), knockback,
-                result.x, result.y, result.z);
-            knockback = event.isCancelled() ? Vec3.ZERO : new Vec3(event.getFinalKnockback().getX(), event.getFinalKnockback().getY(), event.getFinalKnockback().getZ()).subtract(entity.getDeltaMovement());
+                this.damageSource.getEntity() != null ? this.damageSource.getEntity() : this.source,
+                EntityKnockbackEvent.Cause.EXPLOSION, scale, knockback);
+            knockback = event.isCancelled() ? Vec3.ZERO : org.bukkit.craftbukkit.util.CraftVector.toVec3(event.getKnockback());
         }
         return knockback;
     }

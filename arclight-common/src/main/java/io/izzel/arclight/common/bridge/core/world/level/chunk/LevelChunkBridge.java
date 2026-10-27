@@ -19,6 +19,8 @@ public interface LevelChunkBridge {
 
     void bridge$loadCallback();
 
+    void bridge$loadCallback(java.util.function.Consumer<net.minecraft.world.level.chunk.LevelChunk> entityLoadCallback);
+
     void bridge$unloadCallback();
 
     CraftPersistentDataContainer bridge$getPersistentContainer();

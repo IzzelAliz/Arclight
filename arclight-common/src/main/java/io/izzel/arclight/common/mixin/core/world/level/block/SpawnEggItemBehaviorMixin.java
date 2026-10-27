@@ -22,7 +22,7 @@ public abstract class SpawnEggItemBehaviorMixin {
 
     // The parent dispenser flag is reset before dispense; this guard also handles nested plugin
     // callbacks and is restored even when a listener or replacement behavior throws.
-    private static final ThreadLocal<Boolean> arclight$eventInProgress = ThreadLocal.withInitial(() -> false);
+    private static Boolean arclight$eventInProgress = false;
 
     // Native execute catches Exception around EntityType.spawn. Wrap the method instead of
     // decorating that invocation so listener/replacement exceptions escape like fixed CB;
@@ -39,8 +39,8 @@ public abstract class SpawnEggItemBehaviorMixin {
         boolean refunded = false;
         boolean cancel = false;
         boolean preserveCount = false;
-        boolean nested = arclight$eventInProgress.get();
-        arclight$eventInProgress.set(true);
+        boolean nested = arclight$eventInProgress;
+        arclight$eventInProgress = true;
         try {
             CraftItemStack craftItem = CraftItemStack.asCraftMirror(single);
             BlockDispenseEvent event = new BlockDispenseEvent(CraftBlock.at(source.level(), source.pos()), craftItem.clone(), new Vector(0, 0, 0));
@@ -73,28 +73,27 @@ public abstract class SpawnEggItemBehaviorMixin {
                 }
             } finally {
                 // A refund hook may throw; always restore the enclosing event guard.
-                arclight$eventInProgress.set(nested);
+                arclight$eventInProgress = nested;
             }
         }
         if (cancel) {
             return dispensed;
         }
         // Keep native null-spawn, caught-failure and game-event behavior; suppress only shrink.
-        ItemStack previous = arclight$preservedStack.get();
-        arclight$preservedStack.set(preserveCount ? dispensed : null);
+        ItemStack previous = arclight$preservedStack;
+        arclight$preservedStack = preserveCount ? dispensed : null;
         try {
             return original.call(source, dispensed);
         } finally {
-            if (previous == null) arclight$preservedStack.remove();
-            else arclight$preservedStack.set(previous);
+            arclight$preservedStack = previous;
         }
     }
 
-    private static final ThreadLocal<ItemStack> arclight$preservedStack = new ThreadLocal<>();
+    private static ItemStack arclight$preservedStack;
 
     @WrapOperation(method = "execute", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;shrink(I)V"), require = 1)
     private void arclight$keepRefund(ItemStack stack, int amount, Operation<Void> original) {
-        if (arclight$preservedStack.get() != stack) {
+        if (arclight$preservedStack != stack) {
             original.call(stack, amount);
         }
     }

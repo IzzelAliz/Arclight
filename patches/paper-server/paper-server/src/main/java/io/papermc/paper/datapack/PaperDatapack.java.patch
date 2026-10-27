@@ -1,0 +1,18 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/datapack/PaperDatapack.java b/paper-server/src/main/java/io/papermc/paper/datapack/PaperDatapack.java
+--- a/paper-server/src/main/java/io/papermc/paper/datapack/PaperDatapack.java
++++ b/paper-server/src/main/java/io/papermc/paper/datapack/PaperDatapack.java
+@@ -42,7 +42,13 @@
+         } else {
+             enabledPacks.remove(packToChange);
+         }
+-        server.reloadResources(enabledPacks.stream().map(Pack::getId).toList(), ServerResourcesReloadedEvent.Cause.PLUGIN);
++        server.reloadResources(enabledPacks.stream().map(Pack::getId).toList()).thenRunAsync(() -> {
++            org.bukkit.craftbukkit.block.data.CraftBlockData.reloadCache();
++            new ServerResourcesReloadedEvent(ServerResourcesReloadedEvent.Cause.PLUGIN).callEvent();
++        }, server).exceptionally(failure -> {
++            org.bukkit.Bukkit.getLogger().log(java.util.logging.Level.SEVERE, "Failed to reload server resources", failure);
++            return null;
++        });
+     }
+ 
+     @Override

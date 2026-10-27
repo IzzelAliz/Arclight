@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.properties.Property;
 import io.izzel.arclight.common.bridge.core.network.ConnectionBridge;
+import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.server.network.ServerCommonPacketListenerImplBridge;
 import io.izzel.arclight.common.bridge.core.server.network.ServerLoginPacketListenerImplBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
@@ -14,6 +15,7 @@ import net.minecraft.util.Util;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.Connection;
 import net.minecraft.network.ConnectionProtocol;
+import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
@@ -78,11 +80,11 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
     @Shadow public abstract void disconnect(Component reason);
     @Shadow public abstract String getUserName();
     @Shadow @Final private byte[] challenge;
-    @Shadow @Nullable private String requestedUsername;
+    @Shadow @Nullable public String requestedUsername;
     @Shadow abstract void startClientVerification(GameProfile p_301095_);
     @Shadow protected abstract boolean isPlayerAlreadyInWorld(GameProfile p_298499_);
-    @Shadow @Nullable private GameProfile authenticatedProfile;
-    @Shadow @Final private boolean transferred;
+    @Shadow @Nullable public GameProfile authenticatedProfile;
+    @Shadow @Final public boolean transferred;
     // @formatter:on
 
     private static final java.util.regex.Pattern PROP_PATTERN = java.util.regex.Pattern.compile("\\w{0,16}");
@@ -93,9 +95,47 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
     @Unique private volatile boolean arclight$preLoginComplete;
     @Unique protected int arclight$velocityLoginId = -1;
 
+    @Inject(method = "onDisconnect(Lnet/minecraft/network/DisconnectionDetails;)V", at = @At("RETURN"), require = 1, expect = 1, allow = 1)
+    private void arclight$retireLoginPlayerScheduler(DisconnectionDetails details, CallbackInfo ci) {
+        if (this.player == null || this.connection.getPacketListener() != (Object) this) {
+            return;
+        }
+        var bridge = (ServerPlayerBridge) this.player;
+        if (bridge.bridge$getTransferCookieConnection() != (Object) this) {
+            return;
+        }
+        // canPlayerLogin creates the wrapper before returning this player; do not create a fallback.
+        var craft = bridge.bridge$getBukkitEntity();
+        if (craft.getHandleRaw() == this.player && !craft.taskScheduler.isRetired()) {
+            craft.taskScheduler.retire();
+        }
+    }
+
+    @Override
+    public Connection bridge$getConnection() {
+        return this.connection;
+    }
+
+    @Override
+    public @Nullable GameProfile bridge$getAuthenticatedProfile() {
+        return this.authenticatedProfile;
+    }
+
     @Override
     public int bridge$getVelocityLoginId() {
         return arclight$velocityLoginId;
+    }
+
+    public java.util.UUID requestedUuid;
+
+    @Override
+    public java.util.UUID bridge$getRequestedUuid() {
+        return this.requestedUuid;
+    }
+
+    @Override
+    public String bridge$getRequestedUsername() {
+        return this.requestedUsername;
     }
 
     @Override
@@ -116,6 +156,7 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
         Validate.validState(this.state == ServerLoginPacketListenerImpl.State.HELLO, "Unexpected hello packet");
         Validate.validState(StringUtil.isValidPlayerName(packetIn.name()), "Invalid characters in username");
         this.requestedUsername = packetIn.name();
+        this.requestedUuid = packetIn.profileId();
         GameProfile gameprofile = this.server.getSingleplayerProfile();
         if (gameprofile != null && this.requestedUsername.equalsIgnoreCase(gameprofile.name())) {
             this.startClientVerification(gameprofile);

@@ -1,0 +1,34 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftArmorStand.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftArmorStand.java
+index ac3550c65ca4f44443fe46e3ed3bf548007d936b..e14479b804f59aadbe59b3156952390028273830 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftArmorStand.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftArmorStand.java
+@@ -228,12 +228,12 @@ public class CraftArmorStand extends CraftLivingEntity implements ArmorStand {
+ 
+     @Override
+     public boolean canMove() {
+-        return this.getHandle().canMove;
++        throw new UnsupportedOperationException("Independent armor stand movement control is not supported by Arclight");
+     }
+ 
+     @Override
+     public void setCanMove(boolean move) {
+-        this.getHandle().canMove = move;
++        throw new UnsupportedOperationException("Independent armor stand movement control is not supported by Arclight");
+     }
+ 
+     @Override
+@@ -361,12 +361,11 @@ public class CraftArmorStand extends CraftLivingEntity implements ArmorStand {
+ 
+     @Override
+     public boolean canTick() {
+-        return this.getHandle().canTick;
++        throw new UnsupportedOperationException("Independent armor stand ticking control is not supported by Arclight");
+     }
+ 
+     @Override
+     public void setCanTick(final boolean tick) {
+-        this.getHandle().canTick = tick;
+-        this.getHandle().canTickSetByAPI = true;
++        throw new UnsupportedOperationException("Independent armor stand ticking control is not supported by Arclight");
+     }
+ }

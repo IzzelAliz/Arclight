@@ -2,6 +2,8 @@ package io.izzel.arclight.common.mixin.core.world.inventory;
 
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.inventory.PosContainerBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.CartographyTableMenu;
@@ -38,6 +40,16 @@ public abstract class CartographyTableMenuMixin extends AbstractContainerMenuMix
     @Inject(method = "stillValid", cancellable = true, at = @At("HEAD"))
     public void arclight$unreachable(net.minecraft.world.entity.player.Player playerIn, CallbackInfoReturnable<Boolean> cir) {
         if (!bridge$isCheckReachable()) cir.setReturnValue(true);
+    }
+
+    @Decorate(method = "slotsChanged(Lnet/minecraft/world/Container;)V", inject = true, at = @At("HEAD"), require = 1, allow = 1)
+    private void arclight$preserveEditedResult(Container changed) throws Throwable {
+        // Result-slot writes must not recompute the output edited by an inventory click listener.
+        // Keep the input-container callback and the native result calculation unchanged.
+        if (changed == this.resultContainer) {
+            DecorationOps.cancel().invoke();
+            return;
+        }
     }
 
     @Override

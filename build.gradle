@@ -1,17 +1,16 @@
-import io.izzel.arclight.gradle.ArclightGradlePlugin
 import io.izzel.arclight.gradle.tasks.UploadFilesTask
 
 plugins {
-    id 'architectury-plugin' version '3.5.170' apply false
-    id 'dev.architectury.loom-no-remap' apply false  // version: gradle/libs.versions.toml
-    id 'com.gradleup.shadow' version '8.3.+' apply false
+    alias(libs.plugins.architectury) apply false
+    id 'dev.architectury.loom-no-remap' apply false // Supplied by buildSrc's catalog-managed libs.loom
+    alias(libs.plugins.shadow) apply false
 }
 
 allprojects {
     apply plugin: 'java'
 
     group 'io.izzel.arclight'
-    version '1.0.0-SNAPSHOT'
+    version '1.1.0-SNAPSHOT'
 
     def getGitHash = { ->
         def stdout = new ByteArrayOutputStream()
@@ -23,13 +22,13 @@ allprojects {
     ext {
         versionName = 'dipper'
         gitHash = getGitHash()
-        supportedPlatforms = ['neoforge', 'fabric']
+        supportedPlatforms = ['forge', 'neoforge', 'fabric']
         commonProject = project(':arclight-common')
         fabricProject = project(':arclight-fabric')
         neoForgeProject = project(':arclight-neoforge')
-        platformProjects = [ext.fabricProject, ext.neoForgeProject]
+        forgeProject = project(':arclight-forge')
+        platformProjects = [ext.fabricProject, ext.neoForgeProject, ext.forgeProject]
         subProjects = ext.platformProjects + [ext.commonProject]
-        generatedSpigot = "io.izzel.arclight.generated:spigot:${libs.versions.minecraft.get()}:deobf"
     }
 
     java {
@@ -45,6 +44,8 @@ allprojects {
         maven { url = 'https://maven.neoforged.net/releases' }
         maven { url = 'https://files.minecraftforge.net/maven/' }
         maven { url = 'https://maven.izzel.io/releases' }
+        maven { url = 'https://repo.papermc.io/repository/maven-public/' }
+        maven { url = 'https://libraries.minecraft.net/' }
         mavenCentral()
         mavenLocal()
     }
@@ -62,10 +63,30 @@ allprojects {
     }
 }
 
+def paperActions = [verifyPaperUpstream: 'verify', preparePaperPatchWorkspace: 'prepare',
+                    rebuildPaperPatches: 'rebuild', applyPaperPatches: 'apply', checkPaperPatches: 'check']
+paperActions.each { taskName, action ->
+    tasks.register(taskName, io.izzel.arclight.gradle.tasks.PaperSourcesTask) {
+        group = 'paper sources'
+        description = "${action.capitalize()} pinned Paper sources and per-file patches."
+        sourceRoot = rootDir
+        operation = action
+        selectedGroup = providers.gradleProperty('paperGroup').getOrElse('')
+        inputs.file('build-support/paper-sources.json')
+        if (action == 'apply') {
+            dependsOn 'verifyPaperUpstream'
+            inputs.dir(selectedGroup ? "patches/${selectedGroup}" : 'patches')
+            outputs.dir(selectedGroup ? "build/paper-patched/${selectedGroup}" : 'build/paper-patched')
+            mustRunAfter 'clean', 'rebuildPaperPatches'
+        }
+        if (action == 'rebuild') mustRunAfter 'preparePaperPatchWorkspace'
+        if (action == 'check') mustRunAfter 'preparePaperPatchWorkspace', 'rebuildPaperPatches', 'applyPaperPatches'
+    }
+}
+
 rootProject.ext.subProjects.each { Project p ->
     configure(p) {
         apply plugin: 'architectury-plugin'
-        apply plugin: ArclightGradlePlugin
         apply plugin: 'dev.architectury.loom-no-remap'
 
         architectury {
@@ -74,17 +95,20 @@ rootProject.ext.subProjects.each { Project p ->
 
         loom {
             silentMojangMappingsLicense()
+            addMinecraftJarProcessor(
+                io.izzel.arclight.gradle.processor.FieldInjectionProcessor,
+                'arclight:field-injection-v1',
+                rootProject.file('arclight-common/src/main/resources/architectury.common.json'),
+                p
+            )
+            addMinecraftJarProcessor(
+                io.izzel.arclight.gradle.processor.StaticMethodInjectionProcessor,
+                'arclight:static-method-injection-v1',
+                rootProject.file('arclight-common/src/main/resources/architectury.common.json')
+            )
             interfaceInjection {
                 getEnableDependencyInterfaceInjection().set(false)
             }
-        }
-
-        arclight {
-            mcVersion = libs.versions.minecraft.get()
-            bukkitVersion = ''
-            spigotReversion = libs.versions.spigot.reversion.get()
-            accessTransformer = rootProject.ext.commonProject.file('bukkit.at')
-            extraMapping = rootProject.ext.commonProject.file('extra_mapping.tsrg')
         }
 
         configurations {
@@ -116,10 +140,29 @@ rootProject.ext.subProjects.each { Project p ->
     }
 }
 
+def verifyFieldInjections = project(':arclight-common').tasks.register('verifyFieldInjections', io.izzel.arclight.gradle.tasks.VerifyFieldInjections) {
+    def common = rootProject.ext.commonProject
+    specification.set(common.layout.projectDirectory.file('src/main/resources/architectury.common.json'))
+    classes.from(common.sourceSets.main.output.classesDirs)
+    mixinConfigs.from(common.fileTree('src/main/resources') { include 'mixins.arclight.*.json' })
+    dependsOn common.tasks.named('compileJava')
+}
+def verifyStaticMethodInjections = project(':arclight-common').tasks.register('verifyStaticMethodInjections', io.izzel.arclight.gradle.tasks.VerifyStaticMethodInjections) {
+    def common = rootProject.ext.commonProject
+    specification.set(common.layout.projectDirectory.file('src/main/resources/architectury.common.json'))
+    classes.from(common.sourceSets.main.output.classesDirs)
+    mixinConfigs.from(common.fileTree('src/main/resources') { include 'mixins.arclight.*.json' })
+    dependsOn common.tasks.named('compileJava')
+}
+project(':arclight-common').tasks.named('check') { dependsOn verifyStaticMethodInjections }
+project(':arclight-common').tasks.named('jar') { dependsOn verifyFieldInjections, verifyStaticMethodInjections }
+project(':arclight-common').tasks.named('check') { dependsOn verifyFieldInjections }
+
 rootProject.ext.platformProjects.each { Project p ->
     configure(p) {
         apply plugin: 'dev.architectury.loom-no-remap'
         apply plugin: 'com.gradleup.shadow'
+        tasks.named('shadowJar') { dependsOn verifyFieldInjections, verifyStaticMethodInjections }
 
         loom {
             if (p.name == 'arclight-fabric') {
@@ -143,6 +186,54 @@ rootProject.ext.platformProjects.each { Project p ->
                     dependsOn(generateFabricAccessWidener)
                 }
                 accessWidenerPath = fabricAw
+            } else if (p.name == 'arclight-forge') {
+                def forgeAw = p.layout.buildDirectory.file('generated-access/arclight-forge.accesswidener').get().asFile
+                def commonAw = getRootProject().ext.commonProject.file('src/main/resources/arclight.accesswidener')
+                def generateAw = {
+                    forgeAw.parentFile.mkdirs()
+                    // Forge's field-to-method coremods require these fields to remain private.
+                    // Keep the common compile-time AW intact, but never ship these field rules on Forge.
+                    forgeAw.setText(commonAw.readLines('UTF-8').findAll { line ->
+                        def entry = line.split('#', 2)[0].tokenize()
+                        !(entry.size() >= 4 && entry[1] == 'field' &&
+                            ((entry[2] == 'net/minecraft/world/item/BucketItem' && entry[3] == 'content') ||
+                             (entry[2] == 'net/minecraft/world/level/biome/Biome' && entry[3] == 'climateSettings')))
+                    }.join('\n') + '\n', 'UTF-8')
+                }
+                // Loom reads this during configuration; clean may remove it afterwards.
+                generateAw()
+                def generateForgeAccessWidener = tasks.register('generateForgeAccessWidener') {
+                    inputs.file(commonAw)
+                    outputs.file(forgeAw)
+                    mustRunAfter(tasks.named('clean'))
+                    doLast { generateAw() }
+                }
+                tasks.matching { it.name in ['shadowJar', 'validateAccessWidener'] }.configureEach {
+                    dependsOn(generateForgeAccessWidener)
+                }
+                accessWidenerPath = forgeAw
+            } else if (p.name == 'arclight-neoforge') {
+                def neoAw = p.layout.buildDirectory.file('generated-access/arclight-neoforge.accesswidener').get().asFile
+                def commonAw = getRootProject().ext.commonProject.file('src/main/resources/arclight.accesswidener')
+                def generateAw = {
+                    neoAw.parentFile.mkdirs()
+                    neoAw.setText(commonAw.readLines('UTF-8').findAll { line ->
+                        def entry = line.split('#', 2)[0].tokenize()
+                        !(entry.size() >= 4 && entry[1] == 'field' &&
+                            entry[2] == 'net/minecraft/world/level/biome/Biome' && entry[3] == 'climateSettings')
+                    }.join('\n') + '\n', 'UTF-8')
+                }
+                generateAw()
+                def generateNeoForgeAccessWidener = tasks.register('generateNeoForgeAccessWidener') {
+                    inputs.file(commonAw)
+                    outputs.file(neoAw)
+                    mustRunAfter(tasks.named('clean'))
+                    doLast { generateAw() }
+                }
+                tasks.matching { it.name in ['shadowJar', 'validateAccessWidener'] }.configureEach {
+                    dependsOn(generateNeoForgeAccessWidener)
+                }
+                accessWidenerPath = neoAw
             } else {
                 accessWidenerPath = getRootProject().ext.commonProject.loom.accessWidenerPath
             }
@@ -154,6 +245,10 @@ rootProject.ext.platformProjects.each { Project p ->
             manifest.attributes 'Implementation-Version': "${p.name}-${libs.versions.minecraft.get()}-${project.version}+$gitHash"
             manifest.attributes 'Implementation-Vendor': 'Arclight Team'
             manifest.attributes 'Implementation-Timestamp': new Date().format("yyyy-MM-dd HH:mm:ss")
+            manifest.attributes 'Brand-Id': 'arclight:arclight'
+            manifest.attributes 'Brand-Name': 'Arclight'
+            manifest.attributes 'Git-Commit': gitHash
+            manifest.attributes 'Build-Time': java.time.Instant.now().toString()
         }
 
         components.java {
@@ -168,6 +263,7 @@ jar.enabled = false
 
 tasks.register('collect', Copy) {
     destinationDir = file('build/libs')
+    from project(':bootstrap').tasks.forgeJar.outputs
     from project(':bootstrap').tasks.neoforgeJar.outputs
     from project(':bootstrap').tasks.fabricJar.outputs
 }

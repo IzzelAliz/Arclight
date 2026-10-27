@@ -1,7 +1,390 @@
 {
   "accessWidener": "arclight.accesswidener",
+  "injected_static_methods": {
+  "net/minecraft/world/item/enchantment/EnchantmentHelper": [
+    {
+      "name": "updateEnchantments",
+      "descriptor": "(Lnet/minecraft/world/item/ItemStack;Ljava/util/function/Consumer;Z)Lnet/minecraft/world/item/enchantment/ItemEnchantments;",
+      "signature": "(Lnet/minecraft/world/item/ItemStack;Ljava/util/function/Consumer<Lnet/minecraft/world/item/enchantment/ItemEnchantments$Mutable;>;Z)Lnet/minecraft/world/item/enchantment/ItemEnchantments;",
+      "mixin": "io/izzel/arclight/common/mixin/core/world/item/enchantment/EnchantmentHelperMixin"
+    }
+  ],
+  "net/minecraft/world/level/storage/TagValueOutput": [
+    {
+      "name": "createWrappingWithContext",
+      "descriptor": "(Lnet/minecraft/util/ProblemReporter;Lnet/minecraft/core/HolderLookup$Provider;Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/world/level/storage/TagValueOutput;",
+      "mixin": "io/izzel/arclight/common/mixin/core/world/level/storage/TagValueOutputMixin"
+    }
+  ],
+    "net/minecraft/world/entity/Entity": [
+      {
+        "name": "nextEntityId",
+        "descriptor": "()I",
+        "mixin": "io/izzel/arclight/common/mixin/core/world/entity/EntityMixin"
+      }
+    ],
+    "net/minecraft/ChatFormatting": [
+      {
+        "name": "getByHexValue",
+        "descriptor": "(I)Lnet/minecraft/ChatFormatting;",
+        "mixin": "io/izzel/arclight/common/mixin/core/ChatFormattingMixin"
+      }
+    ],
+  "net/minecraft/world/item/component/TypedEntityData": [
+    {
+      "name": "decodeEntity",
+      "descriptor": "(Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/world/item/component/TypedEntityData;",
+      "mixin": "io/izzel/arclight/common/mixin/core/world/item/component/TypedEntityDataMixin",
+      "signature": "(Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/world/item/component/TypedEntityData<Lnet/minecraft/world/entity/EntityType<*>;>;"
+    },
+    {
+      "name": "decodeBlockEntity",
+      "descriptor": "(Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/world/item/component/TypedEntityData;",
+      "mixin": "io/izzel/arclight/common/mixin/core/world/item/component/TypedEntityDataMixin",
+      "signature": "(Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/world/item/component/TypedEntityData<Lnet/minecraft/world/level/block/entity/BlockEntityType<*>;>;"
+    }
+  ],
+  "net/minecraft/world/level/storage/TagValueInput": [
+    {
+      "name": "createGlobal",
+      "descriptor": "(Lnet/minecraft/util/ProblemReporter;Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/world/level/storage/ValueInput;",
+      "mixin": "io/izzel/arclight/common/mixin/core/world/level/storage/TagValueInputMixin"
+    }
+  ],
+  "net/minecraft/world/level/block/DispenserBlock": [
+    {
+      "name": "getDispenseBehavior",
+      "descriptor": "(Lnet/minecraft/core/dispenser/BlockSource;Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/core/dispenser/DispenseItemBehavior;",
+      "mixin": "io/izzel/arclight/common/mixin/core/world/level/block/DispenserBlockMixin"
+    }
+  ],
+  "net/minecraft/world/level/NaturalSpawner": [
+    {
+      "name": "globalLimitForCategory",
+      "descriptor": "(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/MobCategory;I)I",
+      "mixin": "io/izzel/arclight/common/mixin/core/world/level/NaturalSpawnerMixin"
+    }
+  ],
+    "net/minecraft/server/MinecraftServer": [
+      {
+        "name": "getServer",
+        "descriptor": "()Lnet/minecraft/server/MinecraftServer;",
+        "mixin": "io/izzel/arclight/common/mixin/core/server/MinecraftServerMixin"
+      }
+    ],
+    "net/minecraft/world/entity/decoration/painting/Painting": [
+      {
+        "name": "calculateBoundingBoxStatic",
+        "descriptor": "(Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Direction;II)Lnet/minecraft/world/phys/AABB;",
+        "mixin": "io/izzel/arclight/common/mixin/core/world/entity/decoration/PaintingMixin"
+      }
+    ],
+    "net/minecraft/world/entity/decoration/ItemFrame": [
+      {
+        "name": "createBoundingBoxStatic",
+        "descriptor": "(Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Direction;Z)Lnet/minecraft/world/phys/AABB;",
+        "mixin": "io/izzel/arclight/common/mixin/core/world/entity/decoration/ItemFrameMixin"
+      }
+    ],
+    "net/minecraft/world/level/block/entity/ConduitBlockEntity": [
+      {
+        "name": "updateAndAttackTarget",
+        "descriptor": "(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/entity/ConduitBlockEntity;ZZ)V",
+        "mixin": "io/izzel/arclight/common/mixin/core/world/level/block/entity/ConduitBlockEntityMixin"
+      },
+      {
+        "name": "getRange",
+        "descriptor": "(Ljava/util/List;)I",
+        "mixin": "io/izzel/arclight/common/mixin/core/world/level/block/entity/ConduitBlockEntityMixin"
+      }
+    ],
+    "net/minecraft/world/item/crafting/Ingredient": [
+      {
+        "name": "ofStacks",
+        "descriptor": "(Ljava/util/List;)Lnet/minecraft/world/item/crafting/Ingredient;",
+        "mixin": "io/izzel/arclight/common/mixin/core/world/item/crafting/IngredientMixin"
+      }
+    ],
+    "net/minecraft/network/protocol/game/ClientboundPlayerInfoUpdatePacket": [
+      {
+        "name": "updateListed",
+        "descriptor": "(Ljava/util/UUID;Z)Lnet/minecraft/network/protocol/game/ClientboundPlayerInfoUpdatePacket;",
+        "mixin": "io/izzel/arclight/common/mixin/core/network/protocol/game/ClientboundPlayerInfoUpdatePacketMixin"
+      },
+      {
+        "name": "createPlayerInitializing",
+        "descriptor": "(Ljava/util/Collection;Lnet/minecraft/server/level/ServerPlayer;)Lnet/minecraft/network/protocol/game/ClientboundPlayerInfoUpdatePacket;",
+        "mixin": "io/izzel/arclight/common/mixin/core/network/protocol/game/ClientboundPlayerInfoUpdatePacketMixin"
+      }
+    ]
+  },
   "injected_interfaces": {
-    "net/minecraft/world/entity/Entity": ["io/izzel/arclight/common/bridge/inject/InjectEntityBridge"],
-    "net/minecraft/world/level/Level": ["io/izzel/arclight/common/bridge/inject/InjectLevelBridge"]
+    "net/minecraft/world/item/component/TypedEntityData": ["io/izzel/arclight/common/bridge/core/world/item/component/TypedEntityDataBridge"],
+    "net/minecraft/server/bossevents/CustomBossEvent": ["io/izzel/arclight/common/bridge/core/server/bossevents/CustomBossEventBridge"],
+    "net/minecraft/world/level/block/state/BlockState": ["io/izzel/arclight/common/bridge/core/world/level/block/state/BlockStateBridge"],
+    "net/minecraft/world/damagesource/CombatTracker": ["io/izzel/arclight/common/bridge/core/world/damagesource/CombatTrackerBridge"],
+    "net/minecraft/world/level/storage/PlayerDataStorage": ["io/izzel/arclight/common/bridge/core/world/level/storage/PlayerDataStorageBridge"],
+    "net/minecraft/world/Container": ["io/izzel/arclight/common/bridge/core/world/IInventoryBridge"],
+    "net/minecraft/server/MinecraftServer": ["io/izzel/arclight/common/bridge/core/server/MinecraftServerBridge"],
+    "net/minecraft/world/inventory/AbstractContainerMenu": ["io/izzel/arclight/common/bridge/core/world/inventory/AbstractContainerMenuBridge"],
+    "net/minecraft/core/MappedRegistry": ["io/izzel/arclight/common/bridge/core/core/MappedRegistryBridge"],
+    "net/minecraft/world/entity/ai/goal/Goal": ["io/izzel/arclight/common/bridge/core/world/entity/ai/GoalBridge"],
+    "net/minecraft/world/entity/npc/villager/Villager": ["io/izzel/arclight/common/bridge/core/world/entity/npc/VillagerBridge"],
+    "net/minecraft/server/packs/repository/PackRepository": ["io/izzel/arclight/common/bridge/core/server/packs/repository/PackRepositoryBridge"],
+    "net/minecraft/server/ReloadableServerResources": ["io/izzel/arclight/common/bridge/core/server/ReloadableServerResourcesBridge"],
+    "net/minecraft/server/ServerTickRateManager": ["io/izzel/arclight/common/bridge/core/server/ServerTickRateManagerBridge"],
+    "net/minecraft/world/entity/vehicle/minecart/MinecartTNT": ["io/izzel/arclight/common/bridge/core/world/entity/vehicle/MinecartTNTBridge"],
+    "net/minecraft/world/level/chunk/LevelChunkSection": ["io/izzel/arclight/common/bridge/core/world/level/chunk/LevelChunkSectionBridge"],
+    "net/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplate": ["io/izzel/arclight/common/bridge/core/world/level/levelgen/structure/templatesystem/StructureTemplateBridge"],
+    "net/minecraft/world/level/levelgen/structure/StructureStart": ["io/izzel/arclight/common/bridge/core/world/level/levelgen/structure/StructureStartBridge"],
+    "net/minecraft/world/damagesource/DamageSource": ["io/izzel/arclight/common/bridge/core/world/damagesource/DamageSourceBridge"],
+    "net/minecraft/server/network/ServerGamePacketListenerImpl": ["io/izzel/arclight/common/bridge/core/server/network/ServerGamePacketListenerImplBridge"],
+    "net/minecraft/world/entity/ai/attributes/AttributeMap": ["io/izzel/arclight/common/bridge/core/world/entity/ai/attributes/AttributeMapBridge"],
+    "net/minecraft/server/ServerScoreboard": ["io/izzel/arclight/common/bridge/core/server/ServerScoreboardBridge"],
+    "net/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity": ["io/izzel/arclight/common/bridge/core/world/level/block/entity/AbstractFurnaceBlockEntityBridge"],
+    "net/minecraft/core/component/DataComponentPatch$Builder": ["io/izzel/arclight/common/bridge/core/core/component/DataComponentPatchBuilderBridge"],
+    "net/minecraft/world/item/crafting/SmithingTransformRecipe": ["io/izzel/arclight/common/bridge/core/world/item/crafting/SmithingTransformRecipeBridge"],
+    "net/minecraft/world/item/trading/Merchant": ["io/izzel/arclight/common/bridge/core/world/item/trading/MerchantBridge"],
+    "net/minecraft/world/item/trading/MerchantOffer": ["io/izzel/arclight/common/bridge/core/world/item/trading/MerchantOfferBridge"],
+    "net/minecraft/world/level/block/entity/BeaconBlockEntity": ["io/izzel/arclight/common/bridge/core/world/level/block/entity/BeaconBlockEntityBridge"],
+    "net/minecraft/world/level/block/entity/JukeboxBlockEntity": ["io/izzel/arclight/common/bridge/core/world/level/block/entity/JukeboxBlockEntityBridge"],
+    "net/minecraft/world/level/block/entity/ConduitBlockEntity": ["io/izzel/arclight/common/bridge/core/world/level/block/entity/ConduitBlockEntityBridge"],
+    "net/minecraft/world/level/block/entity/BeehiveBlockEntity": ["io/izzel/arclight/common/bridge/core/world/level/block/entity/BeehiveBlockEntityBridge"],
+    "net/minecraft/world/level/block/entity/ContainerOpenersCounter": ["io/izzel/arclight/common/bridge/core/world/level/block/entity/ContainerOpenersCounterBridge"],
+    "net/minecraft/world/item/ItemStack": ["io/izzel/arclight/common/bridge/core/world/item/ItemStackBridge"],
+    "net/minecraft/world/entity/projectile/FishingHook": ["io/izzel/arclight/common/bridge/core/world/entity/projectile/FishingHookBridge"],
+    "net/minecraft/world/level/dimension/end/EnderDragonFight": ["io/izzel/arclight/common/bridge/core/world/level/dimension/end/EnderDragonFightBridge"],
+    "net/minecraft/world/level/storage/loot/LootTable": ["io/izzel/arclight/common/bridge/core/world/level/storage/loot/LootTableBridge"],
+    "net/minecraft/world/level/block/entity/BlockEntity": ["io/izzel/arclight/common/bridge/core/world/level/block/entity/BlockEntityBridge"],
+    "net/minecraft/commands/arguments/EntityArgument": ["io/izzel/arclight/common/bridge/core/commands/arguments/EntityArgumentBridge"],
+    "net/minecraft/network/Connection": ["io/izzel/arclight/common/bridge/core/network/ConnectionBridge"],
+    "net/minecraft/server/network/ServerCommonPacketListenerImpl": ["io/izzel/arclight/common/bridge/core/server/network/ServerCommonPacketListenerImplBridge"],
+    "net/minecraft/world/level/portal/TeleportTransition": ["io/izzel/arclight/common/bridge/core/world/level/portal/DimensionTransitionBridge"],
+    "net/minecraft/world/entity/monster/zombie/ZombieVillager": ["io/izzel/arclight/common/bridge/core/world/entity/monster/ZombieVillagerBridge"],
+    "net/minecraft/world/entity/Mob": ["io/izzel/arclight/common/bridge/core/world/entity/MobBridge"],
+    "net/minecraft/world/entity/monster/EnderMan": ["io/izzel/arclight/common/bridge/core/world/entity/monster/EnderManBridge"],
+    "net/minecraft/world/entity/monster/piglin/Piglin": ["io/izzel/arclight/common/bridge/core/world/entity/monster/piglin/PiglinBridge"],
+    "net/minecraft/world/entity/animal/allay/Allay": ["io/izzel/arclight/common/bridge/core/world/entity/animal/AllayBridge"],
+    "net/minecraft/world/entity/monster/Creeper": ["io/izzel/arclight/common/bridge/core/world/entity/monster/CreeperBridge"],
+    "net/minecraft/world/entity/decoration/ItemFrame": ["io/izzel/arclight/common/bridge/core/world/entity/decoration/ItemFrameBridge"],
+    "net/minecraft/world/entity/boss/wither/WitherBoss": ["io/izzel/arclight/common/bridge/core/world/entity/boss/WitherBossBridge"],
+    "net/minecraft/world/entity/projectile/ShulkerBullet": ["io/izzel/arclight/common/bridge/core/world/entity/projectile/ShulkerBulletBridge"],
+    "net/minecraft/world/entity/projectile/arrow/ThrownTrident": ["io/izzel/arclight/common/bridge/core/world/entity/projectile/ThrownTridentBridge"],
+    "net/minecraft/world/entity/ItemBasedSteering": ["io/izzel/arclight/common/bridge/core/world/entity/ItemBasedSteeringBridge"],
+    "net/minecraft/world/entity/vehicle/minecart/AbstractMinecart": ["io/izzel/arclight/common/bridge/core/world/entity/vehicle/AbstractMinecartBridge"],
+    "net/minecraft/world/inventory/CraftingContainer": ["io/izzel/arclight/common/bridge/core/world/IInventoryBridge"],
+    "net/minecraft/world/item/crafting/RecipeHolder": ["io/izzel/arclight/common/bridge/core/world/item/crafting/RecipeHolderBridge"],
+    "net/minecraft/commands/CommandSourceStack": ["io/izzel/arclight/common/bridge/core/commands/CommandSourceStackBridge", "io/papermc/paper/command/brigadier/PaperCommandSourceStack"],
+    "net/minecraft/server/dedicated/DedicatedServer": ["io/izzel/arclight/common/bridge/core/server/dedicated/DedicatedServerBridge"],
+    "net/minecraft/world/level/LevelAccessor": ["io/izzel/arclight/common/bridge/core/world/level/LevelAccessorBridge"],
+    "net/minecraft/world/level/chunk/ChunkAccess": ["io/izzel/arclight/common/bridge/core/world/chunk/ChunkAccessBridge"],
+    "net/minecraft/server/level/ServerLevel": ["io/izzel/arclight/common/bridge/core/server/level/ServerLevelBridge"],
+    "net/minecraft/server/level/TicketType": ["io/izzel/arclight/common/bridge/core/server/level/TicketTypeBridge"],
+    "net/minecraft/server/level/ServerChunkCache": ["io/izzel/arclight/common/bridge/core/world/server/ServerChunkProviderBridge"],
+    "net/minecraft/world/item/crafting/Ingredient": ["io/izzel/arclight/common/bridge/core/world/item/crafting/IngredientBridge"],
+    "net/minecraft/world/item/crafting/RecipeManager": ["io/izzel/arclight/common/bridge/core/world/item/crafting/RecipeManagerBridge"],
+    "net/minecraft/world/level/entity/PersistentEntitySectionManager": ["io/izzel/arclight/common/bridge/core/world/level/entity/PersistentEntitySectionManagerBridge"],
+    "net/minecraft/server/level/DistanceManager": ["io/izzel/arclight/common/bridge/core/server/level/DistanceManagerBridge"],
+    "net/minecraft/server/level/Ticket": ["io/izzel/arclight/common/bridge/core/server/level/TicketBridge"],
+    "net/minecraft/server/level/ChunkMap": ["io/izzel/arclight/common/bridge/core/server/level/ChunkMapBridge"],
+    "net/minecraft/server/level/ChunkHolder": ["io/izzel/arclight/common/bridge/core/world/server/ChunkHolderBridge"],
+    "net/minecraft/world/entity/Entity": ["io/izzel/arclight/common/bridge/core/entity/EntityBridge"],
+    "net/minecraft/world/entity/LivingEntity": ["io/izzel/arclight/common/bridge/core/world/entity/LivingEntityBridge"],
+    "net/minecraft/world/entity/player/Player": ["io/izzel/arclight/common/bridge/core/world/entity/player/PlayerBridge"],
+    "net/minecraft/server/level/ServerPlayer": ["io/izzel/arclight/common/bridge/core/server/level/ServerPlayerBridge"],
+    "net/minecraft/world/level/Level": ["io/izzel/arclight/common/bridge/core/world/level/WorldBridge", "io/izzel/arclight/common/bridge/core/world/level/TreeCaptureBridge"]
+  },
+  "injected_fields": {
+    "net/minecraft/world/entity/player/Player": [
+      {"name": "flyingFallDamage", "descriptor": "Lnet/kyori/adventure/util/TriState;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/player/PlayerMixin"},
+      {"name": "fauxSleeping", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/player/PlayerMixin"}
+    ],
+    "net/minecraft/world/entity/vehicle/boat/AbstractBoat": [
+      {"name": "maxSpeed", "descriptor": "D", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/vehicle/BoatMixin"},
+      {"name": "occupiedDeceleration", "descriptor": "D", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/vehicle/BoatMixin"},
+      {"name": "unoccupiedDeceleration", "descriptor": "D", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/vehicle/BoatMixin"},
+      {"name": "landBoats", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/vehicle/BoatMixin"}
+    ],
+    "net/minecraft/world/inventory/AnvilMenu": [{"name": "maximumRepairCost", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/inventory/AnvilMenuMixin"}],
+    "net/minecraft/world/level/block/entity/ContainerOpenersCounter": [{"name": "opened", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/level/block/entity/ContainerOpenersCounterMixin"}],
+    "net/minecraft/world/level/block/entity/ShulkerBoxBlockEntity": [{"name": "opened", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/level/block/entity/ShulkerBoxBlockEntityMixin"}],
+    "net/minecraft/world/entity/projectile/FishingHook": [{"name": "minWaitTime", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/projectile/FishingHookMixin"}, {"name": "maxWaitTime", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/projectile/FishingHookMixin"}, {"name": "minLureTime", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/projectile/FishingHookMixin"}, {"name": "maxLureTime", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/projectile/FishingHookMixin"}, {"name": "minLureAngle", "descriptor": "F", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/projectile/FishingHookMixin"}, {"name": "maxLureAngle", "descriptor": "F", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/projectile/FishingHookMixin"}, {"name": "applyLure", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/projectile/FishingHookMixin"}, {"name": "rainInfluenced", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/projectile/FishingHookMixin"}, {"name": "skyInfluenced", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/projectile/FishingHookMixin"}],
+    "net/minecraft/server/level/ServerPlayer": [
+      {"name": "maxHealthCache", "descriptor": "D", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/level/ServerPlayerMixin"},
+      {"name": "displayName", "descriptor": "Ljava/lang/String;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/level/ServerPlayerMixin"},
+      {"name": "listName", "descriptor": "Lnet/minecraft/network/chat/Component;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/level/ServerPlayerMixin"},
+      {"name": "adventure$displayName", "descriptor": "Lnet/kyori/adventure/text/Component;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/level/ServerPlayerMixin"},
+      {"name": "listOrder", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/level/ServerPlayerMixin"},
+      {"name": "newExp", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/level/ServerPlayerMixin"},
+      {"name": "newTotalExp", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/level/ServerPlayerMixin"},
+      {"name": "newLevel", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/level/ServerPlayerMixin"},
+      {"name": "keepLevel", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/level/ServerPlayerMixin"},
+      {"name": "loginTime", "descriptor": "J", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/level/ServerPlayerMixin"},
+      {"name": "timeOffset", "descriptor": "J", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/level/ServerPlayerMixin"},
+      {"name": "relativeTime", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/level/ServerPlayerMixin"},
+      {"name": "compassTarget", "descriptor": "Lorg/bukkit/Location;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/level/ServerPlayerMixin"},
+      {"name": "sentListPacket", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/level/ServerPlayerMixin"},
+      {"name": "weatherType", "descriptor": "Lorg/bukkit/WeatherType;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/level/ServerPlayerMixin"}
+    ],
+    "net/minecraft/world/entity/LivingEntity": [
+      {"name": "bukkitPickUpLoot", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/LivingEntityMixin"},
+      {"name": "collides", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/LivingEntityMixin"},
+      {"name": "collidableExemptions", "descriptor": "Ljava/util/Set;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/LivingEntityMixin"},
+      {"name": "craftAttributes", "descriptor": "Lorg/bukkit/craftbukkit/attribute/CraftAttributeMap;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/LivingEntityMixin"},
+      {"name": "expToDrop", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/LivingEntityMixin"},
+      {"name": "invulnerableDuration", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/LivingEntityMixin"}
+    ],
+    "net/minecraft/world/entity/item/PrimedTnt": [
+      {"name": "isIncendiary", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/item/PrimedTntMixin"}
+    ],
+    "net/minecraft/world/entity/Mob": [
+      {"name": "aware", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/MobMixin"}
+    ],
+    "net/minecraft/world/entity/animal/allay/Allay": [
+      {"name": "forceDancing", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/animal/allay/AllayMixin"}
+    ],
+    "net/minecraft/world/entity/animal/bee/Bee": [
+      {"name": "rollingOverride", "descriptor": "Lnet/kyori/adventure/util/TriState;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/animal/BeeMixin"}
+    ],
+    "net/minecraft/world/entity/npc/wanderingtrader/WanderingTrader": [
+      {"name": "canDrinkPotion", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/npc/WanderingTraderMixin"},
+      {"name": "canDrinkMilk", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/npc/WanderingTraderMixin"}
+    ],
+    "net/minecraft/world/entity/monster/Guardian": [
+      {"name": "guardianAttackGoal", "descriptor": "Lnet/minecraft/world/entity/monster/Guardian$GuardianAttackGoal;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/monster/GuardianMixin"}
+    ],
+    "net/minecraft/world/entity/projectile/hurtingprojectile/AbstractHurtingProjectile": [
+      {"name": "bukkitYield", "descriptor": "F", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/projectile/AbstractHurtingProjectileMixin"},
+      {"name": "isIncendiary", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/projectile/AbstractHurtingProjectileMixin"}
+    ],
+    "net/minecraft/world/entity/animal/equine/AbstractHorse": [
+      {"name": "maxDomestication", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/animal/horse/AbstractHorseMixin"}
+    ],
+    "net/minecraft/world/entity/vehicle/minecart/AbstractMinecart": [
+      {"name": "maxSpeed", "descriptor": "Ljava/lang/Double;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/vehicle/AbstractMinecartMixin"},
+      {"name": "slowWhenEmpty", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/vehicle/AbstractMinecartMixin"}
+    ],
+    "net/minecraft/server/MinecraftServer": [
+      {"name": "isIteratingOverLevels", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/MinecraftServerMixin"},
+      {
+        "name": "options",
+        "descriptor": "Ljoptsimple/OptionSet;",
+        "access": ["public"],
+        "mixin": "io/izzel/arclight/common/mixin/core/server/MinecraftServerMixin"
+      },
+      {
+        "name": "autosavePeriod",
+        "descriptor": "I",
+        "access": ["public"],
+        "mixin": "io/izzel/arclight/common/mixin/core/server/MinecraftServerMixin"
+      },
+      {"name": "console", "descriptor": "Lorg/bukkit/command/ConsoleCommandSender;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/MinecraftServerMixin"},
+      {"name": "processQueue", "descriptor": "Ljava/util/Queue;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/MinecraftServerMixin", "signature": "Ljava/util/Queue<Ljava/lang/Runnable;>;"}
+    ],
+    "net/minecraft/server/level/ServerLevel": [
+      {
+        "name": "uuid",
+        "descriptor": "Ljava/util/UUID;",
+        "access": ["public"],
+        "mixin": "io/izzel/arclight/common/mixin/core/server/level/ServerLevelMixin"
+      }
+    ],
+    "net/minecraft/world/entity/Entity": [
+      {"name": "totalEntityAge", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/EntityMixin"},
+      {"name": "persistentInvisibility", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/EntityMixin"},
+      {"name": "maxAirTicks", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/EntityMixin"},
+      {"name": "visibleByDefault", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/EntityMixin"},
+      {"name": "inWorld", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/EntityMixin"},
+      {"name": "fixedPose", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/EntityMixin"},
+      {
+        "name": "generation",
+        "descriptor": "Z",
+        "access": ["public"],
+        "mixin": "io/izzel/arclight/common/mixin/core/world/entity/EntityMixin"
+      },
+      {
+        "name": "persist",
+        "descriptor": "Z",
+        "access": ["public"],
+        "mixin": "io/izzel/arclight/common/mixin/core/world/entity/EntityMixin"
+      },
+      {"name": "projectileSource", "descriptor": "Lorg/bukkit/projectiles/ProjectileSource;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/EntityMixin"},
+      {"name": "lastDamageCancelled", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/EntityMixin"},
+      {"name": "valid", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/EntityMixin"}
+    ],
+    "net/minecraft/world/food/FoodData": [
+      {"name": "saturatedRegenRate", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/food/FoodDataMixin"},
+      {"name": "unsaturatedRegenRate", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/food/FoodDataMixin"},
+      {"name": "starvationRate", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/food/FoodDataMixin"}
+    ],
+    "net/minecraft/world/entity/animal/Animal": [
+      {"name": "breedItem", "descriptor": "Lnet/minecraft/world/item/ItemStack;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/animal/AnimalMixin"}
+    ],
+    "net/minecraft/world/entity/monster/piglin/Piglin": [
+      {"name": "allowedBarterItems", "descriptor": "Ljava/util/Set;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/monster/piglin/PiglinMixin", "signature": "Ljava/util/Set<Lnet/minecraft/world/item/Item;>;"},
+      {"name": "interestItems", "descriptor": "Ljava/util/Set;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/monster/piglin/PiglinMixin", "signature": "Ljava/util/Set<Lnet/minecraft/world/item/Item;>;"}
+    ],
+    "net/minecraft/world/entity/monster/Creeper": [
+      {"name": "entityIgniter", "descriptor": "Lnet/minecraft/world/entity/Entity;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/monster/CreeperMixin"}
+    ],
+    "net/minecraft/world/entity/vehicle/minecart/MinecartTNT": [
+      {"name": "isIncendiary", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/entity/vehicle/MinecartTNTMixin"}
+    ],
+    "net/minecraft/world/inventory/AbstractContainerMenu": [
+      {"name": "checkReachable", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/inventory/AbstractContainerMenuMixin"}
+    ],
+    "net/minecraft/world/level/Level": [
+      {"name": "generator", "descriptor": "Lorg/bukkit/generator/ChunkGenerator;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/level/LevelMixin"},
+      {"name": "ticksPerSpawnCategory", "descriptor": "Lit/unimi/dsi/fastutil/objects/Object2LongOpenHashMap;", "access": ["public", "final"], "mixin": "io/izzel/arclight/common/mixin/core/world/level/LevelMixin", "signature": "Lit/unimi/dsi/fastutil/objects/Object2LongOpenHashMap<Lorg/bukkit/entity/SpawnCategory;>;"}
+    ],
+    "net/minecraft/world/level/saveddata/maps/MapItemSavedData": [
+      {"name": "id", "descriptor": "Lnet/minecraft/world/level/saveddata/maps/MapId;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/level/saveddata/maps/MapItemSavedDataMixin"},
+      {"name": "mapView", "descriptor": "Lorg/bukkit/craftbukkit/map/CraftMapView;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/level/saveddata/maps/MapItemSavedDataMixin"},
+      {"name": "uniqueId", "descriptor": "Ljava/util/UUID;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/level/saveddata/maps/MapItemSavedDataMixin"}
+    ],
+    "net/minecraft/world/level/chunk/ChunkAccess": [
+      {"name": "persistentDataContainer", "descriptor": "Lorg/bukkit/craftbukkit/persistence/DirtyCraftPersistentDataContainer;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/level/chunk/ChunkAccessMixin"}
+    ],
+    "net/minecraft/world/level/levelgen/structure/StructureStart": [
+      {"name": "persistentDataContainer", "descriptor": "Lorg/bukkit/craftbukkit/persistence/DirtyCraftPersistentDataContainer;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/level/levelgen/structure/StructureStartMixin"}
+    ],
+    "net/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplate": [
+      {"name": "persistentDataContainer", "descriptor": "Lorg/bukkit/craftbukkit/persistence/CraftPersistentDataContainer;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/level/levelgen/structure/templatesystem/StructureTemplateMixin"}
+    ],
+    "net/minecraft/world/level/block/entity/BlockEntity": [
+      {"name": "persistentDataContainer", "descriptor": "Lorg/bukkit/craftbukkit/persistence/CraftPersistentDataContainer;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/level/block/entity/BlockEntityMixin"}
+    ],
+    "net/minecraft/world/level/block/entity/BeehiveBlockEntity": [
+      {"name": "maxBees", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/level/block/entity/BeehiveBlockEntityMixin"}
+    ],
+    "net/minecraft/world/level/storage/loot/LootTable": [
+      {"name": "craftLootTable", "descriptor": "Lorg/bukkit/craftbukkit/CraftLootTable;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/world/level/storage/loot/LootTableMixin"}
+    ],
+    "net/minecraft/server/rcon/RconConsoleSource": [
+      {"name": "socketAddress", "descriptor": "Ljava/net/SocketAddress;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/rcon/RconConsoleSourceMixin"}
+    ],
+    "net/minecraft/network/Connection": [
+      {"name": "protocolVersion", "descriptor": "I", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/network/ConnectionMixin"},
+      {"name": "virtualHost", "descriptor": "Ljava/net/InetSocketAddress;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/network/ConnectionMixin"},
+      {"name": "resourcePackStatus", "descriptor": "Lorg/bukkit/event/player/PlayerResourcePackStatusEvent$Status;", "access": ["public", "volatile"], "mixin": "io/izzel/arclight/common/mixin/core/network/ConnectionMixin"}
+    ],
+    "net/minecraft/commands/CommandSourceStack": [
+      {"name": "bypassSelectorPermissions", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/commands/CommandSourceStackMixin"}
+    ],
+    "net/minecraft/server/level/ServerChunkCache": [
+      {"name": "spawnFriendlies", "descriptor": "Z", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/level/ServerChunkCacheMixin"}
+    ],
+    "net/minecraft/server/network/ServerLoginPacketListenerImpl": [
+      {"name": "requestedUuid", "descriptor": "Ljava/util/UUID;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/network/ServerLoginPacketListenerImplMixin"}
+    ],
+    "net/minecraft/server/network/ServerCommonPacketListenerImpl": [
+      {"name": "cserver", "descriptor": "Lorg/bukkit/craftbukkit/CraftServer;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/network/ServerCommonPacketListenerImplMixin"}
+    ],
+    "net/minecraft/server/network/ServerGamePacketListenerImpl": [
+      {"name": "playerGameConnection", "descriptor": "Lio/papermc/paper/connection/PaperPlayerGameConnection;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/network/ServerGamePacketListenerImplMixin"}
+    ],
+    "net/minecraft/server/network/ServerConfigurationPacketListenerImpl": [
+      {"name": "paperConnection", "descriptor": "Lio/papermc/paper/connection/PaperPlayerConfigurationConnection;", "access": ["public"], "mixin": "io/izzel/arclight/common/mixin/core/server/network/ServerConfigurationPacketListenerImplMixin"}
+    ]
   }
 }

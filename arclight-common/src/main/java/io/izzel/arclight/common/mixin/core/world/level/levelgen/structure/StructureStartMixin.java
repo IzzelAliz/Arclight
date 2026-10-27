@@ -18,7 +18,7 @@ import org.bukkit.craftbukkit.persistence.CraftPersistentDataContainer;
 import org.bukkit.craftbukkit.persistence.CraftPersistentDataTypeRegistry;
 import org.bukkit.craftbukkit.persistence.DirtyCraftPersistentDataContainer;
 import org.bukkit.craftbukkit.util.CraftStructureTransformer;
-import org.bukkit.craftbukkit.util.TransformerGeneratorAccess;
+import org.bukkit.craftbukkit.util.TransformerLevelAccessor;
 import org.bukkit.event.world.AsyncStructureGenerateEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -64,8 +64,8 @@ public class StructureStartMixin implements StructureStartBridge {
 
             List<StructurePiece> pieces = list.stream().filter(piece -> piece.getBoundingBox().intersects(p_226855_)).toList();
             if (!pieces.isEmpty()) {
-                var transformerAccess = new TransformerGeneratorAccess();
-                transformerAccess.setHandle(p_226851_);
+                var transformerAccess = new TransformerLevelAccessor();
+                transformerAccess.setDelegate(p_226851_);
                 transformerAccess.setStructureTransformer(new CraftStructureTransformer(arclight$cause, p_226851_, p_226852_, structure, p_226855_, p_226856_));
                 for (StructurePiece piece : pieces) {
                     piece.postProcess(transformerAccess, p_226852_, p_226853_, p_226854_, p_226855_, p_226856_, blockpos1);

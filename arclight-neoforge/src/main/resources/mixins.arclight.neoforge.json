@@ -15,6 +15,13 @@
   "mixinPriority": 555,
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "core.server.ReloadableServerRegistriesMixin_NeoForge",
+    "core.world.level.block.FireBlockLegacyTntPrimeEventMixin_NeoForge",
+    "core.world.item.ItemStackNaturalDamageEventMixin_NeoForge",
+    "core.world.level.block.BlockDestructionExperienceMixin_NeoForge",
+    "neoforge.CommonHooksBlockDestructionEventMixin_NeoForge",
+    "neoforge.BlockDropsEventDestructionExperienceMixin_NeoForge",
+    "neoforge.DamageContainerAccessor",
     "bukkit.CraftHumanEntityMixin_NeoForge",
     "core.world.level.ServerLevelWorldGenMixin_NeoForge",
     "bukkit.CraftServerMixin_NeoForge",
@@ -52,6 +59,7 @@
     "core.world.entity.animal.frog.TadpoleMixin_NeoForge",
     "core.world.entity.item.ItemEntityMixin_NeoForge",
     "core.world.entity.monster.ZombieMixin_NeoForge",
+    "core.world.entity.npc.VillagerMixin_NeoForge",
     "core.world.entity.monster.piglin.PiglinAiMixin_NeoForge",
     "core.world.entity.monster.piglin.PiglinMixin_NeoForge",
     "core.world.entity.player.PlayerMixin_NeoForge",
@@ -88,6 +96,7 @@
     "core.world.level.storage.loot.LootContextMixin_NeoForge",
     "neoforge.CommonHooksMixin",
     "neoforge.EventHooksMixin",
+    "neoforge.TerminalHandlerAsyncTabCompleteMixin_NeoForge",
     "neoforge.NetworkComponentNegotiatorMixin",
     "neoforge.NetworkRegistryAccessor",
     "neoforge.NetworkRegistryMixin",
@@ -96,7 +105,6 @@
     "neoforge.items.CombinedInvWrapperAccessor",
     "neoforge.items.RangedWrapperAccessor",
     "neoforge.items.SidedInvWrapperAccessor",
-    "neoforge.items.VanillaInventoryCodeHooksMixin",
-    "optimization.general.activationrange.entity.ItemEntityMixin_ActivationRange_NeoForge"
+    "neoforge.items.VanillaInventoryCodeHooksMixin"
   ]
 }

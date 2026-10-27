@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftLightningStrike.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftLightningStrike.java
+index 32e426513f3e710abeda3363a4e2a08fe902c703..e280808e1181ace5129d0701263b6934d3039085 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftLightningStrike.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftLightningStrike.java
+@@ -19,7 +19,7 @@ public class CraftLightningStrike extends CraftEntity implements LightningStrike
+ 
+     @Override
+     public boolean isEffect() {
+-        return this.getHandle().isEffect; // Paper - Properly handle lightning effects api
++        return this.getHandle().visualOnly;
+     }
+ 
+     public int getFlashes() {

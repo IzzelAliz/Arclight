@@ -23,11 +23,12 @@ public abstract class CampfireCookingRecipeMixin extends AbstractCookingRecipe i
 
     @Override
     public Recipe bridge$toBukkitRecipe(NamespacedKey id) {
-        if (this.result().create().isEmpty()) {
+        var output = this.result().create();
+        if (output.isEmpty()) {
             return new ArclightSpecialRecipe(id, this);
         }
-        CraftItemStack result = CraftItemStack.asCraftMirror(this.result());
-        CraftCampfireRecipe recipe = new CraftCampfireRecipe(id, result, CraftRecipe.toBukkit(this.input()), this.experience(), this.cookingTime());
+        CraftItemStack result = CraftItemStack.asCraftMirror(output);
+        CraftCampfireRecipe recipe = new CraftCampfireRecipe(id, result, CraftRecipe.toChoice(this.input()), this.experience(), this.cookingTime());
         recipe.setGroup(this.group());
         recipe.setCategory(CraftRecipe.getCategory(this.category()));
         return recipe;

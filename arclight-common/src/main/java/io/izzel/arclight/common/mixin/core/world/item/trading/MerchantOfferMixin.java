@@ -22,6 +22,11 @@ public abstract class MerchantOfferMixin implements MerchantOfferBridge {
 
     private CraftMerchantRecipe bukkitHandle;
 
+    @Override
+    public void bridge$setBukkitHandle(CraftMerchantRecipe recipe) {
+        this.bukkitHandle = recipe;
+    }
+
     public CraftMerchantRecipe asBukkit() {
         return (bukkitHandle == null) ? bukkitHandle = new CraftMerchantRecipe((MerchantOffer) (Object) this) : bukkitHandle;
     }

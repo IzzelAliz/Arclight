@@ -1,0 +1,26 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftSmithingTrimRecipe.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftSmithingTrimRecipe.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftSmithingTrimRecipe.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftSmithingTrimRecipe.java
+@@ -2,6 +2,8 @@
+ 
+ import net.minecraft.core.registries.Registries;
+ import net.minecraft.server.MinecraftServer;
++import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeManagerBridge;
++import io.izzel.arclight.common.bridge.core.world.item.crafting.SmithingTrimRecipeBridge;
+ import net.minecraft.world.item.crafting.RecipeHolder;
+ import org.bukkit.NamespacedKey;
+ import org.bukkit.craftbukkit.inventory.trim.CraftTrimPattern;
+@@ -35,9 +37,10 @@
+             CraftRecipe.toIngredient(this.getTemplate(), false),
+             CraftRecipe.toIngredient(this.getBase(), false),
+             CraftRecipe.toIngredient(this.getAddition(), false),
+-            CraftTrimPattern.bukkitToMinecraftHolder(this.getTrimPattern()),
+-            this.willCopyDataComponents()
++            CraftTrimPattern.bukkitToMinecraftHolder(this.getTrimPattern())
+         );
+-        MinecraftServer.getServer().getRecipeManager().addRecipe(new RecipeHolder<>(CraftNamespacedKey.toResourceKey(Registries.RECIPE, this.getKey()), recipe));
++        ((SmithingTrimRecipeBridge) (Object) recipe).bridge$setCopyDataComponents(this.willCopyDataComponents());
++        RecipeManagerBridge manager = MinecraftServer.getServer().getRecipeManager();
++        manager.bridge$addRecipe(new RecipeHolder<>(CraftNamespacedKey.toResourceKey(Registries.RECIPE, this.getKey()), recipe));
+     }
+ }

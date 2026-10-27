@@ -1,6 +1,9 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.monster.ZombieVillagerBridge;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
@@ -24,7 +27,28 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 @Mixin(net.minecraft.world.entity.monster.zombie.ZombieVillager.class)
-public abstract class ZombieVillagerMixin extends ZombieMixin {
+public abstract class ZombieVillagerMixin extends ZombieMixin implements ZombieVillagerBridge {
+
+    @Shadow public abstract void startConverting(UUID player, int time);
+    @Unique private boolean arclight$broadcastConversion = true;
+
+    @Override
+    public void bridge$startConverting(UUID player, int time, boolean broadcastEntityEvent) {
+        boolean previous = this.arclight$broadcastConversion;
+        this.arclight$broadcastConversion = broadcastEntityEvent;
+        try {
+            this.startConverting(player, time);
+        } finally {
+            this.arclight$broadcastConversion = previous;
+        }
+    }
+
+    @Decorate(method = "startConverting(Ljava/util/UUID;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;broadcastEntityEvent(Lnet/minecraft/world/entity/Entity;B)V"))
+    private void arclight$conversionBroadcast(net.minecraft.world.level.Level level, net.minecraft.world.entity.Entity entity, byte event) throws Throwable {
+        if (this.arclight$broadcastConversion) {
+            DecorationOps.callsite().invoke(level, entity, event);
+        }
+    }
 
     @Inject(method = "startConverting", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/zombie/ZombieVillager;removeEffect(Lnet/minecraft/core/Holder;)Z"))
     private void arclight$convert1(UUID conversionStarterIn, int conversionTimeIn, CallbackInfo ci) {
@@ -64,4 +88,9 @@ public abstract class ZombieVillagerMixin extends ZombieMixin {
             this.forceDrops = forceDrops;
         }
     }
+
+    public void startConverting(java.util.UUID player, int time, boolean broadcastEntityEvent) {
+        this.bridge$startConverting(player, time, broadcastEntityEvent);
+    }
+
 }

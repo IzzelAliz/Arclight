@@ -1,0 +1,21 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/generator/CustomChunkGenerator.java b/paper-server/src/main/java/org/bukkit/craftbukkit/generator/CustomChunkGenerator.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/generator/CustomChunkGenerator.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/generator/CustomChunkGenerator.java
+@@ -272,7 +272,7 @@
+             return chunk;
+         };
+ 
+-        return future == null ? CompletableFuture.supplyAsync(() -> work.apply(centerChunk), io.papermc.paper.FeatureHooks.getWorldgenExecutor()) : future.thenApply(work); // Paper - chunk system
++        return future == null ? CompletableFuture.supplyAsync(() -> work.apply(centerChunk), net.minecraft.util.Util.backgroundExecutor()) : future.thenApply(work); // Paper - chunk system
+     }
+ 
+     @Override
+@@ -303,7 +303,7 @@
+         int z = chunk.getPos().z();
+ 
+         random.setSeed(Mth.getSeed(x, "should-decoration".hashCode(), z) ^ level.getSeed());
+-        super.applyBiomeDecoration(level, chunk, structureManager, this.generator.shouldGenerateDecorations(this.world.getWorld(), new RandomSourceWrapper.RandomWrapper(random), x, z));
++        ((io.izzel.arclight.common.bridge.core.world.level.chunk.ChunkGeneratorBridge) this).bridge$applyBiomeDecoration(level, chunk, structureManager, this.generator.shouldGenerateDecorations(this.world.getWorld(), new RandomSourceWrapper.RandomWrapper(random), x, z));
+     }
+ 
+     @Override

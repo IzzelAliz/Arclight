@@ -13,74 +13,65 @@ import org.bukkit.event.block.CauldronLevelChangeEvent;
 
 public class CauldronHooks {
 
-    private static final ThreadLocal<PreparedInteraction> PREPARED_INTERACTION = new ThreadLocal<>();
+    private static PreparedInteraction PREPARED_INTERACTION;
 
     public static void withPreparedInteraction(Level level, BlockPos pos, BlockState state, Runnable action) {
-        PreparedInteraction previous = PREPARED_INTERACTION.get();
-        PREPARED_INTERACTION.set(new PreparedInteraction(level, pos.immutable(), state));
+        PreparedInteraction previous = PREPARED_INTERACTION;
+        PREPARED_INTERACTION = new PreparedInteraction(level, pos.immutable(), state);
         try {
             action.run();
         } finally {
-            if (previous == null) PREPARED_INTERACTION.remove();
-            else PREPARED_INTERACTION.set(previous);
+            PREPARED_INTERACTION = previous;
         }
     }
 
     public static BlockState takePreparedInteraction(Level level, BlockPos pos) {
-        PreparedInteraction prepared = PREPARED_INTERACTION.get();
+        PreparedInteraction prepared = PREPARED_INTERACTION;
         if (prepared == null || prepared.level != level || !prepared.pos.equals(pos)) return null;
-        PREPARED_INTERACTION.remove(); // Consume before invoking the setter and any nested callbacks.
+        PREPARED_INTERACTION = null; // Consume before invoking the setter and any nested callbacks.
         return prepared.state;
     }
 
     private record PreparedInteraction(Level level, BlockPos pos, BlockState state) {}
 
-    private static final ThreadLocal<ChangeContext> CHANGE_CONTEXT = new ThreadLocal<>();
-    private static final ThreadLocal<ChangeInvocation> CHANGE_INVOCATION = new ThreadLocal<>();
+    private static ChangeContext CHANGE_CONTEXT;
+    private static ChangeInvocation CHANGE_INVOCATION;
 
     // Tracks only callback identity; native eligibility checks run without event context installed.
     public static boolean runWithChangeInvocation(Entity entity, BlockPos pos, Runnable action) {
-        ChangeInvocation previous = CHANGE_INVOCATION.get();
+        ChangeInvocation previous = CHANGE_INVOCATION;
         ChangeInvocation invocation = new ChangeInvocation(entity, pos.immutable());
-        CHANGE_INVOCATION.set(invocation);
+        CHANGE_INVOCATION = invocation;
         try {
             action.run();
         } finally {
-            if (previous == null) {
-                CHANGE_INVOCATION.remove();
-            } else {
-                CHANGE_INVOCATION.set(previous);
-            }
+            CHANGE_INVOCATION = previous;
         }
         return invocation.changeAttempted && invocation.accepted;
     }
 
     // Called only around native handleEntityOnFireInside, after isOnFire/mayInteract pass.
     public static void runWithChangeContextForCurrentInvocation(Runnable action) {
-        ChangeInvocation invocation = CHANGE_INVOCATION.get();
+        ChangeInvocation invocation = CHANGE_INVOCATION;
         if (invocation == null) {
             action.run();
             return;
         }
 
-        ChangeContext previous = CHANGE_CONTEXT.get();
+        ChangeContext previous = CHANGE_CONTEXT;
         ChangeContext context = new ChangeContext(invocation.entity, invocation.pos, CauldronLevelChangeEvent.ChangeReason.EXTINGUISH);
-        CHANGE_CONTEXT.set(context);
+        CHANGE_CONTEXT = context;
         try {
             action.run();
         } finally {
-            if (previous == null) {
-                CHANGE_CONTEXT.remove();
-            } else {
-                CHANGE_CONTEXT.set(previous);
-            }
+            CHANGE_CONTEXT = previous;
             invocation.changeAttempted |= context.changeAttempted;
             invocation.accepted |= context.accepted;
         }
     }
 
     private static ChangeContext currentChangeContext() {
-        ChangeContext context = CHANGE_CONTEXT.get();
+        ChangeContext context = CHANGE_CONTEXT;
         return context != null && !context.changeAttempted ? context : null;
     }
 
@@ -105,7 +96,7 @@ public class CauldronHooks {
         }
 
         CraftBlockState newState = CraftBlockStates.getBlockState(world, pos);
-        newState.setData(state);
+        newState.setBlock(state);
         CauldronLevelChangeEvent event = new CauldronLevelChangeEvent(
             CraftBlock.at(world, pos),
             (entity == null) ? null : ((EntityBridge) entity).bridge$getBukkitEntity(),

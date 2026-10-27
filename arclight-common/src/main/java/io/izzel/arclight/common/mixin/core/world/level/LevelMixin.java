@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.level;
 
+import io.izzel.arclight.common.bridge.core.world.level.LevelAccessorBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.bridge.core.world.level.border.WorldBorderBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
@@ -23,9 +24,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelWriter;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.border.WorldBorder;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
@@ -60,6 +63,22 @@ import java.util.Map;
 
 @Mixin(Level.class)
 public abstract class LevelMixin implements WorldBridge, io.izzel.arclight.common.bridge.core.world.level.TreeCaptureBridge, LevelAccessor, LevelWriter {
+    public int wakeupInactiveRemainingAnimals;
+    @Override public int bridge$getWakeupInactiveAnimals() { return this.wakeupInactiveRemainingAnimals; }
+    @Override public void bridge$setWakeupInactiveAnimals(int value) { this.wakeupInactiveRemainingAnimals = value; }
+
+    public int wakeupInactiveRemainingFlying;
+    @Override public int bridge$getWakeupInactiveFlying() { return this.wakeupInactiveRemainingFlying; }
+    @Override public void bridge$setWakeupInactiveFlying(int value) { this.wakeupInactiveRemainingFlying = value; }
+
+    public int wakeupInactiveRemainingMonsters;
+    @Override public int bridge$getWakeupInactiveMonsters() { return this.wakeupInactiveRemainingMonsters; }
+    @Override public void bridge$setWakeupInactiveMonsters(int value) { this.wakeupInactiveRemainingMonsters = value; }
+
+    public int wakeupInactiveRemainingVillagers;
+    @Override public int bridge$getWakeupInactiveVillagers() { return this.wakeupInactiveRemainingVillagers; }
+    @Override public void bridge$setWakeupInactiveVillagers(int value) { this.wakeupInactiveRemainingVillagers = value; }
+
 
     // @formatter:off
     @Shadow @Nullable public BlockEntity getBlockEntity(BlockPos pos) { return null; }
@@ -79,17 +98,26 @@ public abstract class LevelMixin implements WorldBridge, io.izzel.arclight.commo
     // @formatter:on
 
     protected CraftWorld world;
+
     public boolean pvpMode;
+
     public final Object2LongOpenHashMap<SpawnCategory> ticksPerSpawnCategory = new Object2LongOpenHashMap<>();
+
     public boolean populating;
+
     public org.bukkit.generator.ChunkGenerator generator;
     protected org.bukkit.World.Environment environment;
     protected org.bukkit.generator.BiomeProvider biomeProvider;
+
     public org.spigotmc.SpigotWorldConfig spigotConfig;
     @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
     private static BlockPos lastPhysicsProblem; // Spigot
     public boolean preventPoiUpdated = false;
+
+    public volatile boolean captureTreeGeneration;
+
     public Map<BlockPos, CapturedBlockState> capturedBlockStates = new java.util.LinkedHashMap<>();
+
     public Map<BlockPos, BlockEntity> capturedTileEntities = new HashMap<>();
 
     @Unique private boolean arclight$isActual;
@@ -111,7 +139,13 @@ public abstract class LevelMixin implements WorldBridge, io.izzel.arclight.commo
         if (Thread.currentThread() != this.arclight$getMainThread()) {
             throw new IllegalStateException("Tree capture requires the Level thread");
         }
-        return this.arclight$treeCapture.capture(action);
+        boolean previous = this.captureTreeGeneration;
+        this.captureTreeGeneration = true;
+        try {
+            return this.arclight$treeCapture.capture(action);
+        } finally {
+            this.captureTreeGeneration = previous;
+        }
     }
 
     @Inject(method = "getBlockState(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;",
@@ -121,6 +155,22 @@ public abstract class LevelMixin implements WorldBridge, io.izzel.arclight.commo
             BlockState state = this.arclight$treeCapture.read(pos);
             if (state != null) cir.setReturnValue(state);
         }
+    }
+
+    @Override
+    @Nullable
+    public BlockState bridge$getBlockStateIfLoaded(BlockPos pos) {
+        if (this.arclight$isActual && Thread.currentThread() == this.arclight$getMainThread()) {
+            BlockState state = this.arclight$treeCapture.read(pos);
+            if (state != null) {
+                return state;
+            }
+        }
+        if (this.isOutsideBuildHeight(pos)) {
+            return Blocks.VOID_AIR.defaultBlockState();
+        }
+        ChunkAccess chunk = ((LevelAccessorBridge) this).getChunkIfLoadedImmediately(pos.getX() >> 4, pos.getZ() >> 4);
+        return chunk == null ? null : chunk.getBlockState(pos);
     }
 
     @ShadowConstructor
@@ -234,7 +284,7 @@ public abstract class LevelMixin implements WorldBridge, io.izzel.arclight.commo
                 oldBlock.updateIndirectNeighbourShapes(this, pos, i, k - 1);
                 try {
                     if (this.world != null) {
-                        BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at(this, pos), CraftBlockData.fromData(newBlock));
+                        BlockPhysicsEvent event = new BlockPhysicsEvent(CraftBlock.at(this, pos), CraftBlockData.createData(newBlock));
                         Bukkit.getPluginManager().callEvent(event);
                         if (event.isCancelled()) {
                             return;
@@ -370,7 +420,18 @@ public abstract class LevelMixin implements WorldBridge, io.izzel.arclight.commo
         if (Thread.currentThread() != this.arclight$getMainThread()) {
             throw new IllegalStateException("Tree capture requires the Level thread");
         }
-        return this.arclight$treeCapture.captureOrJoin(action);
+        boolean previous = this.captureTreeGeneration;
+        this.captureTreeGeneration = true;
+        try {
+            return this.arclight$treeCapture.captureOrJoin(action);
+        } finally {
+            this.captureTreeGeneration = previous;
+        }
     }
+
+    public io.papermc.paper.configuration.WorldConfiguration paperConfig() {
+        return this.bridge$paperConfig();
+    }
+
 
 }

@@ -26,6 +26,10 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(Player.class)
 public abstract class PlayerMixin_NeoForge extends LivingEntityMixin_NeoForge implements PlayerBridge, IPlayerExtension {
 
+    public void arclight$platform$notifyFlyableFall(float damageModifier) {
+        net.neoforged.neoforge.event.EventHooks.onPlayerFall((Player) (Object) this, damageModifier, damageModifier);
+    }
+
 
     @Decorate(method = "actuallyHurt", inject = true, at = @At("HEAD"))
     private void arclight$neoforge$getDamageContainer(ServerLevel serverLevel, DamageSource damageSource, float f, @Local(allocate = "arclightDamageContainer") ArclightDamageContainer container) throws Throwable {

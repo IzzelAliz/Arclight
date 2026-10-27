@@ -1,0 +1,57 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/connection/ReadablePlayerCookieConnectionImpl.java b/paper-server/src/main/java/io/papermc/paper/connection/ReadablePlayerCookieConnectionImpl.java
+index eeb64a8b950f4ff7e7d4158c2ddab3fe557f2b31..50629d23df1f27b2d176b8da4a3088a830d97a4a 100644
+--- a/paper-server/src/main/java/io/papermc/paper/connection/ReadablePlayerCookieConnectionImpl.java
++++ b/paper-server/src/main/java/io/papermc/paper/connection/ReadablePlayerCookieConnectionImpl.java
+@@ -1,9 +1,7 @@
+ package io.papermc.paper.connection;
+ 
+ import com.google.common.base.Preconditions;
+-import java.util.Map;
+ import java.util.concurrent.CompletableFuture;
+-import java.util.concurrent.ConcurrentHashMap;
+ import net.minecraft.network.Connection;
+ import net.minecraft.network.protocol.cookie.ClientboundCookieRequestPacket;
+ import net.minecraft.network.protocol.cookie.ServerboundCookieResponsePacket;
+@@ -15,8 +13,6 @@ import org.jspecify.annotations.NullMarked;
+ @NullMarked
+ public abstract class ReadablePlayerCookieConnectionImpl implements ReadablePlayerCookieConnection {
+ 
+-    // Because we support async cookies, order is not promised.
+-    private final Map<Identifier, CookieFuture> requestedCookies = new ConcurrentHashMap<>();
+     private final Connection connection;
+ 
+     public ReadablePlayerCookieConnectionImpl(final Connection connection) {
+@@ -27,28 +23,18 @@ public abstract class ReadablePlayerCookieConnectionImpl implements ReadablePlay
+     public CompletableFuture<byte[]> retrieveCookie(final NamespacedKey key) {
+         Preconditions.checkArgument(key != null, "Cookie key cannot be null");
+ 
+-        CompletableFuture<byte[]> future = new CompletableFuture<>();
+         Identifier id = CraftNamespacedKey.toMinecraft(key);
+-        this.requestedCookies.put(id, new CookieFuture(id, future));
+-
+-        this.connection.send(new ClientboundCookieRequestPacket(id));
+-
+-        return future;
++        return ((io.izzel.arclight.common.bridge.core.network.ConnectionBridge) this.connection).bridge$getCookieRequests()
++            .request(id, () -> this.connection.send(new ClientboundCookieRequestPacket(id)));
+     }
+ 
+     public boolean handleCookieResponse(ServerboundCookieResponsePacket packet) {
+-        CookieFuture future = this.requestedCookies.get(packet.key());
+-        if (future != null) {
+-            future.future().complete(packet.payload());
+-            this.requestedCookies.remove(packet.key());
+-            return true;
+-        }
+-
+-        return false;
++        return ((io.izzel.arclight.common.bridge.core.network.ConnectionBridge) this.connection).bridge$getCookieRequests()
++            .handleResponse(packet.key(), packet.payload());
+     }
+ 
+     public boolean isAwaitingCookies() {
+-        return !this.requestedCookies.isEmpty();
++        return ((io.izzel.arclight.common.bridge.core.network.ConnectionBridge) this.connection).bridge$getCookieRequests().isAwaitingCookies();
+     }
+ 
+     public record CookieFuture(Identifier key, CompletableFuture<byte[]> future) {

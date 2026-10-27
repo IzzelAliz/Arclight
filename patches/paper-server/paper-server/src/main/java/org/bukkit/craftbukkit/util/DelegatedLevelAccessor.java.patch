@@ -1,0 +1,32 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/util/DelegatedLevelAccessor.java b/paper-server/src/main/java/org/bukkit/craftbukkit/util/DelegatedLevelAccessor.java
+index 280b95047b645385f3fe792aea9d4156dbd8fd5e..84b2d03d0d1d877b168f70379821adfff375b437 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/util/DelegatedLevelAccessor.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/util/DelegatedLevelAccessor.java
+@@ -572,9 +572,11 @@ public abstract class DelegatedLevelAccessor implements WorldGenLevel {
+         return this.delegate.isBlockInLine(c);
+     }
+ 
+-    @Override
+     public BlockHitResult clip(ClipContext c, BlockPos pos) {
+-        return this.delegate.clip(c, pos);
++        if (this.delegate instanceof DelegatedLevelAccessor accessor) {
++            return accessor.clip(c, pos);
++        }
++        return ((io.izzel.arclight.common.bridge.core.world.level.BlockGetterBridge) this.delegate).bridge$rayTraceBlock(c, pos);
+     }
+ 
+     @Override
+@@ -687,9 +689,11 @@ public abstract class DelegatedLevelAccessor implements WorldGenLevel {
+         return this.delegate.addFreshEntity(entity);
+     }
+ 
+-    @Override
+     public boolean addFreshEntity(Entity entity, CreatureSpawnEvent.@Nullable SpawnReason reason) {
+-        return this.delegate.addFreshEntity(entity, reason);
++        if (this.delegate instanceof DelegatedLevelAccessor accessor) {
++            return accessor.addFreshEntity(entity, reason);
++        }
++        return ((io.izzel.arclight.common.bridge.core.world.level.IWorldWriterBridge) this.delegate).bridge$addEntity(entity, reason);
+     }
+ 
+     @Override

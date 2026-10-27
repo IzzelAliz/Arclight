@@ -1,0 +1,42 @@
+diff --git a/paper-server/src/main/java/com/destroystokyo/paper/network/StandardPaperServerListPingEventImpl.java b/paper-server/src/main/java/com/destroystokyo/paper/network/StandardPaperServerListPingEventImpl.java
+index 5e89bad7231d0ec389f6be085943cc027485bd7a..3b47af0330d68ac1d73b40922c39869334aafb10 100644
+--- a/paper-server/src/main/java/com/destroystokyo/paper/network/StandardPaperServerListPingEventImpl.java
++++ b/paper-server/src/main/java/com/destroystokyo/paper/network/StandardPaperServerListPingEventImpl.java
+@@ -1,6 +1,7 @@
+ package com.destroystokyo.paper.network;
+ 
+ import com.destroystokyo.paper.profile.PlayerProfile;
++import io.izzel.arclight.common.bridge.core.server.network.ServerStatusPacketListenerImplBridge;
+ import io.papermc.paper.adventure.AdventureComponent;
+ import java.util.ArrayList;
+ import java.util.Collections;
+@@ -21,7 +22,7 @@ public final class StandardPaperServerListPingEventImpl extends PaperServerListP
+     private List<NameAndId> originalSample;
+ 
+     private StandardPaperServerListPingEventImpl(MinecraftServer server, Connection connection, ServerStatus ping) {
+-        super(server, new PaperStatusClient(connection), ping.version().map(ServerStatus.Version::protocol).orElse(-1), server.server.getServerIcon());
++        super(server, new PaperStatusClient(connection), ping.version().map(ServerStatus.Version::protocol).orElse(-1), ((io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge) server).bridge$getServer().getServerIcon());
+         this.originalSample = ping.players().map(ServerStatus.Players::sample).orElse(null); // GH-1473 - pre-tick race condition NPE
+     }
+ 
+@@ -63,9 +64,9 @@ public final class StandardPaperServerListPingEventImpl extends PaperServerListP
+         return profiles;
+     }
+ 
+-    public static void processRequest(MinecraftServer server, Connection connection) {
++    public static void processRequest(MinecraftServer server, Connection connection, ServerStatusPacketListenerImplBridge statusFactory) {
+         StandardPaperServerListPingEventImpl event = new StandardPaperServerListPingEventImpl(server, connection, server.getStatus());
+-        server.server.getPluginManager().callEvent(event);
++        ((io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge) server).bridge$getServer().getPluginManager().callEvent(event);
+ 
+         // Close connection immediately if event is cancelled
+         if (event.isCancelled()) {
+@@ -96,7 +97,7 @@ public final class StandardPaperServerListPingEventImpl extends PaperServerListP
+         } else {
+             favicon = Optional.empty();
+         }
+-        final ServerStatus ping = new ServerStatus(description, players, Optional.of(version), favicon, server.enforceSecureProfile());
++        final ServerStatus ping = statusFactory.bridge$platform$createServerStatus(description, players, Optional.of(version), favicon, server.enforceSecureProfile());
+ 
+         // Send response
+         connection.send(new ClientboundStatusResponsePacket(ping));

@@ -1,0 +1,15 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/registry/WritableCraftRegistry.java b/paper-server/src/main/java/io/papermc/paper/registry/WritableCraftRegistry.java
+index 9e8672c705eb27c9b7d190129129454fd83cf7d5..6d33d69b35afd37cc22cbaa35102d3d72e4ae299 100644
+--- a/paper-server/src/main/java/io/papermc/paper/registry/WritableCraftRegistry.java
++++ b/paper-server/src/main/java/io/papermc/paper/registry/WritableCraftRegistry.java
+@@ -30,8 +30,8 @@ public class WritableCraftRegistry<M, T extends Keyed, B extends PaperRegistryBu
+ 
+     public void register(final TypedKey<T> key, final Consumer<RegistryBuilderFactory<T, B>> value, final Conversions conversions) {
+         final ResourceKey<M> resourceKey = PaperRegistries.toNms(key);
+-        this.registry.validateWrite(resourceKey);
+-        final PaperRegistryBuilderFactory<M, T, B> builderFactory = new PaperRegistryBuilderFactory<>(this.registry.key(), conversions, this.meta.builderFiller(), this.registry::getValueForCopying);
++        ((io.izzel.arclight.common.bridge.core.core.MappedRegistryBridge<M>) this.registry).bridge$validateWrite(resourceKey);
++        final PaperRegistryBuilderFactory<M, T, B> builderFactory = new PaperRegistryBuilderFactory<>(this.registry.key(), conversions, this.meta.builderFiller(), ((io.izzel.arclight.common.bridge.core.core.MappedRegistryBridge<M>) this.registry)::bridge$valueForCopying);
+         value.accept(builderFactory);
+         PaperRegistryListenerManager.INSTANCE.registerWithListeners(
+             this.registry,

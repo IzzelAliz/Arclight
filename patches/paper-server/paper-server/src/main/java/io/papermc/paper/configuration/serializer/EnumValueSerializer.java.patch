@@ -1,0 +1,20 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/configuration/serializer/EnumValueSerializer.java b/paper-server/src/main/java/io/papermc/paper/configuration/serializer/EnumValueSerializer.java
+index d56a50ee72b03879230bfa3c702a2e579506a7d2..2550ddc735f004104348520dae9c32867e901b76 100644
+--- a/paper-server/src/main/java/io/papermc/paper/configuration/serializer/EnumValueSerializer.java
++++ b/paper-server/src/main/java/io/papermc/paper/configuration/serializer/EnumValueSerializer.java
+@@ -1,6 +1,5 @@
+ package io.papermc.paper.configuration.serializer;
+ 
+-import com.mojang.logging.LogUtils;
+ import io.leangen.geantyref.TypeToken;
+ import java.lang.reflect.AnnotatedType;
+ import java.util.Arrays;
+@@ -19,7 +18,7 @@ import static io.leangen.geantyref.GenericTypeReflector.erase;
+  */
+ public class EnumValueSerializer extends ScalarSerializer.Annotated<Enum<?>> {
+ 
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(EnumValueSerializer.class.getSimpleName());
+ 
+     public EnumValueSerializer() {
+         super(new TypeToken<Enum<?>>() {});

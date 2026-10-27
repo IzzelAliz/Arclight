@@ -1,0 +1,16 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/structure/CraftStructure.java b/paper-server/src/main/java/org/bukkit/craftbukkit/structure/CraftStructure.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/structure/CraftStructure.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/structure/CraftStructure.java
+@@ -143,9 +143,10 @@
+             try (final ProblemReporter.ScopedCollector problemReporter = new ProblemReporter.ScopedCollector(
+                 () -> "entity@" + entity.pos, LOGGER
+             )) {
++                var level = ((CraftWorld) Bukkit.getServer().getWorlds().get(0)).getHandle();
+                 EntityType.create(
+-                    TagValueInput.createGlobal(problemReporter, entity.nbt),
+-                    ((CraftWorld) Bukkit.getServer().getWorlds().get(0)).getHandle(),
++                    TagValueInput.create(problemReporter, level.registryAccess(), entity.nbt),
++                    level,
+                     EntitySpawnReason.STRUCTURE
+                 ).ifPresent(dummyEntity -> {
+                     dummyEntity.setPos(entity.pos.x, entity.pos.y, entity.pos.z);

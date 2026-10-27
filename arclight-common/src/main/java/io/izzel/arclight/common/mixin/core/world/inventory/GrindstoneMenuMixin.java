@@ -47,6 +47,7 @@ public abstract class GrindstoneMenuMixin extends AbstractContainerMenuMixin imp
         } else {
             // Run plugin custom logic
             CraftEventFactory.callPrepareGrindstoneEvent(getBukkitView(), itemStack);
+            CraftEventFactory.callPrepareResultEvent((GrindstoneMenu) (Object) this, GrindstoneMenu.RESULT_SLOT);
         }
     }
 

@@ -1,0 +1,31 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftAbstractInventoryViewBuilder.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftAbstractInventoryViewBuilder.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftAbstractInventoryViewBuilder.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftAbstractInventoryViewBuilder.java
+@@ -2,6 +2,7 @@
+ 
+ import com.google.common.base.Preconditions;
+ import io.papermc.paper.adventure.PaperAdventure;
++import io.izzel.arclight.common.mod.util.ArclightCaptures;
+ import net.kyori.adventure.text.Component;
+ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.world.inventory.AbstractContainerMenu;
+@@ -39,10 +40,15 @@
+         Preconditions.checkArgument(craftHuman.getHandle() instanceof ServerPlayer, "The given player must be an ServerPlayer");
+         final ServerPlayer serverPlayer = (ServerPlayer) craftHuman.getHandle();
+ 
+-        final AbstractContainerMenu container = buildContainer(serverPlayer);
+-        container.checkReachable = this.checkReachable;
+-        container.setTitle(this.title != null ? PaperAdventure.asVanilla(this.title) : this.defaultTitle);
+-        return (V) container.getBukkitView();
++        ArclightCaptures.captureContainerOwner(serverPlayer);
++        try {
++            final AbstractContainerMenu container = buildContainer(serverPlayer);
++            container.checkReachable = this.checkReachable;
++            container.setTitle(this.title != null ? PaperAdventure.asVanilla(this.title) : this.defaultTitle);
++            return (V) container.getBukkitView();
++        } finally {
++            ArclightCaptures.popContainerOwner(serverPlayer);
++        }
+     }
+ 
+     protected abstract AbstractContainerMenu buildContainer(ServerPlayer player);

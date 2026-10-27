@@ -13,6 +13,7 @@
     "mixins.arclight.fabric.json",
     "mixins.arclight.core.json",
     "mixins.arclight.bukkit.json",
+    "mixins.arclight.compat.json",
     "mixins.arclight.vanilla.json",
     "mixins.arclight.impl.optimization.json"
   ],

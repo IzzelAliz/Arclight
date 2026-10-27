@@ -5,7 +5,8 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
-import io.izzel.arclight.common.mod.util.FurnaceEventHooks;
+import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
@@ -23,7 +24,7 @@ public abstract class AbstractFurnaceBlockEntityMixin_NeoForge {
                                              @Local(argsOnly = true) AbstractFurnaceBlockEntity furnace,
                                              @Share(value = "smelted", namespace = "arclight:furnace") LocalBooleanRef smelted) {
         smelted.set(false);
-        ItemStack replacement = FurnaceEventHooks.smeltResult((net.minecraft.server.level.ServerLevel) furnace.getLevel(),
+        ItemStack replacement = ArclightEventFactory.smeltResult((net.minecraft.server.level.ServerLevel) furnace.getLevel(),
             furnace.getBlockPos(), items, input, result);
         if (replacement == null) {
             return;

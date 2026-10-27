@@ -1,0 +1,27 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractHorse.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractHorse.java
+index 0e4cacf29d0c860ce7e295f8dd53b9cdee524b17..dd2bc531c5fa80e63cbca65be31590d99654cd07 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractHorse.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractHorse.java
+@@ -82,7 +82,7 @@ public abstract class CraftAbstractHorse extends CraftAnimals implements Abstrac
+     public void setOwner(AnimalTamer owner) {
+         if (owner != null) {
+             this.setTamed(true);
+-            this.getHandle().setTarget(null, null);
++            ((io.izzel.arclight.common.bridge.core.world.entity.MobBridge) this.getHandle()).bridge$setGoalTarget(null, null, false);
+             this.setOwnerUUID(owner.getUniqueId());
+         } else {
+             this.setTamed(false);
+@@ -148,11 +148,11 @@ public abstract class CraftAbstractHorse extends CraftAnimals implements Abstrac
+ 
+     @Override
+     public boolean isEating() {
+-        return this.getHandle().isMouthOpen();
++        return this.getHandle().getFlag(64);
+     }
+ 
+     @Override
+     public void setEating(boolean eating) {
+-       this.getHandle().setMouthOpen(eating);
++        this.getHandle().setFlag(64, eating);
+     }
+ }

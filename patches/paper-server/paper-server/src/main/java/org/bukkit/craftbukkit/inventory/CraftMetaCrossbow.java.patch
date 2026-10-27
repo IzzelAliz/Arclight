@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaCrossbow.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaCrossbow.java
+index c102a0f81a69cef119ee954d837fa61fca4e345d..de09387410c85a876e546cde4e7ab6b35a8a11b0 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaCrossbow.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaCrossbow.java
+@@ -21,7 +21,7 @@ public class CraftMetaCrossbow extends CraftMetaItem implements CrossbowMeta {
+ 
+     private List<ItemStack> chargedProjectiles;
+ 
+-    CraftMetaCrossbow(CraftMetaItem meta) {
++    public CraftMetaCrossbow(CraftMetaItem meta) {
+         super(meta);
+ 
+         if (!(meta instanceof final CraftMetaCrossbow crossbow)) {

@@ -33,6 +33,12 @@ public class CommandNodeMixin<S> {
     @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
     private static CommandNode<?> CURRENT_COMMAND;
 
+    // CommandNodeHooks resolves these exact names; @Unique would allow Mixin to rename them.
+    // Match AbstractBootstrap's library-layer slots without linking Brigadier to Paper types.
+    private Object arclight$apiCommandMeta;
+    private Object arclight$wrappedCached;
+    private Object arclight$unwrappedCached;
+
     @Unique
     public void removeCommand(String name) {
         children.remove(name);

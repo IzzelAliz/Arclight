@@ -34,17 +34,18 @@ public abstract class DistanceManagerMixin implements DistanceManagerBridge {
     }
 
     @Override
-    public void arclight$offerUpdate(ChunkHolder holder) {
-        arclight$scheduleUpdatingQueue.add(holder);
-    }
-
-    @Decorate(method = "runAllUpdates", inject = true, at = @At(value = "INVOKE", target = "Ljava/util/Set;isEmpty()Z"))
-    private void arclight$runQueuedUpdates(ChunkMap map) {
-        final var queue = arclight$scheduleUpdatingQueue;
+    public void bridge$runQueuedUpdates(ChunkMap map) {
+        final var queue = this.arclight$scheduleUpdatingQueue;
         for (ChunkHolder now = queue.poll(); now != null; now = queue.poll()) {
             ((ChunkHolderBridge) now).bridge$callEventIfUnloading(map);
         }
     }
+
+    @Override
+    public void arclight$offerUpdate(ChunkHolder holder) {
+        arclight$scheduleUpdatingQueue.add(holder);
+    }
+
 
     @Decorate(method = "removePlayer", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;get(J)Ljava/lang/Object;"))
     private Object arclight$nullsafeRemovePlayer(Long2ObjectMap<ServerPlayer> instance, long l) throws Throwable {

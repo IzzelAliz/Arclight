@@ -1,0 +1,12 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftWitch.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftWitch.java
+index 007a11e4d617f7629b60230349fec8d5e8c169a6..351a43a845351f0c5ba9e9f54ce821c11b4c9f0c 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftWitch.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftWitch.java
+@@ -38,6 +38,6 @@ public class CraftWitch extends CraftRaider implements Witch, com.destroystokyo.
+ 
+     public void setDrinkingPotion(ItemStack potion) {
+         Preconditions.checkArgument(potion == null || potion.getType().isEmpty() || potion.getType() == Material.POTION, "must be potion, air, or null");
+-        this.getHandle().setDrinkingPotion(CraftItemStack.asNMSCopy(potion));
++        throw new UnsupportedOperationException("Starting witch potion drinking through the API is not supported by Arclight");
+     }
+ }

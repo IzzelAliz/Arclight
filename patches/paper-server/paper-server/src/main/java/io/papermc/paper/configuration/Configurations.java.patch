@@ -1,0 +1,21 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/configuration/Configurations.java b/paper-server/src/main/java/io/papermc/paper/configuration/Configurations.java
+index b2c5e5cc2e798ac10c1c9cded65e1f8171a6cf98..54c21706b5a28d102539371ed9cb9ecbfaef3405 100644
+--- a/paper-server/src/main/java/io/papermc/paper/configuration/Configurations.java
++++ b/paper-server/src/main/java/io/papermc/paper/configuration/Configurations.java
+@@ -1,7 +1,6 @@
+ package io.papermc.paper.configuration;
+ 
+ import com.google.common.base.Preconditions;
+-import com.mojang.logging.LogUtils;
+ import io.leangen.geantyref.TypeToken;
+ import io.papermc.paper.configuration.constraint.Constraint;
+ import io.papermc.paper.configuration.constraint.Constraints;
+@@ -33,7 +32,7 @@ import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
+ 
+ public abstract class Configurations<G, W> {
+ 
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Configurations.class.getSimpleName());
+     public static final Identifier WORLD_DEFAULTS_KEY = Identifier.fromNamespaceAndPath("configurations", "__world_defaults__");
+     protected final Path globalFolder;
+     protected final Class<G> globalConfigClass;

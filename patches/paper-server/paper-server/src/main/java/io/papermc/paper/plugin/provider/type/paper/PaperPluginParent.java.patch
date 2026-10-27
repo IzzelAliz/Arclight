@@ -1,0 +1,143 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/provider/type/paper/PaperPluginParent.java b/paper-server/src/main/java/io/papermc/paper/plugin/provider/type/paper/PaperPluginParent.java
+index 55a6898e95704cddafda1ca5dc0951c7102fe10b..db832e2aa3d3215cc28b640f7c1bc6ca921d8ec8 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/provider/type/paper/PaperPluginParent.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/provider/type/paper/PaperPluginParent.java
+@@ -2,6 +2,8 @@ package io.papermc.paper.plugin.provider.type.paper;
+ 
+ import com.destroystokyo.paper.util.SneakyThrow;
+ import io.papermc.paper.plugin.bootstrap.PluginProviderContext;
++import io.papermc.paper.plugin.bootstrap.PluginBootstrapContextImpl;
++import io.papermc.paper.plugin.lifecycle.event.LifecycleEventRunner;
+ import io.papermc.paper.plugin.provider.configuration.LoadOrderConfiguration;
+ import io.papermc.paper.plugin.provider.configuration.type.DependencyConfiguration;
+ import io.papermc.paper.plugin.provider.entrypoint.DependencyContext;
+@@ -30,7 +32,9 @@ public class PaperPluginParent {
+     private final Path path;
+     private final JarFile jarFile;
+     private final PaperPluginMeta description;
+-    private final PaperPluginClassLoader classLoader;
++    private PaperPluginClassLoader classLoader;
++    private boolean classLoaderTransferred;
++    private PluginBootstrapContextImpl bootstrapContext;
+     private final PluginProviderContext context;
+     private final ComponentLogger logger;
+ 
+@@ -55,6 +59,36 @@ public class PaperPluginParent {
+         return new PaperServerPluginProvider(provider);
+     }
+ 
++    private void closeUntransferredClassLoader(Throwable failure) {
++        if (this.classLoaderTransferred) {
++            return;
++        }
++
++        PluginBootstrapContextImpl failedBootstrapContext = this.bootstrapContext;
++        this.bootstrapContext = null;
++        if (failedBootstrapContext != null) {
++            failedBootstrapContext.lockLifecycleEventRegistration();
++            LifecycleEventRunner.INSTANCE.unregisterEventHandlersForOwner(failedBootstrapContext);
++        }
++
++        PaperPluginClassLoader failedClassLoader = this.classLoader;
++        // Both providers share this loader. Detach it before close so repeated error callbacks cannot close it twice.
++        this.classLoader = null;
++        if (failedClassLoader == null) {
++            return;
++        }
++
++        try {
++            failedClassLoader.close();
++        } catch (Throwable closeFailure) {
++            if (failure == null) {
++                this.logger.error("Failed to close classloader for plugin " + this.description.getName(), closeFailure);
++            } else if (failure != closeFailure) {
++                failure.addSuppressed(closeFailure);
++            }
++        }
++    }
++
+     public class PaperBootstrapProvider implements PluginProvider<PluginBootstrap>, ProviderStatusHolder, DependencyContextHolder {
+ 
+         private ProviderStatus status;
+@@ -72,11 +106,20 @@ public class PaperPluginParent {
+ 
+         @Override
+         public PluginBootstrap createInstance() {
+-            PluginBootstrap bootstrap = ProviderUtil.loadClass(PaperPluginParent.this.description.getBootstrapper(),
+-                PluginBootstrap.class, PaperPluginParent.this.classLoader, () -> this.status = ProviderStatus.ERRORED);
+-            this.status = ProviderStatus.INITIALIZED;
+-            this.lastProvided = bootstrap;
+-            return bootstrap;
++            try {
++                PluginBootstrap bootstrap = ProviderUtil.loadClass(PaperPluginParent.this.description.getBootstrapper(),
++                    PluginBootstrap.class, PaperPluginParent.this.classLoader);
++                this.status = ProviderStatus.INITIALIZED;
++                this.lastProvided = bootstrap;
++                return bootstrap;
++            } catch (Throwable throwable) {
++                this.status = ProviderStatus.ERRORED;
++                this.lastProvided = null;
++                PaperPluginParent.this.closeUntransferredClassLoader(throwable);
++                SneakyThrow.sneaky(throwable);
++            }
++
++            throw new AssertionError(); // Impossible
+         }
+ 
+         @Override
+@@ -115,12 +158,21 @@ public class PaperPluginParent {
+         @Override
+         public void setStatus(ProviderStatus status) {
+             this.status = status;
++            if (status == ProviderStatus.ERRORED) {
++                // bootstrap() itself is run by BootstrapProviderStorage, which reports failure through this callback.
++                this.lastProvided = null;
++                PaperPluginParent.this.closeUntransferredClassLoader(null);
++            }
+         }
+ 
+         public PluginBootstrap getLastProvided() {
+             return this.lastProvided;
+         }
+ 
++        public void setBootstrapContext(PluginBootstrapContextImpl context) {
++            PaperPluginParent.this.bootstrapContext = context;
++        }
++
+         @Override
+         public void setContext(DependencyContext context) {
+             PaperPluginParent.this.classLoader.refreshClassloaderDependencyTree(context);
+@@ -176,9 +228,16 @@ public class PaperPluginParent {
+                 }
+ 
+                 this.status = ProviderStatus.INITIALIZED;
++                // Only a successfully returned plugin transfers cleanup responsibility to the plugin lifecycle.
++                PaperPluginParent.this.classLoaderTransferred = true;
++                PaperPluginParent.this.bootstrapContext = null;
+                 return plugin;
+             } catch (Throwable throwable) {
+                 this.status = ProviderStatus.ERRORED;
++                if (this.bootstrapProvider != null) {
++                    this.bootstrapProvider.lastProvided = null;
++                }
++                PaperPluginParent.this.closeUntransferredClassLoader(throwable);
+                 SneakyThrow.sneaky(throwable);
+             }
+ 
+@@ -223,6 +282,16 @@ public class PaperPluginParent {
+             this.status = status;
+         }
+ 
++        public void closeIfUntransferred() {
++            if (!PaperPluginParent.this.classLoaderTransferred) {
++                this.status = ProviderStatus.ERRORED;
++                if (this.bootstrapProvider != null) {
++                    this.bootstrapProvider.lastProvided = null;
++                }
++                PaperPluginParent.this.closeUntransferredClassLoader(null);
++            }
++        }
++
+         public boolean shouldSkipCreation() {
+             if (this.bootstrapProvider == null) {
+                 return false;

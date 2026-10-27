@@ -1,0 +1,25 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPhantom.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPhantom.java
+index db0e625d8ba721b0ad6913fe4a11ed8eb939d344..e75ee480ca3feb23c308fac0051d0a3d5c8d208a 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPhantom.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPhantom.java
+@@ -30,17 +30,17 @@ public class CraftPhantom extends CraftMob implements Phantom, CraftEnemy {
+ 
+     @Override
+     public UUID getSpawningEntity() {
+-        return this.getHandle().spawningEntity;
++        throw new UnsupportedOperationException("Phantom spawning entity tracking is not supported by Arclight");
+     }
+ 
+     @Override
+     public boolean shouldBurnInDay() {
+-        return this.getHandle().shouldBurnInDay;
++        throw new UnsupportedOperationException("Independent phantom daylight burning control is not supported by Arclight");
+     }
+ 
+     @Override
+     public void setShouldBurnInDay(boolean shouldBurnInDay) {
+-        this.getHandle().shouldBurnInDay = shouldBurnInDay;
++        throw new UnsupportedOperationException("Independent phantom daylight burning control is not supported by Arclight");
+     }
+ 
+     @Override

@@ -41,4 +41,11 @@ public class ProjectileWeaponItemMixin {
         }
         return projectile;
     }
+
+    @Decorate(method = "draw(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;)Ljava/util/List;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ProjectileWeaponItem;useAmmo(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;Z)Lnet/minecraft/world/item/ItemStack;"), require = 1)
+    private static ItemStack arclight$crossbowLoadAmmo(ItemStack weapon, ItemStack projectile, LivingEntity shooter, boolean forceInfinite) throws Throwable {
+        return (ItemStack) DecorationOps.callsite().invoke(weapon, projectile, shooter, forceInfinite || (io.izzel.arclight.common.mod.util.ArclightCaptures.crossbowNoConsume != null
+            && io.izzel.arclight.common.mod.util.ArclightCaptures.crossbowNoConsume.getFirst() == weapon
+            && io.izzel.arclight.common.mod.util.ArclightCaptures.crossbowNoConsume.getSecond() == shooter));
+    }
 }

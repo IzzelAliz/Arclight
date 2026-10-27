@@ -5,6 +5,7 @@ import io.izzel.arclight.common.bridge.core.world.entity.projectile.FishingHookB
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
+import io.papermc.paper.event.entity.FishHookStateChangeEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -19,6 +20,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.FishHook;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.player.PlayerFishEvent;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -44,14 +46,40 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
     @Shadow public abstract void pullEntity(Entity p_150156_);
     // @formatter:on
 
+    private net.minecraft.world.InteractionHand arclight$retrieveHand;
+
+    @Override
+    public net.minecraft.world.InteractionHand bridge$getRetrieveHand() {
+        return this.arclight$retrieveHand;
+    }
+
+    @Override
+    public net.minecraft.world.InteractionHand bridge$swapRetrieveHand(net.minecraft.world.InteractionHand hand) {
+        var previous = this.arclight$retrieveHand;
+        this.arclight$retrieveHand = hand;
+        return previous;
+    }
+
+    private org.bukkit.inventory.EquipmentSlot arclight$retrieveEquipmentSlot() {
+        return this.arclight$retrieveHand == null ? null : org.bukkit.craftbukkit.CraftEquipmentSlot.getHand(this.arclight$retrieveHand);
+    }
+
     public int minWaitTime = 100;
+
     public int maxWaitTime = 600;
+
     public int minLureTime = 20;
+
     public int maxLureTime = 80;
+
     public float minLureAngle = 0.0F;
+
     public float maxLureAngle = 360.0F;
+
     public boolean applyLure = true;
+
     public boolean rainInfluenced = true;
+
     public boolean skyInfluenced = true;
 
     @Inject(method = "catchingFish", at = @At(value = "FIELD", shift = At.Shift.AFTER, ordinal = 0, target = "Lnet/minecraft/world/entity/projectile/FishingHook;timeUntilHooked:I"))
@@ -76,7 +104,7 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
 
     @Redirect(method = "catchingFish", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;canSeeSky(Lnet/minecraft/core/BlockPos;)Z"))
     private boolean arclight$skyInfluenced(Level instance, BlockPos blockPos) {
-        return this.skyInfluenced && instance.canSeeSky(blockPos);
+        return !this.skyInfluenced || instance.canSeeSky(blockPos);
     }
 
     @Redirect(method = "catchingFish", at = @At(value = "INVOKE", ordinal = 2, target = "Lnet/minecraft/util/Mth;nextFloat(Lnet/minecraft/util/RandomSource;FF)F"))
@@ -96,7 +124,37 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
 
     @Redirect(method = "catchingFish", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/projectile/FishingHook;lureSpeed:I"))
     private int arclight$waitTimeParam2(FishingHook instance) {
-        return this.applyLure ? this.lureSpeed : 0;
+        return this.arclight$lureReduction();
+    }
+
+    private int arclight$lureReduction() {
+        return this.applyLure ? (this.lureSpeed >= this.maxWaitTime ? this.timeUntilLured - 1 : this.lureSpeed) : 0;
+    }
+
+    @Override
+    public void bridge$resetTimeUntilLured() {
+        this.timeUntilLured = Mth.nextInt(this.random, this.minWaitTime, this.maxWaitTime);
+        this.timeUntilLured -= this.arclight$lureReduction();
+    }
+
+    // Paper notifies after the branch's velocity/target update, but before committing its new state.
+    // This event is informational, not cancellable; leave all native state writes and returns intact.
+    @Decorate(method = "tick()V", inject = true, at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, ordinal = 0,
+        target = "Lnet/minecraft/world/entity/projectile/FishingHook;currentState:Lnet/minecraft/world/entity/projectile/FishingHook$FishHookState;"), require = 1)
+    private void arclight$hookedEntityState() {
+        new FishHookStateChangeEvent((FishHook) this.getBukkitEntity(), FishHook.HookState.HOOKED_ENTITY).callEvent();
+    }
+
+    @Decorate(method = "tick()V", inject = true, at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, ordinal = 1,
+        target = "Lnet/minecraft/world/entity/projectile/FishingHook;currentState:Lnet/minecraft/world/entity/projectile/FishingHook$FishHookState;"), require = 1)
+    private void arclight$bobbingState() {
+        new FishHookStateChangeEvent((FishHook) this.getBukkitEntity(), FishHook.HookState.BOBBING).callEvent();
+    }
+
+    @Decorate(method = "tick()V", inject = true, at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, ordinal = 2,
+        target = "Lnet/minecraft/world/entity/projectile/FishingHook;currentState:Lnet/minecraft/world/entity/projectile/FishingHook$FishHookState;"), require = 1)
+    private void arclight$unhookedState() {
+        new FishHookStateChangeEvent((FishHook) this.getBukkitEntity(), FishHook.HookState.UNHOOKED).callEvent();
     }
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/FishingHook;discard()V"))
@@ -109,18 +167,31 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
     }
 
-    @Inject(method = "retrieve", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/FishingHook;pullEntity(Lnet/minecraft/world/entity/Entity;)V"))
-    private void arclight$catchEntity(ItemStack itemStack, CallbackInfoReturnable<Integer> cir) {
-        PlayerFishEvent fishEvent = new PlayerFishEvent(((ServerPlayerBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), this.hookedIn.bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.CAUGHT_ENTITY);
-        Bukkit.getPluginManager().callEvent(fishEvent);
-        if (fishEvent.isCancelled()) {
-            cir.setReturnValue(0);
+    // Dispatch before the branch reads hookedIn, so its consumers see the event's target changes.
+    @Decorate(method = "retrieve", inject = true, at = @At(value = "FIELD", opcode = Opcodes.GETFIELD, ordinal = 0, target = "Lnet/minecraft/world/entity/projectile/FishingHook;hookedIn:Lnet/minecraft/world/entity/Entity;"), require = 1)
+    private void arclight$catchEntity(ItemStack itemStack, @Local(allocate = "hadCaughtEntity") boolean hadCaughtEntity) throws Throwable {
+        hadCaughtEntity = this.hookedIn != null;
+        DecorationOps.blackhole().invoke(hadCaughtEntity);
+        if (hadCaughtEntity) {
+            PlayerFishEvent fishEvent = new PlayerFishEvent(((ServerPlayerBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), this.hookedIn.bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), this.arclight$retrieveEquipmentSlot(), PlayerFishEvent.State.CAUGHT_ENTITY);
+            Bukkit.getPluginManager().callEvent(fishEvent);
+            if (fishEvent.isCancelled()) {
+                DecorationOps.cancel().invoke(0);
+                return;
+            }
         }
+    }
+
+    // Clearing an entity catch must not turn it into a fish catch; keep the native tail intact.
+    @Decorate(method = "retrieve", at = @At(value = "FIELD", opcode = Opcodes.GETFIELD, target = "Lnet/minecraft/world/entity/projectile/FishingHook;nibble:I"), require = 1)
+    private int arclight$skipClearedEntityCatch(FishingHook instance, @Local(allocate = "hadCaughtEntity") boolean hadCaughtEntity) throws Throwable {
+        int nibble = (int) DecorationOps.callsite().invoke(instance);
+        return hadCaughtEntity ? 0 : nibble;
     }
 
     @Decorate(method = "retrieve", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;setDeltaMovement(DDD)V"))
     private void arclight$catchFish(ItemStack stack, @Local(ordinal = -1) ItemEntity itementity, @Local(allocate = "expToDrop") int expToDrop) throws Throwable {
-        PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), itementity.bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.CAUGHT_FISH);
+        PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), itementity.bridge$getBukkitEntity(), (FishHook) this.getBukkitEntity(), this.arclight$retrieveEquipmentSlot(), PlayerFishEvent.State.CAUGHT_FISH);
         playerFishEvent.setExpToDrop(this.random.nextInt(6) + 1);
         Bukkit.getPluginManager().callEvent(playerFishEvent);
 
@@ -144,10 +215,10 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
         return (boolean) DecorationOps.callsite().invoke(instance, entity);
     }
 
-    @Inject(method = "retrieve", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/FishingHook;onGround()Z"))
+    @Inject(method = "retrieve", cancellable = true, at = @At(value = "INVOKE:LAST", target = "Lnet/minecraft/world/entity/projectile/FishingHook;onGround()Z"))
     private void arclight$onGround(ItemStack itemStack, CallbackInfoReturnable<Integer> cir) {
         if (this.onGround()) {
-            PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), null, (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.IN_GROUND);
+            PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerBridge) this.getPlayerOwner()).bridge$getBukkitEntity(), null, (FishHook) this.getBukkitEntity(), this.arclight$retrieveEquipmentSlot(), PlayerFishEvent.State.IN_GROUND);
             Bukkit.getPluginManager().callEvent(playerFishEvent);
 
             if (playerFishEvent.isCancelled()) {
@@ -156,10 +227,10 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
         }
     }
 
-    @Inject(method = "retrieve", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/FishingHook;discard()V"))
+    @Inject(method = "retrieve", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE:LAST", target = "Lnet/minecraft/world/entity/projectile/FishingHook;discard()V"))
     private void arclight$reelIn(ItemStack itemStack, CallbackInfoReturnable<Integer> cir, Player player, int i) {
         if (i == 0) {
-            PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerBridge) player).bridge$getBukkitEntity(), null, (FishHook) this.getBukkitEntity(), PlayerFishEvent.State.REEL_IN);
+            PlayerFishEvent playerFishEvent = new PlayerFishEvent(((ServerPlayerBridge) player).bridge$getBukkitEntity(), null, (FishHook) this.getBukkitEntity(), this.arclight$retrieveEquipmentSlot(), PlayerFishEvent.State.REEL_IN);
             Bukkit.getPluginManager().callEvent(playerFishEvent);
             if (playerFishEvent.isCancelled()) {
                 cir.setReturnValue(0);
@@ -168,4 +239,9 @@ public abstract class FishingHookMixin extends ProjectileMixin implements Fishin
         }
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DESPAWN);
     }
+
+    public void resetTimeUntilLured() {
+        this.bridge$resetTimeUntilLured();
+    }
+
 }

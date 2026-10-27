@@ -1,0 +1,82 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryPlayer.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryPlayer.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryPlayer.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryPlayer.java
+@@ -45,12 +45,12 @@
+ 
+     @Override
+     public ItemStack getItemInOffHand() {
+-        return CraftItemStack.asCraftMirror(this.getInventory().equipment.get(net.minecraft.world.entity.EquipmentSlot.OFFHAND));
++        return CraftItemStack.asCraftMirror(this.getInventory().player.equipment.get(net.minecraft.world.entity.EquipmentSlot.OFFHAND));
+     }
+ 
+     @Override
+     public void setItemInOffHand(ItemStack item) {
+-        this.getInventory().equipment.set(net.minecraft.world.entity.EquipmentSlot.OFFHAND, CraftItemStack.asNMSCopy(item));
++        this.getInventory().player.equipment.set(net.minecraft.world.entity.EquipmentSlot.OFFHAND, CraftItemStack.asNMSCopy(item));
+     }
+ 
+     @Override
+@@ -135,7 +135,7 @@
+         switch (slot) {
+             case HAND -> this.setItemInMainHand(item);
+             case OFF_HAND, FEET, LEGS, CHEST, HEAD, BODY, SADDLE ->
+-                this.getInventory().equipment.set(CraftEquipmentSlot.getNMS(slot), CraftItemStack.asNMSCopy(item));
++                this.getInventory().player.equipment.set(CraftEquipmentSlot.getNMS(slot), CraftItemStack.asNMSCopy(item));
+         }
+     }
+ 
+@@ -150,7 +150,7 @@
+ 
+         return switch (slot) {
+             case HAND -> this.getItemInMainHand();
+-            case OFF_HAND, FEET, LEGS, CHEST, HEAD, BODY, SADDLE -> CraftItemStack.asCraftMirror(this.getInventory().equipment.get(CraftEquipmentSlot.getNMS(slot)));
++            case OFF_HAND, FEET, LEGS, CHEST, HEAD, BODY, SADDLE -> CraftItemStack.asCraftMirror(this.getInventory().player.equipment.get(CraftEquipmentSlot.getNMS(slot)));
+         };
+     }
+ 
+@@ -228,9 +228,23 @@
+ 
+     @Override
+     public ItemStack[] getArmorContents() {
+-        return this.asCraftMirror(this.getInventory().getArmorContents());
++        return this.getSlots(36, 4);
+     }
+ 
++    @Override
++    public ItemStack[] getContents() {
++        return this.getSlots(0, this.getSize());
++    }
++
++    private ItemStack[] getSlots(int baseSlot, int length) {
++        ItemStack[] contents = new ItemStack[length];
++        for (int i = 0; i < length; i++) {
++            var stack = this.getInventory().getItem(baseSlot + i);
++            contents[i] = stack.isEmpty() ? null : CraftItemStack.asCraftMirror(stack);
++        }
++        return contents;
++    }
++
+     private void setSlots(ItemStack[] items, int baseSlot, int length) {
+         if (items == null) {
+             items = new ItemStack[length];
+@@ -253,17 +267,17 @@
+ 
+     @Override
+     public void setArmorContents(ItemStack[] items) {
+-        this.setSlots(items, this.getInventory().getNonEquipmentItems().size(), this.getInventory().getArmorContents().size());
++        this.setSlots(items, 36, 4);
+     }
+ 
+     @Override
+     public ItemStack[] getExtraContents() {
+-        return this.asCraftMirror(this.getInventory().getExtraContent());
++        return this.getSlots(40, 3);
+     }
+ 
+     @Override
+     public void setExtraContents(ItemStack[] items) {
+-        this.setSlots(items, this.getInventory().getNonEquipmentItems().size() + this.getInventory().getArmorContents().size(), 3);
++        this.setSlots(items, 40, 3);
+     }
+ 
+     @Override

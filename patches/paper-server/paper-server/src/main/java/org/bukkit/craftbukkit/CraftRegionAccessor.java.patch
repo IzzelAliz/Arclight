@@ -1,0 +1,21 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftRegionAccessor.java b/paper-server/src/main/java/org/bukkit/craftbukkit/CraftRegionAccessor.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftRegionAccessor.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/CraftRegionAccessor.java
+@@ -142,7 +142,7 @@
+     @Override
+     public boolean generateTree(Location location, Random random, TreeType treeType) {
+         BlockPos pos = CraftLocation.toBlockPos(location);
+-        return this.generateTree(this.getHandle(), this.getHandle().getMinecraftWorld().getChunkSource().getGenerator(), pos, new RandomSourceWrapper(random), treeType);
++        return this.generateTree(this.getHandle(), this.getHandle().getLevel().getChunkSource().getGenerator(), pos, new RandomSourceWrapper(random), treeType);
+     }
+ 
+     @Override
+@@ -157,7 +157,7 @@
+     public boolean generateTree(Location location, Random random, TreeType treeType, Predicate<? super BlockState> predicate) {
+         BlockPos pos = CraftLocation.toBlockPos(location);
+         BlockStateListPopulator populator = new BlockStateListPopulator(this.getHandle());
+-        boolean result = this.generateTree(populator, this.getHandle().getMinecraftWorld().getChunkSource().getGenerator(), pos, new RandomSourceWrapper(random), treeType);
++        boolean result = this.generateTree(populator, this.getHandle().getLevel().getChunkSource().getGenerator(), pos, new RandomSourceWrapper(random), treeType);
+         populator.placeSomeBlocks(predicate == null ? (_ -> true) : predicate);
+         return result;
+     }

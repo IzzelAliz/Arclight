@@ -5,9 +5,15 @@ import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.level.block.entity.SignBlockEntityBridge;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import io.izzel.arclight.mixin.Local;
+import io.papermc.paper.adventure.PaperAdventure;
+import io.papermc.paper.event.player.PlayerSignCommandPreprocessEvent;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -15,7 +21,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.FilteredText;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
@@ -25,7 +30,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.block.CraftBlock;
 import org.bukkit.craftbukkit.block.CraftSign;
 import org.bukkit.craftbukkit.command.CraftBlockCommandSender;
-import org.bukkit.craftbukkit.util.CraftChatMessage;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.util.LazyPlayerSet;
 import org.bukkit.event.block.SignChangeEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,10 +42,9 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -50,7 +55,6 @@ public abstract class SignBlockEntityMixin extends BlockEntityMixin implements S
 
     // @formatter:off
     @Shadow public abstract ClientboundBlockEntityDataPacket getUpdatePacket();
-    @Shadow private static CommandSourceStack createCommandSourceStack(@Nullable Player p_279428_, ServerLevel p_279359_, BlockPos p_279430_) { return null; }
     @Shadow public abstract boolean isWaxed();
     @Shadow @javax.annotation.Nullable public abstract UUID getPlayerWhoMayEdit();
     @Shadow public abstract boolean updateText(UnaryOperator<SignText> p_277877_, boolean p_277426_);
@@ -91,22 +95,22 @@ public abstract class SignBlockEntityMixin extends BlockEntityMixin implements S
 
         // CraftBukkit start
         org.bukkit.entity.Player player = ((ServerPlayerBridge) entityhuman).bridge$getBukkitEntity();
-        String[] lines = new String[4];
+        List<net.kyori.adventure.text.Component> lines = new ArrayList<>();
 
         for (int j = 0; j < list.size(); ++j) {
-            lines[j] = CraftChatMessage.fromComponent(signtext.getMessage(j, entityhuman.isTextFilteringEnabled()));
+            lines.add(PaperAdventure.asAdventure(signtext.getMessage(j, entityhuman.isTextFilteringEnabled())));
         }
 
-        SignChangeEvent event = new SignChangeEvent(CraftBlock.at(this.level, this.worldPosition), player, Arrays.copyOf(lines, lines.length), front ? Side.FRONT : Side.BACK);
+        SignChangeEvent event = new SignChangeEvent(CraftBlock.at(this.level, this.worldPosition), player, new ArrayList<>(lines), front ? Side.FRONT : Side.BACK);
         Bukkit.getPluginManager().callEvent(event);
 
         if (event.isCancelled()) {
             return orig;
         }
 
-        Component[] components = CraftSign.sanitizeLines(event.getLines());
+        Component[] components = CraftSign.sanitizeLines(event.lines());
         for (int j = 0; j < components.length; j++) {
-            if (!Objects.equals(lines[j], event.getLine(j))) {
+            if (!Objects.equals(lines.get(j), event.line(j))) {
                 signtext = signtext.setMessage(j, components[j]);
             }
         }
@@ -115,9 +119,30 @@ public abstract class SignBlockEntityMixin extends BlockEntityMixin implements S
         return signtext;
     }
 
-    @Redirect(method = "executeClickCommandsIfPresent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/SignBlockEntity;createCommandSourceStack(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/commands/CommandSourceStack;"))
-    private CommandSourceStack arclight$setSource(Player p_279428_, ServerLevel p_279359_, BlockPos p_279430_) {
-        var stack = createCommandSourceStack(p_279428_, p_279359_, p_279430_);
+    @Decorate(method = "executeClickCommandsIfPresent(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/core/BlockPos;Z)Z",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/SignBlockEntity;createCommandSourceStack(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/commands/CommandSourceStack;"))
+    private CommandSourceStack arclight$signCommand(Player player, ServerLevel level, BlockPos pos,
+                                                   @Local(ordinal = 0) boolean front,
+                                                   @Local(ordinal = 0) ClickEvent.RunCommand command) throws Throwable {
+        String commandLine = command.command().startsWith("/") ? command.command() : "/" + command.command();
+        if (org.spigotmc.SpigotConfig.logCommands) {
+            LOGGER.info("{} issued server command: {}", player.getScoreboardName(), commandLine);
+        }
+        var event = new PlayerSignCommandPreprocessEvent(
+            (org.bukkit.entity.Player) ((EntityBridge) player).bridge$getBukkitEntity(), commandLine,
+            new LazyPlayerSet(level.getServer()),
+            (org.bukkit.block.Sign) CraftBlock.at(this.level, this.worldPosition).getState(),
+            front ? Side.FRONT : Side.BACK);
+        if (!event.callEvent()) {
+            // The enclosing boolean host must stop the remaining sign lines as well.
+            return (CommandSourceStack) DecorationOps.cancel().invoke(false);
+        }
+        // The native command.command() read is still ahead of this source-creation callsite.
+        // Rewrite only this line's local, keeping the native dispatcher and other click actions.
+        command = new ClickEvent.RunCommand(event.getMessage());
+        DecorationOps.blackhole().invoke(command);
+        Player commandPlayer = ((CraftPlayer) event.getPlayer()).getHandle();
+        var stack = (CommandSourceStack) DecorationOps.callsite().invoke(commandPlayer, level, pos);
         ((CommandSourceStackBridge) stack).bridge$setSource(this);
         return stack;
     }

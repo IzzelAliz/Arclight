@@ -1,0 +1,21 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaTropicalFishBucket.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaTropicalFishBucket.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaTropicalFishBucket.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaTropicalFishBucket.java
+@@ -17,7 +17,7 @@
+ import org.bukkit.inventory.meta.TropicalFishBucketMeta;
+ 
+ @DelegateDeserialization(SerializableMeta.class)
+-class CraftMetaTropicalFishBucket extends CraftMetaItem implements TropicalFishBucketMeta {
++public class CraftMetaTropicalFishBucket extends CraftMetaItem implements TropicalFishBucketMeta {
+ 
+     static final ItemMetaKey VARIANT = new ItemMetaKey("BucketVariantTag", "fish-variant");
+     static final ItemMetaKeyType<TypedEntityData<EntityType<?>>> ENTITY_TAG = new ItemMetaKeyType<>(DataComponents.ENTITY_DATA, "entity-tag");
+@@ -27,7 +27,7 @@
+     private CompoundTag entityTag;
+     private CompoundTag bucketEntityTag;
+ 
+-    CraftMetaTropicalFishBucket(CraftMetaItem meta) {
++    public CraftMetaTropicalFishBucket(CraftMetaItem meta) {
+         super(meta);
+ 
+         if (!(meta instanceof final CraftMetaTropicalFishBucket tropicalFishBucketMeta)) {

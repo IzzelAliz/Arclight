@@ -1,0 +1,46 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftItem.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftItem.java
+index 7c017df81f1aa520fdaf233917a639154b50ac05..69947114f6b4f8aab4a4a01ca05cdefd61de1793 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftItem.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftItem.java
+@@ -70,12 +70,12 @@ public class CraftItem extends CraftEntity implements Item {
+ 
+     @Override
+     public boolean canMobPickup() {
+-        return this.getHandle().canMobPickup;
++        throw new UnsupportedOperationException("Independent mob item pickup control is not supported by Arclight");
+     }
+ 
+     @Override
+     public void setCanMobPickup(boolean canMobPickup) {
+-        this.getHandle().canMobPickup = canMobPickup;
++        throw new UnsupportedOperationException("Independent mob item pickup control is not supported by Arclight");
+     }
+ 
+      @Override
+@@ -100,13 +100,13 @@ public class CraftItem extends CraftEntity implements Item {
+ 
+      @Override
+      public net.kyori.adventure.util.TriState getFrictionState() {
+-        return this.getHandle().frictionState;
++        throw new UnsupportedOperationException("Independent item friction control is not supported by Arclight");
+      }
+ 
+      @Override
+      public void setFrictionState(net.kyori.adventure.util.TriState state) {
+          Preconditions.checkArgument(state != null, "state may not be null");
+-         this.getHandle().frictionState = state;
++         throw new UnsupportedOperationException("Independent item friction control is not supported by Arclight");
+      }
+ 
+     @Override
+@@ -118,7 +118,9 @@ public class CraftItem extends CraftEntity implements Item {
+     public void setHealth(int health) {
+         if (health <= 0) {
+             this.getHandle().getItem().onDestroyed(this.getHandle());
+-            this.getHandle().discard(org.bukkit.event.entity.EntityRemoveEvent.Cause.PLUGIN);
++            io.izzel.arclight.common.bridge.core.entity.EntityBridge bridge = this.getHandle();
++            bridge.bridge$pushEntityRemoveCause(org.bukkit.event.entity.EntityRemoveEvent.Cause.PLUGIN);
++            this.getHandle().discard();
+         } else {
+             this.getHandle().health = health;
+         }

@@ -16,6 +16,11 @@ public class ItemEntityMixin_Realtime {
 
     private int lastTick = ArclightConstants.currentTick - 1;
 
+    @Inject(method = "bridge$inactiveTick", at = @At("RETURN"), remap = false)
+    private void arclight$inactiveClock(CallbackInfo ci) {
+        this.lastTick = ArclightConstants.currentTick;
+    }
+
     @Inject(method = "tick", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/Entity;tick()V"))
     private void arclight$useWallTime(CallbackInfo ci) {
         int elapsedTicks = ArclightConstants.currentTick - this.lastTick - 1;

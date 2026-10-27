@@ -44,6 +44,17 @@ public interface AbstractBootstrap {
         try (var in = getClass().getClassLoader().getResourceAsStream("com/mojang/brigadier/tree/CommandNode.class")) {
             var node = new ClassNode();
             new ClassReader(in).accept(node, 0);
+            // Brigadier lives in the library layer, so these slots cannot name Paper types.
+            // Keep their names and descriptors identical to Connector's CommandNodeMixin.
+            for (var name : new String[]{"arclight$apiCommandMeta", "arclight$wrappedCached", "arclight$unwrappedCached"}) {
+                var fields = node.fields.stream().filter(it -> it.name.equals(name)).toList();
+                if (fields.isEmpty()) {
+                    node.fields.add(new FieldNode(Opcodes.ACC_PRIVATE, name, "Ljava/lang/Object;", null, null));
+                } else if (fields.size() != 1 || !fields.getFirst().desc.equals("Ljava/lang/Object;")
+                    || (fields.getFirst().access & (Opcodes.ACC_STATIC | Opcodes.ACC_FINAL)) != 0) {
+                    throw new IllegalStateException("Conflicting Brigadier state field: " + name);
+                }
+            }
             {
                 FieldNode fieldNode = new FieldNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_VOLATILE, "CURRENT_COMMAND", "Lcom/mojang/brigadier/tree/CommandNode;", null, null);
                 node.fields.add(fieldNode);

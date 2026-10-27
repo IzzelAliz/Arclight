@@ -21,6 +21,11 @@ public class RconConsoleSourceMixin implements CommandSourceBridge, RconConsoleS
     public java.net.SocketAddress socketAddress;
 
     @Override
+    public java.net.SocketAddress bridge$getSocketAddress() {
+        return this.socketAddress;
+    }
+
+    @Override
     public void bridge$setSocketAddress(java.net.SocketAddress address) {
         this.socketAddress = address;
     }

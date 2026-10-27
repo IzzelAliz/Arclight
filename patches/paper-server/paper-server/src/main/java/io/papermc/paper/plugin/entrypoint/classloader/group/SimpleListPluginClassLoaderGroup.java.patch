@@ -1,0 +1,22 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/group/SimpleListPluginClassLoaderGroup.java b/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/group/SimpleListPluginClassLoaderGroup.java
+index 23b6cb297f46c9c2b2944a3ab4031c31414620ad..883ea8651ad88ca8fbd3dba113c9182e1984c3ac 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/group/SimpleListPluginClassLoaderGroup.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/group/SimpleListPluginClassLoaderGroup.java
+@@ -48,12 +48,15 @@ public abstract class SimpleListPluginClassLoaderGroup implements PluginClassLoa
+ 
+     @Override
+     public void remove(ConfiguredPluginClassLoader configuredPluginClassLoader) {
+-        this.classloaders.remove(configuredPluginClassLoader);
++        this.classloaders.removeIf(loader -> loader == configuredPluginClassLoader);
+     }
+ 
+     @Override
+     public void add(ConfiguredPluginClassLoader configuredPluginClassLoader) {
+-        this.classloaders.add(configuredPluginClassLoader);
++        // Open groups delegate to the same global list; publish each loader only once.
++        if (this.classloaders.stream().noneMatch(loader -> loader == configuredPluginClassLoader)) {
++            this.classloaders.add(configuredPluginClassLoader);
++        }
+     }
+ 
+     public List<ConfiguredPluginClassLoader> getClassLoaders() {

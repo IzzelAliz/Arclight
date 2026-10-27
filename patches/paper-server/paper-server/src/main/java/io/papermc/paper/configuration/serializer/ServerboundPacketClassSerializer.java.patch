@@ -1,0 +1,21 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/configuration/serializer/ServerboundPacketClassSerializer.java b/paper-server/src/main/java/io/papermc/paper/configuration/serializer/ServerboundPacketClassSerializer.java
+index 52195607af4cf5c59f81126fc6d00728b4d2cf50..62d147befbf8c1c13bf02732ca1c321f8e145ec8 100644
+--- a/paper-server/src/main/java/io/papermc/paper/configuration/serializer/ServerboundPacketClassSerializer.java
++++ b/paper-server/src/main/java/io/papermc/paper/configuration/serializer/ServerboundPacketClassSerializer.java
+@@ -2,7 +2,6 @@ package io.papermc.paper.configuration.serializer;
+ 
+ import com.google.common.base.Preconditions;
+ import com.google.common.collect.ImmutableMap;
+-import com.mojang.logging.LogUtils;
+ import io.leangen.geantyref.GenericTypeReflector;
+ import io.leangen.geantyref.TypeToken;
+ import java.lang.reflect.Field;
+@@ -32,7 +31,7 @@ import org.spongepowered.configurate.serialize.SerializationException;
+ @SuppressWarnings("Convert2Diamond")
+ public final class ServerboundPacketClassSerializer extends ScalarSerializer<Class<? extends Packet<?>>> {
+ 
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ServerboundPacketClassSerializer.class.getSimpleName());
+     private static final TypeToken<Class<? extends Packet<?>>> TYPE = new TypeToken<Class<? extends Packet<?>>>() {};
+     static final Set<Class<?>> PACKET_CLASS_HOLDERS = Set.of(
+         PingPacketTypes.class,

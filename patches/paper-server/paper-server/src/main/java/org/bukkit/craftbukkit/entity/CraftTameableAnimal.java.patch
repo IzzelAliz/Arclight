@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftTameableAnimal.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftTameableAnimal.java
+index ddcf21a5f903896b6f1ae1b00e357fcce0706b86..832e3fc9911d34440624aa32bf9b5e0e1f5c32de 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftTameableAnimal.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftTameableAnimal.java
+@@ -56,7 +56,7 @@ public class CraftTameableAnimal extends CraftAnimals implements Tameable, Creat
+     public void setOwner(AnimalTamer tamer) {
+         if (tamer != null) {
+             this.setTamed(true);
+-            this.getHandle().setTarget(null, null);
++            ((io.izzel.arclight.common.bridge.core.world.entity.MobBridge) this.getHandle()).bridge$setGoalTarget(null, null, false);
+             this.setOwnerUUID(tamer.getUniqueId());
+         } else {
+             this.setTamed(false);

@@ -1,0 +1,92 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/group/PaperPluginClassLoaderStorage.java b/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/group/PaperPluginClassLoaderStorage.java
+index e6fcdeb96356ff4713627b1458ac8bbfad1866b1..56aa5174535c6a8d6f3c499fd39305c571a21a55 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/group/PaperPluginClassLoaderStorage.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/classloader/group/PaperPluginClassLoaderStorage.java
+@@ -8,7 +8,9 @@ import org.bukkit.plugin.java.PluginClassLoader;
+ import org.jetbrains.annotations.ApiStatus;
+ 
+ import java.util.ArrayList;
++import java.util.IdentityHashMap;
+ import java.util.List;
++import java.util.Map;
+ import java.util.concurrent.CopyOnWriteArrayList;
+ 
+ /**
+@@ -18,25 +20,26 @@ public final class PaperPluginClassLoaderStorage implements PaperClassLoaderStor
+ 
+     private final GlobalPluginClassLoaderGroup globalGroup = new GlobalPluginClassLoaderGroup();
+     private final List<PluginClassLoaderGroup> groups = new CopyOnWriteArrayList<>();
++    private final Map<ConfiguredPluginClassLoader, LockingClassLoaderGroup> groupsByClassLoader = new IdentityHashMap<>();
+ 
+     public PaperPluginClassLoaderStorage() {
+         this.groups.add(this.globalGroup);
+     }
+ 
+     @Override
+-    public PluginClassLoaderGroup registerSpigotGroup(PluginClassLoader pluginClassLoader) {
++    public synchronized PluginClassLoaderGroup registerSpigotGroup(PluginClassLoader pluginClassLoader) {
+         return this.registerGroup(pluginClassLoader, new SpigotPluginClassLoaderGroup(this.globalGroup, (library) -> {
+             return pluginClassLoader.dependencyContext.isTransitiveDependency(pluginClassLoader.getConfiguration(), library.getConfiguration());
+         }, pluginClassLoader));
+     }
+ 
+     @Override
+-    public PluginClassLoaderGroup registerOpenGroup(ConfiguredPluginClassLoader classLoader) {
++    public synchronized PluginClassLoaderGroup registerOpenGroup(ConfiguredPluginClassLoader classLoader) {
+         return this.registerGroup(classLoader, this.globalGroup);
+     }
+ 
+     @Override
+-    public PluginClassLoaderGroup registerAccessBackedGroup(ConfiguredPluginClassLoader classLoader, ClassLoaderAccess access) {
++    public synchronized PluginClassLoaderGroup registerAccessBackedGroup(ConfiguredPluginClassLoader classLoader, ClassLoaderAccess access) {
+         List<ConfiguredPluginClassLoader> allowedLoaders = new ArrayList<>();
+         for (ConfiguredPluginClassLoader configuredPluginClassLoader : this.globalGroup.getClassLoaders()) {
+             if (access.canAccess(configuredPluginClassLoader)) {
+@@ -48,6 +51,10 @@ public final class PaperPluginClassLoaderStorage implements PaperClassLoaderStor
+     }
+ 
+     private PluginClassLoaderGroup registerGroup(ConfiguredPluginClassLoader classLoader, PluginClassLoaderGroup group) {
++        if (this.groupsByClassLoader.containsKey(classLoader)) {
++            this.unregisterClassloader(classLoader);
++        }
++
+         // Now add this classloader to any groups that allows it (includes global)
+         for (PluginClassLoaderGroup loaderGroup : this.groups) {
+             if (loaderGroup.getAccess().canAccess(classLoader)) {
+@@ -55,23 +62,28 @@ public final class PaperPluginClassLoaderStorage implements PaperClassLoaderStor
+             }
+         }
+ 
+-        group = new LockingClassLoaderGroup(group);
+-        this.groups.add(group);
+-        return group;
++        LockingClassLoaderGroup lockingGroup = new LockingClassLoaderGroup(group);
++        this.groupsByClassLoader.put(classLoader, lockingGroup);
++        this.groups.add(lockingGroup);
++        return lockingGroup;
+     }
+ 
+     @Override
+-    public void unregisterClassloader(ConfiguredPluginClassLoader configuredPluginClassLoader) {
+-        this.globalGroup.remove(configuredPluginClassLoader);
+-        this.groups.remove(configuredPluginClassLoader.getGroup());
++    public synchronized void unregisterClassloader(ConfiguredPluginClassLoader configuredPluginClassLoader) {
++        // The loader may not have published its group yet, or may still expose a retired group.
++        LockingClassLoaderGroup ownedGroup = this.groupsByClassLoader.remove(configuredPluginClassLoader);
++        if (ownedGroup != null) {
++            this.groups.remove(ownedGroup);
++            ownedGroup.close();
++        }
+         for (PluginClassLoaderGroup group : this.groups) {
+             group.remove(configuredPluginClassLoader);
+         }
+     }
+ 
+     @Override
+-    public boolean registerUnsafePlugin(ConfiguredPluginClassLoader pluginLoader) {
+-        if (this.globalGroup.getClassLoaders().contains(pluginLoader)) {
++    public synchronized boolean registerUnsafePlugin(ConfiguredPluginClassLoader pluginLoader) {
++        if (this.globalGroup.getClassLoaders().stream().anyMatch(classLoader -> classLoader == pluginLoader)) {
+             return false;
+         } else {
+             this.globalGroup.add(pluginLoader);

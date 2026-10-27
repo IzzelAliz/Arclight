@@ -1,0 +1,33 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftContainer.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftContainer.java
+index 2f41a92465b9da28e026297cc3528898bb1c8412..1cd59b0f4c7ff7d29fb576589a057a467f167b0d 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftContainer.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftContainer.java
+@@ -103,7 +103,6 @@ public class CraftContainer extends AbstractContainerMenu {
+         }, player, id);
+     }
+ 
+-    @Override
+     public InventoryView getBukkitView() {
+         return this.view;
+     }
+@@ -183,9 +182,18 @@ public class CraftContainer extends AbstractContainerMenu {
+             case BLAST_FURNACE:
+                 this.delegate = new BlastFurnaceMenu(windowId, bottom, top, new SimpleContainerData(4));
+                 break;
+-            case LECTERN:
+-                this.delegate = new LecternMenu(windowId, top, new SimpleContainerData(1), bottom);
++            case LECTERN: {
++                final Player owner = bottom.player;
++                io.izzel.arclight.common.mod.util.ArclightCaptures.captureContainerOwner(owner);
++                try {
++                    final LecternMenu lectern = new LecternMenu(windowId, top, new SimpleContainerData(1));
++                    ((io.izzel.arclight.common.bridge.core.world.inventory.LecternMenuBridge) lectern).bridge$setPlayerInventory(bottom);
++                    this.delegate = lectern;
++                } finally {
++                    io.izzel.arclight.common.mod.util.ArclightCaptures.popContainerOwner(owner);
++                }
+                 break;
++            }
+             case SMOKER:
+                 this.delegate = new SmokerMenu(windowId, bottom, top, new SimpleContainerData(4));
+                 break;

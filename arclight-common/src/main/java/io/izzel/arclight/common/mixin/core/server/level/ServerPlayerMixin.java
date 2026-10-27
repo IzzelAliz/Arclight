@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.server.level;
 
+import com.destroystokyo.paper.event.player.PlayerSetSpawnEvent;
 import com.mojang.datafixers.util.Either;
 import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
@@ -18,6 +19,7 @@ import io.izzel.arclight.common.mod.util.Blackhole;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
+import io.papermc.paper.adventure.PaperAdventure;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -43,7 +45,6 @@ import net.minecraft.world.damagesource.CombatTracker;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.PositionMoveRotation;
-import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Relative;
 import net.minecraft.world.entity.animal.equine.AbstractHorse;
@@ -81,7 +82,7 @@ import org.bukkit.craftbukkit.CraftWorldBorder;
 import org.bukkit.craftbukkit.block.CraftBlock;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
-import org.bukkit.craftbukkit.event.CraftPortalEvent;
+import org.bukkit.craftbukkit.event.PortalEventResult;
 import org.bukkit.craftbukkit.scoreboard.CraftScoreboardManager;
 import org.bukkit.craftbukkit.util.CraftChatMessage;
 import org.bukkit.craftbukkit.util.CraftLocation;
@@ -89,16 +90,15 @@ import org.bukkit.event.entity.EntityExhaustionEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerBedLeaveEvent;
-import org.bukkit.event.player.PlayerChangedMainHandEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerLocaleChangeEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerSpawnChangeEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
-import org.bukkit.inventory.MainHand;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -157,6 +157,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Shadow public static Optional<ServerPlayer.RespawnPosAngle> findRespawnAndUseSpawnBlock(ServerLevel serverLevel, ServerPlayer.RespawnConfig respawnConfig, boolean bl) { return Optional.empty(); }
     @Shadow @Final private ContainerSynchronizer containerSynchronizer;
     @Shadow public abstract void setRespawnPosition(@org.jetbrains.annotations.Nullable ServerPlayer.RespawnConfig arg, boolean bl);
+    @Shadow @Final private static Component SPAWN_SET_MESSAGE;
 
     @Shadow private long timeEntitySatOnShoulder;
     @Shadow public abstract CompoundTag getShoulderEntityLeft();
@@ -172,23 +173,53 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
     // FIXME: InitAuther97: Current management of TransferCookieConnection is brittle.
     public CraftPlayer.TransferCookieConnection transferCookieConnection;
+
     public String displayName;
+
+    public net.kyori.adventure.text.Component adventure$displayName;
+
+    public int listOrder;
+
     public Component listName;
+
     public org.bukkit.Location compassTarget;
+
     public int newExp = 0;
+
     public int newLevel = 0;
+
     public int newTotalExp = 0;
     private String arclight$deathMessage;
     private boolean arclight$keepInv = false;
+
     public boolean keepLevel = false;
+
     public double maxHealthCache;
+
     public boolean joining = true;
+
     public boolean sentListPacket = false;
+
+    public long loginTime;
+
+    @Override
+    public boolean bridge$hasSentListPacket() {
+        return this.sentListPacket;
+    }
+
+    @Override
+    public void bridge$setSentListPacket(boolean sent) {
+        this.sentListPacket = sent;
+    }
+
     public long timeOffset = 0;
+
     public boolean relativeTime = true;
-    public WeatherType weather = null;
+
+    public WeatherType weatherType = null;
     private float pluginRainPosition;
     private float pluginRainPositionPrevious;
+
     public String locale = "en_us";
     private boolean arclight$initialized = false;
 
@@ -214,6 +245,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Inject(method = "<init>", at = @At("RETURN"))
     public void arclight$init(CallbackInfo ci) {
         this.displayName = this.getGameProfile() != null ? getScoreboardName() : "~FakePlayer~";
+        this.adventure$displayName = net.kyori.adventure.text.Component.text(this.displayName);
         this.bukkitPickUpLoot = true;
         this.maxHealthCache = this.getMaxHealth();
         this.arclight$initialized = true;
@@ -309,6 +341,15 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         this.gameMode.setLevel((ServerLevel) world);
     }
 
+    @Inject(method = "tick()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/AbstractContainerMenu;broadcastChanges()V", shift = At.Shift.AFTER), require = 1, allow = 1)
+    private void arclight$broadcastNonContainerInventorySlots(CallbackInfo ci) {
+        // Only slots missing from the open menu: result/crafting, armor and offhand.
+        // The native listener still filters out result/crafting before the event.
+        if (this.containerMenu != this.inventoryMenu) {
+            arclight$broadcastNonContainerSlotChanges(this.inventoryMenu);
+        }
+    }
+
     @Inject(method = "tick", at = @At("HEAD"))
     private void arclight$joining(CallbackInfo ci) {
         if (this.joining) {
@@ -330,7 +371,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             this.oldLevel = this.experienceLevel;
         }
         if (this.oldLevel != this.experienceLevel) {
-            CraftEventFactory.callPlayerLevelChangeEvent((ServerPlayer) (Object) this, this.oldLevel, this.experienceLevel);
+            CraftEventFactory.callPlayerLevelChangeEvent(this.getBukkitEntity(), this.oldLevel, this.experienceLevel);
             this.oldLevel = this.experienceLevel;
         }
         if (this.getBukkitEntity().hasClientWorldBorder()) {
@@ -342,14 +383,22 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         return super.drop(itemstack, flag, flag1, callEvent);
     }
 
+    @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(method = "die", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/server/level/ServerPlayer;gameEvent(Lnet/minecraft/core/Holder;)V"))
+    private void arclight$delayDeathGameEvent(ServerPlayer player, net.minecraft.core.Holder<net.minecraft.world.level.gameevent.GameEvent> event,
+            com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original) {
+    }
+
     @Decorate(method = "die", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/level/gamerules/GameRules;get(Lnet/minecraft/world/level/gamerules/GameRule;)Ljava/lang/Object;"),
-        slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/level/GameRules;RULE_SHOWDEATHMESSAGES:Lnet/minecraft/world/level/GameRules$Key;")))
+        slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/level/gamerules/GameRules;SHOW_DEATH_MESSAGES:Lnet/minecraft/world/level/gamerules/GameRule;")))
     private Object arclight$firePlayerDeath(GameRules instance, GameRule<Boolean> key, DamageSource damagesource) throws Throwable {
         Object flagObject = DecorationOps.callsite().invoke(instance, key);
         boolean flag = (Boolean) flagObject;
         if (this.isRemoved()) {
             return DecorationOps.cancel().invoke();
         }
+        var death = (io.izzel.arclight.common.bridge.core.world.entity.DeathEventBridge) this;
+        death.bridge$resetDeathEvent();
         boolean spectator = this.isSpectator();
         boolean keepInventory = this.arclight$serverLevel().getGameRules().get(GameRules.KEEP_INVENTORY) || spectator;
         // FIXME: InitAuther97: copying an Inventory is so expensive and our only way to optimize it is to copy it selectively...
@@ -363,7 +412,14 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         // InitAuther97: PlayerDeathEvent logics handled in EntityEventHandler
         if (!spectator) {
             this.dropAllDeathLoot(this.arclight$serverLevel(), damagesource);
+        } else {
+            io.izzel.arclight.common.mod.server.event.EntityEventHandler.monitorLivingDrops(
+                (ServerPlayer) (Object) this, damagesource, new java.util.ArrayList<>(), false);
         }
+        if (death.bridge$deathCancelled()) {
+            return DecorationOps.cancel().invoke();
+        }
+        ((ServerPlayer) (Object) this).gameEvent(net.minecraft.world.level.gameevent.GameEvent.ENTITY_DIE);
         if (this.containerMenu != this.inventoryMenu) {
             this.closeContainer();
         }
@@ -436,7 +492,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             org.bukkit.entity.Player respawnPlayer = this.getBukkitEntity();
             Location location = CraftLocation.toBukkit(dimensionTransition.position(), dimensionTransition.newLevel().bridge$getWorld(), dimensionTransition.yRot(), dimensionTransition.xRot());
 
-            PlayerRespawnEvent respawnEvent = new PlayerRespawnEvent(respawnPlayer, location, isBedSpawn, isAnchorSpawn, arclight$respawnReason);
+            PlayerRespawnEvent respawnEvent = new PlayerRespawnEvent(respawnPlayer, location, isBedSpawn, isAnchorSpawn, dimensionTransition.missingRespawnBlock(), arclight$respawnReason);
             Bukkit.getPluginManager().callEvent(respawnEvent);
             if (((ServerGamePacketListenerImplBridge) this.connection).bridge$isDisconnected()) {
                 DecorationOps.cancel().invoke((TeleportTransition) null);
@@ -444,8 +500,9 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             }
             location = respawnEvent.getRespawnLocation();
             var cause = ((DimensionTransitionBridge) (Object) dimensionTransition).bridge$getTeleportCause();
-            dimensionTransition = new TeleportTransition(((CraftWorld) location.getWorld()).getHandle(), CraftLocation.toVec3D(location), dimensionTransition.deltaMovement(), location.getYaw(), location.getPitch(), dimensionTransition.missingRespawnBlock(), dimensionTransition.asPassenger(), dimensionTransition.relatives(), dimensionTransition.postTeleportTransition());
+            dimensionTransition = new TeleportTransition(((CraftWorld) location.getWorld()).getHandle(), CraftLocation.toVec3(location), dimensionTransition.deltaMovement(), location.getYaw(), location.getPitch(), dimensionTransition.missingRespawnBlock(), dimensionTransition.asPassenger(), dimensionTransition.relatives(), dimensionTransition.postTeleportTransition());
             ((DimensionTransitionBridge) (Object) dimensionTransition).bridge$setTeleportCause(cause);
+            this.bridge$setPostRespawnEvent(respawnEvent);
             arclight$respawnReason = null;
         }
         DecorationOps.callsite().invoke(dimensionTransition);
@@ -478,14 +535,14 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     }
 
     @Override
-    public CraftPortalEvent callPortalEvent(Entity entity, Location exit, PlayerTeleportEvent.TeleportCause cause, int searchRadius, int creationRadius) {
+    public PortalEventResult callPortalEvent(Entity entity, Location exit, PlayerTeleportEvent.TeleportCause cause, int searchRadius, int creationRadius) {
         Location enter = this.getBukkitEntity().getLocation();
         PlayerPortalEvent event = new PlayerPortalEvent(this.getBukkitEntity(), enter, exit, cause, 128, true, creationRadius);
         Bukkit.getServer().getPluginManager().callEvent(event);
         if (event.isCancelled() || event.getTo() == null || event.getTo().getWorld() == null) {
             return null;
         }
-        return new CraftPortalEvent(event);
+        return new PortalEventResult(event.getTo(), event.getSearchRadius(), event.getCreationRadius(), event.getCanCreatePortal());
     }
 
     @Decorate(method = "teleport(Lnet/minecraft/world/level/portal/TeleportTransition;)Lnet/minecraft/server/level/ServerPlayer;", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;teleport(Lnet/minecraft/world/entity/PositionMoveRotation;Ljava/util/Set;)V"))
@@ -500,12 +557,21 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         }
     }
 
-    @Decorate(method = "teleport(Lnet/minecraft/world/level/portal/TeleportTransition;)Lnet/minecraft/server/level/ServerPlayer;", inject = true, at = @At(value = "FIELD", target = "Lnet/minecraft/server/level/ServerPlayer;isChangingDimension:Z"))
+    @Decorate(method = "teleport(Lnet/minecraft/world/level/portal/TeleportTransition;)Lnet/minecraft/server/level/ServerPlayer;", inject = true,
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/portal/TeleportTransition;asPassenger()Z"), require = 1, allow = 1)
     private void arclight$fireTeleportEvent(TeleportTransition dimensionTransition, @Local(ordinal = 0) ServerLevel newLevel, @Local(ordinal = 1) ServerLevel oldLevel) throws Throwable {
         Location enter = this.getBukkitEntity().getLocation();
         PositionMoveRotation absolutePosition = PositionMoveRotation.calculateAbsolute(PositionMoveRotation.of((ServerPlayer) (Object) this), PositionMoveRotation.of(dimensionTransition), dimensionTransition.relatives());
         Location exit = (newLevel == null) ? null : CraftLocation.toBukkit(absolutePosition.position(), newLevel.bridge$getWorld(), absolutePosition.yRot(), absolutePosition.xRot());
-        PlayerTeleportEvent tpEvent = new PlayerTeleportEvent(this.getBukkitEntity(), enter, exit == null ? null : exit.clone(), ((DimensionTransitionBridge) (Object) dimensionTransition).bridge$getTeleportCause());
+        ServerPlayer player = (ServerPlayer) (Object) this;
+        PlayerTeleportEvent tpEvent;
+        if (player.portalProcess != null
+            && player.portalProcess.isSamePortal((net.minecraft.world.level.block.EndGatewayBlock) net.minecraft.world.level.block.Blocks.END_GATEWAY)
+            && this.level().getBlockEntity(player.portalProcess.getEntryPosition()) instanceof net.minecraft.world.level.block.entity.TheEndGatewayBlockEntity gateway) {
+            tpEvent = new com.destroystokyo.paper.event.player.PlayerTeleportEndGatewayEvent(this.getBukkitEntity(), enter, exit.clone(), new org.bukkit.craftbukkit.block.CraftEndGateway(this.level().bridge$getWorld(), gateway));
+        } else {
+            tpEvent = new PlayerTeleportEvent(this.getBukkitEntity(), enter, exit == null ? null : exit.clone(), ((DimensionTransitionBridge) (Object) dimensionTransition).bridge$getTeleportCause());
+        }
         Bukkit.getServer().getPluginManager().callEvent(tpEvent);
         if (tpEvent.isCancelled() || tpEvent.getTo() == null) {
             DecorationOps.cancel().invoke((ServerPlayer) null);
@@ -515,7 +581,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             exit = tpEvent.getTo();
             newLevel = ((CraftWorld) exit.getWorld()).getHandle();
             var cause = ((DimensionTransitionBridge) (Object) dimensionTransition).bridge$getTeleportCause();
-            dimensionTransition = new TeleportTransition(newLevel, CraftLocation.toVec3D(exit), Vec3.ZERO, exit.getYaw(), exit.getPitch(), dimensionTransition.missingRespawnBlock(), dimensionTransition.asPassenger(), Set.of(), dimensionTransition.postTeleportTransition());
+            dimensionTransition = new TeleportTransition(newLevel, CraftLocation.toVec3(exit), Vec3.ZERO, exit.getYaw(), exit.getPitch(), dimensionTransition.missingRespawnBlock(), dimensionTransition.asPassenger(), Set.of(), dimensionTransition.postTeleportTransition());
             ((DimensionTransitionBridge) (Object) dimensionTransition).bridge$setTeleportCause(cause);
         }
         ((ServerGamePacketListenerImplBridge) this.connection).bridge$pushNoTeleportEvent();
@@ -540,7 +606,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             if (this.bedBlocked(blockposition, enumdirection)) {
                 return Either.left(Player.BedSleepingProblem.OBSTRUCTED);
             }
-            this.setRespawnPosition(this.level().dimension(), blockposition, this.getYRot(), false, true, PlayerSpawnChangeEvent.Cause.BED);
+            this.bridge$setRespawnPosition(new ServerPlayer.RespawnConfig(LevelData.RespawnData.of(this.level().dimension(), blockposition, this.getYRot(), this.getXRot()), false), true, PlayerSetSpawnEvent.Cause.BED);
             if (this.arclight$serverLevel().isBrightOutside()) {
                 return Either.left(Player.BedSleepingProblem.OTHER_PROBLEM);
             }
@@ -633,6 +699,12 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         }
     }
 
+    @Override
+    public int bridge$nextContainerCounter() {
+        this.nextContainerCounter();
+        return this.containerCounter;
+    }
+
     @RenameInto("nextContainerCounter")
     public int bukkit$nextContainerCounter() {
         this.nextContainerCounter();
@@ -658,7 +730,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             boolean cancelled = false;
             try {
                 ArclightCaptures.captureContainerOwner((ServerPlayer) (Object) this);
-                container = CraftEventFactory.callInventoryOpenEvent((ServerPlayer) (Object) this, container, cancelled);
+                container = CraftEventFactory.callInventoryOpenEventWithTitle((ServerPlayer) (Object) this, container, cancelled).getSecond();
             } finally {
                 ArclightCaptures.popContainerOwner((ServerPlayer) (Object) this);
             }
@@ -704,12 +776,29 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     private void arclight$skipSwitchHorse(ServerPlayer instance) {
     }
 
+    @Unique
+    @Nullable
+    private InventoryCloseEvent.Reason arclight$containerCloseReason;
+
+    @Override
+    public void bridge$withContainerCloseReason(InventoryCloseEvent.Reason reason, Runnable nativeClose) {
+        InventoryCloseEvent.Reason previous = this.arclight$containerCloseReason;
+        this.arclight$containerCloseReason = reason;
+        try {
+            nativeClose.run();
+        } finally {
+            this.arclight$containerCloseReason = previous;
+        }
+    }
+
     @Inject(method = "doCloseContainer", at = @At("HEAD"))
     private void arclight$invClose(CallbackInfo ci) {
+        InventoryCloseEvent.Reason reason = this.arclight$containerCloseReason;
+        this.arclight$containerCloseReason = null;
         if (this.containerMenu != this.inventoryMenu) {
             try {
                 ArclightCaptures.captureContainerOwner((ServerPlayer) (Object) this);
-                CraftEventFactory.handleInventoryCloseEvent((ServerPlayer) (Object) this);
+                CraftEventFactory.handleInventoryCloseEvent((ServerPlayer) (Object) this, reason == null ? InventoryCloseEvent.Reason.UNKNOWN : reason);
             } finally {
                 ArclightCaptures.popContainerOwner((ServerPlayer) (Object) this);
             }
@@ -743,22 +832,14 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         this.lastSentExp = -1;
     }
 
-    @Inject(method = "updateOptions", at = @At("HEAD"))
-    private void arclight$settingChange(ClientInformation clientInformation, CallbackInfo ci) {
-        HumanoidArm mainArm = this.clientInformation().mainHand();
-        if (mainArm != clientInformation.mainHand()) {
-            PlayerChangedMainHandEvent event = new PlayerChangedMainHandEvent(getBukkitEntity(), mainArm == HumanoidArm.LEFT ? MainHand.LEFT : MainHand.RIGHT);
-            Bukkit.getPluginManager().callEvent(event);
-        }
-        if (!this.language.equals(clientInformation.language())) {
-            PlayerLocaleChangeEvent event = new PlayerLocaleChangeEvent(getBukkitEntity(), clientInformation.language());
-            Bukkit.getPluginManager().callEvent(event);
-        }
-    }
-
     @Inject(method = "setCamera", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;teleportTo(Lnet/minecraft/server/level/ServerLevel;DDDLjava/util/Set;FFZ)Z"))
     private void arclight$spectatorReason(Entity entityToSpectate, CallbackInfo ci) {
         this.bridge$pushChangeDimensionCause(PlayerTeleportEvent.TeleportCause.SPECTATE);
+    }
+
+    @Inject(method = "getTabListOrder", cancellable = true, at = @At("HEAD"))
+    private void arclight$listOrder(CallbackInfoReturnable<Integer> cir) {
+        cir.setReturnValue(this.listOrder);
     }
 
     @Inject(method = "getTabListDisplayName", cancellable = true, at = @At("HEAD"))
@@ -813,15 +894,15 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     }
 
     public WeatherType getPlayerWeather() {
-        return this.weather;
+        return this.weatherType;
     }
 
     public void setPlayerWeather(WeatherType type, boolean plugin) {
-        if (!plugin && this.weather != null) {
+        if (!plugin && this.weatherType != null) {
             return;
         }
         if (plugin) {
-            this.weather = type;
+            this.weatherType = type;
         }
         if (type == WeatherType.DOWNFALL) {
             this.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.STOP_RAINING, 0.0f));
@@ -831,7 +912,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     }
 
     public void updateWeather(float oldRain, float newRain, float oldThunder, float newThunder) {
-        if (this.weather == null) {
+        if (this.weatherType == null) {
             if (oldRain != newRain) {
                 this.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.RAIN_LEVEL_CHANGE, newRain));
             }
@@ -839,7 +920,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             this.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.RAIN_LEVEL_CHANGE, this.pluginRainPosition));
         }
         if (oldThunder != newThunder) {
-            if (this.weather == WeatherType.DOWNFALL || this.weather == null) {
+            if (this.weatherType == WeatherType.DOWNFALL || this.weatherType == null) {
                 this.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.THUNDER_LEVEL_CHANGE, newThunder));
             } else {
                 this.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.THUNDER_LEVEL_CHANGE, 0.0f));
@@ -848,11 +929,11 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     }
 
     public void tickWeather() {
-        if (this.weather == null) {
+        if (this.weatherType == null) {
             return;
         }
         this.pluginRainPositionPrevious = this.pluginRainPosition;
-        if (this.weather == WeatherType.DOWNFALL) {
+        if (this.weatherType == WeatherType.DOWNFALL) {
             this.pluginRainPosition += (float) 0.01;
         } else {
             this.pluginRainPosition -= (float) 0.01;
@@ -861,7 +942,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     }
 
     public void resetPlayerWeather() {
-        this.weather = null;
+        this.weatherType = null;
         this.setPlayerWeather(((ServerLevel) this.level()).getWeatherData().isRaining() ? WeatherType.DOWNFALL : WeatherType.CLEAR, false);
     }
 
@@ -880,22 +961,48 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         return super.isImmobile() || !this.getBukkitEntity().isOnline();
     }
 
-    private transient PlayerSpawnChangeEvent.Cause arclight$spawnChangeCause;
+    private transient PlayerSetSpawnEvent.Cause arclight$spawnChangeCause;
 
     @Override
     public void bridge$pushChangeSpawnCause(PlayerSpawnChangeEvent.Cause cause) {
+        this.arclight$spawnChangeCause = cause == null ? PlayerSetSpawnEvent.Cause.UNKNOWN : switch (cause) {
+            case BED -> PlayerSetSpawnEvent.Cause.BED;
+            case RESPAWN_ANCHOR -> PlayerSetSpawnEvent.Cause.RESPAWN_ANCHOR;
+            case COMMAND -> PlayerSetSpawnEvent.Cause.COMMAND;
+            case PLUGIN -> PlayerSetSpawnEvent.Cause.PLUGIN;
+            case RESET -> PlayerSetSpawnEvent.Cause.PLAYER_RESPAWN;
+            default -> PlayerSetSpawnEvent.Cause.UNKNOWN;
+        };
+    }
+
+    @Override
+    public void bridge$setRespawnPosition(@Nullable ServerPlayer.RespawnConfig config, boolean showMessage, PlayerSetSpawnEvent.Cause cause) {
+        PlayerSetSpawnEvent.Cause previous = this.arclight$spawnChangeCause;
         this.arclight$spawnChangeCause = cause;
+        try {
+            this.setRespawnPosition(config, showMessage);
+        } finally {
+            this.arclight$spawnChangeCause = previous;
+        }
     }
 
     public void setRespawnPosition(ResourceKey<Level> p_9159_, @Nullable BlockPos p_9160_, float p_9161_, boolean p_9162_, boolean p_9163_, PlayerSpawnChangeEvent.Cause cause) {
-        arclight$spawnChangeCause = cause;
-        this.setRespawnPosition(p_9160_ == null ? null : new ServerPlayer.RespawnConfig(LevelData.RespawnData.of(p_9159_, p_9160_, p_9161_, 0.0F), p_9162_), p_9163_);
+        PlayerSetSpawnEvent.Cause previous = this.arclight$spawnChangeCause;
+        this.bridge$pushChangeSpawnCause(cause);
+        try {
+            this.setRespawnPosition(p_9160_ == null ? null : new ServerPlayer.RespawnConfig(LevelData.RespawnData.of(p_9159_, p_9160_, p_9161_, 0.0F), p_9162_), p_9163_);
+        } finally {
+            this.arclight$spawnChangeCause = previous;
+        }
     }
 
     @Decorate(method = "setRespawnPosition(Lnet/minecraft/server/level/ServerPlayer$RespawnConfig;Z)V", inject = true, at = @At("HEAD"))
-    private void arclight$spawnChangeEvent(@Nullable ServerPlayer.RespawnConfig config, boolean sendMessage) throws Throwable {
-        var cause = arclight$spawnChangeCause == null ? PlayerSpawnChangeEvent.Cause.UNKNOWN : arclight$spawnChangeCause;
-        arclight$spawnChangeCause = null;
+    private void arclight$spawnChangeEvent(@Nullable ServerPlayer.RespawnConfig config, boolean sendMessage,
+            @Local(allocate = "arclightSpawnEvent") PlayerSetSpawnEvent event) throws Throwable {
+        var cause = this.arclight$spawnChangeCause == null ? PlayerSetSpawnEvent.Cause.UNKNOWN : this.arclight$spawnChangeCause;
+        this.arclight$spawnChangeCause = null;
+        // Paper compares the original proposal before either event edits its location.
+        boolean notifyPlayer = sendMessage && config != null && !config.isSamePosition(this.getRespawnConfig());
         ResourceKey<Level> resourceKey = config == null ? Level.OVERWORLD : config.respawnData().dimension();
         BlockPos blockPos = config == null ? null : config.respawnData().pos();
         float yaw = config == null ? 0.0F : config.respawnData().yaw();
@@ -904,13 +1011,25 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         ServerLevel newWorld = this.server.getLevel(resourceKey);
         Location newSpawn = (blockPos != null && newWorld != null) ? CraftLocation.toBukkit(blockPos, newWorld.bridge$getWorld(), yaw, pitch) : null;
 
-        PlayerSpawnChangeEvent event = new PlayerSpawnChangeEvent(this.getBukkitEntity(), newSpawn, forced, cause);
+        PlayerSpawnChangeEvent.Cause legacyCause = switch (cause) {
+            case BED -> PlayerSpawnChangeEvent.Cause.BED;
+            case RESPAWN_ANCHOR -> PlayerSpawnChangeEvent.Cause.RESPAWN_ANCHOR;
+            case COMMAND -> PlayerSpawnChangeEvent.Cause.COMMAND;
+            case PLUGIN -> PlayerSpawnChangeEvent.Cause.PLUGIN;
+            case PLAYER_RESPAWN -> PlayerSpawnChangeEvent.Cause.RESET;
+            default -> PlayerSpawnChangeEvent.Cause.UNKNOWN;
+        };
+        PlayerSpawnChangeEvent legacyEvent = new PlayerSpawnChangeEvent(this.getBukkitEntity(), newSpawn, forced, legacyCause);
+        Bukkit.getServer().getPluginManager().callEvent(legacyEvent);
+        event = new PlayerSetSpawnEvent(this.getBukkitEntity(), cause, legacyEvent.getNewSpawn(), legacyEvent.isForced(),
+            notifyPlayer, notifyPlayer ? PaperAdventure.asAdventure(SPAWN_SET_MESSAGE) : null);
+        event.setCancelled(legacyEvent.isCancelled());
         Bukkit.getServer().getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             DecorationOps.cancel().invoke();
             return;
         }
-        newSpawn = event.getNewSpawn();
+        newSpawn = event.getLocation();
         forced = event.isForced();
 
         if (newSpawn != null) {
@@ -924,7 +1043,22 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             yaw = 0.0F;
             pitch = 0.0F;
         }
-        DecorationOps.blackhole().invoke(blockPos == null ? null : new ServerPlayer.RespawnConfig(LevelData.RespawnData.of(resourceKey, blockPos, yaw, pitch), forced), sendMessage);
+        config = blockPos == null ? null : new ServerPlayer.RespawnConfig(LevelData.RespawnData.of(resourceKey, blockPos, yaw, pitch), forced);
+        // Keep the native setter (including mod hooks), but replace its fixed notification.
+        sendMessage = false;
+        DecorationOps.blackhole().invoke(config, sendMessage, event);
+    }
+
+    @Decorate(method = "setRespawnPosition(Lnet/minecraft/server/level/ServerPlayer$RespawnConfig;Z)V",
+        at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD,
+            target = "Lnet/minecraft/server/level/ServerPlayer;respawnConfig:Lnet/minecraft/server/level/ServerPlayer$RespawnConfig;"))
+    private void arclight$spawnNotification(ServerPlayer player, @Nullable ServerPlayer.RespawnConfig config,
+            @Local(allocate = "arclightSpawnEvent") PlayerSetSpawnEvent event) throws Throwable {
+        // A loader veto returns before this consumer; a cleared spawn never sends a notification.
+        if (config != null && event.willNotifyPlayer() && event.getNotification() != null) {
+            player.sendSystemMessage(PaperAdventure.asVanilla(event.getNotification()));
+        }
+        DecorationOps.callsite().invoke(player, config);
     }
 
     public Scoreboard getScoreboard() {
@@ -951,6 +1085,11 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     /// Restore data on a new player from the old player.
     private void arclight$restoreFromDeath(@Nonnull ServerPlayer from) {
         final var another = (ServerPlayerMixin)(Object) from;
+        this.loginTime = another.loginTime;
+        this.displayName = another.displayName;
+        this.adventure$displayName = another.adventure$displayName;
+        this.listName = another.listName;
+        this.listOrder = another.listOrder;
         if (another.keepLevel) {
             this.experienceProgress = from.experienceProgress;
             this.totalExperience = from.totalExperience;
@@ -997,6 +1136,11 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Override
     public boolean bridge$isMovementBlocked() {
         return isImmobile();
+    }
+
+    @Override
+    public Location bridge$getCompassTarget() {
+        return this.compassTarget;
     }
 
     @Override
@@ -1047,6 +1191,10 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     @Inject(method = "restoreFrom", at = @At("HEAD"))
     private void arclight$restoreFrom(ServerPlayer serverPlayer, boolean bl, CallbackInfo ci) {
         arclight$restoreFromDeath(serverPlayer);
+        final var player = (ServerPlayer) (Object) this;
+        this.connection.player = player;
+        ((ServerGamePacketListenerImplBridge) this.connection).bridge$setPlayer(player);
+        this.sentListPacket = ((ServerPlayerBridge) serverPlayer).bridge$hasSentListPacket();
     }
 
     /**
@@ -1063,5 +1211,47 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
                 this.setShoulderEntityRight(new CompoundTag());
             }
         }
+    }
+    @Unique private boolean arclight$dropSucceeded;
+
+    @Override
+    public boolean bridge$dropSelectedItem(boolean dropAll) {
+        boolean previous = this.arclight$dropSucceeded;
+        this.arclight$dropSucceeded = false;
+        try {
+            ((ServerPlayer) (Object) this).drop(dropAll);
+            return this.arclight$dropSucceeded;
+        } finally {
+            this.arclight$dropSucceeded = previous;
+        }
+    }
+
+    @Override
+    public void bridge$recordSelectedDrop(net.minecraft.world.entity.item.ItemEntity dropped) {
+        this.arclight$dropSucceeded = dropped != null;
+    }
+
+    public org.bukkit.event.player.PlayerGameModeChangeEvent setGameMode(net.minecraft.world.level.GameType mode, org.bukkit.event.player.PlayerGameModeChangeEvent.Cause cause, net.kyori.adventure.text.Component cancelMessage) {
+        return this.bridge$setGameMode(mode, cause, cancelMessage);
+    }
+
+    public void setRespawnPosition(net.minecraft.server.level.ServerPlayer.RespawnConfig config, boolean showMessage, com.destroystokyo.paper.event.player.PlayerSetSpawnEvent.Cause cause) {
+        this.bridge$setRespawnPosition(config, showMessage, cause);
+    }
+
+
+    private static void arclight$broadcastNonContainerSlotChanges(net.minecraft.world.inventory.InventoryMenu menu) {
+        for (int rawSlot = net.minecraft.world.inventory.InventoryMenu.RESULT_SLOT; rawSlot < net.minecraft.world.inventory.InventoryMenu.ARMOR_SLOT_END; rawSlot++) {
+            arclight$broadcastSlotChange(menu, rawSlot);
+        }
+        arclight$broadcastSlotChange(menu, net.minecraft.world.inventory.InventoryMenu.SHIELD_SLOT);
+    }
+
+    private static void arclight$broadcastSlotChange(net.minecraft.world.inventory.InventoryMenu menu, int rawSlot) {
+        net.minecraft.world.item.ItemStack stack = menu.slots.get(rawSlot).getItem();
+        java.util.function.Supplier<net.minecraft.world.item.ItemStack> copy = com.google.common.base.Suppliers.memoize(stack::copy);
+        io.izzel.arclight.common.mixin.core.world.inventory.AbstractContainerMenuSlotBroadcastAccessor accessor = (io.izzel.arclight.common.mixin.core.world.inventory.AbstractContainerMenuSlotBroadcastAccessor) menu;
+        accessor.arclight$triggerSlotListeners(rawSlot, stack, copy);
+        accessor.arclight$synchronizeSlotToRemote(rawSlot, stack, copy);
     }
 }

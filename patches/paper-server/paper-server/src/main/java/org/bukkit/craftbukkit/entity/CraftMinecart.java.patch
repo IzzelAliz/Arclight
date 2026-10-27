@@ -1,0 +1,18 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftMinecart.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftMinecart.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftMinecart.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftMinecart.java
+@@ -118,12 +118,12 @@
+     @org.jetbrains.annotations.NotNull
+     @Override
+     public net.kyori.adventure.util.TriState getFrictionState() {
+-        return this.getHandle().frictionState;
++        throw new UnsupportedOperationException("Independent minecart friction control is not supported by Arclight");
+     }
+ 
+     @Override
+     public void setFrictionState(@org.jetbrains.annotations.NotNull net.kyori.adventure.util.TriState state) {
+         Preconditions.checkArgument(state != null, "state may not be null");
+-        this.getHandle().frictionState = state;
++        throw new UnsupportedOperationException("Independent minecart friction control is not supported by Arclight");
+     }
+ }

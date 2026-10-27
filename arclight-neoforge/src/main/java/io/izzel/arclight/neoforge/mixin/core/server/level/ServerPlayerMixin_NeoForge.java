@@ -30,12 +30,18 @@ public abstract class ServerPlayerMixin_NeoForge extends io.izzel.arclight.neofo
     }
 
     @Decorate(method = "startSleepInBed", at = @At(value = "INVOKE", target = "Lnet/neoforged/neoforge/event/EventHooks;canPlayerStartSleeping(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/core/BlockPos;Lcom/mojang/datafixers/util/Either;)Lcom/mojang/datafixers/util/Either;"))
-    private Either<Player.BedSleepingProblem, Unit> arclight$bedEnterBeforeNeoForge(ServerPlayer player, BlockPos pos, Either<Player.BedSleepingProblem, Unit> vanillaResult) throws Throwable {
-        Either<Player.BedSleepingProblem, Unit> bukkitResult = this.bridge$fireBedEvent(vanillaResult, pos);
-        Either<Player.BedSleepingProblem, Unit> result = (Either<Player.BedSleepingProblem, Unit>) DecorationOps.callsite().invoke(player, pos, bukkitResult);
+    private Either<Player.BedSleepingProblem, Unit> arclight$bedEnterAfterNeoForge(ServerPlayer player, BlockPos pos, Either<Player.BedSleepingProblem, Unit> vanillaResult) throws Throwable {
+        Either<Player.BedSleepingProblem, Unit> neoForgeResult = (Either<Player.BedSleepingProblem, Unit>) DecorationOps.callsite().invoke(player, pos, vanillaResult);
+        Either<Player.BedSleepingProblem, Unit> result = this.bridge$fireBedEvent(neoForgeResult, pos);
         if (result.right().isPresent()) {
             this.bridge$markBedEnterEventFired();
         }
         return result;
+    }
+    @io.izzel.arclight.mixin.Decorate(method = "drop(Z)V", at = @At(value = "INVOKE", target = "Lnet/neoforged/neoforge/common/CommonHooks;onPlayerTossEvent(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;ZZ)Lnet/minecraft/world/entity/item/ItemEntity;"))
+    private net.minecraft.world.entity.item.ItemEntity arclight$recordSelectedDrop(Player player, net.minecraft.world.item.ItemStack stack, boolean randomly, boolean thrownFromHand) throws Throwable {
+        var dropped = (net.minecraft.world.entity.item.ItemEntity) io.izzel.arclight.mixin.DecorationOps.callsite().invoke(player, stack, randomly, thrownFromHand);
+        ((ServerPlayerBridge) player).bridge$recordSelectedDrop(dropped);
+        return dropped;
     }
 }

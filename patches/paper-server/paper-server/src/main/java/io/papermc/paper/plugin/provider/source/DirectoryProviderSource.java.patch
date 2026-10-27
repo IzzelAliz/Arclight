@@ -1,0 +1,20 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/provider/source/DirectoryProviderSource.java b/paper-server/src/main/java/io/papermc/paper/plugin/provider/source/DirectoryProviderSource.java
+index b6dcbd88ea31ea5f87e036afadfb748e5f430fec..12d007de0498f4f7305589fc7be882f2ac6496ed 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/provider/source/DirectoryProviderSource.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/provider/source/DirectoryProviderSource.java
+@@ -1,6 +1,5 @@
+ package io.papermc.paper.plugin.provider.source;
+ 
+-import com.mojang.logging.LogUtils;
+ import io.papermc.paper.plugin.entrypoint.EntrypointHandler;
+ import java.io.IOException;
+ import java.nio.file.FileVisitOption;
+@@ -19,7 +18,7 @@ public class DirectoryProviderSource implements ProviderSource<Path, List<Path>>
+     public static final DirectoryProviderSource INSTANCE = new DirectoryProviderSource(true);
+     public static final DirectoryProviderSource INSTANCE_NO_CREATE = new DirectoryProviderSource(false);
+     private static final FileProviderSource FILE_PROVIDER_SOURCE = new FileProviderSource("Directory '%s'"::formatted);
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(DirectoryProviderSource.class.getSimpleName());
+ 
+     private final boolean createDirectory;
+ 

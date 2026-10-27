@@ -1,0 +1,20 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftWorldBorder.java b/paper-server/src/main/java/org/bukkit/craftbukkit/CraftWorldBorder.java
+index 70d4be7ce9ace8f11d6f374d0686f66c943e9f16..72a5693dbc0abc408d18d93c9b74380ce81f3e4b 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftWorldBorder.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/CraftWorldBorder.java
+@@ -28,7 +28,14 @@ public class CraftWorldBorder implements WorldBorder {
+ 
+     @Override
+     public void reset() {
+-        this.getHandle().applySettings(net.minecraft.world.level.border.WorldBorder.Settings.DEFAULT);
++        var border = this.getHandle();
++        var defaults = net.minecraft.world.level.border.WorldBorder.Settings.DEFAULT;
++        border.setCenter(defaults.centerX(), defaults.centerZ());
++        border.setDamagePerBlock(defaults.damagePerBlock());
++        border.setSafeZone(defaults.safeZone());
++        border.setWarningBlocks(defaults.warningBlocks());
++        border.setWarningTime(defaults.warningTime());
++        border.setSize(defaults.size());
+     }
+ 
+     @Override

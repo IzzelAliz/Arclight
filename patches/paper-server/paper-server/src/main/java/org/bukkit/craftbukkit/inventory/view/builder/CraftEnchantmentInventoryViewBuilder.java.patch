@@ -1,0 +1,21 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftEnchantmentInventoryViewBuilder.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftEnchantmentInventoryViewBuilder.java
+index 6f502941596a0f909d28d85356373fea6adb7539..2552cd3fb349ca8730e87b0194ac5acff3c23bb6 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftEnchantmentInventoryViewBuilder.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftEnchantmentInventoryViewBuilder.java
+@@ -25,7 +25,7 @@ public class CraftEnchantmentInventoryViewBuilder extends CraftAbstractLocationI
+         if (this.position == null) {
+             this.position = player.blockPosition();
+             super.defaultTitle = new EnchantingTableBlockEntity(this.position, Blocks.ENCHANTING_TABLE.defaultBlockState()).getDisplayName();
+-            return new EnchantmentMenu(player.nextContainerCounter(), player.getInventory(), ContainerLevelAccess.create(this.world, this.position));
++            return new EnchantmentMenu(((io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge) player).bridge$nextContainerCounter(), player.getInventory(), ContainerLevelAccess.create(this.world, this.position));
+         }
+ 
+         final BlockEntity entity = this.world.getBlockEntity(position);
+@@ -35,6 +35,6 @@ public class CraftEnchantmentInventoryViewBuilder extends CraftAbstractLocationI
+             super.defaultTitle = new EnchantingTableBlockEntity(this.position, Blocks.ENCHANTING_TABLE.defaultBlockState()).getDisplayName();
+         }
+ 
+-        return new EnchantmentMenu(player.nextContainerCounter(), player.getInventory(), ContainerLevelAccess.create(this.world, this.position));
++        return new EnchantmentMenu(((io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge) player).bridge$nextContainerCounter(), player.getInventory(), ContainerLevelAccess.create(this.world, this.position));
+     }
+ }

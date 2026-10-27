@@ -62,7 +62,7 @@ public abstract class CommonHooksMixin {
     }
 
 
-    private static final ThreadLocal<Deque<BlockDropsScope>> arclight$blockDropsScopes = ThreadLocal.withInitial(ArrayDeque::new);
+    private static Deque<BlockDropsScope> arclight$blockDropsScopes = new ArrayDeque<>();
 
     @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(
         method = "onPlaceItemIntoWorld(Lnet/minecraft/world/item/context/UseOnContext;)Lnet/minecraft/world/InteractionResult;",
@@ -71,7 +71,7 @@ public abstract class CommonHooksMixin {
         require = 1, expect = 1, allow = 1)
     private static void arclight$deferBonemealStat(net.minecraft.world.entity.player.Player player,
             net.minecraft.stats.Stat<?> stat, Operation<Void> original) {
-        io.izzel.arclight.common.mod.util.BonemealTreeConsumer.award(
+        io.izzel.arclight.common.mod.util.TreeCapture.award(
             player, () -> original.call(player, stat));
     }
 
@@ -93,7 +93,7 @@ public abstract class CommonHooksMixin {
 
     @WrapMethod(method = "handleBlockDrops", remap = false)
     private static void arclight$handleBlockDrops(ServerLevel level, BlockPos pos, BlockState state, BlockEntity blockEntity, List<ItemEntity> drops, Entity breaker, ItemStack tool, Operation<Void> original) {
-        Deque<BlockDropsScope> scopes = arclight$blockDropsScopes.get();
+        Deque<BlockDropsScope> scopes = arclight$blockDropsScopes;
         BlockDropsScope scope = new BlockDropsScope(level, arclight$getBlockBreakContext(level, pos, breaker));
         scopes.push(scope);
         try {
@@ -105,7 +105,7 @@ public abstract class CommonHooksMixin {
                 scopes.removeFirstOccurrence(scope);
             }
             if (scopes.isEmpty()) {
-                arclight$blockDropsScopes.remove();
+                arclight$blockDropsScopes = new ArrayDeque<>();
             }
         }
     }
@@ -115,6 +115,10 @@ public abstract class CommonHooksMixin {
         BlockDropsScope scope = arclight$currentBlockDropsScope();
         if (scope != null && scope.context() != null && event instanceof BlockDropsEvent drops) {
             drops.setDroppedExperience(scope.context().getEvent().getExpToDrop());
+        }
+        if (event instanceof BlockDropsEvent drops && drops.getBreaker() == null
+            && ArclightCaptures.shouldSuppressVanillaBlockBreakExperience(drops.getLevel(), drops.getPos())) {
+            drops.setDroppedExperience(0);
         }
         Event result = (Event) DecorationOps.callsite().invoke(bus, event);
         if (scope != null && scope.context() != null && event instanceof BlockDropsEvent drops) {
@@ -148,7 +152,7 @@ public abstract class CommonHooksMixin {
     }
 
     private static BlockDropsScope arclight$currentBlockDropsScope() {
-        Deque<BlockDropsScope> scopes = arclight$blockDropsScopes.get();
+        Deque<BlockDropsScope> scopes = arclight$blockDropsScopes;
         return scopes.isEmpty() ? null : scopes.peek();
     }
 

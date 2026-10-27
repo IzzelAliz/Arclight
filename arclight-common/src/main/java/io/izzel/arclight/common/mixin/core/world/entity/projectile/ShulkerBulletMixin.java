@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.projectile.ShulkerBulletBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.EntityMixin;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -25,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import javax.annotation.Nullable;
 
 @Mixin(ShulkerBullet.class)
-public abstract class ShulkerBulletMixin extends EntityMixin {
+public abstract class ShulkerBulletMixin extends EntityMixin implements ShulkerBulletBridge {
 
     // @formatter:off
     @Shadow private EntityReference<Entity> finalTarget;
@@ -65,10 +66,12 @@ public abstract class ShulkerBulletMixin extends EntityMixin {
         }
     }
 
+    @Override
     public Entity getTarget() {
         return this.finalTarget == null ? null : EntityReference.get(this.finalTarget, this.level(), Entity.class);
     }
 
+    @Override
     public void setTarget(final Entity e) {
         this.finalTarget = EntityReference.of(e);
         this.currentMoveDirection = Direction.UP;

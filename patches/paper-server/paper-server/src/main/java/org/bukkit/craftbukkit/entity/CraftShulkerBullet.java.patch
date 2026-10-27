@@ -1,0 +1,14 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftShulkerBullet.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftShulkerBullet.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftShulkerBullet.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftShulkerBullet.java
+@@ -17,7 +17,9 @@
+ 
+     @Override
+     public org.bukkit.entity.Entity getTarget() {
+-        return this.getHandle().getTarget() != null ? this.getHandle().getTarget().getBukkitEntity() : null;
++        io.izzel.arclight.common.bridge.core.world.entity.projectile.ShulkerBulletBridge bridge = this.getHandle();
++        var target = bridge.getTarget();
++        return target == null ? null : target.getBukkitEntity();
+     }
+ 
+     @Override

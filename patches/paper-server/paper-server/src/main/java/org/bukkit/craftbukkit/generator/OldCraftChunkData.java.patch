@@ -1,0 +1,19 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/generator/OldCraftChunkData.java b/paper-server/src/main/java/org/bukkit/craftbukkit/generator/OldCraftChunkData.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/generator/OldCraftChunkData.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/generator/OldCraftChunkData.java
+@@ -1,6 +1,5 @@
+ package org.bukkit.craftbukkit.generator;
+ 
+-import io.papermc.paper.FeatureHooks;
+ import java.util.HashSet;
+ import java.util.Set;
+ import net.minecraft.core.BlockPos;
+@@ -184,7 +183,7 @@
+         int offset = (y - this.minHeight) >> 4;
+         LevelChunkSection section = this.sections[offset];
+         if (create && section == null) {
+-            this.sections[offset] = section = FeatureHooks.createSection(this.palettedContainerFactory, this.world instanceof org.bukkit.craftbukkit.CraftWorld ? ((org.bukkit.craftbukkit.CraftWorld) this.world).getHandle() : null, null, offset + (this.minHeight >> 4)); // Paper - Anti-Xray - Add parameters
++            this.sections[offset] = section = new LevelChunkSection(this.palettedContainerFactory);
+         }
+         return section;
+     }

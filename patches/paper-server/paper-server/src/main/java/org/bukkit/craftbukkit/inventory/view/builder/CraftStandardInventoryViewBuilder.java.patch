@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftStandardInventoryViewBuilder.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftStandardInventoryViewBuilder.java
+index 90ee6a02b25490426d85b8775e2b8d56f5fbdf50..0adfe085442c6e47a8d0e3881eaeac8765c2b1d6 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftStandardInventoryViewBuilder.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/builder/CraftStandardInventoryViewBuilder.java
+@@ -16,7 +16,7 @@ public class CraftStandardInventoryViewBuilder<V extends InventoryView> extends
+ 
+     @Override
+     protected AbstractContainerMenu buildContainer(final ServerPlayer player) {
+-        return super.handle.create(player.nextContainerCounter(), player.getInventory());
++        return super.handle.create(((io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge) player).bridge$nextContainerCounter(), player.getInventory());
+     }
+ 
+     @Override

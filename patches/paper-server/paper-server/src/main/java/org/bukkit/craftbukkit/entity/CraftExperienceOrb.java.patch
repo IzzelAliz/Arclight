@@ -1,0 +1,24 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftExperienceOrb.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftExperienceOrb.java
+index 8cd7ba2f4b7ceaebd2ef698b5de80ca4bf1f1569..26088231f4e1da8af50690b7070f628102197a69 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftExperienceOrb.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftExperienceOrb.java
+@@ -37,16 +37,16 @@ public class CraftExperienceOrb extends CraftEntity implements ExperienceOrb {
+ 
+     @Override
+     public UUID getTriggerEntityId() {
+-        return this.getHandle().triggerEntityId;
++        throw new UnsupportedOperationException("Experience orb source tracking is not supported by Arclight");
+     }
+ 
+     @Override
+     public UUID getSourceEntityId() {
+-        return this.getHandle().sourceEntityId;
++        throw new UnsupportedOperationException("Experience orb source tracking is not supported by Arclight");
+     }
+ 
+     @Override
+     public SpawnReason getSpawnReason() {
+-        return this.getHandle().spawnReason;
++        throw new UnsupportedOperationException("Experience orb source tracking is not supported by Arclight");
+     }
+ }

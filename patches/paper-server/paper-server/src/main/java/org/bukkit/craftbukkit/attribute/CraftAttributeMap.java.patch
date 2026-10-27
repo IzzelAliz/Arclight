@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/attribute/CraftAttributeMap.java b/paper-server/src/main/java/org/bukkit/craftbukkit/attribute/CraftAttributeMap.java
+index 95bc2a68e5187ab3e60a4350696dfdefacba41f2..e2dd9c425c307aec28f767365d69a51725d9815c 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/attribute/CraftAttributeMap.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/attribute/CraftAttributeMap.java
+@@ -55,6 +55,7 @@ public class CraftAttributeMap implements Attributable {
+     @Override
+     public void registerAttribute(Attribute attribute) {
+         Preconditions.checkArgument(attribute != null, "attribute");
+-        this.handle.registerAttribute(CraftAttribute.bukkitToMinecraftHolder(attribute));
++        io.izzel.arclight.common.bridge.core.world.entity.ai.attributes.AttributeMapBridge bridge = this.handle;
++        bridge.bridge$registerAttribute(CraftAttribute.bukkitToMinecraftHolder(attribute));
+     }
+ }

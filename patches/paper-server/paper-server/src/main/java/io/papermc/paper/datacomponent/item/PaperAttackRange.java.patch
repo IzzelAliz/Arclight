@@ -1,0 +1,23 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/datacomponent/item/PaperAttackRange.java b/paper-server/src/main/java/io/papermc/paper/datacomponent/item/PaperAttackRange.java
+index 0b3d6f8b1f16646452e3bb7a69830d1e51c41f37..2c9828ac689e9f1daa618db7faec0bdc9aeb4c78 100644
+--- a/paper-server/src/main/java/io/papermc/paper/datacomponent/item/PaperAttackRange.java
++++ b/paper-server/src/main/java/io/papermc/paper/datacomponent/item/PaperAttackRange.java
+@@ -45,12 +45,12 @@ public record PaperAttackRange(
+ 
+     static final class BuilderImpl implements AttackRange.Builder {
+ 
+-        private float minReach = net.minecraft.world.item.component.AttackRange.CODEC_DEFAULT.minReach();
+-        private float maxReach = net.minecraft.world.item.component.AttackRange.CODEC_DEFAULT.maxReach();
+-        private float minCreativeReach = net.minecraft.world.item.component.AttackRange.CODEC_DEFAULT.minCreativeReach();
+-        private float maxCreativeReach = net.minecraft.world.item.component.AttackRange.CODEC_DEFAULT.maxCreativeReach();
+-        private float hitboxMargin = net.minecraft.world.item.component.AttackRange.CODEC_DEFAULT.hitboxMargin();
+-        private float mobFactor = net.minecraft.world.item.component.AttackRange.CODEC_DEFAULT.mobFactor();
++        private float minReach = 0.0F;
++        private float maxReach = 3.0F;
++        private float minCreativeReach = 0.0F;
++        private float maxCreativeReach = 5.0F;
++        private float hitboxMargin = 0.3F;
++        private float mobFactor = 1.0F;
+ 
+         @Override
+         public AttackRange.Builder minReach(final float minReach) {

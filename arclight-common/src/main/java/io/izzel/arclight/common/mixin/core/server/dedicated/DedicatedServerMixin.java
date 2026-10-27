@@ -18,6 +18,8 @@ import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.PrimaryLevelData;
 import net.minecraft.world.level.storage.WorldData;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
+import org.bukkit.conversations.Conversable;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.event.server.RemoteServerCommandEvent;
 import org.bukkit.event.server.ServerCommandEvent;
@@ -26,6 +28,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -33,6 +36,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 @Mixin(DedicatedServer.class)
 public abstract class DedicatedServerMixin extends MinecraftServerMixin implements DedicatedServerBridge {
@@ -62,19 +66,20 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin implemen
      */
     @Overwrite
     public String runCommand(String command) {
-        return this.bridge$runRconCommand(command, null);
+        RconConsoleSource source = new RconConsoleSource((MinecraftServer) (Object) this);
+        ((io.izzel.arclight.common.bridge.core.server.rcon.RconConsoleSourceBridge) source).bridge$setSocketAddress(null);
+        return this.bridge$runRconCommand(source, command);
     }
 
     @Override
-    public String bridge$runRconCommand(String command, java.net.SocketAddress address) {
-        RconConsoleSource source = new RconConsoleSource((MinecraftServer) (Object) this);
-        ((io.izzel.arclight.common.bridge.core.server.rcon.RconConsoleSourceBridge) source).bridge$setSocketAddress(address);
+    public String bridge$runRconCommand(RconConsoleSource source, String command) {
+        source.prepareForCommand();
         this.executeBlocking(() -> {
             CommandSourceStack wrapper = source.createCommandSourceStack();
             RemoteServerCommandEvent event = new RemoteServerCommandEvent(((CommandSourceBridge) source).bridge$getBukkitSender(wrapper), command);
             this.server.getPluginManager().callEvent(event);
             if (!event.isCancelled()) {
-                this.server.dispatchServerCommand(event.getSender(), new ConsoleInput(event.getCommand(), wrapper));
+                this.arclight$dispatchServerCommand(event.getSender(), event.getCommand());
             }
         });
         return source.getCommandResponse();
@@ -104,7 +109,21 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin implemen
             if (event.isCancelled()) {
                 continue;
             }
-            this.server.dispatchServerCommand(this.console, new ConsoleInput(event.getCommand(), input.source));
+            this.arclight$dispatchServerCommand(this.console, event.getCommand());
+        }
+    }
+
+    @Unique
+    private boolean arclight$dispatchServerCommand(CommandSender sender, String command) {
+        if (sender instanceof Conversable conversable && conversable.isConversing()) {
+            conversable.acceptConversationInput(command);
+            return true;
+        }
+        try {
+            return this.server.dispatchCommand(sender, command);
+        } catch (Exception ex) {
+            this.server.getLogger().log(Level.WARNING, "Unexpected exception while parsing console command \"" + command + '"', ex);
+            return false;
         }
     }
 

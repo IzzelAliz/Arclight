@@ -1,7 +1,6 @@
 package io.izzel.arclight.common.bridge.core.entity;
 
 import io.izzel.arclight.common.bridge.core.command.CommandSourceBridge;
-import io.izzel.arclight.common.bridge.inject.InjectEntityBridge;
 import io.izzel.arclight.common.mod.server.entity.ArclightSpawnReason;
 import io.izzel.tools.product.Product;
 import io.izzel.tools.product.Product4;
@@ -14,15 +13,44 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.entity.CraftEntity;
-import org.bukkit.craftbukkit.event.CraftPortalEvent;
+import org.bukkit.craftbukkit.event.PortalEventResult;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.projectiles.ProjectileSource;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
-public interface EntityBridge extends CommandSourceBridge, InjectEntityBridge {
+public interface EntityBridge extends CommandSourceBridge {
+
+    io.papermc.paper.entity.activation.ActivationType bridge$getActivationType();
+    boolean bridge$getDefaultActivationState();
+    long bridge$getActivatedTick();
+    void bridge$setActivatedTick(long tick);
+    long bridge$getActivatedImmunityTick();
+    void bridge$setActivatedImmunityTick(long tick);
+    boolean bridge$isTemporarilyActive();
+    void bridge$setTemporarilyActive(boolean active);
+    void bridge$inactiveTick();
+
+    net.minecraft.world.phys.AABB bridge$getBoundingBoxAt(double x, double y, double z);
+
+    default EntityBridge bridge() {
+        return this;
+    }
+
+    default CraftEntity getBukkitEntity() {
+        return bridge$getBukkitEntity();
+    }
+
+    default float getBukkitYaw() {
+        return bridge$getBukkitYaw();
+    }
+
+    default boolean isChunkLoaded() {
+        return bridge$isChunkLoaded();
+    }
 
     /** Apply Bukkit's pair rule to an already evaluated native pushability result. */
     default boolean bridge$canCollideWithBukkit(Entity other, boolean pushable) {
@@ -33,7 +61,15 @@ public interface EntityBridge extends CommandSourceBridge, InjectEntityBridge {
 
     CraftEntity bridge$getBukkitEntity();
 
+    /** Returns the existing wrapper without constructing one. */
+    @Nullable
+    CraftEntity bridge$peekBukkitEntity();
+
     void bridge$setBukkitEntity(CraftEntity craftEntity);
+
+    boolean bridge$saveSnapshot(net.minecraft.world.level.storage.ValueOutput output);
+
+    boolean bridge$saveEntity(net.minecraft.world.level.storage.ValueOutput output, boolean includeAll, boolean includeNonSaveable, boolean forceSerialization);
 
     boolean bridge$isPersist();
 
@@ -73,9 +109,11 @@ public interface EntityBridge extends CommandSourceBridge, InjectEntityBridge {
 
     void bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause cause);
 
-    CraftPortalEvent bridge$callPortalEvent(Entity entity, Location exit, PlayerTeleportEvent.TeleportCause cause, int searchRadius, int creationRadius);
+    PortalEventResult bridge$callPortalEvent(Entity entity, Location exit, PlayerTeleportEvent.TeleportCause cause, int searchRadius, int creationRadius);
 
     boolean bridge$pluginRemoved();
+
+    void bridge$removeFromPlugin();
 
     boolean bridge$isForceDrops();
 
@@ -126,4 +164,13 @@ public interface EntityBridge extends CommandSourceBridge, InjectEntityBridge {
      */
     @SuppressWarnings("JavadocReference")
     void arclight$onAddedToLevel();
+
+    default net.minecraft.world.phys.AABB getBoundingBoxAt(double x, double y, double z) {
+        return this.bridge$getBoundingBoxAt(x, y, z);
+    }
+
+    default boolean saveAsPassenger(net.minecraft.world.level.storage.ValueOutput output, boolean includeAll, boolean includeNonSaveable, boolean forceSerialization) {
+        return this.bridge$saveEntity(output, includeAll, includeNonSaveable, forceSerialization);
+    }
+
 }

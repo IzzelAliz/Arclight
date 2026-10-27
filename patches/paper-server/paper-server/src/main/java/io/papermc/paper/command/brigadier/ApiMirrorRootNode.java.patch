@@ -1,0 +1,73 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/command/brigadier/ApiMirrorRootNode.java b/paper-server/src/main/java/io/papermc/paper/command/brigadier/ApiMirrorRootNode.java
+index 51cd385821a4099f92e4cfb0fb9b6988cd4fe72e..f943d744aa3a43747ef2a5ca79c213ab0e18a72d 100644
+--- a/paper-server/src/main/java/io/papermc/paper/command/brigadier/ApiMirrorRootNode.java
++++ b/paper-server/src/main/java/io/papermc/paper/command/brigadier/ApiMirrorRootNode.java
+@@ -16,6 +16,7 @@ import com.mojang.brigadier.tree.ArgumentCommandNode;
+ import com.mojang.brigadier.tree.CommandNode;
+ import com.mojang.brigadier.tree.LiteralCommandNode;
+ import com.mojang.brigadier.tree.RootCommandNode;
++import io.izzel.arclight.common.mod.compat.CommandNodeHooks;
+ import io.papermc.paper.command.brigadier.argument.CustomArgumentType;
+ import io.papermc.paper.command.brigadier.argument.VanillaArgumentProviderImpl;
+ import io.papermc.paper.command.brigadier.argument.WrappedArgumentCommandNode;
+@@ -85,8 +86,9 @@ public abstract class ApiMirrorRootNode extends RootCommandNode<CommandSourceSta
+         /*
+         This node already has had an unwrapped node created, so we can assume that it's safe to reuse that cached copy.
+          */
+-        if (maybeWrappedNode.unwrappedCached != null) {
+-            return maybeWrappedNode.unwrappedCached;
++        final CommandNode<CommandSourceStack> cached = CommandNodeHooks.getUnwrappedCached(maybeWrappedNode);
++        if (cached != null) {
++            return cached;
+         }
+ 
+         // convert the pure brig node into one compatible with the nms dispatcher
+@@ -147,8 +149,8 @@ public abstract class ApiMirrorRootNode extends RootCommandNode<CommandSourceSta
+         }
+ 
+         // Store unwrapped node before unwrapping children to avoid infinite recursion in cyclic redirects.
+-        converted.wrappedCached = pureNode;
+-        pureNode.unwrappedCached = converted;
++        CommandNodeHooks.setWrappedCached(converted, pureNode);
++        CommandNodeHooks.setUnwrappedCached(pureNode, converted);
+ 
+         /*
+         Add the children to the node, unwrapping each child in the process.
+@@ -181,8 +183,9 @@ public abstract class ApiMirrorRootNode extends RootCommandNode<CommandSourceSta
+         This was most likely created by API and has a wrapped variant,
+         so we can return this safely.
+          */
+-        if (unwrapped.wrappedCached != null) {
+-            return unwrapped.wrappedCached;
++        final CommandNode<CommandSourceStack> cached = CommandNodeHooks.getWrappedCached(unwrapped);
++        if (cached != null) {
++            return cached;
+         }
+ 
+         /*
+@@ -191,7 +194,7 @@ public abstract class ApiMirrorRootNode extends RootCommandNode<CommandSourceSta
+         restrictive access.
+          */
+         CommandNode<CommandSourceStack> shadow = new ShadowBrigNode(unwrapped);
+-        unwrapped.wrappedCached = shadow;
++        CommandNodeHooks.setWrappedCached(unwrapped, shadow);
+         return shadow;
+     }
+ 
+@@ -225,14 +228,12 @@ public abstract class ApiMirrorRootNode extends RootCommandNode<CommandSourceSta
+     }
+ 
+     // These are needed for bukkit... we should NOT allow this
+-    @Override
+     public void removeCommand(String name) {
+-        this.getDispatcher().getRoot().removeCommand(name);
++        PaperBrigadier.removeCommand(this.getDispatcher().getRoot(), name);
+     }
+ 
+-    @Override
+     public void clearAll() {
+-        this.getDispatcher().getRoot().clearAll();
++        PaperBrigadier.clearCommands(this.getDispatcher().getRoot());
+     }
+ 
+     @SuppressWarnings({"rawtypes", "unchecked"})

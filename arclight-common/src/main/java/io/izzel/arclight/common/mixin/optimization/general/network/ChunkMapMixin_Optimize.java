@@ -85,6 +85,7 @@ public class ChunkMapMixin_Optimize {
     }
 
     @Mixin(ChunkMap.TrackedEntity.class)
+    @LoadIfMod(modid = "moonrise", condition = LoadIfMod.ModCondition.ABSENT)
     public static class TrackedEntityMixin {
 
         @Redirect(method = "<init>", at = @At(value = "INVOKE", remap = false, target = "Lcom/google/common/collect/Sets;newIdentityHashSet()Ljava/util/Set;"))

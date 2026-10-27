@@ -9,7 +9,18 @@ import java.util.List;
 
 public interface FishingHookBridge {
 
+    void bridge$resetTimeUntilLured();
+
+    net.minecraft.world.InteractionHand bridge$getRetrieveHand();
+
+    net.minecraft.world.InteractionHand bridge$swapRetrieveHand(net.minecraft.world.InteractionHand hand);
+
     default Product2<Boolean, Integer> bridge$forge$onItemFished(List<ItemStack> stacks, int rodDamage, FishingHook hook) {
         return Product.of(false, rodDamage);
     }
+
+    default void resetTimeUntilLured() {
+        this.bridge$resetTimeUntilLured();
+    }
+
 }

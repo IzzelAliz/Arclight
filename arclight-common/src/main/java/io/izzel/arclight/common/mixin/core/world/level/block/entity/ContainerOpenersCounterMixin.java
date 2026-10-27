@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import org.objectweb.asm.Opcodes;
 
 @Mixin(ContainerOpenersCounter.class)
-public abstract class ContainerOpenersCounterMixin {
+public abstract class ContainerOpenersCounterMixin implements io.izzel.arclight.common.bridge.core.world.level.block.entity.ContainerOpenersCounterBridge {
 
     // @formatter:off
     @Shadow private int openCount;
@@ -26,6 +26,16 @@ public abstract class ContainerOpenersCounterMixin {
     // @formatter:on
 
     public boolean opened;
+
+    @Override
+    public boolean bridge$isOpened() {
+        return this.opened;
+    }
+
+    @Override
+    public void bridge$setOpened(boolean opened) {
+        this.opened = opened;
+    }
 
     public void onAPIOpen(Level world, BlockPos blockposition, BlockState iblockdata) {
         onOpen(world, blockposition, iblockdata);

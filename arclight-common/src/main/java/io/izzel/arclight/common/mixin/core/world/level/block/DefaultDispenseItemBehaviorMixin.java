@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.level.block;
 
 import io.izzel.arclight.common.mod.server.block.DispenserBlockHooks;
+import io.izzel.arclight.common.mod.server.block.DispenserBlockHooks.Context;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.Direction;
@@ -29,29 +30,15 @@ public abstract class DefaultDispenseItemBehaviorMixin {
     // Only execute's native split(1) has an inventory stack to refund. The static five-argument
     // spawnItem is also used by the remainder overflow path and other callers; never infer a
     // BlockSource from its Position or synthesize the CraftBukkit boolean overload there.
-    @Unique private static final ThreadLocal<Context> arclight$context = new ThreadLocal<>();
+    @Unique private static Context arclight$context;
 
-    @Unique
-    private static final class Context {
-        final Context parent;
-        final BlockSource source;
-        final ItemStack original;
-        boolean refund;
-        boolean inEvent;
-
-        Context(Context parent, BlockSource source, ItemStack original) {
-            this.parent = parent;
-            this.source = source;
-            this.original = original;
-        }
-    }
 
     @Decorate(method = "execute", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/dispenser/DefaultDispenseItemBehavior;spawnItem(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;ILnet/minecraft/core/Direction;Lnet/minecraft/core/Position;)V"))
     private void arclight$defaultCall(Level level, ItemStack single, int accuracy, Direction direction, Position position,
                                       BlockSource source, ItemStack original) throws Throwable {
-        Context parent = arclight$context.get();
+        Context parent = arclight$context;
         Context context = new Context(parent, source, original);
-        arclight$context.set(context);
+        arclight$context = context;
         try {
             DecorationOps.callsite().invoke(level, single, accuracy, direction, position);
         } finally {
@@ -61,7 +48,7 @@ public abstract class DefaultDispenseItemBehaviorMixin {
                 }
             } finally {
                 // A grow hook may itself throw; never leak this call's source into later dispenses.
-                arclight$context.set(parent);
+                arclight$context = parent;
             }
         }
         // A cancelled/replaced default action returns the restored original to the caller.
@@ -74,7 +61,7 @@ public abstract class DefaultDispenseItemBehaviorMixin {
 
     @Decorate(method = "spawnItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private static boolean arclight$defaultEvent(Level level, Entity entity) throws Throwable {
-        Context context = arclight$context.get();
+        Context context = arclight$context;
         boolean skip = false;
         boolean refundAfterNativeAdd = false;
         if (context != null && context.parent == null && entity instanceof ItemEntity itemEntity
@@ -97,7 +84,7 @@ public abstract class DefaultDispenseItemBehaviorMixin {
             } else {
                 ItemStack eventStack = CraftItemStack.asNMSCopy(event.getItem());
                 itemEntity.setItem(eventStack);
-                itemEntity.setDeltaMovement(CraftVector.toNMS(event.getVelocity()));
+                itemEntity.setDeltaMovement(CraftVector.toVec3(event.getVelocity()));
                 if (!(source.state().getBlock() instanceof DropperBlock)
                     && event.getItem().getType() != originalItem.getType()) {
                     // Use a second copy as fixed CB does: handler mutations must not edit the drop entity.

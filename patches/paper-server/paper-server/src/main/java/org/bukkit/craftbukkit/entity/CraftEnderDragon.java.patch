@@ -1,0 +1,25 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftEnderDragon.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftEnderDragon.java
+index f5caff5c2644418c74c10d7c4697ad0019c0d97d..32f1213f894fd93f7524dec1dc577e5335e0efa7 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftEnderDragon.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftEnderDragon.java
+@@ -73,17 +73,15 @@ public class CraftEnderDragon extends CraftMob implements EnderDragon, CraftEnem
+     // Paper start - Allow changing the EnderDragon podium
+     @Override
+     public org.bukkit.Location getPodium() {
+-        return CraftLocation.toBukkit(this.getHandle().getPodium(), this.getWorld());
++        return CraftLocation.toBukkit(net.minecraft.world.level.levelgen.feature.EndPodiumFeature.getLocation(this.getHandle().getFightOrigin()), this.getWorld());
+     }
+ 
+     @Override
+     public void setPodium(org.bukkit.Location location) {
+-        if (location == null) {
+-            this.getHandle().setPodium(null);
+-        } else {
++        if (location != null) {
+             Preconditions.checkArgument(location.getWorld() == null || location.getWorld().equals(getWorld()), "You cannot set a podium in a different world to where the dragon is");
+-            this.getHandle().setPodium(CraftLocation.toBlockPos(location));
+         }
++        throw new UnsupportedOperationException("Custom dragon podium locations are not supported");
+     }
+     // Paper end - Allow changing the EnderDragon podium
+ }

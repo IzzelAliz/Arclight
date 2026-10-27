@@ -16,6 +16,11 @@ import java.util.List;
 public interface ContainerMixin extends IInventoryBridge {
 
     @Override
+    default List<net.minecraft.world.item.ItemStack> getContents() {
+        return new io.izzel.arclight.common.mod.util.WrappedContents((Container) this);
+    }
+
+    @Override
     default void onOpen(CraftHumanEntity who) {
         SideViewingTracker.onOpen((Container) this, who);
     }

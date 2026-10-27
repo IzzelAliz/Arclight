@@ -1,0 +1,20 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/storage/BootstrapProviderStorage.java b/paper-server/src/main/java/io/papermc/paper/plugin/storage/BootstrapProviderStorage.java
+index 65a66e484c1c39c5f41d97db52f31c67b4479d20..b7fd317f3edce29cc370e70d871fcb33a7a79177 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/storage/BootstrapProviderStorage.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/storage/BootstrapProviderStorage.java
+@@ -1,6 +1,5 @@
+ package io.papermc.paper.plugin.storage;
+ 
+-import com.mojang.logging.LogUtils;
+ import io.papermc.paper.plugin.PluginInitializerManager;
+ import io.papermc.paper.plugin.bootstrap.BootstrapContext;
+ import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
+@@ -18,7 +17,7 @@ import org.slf4j.Logger;
+ 
+ public class BootstrapProviderStorage extends SimpleProviderStorage<PluginBootstrap> {
+ 
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(BootstrapProviderStorage.class.getSimpleName());
+ 
+     public BootstrapProviderStorage() {
+         super(new ModernPluginLoadingStrategy<>(new ProviderConfiguration<>() {

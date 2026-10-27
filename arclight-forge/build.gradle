@@ -1,0 +1,77 @@
+plugins {
+    id 'architectury-plugin'
+    id 'com.gradleup.shadow'
+}
+
+architectury {
+    platformSetupLoomIde()
+    forge()
+}
+
+loom {
+    forge {
+        useCustomMixin = false
+        mixinConfig 'mixins.arclight.forge.json'
+    }
+}
+
+configurations { legacyEventBus }
+
+dependencies {
+    forge libs.forge
+
+    implementation libs.izzel.tools
+    implementation libs.arclight.api
+    implementation libs.mixin.tools
+    compileOnly "io.github.llamalad7:mixinextras-common:0.5.4"
+    legacyEventBus("net.minecraftforge:eventbus:4.0.0") { transitive = false }
+    compileOnly files(configurations.legacyEventBus)
+
+    implementation project(':arclight-paper-api')
+    shadowBundle(project(':arclight-paper-api')) { transitive = false }
+    implementation libs.jline
+
+    implementation(project(':i18n-config')) { transitive = false }
+
+    common(project(path: ':arclight-common', configuration: 'runtimeElements')) { transitive = false }
+    shadowBundle(project(path: ':arclight-common', configuration: 'transformProductionForge')) { transitive = false }
+}
+
+processResources {
+    def ver = "${project.version}+$gitHash"
+    inputs.property 'version', ver
+
+    filesMatching('META-INF/mods.toml') {
+        expand 'version': ver
+    }
+}
+
+shadowJar {
+    exclude 'fabric.mod.json'
+    exclude 'architectury.common.json'
+    // Replace the shaded common AW with the Forge-specific, coremod-safe copy.
+    exclude 'arclight.accesswidener'
+    from(loom.accessWidenerPath)
+
+    configurations = [project.configurations.shadowBundle]
+    archiveClassifier = 'dev-shadow'
+}
+
+
+loom.getForge().convertAccessWideners(tasks.named('shadowJar'), loom.accessWidenerPath.get().asFile.name)
+
+tasks.register('srgJar', Jar) {
+    from(tasks.shadowJar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) }) {
+        include 'io/izzel/**'
+        exclude 'io/izzel/arclight/common/mixin/**'
+        exclude 'io/izzel/arclight/forge/mixin/**'
+    }
+    archiveClassifier.set('srg')
+    dependsOn shadowJar
+}
+
+sourcesJar {
+    def commonSources = rootProject.ext.commonProject.sourcesJar
+    dependsOn commonSources
+    from commonSources.archiveFile.map { zipTree(it) }
+}

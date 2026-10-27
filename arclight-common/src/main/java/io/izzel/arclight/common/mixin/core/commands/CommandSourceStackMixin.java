@@ -10,6 +10,7 @@ import io.izzel.arclight.common.mod.compat.CommandNodeHooks;
 import io.izzel.arclight.common.mod.server.command.ArclightDummyCommandSender;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.players.NameAndId;
 import net.minecraft.server.players.PlayerList;
@@ -32,12 +33,28 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Objects;
 
 @Mixin(CommandSourceStack.class)
-public abstract class CommandSourceStackMixin implements CommandSourceStackBridge {
+public abstract class CommandSourceStackMixin implements CommandSourceStackBridge, io.papermc.paper.command.brigadier.PaperCommandSourceStack {
+
+    @Override
+    public CommandSourceStack getHandle() {
+        return (CommandSourceStack) (Object) this;
+    }
+
+    @Override
+    public io.papermc.paper.command.brigadier.CommandSourceStack withLocation(org.bukkit.Location location) {
+        Objects.requireNonNull(location, "Location cannot be null");
+        var world = (org.bukkit.craftbukkit.CraftWorld) Objects.requireNonNull(location.getWorld(), "World cannot be null");
+        return this.getHandle().withLevel(world.getHandle())
+            .withPosition(new net.minecraft.world.phys.Vec3(location.getX(), location.getY(), location.getZ()))
+            .withRotation(new net.minecraft.world.phys.Vec2(location.getPitch(), location.getYaw()));
+    }
 
     // @formatter:off
     @Shadow @Final @Mutable public CommandSource source;
     @Shadow public abstract ServerLevel getLevel();
     @Shadow @Final private PermissionSet permissions;
+    @Shadow public abstract void sendFailure(Component message);
+    @Shadow public abstract boolean isSilent();
     // @formatter:on
 
     @Override
@@ -45,9 +62,29 @@ public abstract class CommandSourceStackMixin implements CommandSourceStackBridg
         this.source = source;
     }
 
+    @Override
+    public void bridge$sendFailure(Component message, boolean withStyle) {
+        if (withStyle) {
+            this.sendFailure(message);
+        } else if (this.source.acceptsFailure() && !this.isSilent()) {
+            this.source.sendSystemMessage(message);
+        }
+    }
+
     public CommandNode currentCommand;
 
     @Unique private CommandPermissionSet arclight$bukkitPermissions;
+    public boolean bypassSelectorPermissions;
+
+    @Override
+    public boolean bridge$isBypassSelectorPermissions() {
+        return this.bypassSelectorPermissions;
+    }
+
+    @Override
+    public void bridge$setBypassSelectorPermissions(boolean bypassSelectorPermissions) {
+        this.bypassSelectorPermissions = bypassSelectorPermissions;
+    }
 
     @Inject(method = "permissions()Lnet/minecraft/server/permissions/PermissionSet;", cancellable = true, at = @At("RETURN"))
     private void arclight$permissions(CallbackInfoReturnable<PermissionSet> cir) {

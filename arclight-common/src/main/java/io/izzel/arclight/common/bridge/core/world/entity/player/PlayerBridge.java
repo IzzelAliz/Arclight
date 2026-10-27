@@ -9,10 +9,19 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.Player;
 import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 import org.bukkit.event.entity.EntityExhaustionEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 
 public interface PlayerBridge extends LivingEntityBridge {
 
+    net.minecraft.world.entity.item.ItemEntity bridge$dropProvidedItem(net.minecraft.world.item.ItemStack stack, boolean randomly, java.util.function.Consumer<org.bukkit.entity.Item> operation);
+
+    net.minecraft.world.entity.item.ItemEntity bridge$dropInventoryItem(net.minecraft.world.item.ItemStack stack, boolean randomly, java.util.function.Consumer<org.bukkit.entity.Item> operation);
+
+    net.minecraft.world.entity.item.ItemEntity bridge$prepareApiDrop(net.minecraft.world.entity.item.ItemEntity entity);
+
     boolean bridge$isFauxSleeping();
+
+    void bridge$setFauxSleeping(boolean sleeping);
 
     void bridge$cancelCopperShear(net.minecraft.world.entity.Entity target);
 
@@ -27,9 +36,18 @@ public interface PlayerBridge extends LivingEntityBridge {
     }
 
     @Override
+    default CraftHumanEntity getBukkitEntity() {
+        return bridge$getBukkitEntity();
+    }
+
+    @Override
     CraftHumanEntity bridge$getBukkitEntity();
 
     Either<Player.BedSleepingProblem, Unit> bridge$trySleep(BlockPos at, boolean force);
+
+    default void bridge$closeContainer(InventoryCloseEvent.Reason reason) {
+        ((Player) this).closeContainer();
+    }
 
     void bridge$pushExhaustReason(EntityExhaustionEvent.ExhaustionReason reason);
 
@@ -49,4 +67,9 @@ public interface PlayerBridge extends LivingEntityBridge {
             default -> amount;
         };
     }
+
+    default void closeContainer(org.bukkit.event.inventory.InventoryCloseEvent.Reason reason) {
+        this.bridge$closeContainer(reason);
+    }
+
 }

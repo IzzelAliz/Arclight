@@ -1,0 +1,33 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java
+@@ -497,9 +497,7 @@
+             return new net.minecraft.nbt.CompoundTag();
+         }
+         final net.minecraft.world.item.component.CustomData customData = this.handle.getOrDefault(DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY);
+-        // getUnsafe is OK here because we are only ever *reading* the data so immutability is preserved
+-        //noinspection deprecation
+-        return customData.getUnsafe().getCompoundOrEmpty(PDC_CUSTOM_DATA_KEY);
++        return customData.copyTag().getCompoundOrEmpty(PDC_CUSTOM_DATA_KEY);
+     }
+ 
+     private static final org.bukkit.craftbukkit.persistence.CraftPersistentDataTypeRegistry REGISTRY = new org.bukkit.craftbukkit.persistence.CraftPersistentDataTypeRegistry();
+@@ -531,15 +529,15 @@
+ 
+         final CraftPersistentDataContainer container = new CraftPersistentDataContainer(REGISTRY);
+         CustomData customData = this.handle.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+-        //noinspection deprecation // we copy only the pdc tag
+-        final CompoundTag pdcTag = customData.getUnsafe().getCompoundOrEmpty(PDC_CUSTOM_DATA_KEY).copy();
++        final CompoundTag customTag = customData.copyTag();
++        final CompoundTag pdcTag = customTag.getCompoundOrEmpty(PDC_CUSTOM_DATA_KEY);
+         container.putAll(pdcTag);
+         consumer.accept(container);
+ 
+         final CompoundTag newPdcTag = container.toTagCompound();
+         if (!newPdcTag.isEmpty()) {
+             customData = customData.update(tag -> tag.put(PDC_CUSTOM_DATA_KEY, newPdcTag));
+-        } else if (customData.contains(PDC_CUSTOM_DATA_KEY)) {
++        } else if (customTag.contains(PDC_CUSTOM_DATA_KEY)) {
+             customData = customData.update(tag -> tag.remove(PDC_CUSTOM_DATA_KEY));
+         }
+ 

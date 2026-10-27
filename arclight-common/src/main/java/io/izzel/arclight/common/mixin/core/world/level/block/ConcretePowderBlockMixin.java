@@ -50,7 +50,7 @@ public abstract class ConcretePowderBlockMixin extends FallingBlockMixin {
         Level world = context.getLevel();
         BlockPos blockPos = context.getClickedPos();
         CraftBlockState blockState = CraftBlockStates.getBlockState(world, blockPos);
-        blockState.setData(this.concrete.defaultBlockState());
+        blockState.setBlock(this.concrete.defaultBlockState());
         BlockFormEvent event = new BlockFormEvent(blockState.getBlock(), blockState);
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
@@ -67,7 +67,7 @@ public abstract class ConcretePowderBlockMixin extends FallingBlockMixin {
             return this.concrete.defaultBlockState();
         }
         CraftBlockState blockState = CraftBlockStates.getBlockState(world, pos);
-        blockState.setData(this.concrete.defaultBlockState());
+        blockState.setBlock(this.concrete.defaultBlockState());
         BlockFormEvent event = new BlockFormEvent(blockState.getBlock(), blockState);
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {

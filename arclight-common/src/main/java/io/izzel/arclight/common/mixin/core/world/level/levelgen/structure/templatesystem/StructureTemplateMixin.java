@@ -20,7 +20,7 @@ import org.bukkit.craftbukkit.block.CraftLootable;
 import org.bukkit.craftbukkit.persistence.CraftPersistentDataContainer;
 import org.bukkit.craftbukkit.persistence.CraftPersistentDataTypeRegistry;
 import org.bukkit.craftbukkit.util.CraftStructureTransformer;
-import org.bukkit.craftbukkit.util.TransformerGeneratorAccess;
+import org.bukkit.craftbukkit.util.TransformerLevelAccessor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -32,6 +32,11 @@ public abstract class StructureTemplateMixin implements StructureTemplateBridge 
 
     private static final CraftPersistentDataTypeRegistry DATA_TYPE_REGISTRY = new CraftPersistentDataTypeRegistry();
     public CraftPersistentDataContainer persistentDataContainer = new CraftPersistentDataContainer(DATA_TYPE_REGISTRY);
+
+    @Override
+    public CraftPersistentDataContainer bridge$getPersistentDataContainer() {
+        return this.persistentDataContainer;
+    }
 
     @Inject(method = "save", at = @At("RETURN"))
     private void arclight$savePdc(CompoundTag tag, CallbackInfoReturnable<CompoundTag> cir) {
@@ -54,8 +59,8 @@ public abstract class StructureTemplateMixin implements StructureTemplateBridge 
                                  @Local(allocate = "structureTransformer") CraftStructureTransformer structureTransformer) throws Throwable {
         wrappedAccess = serverLevelAccessor;
         structureTransformer = null;
-        if (wrappedAccess instanceof TransformerGeneratorAccess transformerAccess) {
-            serverLevelAccessor = transformerAccess.getHandle();
+        if (wrappedAccess instanceof TransformerLevelAccessor transformerAccess) {
+            serverLevelAccessor = transformerAccess.getDelegate();
             structureTransformer = transformerAccess.getStructureTransformer();
             // The structureTransformer is not needed if we can not transform blocks therefore we can save a little bit of performance doing this
             if (structureTransformer != null && !structureTransformer.canTransformBlocks()) {

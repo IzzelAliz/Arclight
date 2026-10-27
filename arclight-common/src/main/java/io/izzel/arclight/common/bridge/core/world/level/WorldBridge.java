@@ -1,6 +1,5 @@
 package io.izzel.arclight.common.bridge.core.world.level;
 
-import io.izzel.arclight.common.bridge.inject.InjectLevelBridge;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -25,7 +24,29 @@ import org.spigotmc.SpigotWorldConfig;
 
 import java.util.Map;
 
-public interface WorldBridge extends IWorldWriterBridge, LevelAccessorBridge, InjectLevelBridge {
+public interface WorldBridge extends IWorldWriterBridge, LevelAccessorBridge {
+
+    int bridge$getWakeupInactiveAnimals();
+    void bridge$setWakeupInactiveAnimals(int value);
+    int bridge$getWakeupInactiveFlying();
+    void bridge$setWakeupInactiveFlying(int value);
+    int bridge$getWakeupInactiveMonsters();
+    void bridge$setWakeupInactiveMonsters(int value);
+    int bridge$getWakeupInactiveVillagers();
+    void bridge$setWakeupInactiveVillagers(int value);
+
+
+    default CraftWorld getWorld() {
+        return bridge$getWorld();
+    }
+
+    default CraftServer getCraftServer() {
+        return bridge$getServer();
+    }
+
+    default BlockEntity getBlockEntity(BlockPos pos, boolean validate) {
+        return bridge$getTileEntity(pos, validate);
+    }
 
     CraftServer bridge$getServer();
 
@@ -42,6 +63,8 @@ public interface WorldBridge extends IWorldWriterBridge, LevelAccessorBridge, In
     BlockEntity bridge$getTileEntity(BlockPos pos, boolean validate);
 
     SpigotWorldConfig bridge$spigotConfig();
+
+    io.papermc.paper.configuration.WorldConfiguration bridge$paperConfig();
 
     Object2LongOpenHashMap<SpawnCategory> bridge$ticksPerSpawnCategory();
 
@@ -80,4 +103,13 @@ public interface WorldBridge extends IWorldWriterBridge, LevelAccessorBridge, In
     }
 
     default void bridge$platform$endCaptureBlockBreak() {}
+
+    default io.papermc.paper.configuration.WorldConfiguration paperConfig() {
+        return this.bridge$paperConfig();
+    }
+
+    default net.minecraft.resources.ResourceKey<net.minecraft.world.level.dimension.LevelStem> getTypeKey() {
+        return this.bridge$getTypeKey();
+    }
+
 }

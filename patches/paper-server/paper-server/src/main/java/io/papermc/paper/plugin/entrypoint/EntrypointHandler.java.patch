@@ -1,0 +1,14 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/EntrypointHandler.java b/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/EntrypointHandler.java
+index b38e1e0f3d3055086f51bb191fd4b60ecf32d016..0f1d7d361850d2aa70cf70f0e52f9feb8cebc82c 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/EntrypointHandler.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/EntrypointHandler.java
+@@ -8,6 +8,9 @@ import io.papermc.paper.plugin.provider.PluginProvider;
+  */
+ public interface EntrypointHandler {
+ 
++    /** Reject unsupported registrations without retaining the provider or its resources. */
++    default <T> void validateRegistration(Entrypoint<T> entrypoint, PluginProvider<T> provider) {}
++
+     <T> void register(Entrypoint<T> entrypoint, PluginProvider<T> provider);
+ 
+     void enter(Entrypoint<?> entrypoint);

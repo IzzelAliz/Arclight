@@ -12,6 +12,12 @@ public interface ServerLoginPacketListenerImplBridge {
 
     int bridge$getVelocityLoginId();
 
+    @javax.annotation.Nullable java.util.UUID bridge$getRequestedUuid();
+
+    @javax.annotation.Nullable String bridge$getRequestedUsername();
+
+    @javax.annotation.Nullable GameProfile bridge$getAuthenticatedProfile();
+
     void bridge$preLogin(GameProfile authenticatedProfile) throws Exception;
 
     void bridge$disconnect(String reason);

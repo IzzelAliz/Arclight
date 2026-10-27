@@ -1,0 +1,19 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/command/PaperCommand.java b/paper-server/src/main/java/io/papermc/paper/command/PaperCommand.java
+index b629a9a37ce7099c8c7426a8114e29d2cea94792..afebe223c40a6e66cc45055c5f6ad2433d738529 100644
+--- a/paper-server/src/main/java/io/papermc/paper/command/PaperCommand.java
++++ b/paper-server/src/main/java/io/papermc/paper/command/PaperCommand.java
+@@ -1,6 +1,5 @@
+ package io.papermc.paper.command;
+ 
+-import io.papermc.paper.FeatureHooks;
+ import io.papermc.paper.command.subcommands.DumpItemCommand;
+ import io.papermc.paper.command.subcommands.DumpListenersCommand;
+ import io.papermc.paper.command.subcommands.DumpPluginsCommand;
+@@ -51,7 +50,6 @@ public final class PaperCommand extends Command {
+         commands.put(Set.of("dumpitem"), new DumpItemCommand());
+         commands.put(Set.of("mobcaps", "playermobcaps"), new MobcapsCommand());
+         commands.put(Set.of("dumplisteners"), new DumpListenersCommand());
+-        FeatureHooks.registerPaperCommands(commands);
+ 
+         return commands.entrySet().stream()
+             .flatMap(entry -> entry.getKey().stream().map(s -> Map.entry(s, entry.getValue())))

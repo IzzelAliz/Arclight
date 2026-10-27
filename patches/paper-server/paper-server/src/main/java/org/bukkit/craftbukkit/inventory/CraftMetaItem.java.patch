@@ -1,0 +1,77 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaItem.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaItem.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaItem.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaItem.java
+@@ -163,7 +163,7 @@
+  */
+ @DelegateDeserialization(SerializableMeta.class)
+ // Important: ItemMeta needs to be the first interface see #applicableTo(Material)
+-class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
++public class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
+ 
+     static final Logger LOGGER = LogUtils.getLogger();
+ 
+@@ -355,7 +355,7 @@
+ 
+     private int version = CraftMagicNumbers.INSTANCE.getDataVersion(); // Internal use only
+ 
+-    CraftMetaItem(CraftMetaItem meta) {
++    public CraftMetaItem(CraftMetaItem meta) {
+         if (meta == null) {
+             return;
+         }
+@@ -2084,6 +2084,8 @@
+             if (this.customTag != null) {
+                 clone.customTag = this.customTag.copy();
+             }
++            clone.unhandledTags = DataComponentPatch.builder();
++            clone.unhandledTags.map.putAll(this.unhandledTags.build().map);
+             clone.removedTags = Sets.newHashSet(this.removedTags);
+             clone.persistentDataContainer = new CraftPersistentDataContainer(this.persistentDataContainer.getTagsCloned(), CraftMetaItem.DATA_TYPE_REGISTRY); // Paper - deep clone NBT tags
+             if (this.tooltipDisplay != null) {
+@@ -2266,17 +2268,19 @@
+             }
+         }
+ 
++        DataComponentPatch.Builder serializedUnhandled = DataComponentPatch.builder();
++        serializedUnhandled.map.putAll(this.unhandledTags.build().map);
+         final boolean canBreakAddToUnhandled = this.canBreakPredicates != null && !this.canBreakPredicates.isEmpty();
+         if (canBreakAddToUnhandled) {
+-            this.unhandledTags.set(DataComponents.CAN_BREAK, new net.minecraft.world.item.AdventureModePredicate(this.canBreakPredicates));
++            serializedUnhandled.set(DataComponents.CAN_BREAK, new net.minecraft.world.item.AdventureModePredicate(this.canBreakPredicates));
+         }
+         final boolean canPlaceOnAddToUnhandled = this.canPlaceOnPredicates != null && !this.canPlaceOnPredicates.isEmpty();
+         if (canPlaceOnAddToUnhandled) {
+-            this.unhandledTags.set(DataComponents.CAN_PLACE_ON, new net.minecraft.world.item.AdventureModePredicate(this.canPlaceOnPredicates));
++            serializedUnhandled.set(DataComponents.CAN_PLACE_ON, new net.minecraft.world.item.AdventureModePredicate(this.canPlaceOnPredicates));
+         }
+ 
+-        if (!this.unhandledTags.isEmpty()) {
+-            net.minecraft.nbt.Tag unhandled = DataComponentPatch.CODEC.encodeStart(CraftRegistry.getMinecraftRegistry().createSerializationContext(NbtOps.INSTANCE), this.unhandledTags.build()).getOrThrow(IllegalStateException::new);
++        if (!serializedUnhandled.build().isEmpty()) {
++            net.minecraft.nbt.Tag unhandled = DataComponentPatch.CODEC.encodeStart(CraftRegistry.getMinecraftRegistry().createSerializationContext(NbtOps.INSTANCE), serializedUnhandled.build()).getOrThrow(IllegalStateException::new);
+             try {
+                 ByteArrayOutputStream buf = new ByteArrayOutputStream();
+                 NbtIo.writeCompressed((CompoundTag) unhandled, buf);
+@@ -2286,13 +2290,6 @@
+             }
+         }
+ 
+-        if (canBreakAddToUnhandled) {
+-            this.unhandledTags.clear(DataComponents.CAN_BREAK);
+-        }
+-        if (canPlaceOnAddToUnhandled) {
+-            this.unhandledTags.clear(DataComponents.CAN_PLACE_ON);
+-        }
+-
+         if (!this.removedTags.isEmpty()) {
+             RegistryAccess registryAccess = CraftRegistry.getMinecraftRegistry();
+             Registry<DataComponentType<?>> componentTypeRegistry = registryAccess.lookupOrThrow(Registries.DATA_COMPONENT_TYPE);
+@@ -2456,7 +2453,7 @@
+                 final Map<Class<? extends CraftMetaItem>, Set<DataComponentType<?>>> map = new HashMap<>();
+                 map.put(CraftMetaArmor.class, Set.of(CraftMetaArmor.TRIM.TYPE));
+                 map.put(CraftMetaArmorStand.class, Set.of(CraftMetaArmorStand.ENTITY_TAG.TYPE));
+-                map.put(CraftMetaAxolotlBucket.class, Set.of(CraftMetaAxolotlBucket.ENTITY_TAG.TYPE, CraftMetaAxolotlBucket.BUCKET_ENTITY_TAG.TYPE));
++                map.put(CraftMetaAxolotlBucket.class, Set.of(CraftMetaAxolotlBucket.VARIANT.TYPE, CraftMetaAxolotlBucket.ENTITY_TAG.TYPE, CraftMetaAxolotlBucket.BUCKET_ENTITY_TAG.TYPE));
+                 map.put(CraftMetaBanner.class, Set.of(CraftMetaBanner.PATTERNS.TYPE)); // banner uses same tag as block state
+                 map.put(CraftMetaShield.class, Set.of(CraftMetaShield.BASE_COLOR.TYPE, CraftMetaBanner.PATTERNS.TYPE));
+                 map.put(CraftMetaBlockState.class, Set.of(CraftMetaBlockState.BLOCK_ENTITY_TAG.TYPE));

@@ -24,10 +24,8 @@ public abstract class DifficultyCommandMixin {
 
     @Redirect(method = "setDifficulty", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;setDifficulty(Lnet/minecraft/world/Difficulty;Z)V"))
     private static void arclight$sourceDifficultyWrite(MinecraftServer server, Difficulty difficulty, boolean ignoreLock, CommandSourceStack source, Difficulty requested) {
-        // The command's vanilla call passes ignoreLock=true. CraftBukkit writes the world
-        // data directly; do not call the server setter, which rewrites the global world and
-        // broadcasts to every player. PrimaryLevelData#setDifficulty owns scoped packets.
-        arclight$owner(source.getLevel()).setDifficulty(difficulty);
+        ((io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge) server)
+            .bridge$setDifficulty(source.getLevel(), difficulty, source, ignoreLock);
     }
 
     private static WorldData arclight$owner(ServerLevel level) {

@@ -31,6 +31,7 @@ public class GlobalClassRepo implements ClassRepo, PluginPatcher.ClassRepo {
 
     @Override
     public ClassNode findClass(String internalName) {
+        removeStaleRepos();
         try {
             return cache.get(internalName);
         } catch (Throwable e) {
@@ -43,6 +44,7 @@ public class GlobalClassRepo implements ClassRepo, PluginPatcher.ClassRepo {
         if (parsingOptions == ClassReader.SKIP_CODE) {
             return findClass(internalName);
         } else {
+            removeStaleRepos();
             return this.repos.parallelStream()
                 .filter(PluginPatcher.ClassRepo.class::isInstance)
                 .map(PluginPatcher.ClassRepo.class::cast)
@@ -71,10 +73,23 @@ public class GlobalClassRepo implements ClassRepo, PluginPatcher.ClassRepo {
 
     public void addRepo(ClassRepo repo) {
         this.repos.add(repo);
+        removeStaleRepos();
+        // A previously drained reference may be registered again after its owner is gone.
+        if (repo instanceof ClassLoaderRepo classLoaderRepo && classLoaderRepo.isStale()) {
+            this.repos.remove(repo);
+        }
     }
 
     public void removeRepo(ClassRepo repo) {
         this.repos.remove(repo);
+        removeStaleRepos();
+    }
+
+    private void removeStaleRepos() {
+        ClassLoaderRepo repo;
+        while ((repo = ClassLoaderRepo.pollStaleRepo()) != null) {
+            this.repos.remove(repo);
+        }
     }
 
     public static PluginInheritanceProvider inheritanceProvider() {

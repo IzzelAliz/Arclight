@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftFirework.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftFirework.java
+index 6e0d195bb80a2176d9c45cb08bd15d7a8c21fb5e..83194e29e302018630ff875cb98d5df7753962b4 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftFirework.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftFirework.java
+@@ -114,7 +114,7 @@ public class CraftFirework extends CraftProjectile implements Firework {
+ 
+     @Override
+     public UUID getSpawningEntity() {
+-        return this.getHandle().spawningEntity;
++        throw new UnsupportedOperationException("Firework spawning entity tracking is not supported by Arclight");
+     }
+ 
+     @Override

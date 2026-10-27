@@ -1,0 +1,48 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftChest.java b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftChest.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftChest.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftChest.java
+@@ -51,7 +51,11 @@
+         CraftWorld world = (CraftWorld) this.getWorld();
+ 
+         ChestBlock block = this.block.getBlock() instanceof ChestBlock chestBlock ? chestBlock : (ChestBlock) Blocks.CHEST;
+-        MenuProvider provider = block.getMenuProvider(this.block, world.getHandle(), this.getPosition(), true);
++        MenuProvider provider = block.combine(this.block, world.getHandle(), this.getPosition(), true)
++            .apply(ChestBlock.MENU_PROVIDER_COMBINER).orElse(null);
++        if (provider instanceof io.izzel.arclight.common.bridge.core.world.level.block.DoubleChestMenuProviderBridge bridge) {
++            provider = CraftInventoryDoubleChest.Provider.wrap(provider, bridge.bridge$getDoubleChestContainer());
++        }
+ 
+         if (provider instanceof CraftInventoryDoubleChest.Provider doubleChestProvider) {
+             inventory = new CraftInventoryDoubleChest(doubleChestProvider);
+@@ -62,12 +66,13 @@
+     @Override
+     public void open() {
+         this.requirePlaced();
++        io.izzel.arclight.common.bridge.core.world.level.block.entity.ContainerOpenersCounterBridge bridge = this.getBlockEntity().openersCounter;
+         if (!this.getBlockEntity().openersCounter.opened && this.getWorldHandle() instanceof net.minecraft.world.level.Level level) {
+             BlockState block = this.getBlockEntity().getBlockState();
+             int openCount = this.getBlockEntity().openersCounter.getOpenerCount();
+ 
+-            this.getBlockEntity().openersCounter.onOpenAPI(level, this.getPosition(), block);
+-            this.getBlockEntity().openersCounter.openerCountChangedAPI(level, this.getPosition(), block, openCount, openCount + 1);
++            bridge.onAPIOpen(level, this.getPosition(), block);
++            bridge.openerAPICountChanged(level, this.getPosition(), block, openCount, openCount + 1);
+         }
+         this.getBlockEntity().openersCounter.opened = true;
+     }
+@@ -75,12 +80,13 @@
+     @Override
+     public void close() {
+         this.requirePlaced();
++        io.izzel.arclight.common.bridge.core.world.level.block.entity.ContainerOpenersCounterBridge bridge = this.getBlockEntity().openersCounter;
+         if (this.getBlockEntity().openersCounter.opened && this.getWorldHandle() instanceof net.minecraft.world.level.Level level) {
+             BlockState block = this.getBlockEntity().getBlockState();
+             int openCount = this.getBlockEntity().openersCounter.getOpenerCount();
+ 
+-            this.getBlockEntity().openersCounter.onCloseAPI(level, this.getPosition(), block);
+-            this.getBlockEntity().openersCounter.openerCountChangedAPI(level, this.getPosition(), block, openCount, 0);
++            bridge.onAPIClose(level, this.getPosition(), block);
++            bridge.openerAPICountChanged(level, this.getPosition(), block, openCount, 0);
+         }
+         this.getBlockEntity().openersCounter.opened = false;
+     }

@@ -11,6 +11,30 @@ loom {
 
 }
 
+sourceSets.main {
+    java.srcDir rootProject.layout.buildDirectory.dir('paper-patched/paper-server/paper-server/src/main/java')
+    java.srcDir rootProject.layout.buildDirectory.dir('paper-patched/paper-server/paper-server/src/generated/java')
+    resources {
+        srcDir rootProject.layout.buildDirectory.dir('paper-patched/paper-server/paper-server/src/main/resources')
+        // The pinned upstream retains these obsolete descriptors without their service types/providers.
+        // Keep the actual plugin, lifecycle, registry and Adventure providers from the patched server tree.
+        exclude 'META-INF/services/io.papermc.paper.command.brigadier.CommandBuilderProvider'
+        exclude 'META-INF/services/io.papermc.paper.world.flag.FeatureFlags$FeatureFlagProvider'
+    }
+}
+tasks.named('compileJava') { dependsOn rootProject.tasks.named('applyPaperPatches') }
+tasks.named('processResources') {
+    dependsOn rootProject.tasks.named('applyPaperPatches')
+    from(rootProject.layout.buildDirectory.dir('paper-patched/paper-server')) {
+        include 'LICENSE.md', 'licenses/**'
+        into 'META-INF/paper-server'
+    }
+    from(rootProject.layout.buildDirectory.dir('paper-patched/paper-server/paper-server/src/main/resources/data/minecraft/datapacks/paper')) {
+        include 'data/paper/chat_type/raw.json'
+    }
+}
+tasks.named('sourcesJar') { dependsOn rootProject.tasks.named('applyPaperPatches') }
+
 configurations {
     mixinProcessorSupport
     compileClasspath {
@@ -23,7 +47,11 @@ configurations {
 dependencies {
     implementation libs.fabric.loader
 
-    compileOnly rootProject.ext.generatedSpigot
+    implementation project(':arclight-paper-api')
+    implementation libs.configurate.yaml
+    implementation(libs.json.simple) { transitive = false }
+    implementation platform(libs.adventure.bom)
+    implementation libs.adventure.ansi
 
     implementation libs.izzel.tools
     implementation libs.arclight.api
@@ -34,13 +62,11 @@ dependencies {
     mixinProcessorSupport libs.asm.util
     mixinProcessorSupport libs.asm.tree
 
-    // spigot
-    implementation libs.spigot.api
     implementation libs.jline
     implementation libs.terminalconsoleappender
+    implementation libs.commons.lang3
     implementation libs.specialsource
     implementation libs.log4j.jul
-    implementation libs.bungeecord.serializer
     implementation libs.mysql.connectorj
     implementation libs.snakeyaml
 

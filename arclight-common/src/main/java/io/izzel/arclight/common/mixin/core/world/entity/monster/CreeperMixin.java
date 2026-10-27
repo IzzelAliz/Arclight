@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
+import com.destroystokyo.paper.event.entity.CreeperIgniteEvent;
 import io.izzel.arclight.common.bridge.core.world.entity.monster.CreeperBridge;
 import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
@@ -44,15 +45,39 @@ public abstract class CreeperMixin extends PathfinderMobMixin implements Creeper
 
     // @formatter:off
     @Shadow @Final private static EntityDataAccessor<Boolean> DATA_IS_POWERED;
+    @Shadow @Final private static EntityDataAccessor<Boolean> DATA_IS_IGNITED;
     @Shadow public int explosionRadius;
     @Shadow protected abstract void spawnLingeringCloud();
     @Shadow private int swell;
     @Shadow public abstract boolean isPowered();
+    @Shadow public abstract boolean isIgnited();
     // @formatter:on
 
-    @Unique public Player entityIgniter; // CraftBukkit
+    public Entity entityIgniter; // CraftBukkit
+    @Override
+    public Entity bridge$getIgniter() {
+        return this.entityIgniter;
+    }
+
+    @Override
+    public void bridge$setIgniter(Entity igniter) {
+        this.entityIgniter = igniter;
+    }
+
     @Unique private float eventRadius = 0f;
     @Unique private boolean eventFire = false;
+
+    @Inject(method = "ignite()V", at = @At("HEAD"), cancellable = true)
+    private void arclight$ignite(CallbackInfo ci) {
+        this.bridge$setIgnited(true);
+        ci.cancel();
+    }
+
+    @Redirect(method = "readAdditionalSaveData(Lnet/minecraft/world/level/storage/ValueInput;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/Creeper;ignite()V"))
+    private void arclight$restoreIgnited(Creeper instance) {
+        // Restore persisted state without firing CreeperIgniteEvent.
+        instance.getEntityData().set(DATA_IS_IGNITED, true);
+    }
 
     @Inject(method = "mobInteract", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/Creeper;ignite()V"))
     private void arclight$catchIgniter(Player player, InteractionHand interactionHand, CallbackInfoReturnable<InteractionResult> cir) {
@@ -74,12 +99,13 @@ public abstract class CreeperMixin extends PathfinderMobMixin implements Creeper
     //@Overwrite
     //public void explodeCreeper()
 
-    @Decorate(method = "explodeCreeper", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/entity/monster/Creeper;dead:Z"))
+    @Decorate(method = "explodeCreeper()V", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/entity/monster/Creeper;dead:Z"))
     private void arclight$delaySetDead(Creeper instance, boolean value, @Local(ordinal = -1) float f) throws Throwable {
         final ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), this.explosionRadius * f, false);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             this.swell = 0;
+            this.entityData.set(DATA_IS_IGNITED, false);
             DecorationOps.cancel().invoke();
             return;
         }
@@ -102,6 +128,16 @@ public abstract class CreeperMixin extends PathfinderMobMixin implements Creeper
         ((WorldBridge) this.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.EXPLOSION);
     }
 
+    @Override
+    public void bridge$setIgnited(boolean ignited) {
+        if (this.isIgnited() != ignited) {
+            CreeperIgniteEvent event = new CreeperIgniteEvent((org.bukkit.entity.Creeper) this.getBukkitEntity(), ignited);
+            if (event.callEvent()) {
+                this.entityData.set(DATA_IS_IGNITED, event.isIgnited());
+            }
+        }
+    }
+
     public void setPowered(boolean power) {
         this.entityData.set(DATA_IS_POWERED, power);
     }
@@ -110,4 +146,9 @@ public abstract class CreeperMixin extends PathfinderMobMixin implements Creeper
     public void bridge$setPowered(boolean power) {
         setPowered(power);
     }
+
+    public void setIgnited(boolean ignited) {
+        this.bridge$setIgnited(ignited);
+    }
+
 }

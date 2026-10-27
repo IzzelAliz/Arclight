@@ -13,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import java.util.Set;
 
 @Mixin(targets = "net.minecraft.server.level.LoadingChunkTracker")
+@io.izzel.arclight.common.mod.mixins.annotation.LoadIfMod(modid = "moonrise", condition = io.izzel.arclight.common.mod.mixins.annotation.LoadIfMod.ModCondition.ABSENT)
 public class DistanceManager_ChunkTicketTrackerMixin {
     // @formatter:off
     @Shadow @Final private DistanceManager distanceManager;

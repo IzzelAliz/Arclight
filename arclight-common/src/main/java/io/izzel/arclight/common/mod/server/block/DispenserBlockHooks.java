@@ -7,6 +7,20 @@ import java.lang.invoke.VarHandle;
 
 public class DispenserBlockHooks {
 
+    public static final class Context {
+        public final Context parent;
+        public final net.minecraft.core.dispenser.BlockSource source;
+        public final net.minecraft.world.item.ItemStack original;
+        public boolean refund;
+        public boolean inEvent;
+
+        public Context(Context parent, net.minecraft.core.dispenser.BlockSource source, net.minecraft.world.item.ItemStack original) {
+            this.parent = parent;
+            this.source = source;
+            this.original = original;
+        }
+    }
+
     private static final VarHandle H_EVENT_FIRED;
 
     static {

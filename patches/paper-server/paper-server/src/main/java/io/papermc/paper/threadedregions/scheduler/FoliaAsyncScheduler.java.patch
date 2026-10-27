@@ -1,0 +1,233 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaAsyncScheduler.java b/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaAsyncScheduler.java
+index a1c153650b9146a245bf61ed3e89d407065da077..a1794886ad9d4102ef214662f4180e7c6dc82f5a 100644
+--- a/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaAsyncScheduler.java
++++ b/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaAsyncScheduler.java
+@@ -1,16 +1,14 @@
+ package io.papermc.paper.threadedregions.scheduler;
+ 
+-import com.mojang.logging.LogUtils;
+ import org.bukkit.plugin.IllegalPluginAccessException;
+ import org.bukkit.plugin.Plugin;
+ import org.slf4j.Logger;
+ import java.util.Objects;
+ import java.util.Set;
+ import java.util.concurrent.ConcurrentHashMap;
+-import java.util.concurrent.Executor;
+-import java.util.concurrent.Executors;
+-import java.util.concurrent.ScheduledExecutorService;
++import java.util.concurrent.ExecutorService;
+ import java.util.concurrent.ScheduledFuture;
++import java.util.concurrent.ScheduledThreadPoolExecutor;
+ import java.util.concurrent.SynchronousQueue;
+ import java.util.concurrent.ThreadFactory;
+ import java.util.concurrent.ThreadPoolExecutor;
+@@ -21,9 +19,9 @@ import java.util.logging.Level;
+ 
+ public final class FoliaAsyncScheduler implements AsyncScheduler {
+ 
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(FoliaAsyncScheduler.class);
+ 
+-    private final Executor executors = new ThreadPoolExecutor(Math.max(4, Runtime.getRuntime().availableProcessors() / 2), Integer.MAX_VALUE,
++    private final ExecutorService executors = new ThreadPoolExecutor(Math.max(4, Runtime.getRuntime().availableProcessors() / 2), Integer.MAX_VALUE,
+         30L, TimeUnit.SECONDS, new SynchronousQueue<>(),
+         new ThreadFactory() {
+             private final AtomicInteger idGenerator = new AtomicInteger();
+@@ -43,7 +41,7 @@ public final class FoliaAsyncScheduler implements AsyncScheduler {
+         }
+     );
+ 
+-    private final ScheduledExecutorService timerThread = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
++    private final ScheduledThreadPoolExecutor timerThread = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
+         @Override
+         public Thread newThread(final Runnable run) {
+             final Thread ret = new Thread(run);
+@@ -59,9 +57,32 @@ public final class FoliaAsyncScheduler implements AsyncScheduler {
+     });
+ 
+     private final Set<AsyncScheduledTask> tasks = ConcurrentHashMap.newKeySet();
++    private volatile boolean closed;
++
++    public FoliaAsyncScheduler() {
++        this.timerThread.setRemoveOnCancelPolicy(true);
++        this.timerThread.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
++    }
++
++    public synchronized void shutdown() {
++        if (this.closed) {
++            return;
++        }
++        this.closed = true;
++        for (final AsyncScheduledTask task : this.tasks) {
++            task.cancel();
++        }
++        this.timerThread.shutdownNow();
++        this.executors.shutdown();
++    }
++
++    private void checkOpen() {
++        if (this.closed) throw new IllegalPluginAccessException("Scheduler is shut down");
++    }
+ 
+     @Override
+-    public ScheduledTask runNow(final Plugin plugin, final Consumer<ScheduledTask> task) {
++    public synchronized ScheduledTask runNow(final Plugin plugin, final Consumer<ScheduledTask> task) {
++        this.checkOpen();
+         Objects.requireNonNull(plugin, "Plugin may not be null");
+         Objects.requireNonNull(task, "Task may not be null");
+ 
+@@ -83,8 +104,9 @@ public final class FoliaAsyncScheduler implements AsyncScheduler {
+     }
+ 
+     @Override
+-    public ScheduledTask runDelayed(final Plugin plugin, final Consumer<ScheduledTask> task, final long delay,
++    public synchronized ScheduledTask runDelayed(final Plugin plugin, final Consumer<ScheduledTask> task, final long delay,
+                                     final TimeUnit unit) {
++        this.checkOpen();
+         Objects.requireNonNull(plugin, "Plugin may not be null");
+         Objects.requireNonNull(task, "Task may not be null");
+         Objects.requireNonNull(unit, "Time unit may not be null");
+@@ -100,8 +122,9 @@ public final class FoliaAsyncScheduler implements AsyncScheduler {
+     }
+ 
+     @Override
+-    public ScheduledTask runAtFixedRate(final Plugin plugin, final Consumer<ScheduledTask> task, final long initialDelay,
++    public synchronized ScheduledTask runAtFixedRate(final Plugin plugin, final Consumer<ScheduledTask> task, final long initialDelay,
+                                         final long period, final TimeUnit unit) {
++        this.checkOpen();
+         Objects.requireNonNull(plugin, "Plugin may not be null");
+         Objects.requireNonNull(task, "Task may not be null");
+         Objects.requireNonNull(unit, "Time unit may not be null");
+@@ -142,7 +165,7 @@ public final class FoliaAsyncScheduler implements AsyncScheduler {
+     }
+ 
+     @Override
+-    public void cancelTasks(final Plugin plugin) {
++    public synchronized void cancelTasks(final Plugin plugin) {
+         Objects.requireNonNull(plugin, "Plugin may not be null");
+ 
+         for (final AsyncScheduledTask task : this.tasks) {
+@@ -188,9 +211,15 @@ public final class FoliaAsyncScheduler implements AsyncScheduler {
+             final boolean repeating = this.isRepeatingTask();
+             // try to advance state
+             final boolean timer;
++            final Consumer<ScheduledTask> run;
+             synchronized (this) {
++                if (!this.plugin.isEnabled() || FoliaAsyncScheduler.this.closed) {
++                    this.cancel();
++                    return;
++                }
+                 if (this.state == STATE_ON_TIMER) {
+                     timer = true;
++                    run = null;
+                     this.delay = null;
+                     this.state = STATE_SCHEDULED_EXECUTOR;
+                 } else if (this.state != STATE_SCHEDULED_EXECUTOR) {
+@@ -202,44 +231,55 @@ public final class FoliaAsyncScheduler implements AsyncScheduler {
+                 } else {
+                     timer = false;
+                     this.state = STATE_EXECUTING;
++                    run = this.run;
+                 }
+             }
+ 
+             if (timer) {
+                 // the scheduled executor is single thread, and unfortunately not expandable with threads
+                 // so we just schedule onto the executor
+-                FoliaAsyncScheduler.this.executors.execute(this);
++                synchronized (FoliaAsyncScheduler.this) {
++                    if (FoliaAsyncScheduler.this.closed) {
++                        this.cancel();
++                        return;
++                    }
++                    FoliaAsyncScheduler.this.executors.execute(this);
++                }
+                 return;
+             }
+ 
+             try {
+-                this.run.accept(this);
++                run.accept(this);
+             } catch (final Throwable throwable) {
+-                this.plugin.getLogger().log(Level.WARNING, "Async task for " + this.plugin.getDescription().getFullName() + " generated an exception", throwable);
++                this.plugin.getLogger().log(Level.WARNING, "Async task for " + this.plugin.getPluginMeta().getDisplayName() + " generated an exception", throwable);
+             } finally {
+-                boolean removeFromTasks = false;
+-                synchronized (this) {
+-                    if (!repeating) {
+-                        // only want to execute once, so we're done
+-                        removeFromTasks = true;
+-                        this.state = STATE_FINISHED;
+-                    } else if (this.state != STATE_EXECUTING_CANCELLED) {
+-                        this.state = STATE_ON_TIMER;
+-                        // account for any delays, whether it be by task exec. or scheduler issues so that we keep
+-                        // the fixed schedule
+-                        final long currTime = System.nanoTime();
+-                        final long delay = Math.max(0L, this.scheduleTarget + this.repeatDelay - currTime);
+-                        this.scheduleTarget = currTime + delay;
+-                        this.delay = FoliaAsyncScheduler.this.timerThread.schedule(this, delay, TimeUnit.NANOSECONDS);
+-                    } else {
+-                        // cancelled repeating task
+-                        removeFromTasks = true;
+-                    }
+-                }
++                // Keep resubmission atomic with shutdown, using the scheduler-before-task lock order.
++                synchronized (FoliaAsyncScheduler.this) {
++                    synchronized (this) {
++                        boolean removeFromTasks = false;
++                        if (!repeating) {
++                            // only want to execute once, so we're done
++                            this.state = STATE_FINISHED;
++                            removeFromTasks = true;
++                        } else if (this.state == STATE_EXECUTING_CANCELLED
++                            || FoliaAsyncScheduler.this.closed || !this.plugin.isEnabled()) {
++                            this.state = STATE_CANCELLED;
++                            removeFromTasks = true;
++                        } else {
++                            this.state = STATE_ON_TIMER;
++                            // account for any delays, whether it be by task exec. or scheduler issues so that we keep
++                            // the fixed schedule
++                            final long currTime = System.nanoTime();
++                            final long delay = Math.max(0L, this.scheduleTarget + this.repeatDelay - currTime);
++                            this.scheduleTarget = currTime + delay;
++                            this.delay = FoliaAsyncScheduler.this.timerThread.schedule(this, delay, TimeUnit.NANOSECONDS);
++                        }
+ 
+-                if (removeFromTasks) {
+-                    this.run = null;
+-                    FoliaAsyncScheduler.this.tasks.remove(this);
++                        if (removeFromTasks) {
++                            this.run = null;
++                            FoliaAsyncScheduler.this.tasks.remove(this);
++                        }
++                    }
+                 }
+             }
+         }
+@@ -277,7 +317,8 @@ public final class FoliaAsyncScheduler implements AsyncScheduler {
+                             return CancelledState.RUNNING;
+                         }
+                         this.state = STATE_EXECUTING_CANCELLED;
+-                        return CancelledState.NEXT_RUNS_CANCELLED;
++                        ret = CancelledState.NEXT_RUNS_CANCELLED;
++                        break;
+                     }
+                     case STATE_EXECUTING_CANCELLED: {
+                         return CancelledState.NEXT_RUNS_CANCELLED_ALREADY;
+@@ -292,13 +333,14 @@ public final class FoliaAsyncScheduler implements AsyncScheduler {
+                         throw new IllegalStateException("Unknown state: " + this.state);
+                     }
+                 }
++                // Executing callbacks use their local reference; cancelled handles need not retain it.
++                this.run = null;
++                FoliaAsyncScheduler.this.tasks.remove(this);
+             }
+ 
+             if (delay != null) {
+                 delay.cancel(false);
+             }
+-            this.run = null;
+-            FoliaAsyncScheduler.this.tasks.remove(this);
+             return ret;
+         }
+ 

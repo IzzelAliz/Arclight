@@ -26,11 +26,12 @@ public abstract class StonecutterRecipeMixin extends SingleItemRecipe implements
 
     @Override
     public Recipe bridge$toBukkitRecipe(NamespacedKey id) {
-        if (this.result().create().isEmpty()) {
+        var output = this.result().create();
+        if (output.isEmpty()) {
             return new ArclightSpecialRecipe(id, this);
         }
-        CraftItemStack result = CraftItemStack.asCraftMirror(this.result());
-        CraftStonecuttingRecipe recipe = new CraftStonecuttingRecipe(id, result, CraftRecipe.toBukkit(this.input()));
+        CraftItemStack result = CraftItemStack.asCraftMirror(output);
+        CraftStonecuttingRecipe recipe = new CraftStonecuttingRecipe(id, result, CraftRecipe.toChoice(this.input()));
         recipe.setGroup(this.group());
         return recipe;
     }

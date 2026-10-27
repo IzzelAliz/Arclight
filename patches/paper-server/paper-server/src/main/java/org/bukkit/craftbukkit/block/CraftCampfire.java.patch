@@ -1,0 +1,45 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftCampfire.java b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftCampfire.java
+index 3747bb401dcfce67d1c39ee75e938d5277a23583..b122e1f73a4e8812d07df07ec28f21ce2d377a4b 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftCampfire.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftCampfire.java
+@@ -68,35 +68,29 @@ public class CraftCampfire extends CraftBlockEntityState<CampfireBlockEntity> im
+ 
+     @Override
+     public void stopCooking() {
+-        for (int i = 0; i < this.getSnapshot().stopCooking.length; ++i)
+-            this.stopCooking(i);
++        throw new UnsupportedOperationException("Campfire cooking suspension is not supported");
+     }
+ 
+     @Override
+     public void startCooking() {
+-        for (int i = 0; i < this.getSnapshot().stopCooking.length; ++i)
+-            this.startCooking(i);
++        throw new UnsupportedOperationException("Campfire cooking suspension is not supported");
+     }
+ 
+     @Override
+     public boolean stopCooking(int index) {
+         requireRange(index, "index", 0, 3);
+-        boolean previous = this.isCookingDisabled(index);
+-        this.getSnapshot().stopCooking[index] = true;
+-        return previous;
++        throw new UnsupportedOperationException("Campfire cooking suspension is not supported");
+     }
+ 
+     @Override
+     public boolean startCooking(int index) {
+         requireRange(index, "index", 0, 3);
+-        boolean previous = this.isCookingDisabled(index);
+-        this.getSnapshot().stopCooking[index] = false;
+-        return previous;
++        throw new UnsupportedOperationException("Campfire cooking suspension is not supported");
+     }
+ 
+     @Override
+     public boolean isCookingDisabled(int index) {
+         requireRange(index, "index", 0, 3);
+-        return this.getSnapshot().stopCooking[index];
++        throw new UnsupportedOperationException("Campfire cooking suspension is not supported");
+     }
+ }

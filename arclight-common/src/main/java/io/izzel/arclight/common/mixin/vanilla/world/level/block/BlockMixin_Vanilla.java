@@ -32,7 +32,7 @@ public abstract class BlockMixin_Vanilla implements BlockBridge {
     @Decorate(method = "dropResources(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/entity/BlockEntity;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/item/ItemStack;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;spawnAfterBreak(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/item/ItemStack;Z)V"))
     private static void arclight$suppressNativeBlockBreakExperience(BlockState state, ServerLevel world, BlockPos pos, ItemStack tool, boolean dropExperience) throws Throwable {
-        DecorationOps.callsite().invoke(state, world, pos, tool,
-            ArclightCaptures.shouldSuppressVanillaBlockBreakExperience(world, pos) ? false : dropExperience);
+        boolean selectedExperience = !ArclightCaptures.shouldSuppressVanillaBlockBreakExperience(world, pos) && dropExperience;
+        DecorationOps.callsite().invoke(state, world, pos, tool, selectedExperience);
     }
 }

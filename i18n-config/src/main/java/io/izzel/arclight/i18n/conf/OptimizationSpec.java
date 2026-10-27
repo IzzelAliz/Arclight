@@ -13,10 +13,10 @@ public class OptimizationSpec {
     private int goalSelectorInterval;
 
     @Setting("use-activation-and-tracking-range")
-    private boolean useActivationAndTrackingRange;
+    private boolean useTrackingRange;
 
-    public boolean useActivationAndTrackingRange() {
-        return useActivationAndTrackingRange;
+    public boolean useTrackingRange() {
+        return useTrackingRange;
     }
 
     public boolean isCachePluginClass() {

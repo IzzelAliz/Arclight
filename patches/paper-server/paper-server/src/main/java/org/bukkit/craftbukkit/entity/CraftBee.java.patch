@@ -1,0 +1,27 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftBee.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftBee.java
+index 27155539258c5c49d9f5b598fc13190a4f3ab2ff..8d7fddad4cc5d524bbe613d9524fbc5a8e9cc533 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftBee.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftBee.java
+@@ -1,6 +1,7 @@
+ package org.bukkit.craftbukkit.entity;
+ 
+ import com.google.common.base.Preconditions;
++import io.izzel.arclight.common.bridge.core.world.entity.BeeBridge;
+ import net.minecraft.core.BlockPos;
+ import org.bukkit.Location;
+ import org.bukkit.craftbukkit.CraftServer;
+@@ -86,12 +87,12 @@ public class CraftBee extends CraftAnimals implements Bee {
+     public void setRollingOverride(net.kyori.adventure.util.TriState rolling) {
+         this.getHandle().rollingOverride = rolling;
+ 
+-        this.getHandle().setRolling(this.getHandle().isRolling()); // Refresh rolling state
++        ((BeeBridge) this.getHandle()).bridge$setRolling(((BeeBridge) this.getHandle()).bridge$isRolling()); // Refresh rolling state
+     }
+ 
+     @Override
+     public boolean isRolling() {
+-        return this.getRollingOverride().toBooleanOrElse(this.getHandle().isRolling());
++        return this.getRollingOverride().toBooleanOrElse(((BeeBridge) this.getHandle()).bridge$isRolling());
+     }
+ 
+     @Override

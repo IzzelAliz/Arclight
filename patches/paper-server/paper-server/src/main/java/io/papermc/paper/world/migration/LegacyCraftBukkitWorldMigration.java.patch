@@ -1,0 +1,26 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/world/migration/LegacyCraftBukkitWorldMigration.java b/paper-server/src/main/java/io/papermc/paper/world/migration/LegacyCraftBukkitWorldMigration.java
+index ba24fda2395f07cdb3d1c0c66811dfd4a5b81533..a3ead437799616b3cd7d6358614129bb7528907c 100644
+--- a/paper-server/src/main/java/io/papermc/paper/world/migration/LegacyCraftBukkitWorldMigration.java
++++ b/paper-server/src/main/java/io/papermc/paper/world/migration/LegacyCraftBukkitWorldMigration.java
+@@ -1,6 +1,5 @@
+ package io.papermc.paper.world.migration;
+ 
+-import com.mojang.logging.LogUtils;
+ import com.mojang.serialization.Dynamic;
+ import io.papermc.paper.world.saveddata.PaperLevelOverrides;
+ import io.papermc.paper.world.saveddata.PaperWorldMetadata;
+@@ -32,12 +31,13 @@ import net.minecraft.world.level.timers.TimerQueue;
+ import org.jspecify.annotations.NullMarked;
+ import org.jspecify.annotations.Nullable;
+ import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
+ 
+ import static java.util.Objects.requireNonNullElseGet;
+ 
+ @NullMarked
+ final class LegacyCraftBukkitWorldMigration {
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = LoggerFactory.getLogger(LegacyCraftBukkitWorldMigration.class.getSimpleName());
+     private static final String[] WORLD_BORDER_RELATIVE_CANDIDATES = {"minecraft/world_border.dat", "world_border.dat"};
+ 
+     private final WorldMigrationContext context;

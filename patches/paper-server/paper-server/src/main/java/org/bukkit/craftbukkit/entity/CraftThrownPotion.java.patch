@@ -1,0 +1,12 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftThrownPotion.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftThrownPotion.java
+index 88080e8e9790047dd75cf4429349b546141675ea..4078d3956396df4885059b9c258fec6c8aa89f0f 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftThrownPotion.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftThrownPotion.java
+@@ -48,6 +48,6 @@ public abstract class CraftThrownPotion extends CraftThrowableProjectile impleme
+ 
+     @Override
+     public void splash() {
+-        this.getHandle().splash(null);
++        throw new UnsupportedOperationException("Arclight does not support active potion splashing");
+     }
+ }

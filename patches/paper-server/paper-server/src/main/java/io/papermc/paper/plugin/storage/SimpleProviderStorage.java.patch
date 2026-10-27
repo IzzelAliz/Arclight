@@ -1,0 +1,21 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/storage/SimpleProviderStorage.java b/paper-server/src/main/java/io/papermc/paper/plugin/storage/SimpleProviderStorage.java
+index 26422904751647a061397ce978bba752149003cd..65f8c6b137e10f838637ce72e432cb79bfc2209e 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/storage/SimpleProviderStorage.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/storage/SimpleProviderStorage.java
+@@ -1,7 +1,6 @@
+ package io.papermc.paper.plugin.storage;
+ 
+ import com.google.common.graph.GraphBuilder;
+-import com.mojang.logging.LogUtils;
+ import io.papermc.paper.plugin.entrypoint.dependency.MetaDependencyTree;
+ import io.papermc.paper.plugin.entrypoint.dependency.SimpleMetaDependencyTree;
+ import io.papermc.paper.plugin.entrypoint.strategy.PluginGraphCycleException;
+@@ -15,7 +14,7 @@ import java.util.stream.Collectors;
+ 
+ public abstract class SimpleProviderStorage<T> implements ProviderStorage<T> {
+ 
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(SimpleProviderStorage.class.getSimpleName());
+ 
+     protected final List<PluginProvider<T>> providers = new ArrayList<>();
+     protected ProviderLoadingStrategy<T> strategy;

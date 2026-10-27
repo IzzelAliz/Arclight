@@ -9,7 +9,7 @@ import net.minecraft.world.level.storage.WorldData;
 
 public interface DedicatedServerBridge {
     net.minecraft.server.dedicated.DedicatedServerProperties bridge$reloadProperties();
-    String bridge$runRconCommand(String command, java.net.SocketAddress address);
+    String bridge$runRconCommand(net.minecraft.server.rcon.RconConsoleSource source, String command);
 
     default void bridge$platform$exitNow() {
     }

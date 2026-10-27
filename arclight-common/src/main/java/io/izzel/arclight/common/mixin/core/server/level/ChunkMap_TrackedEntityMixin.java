@@ -5,6 +5,7 @@ import io.izzel.arclight.common.bridge.core.server.level.ServerEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.server.ChunkMap_TrackedEntityBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
+import io.papermc.paper.event.player.PlayerTrackEntityEvent;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ServerEntity;
@@ -40,6 +41,15 @@ public abstract class ChunkMap_TrackedEntityMixin implements ChunkMap_TrackedEnt
         boolean canSee =  ((ServerPlayerBridge)serverPlayer).bridge$getBukkitEntity().canSee(instance.bridge$getBukkitEntity());
         boolean canBroadcast = (boolean) DecorationOps.callsite().invoke(instance, serverPlayer);
         return canSee && canBroadcast;
+    }
+
+    /** Keep Paper's accepted observer insertion even when the pairing event is vetoed. */
+    @Decorate(method = "updatePlayer(Lnet/minecraft/server/level/ServerPlayer;)V", require = 1, allow = 1,
+        at = @At(value = "INVOKE", target = "Ljava/util/Set;add(Ljava/lang/Object;)Z", remap = false))
+    private boolean arclight$trackEntity(Set<ServerPlayerConnection> viewers, Object connection, ServerPlayer player) throws Throwable {
+        boolean added = (boolean) DecorationOps.callsite().invoke(viewers, connection);
+        return added && (PlayerTrackEntityEvent.getHandlerList().getRegisteredListeners().length == 0
+            || new PlayerTrackEntityEvent(((ServerPlayerBridge) player).bridge$getBukkitEntity(), this.entity.bridge$getBukkitEntity()).callEvent());
     }
 
     @Override

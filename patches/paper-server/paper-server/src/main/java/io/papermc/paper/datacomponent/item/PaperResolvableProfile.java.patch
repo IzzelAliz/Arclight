@@ -1,0 +1,29 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/datacomponent/item/PaperResolvableProfile.java b/paper-server/src/main/java/io/papermc/paper/datacomponent/item/PaperResolvableProfile.java
+--- a/paper-server/src/main/java/io/papermc/paper/datacomponent/item/PaperResolvableProfile.java
++++ b/paper-server/src/main/java/io/papermc/paper/datacomponent/item/PaperResolvableProfile.java
+@@ -1,6 +1,5 @@
+ package io.papermc.paper.datacomponent.item;
+ 
+-import com.destroystokyo.paper.profile.CraftPlayerProfile;
+ import com.destroystokyo.paper.profile.PlayerProfile;
+ import com.destroystokyo.paper.profile.ProfileProperty;
+ import com.destroystokyo.paper.profile.SharedPlayerProfile;
+@@ -25,6 +24,7 @@
+ import net.minecraft.util.StringUtil;
+ import net.minecraft.world.entity.player.PlayerModelType;
+ import net.minecraft.world.entity.player.PlayerSkin;
++import org.bukkit.craftbukkit.profile.CraftPlayerProfile;
+ import org.bukkit.craftbukkit.util.Handleable;
+ import org.bukkit.profile.PlayerTextures;
+ import org.jetbrains.annotations.Unmodifiable;
+@@ -69,7 +69,9 @@
+     @Override
+     public CompletableFuture<PlayerProfile> resolve() {
+         return this.impl.resolveProfile(MinecraftServer.getServer().services().profileResolver())
+-            .thenApply(CraftPlayerProfile::asBukkitCopy);
++            .thenApply(profile -> new CraftPlayerProfile(new net.minecraft.world.item.component.ResolvableProfile.Static(
++                Either.left(profile), this.impl.skinPatch()
++            )));
+     }
+ 
+     @Override

@@ -1,0 +1,19 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/util/sanitizer/ItemComponentSanitizer.java b/paper-server/src/main/java/io/papermc/paper/util/sanitizer/ItemComponentSanitizer.java
+--- a/paper-server/src/main/java/io/papermc/paper/util/sanitizer/ItemComponentSanitizer.java
++++ b/paper-server/src/main/java/io/papermc/paper/util/sanitizer/ItemComponentSanitizer.java
+@@ -1,6 +1,7 @@
+ package io.papermc.paper.util.sanitizer;
+ 
+ import com.google.common.collect.ImmutableMap;
++import net.minecraft.server.MinecraftServer;
+ import io.papermc.paper.configuration.GlobalConfiguration;
+ import java.util.List;
+ import java.util.Map;
+@@ -10,7 +11,6 @@
+ import net.minecraft.core.component.DataComponentType;
+ import net.minecraft.core.component.DataComponents;
+ import net.minecraft.core.registries.Registries;
+-import net.minecraft.server.MinecraftServer;
+ import net.minecraft.util.RandomSource;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.alchemy.PotionContents;

@@ -63,6 +63,11 @@ public abstract class ChunkGeneratorMixin implements ChunkGeneratorBridge {
 
     // TODO SpigotWorldConfig support to provide different seed according to the structure kind
 
+    @Override
+    public void bridge$applyBiomeDecoration(WorldGenLevel level, ChunkAccess chunkAccess, StructureManager structureFeatureManager, boolean vanilla) {
+        this.applyBiomeDecoration(level, chunkAccess, structureFeatureManager, vanilla);
+    }
+
     public void applyBiomeDecoration(WorldGenLevel level, ChunkAccess chunkAccess, StructureManager structureFeatureManager, boolean vanilla) {
         if (vanilla) {
             arclight$this$applyBiomeDecoration(level, chunkAccess, structureFeatureManager);

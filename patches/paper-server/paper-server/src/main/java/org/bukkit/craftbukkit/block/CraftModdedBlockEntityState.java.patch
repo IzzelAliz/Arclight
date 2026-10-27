@@ -1,0 +1,34 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftModdedBlockEntityState.java b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftModdedBlockEntityState.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..6e86cbe0a06cc99af25697cb6c2ced452fb85c37
+--- /dev/null
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftModdedBlockEntityState.java
+@@ -0,0 +1,28 @@
++package org.bukkit.craftbukkit.block;
++
++import com.google.common.base.Preconditions;
++import net.minecraft.world.level.block.entity.BlockEntity;
++import org.bukkit.Location;
++import org.bukkit.World;
++
++public final class CraftModdedBlockEntityState extends CraftBlockEntityState<BlockEntity> {
++
++    public CraftModdedBlockEntityState(World world, BlockEntity blockEntity) {
++        super(world, blockEntity);
++        Preconditions.checkState(this.getSnapshot() != null, "Failed to create snapshot for modded block entity %s", blockEntity.getType());
++    }
++
++    private CraftModdedBlockEntityState(CraftModdedBlockEntityState state, Location location) {
++        super(state, location);
++    }
++
++    @Override
++    public CraftModdedBlockEntityState copy() {
++        return new CraftModdedBlockEntityState(this, null);
++    }
++
++    @Override
++    public CraftModdedBlockEntityState copy(Location location) {
++        return new CraftModdedBlockEntityState(this, location);
++    }
++}

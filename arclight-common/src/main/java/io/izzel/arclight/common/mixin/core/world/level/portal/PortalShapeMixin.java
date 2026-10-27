@@ -42,7 +42,7 @@ public abstract class PortalShapeMixin implements PortalShapeBridge {
     @Shadow @Final private int width;
     // @formatter:on
 
-    @Unique private static final ThreadLocal<Deque<Optional<BlockStateListPopulator>>> arclight$portalScanScopes = new ThreadLocal<>();
+    @Unique private static Deque<Optional<BlockStateListPopulator>> arclight$portalScanScopes;
     @Unique private @Nullable BlockStateListPopulator arclight$portalBlocks;
 
     @WrapMethod(method = "findAnyShape(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Direction$Axis;)Lnet/minecraft/world/level/portal/PortalShape;")
@@ -50,13 +50,13 @@ public abstract class PortalShapeMixin implements PortalShapeBridge {
         boolean actual = level instanceof LevelAccessor levelAccessor
             && levelAccessor instanceof LevelAccessorBridge bridge
             && bridge.arclight$isActual();
-        Deque<Optional<BlockStateListPopulator>> scopes = arclight$portalScanScopes.get();
+        Deque<Optional<BlockStateListPopulator>> scopes = arclight$portalScanScopes;
         if (!actual && (scopes == null || scopes.isEmpty())) {
             return original.call(level, pos, axis);
         }
         if (scopes == null) {
             scopes = new ArrayDeque<>();
-            arclight$portalScanScopes.set(scopes);
+            arclight$portalScanScopes = scopes;
         }
         scopes.push(actual ? Optional.of(new BlockStateListPopulator((LevelAccessor) level)) : Optional.empty());
         try {
@@ -69,7 +69,7 @@ public abstract class PortalShapeMixin implements PortalShapeBridge {
         } finally {
             scopes.pop();
             if (scopes.isEmpty()) {
-                arclight$portalScanScopes.remove();
+                arclight$portalScanScopes = null;
             }
         }
     }
@@ -78,7 +78,7 @@ public abstract class PortalShapeMixin implements PortalShapeBridge {
     @Decorate(method = {"getDistanceUntilEdgeAboveFrame", "hasTopFrame", "getDistanceUntilTop"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockBehaviour$StatePredicate;test(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Z"))
     private static boolean arclight$capturePortalFrame(BlockBehaviour.StatePredicate frame, BlockState state, BlockGetter level, BlockPos pos) throws Throwable {
         boolean matches = (boolean) DecorationOps.callsite().invoke(frame, state, level, pos);
-        Deque<Optional<BlockStateListPopulator>> scopes = arclight$portalScanScopes.get();
+        Deque<Optional<BlockStateListPopulator>> scopes = arclight$portalScanScopes;
         BlockStateListPopulator blocks = scopes == null || scopes.isEmpty() ? null : scopes.peek().orElse(null);
         if (matches && blocks != null) {
             blocks.setBlock(pos, state, 18);
@@ -97,7 +97,7 @@ public abstract class PortalShapeMixin implements PortalShapeBridge {
         BlockState portal = Blocks.NETHER_PORTAL.defaultBlockState().setValue(NetherPortalBlock.AXIS, this.axis);
         BlockPos.betweenClosed(this.bottomLeft, this.bottomLeft.relative(Direction.UP, this.height - 1).relative(this.rightDir, this.width - 1))
             .forEach(pos -> blocks.setBlock(pos, portal, 18));
-        PortalCreateEvent event = new PortalCreateEvent((java.util.List<org.bukkit.block.BlockState>) (java.util.List) blocks.getList(), world, null, PortalCreateEvent.CreateReason.FIRE);
+        PortalCreateEvent event = new PortalCreateEvent((java.util.List<org.bukkit.block.BlockState>) (java.util.List) blocks.getSnapshotBlocks(), world, null, PortalCreateEvent.CreateReason.FIRE);
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
             original.call(level);

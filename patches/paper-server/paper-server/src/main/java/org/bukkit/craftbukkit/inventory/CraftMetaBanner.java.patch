@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBanner.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBanner.java
+index 0d1ae9683c4309227ad276e1370878c643c487e6..b05a26d8dbcc132196c951b3ad671c88928e1069 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBanner.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBanner.java
+@@ -27,7 +27,7 @@ public class CraftMetaBanner extends CraftMetaItem implements BannerMeta {
+ 
+     private List<Pattern> patterns = new ArrayList<>();
+ 
+-    CraftMetaBanner(CraftMetaItem meta) {
++    public CraftMetaBanner(CraftMetaItem meta) {
+         super(meta);
+ 
+         if (!(meta instanceof final CraftMetaBanner bannerMeta)) {

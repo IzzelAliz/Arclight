@@ -1,0 +1,24 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/profile/PaperFilledProfileCache.java b/paper-server/src/main/java/io/papermc/paper/profile/PaperFilledProfileCache.java
+index 8bc0b29368039124fe8624ee324afeb7635d1bff..bd2253f09c643e010ec601fb9ba5128c910a7591 100644
+--- a/paper-server/src/main/java/io/papermc/paper/profile/PaperFilledProfileCache.java
++++ b/paper-server/src/main/java/io/papermc/paper/profile/PaperFilledProfileCache.java
+@@ -28,7 +28,7 @@ import org.slf4j.Logger;
+  */
+ @NullMarked
+ public final class PaperFilledProfileCache {
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = LogUtils.getLogger();
+ 
+     private final ReadWriteLock lock = new ReentrantReadWriteLock();
+     private final Map<String, GameProfile> byName = new HashMap<>();
+@@ -107,8 +107,8 @@ public final class PaperFilledProfileCache {
+     }
+ 
+     private boolean tryCancelCleanup() {
+-        final MinecraftServer server = MinecraftServer.getServer();
+-        if (server != null && (!server.isRunning() || server.hasStopped())) {
++        final MinecraftServer server = org.bukkit.Bukkit.getServer() instanceof org.bukkit.craftbukkit.CraftServer craftServer ? craftServer.getServer() : null;
++        if (server != null && (!server.isRunning() || ((io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge) server).bridge$hasStopped())) {
+             this.cleanupExecutor.shutdown();
+             return true;
+         }

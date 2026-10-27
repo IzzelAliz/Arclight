@@ -1,11 +1,9 @@
 package io.izzel.arclight.boot.forge.mod;
 
 import cpw.mods.jarhandling.SecureJar;
-import cpw.mods.jarhandling.impl.Jar;
 import cpw.mods.modlauncher.LaunchPluginHandler;
 import cpw.mods.modlauncher.Launcher;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
-import cpw.mods.util.LambdaExceptionUtils;
 import io.izzel.arclight.api.ArclightPlatform;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.boot.AbstractBootstrap;
@@ -21,25 +19,19 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
 import java.io.File;
-import java.io.InputStream;
-import java.lang.invoke.MethodType;
 import java.lang.module.Configuration;
-import java.lang.module.ModuleDescriptor;
 import java.lang.module.ModuleFinder;
+import java.lang.module.ModuleReference;
 import java.lang.module.ResolvedModule;
-import java.net.URI;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.CodeSigner;
 import java.util.*;
-import java.util.jar.Manifest;
 
 public class ModBootstrap implements AbstractBootstrap {
 
     public record ModBoot(Configuration configuration, ClassLoader parent) {}
 
     private static ModBoot modBoot;
+    private static boolean discovererPatched;
 
     static void run() {
         var plugin = Launcher.INSTANCE.environment().findLaunchPlugin("arclight_implementer");
@@ -89,49 +81,44 @@ public class ModBootstrap implements AbstractBootstrap {
     @Override
     public void dirtyHacks() throws Exception {
         AbstractBootstrap.super.dirtyHacks();
-        try (var in = getClass().getClassLoader().getResourceAsStream("net/minecraftforge/fml/loading/moddiscovery/ModDiscoverer.class")) {
+    }
+
+    static synchronized void patchModDiscoverer(Class<?> bootstrap) throws Exception {
+        if (discovererPatched) {
+            return;
+        }
+        final var name = "net/minecraftforge/fml/loading/moddiscovery/ModDiscoverer";
+        try (var in = bootstrap.getClassLoader().getResourceAsStream(name + ".class")) {
+            if (in == null) {
+                throw new IllegalStateException("Cannot find Forge ModDiscoverer");
+            }
             var clazz = new ClassNode();
             new ClassReader(in).accept(clazz, 0);
-            final var mdName = "net/minecraftforge/fml/loading/moddiscovery/ModDiscoverer";
-            final var mdSig = "L" + mdName + ";";
-            {
-                MethodNode constructor = null;
-                for (var method: clazz.methods) {
-                    if ("<init>".equals(method.name)) {
-                        constructor = method;
+            int patched = 0;
+            for (var method : clazz.methods) {
+                if (!method.name.equals("discoverMods") || !method.desc.equals("(Ljava/util/Map;)Lnet/minecraftforge/fml/loading/moddiscovery/ModValidator;")) {
+                    continue;
+                }
+                for (var insn : method.instructions) {
+                    if (insn instanceof MethodInsnNode call && call.getOpcode() == Opcodes.INVOKEINTERFACE
+                        && call.owner.equals("net/minecraftforge/forgespi/locating/IDependencyLocator")
+                        && call.name.equals("scanMods") && call.desc.equals("(Ljava/lang/Iterable;)Ljava/util/List;")) {
+                        method.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESTATIC,
+                            "io/izzel/arclight/boot/forge/mod/ArclightJarInJarAdaptor", "scanMods",
+                            "(Lnet/minecraftforge/forgespi/locating/IDependencyLocator;Ljava/lang/Iterable;)Ljava/util/List;", false));
+                        patched++;
                     }
                 }
-                if (constructor == null) {
-                    throw new RuntimeException("Cannot transform ModDiscoverer: <init> not found");
-                }
-
-                FrameNode lastFrame = null;
-                for (var insn: constructor.instructions) {
-                    if (insn instanceof FrameNode frame) {
-                        lastFrame = frame;
-                    }
-                }
-                if (lastFrame == null) {
-                    throw new RuntimeException("Cannot transform ModDiscoverer: <init> return not found");
-                }
-
-                var aloadThis = new VarInsnNode(Opcodes.ALOAD, 0);
-                var putField = new FieldInsnNode(Opcodes.PUTSTATIC, mdName, "arclight$INSTANCE", mdSig);
-                constructor.instructions.insertBefore(lastFrame, aloadThis);
-                constructor.instructions.insert(aloadThis, putField);
-                constructor.instructions.insert(putField, new InsnNode(Opcodes.RETURN));
-                constructor.instructions.remove(lastFrame);
             }
-            {
-                clazz.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "arclight$INSTANCE", mdSig, mdSig, null);
+            if (patched != 1) {
+                throw new IllegalStateException("Cannot adapt Forge ModDiscoverer: expected one dependency scan, found " + patched);
             }
-            var cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+            // The static adapter consumes the same stack values; retain the original frames.
+            var cw = new ClassWriter(0);
             clazz.accept(cw);
             byte[] bytes = cw.toByteArray();
-            Unsafe.defineClass(mdName.replace('/', '.'), bytes, 0, bytes.length, getClass().getClassLoader() /* MC-BOOTSTRAP */, getClass().getProtectionDomain());
-            System.out.println("Redefined ModDiscoverer in cl:" +getClass().getClassLoader());
-        } catch (Throwable t) {
-            t.printStackTrace();
+            Unsafe.defineClass(name.replace('/', '.'), bytes, 0, bytes.length, bootstrap.getClassLoader(), bootstrap.getProtectionDomain());
+            discovererPatched = true;
         }
     }
 
@@ -181,51 +168,14 @@ public class ModBootstrap implements AbstractBootstrap {
         var packageLookup = (Map<String, ResolvedModule>) Unsafe.getObject(classLoader, Unsafe.objectFieldOffset(pkgField));
         var rootField = SecureModuleClassLoader.class.getDeclaredField("ourModulesSecure");
         var resolvedRoots = (Map<String, Object>) Unsafe.getObject(classLoader, Unsafe.objectFieldOffset(rootField));
-        var moduleRefCtor = Unsafe.lookup().findConstructor(Class.forName("net.minecraftforge.securemodules.SecureModuleFinder$Reference"),
-            MethodType.methodType(void.class, SecureJar.ModuleDataProvider.class));
+        var modulesField = SecureModuleClassLoader.class.getDeclaredField("ourModules");
+        var modules = (Map<String, ModuleReference>) Unsafe.getObject(classLoader, Unsafe.objectFieldOffset(modulesField));
         for (var mod : conf.modules()) {
             for (var pk : mod.reference().descriptor().packages()) {
                 packageLookup.put(pk, mod);
             }
-            resolvedRoots.put(mod.name(), moduleRefCtor.invokeWithArguments(new JarModuleDataProvider((Jar) secureJar)));
-        }
-    }
-
-    private record JarModuleDataProvider(Jar jar) implements SecureJar.ModuleDataProvider {
-
-        @Override
-        public String name() {
-            return jar.name();
-        }
-
-        @Override
-        public ModuleDescriptor descriptor() {
-            return jar.computeDescriptor();
-        }
-
-        @Override
-        public URI uri() {
-            return jar.getURI();
-        }
-
-        @Override
-        public Optional<URI> findFile(final String name) {
-            return jar.findFile(name);
-        }
-
-        @Override
-        public Optional<InputStream> open(final String name) {
-            return jar.findFile(name).map(Paths::get).map(LambdaExceptionUtils.rethrowFunction(Files::newInputStream));
-        }
-
-        @Override
-        public Manifest getManifest() {
-            return jar.getManifest();
-        }
-
-        @Override
-        public CodeSigner[] verifyAndGetSigners(final String cname, final byte[] bytes) {
-            return jar.verifyAndGetSigners(cname, bytes);
+            modules.put(mod.name(), mod.reference());
+            resolvedRoots.put(mod.name(), mod.reference());
         }
     }
 }

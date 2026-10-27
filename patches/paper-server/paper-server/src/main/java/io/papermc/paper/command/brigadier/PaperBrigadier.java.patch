@@ -1,0 +1,51 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/command/brigadier/PaperBrigadier.java b/paper-server/src/main/java/io/papermc/paper/command/brigadier/PaperBrigadier.java
+index c40dc26e7da473fdb7204884abde9857d3904176..c824bbea5652ad2d8e858dc8a343b31a4f265a9b 100644
+--- a/paper-server/src/main/java/io/papermc/paper/command/brigadier/PaperBrigadier.java
++++ b/paper-server/src/main/java/io/papermc/paper/command/brigadier/PaperBrigadier.java
+@@ -4,7 +4,9 @@ import com.mojang.brigadier.CommandDispatcher;
+ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+ import com.mojang.brigadier.tree.CommandNode;
+ import com.mojang.brigadier.tree.LiteralCommandNode;
++import io.izzel.arclight.common.mod.compat.CommandNodeHooks;
+ import io.papermc.paper.command.brigadier.bukkit.BukkitCommandNode;
++import java.util.ArrayList;
+ import java.util.Map;
+ import net.minecraft.commands.CommandSource;
+ import net.minecraft.commands.Commands;
+@@ -37,7 +39,7 @@ public final class PaperBrigadier {
+         }
+ 
+         final APICommandMeta meta;
+-        if ((meta = node.apiCommandMeta) == null) {
++        if ((meta = CommandNodeHooks.getApiCommandMeta(node)) == null) {
+             return new VanillaCommandWrapper(node);
+         }
+         CommandNode<CommandSourceStack> argumentCommandNode = node;
+@@ -68,12 +70,26 @@ public final class PaperBrigadier {
+ 
+         for (Object node : erasedDispatcher.getRoot().getChildren()) {
+             if (node instanceof CommandNode<?> commandNode && commandNode.getCommand() instanceof BukkitCommandNode.BukkitBrigCommand) {
+-                after.getDispatcher().getRoot().removeCommand(((CommandNode<?>) node).getName()); // Remove already existing commands
++                removeCommand(after.getDispatcher().getRoot(), ((CommandNode<?>) node).getName()); // Remove already existing commands
+                 after.getDispatcher().getRoot().addChild((CommandNode<net.minecraft.commands.CommandSourceStack>) node);
+             }
+         }
+     }
+ 
++    public static void removeCommand(final CommandNode<?> node, final String name) {
++        // The mirror has no local children: mutate the actual native node's three indexes.
++        final CommandNode<?> target = node instanceof ApiMirrorRootNode mirror ? mirror.getDispatcher().getRoot() : node;
++        CommandNodeHooks.removeCommand(target, name);
++    }
++
++    public static void clearCommands(final CommandNode<?> node) {
++        final CommandNode<?> target = node instanceof ApiMirrorRootNode mirror ? mirror.getDispatcher().getRoot() : node;
++        // Removal changes the live children view, so take a snapshot first.
++        for (final CommandNode<?> child : new ArrayList<>(target.getChildren())) {
++            CommandNodeHooks.removeCommand(target, child.getName());
++        }
++    }
++
+     public static <S> LiteralCommandNode<S> copyLiteral(final String newLiteral, final LiteralCommandNode<S> source) {
+         // logic copied from LiteralCommandNode#createBuilder
+         final LiteralArgumentBuilder<S> copyBuilder = LiteralArgumentBuilder.<S>literal(newLiteral)

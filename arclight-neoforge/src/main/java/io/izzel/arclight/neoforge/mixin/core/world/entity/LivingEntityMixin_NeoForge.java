@@ -56,14 +56,9 @@ public abstract class LivingEntityMixin_NeoForge extends EntityMixin_NeoForge im
     }
 
     @Decorate(method = "hurtServer", at = @At(value = "INVOKE", target = "Lnet/neoforged/neoforge/common/CommonHooks;onEntityIncomingDamage(Lnet/minecraft/world/entity/LivingEntity;Lnet/neoforged/neoforge/common/damagesource/DamageContainer;)Z"))
-    private boolean arclight$neoforge$popIncomingDamageOnCancel(LivingEntity entity, DamageContainer container) throws Throwable {
-        boolean cancelled = (boolean) DecorationOps.callsite().invoke(entity, container);
-        // NeoForge returns directly on incoming cancellation without consuming the
-        // container it just pushed. Only remove our exact invocation's container.
-        if (cancelled && this.damageContainers.peek() == container) {
-            this.damageContainers.pop();
-        }
-        return cancelled;
+    private boolean arclight$neoforge$incomingDamage(LivingEntity entity, DamageContainer container) throws Throwable {
+        ((io.izzel.arclight.neoforge.mixin.neoforge.DamageContainerAccessor) container).arclight$setInitialInvulnerabilityTicks(this.bridge$getInvulnerableDuration());
+        return (boolean) DecorationOps.callsite().invoke(entity, container);
     }
 
     @Decorate(method = "hurtServer", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/neoforged/neoforge/common/damagesource/DamageContainer;getNewDamage()F"))
@@ -81,9 +76,6 @@ public abstract class LivingEntityMixin_NeoForge extends EntityMixin_NeoForge im
         damageContainers.peek().setNewDamage((float) event.getDamage());
         ArclightCaptures.captureDamageContainer(container);
 
-        if (source.getEntity() instanceof net.minecraft.world.entity.player.Player player) {
-            player.resetAttackStrengthTicker();
-        }
         // hurtServer stores this callsite's return in its working damage local and later
         // overwrites DamageContainer from that local. Keep both data-flow paths aligned.
         return (float) event.getDamage();

@@ -1,0 +1,20 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/provider/source/FileArrayProviderSource.java b/paper-server/src/main/java/io/papermc/paper/plugin/provider/source/FileArrayProviderSource.java
+index b2ec31fdb2ba8f18c29f2014c03c96a15ec995ad..c7e1672c4a5a345f314b0d5738bee6b3191efea3 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/provider/source/FileArrayProviderSource.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/provider/source/FileArrayProviderSource.java
+@@ -1,6 +1,5 @@
+ package io.papermc.paper.plugin.provider.source;
+ 
+-import com.mojang.logging.LogUtils;
+ import io.papermc.paper.plugin.entrypoint.EntrypointHandler;
+ import java.io.File;
+ import java.nio.file.Path;
+@@ -12,7 +11,7 @@ public class FileArrayProviderSource implements ProviderSource<File[], List<Path
+ 
+     public static final FileArrayProviderSource INSTANCE = new FileArrayProviderSource();
+     private static final FileProviderSource FILE_PROVIDER_SOURCE = new FileProviderSource("File '%s'"::formatted);
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(FileArrayProviderSource.class.getSimpleName());
+ 
+     @Override
+     public List<Path> prepareContext(File[] context) {

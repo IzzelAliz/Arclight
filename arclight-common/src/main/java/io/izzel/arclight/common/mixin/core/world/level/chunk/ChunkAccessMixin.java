@@ -42,6 +42,7 @@ public abstract class ChunkAccessMixin implements BlockGetter, BiomeManager.Nois
 
 
     private static final CraftPersistentDataTypeRegistry DATA_TYPE_REGISTRY = new CraftPersistentDataTypeRegistry();
+
     public DirtyCraftPersistentDataContainer persistentDataContainer = new DirtyCraftPersistentDataContainer(DATA_TYPE_REGISTRY);
 
     @Inject(method = "tryMarkSaved", cancellable = true, at = @At("RETURN"))
@@ -80,4 +81,9 @@ public abstract class ChunkAccessMixin implements BlockGetter, BiomeManager.Nois
             throw new ReportedException(crashreport);
         }
     }
+
+    public void setNoiseBiome(int x, int y, int z, net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> biome) {
+        this.setBiome(x, y, z, biome);
+    }
+
 }

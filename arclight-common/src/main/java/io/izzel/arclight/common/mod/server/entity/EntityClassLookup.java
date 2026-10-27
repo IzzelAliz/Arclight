@@ -23,6 +23,7 @@ import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ambient.AmbientCreature;
 import net.minecraft.world.entity.ambient.Bat;
 import net.minecraft.world.entity.animal.fish.AbstractFish;
+import net.minecraft.world.entity.animal.fish.AbstractSchoolingFish;
 import net.minecraft.world.entity.animal.golem.AbstractGolem;
 import net.minecraft.world.entity.animal.golem.CopperGolem;
 import net.minecraft.world.entity.animal.Animal;
@@ -262,6 +263,13 @@ public class EntityClassLookup {
             org.bukkit.entity.Steerable.class,
             org.bukkit.entity.Enemy.class,
             org.bukkit.entity.ComplexLivingEntity.class,
+            // Capabilities shared by separate native entity hierarchies.
+            org.bukkit.entity.Sittable.class,
+            com.destroystokyo.paper.entity.RangedEntity.class,
+            io.papermc.paper.entity.Shearable.class,
+            io.papermc.paper.entity.CollarColorable.class,
+            io.papermc.paper.entity.Bucketable.class,
+            io.papermc.paper.entity.Leashable.class,
             org.bukkit.entity.AbstractCow.class,
             org.bukkit.entity.AbstractNautilus.class,
             org.bukkit.entity.boat.OakBoat.class,
@@ -382,7 +390,7 @@ public class EntityClassLookup {
         add(PathfinderMob.class, new EntityClass<>(org.bukkit.entity.Creature.class, org.bukkit.craftbukkit.entity.CraftCreature.class, org.bukkit.craftbukkit.entity.CraftCreature::new));
         add(AgeableMob.class, new EntityClass<>(org.bukkit.entity.Ageable.class, org.bukkit.craftbukkit.entity.CraftAgeable.class, org.bukkit.craftbukkit.entity.CraftAgeable::new));
         add(AbstractVillager.class, new EntityClass<>(org.bukkit.entity.AbstractVillager.class, org.bukkit.craftbukkit.entity.CraftAbstractVillager.class, org.bukkit.craftbukkit.entity.CraftAbstractVillager::new));
-        add(AbstractArrow.class, new EntityClass<>(org.bukkit.entity.AbstractArrow.class, org.bukkit.craftbukkit.entity.CraftAbstractArrow.class, org.bukkit.craftbukkit.entity.CraftAbstractArrow::new));
+        add(AbstractArrow.class, new EntityClass<AbstractArrow>(org.bukkit.entity.AbstractArrow.class, org.bukkit.craftbukkit.entity.CraftAbstractArrow.class, (server, entity) -> new org.bukkit.craftbukkit.entity.CraftAbstractArrow(server, entity) {}));
         add(Animal.class, new EntityClass<>(org.bukkit.entity.Animals.class, org.bukkit.craftbukkit.entity.CraftAnimals.class, org.bukkit.craftbukkit.entity.CraftAnimals::new));
         add(Fireball.class, new EntityClass<>(org.bukkit.entity.SizedFireball.class, org.bukkit.craftbukkit.entity.CraftSizedFireball.class, org.bukkit.craftbukkit.entity.CraftSizedFireball::new));
         add(AbstractHurtingProjectile.class, new EntityClass<>(org.bukkit.entity.Fireball.class, org.bukkit.craftbukkit.entity.CraftFireball.class, org.bukkit.craftbukkit.entity.CraftFireball::new));
@@ -399,6 +407,7 @@ public class EntityClassLookup {
         add(AbstractGolem.class, new EntityClass<>(org.bukkit.entity.Golem.class, org.bukkit.craftbukkit.entity.CraftGolem.class, org.bukkit.craftbukkit.entity.CraftGolem::new));
         add(Player.class, new EntityClass<>(org.bukkit.entity.HumanEntity.class, org.bukkit.craftbukkit.entity.CraftHumanEntity.class, org.bukkit.craftbukkit.entity.CraftHumanEntity::new));
         add(AbstractFish.class, new EntityClass<>(org.bukkit.entity.Fish.class, org.bukkit.craftbukkit.entity.CraftFish.class, org.bukkit.craftbukkit.entity.CraftFish::new));
+        add(AbstractSchoolingFish.class, new EntityClass<>(io.papermc.paper.entity.SchoolableFish.class, io.papermc.paper.entity.PaperSchoolableFish.class, io.papermc.paper.entity.PaperSchoolableFish::new));
         add(EnderDragonPart.class, new EntityClass<>(org.bukkit.entity.EnderDragonPart.class, org.bukkit.craftbukkit.entity.CraftEnderDragonPart.class, org.bukkit.craftbukkit.entity.CraftEnderDragonPart::new));
 
         // vanilla mob types

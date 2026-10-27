@@ -1,0 +1,15 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftLootTable.java b/paper-server/src/main/java/org/bukkit/craftbukkit/CraftLootTable.java
+index f1a616432ea732d5a316113ae19a6e0e1ef3dd17..6d4c84171c25d7f1551547095ecfb7ec1e1480ab 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftLootTable.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/CraftLootTable.java
+@@ -91,8 +91,8 @@ public class CraftLootTable implements org.bukkit.loot.LootTable {
+         CraftInventory craftInventory = (CraftInventory) inventory;
+         Container handle = craftInventory.getInventory();
+ 
+-        // TODO: When events are added, call event here w/ custom reason?
+-        this.getHandle().fill(handle, nmsContext, random == null ? null : new RandomSourceWrapper(random), true);
++        io.izzel.arclight.common.bridge.core.world.level.storage.loot.LootTableBridge bridge = this.getHandle();
++        bridge.bridge$fillInventory(handle, nmsContext, random == null ? null : new RandomSourceWrapper(random), true);
+     }
+ 
+     @Override

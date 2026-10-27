@@ -1,0 +1,34 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/registry/data/util/Conversions.java b/paper-server/src/main/java/io/papermc/paper/registry/data/util/Conversions.java
+index e4124cc4bc064768c17f9c5730e45a7c58bae7b3..2a1bce66f9011287b9ba7b1e42a61255d5da73d4 100644
+--- a/paper-server/src/main/java/io/papermc/paper/registry/data/util/Conversions.java
++++ b/paper-server/src/main/java/io/papermc/paper/registry/data/util/Conversions.java
+@@ -32,7 +32,12 @@ public class Conversions {
+         if (globalInstance == null) {
+             final RegistryAccess globalAccess = CraftRegistry.getMinecraftRegistry();
+             Preconditions.checkState(globalAccess != null, "Global registry access is not available");
+-            globalInstance = new Conversions(new RegistryOps.HolderLookupAdapter(globalAccess));
++            globalInstance = new Conversions(new RegistryOps.RegistryInfoLookup() {
++                @Override
++                public <T> java.util.Optional<RegistryOps.RegistryInfo<T>> lookup(final ResourceKey<? extends Registry<? extends T>> registryKey) {
++                    return globalAccess.lookup(registryKey).map(RegistryOps.RegistryInfo::fromRegistryLookup);
++                }
++            });
+         }
+         return globalInstance;
+     }
+@@ -112,8 +117,13 @@ public class Conversions {
+         final RegistryEntryMeta.Buildable<M, A, B> buildableMeta
+     ) {
+         final ResourceKey<? extends Registry<M>> resourceRegistryKey = PaperRegistries.registryToNms(registryKey);
+-        final HolderLookup.RegistryLookup<M> lookupForBuilders = this.lookup.lookupForValueCopyViaBuilders().lookupOrThrow(resourceRegistryKey);
+-        return new PaperRegistryBuilderFactory<>(resourceRegistryKey, this, buildableMeta.builderFiller(), lookupForBuilders::getValueForCopying);
++        final net.minecraft.core.HolderGetter<M> lookupForBuilders = this.lookup.lookup(resourceRegistryKey).orElseThrow().getter();
++        return new PaperRegistryBuilderFactory<>(resourceRegistryKey, this, buildableMeta.builderFiller(), key -> lookupForBuilders.get(key).map(holder -> {
++            if (!holder.isBound()) {
++                throw new UnsupportedOperationException("Copying unbound registry entries is not supported: " + key);
++            }
++            return holder.value();
++        }));
+     }
+ 
+ }

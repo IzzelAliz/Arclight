@@ -9,4 +9,12 @@ public interface ClockInstanceAccessor extends ClockInstanceBridge {
     @Override
     @Accessor("totalTicks")
     long bridge$totalTicks();
+
+    @Override
+    @Accessor("totalTicks")
+    void bridge$totalTicks(long ticks);
+
+    @Override
+    @Accessor("timeMarkers")
+    java.util.Map<net.minecraft.resources.ResourceKey<net.minecraft.world.clock.ClockTimeMarker>, net.minecraft.world.clock.ClockTimeMarker> bridge$timeMarkers();
 }

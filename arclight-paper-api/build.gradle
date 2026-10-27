@@ -1,0 +1,65 @@
+plugins {
+    id 'java-library'
+}
+
+version = libs.versions.paper.api.get()
+
+java { withSourcesJar() }
+sourceSets.main.java {
+    srcDir rootProject.layout.buildDirectory.dir('paper-patched/paper-api/paper-api/src/main/java')
+    srcDir rootProject.layout.buildDirectory.dir('paper-patched/paper-api/paper-api/src/generated/java')
+}
+
+dependencies {
+    api libs.paper.guava
+    api libs.paper.gson
+    api libs.paper.snakeyaml
+    api(libs.joml) { transitive = false }
+    api libs.fastutil
+    api libs.paper.log4j.api
+    api libs.slf4j
+    api libs.brigadier
+    api(libs.paper.bungeecord) { exclude group: 'com.google.guava', module: 'guava' }
+    api platform(libs.adventure.bom)
+    api libs.adventure.api
+    api libs.adventure.text.minimessage
+    api libs.adventure.text.serializer.gson
+    api libs.adventure.text.serializer.legacy
+    api libs.adventure.text.serializer.plain
+    api libs.adventure.text.logger.slf4j
+    api libs.maven.provider
+    implementation libs.maven.resolver.connector
+    implementation libs.maven.resolver.http
+    compileOnly libs.paper.annotations
+    compileOnlyApi libs.checker.qual
+    api libs.jspecify
+}
+
+def metadataDir = layout.buildDirectory.dir('generated-api-resources')
+def generateApiVersioning = tasks.register('generateApiVersioning') {
+    inputs.property('version', project.version.toString())
+    inputs.property('currentApiVersion', libs.versions.minecraft.get())
+    outputs.dir(metadataDir)
+    doLast {
+        def output = metadataDir.get().file('apiVersioning.json').asFile
+        output.parentFile.mkdirs()
+        output.text = groovy.json.JsonOutput.toJson([
+            version: project.version.toString(),
+            currentApiVersion: libs.versions.minecraft.get()
+        ])
+    }
+}
+sourceSets.main.resources.srcDir(generateApiVersioning)
+tasks.named('compileJava') {
+    dependsOn rootProject.tasks.named('applyPaperPatches')
+    options.encoding = 'UTF-8'
+}
+tasks.named('sourcesJar') { dependsOn rootProject.tasks.named('applyPaperPatches') }
+tasks.named('jar') {
+    dependsOn rootProject.tasks.named('applyPaperPatches')
+    manifest.attributes 'Automatic-Module-Name': 'org.bukkit'
+    from(rootProject.layout.buildDirectory.dir('paper-patched/paper-api')) {
+        include 'LICENSE.md', 'licenses/**'
+        into 'META-INF/paper'
+    }
+}

@@ -1,0 +1,98 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/storage/ServerPluginProviderStorage.java b/paper-server/src/main/java/io/papermc/paper/plugin/storage/ServerPluginProviderStorage.java
+index cb9b13522a976b82bcb71cef486f11f4172e3e99..08433fce872e1b3b9a645f9c06ff171e17e88ce1 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/storage/ServerPluginProviderStorage.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/storage/ServerPluginProviderStorage.java
+@@ -1,23 +1,20 @@
+ package io.papermc.paper.plugin.storage;
+ 
+-import com.mojang.logging.LogUtils;
+ import io.papermc.paper.plugin.provider.entrypoint.DependencyContext;
+ import io.papermc.paper.plugin.entrypoint.dependency.DependencyContextHolder;
+ import io.papermc.paper.plugin.entrypoint.strategy.ProviderConfiguration;
+ import io.papermc.paper.plugin.manager.PaperPluginManagerImpl;
+ import io.papermc.paper.plugin.provider.PluginProvider;
+-import io.papermc.paper.plugin.provider.ProviderStatus;
+-import io.papermc.paper.plugin.provider.ProviderStatusHolder;
++import io.papermc.paper.plugin.provider.classloader.ConfiguredPluginClassLoader;
++import io.papermc.paper.plugin.provider.classloader.PaperClassLoaderStorage;
+ import io.papermc.paper.plugin.provider.type.paper.PaperPluginParent;
+ import org.bukkit.plugin.Plugin;
+ import org.bukkit.plugin.java.JavaPlugin;
+-import org.slf4j.Logger;
+ 
+ import java.util.List;
+ 
+ public class ServerPluginProviderStorage extends ConfiguredProviderStorage<JavaPlugin> {
+ 
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
+ 
+     public ServerPluginProviderStorage() {
+         super(new ProviderConfiguration<>() {
+@@ -36,12 +33,66 @@ public class ServerPluginProviderStorage extends ConfiguredProviderStorage<JavaP
+             @Override
+             public boolean load(PluginProvider<JavaPlugin> provider, JavaPlugin provided) {
+                 // Add it to the map here, we have to run the actual loading logic later.
+-                PaperPluginManagerImpl.getInstance().loadPlugin(provided);
++                PaperPluginManagerImpl pluginManager = PaperPluginManagerImpl.getInstance();
++                try {
++                    pluginManager.loadPlugin(provided);
++                } catch (RuntimeException | Error failure) {
++                    closeUnregisteredPluginClassLoader(pluginManager, provider, provided, failure);
++                    throw failure;
++                }
+                 return true;
+             }
+         });
+     }
+ 
++    private static void closeUnregisteredPluginClassLoader(PaperPluginManagerImpl pluginManager, PluginProvider<JavaPlugin> provider, JavaPlugin provided, Throwable failure) {
++        try {
++            ClassLoader definingClassLoader = provided.getClass().getClassLoader();
++            if (!(definingClassLoader instanceof ConfiguredPluginClassLoader classLoader)
++                || classLoader.getPlugin() != provided
++                || classLoader.getConfiguration() != provider.getMeta()) {
++                // A custom bootstrap may return a plugin from another provider's loader.
++                return;
++            }
++
++            for (Plugin registered : pluginManager.getPlugins()) {
++                if (registered == provided || registered.getClass().getClassLoader() == definingClassLoader) {
++                    // loadPlugin publishes to the plugin list before updating names and dependencies.
++                    // Even a partial registration leaves lifecycle ownership with the manager.
++                    return;
++                }
++            }
++
++            // Only this provider's loader, with no manager-owned plugin, can be reclaimed here.
++            try {
++                classLoader.close();
++            } catch (Throwable closeFailure) {
++                if (failure != closeFailure) {
++                    failure.addSuppressed(closeFailure);
++                }
++            } finally {
++                PaperClassLoaderStorage.instance().unregisterClassloader(classLoader);
++            }
++        } catch (Throwable cleanupFailure) {
++            if (failure != cleanupFailure) {
++                failure.addSuppressed(cleanupFailure);
++            }
++        }
++    }
++
++    @Override
++    public void enter() {
++        try {
++            super.enter();
++        } finally {
++            for (PluginProvider<JavaPlugin> provider : this.providers) {
++                if (provider instanceof PaperPluginParent.PaperServerPluginProvider paperProvider) {
++                    paperProvider.closeIfUntransferred();
++                }
++            }
++        }
++    }
++
+     @Override
+     protected void filterLoadingProviders(List<PluginProvider<JavaPlugin>> pluginProviders) {
+          /*

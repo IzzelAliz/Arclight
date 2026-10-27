@@ -25,9 +25,7 @@ public class ArclightDummyCommandSender extends ArclightDummyPermissible impleme
     public class Spigot extends CommandSender.Spigot {
         @Override
         public void sendMessage(@NotNull BaseComponent... components) {
-            for (var raw: components) {
-                sendMessage(raw);
-            }
+            stack.sendSystemMessage(CraftChatMessage.bungeeToVanilla(components));
         }
 
         @Override
@@ -42,7 +40,7 @@ public class ArclightDummyCommandSender extends ArclightDummyPermissible impleme
 
         @Override
         public void sendMessage(@NotNull BaseComponent component) {
-            stack.sendSystemMessage(CraftChatMessage.fromJSON(CraftChatMessage.getBungee().toString(component)));
+            stack.sendSystemMessage(CraftChatMessage.bungeeToVanilla(component));
         }
     }
 
@@ -74,6 +72,16 @@ public class ArclightDummyCommandSender extends ArclightDummyPermissible impleme
     public @NotNull Server getServer() {
         // TODO: Use stack.getServer().bridge$getServer() after PR #1724 is merged
         return Bukkit.getServer();
+    }
+
+    @Override
+    public net.kyori.adventure.text.@NotNull Component name() {
+        return io.papermc.paper.adventure.PaperAdventure.asAdventure(stack.getDisplayName());
+    }
+
+    @Override
+    public void sendMessage(net.kyori.adventure.identity.Identity identity, net.kyori.adventure.text.Component message, net.kyori.adventure.audience.MessageType type) {
+        stack.sendSystemMessage(io.papermc.paper.adventure.PaperAdventure.asVanilla(message));
     }
 
     @Override

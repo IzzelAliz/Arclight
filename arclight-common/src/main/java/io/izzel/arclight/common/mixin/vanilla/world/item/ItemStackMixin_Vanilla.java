@@ -1,9 +1,13 @@
 package io.izzel.arclight.common.mixin.vanilla.world.item;
 
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
-import io.izzel.arclight.common.mod.util.SignPlacementScope;
+import io.izzel.arclight.common.mod.util.ArclightCaptures;
+import io.izzel.arclight.mixin.Decorate;
+import io.izzel.arclight.mixin.DecorationOps;
+import io.papermc.paper.event.entity.EntityDamageItemEvent;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -12,6 +16,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.Item;
@@ -44,8 +49,8 @@ public abstract class ItemStackMixin_Vanilla {
 
     @WrapMethod(method = "useOn(Lnet/minecraft/world/item/context/UseOnContext;)Lnet/minecraft/world/InteractionResult;")
     private InteractionResult arclight$signPlacement(UseOnContext context, Operation<InteractionResult> original) {
-        return io.izzel.arclight.common.mod.util.BonemealTreeConsumer.useOn(
-            (ItemStack) (Object) this, context, () -> SignPlacementScope.use(context, original));
+        return io.izzel.arclight.common.mod.util.TreeCapture.useOn(
+            (ItemStack) (Object) this, context, () -> ArclightEventFactory.useSignItem(context, original));
     }
 
     /**
@@ -70,7 +75,7 @@ public abstract class ItemStackMixin_Vanilla {
             if (player != null && interactionResult instanceof InteractionResult.Success success && success.wasItemInteraction()) {
                 interactionResult = ArclightEventFactory.onBlockPlace(useOnContext, player, oldStack, (ItemStack) (Object) this, interactionResult);
                 if (interactionResult != InteractionResult.FAIL) {
-                    io.izzel.arclight.common.mod.util.BonemealTreeConsumer.award(
+                    io.izzel.arclight.common.mod.util.TreeCapture.award(
                         player, () -> player.awardStat(Stats.ITEM_USED.get(item)));
                 }
             }
@@ -81,15 +86,30 @@ public abstract class ItemStackMixin_Vanilla {
         }
     }
 
+    @Decorate(method = "processDurabilityChange(ILnet/minecraft/server/level/ServerLevel;Lnet/minecraft/server/level/ServerPlayer;)I",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;hasInfiniteMaterials()Z"))
+    private boolean arclight$forceItemDamage(ServerPlayer owner) throws Throwable {
+        boolean infiniteMaterials = (boolean) DecorationOps.callsite().invoke(owner);
+        return infiniteMaterials && !ArclightCaptures.isItemDamageForced((ItemStack) (Object) this, owner);
+    }
+
     @WrapOperation(method = "hurtAndBreak(ILnet/minecraft/server/level/ServerLevel;Lnet/minecraft/server/level/ServerPlayer;Ljava/util/function/Consumer;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;processDurabilityChange(ILnet/minecraft/server/level/ServerLevel;Lnet/minecraft/server/level/ServerPlayer;)I"))
     private int arclight$itemDamage(ItemStack stack, int amount, ServerLevel level, ServerPlayer damager, Operation<Integer> original) {
         // Preserve the existing event gate, but do not eventize hurtWithoutBreaking.
+        LivingEntity apiOwner = ArclightCaptures.getItemDamageOwner(stack, damager);
         boolean eventEligible = amount > 0 && stack.isDamageableItem()
             && damager != null && !damager.hasInfiniteMaterials();
         int result = original.call(stack, amount, level, damager);
-        if (eventEligible && damager != null) {
-            PlayerItemDamageEvent event = new PlayerItemDamageEvent(((ServerPlayerBridge) damager).bridge$getBukkitEntity(), CraftItemStack.asCraftMirror(stack), result);
+        if (apiOwner != null && !(apiOwner instanceof ServerPlayer)) {
+            if (result > 0) {
+                EntityDamageItemEvent event = new EntityDamageItemEvent(((LivingEntityBridge) apiOwner).bridge$getBukkitEntity(), CraftItemStack.asCraftMirror(stack), result);
+                return event.callEvent() ? event.getDamage() : 0;
+            }
+            return result;
+        }
+        if (damager != null && (apiOwner != null ? result > 0 : eventEligible)) {
+            PlayerItemDamageEvent event = new PlayerItemDamageEvent(((ServerPlayerBridge) damager).bridge$getBukkitEntity(), CraftItemStack.asCraftMirror(stack), result, amount);
             event.getPlayer().getServer().getPluginManager().callEvent(event);
             if (result != event.getDamage() || event.isCancelled()) {
                 event.getPlayer().updateInventory();

@@ -1,0 +1,24 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/potion/PaperPotionBrewer.java b/paper-server/src/main/java/io/papermc/paper/potion/PaperPotionBrewer.java
+index d9390227a2bba4e03aa9ee592ca157127633c41b..da0599f6305714f1b2e495b447a0c2ad745b4462 100644
+--- a/paper-server/src/main/java/io/papermc/paper/potion/PaperPotionBrewer.java
++++ b/paper-server/src/main/java/io/papermc/paper/potion/PaperPotionBrewer.java
+@@ -41,16 +41,16 @@ public class PaperPotionBrewer implements PotionBrewer {
+ 
+     @Override
+     public void addPotionMix(final PotionMix potionMix) {
+-        this.minecraftServer.potionBrewing().addPotionMix(potionMix);
++        throw new UnsupportedOperationException("Plugin potion mix registration is not supported");
+     }
+ 
+     @Override
+     public void removePotionMix(final NamespacedKey key) {
+-        this.minecraftServer.potionBrewing.removePotionMix(key);
++        throw new UnsupportedOperationException("Plugin potion mix registration is not supported");
+     }
+ 
+     @Override
+     public void resetPotionMixes() {
+-        this.minecraftServer.potionBrewing = this.minecraftServer.potionBrewing().reload(this.minecraftServer.getWorldData().enabledFeatures());
++        throw new UnsupportedOperationException("Plugin potion mix registration is not supported");
+     }
+ }

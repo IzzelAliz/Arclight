@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/CraftEnchantmentView.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/CraftEnchantmentView.java
+index 1fb3059ee0ee4418868a641558194feb7b28f6c2..6f1190da48653f2e33b9f842b3551681bb9fc83e 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/CraftEnchantmentView.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/view/CraftEnchantmentView.java
+@@ -28,7 +28,7 @@ public class CraftEnchantmentView extends CraftInventoryView<EnchantmentMenu, En
+ 
+     @Override
+     public void setEnchantmentSeed(int seed) {
+-        this.container.setEnchantmentSeed(seed);
++        this.container.setData(3, seed);
+     }
+ 
+     @NotNull

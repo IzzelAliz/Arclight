@@ -1,0 +1,38 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/datacomponent/item/PaperItemAdventurePredicate.java b/paper-server/src/main/java/io/papermc/paper/datacomponent/item/PaperItemAdventurePredicate.java
+index c2e2ff3a8c1b5740fb959545163c2c2400a2e045..d197ff38133192b790bb908f61ff9abfeafa8f77 100644
+--- a/paper-server/src/main/java/io/papermc/paper/datacomponent/item/PaperItemAdventurePredicate.java
++++ b/paper-server/src/main/java/io/papermc/paper/datacomponent/item/PaperItemAdventurePredicate.java
+@@ -17,8 +17,7 @@ public record PaperItemAdventurePredicate(
+ ) implements ItemAdventurePredicate, Handleable<net.minecraft.world.item.AdventureModePredicate> {
+ 
+     private static List<BlockPredicate> convert(final net.minecraft.world.item.AdventureModePredicate nmsModifiers) {
+-        return MCUtil.transformUnmodifiable(nmsModifiers.predicates, nms -> BlockPredicate.predicate()
+-            .blocks(nms.blocks().map(blocks -> PaperRegistrySets.convertToApi(RegistryKey.BLOCK, blocks)).orElse(null)).build());
++        return MCUtil.transformUnmodifiable(nmsModifiers.predicates, NativeBlockPredicate::new);
+     }
+ 
+     @Override
+@@ -31,12 +30,23 @@ public record PaperItemAdventurePredicate(
+         return convert(this.impl);
+     }
+ 
++    private record NativeBlockPredicate(net.minecraft.advancements.criterion.BlockPredicate handle) implements BlockPredicate {
++        @Override
++        public io.papermc.paper.registry.set.@org.jspecify.annotations.Nullable RegistryKeySet<org.bukkit.block.BlockType> blocks() {
++            return this.handle.blocks().map(blocks -> PaperRegistrySets.convertToApi(RegistryKey.BLOCK, blocks)).orElse(null);
++        }
++    }
++
+     static final class BuilderImpl implements ItemAdventurePredicate.Builder {
+ 
+         private final List<net.minecraft.advancements.criterion.BlockPredicate> predicates = new ObjectArrayList<>();
+ 
+         @Override
+         public ItemAdventurePredicate.Builder addPredicate(final BlockPredicate predicate) {
++            if (predicate instanceof NativeBlockPredicate nativePredicate) {
++                this.predicates.add(nativePredicate.handle());
++                return this;
++            }
+             this.predicates.add(new net.minecraft.advancements.criterion.BlockPredicate(Optional.ofNullable(predicate.blocks()).map(
+                 blocks -> PaperRegistrySets.convertToNms(Registries.BLOCK, Conversions.global().lookup(), blocks)
+             ), Optional.empty(), Optional.empty(), DataComponentMatchers.ANY)); // TODO DataComponentMatchers

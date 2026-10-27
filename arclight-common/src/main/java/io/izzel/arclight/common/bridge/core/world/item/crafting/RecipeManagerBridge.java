@@ -10,6 +10,17 @@ public interface RecipeManagerBridge {
 
     void bridge$clearRecipes();
 
+    boolean removeRecipe(net.minecraft.resources.ResourceKey<net.minecraft.world.item.crafting.Recipe<?>> key);
+
     default void bridge$syncModRecipeContent(net.minecraft.server.level.ServerPlayer player) {
     }
+
+    default void addRecipe(net.minecraft.world.item.crafting.RecipeHolder<?> recipe) {
+        this.bridge$addRecipe(recipe);
+    }
+
+    default void clearRecipes() {
+        this.bridge$clearRecipes();
+    }
+
 }

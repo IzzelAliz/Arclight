@@ -1,0 +1,21 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftVex.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftVex.java
+index 80cc06f91f802f235171ef6ecde797cf744f4a35..be9e5a909b1aa01b379c5c20768235707c820416 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftVex.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftVex.java
+@@ -2,7 +2,6 @@ package org.bukkit.craftbukkit.entity;
+ 
+ import com.google.common.base.Preconditions;
+ import net.minecraft.core.BlockPos;
+-import net.minecraft.world.entity.EntityReference;
+ import org.bukkit.Location;
+ import org.bukkit.craftbukkit.CraftServer;
+ import org.bukkit.craftbukkit.util.CraftLocation;
+@@ -27,7 +26,7 @@ public class CraftVex extends CraftMonster implements Vex {
+ 
+     @Override
+     public void setSummoner(org.bukkit.entity.Mob summoner) {
+-        this.getHandle().owner = summoner == null ? null : EntityReference.of(((CraftMob) summoner).getHandle());
++        this.getHandle().setOwner(summoner == null ? null : ((CraftMob) summoner).getHandle());
+     }
+ 
+     @Override

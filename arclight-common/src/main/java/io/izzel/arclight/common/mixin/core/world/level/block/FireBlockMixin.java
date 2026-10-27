@@ -58,7 +58,7 @@ public abstract class FireBlockMixin extends BaseFireBlockMixin implements FireB
             return Blocks.AIR.defaultBlockState();
         }
         CraftBlockState blockState = CraftBlockStates.getBlockState(world, pos);
-        blockState.setData(Blocks.AIR.defaultBlockState());
+        blockState.setBlock(Blocks.AIR.defaultBlockState());
         BlockFadeEvent event = new BlockFadeEvent(blockState.getBlock(), blockState);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {

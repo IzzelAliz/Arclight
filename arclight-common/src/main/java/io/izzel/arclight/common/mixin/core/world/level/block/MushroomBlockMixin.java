@@ -42,15 +42,7 @@ public class MushroomBlockMixin {
             ArclightCaptures.captureTreeType(TreeType.RED_MUSHROOM);
         }
     }
-    @com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod(method = "growMushroom(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/util/RandomSource;)Z")
-    private boolean arclight$mushroomSource(ServerLevel level, BlockPos pos, BlockState state, RandomSource random,
-            com.llamalad7.mixinextras.injector.wrapoperation.Operation<Boolean> original) {
-        try (var frame = io.izzel.arclight.common.mod.util.TreeGrowthContext.enter(level)) {
-            boolean result = original.call(level, pos, state, random);
-            frame.returnedNormally();
-            return result;
-        }
-    }
+
 
     @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(
         method = "growMushroom(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/util/RandomSource;)Z",
@@ -62,7 +54,7 @@ public class MushroomBlockMixin {
         // Record the actual eligible holder, but do not select block-vs-feature event policy.
         @SuppressWarnings("unchecked")
         var featureHolder = (net.minecraft.core.Holder<net.minecraft.world.level.levelgen.feature.ConfiguredFeature<?, ?>>) holder;
-        io.izzel.arclight.common.mod.util.TreeGrowthContext.observedMushroom(level, this, featureHolder);
+        io.izzel.arclight.common.mod.util.TreeCapture.observeMushroom(this);
         return original.call(holder);
     }
 

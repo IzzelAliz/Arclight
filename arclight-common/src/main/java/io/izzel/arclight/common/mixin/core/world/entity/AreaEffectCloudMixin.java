@@ -33,7 +33,17 @@ public abstract class AreaEffectCloudMixin extends EntityMixin implements AreaEf
     // @formatter:off
     @Shadow @Final private Map<Entity, Integer> victims;
     @Shadow @Nullable public abstract LivingEntity getOwner();
+    @Shadow private int duration;
+    @Shadow public int waitTime;
     // @formatter:on
+
+    @Override
+    public void bridge$inactiveTick() {
+        super.bridge$inactiveTick();
+        if (this.duration != AreaEffectCloud.INFINITE_DURATION && this.tickCount - this.waitTime >= this.duration) {
+            this.discard(EntityRemoveEvent.Cause.DESPAWN);
+        }
+    }
 
     @SuppressWarnings("unchecked")
     @Decorate(method = "serverTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getEntitiesOfClass(Ljava/lang/Class;Lnet/minecraft/world/phys/AABB;)Ljava/util/List;"))

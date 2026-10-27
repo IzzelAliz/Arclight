@@ -10,6 +10,7 @@ import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -36,8 +37,11 @@ public abstract class DamageSourcesMixin implements DamageSourcesBridge {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(RegistryAccess p_270740_, CallbackInfo ci) {
+        // Dedicated context sources: leave the normal onFire()/magic() sources unmarked.
         this.melting = ((DamageSourceBridge) this.source(DamageTypes.ON_FIRE)).bridge$melting();
+        this.melting = ((DamageSourceBridge) this.melting).bridge$knownCause(DamageCause.MELTING);
         this.poison = ((DamageSourceBridge) this.source(DamageTypes.MAGIC)).bridge$poison();
+        this.poison = ((DamageSourceBridge) this.poison).bridge$knownCause(DamageCause.POISON);
     }
 
     public DamageSource poison() {

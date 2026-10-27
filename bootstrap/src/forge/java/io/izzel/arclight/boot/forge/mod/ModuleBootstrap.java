@@ -7,18 +7,14 @@ import io.izzel.arclight.boot.AbstractBootstrap;
 import io.izzel.arclight.i18n.ArclightConfig;
 import io.izzel.arclight.i18n.ArclightLocale;
 import net.minecraftforge.bootstrap.api.BootstrapEntryPoint;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.*;
 
 import java.util.Arrays;
 import java.util.ServiceLoader;
 
 public class ModuleBootstrap implements BootstrapEntryPoint, AbstractBootstrap {
 
-    private static final int MIN_DEPRECATED_VERSION = 60;
-    private static final int MIN_DEPRECATED_JAVA_VERSION = 16;
+    private static final int MIN_DEPRECATED_VERSION = 69;
+    private static final int MIN_DEPRECATED_JAVA_VERSION = 25;
 
     @Override
     public void main(String[] args) {
@@ -57,49 +53,6 @@ public class ModuleBootstrap implements BootstrapEntryPoint, AbstractBootstrap {
     @Override
     public void dirtyHacks() throws Exception {
         AbstractBootstrap.super.dirtyHacks();
-        try (var in = getClass().getClassLoader().getResourceAsStream("net/minecraftforge/fml/loading/moddiscovery/ModDiscoverer.class")) {
-            var clazz = new ClassNode();
-            new ClassReader(in).accept(clazz, 0);
-            final var mdName = "net/minecraftforge/fml/loading/moddiscovery/ModDiscoverer";
-            final var mdSig = "L" + mdName + ";";
-            {
-                MethodNode constructor = null;
-                for (var method: clazz.methods) {
-                    if ("<init>".equals(method.name)) {
-                        constructor = method;
-                    }
-                }
-                if (constructor == null) {
-                    throw new RuntimeException("Cannot transform ModDiscoverer: <init> not found");
-                }
-
-                FrameNode lastFrame = null;
-                for (var insn: constructor.instructions) {
-                    if (insn instanceof FrameNode frame) {
-                        lastFrame = frame;
-                    }
-                }
-                if (lastFrame == null) {
-                    throw new RuntimeException("Cannot transform ModDiscoverer: <init> return not found");
-                }
-
-                var aloadThis = new VarInsnNode(Opcodes.ALOAD, 0);
-                var putField = new FieldInsnNode(Opcodes.PUTSTATIC, mdName, "arclight$INSTANCE", mdSig);
-                constructor.instructions.insertBefore(lastFrame, aloadThis);
-                constructor.instructions.insert(aloadThis, putField);
-                constructor.instructions.insert(putField, new InsnNode(Opcodes.RETURN));
-                constructor.instructions.remove(lastFrame);
-            }
-            {
-                clazz.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "arclight$INSTANCE", mdSig, mdSig, null);
-            }
-            var cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
-            clazz.accept(cw);
-            byte[] bytes = cw.toByteArray();
-            Unsafe.defineClass(mdName.replace('/', '.'), bytes, 0, bytes.length, getClass().getClassLoader() /* MC-BOOTSTRAP */, getClass().getProtectionDomain());
-            System.out.println("Redefined ModDiscoverer in cl:" +getClass().getClassLoader());
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
+        ModBootstrap.patchModDiscoverer(getClass());
     }
 }

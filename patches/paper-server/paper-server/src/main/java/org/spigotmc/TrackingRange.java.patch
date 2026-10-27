@@ -1,0 +1,31 @@
+diff --git a/paper-server/src/main/java/org/spigotmc/TrackingRange.java b/paper-server/src/main/java/org/spigotmc/TrackingRange.java
+--- a/paper-server/src/main/java/org/spigotmc/TrackingRange.java
++++ b/paper-server/src/main/java/org/spigotmc/TrackingRange.java
+@@ -25,7 +25,7 @@
+             return defaultRange;
+         }
+ 
+-        final SpigotWorldConfig config = entity.level().spigotConfig;
++        final SpigotWorldConfig config = ((io.izzel.arclight.common.bridge.core.world.level.WorldBridge) entity.level()).bridge$spigotConfig();
+         if (entity instanceof ServerPlayer) {
+             return config.playerTrackingRange;
+         }
+@@ -35,16 +35,12 @@
+             return ((ServerLevel) entity.level()).getChunkSource().chunkMap.serverViewDistance << 4;
+         }
+ 
+-        switch (entity.activationType) {
+-            case RAIDER:
++        switch (io.izzel.arclight.common.mod.util.TrackingCategory.of(entity)) {
+             case MONSTER:
+-            case FLYING_MONSTER:
+                 return config.monsterTrackingRange;
+-            case WATER:
+-            case VILLAGER:
+             case ANIMAL:
+                 return config.animalTrackingRange;
+-            case MISC:
++            case OTHER:
+         }
+ 
+         if (entity instanceof ItemFrame || entity instanceof Painting || entity instanceof ItemEntity || entity instanceof ExperienceOrb) {

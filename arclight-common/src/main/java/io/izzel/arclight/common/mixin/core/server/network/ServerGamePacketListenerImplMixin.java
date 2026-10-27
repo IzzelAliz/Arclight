@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.server.network;
 
 import com.mojang.brigadier.ParseResults;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge;
 import io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge;
 import io.izzel.arclight.common.bridge.core.world.inventory.AbstractContainerMenuBridge;
@@ -16,6 +18,9 @@ import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
+import io.papermc.paper.adventure.ChatProcessor;
+import io.papermc.paper.connection.PaperPlayerGameConnection;
+import io.papermc.paper.connection.PlayerGameConnection;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSigningContext;
@@ -28,7 +33,6 @@ import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.LastSeenMessages;
-import net.minecraft.network.chat.OutgoingChatMessage;
 import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.network.chat.SignableCommand;
 import net.minecraft.network.chat.SignedMessageChain;
@@ -105,7 +109,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.util.CraftLocation;
@@ -118,7 +121,6 @@ import org.bukkit.craftbukkit.inventory.CraftItemType;
 import org.bukkit.craftbukkit.util.CraftChatMessage;
 import org.bukkit.craftbukkit.util.CraftNamespacedKey;
 import org.bukkit.craftbukkit.util.LazyPlayerSet;
-import org.bukkit.craftbukkit.util.Waitable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
@@ -126,13 +128,10 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryCreativeEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.SmithItemEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerAnimationEvent;
-import org.bukkit.event.player.PlayerAnimationType;
-import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -167,11 +166,42 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 
 @Mixin(ServerGamePacketListenerImpl.class)
 public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPacketListenerImplMixin implements ServerGamePacketListenerImplBridge {
+
+    @Decorate(method = "handleSetGameRule(Lnet/minecraft/network/protocol/game/ServerboundSetGameRulePacket;)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/server/permissions/PermissionSet;hasPermission(Lnet/minecraft/server/permissions/Permission;)Z"),
+        require = 1, allow = 1)
+    private boolean arclight$gameRuleMenuPermission(net.minecraft.server.permissions.PermissionSet permissions,
+                                                   net.minecraft.server.permissions.Permission permission) throws Throwable {
+        return (boolean) DecorationOps.callsite().invoke(permissions, permission)
+            || ((ServerPlayerBridge) this.player).bridge$getBukkitEntity().hasPermission("minecraft.command.gamerule");
+    }
+
+    @Decorate(method = "lambda$setGameRuleValue$0(Lnet/minecraft/world/level/gamerules/GameRules;Lnet/minecraft/world/level/gamerules/GameRule;Ljava/lang/Object;)V",
+        inject = true, at = @At("HEAD"), require = 1, allow = 1)
+    private <T> void arclight$worldGameRuleChange(GameRules rules, net.minecraft.world.level.gamerules.GameRule<T> rule,
+                                               T parsedValue) throws Throwable {
+        // This lambda runs only after native deserialization succeeds. Keep the resulting
+        // value in its parameter so the native operator broadcast uses edits or the old
+        // value on veto, exactly like Paper's handleGameRuleSet replacement.
+        parsedValue = CraftEventFactory.handleGameRuleSet(rule, parsedValue, this.player.level(),
+            ((ServerPlayerBridge) this.player).bridge$getBukkitEntity()).value();
+        DecorationOps.blackhole().invoke(parsedValue);
+    }
+
+    @com.llamalad7.mixinextras.injector.WrapWithCondition(
+        method = "lambda$setGameRuleValue$0(Lnet/minecraft/world/level/gamerules/GameRules;Lnet/minecraft/world/level/gamerules/GameRule;Ljava/lang/Object;)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/gamerules/GameRules;set(Lnet/minecraft/world/level/gamerules/GameRule;Ljava/lang/Object;Lnet/minecraft/server/MinecraftServer;)V"),
+        require = 1, allow = 1)
+    private <T> boolean arclight$alreadyAppliedWorldGameRule(GameRules rules, net.minecraft.world.level.gamerules.GameRule<T> rule,
+                                                          T parsedValue, MinecraftServer server) {
+        // handleGameRuleSet owns the accepted per-world write; never replay the global
+        // setter after it, especially not after cancellation.
+        return false;
+    }
 
     // @formatter:off
     @Shadow public ServerPlayer player;
@@ -222,6 +252,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
     @Shadow protected abstract <S> Map<String, PlayerChatMessage> collectSignedArguments(ServerboundChatCommandSignedPacket serverboundChatCommandSignedPacket, SignableCommand<S> signableCommand, LastSeenMessages lastSeenMessages) throws SignedMessageChain.DecodeException;
     @Shadow public abstract void sendDisguisedChatMessage(Component component, ChatType.Bound bound);
     @Shadow public abstract void teleport(PositionMoveRotation positionMoveRotation, Set<Relative> set);
+    @Shadow public abstract void handleContainerClose(ServerboundContainerClosePacket packet);
     // @formatter:on
 
     private static final int SURVIVAL_PLACE_DISTANCE_SQUARED = 6 * 6;
@@ -240,7 +271,15 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
     private boolean justTeleported;
     private boolean hasMoved;
 
-    @Inject(method = "<init>", at = @At("RETURN"))
+    public PaperPlayerGameConnection playerGameConnection;
+
+    @Override
+    public PlayerGameConnection bridge$getGameConnection() {
+        return this.playerGameConnection;
+    }
+
+    @Inject(method = "<init>(Lnet/minecraft/server/MinecraftServer;Lnet/minecraft/network/Connection;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/server/network/CommonListenerCookie;)V",
+        at = @At("RETURN"), require = 1, expect = 1, allow = 1)
     private void arclight$init(MinecraftServer server, Connection networkManagerIn, ServerPlayer playerIn, CommonListenerCookie cookie, CallbackInfo ci) {
         allowedPlayerTicks = 1;
         dropCount = 0;
@@ -252,6 +291,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         justTeleported = false;
         this.chatMessageChain = new FutureChain(ArclightServer.getChatExecutor());
         bridge$setPlayer(playerIn);
+        this.playerGameConnection = new PaperPlayerGameConnection((ServerGamePacketListenerImpl) (Object) this);
     }
 
     @Inject(method = "onDisconnect", cancellable = true, at = @At("HEAD"))
@@ -450,7 +490,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
 
     @Inject(method = "handleSelectTrade", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/MerchantMenu;setSelectionHint(I)V"))
     private void arclight$tradeSelect(ServerboundSelectTradePacket serverboundSelectTradePacket, CallbackInfo ci, int i) {
-        var event = CraftEventFactory.callTradeSelectEvent(this.player, i, (MerchantMenu) this.player.containerMenu);
+        var event = CraftEventFactory.callTradeSelectEvent(i, (MerchantMenu) this.player.containerMenu);
         if (event.isCancelled()) {
             ((ServerPlayerBridge) this.player).bridge$getBukkitEntity().updateInventory();
             ci.cancel();
@@ -583,14 +623,32 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                                     speed = player.getAbilities().walkingSpeed * 10f;
                                 }
 
+                                if (((io.izzel.arclight.common.bridge.core.world.level.WorldBridge) worldserver).bridge$paperConfig().chunks.preventMovingIntoUnloadedChunks
+                                    && (this.player.getX() != d0 || this.player.getZ() != d2)
+                                    && !arclight$areChunksLoadedForMove(worldserver,
+                                        this.player.getBoundingBox().expandTowards(new Vec3(d0, d1, d2).subtract(this.player.position())))) {
+                                    var failMove = this.bridge$fireFailMove(io.papermc.paper.event.player.PlayerFailMoveEvent.FailReason.MOVED_INTO_UNLOADED_CHUNK,
+                                        d0, d1, d2, f, f1, false);
+                                    if (!failMove.isAllowed()) {
+                                        this.bridge$internalTeleport(PositionMoveRotation.of(this.player), Collections.emptySet());
+                                        return;
+                                    }
+                                }
+
                                 if (this.shouldCheckPlayerMovement(this.player.isFallFlying())) {
                                     float f2 = this.player.isFallFlying() ? 300.0F : 100.0F;
 
                                     if (d11 - d10 > Math.max(f2, Math.pow((double) (org.spigotmc.SpigotConfig.movedTooQuicklyMultiplier * (float) i * speed), 2)) && !this.isSingleplayerOwner()) {
                                         // CraftBukkit end
-                                        LOGGER.warn("{} moved too quickly! {},{},{}", this.player.getName().getString(), d7, d8, d9);
-                                        this.teleport(this.player.getX(), this.player.getY(), this.player.getZ(), this.player.getYRot(), this.player.getXRot());
-                                        return;
+                                        var failMove = this.bridge$fireFailMove(io.papermc.paper.event.player.PlayerFailMoveEvent.FailReason.MOVED_TOO_QUICKLY,
+                                            d0, d1, d2, f, f1, true);
+                                        if (!failMove.isAllowed()) {
+                                            if (failMove.getLogWarning()) {
+                                                LOGGER.warn("{} moved too quickly! {},{},{}", this.player.getName().getString(), d7, d8, d9);
+                                            }
+                                            this.teleport(this.player.getX(), this.player.getY(), this.player.getZ(), this.player.getYRot(), this.player.getXRot());
+                                            return;
+                                        }
                                     }
                                 }
                             }
@@ -622,11 +680,22 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
 
                             // Support imfast changing moved wrongly threshold constant (0.0625) in ATM10
                             if (!this.player.isChangingDimension() && d11 > arclight$selectMovedWronglyThreshold(0.0625) && !this.player.isSleeping() && !this.player.gameMode.isCreative() && this.player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) { // Spigot
-                                flag1 = true;
-                                LOGGER.warn("{} moved wrongly!", this.player.getName().getString());
+                                var failMove = this.bridge$fireFailMove(io.papermc.paper.event.player.PlayerFailMoveEvent.FailReason.MOVED_WRONGLY,
+                                    d0, d1, d2, f, f1, true);
+                                if (!failMove.isAllowed()) {
+                                    flag1 = true;
+                                    if (failMove.getLogWarning()) {
+                                        LOGGER.warn("{} moved wrongly!", this.player.getName().getString());
+                                    }
+                                }
                             }
 
-                            if (!this.player.noPhysics && !this.player.isSleeping() && (flag1 && worldserver.noCollision(this.player, axisalignedbb) || this.isEntityCollidingWithAnythingNew(worldserver, this.player, axisalignedbb, d0, d1, d2))) {
+                            boolean movementRejected = !this.player.noPhysics && !this.player.isSleeping() && (flag1 && worldserver.noCollision(this.player, axisalignedbb) || this.isEntityCollidingWithAnythingNew(worldserver, this.player, axisalignedbb, d0, d1, d2));
+                            if (movementRejected && this.bridge$fireFailMove(io.papermc.paper.event.player.PlayerFailMoveEvent.FailReason.CLIPPED_INTO_BLOCK,
+                                d0, d1, d2, f, f1, false).isAllowed()) {
+                                movementRejected = false;
+                            }
+                            if (movementRejected) {
                                 this.bridge$pushNoTeleportEvent();
                                 this.teleport(new PositionMoveRotation(new Vec3(d3, d4, d5), Vec3.ZERO, f, f1), Collections.emptySet()); // CraftBukkit - SPIGOT-1807: Don't call teleport event, when the client thinks the player is falling, because the chunks are not loaded on the client yet.
                                 this.player.doCheckFallDamage(this.player.getX() - d3, this.player.getY() - d4, this.player.getZ() - d5, packetplayinflying.isOnGround());
@@ -966,6 +1035,16 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         }
     }
 
+    @Shadow
+    private void performUnsignedChatCommand(String command) {
+        throw new AssertionError();
+    }
+
+    @Override
+    public void bridge$handleUnsignedCommand(String command) {
+        this.performUnsignedChatCommand(command.startsWith("/") ? command.substring(1) : command);
+    }
+
     @Decorate(method = "performUnsignedChatCommand", inject = true, at = @At("HEAD"))
     private void arclight$commandPreprocessEvent(String s) throws Throwable {
         if (this.player.hasDisconnected()) {
@@ -1036,80 +1115,10 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         if (s.isEmpty() || this.player.getChatVisibility() == ChatVisiblity.HIDDEN) {
             return;
         }
-        ServerGamePacketListenerImpl handler = (ServerGamePacketListenerImpl) (Object) this;
-        var outgoing = OutgoingChatMessage.create(original);
         if (!async && s.startsWith("/")) {
             this.handleCommand(s);
         } else if (this.player.getChatVisibility() != ChatVisiblity.SYSTEM) {
-            Player thisPlayer = this.getCraftPlayer();
-            AsyncPlayerChatEvent event = new AsyncPlayerChatEvent(async, thisPlayer, s, new LazyPlayerSet(this.server));
-            String originalFormat = event.getFormat(), originalMessage = event.getMessage();
-            this.cserver.getPluginManager().callEvent(event);
-            if (PlayerChatEvent.getHandlerList().getRegisteredListeners().length != 0) {
-                PlayerChatEvent queueEvent = new PlayerChatEvent(thisPlayer, event.getMessage(), event.getFormat(), event.getRecipients());
-                queueEvent.setCancelled(event.isCancelled());
-                class SyncChat extends Waitable<Object> {
-
-                    @Override
-                    protected Object evaluate() {
-                        Bukkit.getPluginManager().callEvent(queueEvent);
-                        if (queueEvent.isCancelled()) {
-                            return null;
-                        }
-                        String message = String.format(queueEvent.getFormat(), queueEvent.getPlayer().getDisplayName(), queueEvent.getMessage());
-                        if (((LazyPlayerSet) queueEvent.getRecipients()).isLazy()) {
-                            if (!org.spigotmc.SpigotConfig.bungee && originalFormat.equals(queueEvent.getFormat()) && originalMessage.equals(queueEvent.getMessage()) && queueEvent.getPlayer().getName().equalsIgnoreCase(queueEvent.getPlayer().getDisplayName())) { // Spigot
-                                server.getPlayerList().broadcastChatMessage(original, player, ChatType.bind(ChatType.CHAT, player));
-                                return null;
-                            }
-                            for (ServerPlayer recipient : server.getPlayerList().players) {
-                                ((ServerPlayerBridge) recipient).bridge$getBukkitEntity().sendMessage(player.getUUID(), message);
-                            }
-                        } else {
-                            for (Player player2 : queueEvent.getRecipients()) {
-                                player2.sendMessage(thisPlayer.getUniqueId(), message);
-                            }
-                        }
-                        Bukkit.getConsoleSender().sendMessage(message);
-                        return null;
-                    }
-                }
-                Waitable waitable = new SyncChat();
-                if (async) {
-                    ((MinecraftServerBridge) server).bridge$queuedProcess(waitable);
-                } else {
-                    waitable.run();
-                }
-                try {
-                    waitable.get();
-                    return;
-                } catch (InterruptedException e2) {
-                    Thread.currentThread().interrupt();
-                    return;
-                } catch (ExecutionException e) {
-                    throw new RuntimeException("Exception processing chat event", e.getCause());
-                }
-            }
-            if (event.isCancelled()) {
-                return;
-            }
-
-            s = String.format(event.getFormat(), event.getPlayer().getDisplayName(), event.getMessage());
-            if (((LazyPlayerSet) event.getRecipients()).isLazy()) {
-                if (!org.spigotmc.SpigotConfig.bungee && originalFormat.equals(event.getFormat()) && originalMessage.equals(event.getMessage()) && event.getPlayer().getName().equalsIgnoreCase(event.getPlayer().getDisplayName())) { // Spigot
-                    server.getPlayerList().broadcastChatMessage(original, player, ChatType.bind(ChatType.CHAT, player));
-                    return;
-                }
-
-                for (ServerPlayer recipient : server.getPlayerList().players) {
-                    ((ServerPlayerBridge) recipient).bridge$getBukkitEntity().sendMessage(player.getUUID(), s);
-                }
-            } else {
-                for (Player recipient : event.getRecipients()) {
-                    recipient.sendMessage(player.getUUID(), s);
-                }
-            }
-            Bukkit.getConsoleSender().sendMessage(s);
+            new ChatProcessor(this.server, this.player, original, async).process();
         }
     }
 
@@ -1155,7 +1164,12 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
     @Inject(method = "sendPlayerChatMessage", cancellable = true, at = @At("HEAD"))
     private void arclight$cantSee(PlayerChatMessage playerChatMessage, ChatType.Bound bound, CallbackInfo ci) {
         if (!getCraftPlayer().canSeePlayer(playerChatMessage.link().sender())) {
-            sendDisguisedChatMessage(playerChatMessage.decoratedContent(), bound);
+            var filterMask = playerChatMessage.filterMask();
+            Component content = filterMask.isEmpty() ? playerChatMessage.decoratedContent()
+                : filterMask.applyWithFormatting(playerChatMessage.signedContent());
+            if (content != null) {
+                sendDisguisedChatMessage(content, bound);
+            }
             ci.cancel();
         }
     }
@@ -1182,11 +1196,6 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         });
         if (result == null) {
             CraftEventFactory.callPlayerInteractEvent(this.player, Action.LEFT_CLICK_AIR, this.player.getInventory().getSelectedItem(), InteractionHand.MAIN_HAND);
-        }
-        PlayerAnimationEvent event = new PlayerAnimationEvent(this.getCraftPlayer(), packet.getHand() == InteractionHand.MAIN_HAND ? PlayerAnimationType.ARM_SWING : PlayerAnimationType.OFF_ARM_SWING);
-        this.cserver.getPluginManager().callEvent(event);
-        if (event.isCancelled()) {
-            ci.cancel();
         }
     }
 
@@ -1235,12 +1244,32 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         ((PlayerListBridge) this.server.getPlayerList()).bridge$pushRespawnCause(PlayerRespawnEvent.RespawnReason.DEATH);
     }
 
+    private transient InventoryCloseEvent.Reason arclight$inventoryCloseReason;
+
+    @Override
+    public void bridge$handleContainerClose(ServerboundContainerClosePacket packet, InventoryCloseEvent.Reason reason) {
+        InventoryCloseEvent.Reason previous = this.arclight$inventoryCloseReason;
+        this.arclight$inventoryCloseReason = reason;
+        try {
+            this.handleContainerClose(packet);
+        } finally {
+            this.arclight$inventoryCloseReason = previous;
+        }
+    }
+
+    @WrapOperation(method = "handleContainerClose(Lnet/minecraft/network/protocol/game/ServerboundContainerClosePacket;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;doCloseContainer()V"), require = 1, expect = 1, allow = 1)
+    private void arclight$withInventoryCloseReason(ServerPlayer player, Operation<Void> original) {
+        InventoryCloseEvent.Reason reason = this.arclight$inventoryCloseReason;
+        ((ServerPlayerBridge) player).bridge$withContainerCloseReason(
+            reason == null ? InventoryCloseEvent.Reason.PLAYER : reason, () -> original.call(player));
+    }
+
     @Inject(method = "handleContainerClose", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;doCloseContainer()V"))
     private void arclight$invClose(ServerboundContainerClosePacket packetIn, CallbackInfo ci) {
         if (((ServerPlayerBridge) this.player).bridge$isMovementBlocked()) {
             ci.cancel();
         }
-        // CraftEventFactory.handleInventoryCloseEvent(this.player); handled in ServerPlayerEntity#closeContainer
+        // The close event is handled once by ServerPlayer#doCloseContainer.
     }
 
     /**
@@ -1483,6 +1512,18 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                         }
                     }
 
+                    if (packet.slotNum() == net.minecraft.world.inventory.CartographyTableMenu.RESULT_SLOT
+                        && top instanceof org.bukkit.inventory.CartographyInventory cartographyInventory) {
+                        org.bukkit.inventory.ItemStack result = cartographyInventory.getResult();
+                        if (result != null && !result.isEmpty()) {
+                            if (click == ClickType.NUMBER_KEY) {
+                                event = new io.papermc.paper.event.player.CartographyItemEvent(inventory, type, packet.slotNum(), click, action, packet.buttonNum());
+                            } else {
+                                event = new io.papermc.paper.event.player.CartographyItemEvent(inventory, type, packet.slotNum(), click, action);
+                            }
+                        }
+                    }
+
                     event.setCancelled(cancelled);
                     AbstractContainerMenu oldContainer = this.player.containerMenu; // SPIGOT-1224
                     cserver.getPluginManager().callEvent(event);
@@ -1572,20 +1613,6 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
     @Inject(method = "handleRecipeBookChangeSettingsPacket", at = @At(value = "INVOKE", target = "Lnet/minecraft/stats/ServerRecipeBook;setBookSetting(Lnet/minecraft/world/inventory/RecipeBookType;ZZ)V"))
     private void arclight$recipeBookSettings(ServerboundRecipeBookChangeSettingsPacket packet, CallbackInfo ci) {
         CraftEventFactory.callRecipeBookSettingsEvent(this.player, packet.getBookType(), packet.isOpen(), packet.isFiltering());
-    }
-
-    @Decorate(method = "handlePlaceRecipe", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/RecipeBookMenu;handlePlacement(ZZLnet/minecraft/world/item/crafting/RecipeHolder;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/player/Inventory;)Lnet/minecraft/world/inventory/RecipeBookMenu$PostPlaceAction;"))
-    private RecipeBookMenu.PostPlaceAction arclight$recipeBookClick(RecipeBookMenu menu, boolean useMaxItems, boolean creative, RecipeHolder<?> holder, ServerLevel level, Inventory inventory) throws Throwable {
-        var recipe = ((RecipeHolderBridge) (Object) holder).bridge$toBukkitRecipe();
-        if (recipe == null) {
-            return (RecipeBookMenu.PostPlaceAction) DecorationOps.cancel().invoke();
-        }
-        var event = CraftEventFactory.callRecipeBookClickEvent(this.player, recipe, useMaxItems);
-        var replacement = this.server.getRecipeManager().byKey(org.bukkit.craftbukkit.inventory.CraftRecipe.toMinecraft(((org.bukkit.Keyed) event.getRecipe()).getKey())).orElse(null);
-        if (replacement == null) {
-            return (RecipeBookMenu.PostPlaceAction) DecorationOps.cancel().invoke();
-        }
-        return (RecipeBookMenu.PostPlaceAction) DecorationOps.callsite().invoke(menu, event.isShiftClick(), creative, replacement, level, inventory);
     }
 
     @Inject(method = "handleContainerButtonClick", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;resetLastActionTime()V"))
@@ -1705,7 +1732,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             if (event.isCancelled() || !to.equals(event.getTo())) {
                 relativeSet = Collections.emptySet();
                 to = (event.isCancelled() ? event.getFrom() : event.getTo());
-                positionMoveRotation = new PositionMoveRotation(CraftLocation.toVec3D(to), Vec3.ZERO, to.getYaw(), to.getPitch());
+                positionMoveRotation = new PositionMoveRotation(CraftLocation.toVec3(to), Vec3.ZERO, to.getYaw(), to.getPitch());
             }
             arclight$teleportCancelled = event.isCancelled();
         } else {
@@ -1739,6 +1766,17 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
     }
 
     @Override
+    public void bridge$internalTeleport(PositionMoveRotation position, Set<Relative> relatives) {
+        boolean previous = this.arclight$noTeleportEvent;
+        this.arclight$noTeleportEvent = true;
+        try {
+            this.teleport(position, relatives);
+        } finally {
+            this.arclight$noTeleportEvent = previous;
+        }
+    }
+
+    @Override
     public void bridge$pushNoTeleportEvent() {
         arclight$noTeleportEvent = true;
     }
@@ -1765,6 +1803,11 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
     }
 
     @Override
+    public Location bridge$getLastMoveEventLocation() {
+        return new Location(this.getCraftPlayer().getWorld(), this.lastPosX, this.lastPosY, this.lastPosZ, this.lastYaw, this.lastPitch);
+    }
+
+    @Override
     public void arclight$platform$setLastPosX(double d) {
         lastPosX = d;
     }
@@ -1787,5 +1830,62 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
     @Override
     public void arclight$platform$setLastYaw(float f) {
         lastYaw = f;
+    }
+    @Decorate(method = "handleMovePlayer(Lnet/minecraft/network/protocol/game/ServerboundMovePlayerPacket;)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;jumpFromGround()V"),
+        require = 1, allow = 1)
+    private void arclight$playerJump(ServerPlayer player, @Local(ordinal = 0) ServerboundMovePlayerPacket packet) throws Throwable {
+        Player bukkitPlayer = this.bridge$getCraftPlayer();
+        Location from = this.bridge$getLastMoveEventLocation();
+        Location to = bukkitPlayer.getLocation().clone();
+        // Jump destinations are the raw fields actually present in the packet,
+        // unlike the clamped/wrapped destination supplied to fail-move events.
+        if (packet.hasPosition()) {
+            to.setX(packet.getX(to.getX()));
+            to.setY(packet.getY(to.getY()));
+            to.setZ(packet.getZ(to.getZ()));
+        }
+        if (packet.hasRotation()) {
+            to.setYaw(packet.getYRot(to.getYaw()));
+            to.setPitch(packet.getXRot(to.getPitch()));
+        }
+
+        com.destroystokyo.paper.event.player.PlayerJumpEvent event = new com.destroystokyo.paper.event.player.PlayerJumpEvent(bukkitPlayer, from, to);
+        if (!event.callEvent()) {
+            from = event.getFrom();
+            // Paper consumes a changed from only on cancellation, and rolls back
+            // without PlayerTeleportEvent or a world change.
+            this.bridge$internalTeleport(new PositionMoveRotation(org.bukkit.craftbukkit.util.CraftLocation.toVec3(from), Vec3.ZERO,
+                from.getYaw(), from.getPitch()), Collections.emptySet());
+            DecorationOps.cancel().invoke();
+            return;
+        }
+        // Keep the original virtual jump, including native and loader callbacks.
+        DecorationOps.callsite().invoke(player);
+    }
+
+    public void handleContainerClose(net.minecraft.network.protocol.game.ServerboundContainerClosePacket packet, org.bukkit.event.inventory.InventoryCloseEvent.Reason reason) {
+        this.bridge$handleContainerClose(packet, reason);
+    }
+
+    public void internalTeleport(net.minecraft.world.entity.PositionMoveRotation position, java.util.Set<net.minecraft.world.entity.Relative> relatives) {
+        this.bridge$internalTeleport(position, relatives);
+    }
+
+    private static boolean arclight$areChunksLoadedForMove(net.minecraft.server.level.ServerLevel level, net.minecraft.world.phys.AABB box) {
+        // Same padded rectangle as the pinned Paper helper, without Moonrise.
+        int minChunkX = (net.minecraft.util.Mth.floor(box.minX - 1.0E-7) - 3) >> 4;
+        int maxChunkX = (net.minecraft.util.Mth.floor(box.maxX + 1.0E-7) + 3) >> 4;
+        int minChunkZ = (net.minecraft.util.Mth.floor(box.minZ - 1.0E-7) - 3) >> 4;
+        int maxChunkZ = (net.minecraft.util.Mth.floor(box.maxZ + 1.0E-7) + 3) >> 4;
+        var chunkSource = level.getChunkSource();
+        for (int x = minChunkX; x <= maxChunkX; ++x) {
+            for (int z = minChunkZ; z <= maxChunkZ; ++z) {
+                if (chunkSource.getChunkNow(x, z) == null) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

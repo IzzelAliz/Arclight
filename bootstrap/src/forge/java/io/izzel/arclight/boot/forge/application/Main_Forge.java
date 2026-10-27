@@ -15,9 +15,12 @@ import java.util.stream.Stream;
 public class Main_Forge {
 
     public static void main(String[] args) throws Throwable {
+        var oldcl = Thread.currentThread().getContextClassLoader();
         try {
             Map.Entry<String, List<String>> install = forgeInstall();
-            var cl = Class.forName(install.getKey());
+            // Use the complete launch classpath prepared by the installer,
+            // including Arclight's additional runtime libraries.
+            var cl = Class.forName(install.getKey(), false, Thread.currentThread().getContextClassLoader());
             var method = cl.getMethod("main", String[].class);
             var target = Stream.concat(install.getValue().stream(), Arrays.stream(args)).toArray(String[]::new);
             method.invoke(null, (Object) target);
@@ -25,6 +28,8 @@ public class Main_Forge {
             e.printStackTrace();
             System.err.println("Fail to launch Arclight.");
             System.exit(-1);
+        } finally {
+            Thread.currentThread().setContextClassLoader(oldcl);
         }
     }
 

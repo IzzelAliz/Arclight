@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.entity.monster;
 
-import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.MobBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.npc.VillagerBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.PathfinderMobMixin;
 import io.izzel.arclight.common.mod.mixins.annotation.TransformAccess;
@@ -90,20 +90,6 @@ public abstract class ZombieMixin extends PathfinderMobMixin {
 
     @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
     private static ZombieVillager zombifyVillager(ServerLevel level, Villager villager, BlockPos blockPosition, boolean silent, CreatureSpawnEvent.SpawnReason spawnReason) {
-        ((WorldBridge) villager.level()).bridge$pushAddEntityReason(spawnReason);
-        ((MobBridge) villager).bridge$pushTransformReason(EntityTransformEvent.TransformReason.INFECTION);
-        ZombieVillager zombieVillager = villager.convertTo(EntityType.ZOMBIE_VILLAGER, ConversionParams.single(villager, false, false), EntitySpawnReason.CONVERSION, z -> {});
-        if (zombieVillager != null) {
-            zombieVillager.finalizeSpawn(level, level.getCurrentDifficultyAt(zombieVillager.blockPosition()), EntitySpawnReason.CONVERSION, new net.minecraft.world.entity.monster.zombie.Zombie.ZombieGroupData(false, true));
-            zombieVillager.setVillagerData(villager.getVillagerData());
-            zombieVillager.setGossips(villager.getGossips());
-            zombieVillager.setTradeOffers(villager.getOffers().copy());
-            zombieVillager.setVillagerXp(villager.getVillagerXp());
-            ((LivingEntityBridge) villager).bridge$forge$onLivingConvert(villager, zombieVillager);
-            if (!silent) {
-                level.levelEvent(null, 1026, blockPosition, 0);
-            }
-        }
-        return zombieVillager;
+        return ((VillagerBridge) villager).bridge$zombify(level, blockPosition, silent, spawnReason);
     }
 }

@@ -35,7 +35,12 @@ import java.util.Set;
 public abstract class BlockEntityMixin implements BlockEntityBridge {
 
     private static final CraftPersistentDataTypeRegistry DATA_TYPE_REGISTRY = new CraftPersistentDataTypeRegistry();
-    public CraftPersistentDataContainer persistentDataContainer;
+    public CraftPersistentDataContainer persistentDataContainer = new CraftPersistentDataContainer(DATA_TYPE_REGISTRY);
+
+    @Override
+    public CraftPersistentDataContainer bridge$getPersistentDataContainer() {
+        return this.persistentDataContainer;
+    }
 
     // @formatter:off
     @Shadow @Nullable public Level level;
@@ -60,12 +65,12 @@ public abstract class BlockEntityMixin implements BlockEntityBridge {
 
     @Inject(method = "loadAdditional", at = @At("RETURN"))
     public void arclight$loadPersistent(ValueInput input, CallbackInfo ci) {
-        this.persistentDataContainer = new CraftPersistentDataContainer(DATA_TYPE_REGISTRY);
+        this.persistentDataContainer.clear();
 
         input.read("PublicBukkitValues", CompoundTag.CODEC).ifPresent(this.persistentDataContainer::putAll);
     }
 
-    @Inject(method = "saveWithoutMetadata(Lnet/minecraft/world/level/storage/ValueOutput;)V", at = @At("RETURN"))
+    @Inject(method = {"saveWithoutMetadata(Lnet/minecraft/world/level/storage/ValueOutput;)V", "saveCustomOnly(Lnet/minecraft/world/level/storage/ValueOutput;)V"}, at = @At("RETURN"))
     private void arclight$savePersistent(ValueOutput output, CallbackInfo ci) {
         if (this.persistentDataContainer != null && !this.persistentDataContainer.isEmpty()) {
             output.store("PublicBukkitValues", CompoundTag.CODEC, this.persistentDataContainer.toTagCompound());
@@ -86,7 +91,6 @@ public abstract class BlockEntityMixin implements BlockEntityBridge {
     @Inject(method = "applyComponents", locals = LocalCapture.CAPTURE_FAILHARD, at = @At("RETURN"))
     private void arclight$captureSet(DataComponentMap dataComponentMap, DataComponentPatch dataComponentPatch, CallbackInfo ci, Set<DataComponentType<?>> set) {
         set.remove(DataComponents.BLOCK_ENTITY_DATA);
-        set.remove(DataComponents.BLOCK_STATE);
         arclight$appliedSet = set;
     }
 

@@ -1,0 +1,25 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/configuration/transformation/global/versioned/V29_LogIPs.java b/paper-server/src/main/java/io/papermc/paper/configuration/transformation/global/versioned/V29_LogIPs.java
+--- a/paper-server/src/main/java/io/papermc/paper/configuration/transformation/global/versioned/V29_LogIPs.java
++++ b/paper-server/src/main/java/io/papermc/paper/configuration/transformation/global/versioned/V29_LogIPs.java
+@@ -1,7 +1,7 @@
+ package io.papermc.paper.configuration.transformation.global.versioned;
+ 
+-import java.util.Properties;
+ import net.minecraft.server.MinecraftServer;
++import java.util.Properties;
+ import net.minecraft.server.dedicated.DedicatedServer;
+ import org.jspecify.annotations.Nullable;
+ import org.spongepowered.configurate.ConfigurateException;
+@@ -31,9 +31,10 @@
+ 
+         final boolean val = value.getBoolean(server.settings.getProperties().logIPs);
+         server.settings.update((config) -> {
+-            final Properties newProps = new Properties(config.properties);
++            final Properties newProps = new Properties();
++            newProps.putAll(config.properties);
+             newProps.setProperty("log-ips", String.valueOf(val));
+-            return config.reload(server.registryAccess(), newProps, server.options);
++            return new net.minecraft.server.dedicated.DedicatedServerProperties(newProps);
+         });
+ 
+         value.raw(null);

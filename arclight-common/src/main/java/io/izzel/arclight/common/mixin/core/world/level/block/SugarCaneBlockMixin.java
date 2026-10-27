@@ -6,6 +6,7 @@ import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalIntRef;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.SugarCaneBlock;
@@ -39,6 +40,6 @@ public class SugarCaneBlockMixin {
     // Preserve the pre-existing event bridge; no new upper-call ownership policy.
     @Redirect(method = "randomTick(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/util/RandomSource;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
     public boolean arclight$cropGrow(ServerLevel world, BlockPos pos, BlockState state) {
-        return CraftEventFactory.handleBlockGrowEvent(world, pos, state);
+        return CraftEventFactory.handleBlockGrowEvent(world, pos, state, Block.UPDATE_ALL);
     }
 }

@@ -59,6 +59,7 @@ import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.LevelStem;
@@ -201,7 +202,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
             }
 
             // Now we create the CraftWorld
-            this.world = new CraftWorld((ServerLevel) (Object) this, generator, biomeProvider, environment);
+            this.world = new CraftWorld((ServerLevel) (Object) this, org.bukkit.craftbukkit.util.CraftNamespacedKey.fromMinecraft(this.dimension().identifier()), biomeProvider, environment);
         }
 
         ChunkGenerator raw = (ChunkGenerator) DecorationOps.callsite().invoke(instance);
@@ -209,7 +210,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
             // Data needed by getWorld() are all initialized for possible creating CraftWorld.
             // CraftBukkit start: select custom chunk generator
             if (biomeProvider != null) {
-                BiomeSource biomeSource = new CustomWorldChunkManager(getWorld(), biomeProvider, getServer().registryAccess().lookupOrThrow(Registries.BIOME));
+                BiomeSource biomeSource = new CustomWorldChunkManager(getWorld(), biomeProvider, raw.getBiomeSource());
                 if (raw instanceof NoiseBasedChunkGenerator noise) {
                     raw = new NoiseBasedChunkGenerator(biomeSource, noise.settings);
                 } else if (raw instanceof FlatLevelSource flat) {
@@ -224,6 +225,16 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
             // CraftBukkit end
         }
         return raw;
+    }
+
+    @Decorate(method = "<init>(Lnet/minecraft/server/MinecraftServer;Ljava/util/concurrent/Executor;Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/world/level/storage/ServerLevelData;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/dimension/LevelStem;ZJLjava/util/List;Z)V",
+        inject = true, at = @At(value = "FIELD", target = "Lnet/minecraft/server/level/ServerLevel;chunkSource:Lnet/minecraft/server/level/ServerChunkCache;", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER),
+        require = 1, expect = 1, allow = 1)
+    private void arclight$initWanderingTraderSpawner(MinecraftServer minecraftServer, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, ServerLevelData worldInfo, ResourceKey<Level> dimension, LevelStem levelStem, boolean isDebug, long seed, List<CustomSpawner> spawners, boolean shouldBeTicking) {
+        if (WorldCreationContext.ownsPending((ServerLevel) (Object) this) && this.environment == World.Environment.NORMAL) {
+            // The chunk source now owns the storage; populate the list before NeoForge copies it for its event.
+            spawners.add(new net.minecraft.world.entity.npc.wanderingtrader.WanderingTraderSpawner(this.getDataStorage()));
+        }
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -262,8 +273,18 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
                 }
             }
         }
-        this.spigotConfig = new SpigotWorldConfig(worldInfo.getLevelName());
+        this.spigotConfig = new SpigotWorldConfig(worldInfo.getLevelName(), org.bukkit.craftbukkit.util.CraftNamespacedKey.fromMinecraft(dimension.identifier()));
         this.uuid = BukkitWorldIdentity.getUUID(levelSave, this.dimension());
+        this.arclight$paperConfig = ArclightServer.getPaperConfigurations().createWorldConfig(
+            io.papermc.paper.configuration.PaperConfigurations.createWorldContextMap(
+                BukkitWorldIdentity.getWorldFolder(levelSave, dimension), dimension.identifier(),
+                this.spigotConfig, this.registryAccess(), this.getGameRules()));
+        for (var category : org.bukkit.entity.SpawnCategory.values()) {
+            if (org.bukkit.craftbukkit.util.CraftSpawnCategory.isValidForLimits(category)) {
+                this.getWorld().setSpawnLimit(category, this.arclight$paperConfig.entities.spawning.spawnLimits
+                    .getInt(org.bukkit.craftbukkit.util.CraftSpawnCategory.toNMS(category)));
+            }
+        }
         ((WorldBorderBridge) this.getWorldBorder()).bridge$setWorld((ServerLevel) (Object) this);
         ((ServerChunkProviderBridge) this.chunkSource).bridge$setViewDistance(spigotConfig.viewDistance);
         ((ServerChunkProviderBridge) this.chunkSource).bridge$setSimulationDistance(spigotConfig.simulationDistance);
@@ -281,8 +302,21 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
         data.save(this.world);
     }
 
+    private io.papermc.paper.configuration.WorldConfiguration arclight$paperConfig;
+
+    @Override
+    public io.papermc.paper.configuration.WorldConfiguration bridge$paperConfig() {
+        return this.arclight$paperConfig;
+    }
+
     public LevelChunk getChunkIfLoaded(int x, int z) {
         return this.chunkSource.getChunk(x, z, false);
+    }
+
+    @Nullable
+    @Override
+    public ChunkAccess bridge$getChunkIfLoadedImmediately(int x, int z) {
+        return this.getChunkSource().getChunkNow(x, z);
     }
 
     public <T extends ParticleOptions> int sendParticles(final ServerPlayer sender, final T t0, final double d0, final double d1, final double d2, final int i, final double d3, final double d4, final double d5, final double d6, final boolean force) {
@@ -303,14 +337,57 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
         return this.convertable;
     }
 
-    @Inject(method = "tickNonPassenger", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/Entity;tick()V"))
-    private void arclight$tickPortal(Entity entityIn, CallbackInfo ci) {
-        ((EntityBridge) entityIn).bridge$postTick();
+    @Inject(method = "tickNonPassenger(Lnet/minecraft/world/entity/Entity;)V", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/Entity;tickCount:I", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER), require = 1, allow = 1)
+    private void arclight$tickTotalAge(Entity entity, CallbackInfo ci) {
+        entity.totalEntityAge++;
     }
 
-    @Inject(method = "tickPassenger", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/entity/Entity;rideTick()V"))
-    private void arclight$tickPortalPassenger(Entity ridingEntity, Entity passengerEntity, CallbackInfo ci) {
-        ((EntityBridge) passengerEntity).bridge$postTick();
+    @Inject(method = "tickPassenger(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity;)V", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/Entity;tickCount:I", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER), require = 1, allow = 1)
+    private void arclight$tickPassengerTotalAge(Entity ridingEntity, Entity passengerEntity, CallbackInfo ci) {
+        passengerEntity.totalEntityAge++;
+    }
+
+    @org.spongepowered.asm.mixin.Unique private boolean arclight$activeEntityTick;
+
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/entity/EntityTickList;forEach(Ljava/util/function/Consumer;)V"))
+    private void arclight$activateEntities(CallbackInfo ci) {
+        io.papermc.paper.entity.activation.ActivationRange.activateEntities((ServerLevel) (Object) this);
+    }
+
+    @com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod(method = "tickNonPassenger")
+    private void arclight$preserveActivation(Entity entity, com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original) {
+        boolean previous = this.arclight$activeEntityTick;
+        try {
+            original.call(entity);
+        } finally {
+            this.arclight$activeEntityTick = previous;
+        }
+    }
+
+    @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(method = "tickNonPassenger",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;tick()V"))
+    private void arclight$activationTick(Entity entity, com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original) {
+        this.arclight$activeEntityTick = io.papermc.paper.entity.activation.ActivationRange.checkIfActive(entity);
+        if (this.arclight$activeEntityTick) {
+            original.call(entity);
+            ((EntityBridge) entity).bridge$postTick();
+        } else {
+            ((EntityBridge) entity).bridge$inactiveTick();
+        }
+    }
+
+    @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(method = "tickPassenger",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;rideTick()V"))
+    private void arclight$activationPassengerTick(Entity entity, com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original,
+                                               Entity vehicle, Entity passenger) {
+        if (this.arclight$activeEntityTick) {
+            original.call(entity);
+            ((EntityBridge) entity).bridge$postTick();
+        } else {
+            entity.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+            ((EntityBridge) entity).bridge$inactiveTick();
+            vehicle.positionRider(entity);
+        }
     }
 
     @Decorate(method = "tickChunk", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/util/RandomSource;nextInt(I)I"))
@@ -622,19 +699,24 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
     @com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod(method = "tick(Ljava/util/function/BooleanSupplier;)V", require = 1, expect = 1, allow = 1)
     private void arclight$nightTickScope(java.util.function.BooleanSupplier timeLeft,
                                         com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original) {
-        try (var scope = io.izzel.arclight.common.mod.util.NightSkipScope.tick(this)) {
+        ArclightCaptures.nightLevel = this;
+        ArclightCaptures.nightCancelled = false;
+        try {
             original.call(timeLeft);
+        } finally {
+            ArclightCaptures.nightLevel = null;
+            ArclightCaptures.nightCancelled = false;
         }
     }
 
-    @com.llamalad7.mixinextras.injector.ModifyExpressionValue(method = "tick(Ljava/util/function/BooleanSupplier;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;clockManager()Lnet/minecraft/world/clock/ServerClockManager;"), require = 1, expect = 1, allow = 1)
+    @com.llamalad7.mixinextras.injector.ModifyExpressionValue(method = "tick(Ljava/util/function/BooleanSupplier;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;clockManager()Lnet/minecraft/world/clock/ServerClockManager;"), require = 1, expect = 1, allow = 3)
     private net.minecraft.world.clock.ServerClockManager arclight$sleepWorldClock(net.minecraft.world.clock.ServerClockManager global) {
         return ((ServerLevel) (Object) this).clockManager();
     }
 
     @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(method = "tick(Ljava/util/function/BooleanSupplier;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;wakeUpAllPlayers()V"), require = 1, expect = 1, allow = 1)
     private void arclight$notWakeIfCancelled(ServerLevel world, com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original) {
-        if (!io.izzel.arclight.common.mod.util.NightSkipScope.cancelled(world)) {
+        if (!(ArclightCaptures.nightLevel == world && ArclightCaptures.nightCancelled)) {
             original.call(world);
         }
     }

@@ -1,0 +1,97 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/command/PaperVersionCommand.java b/paper-server/src/main/java/io/papermc/paper/command/PaperVersionCommand.java
+index bfacb856623b5cb6af4f1b65ee89200cdfb1ef13..ebc15575a6776c1c700ff7b89715a8a39467a35d 100644
+--- a/paper-server/src/main/java/io/papermc/paper/command/PaperVersionCommand.java
++++ b/paper-server/src/main/java/io/papermc/paper/command/PaperVersionCommand.java
+@@ -1,6 +1,5 @@
+ package io.papermc.paper.command;
+ 
+-import com.destroystokyo.paper.util.VersionFetcher;
+ import com.mojang.brigadier.Command;
+ import com.mojang.brigadier.arguments.StringArgumentType;
+ import com.mojang.brigadier.context.CommandContext;
+@@ -19,12 +18,9 @@ import net.kyori.adventure.text.JoinConfiguration;
+ import net.kyori.adventure.text.TextComponent;
+ import net.kyori.adventure.text.event.ClickEvent;
+ import net.kyori.adventure.text.format.NamedTextColor;
+-import net.kyori.adventure.text.format.TextDecoration;
+ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+-import net.minecraft.server.MinecraftServer;
+ import org.bukkit.Bukkit;
+ import org.bukkit.command.CommandSender;
+-import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+ import org.bukkit.plugin.Plugin;
+ import org.bukkit.util.StringUtil;
+ import org.jspecify.annotations.NullMarked;
+@@ -42,12 +38,6 @@ public class PaperVersionCommand {
+         Component.text(", ", NamedTextColor.WHITE),
+         Component.text(", and ", NamedTextColor.WHITE)
+     );
+-    private static final Component FAILED_TO_FETCH = Component.text("Could not fetch version information!", NamedTextColor.RED);
+-    private static final Component FETCHING = Component.text("Checking version, please wait...", NamedTextColor.WHITE, TextDecoration.ITALIC);
+-
+-    private final VersionFetcher versionFetcher = CraftMagicNumbers.INSTANCE.getVersionFetcher();
+-    private CompletableFuture<ComputedVersion> computedVersion = CompletableFuture.completedFuture(new ComputedVersion(Component.empty(), -1)); // Precompute-- someday move that stuff out of bukkit
+-
+     public static LiteralCommandNode<CommandSourceStack> create() {
+         final PaperVersionCommand command = new PaperVersionCommand();
+ 
+@@ -135,50 +125,14 @@ public class PaperVersionCommand {
+     }
+ 
+     private void sendVersion(final CommandSender sender) {
+-        final CompletableFuture<ComputedVersion> version = getVersionOrFetch();
+-        if (!version.isDone()) {
+-            sender.sendMessage(FETCHING);
+-        }
+-
+-        version.whenComplete((computedVersion, throwable) -> {
+-            if (computedVersion != null) {
+-                sender.sendMessage(computedVersion.message);
+-            } else if (throwable != null) {
+-                sender.sendMessage(FAILED_TO_FETCH);
+-                MinecraftServer.LOGGER.warn("Could not fetch version information!", throwable);
+-            }
+-        });
+-    }
+-
+-    private CompletableFuture<ComputedVersion> getVersionOrFetch() {
+-        if (!this.computedVersion.isDone()) {
+-            return this.computedVersion;
+-        }
+-
+-        if (this.computedVersion.isCompletedExceptionally() || System.currentTimeMillis() - this.computedVersion.resultNow().computedTime() > this.versionFetcher.getCacheTime()) {
+-            this.computedVersion = this.fetchVersionMessage();
+-        }
+-
+-        return this.computedVersion;
+-    }
+-
+-    private CompletableFuture<ComputedVersion> fetchVersionMessage() {
+-       return CompletableFuture.supplyAsync(() -> {
+-           final Component message = Component.textOfChildren(
+-               Component.text(Bukkit.getVersionMessage(), NamedTextColor.WHITE),
+-               Component.newline(),
+-               this.versionFetcher.getVersionMessage()
+-           );
+-
+-           return new ComputedVersion(
+-               message.hoverEvent(Component.translatable("chat.copy.click", NamedTextColor.WHITE))
+-                   .clickEvent(ClickEvent.copyToClipboard(PlainTextComponentSerializer.plainText().serialize(message))),
+-               System.currentTimeMillis()
+-           );
+-       });
+-    }
+-
+-    record ComputedVersion(Component message, long computedTime) {
+-
++        final Component message = Component.text(
++            "This server is running " + Bukkit.getName()
++                + " version " + Bukkit.getVersion()
++                + " (Implementing API version " + Bukkit.getBukkitVersion() + ")",
++            NamedTextColor.WHITE
++        );
++        sender.sendMessage(message
++            .hoverEvent(Component.translatable("chat.copy.click", NamedTextColor.WHITE))
++            .clickEvent(ClickEvent.copyToClipboard(PlainTextComponentSerializer.plainText().serialize(message))));
+     }
+ }

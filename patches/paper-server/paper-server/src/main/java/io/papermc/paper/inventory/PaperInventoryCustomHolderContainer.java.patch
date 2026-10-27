@@ -1,0 +1,32 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/inventory/PaperInventoryCustomHolderContainer.java b/paper-server/src/main/java/io/papermc/paper/inventory/PaperInventoryCustomHolderContainer.java
+--- a/paper-server/src/main/java/io/papermc/paper/inventory/PaperInventoryCustomHolderContainer.java
++++ b/paper-server/src/main/java/io/papermc/paper/inventory/PaperInventoryCustomHolderContainer.java
+@@ -1,6 +1,7 @@
+ package io.papermc.paper.inventory;
+ 
+ import io.papermc.paper.adventure.PaperAdventure;
++import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
+ import net.kyori.adventure.text.Component;
+ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+ import net.minecraft.world.Container;
+@@ -19,7 +20,7 @@
+ import java.util.List;
+ 
+ @DefaultQualifier(NonNull.class)
+-public final class PaperInventoryCustomHolderContainer implements Container {
++public final class PaperInventoryCustomHolderContainer implements Container, IInventoryBridge {
+ 
+     private final InventoryHolder owner;
+     private final Container delegate;
+@@ -125,6 +126,11 @@
+     }
+ 
+     @Override
++    public void setOwner(InventoryHolder owner) {
++        throw new UnsupportedOperationException("Custom inventory wrapper owner is fixed at construction");
++    }
++
++    @Override
+     public void setMaxStackSize(int size) {
+         this.delegate.setMaxStackSize(size);
+     }

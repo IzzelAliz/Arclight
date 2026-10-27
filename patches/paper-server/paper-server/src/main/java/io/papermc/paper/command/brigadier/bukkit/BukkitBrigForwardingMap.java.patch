@@ -1,0 +1,31 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/command/brigadier/bukkit/BukkitBrigForwardingMap.java b/paper-server/src/main/java/io/papermc/paper/command/brigadier/bukkit/BukkitBrigForwardingMap.java
+index d08ca38b4f04f7834de4ab64e5f794e8e26ec746..10b8ecde101af7e11548d3ea38167e80fce96a88 100644
+--- a/paper-server/src/main/java/io/papermc/paper/command/brigadier/bukkit/BukkitBrigForwardingMap.java
++++ b/paper-server/src/main/java/io/papermc/paper/command/brigadier/bukkit/BukkitBrigForwardingMap.java
+@@ -96,7 +96,7 @@ public class BukkitBrigForwardingMap extends HashMap<String, Command> {
+     @Override
+     public Command put(String key, Command value) {
+         Command old = this.get(key);
+-        this.getDispatcher().getRoot().removeCommand(key); // Override previous command
++        PaperBrigadier.removeCommand(this.getDispatcher().getRoot(), key); // Override previous command
+         if (value instanceof VanillaCommandWrapper wrapper && wrapper.getName().equals(key)) {
+             // Don't break when some plugin tries to remove and add back a plugin command registered with modern API...
+             this.getDispatcher().getRoot().addChild((CommandNode) wrapper.vanillaCommand);
+@@ -114,7 +114,7 @@ public class BukkitBrigForwardingMap extends HashMap<String, Command> {
+ 
+         Command old = this.get(key);
+          if (old != null) {
+-             this.getDispatcher().getRoot().removeCommand(string);
++             PaperBrigadier.removeCommand(this.getDispatcher().getRoot(), string);
+          }
+ 
+         return old;
+@@ -140,7 +140,7 @@ public class BukkitBrigForwardingMap extends HashMap<String, Command> {
+ 
+     @Override
+     public void clear() {
+-        this.getDispatcher().getRoot().clearAll();
++        PaperBrigadier.clearCommands(this.getDispatcher().getRoot());
+     }
+ 
+     @NotNull

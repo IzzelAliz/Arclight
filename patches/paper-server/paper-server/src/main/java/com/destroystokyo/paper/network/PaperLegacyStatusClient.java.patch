@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/com/destroystokyo/paper/network/PaperLegacyStatusClient.java b/paper-server/src/main/java/com/destroystokyo/paper/network/PaperLegacyStatusClient.java
+index cc54b1c207981235b5160e8773b27cf9a5dcd4d5..650a72a9a0cd09bf312e19a57d537dd95ab50c59 100644
+--- a/paper-server/src/main/java/com/destroystokyo/paper/network/PaperLegacyStatusClient.java
++++ b/paper-server/src/main/java/com/destroystokyo/paper/network/PaperLegacyStatusClient.java
+@@ -48,7 +48,7 @@ public final class PaperLegacyStatusClient implements StatusClient {
+ 
+         PaperServerListPingEvent event =  new PaperServerListPingEventImpl(server,
+                 new PaperLegacyStatusClient(address, protocolVersion, virtualHost), Byte.MAX_VALUE, null);
+-        server.server.getPluginManager().callEvent(event);
++        ((io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge) server).bridge$getServer().getPluginManager().callEvent(event);
+ 
+         if (event.isCancelled()) {
+             return null;

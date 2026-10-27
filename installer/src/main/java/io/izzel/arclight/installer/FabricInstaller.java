@@ -61,7 +61,11 @@ public class FabricInstaller {
     private static Map.Entry<String, List<Path>> classpath(InstallInfo info, Path path) throws Exception {
         var mcPath = String.format("libraries/net/minecraft/server/%1$s/server-%1$s.jar", info.installer.minecraft);
         System.setProperty("fabric.gameJarPath", Paths.get(mcPath).toAbsolutePath().toString());
+        var loaderDeps = fabricDeps(path);
+        var loaderModules = loaderDeps.keySet().stream()
+            .map(it -> it.substring(0, it.lastIndexOf(':'))).collect(Collectors.toSet());
         var gameLibs = runtimeDeps(info).keySet().stream()
+            .filter(it -> !loaderModules.contains(it.substring(0, it.lastIndexOf(':'))))
             .filter(it -> BUILTIN_MODS.stream().noneMatch(it::startsWith))
             .map(it -> "libraries/" + Util.mavenToPath(it)).collect(Collectors.joining(File.pathSeparator));
         System.setProperty("arclight.fabric.classpath", gameLibs);
@@ -70,7 +74,7 @@ public class FabricInstaller {
             .map(it -> "libraries/" + Util.mavenToPath(it)).collect(Collectors.joining(File.pathSeparator));
         System.setProperty("arclight.fabric.builtinMods", builtinMods);
         var libs = new ArrayList<Path>();
-        fabricDeps(path).keySet().stream().map(it -> Paths.get("libraries", Util.mavenToPath(it))).forEach(libs::add);
+        loaderDeps.keySet().stream().map(it -> Paths.get("libraries", Util.mavenToPath(it))).forEach(libs::add);
 
         libs.add(path);
         try (var file = new JarFile(path.toFile())) {

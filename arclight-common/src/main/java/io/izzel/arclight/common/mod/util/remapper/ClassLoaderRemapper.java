@@ -22,6 +22,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.service.MixinService;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.net.JarURLConnection;
 import java.net.URL;
@@ -45,21 +46,26 @@ public class ClassLoaderRemapper {
     private static final String PREFIX = "net/minecraft/";
     private static final String REPLACED_NAME = Type.getInternalName(ArclightReflectionHandler.class);
 
-    private final ClassLoader classLoader;
+    // The server-loaded reflection handler retains this remapper after its owner is gone.
+    private final WeakReference<ClassLoader> classLoader;
     private final String generatedHandler;
     private final Class<?> generatedHandlerClass;
     private final GeneratedHandlerAdapter generatedHandlerAdapter;
     private final Map<String, Boolean> secureJarInfo = new ConcurrentHashMap<>();
 
     public ClassLoaderRemapper(ClassLoader classLoader) {
-        this.classLoader = classLoader;
+        this.classLoader = new WeakReference<>(classLoader);
         this.generatedHandlerClass = generateReflectionHandler();
         this.generatedHandler = Type.getInternalName(generatedHandlerClass);
         this.generatedHandlerAdapter = new GeneratedHandlerAdapter(REPLACED_NAME, generatedHandler);
-        GlobalClassRepo.INSTANCE.addRepo(new ClassLoaderRepo(this.classLoader));
+        GlobalClassRepo.INSTANCE.addRepo(new ClassLoaderRepo(classLoader));
     }
 
     public ClassLoader getClassLoader() {
+        ClassLoader classLoader = this.classLoader.get();
+        if (classLoader == null) {
+            throw new IllegalStateException("The owning class loader has been garbage collected");
+        }
         return classLoader;
     }
 

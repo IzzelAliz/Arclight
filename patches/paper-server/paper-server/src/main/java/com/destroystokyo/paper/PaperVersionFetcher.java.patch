@@ -1,0 +1,21 @@
+diff --git a/paper-server/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java b/paper-server/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
+index 602d3ce2cd16405f35453ce12a207b70312a4a8a..82cb6a44304c2cbef5a91c109f855a29a1429f30 100644
+--- a/paper-server/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
++++ b/paper-server/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
+@@ -6,7 +6,6 @@ import com.google.gson.JsonArray;
+ import com.google.gson.JsonElement;
+ import com.google.gson.JsonObject;
+ import com.google.gson.JsonSyntaxException;
+-import com.mojang.logging.LogUtils;
+ import io.papermc.paper.ServerBuildInfo;
+ import java.io.BufferedReader;
+ import java.io.IOException;
+@@ -36,7 +35,7 @@ import static io.papermc.paper.ServerBuildInfo.StringRepresentation.VERSION_SIMP
+ 
+ @DefaultQualifier(NonNull.class)
+ public class PaperVersionFetcher implements VersionFetcher {
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(PaperVersionFetcher.class.getSimpleName());
+     private static final ComponentLogger COMPONENT_LOGGER = ComponentLogger.logger(LogManager.getRootLogger().getName());
+     private static final int DISTANCE_ERROR = -1;
+     private static final int DISTANCE_UNKNOWN = -2;

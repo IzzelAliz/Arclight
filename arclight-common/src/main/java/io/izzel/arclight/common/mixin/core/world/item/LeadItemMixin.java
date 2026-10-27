@@ -29,27 +29,23 @@ import java.util.function.Supplier;
 @Mixin(LeadItem.class)
 public class LeadItemMixin {
 
-    private static final ThreadLocal<InteractionHand> arclight$pendingHand = new ThreadLocal<>();
+    private static InteractionHand arclight$pendingHand;
 
     @WrapOperation(method = "useOn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/LeadItem;bindPlayerMobs(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/InteractionResult;"))
     private InteractionResult arclight$withHand(Player player, Level level, BlockPos pos, Operation<InteractionResult> original, UseOnContext context) {
-        var previous = arclight$pendingHand.get();
-        arclight$pendingHand.set(context.getHand());
+        var previous = arclight$pendingHand;
+        arclight$pendingHand = context.getHand();
         try {
             return original.call(player, level, pos);
         } finally {
-            if (previous == null) {
-                arclight$pendingHand.remove();
-            } else {
-                arclight$pendingHand.set(previous);
-            }
+            arclight$pendingHand = previous;
         }
     }
 
     @Decorate(method = "bindPlayerMobs", inject = true, at = @At("HEAD"))
     private static void arclight$captureHand(@Local(allocate = "arclightLeadHand") InteractionHand hand) throws Throwable {
-        var pending = arclight$pendingHand.get();
-        arclight$pendingHand.remove();
+        var pending = arclight$pendingHand;
+        arclight$pendingHand = null;
         hand = pending == null ? InteractionHand.MAIN_HAND : pending;
         DecorationOps.blackhole().invoke(hand);
     }

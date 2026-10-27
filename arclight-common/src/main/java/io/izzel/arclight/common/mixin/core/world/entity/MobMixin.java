@@ -7,6 +7,7 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.MobBridge;
+import io.izzel.arclight.common.bridge.core.world.entity.ai.goal.GoalSelectorBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.animal.PigBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
@@ -71,7 +72,34 @@ public abstract class MobMixin extends LivingEntityMixin implements MobBridge {
     @Shadow public abstract void setTarget(@org.jetbrains.annotations.Nullable LivingEntity livingEntity);
     // @formatter:on
 
+    @Shadow @org.spongepowered.asm.mixin.Final protected net.minecraft.world.entity.ai.goal.GoalSelector goalSelector;
+    @Shadow @org.spongepowered.asm.mixin.Final protected net.minecraft.world.entity.ai.goal.GoalSelector targetSelector;
+
+    @Override
+    public net.minecraft.world.entity.ai.goal.GoalSelector bridge$goalSelector() {
+        return this.goalSelector;
+    }
+
+    @Override
+    public net.minecraft.world.entity.ai.goal.GoalSelector bridge$targetSelector() {
+        return this.targetSelector;
+    }
+
     public boolean aware;
+
+    @Override
+    public void bridge$inactiveTick() {
+        super.bridge$inactiveTick();
+        if (!this.aware) {
+            return;
+        }
+        if (((GoalSelectorBridge) this.goalSelector).bridge$inactiveTick()) {
+            this.goalSelector.tick();
+        }
+        if (((GoalSelectorBridge) this.targetSelector).bridge$inactiveTick()) {
+            this.targetSelector.tick();
+        }
+    }
 
     @Override
     public void bridge$setAware(boolean aware) {
@@ -325,7 +353,7 @@ public abstract class MobMixin extends LivingEntityMixin implements MobBridge {
             ConversionParams.AfterConversion<?> after,
             @com.llamalad7.mixinextras.sugar.Cancellable CallbackInfoReturnable<Mob> cir) {
         if (params.type() == net.minecraft.world.entity.ConversionType.SPLIT_ON_DEATH
-            && after instanceof io.izzel.arclight.common.mod.server.entity.SlimeSplitScope.Conversion<?> split
+            && after instanceof io.izzel.arclight.common.mod.server.event.ArclightEventFactory.SlimeSplit.Conversion<?> split
             && split.defer((Mob) (Object) this, entityIn, () -> original.call(world, entityIn))) {
             return true;
         }

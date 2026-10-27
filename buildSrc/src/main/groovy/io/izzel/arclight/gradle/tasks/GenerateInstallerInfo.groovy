@@ -4,7 +4,7 @@ import groovy.json.JsonOutput
 import io.izzel.arclight.gradle.Utils
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.DependencyArtifact
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
@@ -70,71 +70,52 @@ class GenerateInstallerInfo extends DefaultTask {
         this.fabricLoaderVersion = fabricLoaderVersion
     }
 
-    private static List<String> configurationDeps(Configuration conf) {
-        return conf.dependencies.collect { dep ->
-            def classifier = null
-            if (dep.artifacts) {
-                dep.artifacts.each { DependencyArtifact artifact ->
-                    if (artifact.classifier) {
-                        classifier = artifact.classifier
-                    }
+    private static Map<String, String> configurationArtifacts(Configuration conf) {
+        def artifacts = new TreeMap<String, String>()
+        conf.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            if (artifact.id.componentIdentifier instanceof ModuleComponentIdentifier && artifact.extension == 'jar') {
+                def module = artifact.moduleVersion.id
+                def coordinate = "${module.group}:${module.name}:${module.version}"
+                if (artifact.classifier) {
+                    coordinate += ":${artifact.classifier}"
                 }
+                artifacts.put(coordinate.toString(), Utils.sha1(artifact.file))
             }
-            if (classifier) {
-                return "${dep.group}:${dep.name}:${dep.version}:$classifier"
-            } else {
-                return "${dep.group}:${dep.name}:${dep.version}"
-            }
-        } as List<String>
+        }
+        return artifacts
     }
 
     @TaskAction
     void run() {
-        def libs = configurationDeps(this.configuration)
-        def fabricLibs = configurationDeps(this.fabricExtra)
-        def artifacts = { List<String> arts ->
-            def ret = new HashMap<String, String>()
-            def cfg = project.configurations.create("art_rev_" + System.currentTimeMillis())
-            cfg.transitive = false
-            arts.each {
-                def dep = project.dependencies.create(it)
-                cfg.dependencies.add(dep)
-            }
-            cfg.resolve()
-            cfg.resolvedConfiguration.resolvedArtifacts.each { rev ->
-                def art = [
-                        group     : rev.moduleVersion.id.group,
-                        name      : rev.moduleVersion.id.name,
-                        version   : rev.moduleVersion.id.version,
-                        classifier: rev.classifier,
-                        extension : rev.extension,
-                        file      : rev.file
-                ]
-                def desc = "${art.group}:${art.name}:${art.version}"
-                if (art.classifier != null)
-                    desc += ":${art.classifier}"
-                if (art.extension != 'jar')
-                    desc += "@${art.extension}"
-                ret.put(desc.toString(), Utils.sha1(art.file))
-            }
-            return arts.collectEntries { [(it.toString()): ret.get(it.toString())] }
-        }
+        def forgeUrl = "https://maven.minecraftforge.net/net/minecraftforge/forge/$minecraftVersion-$forgeVersion/forge-$minecraftVersion-$forgeVersion-installer.jar"
+        def tmpForge = Files.createTempFile("forge", "jar")
+        Utils.download(forgeUrl, tmpForge.toFile())
         def neoforgeUrl = "https://maven.neoforged.net/releases/net/neoforged/neoforge/$neoforgeVersion/neoforge-$neoforgeVersion-installer.jar"
         def tmpNeoforge = Files.createTempFile("neoforge", "jar")
         Utils.download(neoforgeUrl, tmpNeoforge.toFile())
         def fabricLoaderUrl = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/$fabricLoaderVersion/fabric-loader-${fabricLoaderVersion}.jar"
         def tmpFabric = Files.createTempFile("fabric", "jar")
         Utils.download(fabricLoaderUrl, tmpFabric.toFile())
+        def libraries = configurationArtifacts(this.configuration)
+        def fabricLibraries = configurationArtifacts(this.fabricExtra)
+        libraries.each { coordinate, hash ->
+            if (fabricLibraries.get(coordinate) != hash) {
+                throw new IllegalStateException("Fabric installer overrides shared library ${coordinate}")
+            }
+            fabricLibraries.remove(coordinate)
+        }
         def output = [
                 installer  : [
                         minecraft       : minecraftVersion,
+                        forge           : forgeVersion,
+                        forgeHash       : Utils.sha1(tmpForge.toFile()),
                         neoforge        : neoforgeVersion,
                         neoforgeHash    : Utils.sha1(tmpNeoforge.toFile()),
                         fabricLoader    : fabricLoaderVersion,
                         fabricLoaderHash: Utils.sha1(tmpFabric.toFile()),
                 ],
-                libraries  : artifacts(libs),
-                fabricExtra: artifacts(fabricLibs)
+                libraries  : libraries,
+                fabricExtra: fabricLibraries
         ]
         outputs.files.singleFile.text = JsonOutput.toJson(output)
     }

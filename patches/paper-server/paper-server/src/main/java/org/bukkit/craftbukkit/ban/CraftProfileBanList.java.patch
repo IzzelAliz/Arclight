@@ -1,0 +1,25 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/ban/CraftProfileBanList.java b/paper-server/src/main/java/org/bukkit/craftbukkit/ban/CraftProfileBanList.java
+index 89ad99df2f76537bdcb0482f2046e1215c104ded..2ab6db4af841cb62b9f628ede497df00ad1a35a7 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/ban/CraftProfileBanList.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/ban/CraftProfileBanList.java
+@@ -7,7 +7,6 @@ import java.time.Instant;
+ import java.util.Date;
+ import java.util.Set;
+ import java.util.UUID;
+-import net.minecraft.server.MinecraftServer;
+ import net.minecraft.server.players.NameAndId;
+ import net.minecraft.server.players.UserBanList;
+ import net.minecraft.server.players.UserBanListEntry;
+@@ -205,10 +204,10 @@ public class CraftProfileBanList implements ProfileBanList {
+     }
+ 
+     static NameAndId getProfileByUUID(UUID uuid) {
+-        return (MinecraftServer.getServer() != null) ? MinecraftServer.getServer().services().nameToIdCache().get(uuid).orElse(null) : null;
++        return org.bukkit.Bukkit.getServer() instanceof org.bukkit.craftbukkit.CraftServer server ? server.getServer().services().nameToIdCache().get(uuid).orElse(null) : null;
+     }
+ 
+     static NameAndId getProfileByName(String name) {
+-        return (MinecraftServer.getServer() != null) ? MinecraftServer.getServer().services().nameToIdCache().get(name).orElse(null) : null;
++        return org.bukkit.Bukkit.getServer() instanceof org.bukkit.craftbukkit.CraftServer server ? server.getServer().services().nameToIdCache().get(name).orElse(null) : null;
+     }
+ }

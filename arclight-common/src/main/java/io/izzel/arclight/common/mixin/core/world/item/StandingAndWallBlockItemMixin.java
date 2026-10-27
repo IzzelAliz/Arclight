@@ -24,7 +24,7 @@ public class StandingAndWallBlockItemMixin {
             var result = context.getLevel().isUnobstructed(defaultReturn, context.getClickedPos(), CollisionContext.empty());
             var player = (context.getPlayer() instanceof ServerPlayerBridge bridge) ? bridge.bridge$getBukkitEntity() : null;
 
-            var event = new BlockCanBuildEvent(CraftBlock.at(context.getLevel(), context.getClickedPos()), player, CraftBlockData.fromData(defaultReturn), result);
+            var event = new BlockCanBuildEvent(CraftBlock.at(context.getLevel(), context.getClickedPos()), player, CraftBlockData.createData(defaultReturn), result);
             Bukkit.getPluginManager().callEvent(event);
 
             cir.setReturnValue(event.isBuildable() ? defaultReturn : null);

@@ -5,16 +5,22 @@ import net.minecraftforge.fml.loading.targets.CommonLaunchHandler;
 import java.nio.file.Path;
 import java.util.List;
 
-// duplicate of ForgeProdLaunchHandler, change on update
+// Forge 64.1.5's production server contract, retaining Arclight's logging configuration.
 public class ArclightLaunchHandler extends CommonLaunchHandler {
 
     public ArclightLaunchHandler() {
         super(CommonLaunchHandler.SERVER, "arclight_");
+        // Also runs before discovery when Arclight is installed as a mod, without ModuleBootstrap.
+        try {
+            ModBootstrap.patchModDiscoverer(getClass());
+        } catch (Exception e) {
+            throw new IllegalStateException("Cannot initialize Arclight's Forge dependency locator", e);
+        }
     }
 
     @Override
     public String getNaming() {
-        // Target mapping in use is SRG -> MCP, translates to MCP
+        // Forge calls the unobfuscated production namespace "mcp".
         return "mcp";
     }
 

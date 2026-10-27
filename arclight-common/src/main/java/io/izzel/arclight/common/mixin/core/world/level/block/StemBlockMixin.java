@@ -3,6 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.level.block;
 import io.izzel.arclight.mixin.Eject;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
@@ -38,7 +39,7 @@ public class StemBlockMixin {
 
     @Eject(method = "randomTick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
     public boolean arclight$cropGrow2(ServerLevel world, BlockPos pos, BlockState state, CallbackInfo ci) {
-        if (!CraftEventFactory.handleBlockGrowEvent(world, pos, state)) {
+        if (!CraftEventFactory.handleBlockGrowEvent(world, pos, state, Block.UPDATE_ALL)) {
             ci.cancel();
         }
         return true;

@@ -1,0 +1,34 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/LaunchEntryPointHandler.java b/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/LaunchEntryPointHandler.java
+index c75f72b470a926fef8deddcece97920c7da74913..b938a0b0b73a0af0125ae063d75f2ad41c24f045 100644
+--- a/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/LaunchEntryPointHandler.java
++++ b/paper-server/src/main/java/io/papermc/paper/plugin/entrypoint/LaunchEntryPointHandler.java
+@@ -40,14 +40,27 @@ public class LaunchEntryPointHandler implements EntrypointHandler {
+         this.enteredMap.put(entrypoint, true);
+     }
+ 
++    /**
++     * Checks the handler's rejection before it delegates ownership to provider storage.
++     * This does not establish whether a storage callback that throws retained the provider.
++     */
+     @Override
+-    public <T> void register(Entrypoint<T> entrypoint, PluginProvider<T> provider) {
++    public <T> void validateRegistration(Entrypoint<T> entrypoint, PluginProvider<T> provider) {
++        this.registrationStorage(entrypoint);
++    }
++
++    private <T> ProviderStorage<T> registrationStorage(Entrypoint<T> entrypoint) {
+         ProviderStorage<T> storage = this.get(entrypoint);
+         if (storage == null) {
+             throw new IllegalArgumentException("No storage registered for entrypoint %s.".formatted(entrypoint));
+         }
++        return storage;
++    }
+ 
+-        storage.register(provider);
++    @Override
++    public <T> void register(Entrypoint<T> entrypoint, PluginProvider<T> provider) {
++        // Once storage is called, even an exception is not proof that the provider was not retained.
++        this.registrationStorage(entrypoint).register(provider);
+     }
+ 
+     @SuppressWarnings("unchecked")

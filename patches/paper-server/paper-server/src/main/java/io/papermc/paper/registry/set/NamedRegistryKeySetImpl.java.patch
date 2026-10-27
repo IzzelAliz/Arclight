@@ -1,0 +1,13 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/registry/set/NamedRegistryKeySetImpl.java b/paper-server/src/main/java/io/papermc/paper/registry/set/NamedRegistryKeySetImpl.java
+index e056d9407a1ce95c99df7fdb29cb59f331348b43..963de585c3243289b835b06e2f2204bd19e3ffe9 100644
+--- a/paper-server/src/main/java/io/papermc/paper/registry/set/NamedRegistryKeySetImpl.java
++++ b/paper-server/src/main/java/io/papermc/paper/registry/set/NamedRegistryKeySetImpl.java
+@@ -45,7 +45,7 @@ public record NamedRegistryKeySetImpl<T extends Keyed, M>( // TODO remove Keyed
+ 
+     @Override
+     public boolean contains(final TypedKey<T> valueKey) {
+-        return this.namedSet.contains(valueKey);
++        return this.values().contains(valueKey);
+     }
+ 
+     @Override

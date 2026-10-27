@@ -6,7 +6,6 @@ import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
 import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.mixin.bukkit.plugin.SimplePluginManagerAccessor;
 import io.izzel.arclight.common.mod.ArclightCommon;
-import io.izzel.arclight.common.mod.util.VelocitySupport;
 import io.izzel.arclight.common.mod.util.log.ArclightI18nLogger;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -17,7 +16,7 @@ import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftServer;
-import org.bukkit.craftbukkit.command.ColouredConsoleSender;
+import com.destroystokyo.paper.console.TerminalConsoleCommandSender;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.SimplePluginManager;
 import org.jetbrains.annotations.NotNull;
@@ -67,6 +66,11 @@ public class ArclightServer {
     }
 
     private static CraftServer server;
+    private static io.papermc.paper.configuration.PaperConfigurations paperConfigurations;
+
+    public static io.papermc.paper.configuration.PaperConfigurations getPaperConfigurations() {
+        return Objects.requireNonNull(paperConfigurations);
+    }
 
     public static Set<String> iterateDepends(PluginDescriptionFile desc) {
         SimplePluginManager manager = (SimplePluginManager) Bukkit.getPluginManager();
@@ -84,7 +88,6 @@ public class ArclightServer {
             try {
                 server = new CraftServer(console, playerList);
                 ((MinecraftServerBridge) console).bridge$setServer(server);
-                ((MinecraftServerBridge) console).bridge$setConsole(ColouredConsoleSender.getInstance());
 
                 Class.forName("org.sqlite.JDBC");
                 Class.forName("com.mysql.cj.jdbc.Driver");
@@ -94,11 +97,19 @@ public class ArclightServer {
             try {
                 LOGGER.info("registry.begin");
                 BukkitRegistry.registerAll(console);
-                org.spigotmc.SpigotConfig.init(new File("./spigot.yml"));
-                org.spigotmc.SpigotConfig.registerCommands();
-                if (VelocitySupport.isEnabled()) {
-                    SpigotConfig.bungee = true;
+                try {
+                    paperConfigurations = io.papermc.paper.configuration.PaperConfigurations.setup(
+                        java.nio.file.Path.of("paper.yml"),
+                        java.nio.file.Path.of(io.papermc.paper.configuration.PaperConfigurations.CONFIG_DIR),
+                        server.getWorldContainer().toPath(), new File("./spigot.yml"));
+                    org.spigotmc.SpigotConfig.init(new File("./spigot.yml"));
+                    paperConfigurations.initializeGlobalConfiguration(console.registryAccess());
+                    ((MinecraftServerBridge) console).bridge$setConsole(new TerminalConsoleCommandSender());
+                    paperConfigurations.initializeWorldDefaultsConfiguration(console.registryAccess());
+                } catch (Exception exception) {
+                    throw new IllegalStateException("Cannot initialize Paper configuration", exception);
                 }
+                org.spigotmc.SpigotConfig.registerCommands();
             } catch (Throwable t) {
                 LOGGER.error("registry.error", t);
                 throw t;

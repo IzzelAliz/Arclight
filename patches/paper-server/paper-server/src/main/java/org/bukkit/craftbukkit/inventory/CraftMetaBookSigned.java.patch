@@ -1,0 +1,140 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBookSigned.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBookSigned.java
+index af8fb032e11c79b00920133ba6d6737eb2c54ed6..44bf1c204153c4200cdbe6ae66371a1c43bf0734 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBookSigned.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBookSigned.java
+@@ -41,9 +41,10 @@ public class CraftMetaBookSigned extends CraftMetaItem implements BookMeta {
+     protected boolean resolved;
+     protected int generation;
+ 
+-    CraftMetaBookSigned(CraftMetaItem meta) {
++    public CraftMetaBookSigned(CraftMetaItem meta) {
+         super(meta);
+ 
++        this.promoteUnhandledContent();
+         if (meta instanceof CraftMetaBookSigned) {
+             CraftMetaBookSigned bookMeta = (CraftMetaBookSigned) meta;
+             this.title = bookMeta.title;
+@@ -75,26 +76,40 @@ public class CraftMetaBookSigned extends CraftMetaItem implements BookMeta {
+     CraftMetaBookSigned(DataComponentPatch patch, java.util.Set<net.minecraft.core.component.DataComponentType<?>> extraHandledComponents) {
+         super(patch, extraHandledComponents);
+ 
+-        getOrEmpty(patch, CraftMetaBookSigned.BOOK_CONTENT).ifPresent((bookContent) -> {
+-            this.title = bookContent.title().raw();
+-            this.author = bookContent.author();
+-            this.resolved = bookContent.resolved();
+-            this.generation = bookContent.generation();
++        getOrEmpty(patch, CraftMetaBookSigned.BOOK_CONTENT).ifPresent(this::readContent);
++    }
+ 
+-            List<Filterable<Component>> pages = bookContent.pages();
+-            this.pages = new ArrayList<>(pages.size());
+-            for (Filterable<Component> page : pages) {
+-                this.pages.add(page.raw());
+-            }
++    private void readContent(WrittenBookContent bookContent) {
++        this.title = bookContent.title().raw();
++        this.author = bookContent.author();
++        this.resolved = bookContent.resolved();
++        this.generation = bookContent.generation();
++
++        List<Filterable<Component>> pages = bookContent.pages();
++        this.pages = new ArrayList<>(pages.size());
++        for (Filterable<Component> page : pages) {
++            this.pages.add(page.raw());
++        }
++    }
++
++    private void promoteUnhandledContent() {
++        getOrEmpty(this.unhandledTags.build(), CraftMetaBookSigned.BOOK_CONTENT).ifPresent(bookContent -> {
++            this.readContent(bookContent);
++            this.unhandledTags.map.remove(CraftMetaBookSigned.BOOK_CONTENT.TYPE);
+         });
+     }
+ 
+     CraftMetaBookSigned(Map<String, Object> map) {
+         super(map);
+ 
+-        this.setAuthor(SerializableMeta.getString(map, CraftMetaBookSigned.BOOK_AUTHOR.BUKKIT, true));
++        this.promoteUnhandledContent();
++        if (map.containsKey(CraftMetaBookSigned.BOOK_AUTHOR.BUKKIT)) {
++            this.setAuthor(SerializableMeta.getString(map, CraftMetaBookSigned.BOOK_AUTHOR.BUKKIT, true));
++        }
+ 
+-        this.setTitle(SerializableMeta.getString(map, CraftMetaBookSigned.BOOK_TITLE.BUKKIT, true));
++        if (map.containsKey(CraftMetaBookSigned.BOOK_TITLE.BUKKIT)) {
++            this.setTitle(SerializableMeta.getString(map, CraftMetaBookSigned.BOOK_TITLE.BUKKIT, true));
++        }
+ 
+         Iterable<?> pages = SerializableMeta.getObject(Iterable.class, map, CraftMetaBookSigned.BOOK_PAGES.BUKKIT, true);
+         if (pages != null) {
+@@ -106,14 +121,23 @@ public class CraftMetaBookSigned extends CraftMetaItem implements BookMeta {
+             }
+         }
+ 
+-        this.resolved = SerializableMeta.getBoolean(map, CraftMetaBookSigned.RESOLVED.BUKKIT);
+-        this.generation = SerializableMeta.getInteger(map, CraftMetaBookSigned.GENERATION.BUKKIT);
++        if (map.containsKey(CraftMetaBookSigned.RESOLVED.BUKKIT)) {
++            this.resolved = SerializableMeta.getBoolean(map, CraftMetaBookSigned.RESOLVED.BUKKIT);
++        }
++        if (map.containsKey(CraftMetaBookSigned.GENERATION.BUKKIT)) {
++            this.generation = SerializableMeta.getInteger(map, CraftMetaBookSigned.GENERATION.BUKKIT);
++        }
+     }
+ 
+     @Override
+     void applyToItem(CraftMetaItem.Applicator tag) {
+         super.applyToItem(tag);
+ 
++        // Do not replace an absent or explicitly removed component with an empty book.
++        if (this.isBookEmpty()) {
++            return;
++        }
++
+         List<Filterable<Component>> list = new ArrayList<>();
+         if (this.pages != null) {
+             for (Component page : this.pages) {
+@@ -451,9 +475,9 @@ public class CraftMetaBookSigned extends CraftMetaItem implements BookMeta {
+         .build();
+     private CraftMetaBookSigned(net.kyori.adventure.text.Component title, net.kyori.adventure.text.Component author, java.util.List<net.kyori.adventure.text.Component> pages) {
+         super((org.bukkit.craftbukkit.inventory.CraftMetaItem) org.bukkit.Bukkit.getItemFactory().getItemMeta(Material.WRITABLE_BOOK));
+-        this.title = title == null ? null : LEGACY_DOWNSAMPLING_COMPONENT_SERIALIZER.serialize(title);
+-        this.author = author == null ? null : LEGACY_DOWNSAMPLING_COMPONENT_SERIALIZER.serialize(author);
+-        this.pages = io.papermc.paper.adventure.PaperAdventure.asVanilla(pages);
++        this.title(title);
++        this.author(author);
++        this.addPages(pages.toArray(net.kyori.adventure.text.Component[]::new));
+     }
+ 
+     static final class CraftMetaBookSignedBuilder extends CraftMetaBook.CraftMetaBookBuilder {
+@@ -480,7 +504,7 @@ public class CraftMetaBookSigned extends CraftMetaItem implements BookMeta {
+ 
+     @Override
+     public BookMetaBuilder toBuilder() {
+-        return new CraftMetaBookSignedBuilder();
++        return new CraftMetaBookSignedBuilder().title(this.title()).author(this.author()).pages(this.pages());
+     }
+ 
+     @Override
+@@ -514,7 +538,7 @@ public class CraftMetaBookSigned extends CraftMetaItem implements BookMeta {
+     @Override
+     public void page(final int page, net.kyori.adventure.text.Component data) {
+         Preconditions.checkArgument(this.isValidPage(page), "Invalid page number (%s/%s)", page, this.getPageCount());
+-        this.pages.set(page - 1, io.papermc.paper.adventure.PaperAdventure.asVanillaNullToEmpty(data));
++        this.pages.set(page - 1, nativePage(data));
+     }
+ 
+     @Override
+@@ -543,7 +567,12 @@ public class CraftMetaBookSigned extends CraftMetaItem implements BookMeta {
+     public void addPages(net.kyori.adventure.text.Component... pages) {
+         if (this.pages == null) this.pages = new ArrayList<>();
+         for (net.kyori.adventure.text.Component page : pages) {
+-            this.pages.add(io.papermc.paper.adventure.PaperAdventure.asVanillaNullToEmpty(page));
++            this.pages.add(nativePage(page));
+         }
+     }
++
++    private static Component nativePage(net.kyori.adventure.text.Component page) {
++        // Item component codecs consume native contents, not Paper's lazy wrapper.
++        return page == null ? Component.empty() : io.papermc.paper.adventure.PaperAdventure.WRAPPER_AWARE_SERIALIZER.serialize(page);
++    }
+ }

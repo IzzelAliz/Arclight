@@ -1,0 +1,12 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBlockState.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBlockState.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBlockState.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftMetaBlockState.java
+@@ -78,7 +78,7 @@
+     // Paper end
+     private CompoundTag internalTag;
+ 
+-    CraftMetaBlockState(CraftMetaItem meta, Material material) {
++    public CraftMetaBlockState(CraftMetaItem meta, Material material) {
+         super(meta);
+         this.material = material;
+ 

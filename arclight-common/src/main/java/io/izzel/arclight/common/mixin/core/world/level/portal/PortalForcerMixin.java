@@ -75,7 +75,7 @@ public abstract class PortalForcerMixin implements PortalForcerBridge {
         if (this.arclight$populator == null) {
             blockStates = new ArrayList<>();
         } else {
-            blockStates = (List) this.arclight$populator.getList();
+            blockStates = (List) this.arclight$populator.getSnapshotBlocks();
         }
         PortalCreateEvent event = new PortalCreateEvent(blockStates, craftWorld, (this.arclight$entity == null) ? null : this.arclight$entity.bridge$getBukkitEntity(), PortalCreateEvent.CreateReason.NETHER_PAIR);
 
@@ -85,7 +85,7 @@ public abstract class PortalForcerMixin implements PortalForcerBridge {
             return;
         }
         if (this.arclight$populator != null) {
-            this.arclight$populator.updateList();
+            this.arclight$populator.placeBlocks();
         }
     }
 

@@ -1,0 +1,44 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/command/CraftConsoleCommandSender.java b/paper-server/src/main/java/org/bukkit/craftbukkit/command/CraftConsoleCommandSender.java
+index 6e2f931b06d4ef702e0abf609a5f5bba780c5b7a..853545e6c6a8ccd0923f7f6a4dfd156d7aa96571 100644
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/command/CraftConsoleCommandSender.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/command/CraftConsoleCommandSender.java
+@@ -88,7 +88,38 @@ public class CraftConsoleCommandSender extends ServerCommandSender implements Co
+ 
+     @Override
+     public void sendMessage(final net.kyori.adventure.identity.Identity identity, final net.kyori.adventure.text.Component message, final net.kyori.adventure.audience.MessageType type) {
+-        this.sendRawMessage(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().serialize(message));
++        this.sendRawMessage(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().serialize(
++            net.kyori.adventure.translation.GlobalTranslator.render(message, java.util.Locale.getDefault())));
++    }
++
++    @Override
++    public void sendMessage(final net.kyori.adventure.text.Component message, final net.kyori.adventure.chat.ChatType.Bound boundChatType) {
++        this.sendMessage(net.kyori.adventure.identity.Identity.nil(), decorateMessage(message, boundChatType,
++            ((org.bukkit.craftbukkit.CraftServer) this.getServer()).getServer().registryAccess()), net.kyori.adventure.audience.MessageType.CHAT);
++    }
++
++    @Override
++    public void sendMessage(final net.kyori.adventure.chat.SignedMessage signedMessage, final net.kyori.adventure.chat.ChatType.Bound boundChatType) {
++        final net.kyori.adventure.text.Component unsignedContent = signedMessage.unsignedContent();
++        final net.kyori.adventure.text.Component content = unsignedContent != null
++            ? unsignedContent : net.kyori.adventure.text.Component.text(signedMessage.message());
++        if (signedMessage.isSystem()) {
++            this.sendMessage(content);
++        } else {
++            this.sendMessage(content, boundChatType);
++        }
++    }
++
++    static net.kyori.adventure.text.Component decorateMessage(final net.kyori.adventure.text.Component message,
++        final net.kyori.adventure.chat.ChatType.Bound boundChatType, final net.minecraft.core.RegistryAccess registryAccess) {
++        // Resolve the supplied type against the live server registry, including mod/datapack types.
++        final net.minecraft.core.Registry<net.minecraft.network.chat.ChatType> registry = registryAccess.lookupOrThrow(net.minecraft.core.registries.Registries.CHAT_TYPE);
++        final net.minecraft.network.chat.ChatType.Bound bound = new net.minecraft.network.chat.ChatType.Bound(
++            registry.getOrThrow(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.CHAT_TYPE,
++                io.papermc.paper.adventure.PaperAdventure.asVanilla(boundChatType.type().key()))),
++            io.papermc.paper.adventure.PaperAdventure.asVanilla(boundChatType.name()),
++            java.util.Optional.ofNullable(io.papermc.paper.adventure.PaperAdventure.asVanilla(boundChatType.target())));
++        return io.papermc.paper.adventure.PaperAdventure.asAdventure(bound.decorate(io.papermc.paper.adventure.PaperAdventure.asVanilla(message)));
+     }
+ 
+     @Override

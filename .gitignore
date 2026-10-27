@@ -7,3 +7,5 @@ bin/
 *.log
 run_*/
 run
+.paper-work/
+__pycache__/

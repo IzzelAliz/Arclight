@@ -1,0 +1,40 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/world/migration/VanillaWorldMigration.java b/paper-server/src/main/java/io/papermc/paper/world/migration/VanillaWorldMigration.java
+index 00ab529b50f3cd8b5e0b3256d500e00066ade762..9e18cae0c344d340086b898ca52ed68640412f30 100644
+--- a/paper-server/src/main/java/io/papermc/paper/world/migration/VanillaWorldMigration.java
++++ b/paper-server/src/main/java/io/papermc/paper/world/migration/VanillaWorldMigration.java
+@@ -1,6 +1,5 @@
+ package io.papermc.paper.world.migration;
+ 
+-import com.mojang.logging.LogUtils;
+ import com.mojang.serialization.Dynamic;
+ import io.papermc.paper.world.saveddata.PaperLevelOverrides;
+ import io.papermc.paper.world.saveddata.PaperWorldMetadata;
+@@ -21,16 +20,17 @@ import net.minecraft.world.level.saveddata.WanderingTraderData;
+ import net.minecraft.world.level.saveddata.WeatherData;
+ import net.minecraft.world.level.storage.LevelData;
+ import net.minecraft.world.level.storage.LevelResource;
+-import net.minecraft.world.level.storage.PrimaryLevelData;
+ import net.minecraft.world.level.storage.SavedDataStorage;
+ import net.minecraft.world.level.timers.TimerQueue;
+ import org.jspecify.annotations.NullMarked;
+ import org.jspecify.annotations.Nullable;
+ import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
+ 
+ @NullMarked
+ final class VanillaWorldMigration {
+-    private static final Logger LOGGER = LogUtils.getClassLogger();
++    private static final String PAPER_RESPAWN_DIMENSION = "paperSpawnDimension"; // Legacy Paper level.dat key
++    private static final Logger LOGGER = LoggerFactory.getLogger(VanillaWorldMigration.class.getSimpleName());
+ 
+     private VanillaWorldMigration() {
+     }
+@@ -147,7 +147,7 @@ final class VanillaWorldMigration {
+             return null;
+         }
+ 
+-        return levelData.get(PrimaryLevelData.PAPER_RESPAWN_DIMENSION)
++        return levelData.get(PAPER_RESPAWN_DIMENSION)
+             .read(Level.RESOURCE_KEY_CODEC)
+             .result()
+             .orElse(null);

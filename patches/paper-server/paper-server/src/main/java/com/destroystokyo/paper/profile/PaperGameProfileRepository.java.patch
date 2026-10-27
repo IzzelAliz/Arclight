@@ -1,0 +1,57 @@
+diff --git a/paper-server/src/main/java/com/destroystokyo/paper/profile/PaperGameProfileRepository.java b/paper-server/src/main/java/com/destroystokyo/paper/profile/PaperGameProfileRepository.java
+index 58c1ff58e58e969a88b929663dfff785843dc1b2..99d61c6acf4a81ab7bd61912f3f46734aa08e059 100644
+--- a/paper-server/src/main/java/com/destroystokyo/paper/profile/PaperGameProfileRepository.java
++++ b/paper-server/src/main/java/com/destroystokyo/paper/profile/PaperGameProfileRepository.java
+@@ -3,18 +3,20 @@ package com.destroystokyo.paper.profile;
+ import com.destroystokyo.paper.event.profile.LookupProfileEvent;
+ import com.destroystokyo.paper.event.profile.PreLookupProfileEvent;
+ import com.google.common.collect.Sets;
+-import com.mojang.authlib.Environment;
++import com.mojang.authlib.GameProfileRepository;
+ import com.mojang.authlib.ProfileLookupCallback;
+-import com.mojang.authlib.yggdrasil.YggdrasilGameProfileRepository;
+ import com.mojang.authlib.yggdrasil.response.NameAndId;
+-import java.net.Proxy;
++import java.util.Objects;
+ import java.util.Optional;
+ import java.util.Set;
+ import java.util.UUID;
+ 
+-public class PaperGameProfileRepository extends YggdrasilGameProfileRepository {
+-    public PaperGameProfileRepository(Proxy proxy, Environment environment) {
+-        super(proxy, environment);
++public class PaperGameProfileRepository implements GameProfileRepository {
++
++    private final GameProfileRepository delegate;
++
++    public PaperGameProfileRepository(GameProfileRepository delegate) {
++        this.delegate = Objects.requireNonNull(delegate, "profile repository");
+     }
+ 
+     @Override
+@@ -34,7 +36,7 @@ public class PaperGameProfileRepository extends YggdrasilGameProfileRepository {
+         // Some things were not found.... Proceed to look up.
+         if (!unfoundNames.isEmpty()) {
+             String[] namesArr = unfoundNames.toArray(new String[unfoundNames.size()]);
+-            super.findProfilesByNames(namesArr, new PreProfileLookupCallback(callback));
++            this.delegate.findProfilesByNames(namesArr, new PreProfileLookupCallback(callback));
+         }
+     }
+ 
+@@ -46,12 +48,14 @@ public class PaperGameProfileRepository extends YggdrasilGameProfileRepository {
+             // Plugin provided UUID, we can skip network call.
+             return Optional.of(new NameAndId(event.getUUID(), name));
+         }
+-        return super.findProfileByName(name);
++        Optional<NameAndId> result = this.delegate.findProfileByName(name);
++        result.ifPresent(found -> new LookupProfileEvent(new CraftPlayerProfile(found.id(), found.name())).callEvent());
++        return result;
+     }
+ 
+     private record PreProfileLookupCallback(ProfileLookupCallback callback) implements ProfileLookupCallback {
+         @Override
+-        public void onProfileLookupSucceeded(final String  profileName, final UUID profileId) {
++        public void onProfileLookupSucceeded(final String profileName, final UUID profileId) {
+             PlayerProfile from = new CraftPlayerProfile(profileId, profileName);
+             new LookupProfileEvent(from).callEvent();
+             this.callback.onProfileLookupSucceeded(profileName, profileId);

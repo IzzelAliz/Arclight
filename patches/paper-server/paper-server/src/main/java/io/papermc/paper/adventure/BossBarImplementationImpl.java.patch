@@ -1,0 +1,85 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/adventure/BossBarImplementationImpl.java b/paper-server/src/main/java/io/papermc/paper/adventure/BossBarImplementationImpl.java
+index 4d5f001b2eeb167f375089d9b7bbaa6c270fbf2d..a6cd01f7f982b359a20c42230604c741c17555db 100644
+--- a/paper-server/src/main/java/io/papermc/paper/adventure/BossBarImplementationImpl.java
++++ b/paper-server/src/main/java/io/papermc/paper/adventure/BossBarImplementationImpl.java
+@@ -2,15 +2,12 @@ package io.papermc.paper.adventure;
+ 
+ import com.google.common.collect.Collections2;
+ import java.util.Set;
+-import java.util.function.Function;
+ import net.kyori.adventure.bossbar.BossBar;
+ import net.kyori.adventure.bossbar.BossBarImplementation;
+ import net.kyori.adventure.bossbar.BossBarViewer;
+ import net.kyori.adventure.text.Component;
+-import net.minecraft.network.protocol.game.ClientboundBossEventPacket;
+ import net.minecraft.server.level.ServerBossEvent;
+ import net.minecraft.server.level.ServerPlayer;
+-import net.minecraft.world.BossEvent;
+ import org.bukkit.craftbukkit.entity.CraftPlayer;
+ import org.checkerframework.checker.nullness.qual.NonNull;
+ import org.jetbrains.annotations.NotNull;
+@@ -32,7 +29,8 @@ public final class BossBarImplementationImpl implements BossBar.Listener, BossBa
+                 PaperAdventure.asVanilla(this.bar.color()),
+                 PaperAdventure.asVanilla(this.bar.overlay())
+             );
+-            this.vanilla.adventure = this.bar;
++            this.vanilla.setProgress(this.bar.progress());
++            this.syncFlags(this.bar.flags());
+             this.bar.addListener(this);
+         }
+         this.vanilla.addPlayer(player.getHandle());
+@@ -50,27 +48,35 @@ public final class BossBarImplementationImpl implements BossBar.Listener, BossBa
+ 
+     @Override
+     public void bossBarNameChanged(final @NonNull BossBar bar, final @NonNull Component oldName, final @NonNull Component newName) {
+-        this.maybeBroadcast(ClientboundBossEventPacket::createUpdateNamePacket);
++        if (this.vanilla != null) {
++            this.vanilla.setName(PaperAdventure.asVanilla(newName));
++        }
+     }
+ 
+     @Override
+     public void bossBarProgressChanged(final @NonNull BossBar bar, final float oldProgress, final float newProgress) {
+-        this.maybeBroadcast(ClientboundBossEventPacket::createUpdateProgressPacket);
++        if (this.vanilla != null) {
++            this.vanilla.setProgress(newProgress);
++        }
+     }
+ 
+     @Override
+     public void bossBarColorChanged(final @NonNull BossBar bar, final BossBar.@NonNull Color oldColor, final BossBar.@NonNull Color newColor) {
+-        this.maybeBroadcast(ClientboundBossEventPacket::createUpdateStylePacket);
++        if (this.vanilla != null) {
++            this.vanilla.setColor(PaperAdventure.asVanilla(newColor));
++        }
+     }
+ 
+     @Override
+     public void bossBarOverlayChanged(final @NonNull BossBar bar, final BossBar.@NonNull Overlay oldOverlay, final BossBar.@NonNull Overlay newOverlay) {
+-        this.maybeBroadcast(ClientboundBossEventPacket::createUpdateStylePacket);
++        if (this.vanilla != null) {
++            this.vanilla.setOverlay(PaperAdventure.asVanilla(newOverlay));
++        }
+     }
+ 
+     @Override
+     public void bossBarFlagsChanged(final @NonNull BossBar bar, final @NonNull Set<BossBar.Flag> flagsAdded, final @NonNull Set<BossBar.Flag> flagsRemoved) {
+-        this.maybeBroadcast(ClientboundBossEventPacket::createUpdatePropertiesPacket);
++        this.syncFlags(bar.flags());
+     }
+ 
+     @Override
+@@ -78,9 +84,11 @@ public final class BossBarImplementationImpl implements BossBar.Listener, BossBa
+         return this.vanilla == null ? Set.of() : Collections2.transform(this.vanilla.getPlayers(), ServerPlayer::getBukkitEntity);
+     }
+ 
+-    private void maybeBroadcast(final Function<BossEvent, ClientboundBossEventPacket> fn) {
++    private void syncFlags(final Set<BossBar.Flag> flags) {
+         if (this.vanilla != null) {
+-            this.vanilla.broadcast(fn);
++            this.vanilla.setDarkenScreen(flags.contains(BossBar.Flag.DARKEN_SCREEN));
++            this.vanilla.setPlayBossMusic(flags.contains(BossBar.Flag.PLAY_BOSS_MUSIC));
++            this.vanilla.setCreateWorldFog(flags.contains(BossBar.Flag.CREATE_WORLD_FOG));
+         }
+     }
+ }
