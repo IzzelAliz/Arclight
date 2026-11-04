@@ -137,7 +137,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
     public PrimaryLevelData bridge$getPrimaryLevelData() {
         return K;
     }
-    public LevelStorageSource.LevelStorageAccess convertable;
+    public LevelStorageSource.LevelStorageAccess storageSource; // Paper added
     public UUID uuid;
     public ResourceKey<LevelStem> typeKey;
 
@@ -245,7 +245,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
                 this.ticksPerSpawnCategory.put(category, this.getCraftServer().getTicksPerSpawns(category));
             }
         }
-        this.convertable = levelSave;
+        this.storageSource = levelSave;
         var worldGenSettings = WorldCreationContext.lookup((ServerLevel) (Object) this);
         if (worldGenSettings != null) {
             this.getDataStorage().set(WorldGenSettings.TYPE, worldGenSettings);
@@ -334,7 +334,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
 
     @Override
     public LevelStorageSource.LevelStorageAccess bridge$getConvertable() {
-        return this.convertable;
+        return this.storageSource;
     }
 
     @Inject(method = "tickNonPassenger(Lnet/minecraft/world/entity/Entity;)V", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/Entity;tickCount:I", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER), require = 1, allow = 1)
@@ -454,7 +454,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
     private void arclight$saveLevelDat(ProgressListener progress, boolean flush, boolean skipSave, CallbackInfo ci) {
         if (!skipSave && this.serverLevelData instanceof PrimaryLevelData worldInfo) {
             var profile = this.getServer().getSingleplayerProfile();
-            this.convertable.saveDataTag(worldInfo, profile == null ? null : profile.id());
+            this.storageSource.saveDataTag(worldInfo, profile == null ? null : profile.id());
         }
     }
 

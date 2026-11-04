@@ -186,7 +186,7 @@ public abstract class DedicatedServerMixin extends MinecraftServerMixin implemen
 
     @Override
     public WorldLoader.DataLoadContext arclight$dataLoadContext() {
-        return this.worldLoader;
+        return this.worldLoaderContext;
     }
 
     @Override

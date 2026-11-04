@@ -38,12 +38,12 @@ public abstract class BeaconMenuMixin extends AbstractContainerMenuMixin {
     @Shadow @Final private ContainerLevelAccess access;
     // @formatter:on
 
-    private CraftBeaconView bukkitEntity;
-    private Inventory playerInventory;
+    private CraftBeaconView view; // Paper added
+    private Inventory inventory; // Paper added
 
     @Inject(method = "<init>(ILnet/minecraft/world/Container;Lnet/minecraft/world/inventory/ContainerData;Lnet/minecraft/world/inventory/ContainerLevelAccess;)V", at = @At("RETURN"))
     public void arclight$init(int id, Container inventory, ContainerData p_i50100_3_, ContainerLevelAccess worldPosCallable, CallbackInfo ci) {
-        this.playerInventory = (Inventory) inventory;
+        this.inventory = (Inventory) inventory;
     }
 
     @Inject(method = "stillValid", cancellable = true, at = @At("HEAD"))
@@ -67,7 +67,7 @@ public abstract class BeaconMenuMixin extends AbstractContainerMenuMixin {
             secondary = Optional.empty();
         }
         var event = new PlayerChangeBeaconEffectEvent(
-            (org.bukkit.entity.Player) ((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(),
+            (org.bukkit.entity.Player) ((PlayerBridge) this.inventory.player).bridge$getBukkitEntity(),
             primary.map(CraftPotionEffectType::minecraftHolderToBukkit).orElse(null),
             secondary.map(CraftPotionEffectType::minecraftHolderToBukkit).orElse(null),
             ((ContainerLevelAccessBridge) this.access).bridge$getLocation().getBlock());
@@ -109,12 +109,12 @@ public abstract class BeaconMenuMixin extends AbstractContainerMenuMixin {
 
     @Override
     public CraftBeaconView getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
+        if (this.view != null) {
+            return this.view;
         }
 
         var inventory = new CraftInventoryBeacon(this.beacon);
-        bukkitEntity = new CraftBeaconView(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (BeaconMenu) (Object) this);
-        return bukkitEntity;
+        this.view = new CraftBeaconView(((PlayerBridge) this.inventory.player).bridge$getBukkitEntity(), inventory, (BeaconMenu) (Object) this);
+        return this.view;
     }
 }

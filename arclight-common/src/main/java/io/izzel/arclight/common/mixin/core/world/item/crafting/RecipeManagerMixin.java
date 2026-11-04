@@ -33,18 +33,18 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
     @Shadow private RecipeMap recipes;
     // @formatter:on
 
-    @Unique private FeatureFlagSet arclight$recipeFeatures;
+    @Unique private FeatureFlagSet enabledFlags; // Paper added
 
     @Inject(method = "finalizeRecipeLoading", at = @At("HEAD"))
     private void arclight$captureRecipeFeatures(FeatureFlagSet enabledFlags, CallbackInfo ci) {
-        this.arclight$recipeFeatures = enabledFlags;
+        this.enabledFlags = enabledFlags;
     }
 
     @Unique
     private void arclight$refreshRecipes() {
-        if (arclight$recipeFeatures != null) {
+        if (this.enabledFlags != null) {
             var manager = (RecipeManager) (Object) this;
-            manager.finalizeRecipeLoading(arclight$recipeFeatures);
+            manager.finalizeRecipeLoading(this.enabledFlags);
             var packet = new ClientboundUpdateRecipesPacket(manager.getSynchronizedItemProperties(), manager.getSynchronizedStonecutterRecipes());
             for (var player : ArclightServer.getMinecraftServer().getPlayerList().getPlayers()) {
                 player.connection.send(packet);

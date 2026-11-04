@@ -25,14 +25,14 @@ public abstract class ServerTickRateManagerMixin implements ServerTickRateManage
     // @formatter:on
 
     private boolean arclight$sendLog = true;
-    private boolean arclight$silent;
+    private boolean silent; // Paper added
 
     @Override
     public boolean bridge$requestGameToSprint(int time, boolean silent) {
         boolean sprinting = this.isSprinting();
         boolean interrupted = this.requestGameToSprint(time);
         if (!sprinting) {
-            this.arclight$silent = silent;
+            this.silent = silent;
         }
         return interrupted;
     }
@@ -40,17 +40,17 @@ public abstract class ServerTickRateManagerMixin implements ServerTickRateManage
     @WrapMethod(method = "requestGameToSprint(I)Z")
     private boolean arclight$requestSprint(int time, Operation<Boolean> original) {
         boolean sprinting = this.isSprinting();
-        boolean silent = this.arclight$silent;
+        boolean silent = this.silent;
         boolean interrupted = original.call(time);
         // Keep any old-session report in the native request on its original flag.
         // A direct one-argument request starts a non-silent session by default.
-        this.arclight$silent = sprinting && silent;
+        this.silent = sprinting && silent;
         return interrupted;
     }
 
     @Inject(method = "finishTickSprint()V", at = @At("RETURN"))
     private void arclight$finishSprint(CallbackInfo ci) {
-        this.arclight$silent = false;
+        this.silent = false;
     }
 
     public boolean stopSprinting(boolean sendLog) {
@@ -64,7 +64,7 @@ public abstract class ServerTickRateManagerMixin implements ServerTickRateManage
 
     @Redirect(method = "finishTickSprint", at = @At(value = "INVOKE", target = "Lnet/minecraft/commands/CommandSourceStack;sendSuccess(Ljava/util/function/Supplier;Z)V"))
     private void arclight$send(CommandSourceStack source, Supplier<Component> supplier, boolean flag) {
-        if (this.arclight$sendLog && !this.arclight$silent) {
+        if (this.arclight$sendLog && !this.silent) {
             source.sendSuccess(supplier, flag);
         }
     }

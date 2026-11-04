@@ -19,17 +19,17 @@ public abstract class SculkSpreaderMixin implements SculkSpreaderBridge {
     @Shadow public abstract boolean isWorldGeneration();
     // @formatter:on
 
-    private transient Level arclight$level;
+    private transient Level level; // Paper added
 
     @Override
     public void bridge$setLevel(Level level) {
-        this.arclight$level = level;
+        this.level = level;
     }
 
     @Inject(method = "addCursor", cancellable = true, at = @At(value = "INVOKE", remap = false, target = "Ljava/util/List;add(Ljava/lang/Object;)Z"))
     private void arclight$bloomEvent(SculkSpreader.ChargeCursor cursor, CallbackInfo ci) {
-        if (!isWorldGeneration() && arclight$level != null) {
-            var bukkitBlock = CraftBlock.at(arclight$level, cursor.pos);
+        if (!isWorldGeneration() && this.level != null) {
+            var bukkitBlock = CraftBlock.at(this.level, cursor.pos);
             var event = new SculkBloomEvent(bukkitBlock, cursor.getCharge());
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {

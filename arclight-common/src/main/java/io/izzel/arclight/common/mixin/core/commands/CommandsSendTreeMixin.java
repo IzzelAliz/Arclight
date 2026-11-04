@@ -23,8 +23,8 @@ import java.util.function.Consumer;
 public abstract class CommandsSendTreeMixin implements CommandsSendTreeBridge {
 
     @Unique
-    private static final ExecutorService arclight$commandSendingPool = Executors.newFixedThreadPool(2,
-        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Arclight Async Command Builder - %d").build());
+    private static final ExecutorService COMMAND_SENDING_POOL = Executors.newFixedThreadPool(2,
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Arclight Async Command Builder - %d").build()); // Paper added
 
     @Override
     public void bridge$sendCommandTree(ServerPlayer player, Consumer<RootCommandNode<CommandSourceStack>> build,
@@ -32,7 +32,7 @@ public abstract class CommandsSendTreeMixin implements CommandsSendTreeBridge {
         var root = new RootCommandNode<CommandSourceStack>();
         // Native/mod permission predicates retain their original caller thread.
         build.accept(root);
-        arclight$commandSendingPool.execute(() -> {
+        COMMAND_SENDING_POOL.execute(() -> {
             Collection<String> labels = new LinkedHashSet<>();
             root.getChildren().forEach(child -> labels.add(child.getName()));
             var bukkitPlayer = ((ServerPlayerBridge) player).bridge$getBukkitEntity();

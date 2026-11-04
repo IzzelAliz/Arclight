@@ -12,20 +12,20 @@ import java.net.Socket;
 @Mixin(RconClient.class)
 public class RconClientMixin {
     @org.spongepowered.asm.mixin.Unique
-    private net.minecraft.server.rcon.RconConsoleSource arclight$source;
+    private net.minecraft.server.rcon.RconConsoleSource rconConsoleSource; // Paper added
 
     @org.spongepowered.asm.mixin.injection.Inject(method = "<init>(Lnet/minecraft/server/ServerInterface;Ljava/lang/String;Ljava/net/Socket;)V", at = @At("RETURN"))
     private void arclight$createSource(ServerInterface server, String password, Socket socket, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
         if (server instanceof net.minecraft.server.MinecraftServer minecraftServer && server instanceof DedicatedServerBridge) {
-            this.arclight$source = new net.minecraft.server.rcon.RconConsoleSource(minecraftServer);
-            ((io.izzel.arclight.common.bridge.core.server.rcon.RconConsoleSourceBridge) this.arclight$source).bridge$setSocketAddress(socket.getRemoteSocketAddress());
+            this.rconConsoleSource = new net.minecraft.server.rcon.RconConsoleSource(minecraftServer);
+            ((io.izzel.arclight.common.bridge.core.server.rcon.RconConsoleSourceBridge) this.rconConsoleSource).bridge$setSocketAddress(socket.getRemoteSocketAddress());
         }
     }
 
     @Redirect(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/ServerInterface;runCommand(Ljava/lang/String;)Ljava/lang/String;"))
     private String arclight$runCommandWithAddress(ServerInterface server, String command) {
-        if (server instanceof DedicatedServerBridge bridge && this.arclight$source != null) {
-            return bridge.bridge$runRconCommand(this.arclight$source, command);
+        if (server instanceof DedicatedServerBridge bridge && this.rconConsoleSource != null) {
+            return bridge.bridge$runRconCommand(this.rconConsoleSource, command);
         }
         return server.runCommand(command);
     }

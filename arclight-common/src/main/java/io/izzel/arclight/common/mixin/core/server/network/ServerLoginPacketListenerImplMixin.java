@@ -93,7 +93,7 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
     // Shared by the authenticator and server tick; pending logins must not start another task.
     @Unique private volatile boolean arclight$preLoginStarted;
     @Unique private volatile boolean arclight$preLoginComplete;
-    @Unique protected int arclight$velocityLoginId = -1;
+    @Unique protected int velocityLoginMessageId = -1; // Paper added
 
     @Inject(method = "onDisconnect(Lnet/minecraft/network/DisconnectionDetails;)V", at = @At("RETURN"), require = 1, expect = 1, allow = 1)
     private void arclight$retireLoginPlayerScheduler(DisconnectionDetails details, CallbackInfo ci) {
@@ -123,7 +123,7 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
 
     @Override
     public int bridge$getVelocityLoginId() {
-        return arclight$velocityLoginId;
+        return this.velocityLoginMessageId;
     }
 
     public java.util.UUID requestedUuid;
@@ -166,8 +166,8 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
                 this.connection.send(new ClientboundHelloPacket("", this.server.getKeyPair().getPublic().getEncoded(), this.challenge, true));
             } else {
                 if (VelocitySupport.isEnabled()) {
-                    this.arclight$velocityLoginId = ThreadLocalRandom.current().nextInt();
-                    var packet = new ClientboundCustomQueryPacket(this.arclight$velocityLoginId, VelocitySupport.createPacket());
+                    this.velocityLoginMessageId = ThreadLocalRandom.current().nextInt();
+                    var packet = new ClientboundCustomQueryPacket(this.velocityLoginMessageId, VelocitySupport.createPacket());
                     this.connection.send(packet);
                     return;
                 }
@@ -347,7 +347,7 @@ public abstract class ServerLoginPacketListenerImplMixin implements ServerLoginP
     @Unique
     public void bridge$preLogin(GameProfile gameProfile) throws Exception {
         this.arclight$preLoginStarted = true;
-        if (this.arclight$velocityLoginId == -1 && VelocitySupport.isEnabled()) {
+        if (this.velocityLoginMessageId == -1 && VelocitySupport.isEnabled()) {
             disconnect("This server requires you to connect with Velocity.");
             return;
         }

@@ -28,7 +28,7 @@ public abstract class GrindstoneMenuMixin extends AbstractContainerMenuMixin imp
     @Shadow @Final Container repairSlots;
     @Shadow @Final private Container resultSlots;
     @Shadow @Final private ContainerLevelAccess access;
-    private CraftInventoryView<GrindstoneMenu, ?> bukkitEntity = null;
+    private CraftInventoryView<GrindstoneMenu, ?> view = null; // Paper added
     private Inventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/inventory/ContainerLevelAccess;)V", at = @At("RETURN"))
@@ -58,13 +58,13 @@ public abstract class GrindstoneMenuMixin extends AbstractContainerMenuMixin imp
 
     @Override
     public CraftInventoryView<GrindstoneMenu, ?> getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
+        if (this.view != null) {
+            return this.view;
         }
 
         CraftInventoryGrindstone inventory = new CraftInventoryGrindstone(this.repairSlots, this.resultSlots);
-        bukkitEntity = new ArclightGrindstoneView(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (GrindstoneMenu) (Object) this);
-        return bukkitEntity;
+        this.view = new ArclightGrindstoneView(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (GrindstoneMenu) (Object) this);
+        return this.view;
     }
 
     @Inject(method = "stillValid", at = @At("HEAD"), cancellable = true)

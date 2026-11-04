@@ -61,14 +61,14 @@ public abstract class ServerLevel_WeatherMixin extends Level {
             }
         }
     }
-    private WeatherData arclight$weatherData;
+    private WeatherData weatherData; // Paper added
 
     private WeatherData arclight$getWeatherData() {
-        if (this.arclight$weatherData == null) {
-            this.arclight$weatherData = this.getDataStorage().computeIfAbsent(WeatherData.TYPE);
-            ((WeatherDataBridge) (Object) this.arclight$weatherData).bridge$setWorld((ServerLevel) (Object) this);
+        if (this.weatherData == null) {
+            this.weatherData = this.getDataStorage().computeIfAbsent(WeatherData.TYPE);
+            ((WeatherDataBridge) (Object) this.weatherData).bridge$setWorld((ServerLevel) (Object) this);
         }
-        return this.arclight$weatherData;
+        return this.weatherData;
     }
 
     @Inject(method = "getWeatherData", at = @At("HEAD"), cancellable = true)

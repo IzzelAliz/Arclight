@@ -27,21 +27,21 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
     @Shadow @Final @org.jetbrains.annotations.Nullable private Vec3 damageSourcePosition;
     // @formatter:on
 
-    private org.bukkit.block.Block directBlock;
-    private org.bukkit.block.BlockState directBlockState;
+    private org.bukkit.block.Block eventBlockDamager; // Paper added
+    private org.bukkit.block.BlockState fromBlockSnapshot; // Paper added
     private boolean withSweep;
     private boolean melting;
     private boolean poison;
-    private Entity customEntityDamager = null;
+    private Entity eventEntityDamager = null; // Paper added
     private Entity customCausingEntityDamager = null;
 
-    @Unique @Nullable private DamageCause arclight$knownCause;
-    @Unique private boolean arclight$critical;
+    @Unique @Nullable private DamageCause knownCause; // Paper added
+    @Unique private boolean critical; // Paper added
 
     @Override
     @Nullable
     public DamageCause bridge$knownCause() {
-        return this.arclight$knownCause;
+        return this.knownCause;
     }
 
     @Override
@@ -51,13 +51,13 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
 
     @Override
     public DamageSource bridge$setKnownCause(@Nullable DamageCause cause) {
-        this.arclight$knownCause = cause;
+        this.knownCause = cause;
         return (DamageSource) (Object) this;
     }
 
     @Override
     public boolean bridge$isCritical() {
-        return this.arclight$critical;
+        return this.critical;
     }
 
     @Override
@@ -67,7 +67,7 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
 
     @Override
     public DamageSource bridge$setCritical(boolean critical) {
-        this.arclight$critical = critical;
+        this.critical = critical;
         return (DamageSource) (Object) this;
     }
 
@@ -120,7 +120,7 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
 
     public Entity getDamager() {
         // Arclight: Blame: used causingEntity instead of directEntity and bump into problems :(
-        return this.customEntityDamager == null ? this.directEntity : this.customEntityDamager;
+        return this.eventEntityDamager == null ? this.directEntity : this.eventEntityDamager;
     }
 
     @Override
@@ -131,7 +131,7 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
     public DamageSource customEntityDamager(Entity entity) {
         // This method is not intended for change the causing entity if is already set
         // also is only necessary if the entity passed is not the direct entity or different from the current causingEntity
-        if (this.customEntityDamager != null || this.directEntity == entity || this.causingEntity == entity) {
+        if (this.eventEntityDamager != null || this.directEntity == entity || this.causingEntity == entity) {
             return (DamageSource) (Object) this;
         }
         var src = cloneInstance();
@@ -154,7 +154,7 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
 
     @Override
     public DamageSource bridge$setCustomCausingEntity(Entity entity) {
-        this.customEntityDamager = entity;
+        this.eventEntityDamager = entity;
         return (DamageSource) (Object) this;
     }
 
@@ -180,7 +180,7 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
     }
 
     public Block getDirectBlock() {
-        return this.directBlock;
+        return this.eventBlockDamager;
     }
 
     @Override
@@ -195,12 +195,12 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
 
     @Override
     public DamageSource bridge$setDirectBlock(Block block) {
-        this.directBlock = block;
+        this.eventBlockDamager = block;
         return (DamageSource) (Object) this;
     }
 
     public org.bukkit.block.BlockState getDirectBlockState() {
-        return this.directBlockState;
+        return this.fromBlockSnapshot;
     }
 
     public DamageSource directBlockState(org.bukkit.block.BlockState blockState) {
@@ -215,7 +215,7 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
 
     @Override
     public BlockState bridge$directBlockState() {
-        return this.directBlockState;
+        return this.fromBlockSnapshot;
     }
 
     @Override
@@ -225,7 +225,7 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
 
     @Override
     public DamageSource bridge$setDirectBlockState(BlockState block) {
-        this.directBlockState = block;
+        this.fromBlockSnapshot = block;
         return (DamageSource) (Object) this;
     }
 
@@ -234,10 +234,10 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
         var br = (DamageSourceBridge) damageSource;
         br.bridge$setDirectBlock(this.bridge$directBlock());
         br.bridge$setDirectBlockState(this.bridge$directBlockState());
-        br.bridge$setCustomCausingEntity(this.customEntityDamager);
+        br.bridge$setCustomCausingEntity(this.eventEntityDamager);
         br.bridge$setCustomCausingEntityDamager(this.customCausingEntityDamager);
-        br.bridge$setKnownCause(this.arclight$knownCause);
-        br.bridge$setCritical(this.arclight$critical);
+        br.bridge$setKnownCause(this.knownCause);
+        br.bridge$setCritical(this.critical);
         if (this.withSweep) {
             br.bridge$sweep();
         }

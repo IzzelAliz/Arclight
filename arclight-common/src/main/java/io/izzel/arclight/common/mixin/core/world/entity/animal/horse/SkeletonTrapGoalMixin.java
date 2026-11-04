@@ -38,7 +38,7 @@ public class SkeletonTrapGoalMixin {
     @Shadow @Final private SkeletonHorse horse;
     // @formatter:on
 
-    @Unique private List<HumanEntity> arclight$eligiblePlayers = ImmutableList.of();
+    @Unique private List<HumanEntity> eligiblePlayers = ImmutableList.of(); // Paper added
 
     @Decorate(method = "canUse()Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;hasNearbyAlivePlayer(DDDD)Z"), require = 1, allow = 1)
     private boolean arclight$eligiblePlayers(Level level, double x, double y, double z, double range) throws Throwable {
@@ -53,14 +53,14 @@ public class SkeletonTrapGoalMixin {
             }
         }
         // Keep the canUse snapshot: NeoForge defers the trap body to a scheduled lambda.
-        this.arclight$eligiblePlayers = players.build();
+        this.eligiblePlayers = players.build();
         return canUse;
     }
 
     @Decorate(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/equine/SkeletonHorse;blockPosition()Lnet/minecraft/core/BlockPos;"), require = 1, allow = 1)
     private BlockPos arclight$trapEvent(SkeletonHorse horse) throws Throwable {
         SkeletonHorseTrapEvent event = new SkeletonHorseTrapEvent(
-            (org.bukkit.entity.SkeletonHorse) ((EntityBridge) this.horse).bridge$getBukkitEntity(), this.arclight$eligiblePlayers);
+            (org.bukkit.entity.SkeletonHorse) ((EntityBridge) this.horse).bridge$getBukkitEntity(), this.eligiblePlayers);
         if (!event.callEvent()) {
             // Both native trap hosts return void; cancel before difficulty lookup or horse mutations.
             return (BlockPos) DecorationOps.cancel().invoke();

@@ -123,7 +123,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         super(name, propagatesCrashes);
     }
 
-    public WorldLoader.DataLoadContext worldLoader;
+    public WorldLoader.DataLoadContext worldLoaderContext; // Paper added
     private boolean forceTicks;
 
     public CraftServer server;
@@ -187,11 +187,11 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
 
     public Commands vanillaCommandDispatcher;
     private boolean hasStopped = false;
-    @Unique private volatile boolean arclight$restarting;
+    @Unique private volatile boolean isRestarting; // Paper added
     @Shadow private int emptyTicks;
     @Shadow protected abstract int pauseWhenEmptySeconds();
     @Unique private int arclight$currentTick;
-    @Unique private long arclight$currentTickStartNanos;
+    @Unique private long currentTickStart; // Paper added
 
     @Override
     public int bridge$getCurrentTick() {
@@ -206,7 +206,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Decorate(method = "runServer()V", inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;isPaused()Z"), require = 1, allow = 1)
     private void arclight$recordTickStart() {
         // Paper measures from the loop iteration, including scheduling and queued packets.
-        this.arclight$currentTickStartNanos = System.nanoTime();
+        this.currentTickStart = System.nanoTime();
     }
 
     @Inject(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;processPacketsAndTick(Z)V"))
@@ -247,20 +247,20 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Override
     public void bridge$safeShutdown(boolean waitForServer, boolean restarting) {
         // Publish the restart intent before the native server loop begins shutdown.
-        this.arclight$restarting = restarting;
+        this.isRestarting = restarting;
         this.halt(waitForServer);
     }
 
     @Override
     public boolean bridge$isRestarting() {
-        return this.arclight$restarting;
+        return this.isRestarting;
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void arclight$loadOptions(Thread p_236723_, LevelStorageSource.LevelStorageAccess p_236724_, PackRepository p_236725_, WorldStem worldStem, Optional<GameRules> gameRules, Proxy p_236727_, DataFixer p_236728_, Services p_236729_, LevelLoadListener p_236730_, boolean propagatesCrashes, CallbackInfo ci) {
         this.options = ArclightCaptures.getBukkitOptions();
         this.vanillaCommandDispatcher = worldStem.dataPackResources().getCommands();
-        this.worldLoader = ArclightCaptures.getDataLoadContext();
+        this.worldLoaderContext = ArclightCaptures.getDataLoadContext();
         ArclightServer.setMinecraftServer((MinecraftServer) (Object) this);
     }
 
@@ -650,7 +650,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         long endTime = System.nanoTime();
         // Native deadlines use Util's clock, which mods may replace independently of nanoTime.
         long remaining = this.nextTickTimeNanos - Util.getNanos();
-        new ServerTickEndEvent(this.tickCount, (double) (endTime - this.arclight$currentTickStartNanos) / 1_000_000D, remaining).callEvent();
+        new ServerTickEndEvent(this.tickCount, (double) (endTime - this.currentTickStart) / 1_000_000D, remaining).callEvent();
     }
 
     @Inject(method = "tickServer", at = @At("HEAD"))

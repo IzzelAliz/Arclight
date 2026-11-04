@@ -29,7 +29,7 @@ public abstract class MerchantContainerMixin implements IInventoryBridge, Contai
     @Shadow @Final private Merchant merchant;
     // @formatter:on
 
-    private List<HumanEntity> transactions = new ArrayList<>();
+    private List<HumanEntity> transaction = new ArrayList<>(); // Paper added
     private int maxStack = MAX_STACK;
 
     @Override
@@ -39,18 +39,18 @@ public abstract class MerchantContainerMixin implements IInventoryBridge, Contai
 
     @Override
     public void onOpen(CraftHumanEntity who) {
-        transactions.add(who);
+        this.transaction.add(who);
     }
 
     @Override
     public void onClose(CraftHumanEntity who) {
-        transactions.remove(who);
+        this.transaction.remove(who);
         this.merchant.setTradingPlayer(null);
     }
 
     @Override
     public List<HumanEntity> getViewers() {
-        return transactions;
+        return this.transaction;
     }
 
     @Override

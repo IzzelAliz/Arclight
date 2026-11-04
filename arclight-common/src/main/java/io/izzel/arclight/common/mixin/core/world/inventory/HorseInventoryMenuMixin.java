@@ -21,20 +21,20 @@ public abstract class HorseInventoryMenuMixin extends AbstractContainerMenuMixin
     @Shadow @Final protected Container mountContainer;
     // @formatter:on
 
-    CraftInventoryView<AbstractMountInventoryMenu, ?> bukkitEntity;
-    Inventory playerInventory;
+    CraftInventoryView<AbstractMountInventoryMenu, ?> view; // Paper added
+    Inventory inventory; // Paper added
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void arclight$init(int i, Inventory inventory, Container container, LivingEntity livingEntity, CallbackInfo ci) {
-        this.playerInventory = inventory;
+        this.inventory = inventory;
     }
 
     @Override
     public CraftInventoryView<AbstractMountInventoryMenu, ?> getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
+        if (this.view != null) {
+            return this.view;
         }
-        return bukkitEntity = new CraftInventoryView<>(((PlayerBridge) playerInventory.player).bridge$getBukkitEntity(),
+        return this.view = new CraftInventoryView<>(((PlayerBridge) this.inventory.player).bridge$getBukkitEntity(),
             ((IInventoryBridge) this.mountContainer).getOwner().getInventory(), (AbstractMountInventoryMenu) (Object) this);
     }
 }

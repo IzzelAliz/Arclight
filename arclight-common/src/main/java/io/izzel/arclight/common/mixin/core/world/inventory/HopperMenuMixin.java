@@ -22,12 +22,12 @@ public abstract class HopperMenuMixin extends AbstractContainerMenuMixin {
     @Shadow @Final private Container hopper;
     // @formatter:on
 
-    private CraftInventoryView<HopperMenu, ?> bukkitEntity = null;
-    private Inventory playerInventory;
+    private CraftInventoryView<HopperMenu, ?> view = null; // Paper added
+    private Inventory inventory; // Paper added
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;)V", at = @At("RETURN"))
     public void arclight$init(int id, Inventory playerInventory, Container inventory, CallbackInfo ci) {
-        this.playerInventory = playerInventory;
+        this.inventory = playerInventory;
     }
 
     @Inject(method = "stillValid", cancellable = true, at = @At("HEAD"))
@@ -37,11 +37,11 @@ public abstract class HopperMenuMixin extends AbstractContainerMenuMixin {
 
     @Override
     public CraftInventoryView<HopperMenu, ?> getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
+        if (this.view != null) {
+            return this.view;
         }
         CraftInventory inventory = new CraftInventory(this.hopper);
-        bukkitEntity = new CraftInventoryView<>(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (HopperMenu) (Object) this);
-        return bukkitEntity;
+        this.view = new CraftInventoryView<>(((PlayerBridge) this.inventory.player).bridge$getBukkitEntity(), inventory, (HopperMenu) (Object) this);
+        return this.view;
     }
 }

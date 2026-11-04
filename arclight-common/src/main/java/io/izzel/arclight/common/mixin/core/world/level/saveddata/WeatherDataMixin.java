@@ -17,11 +17,11 @@ public abstract class WeatherDataMixin implements WeatherDataBridge {
 
     @Shadow private boolean raining;
     @Shadow private boolean thundering;
-    private ServerLevel arclight$world;
+    private ServerLevel level; // Paper added
 
     @Override
     public void bridge$setWorld(ServerLevel world) {
-        this.arclight$world = world;
+        this.level = world;
     }
 
     private com.mojang.datafixers.util.Pair<ServerLevel, WeatherChangeEvent.Cause> arclight$weatherCause;
@@ -40,7 +40,7 @@ public abstract class WeatherDataMixin implements WeatherDataBridge {
             ci.cancel();
             return;
         }
-        var world = this.arclight$weatherCause == null ? this.arclight$world : this.arclight$weatherCause.getFirst();
+        var world = this.arclight$weatherCause == null ? this.level : this.arclight$weatherCause.getFirst();
         if (world != null && world.bridge$getWorld() != null) {
             var event = new WeatherChangeEvent(world.bridge$getWorld(), value,
                 (this.arclight$weatherCause == null ? WeatherChangeEvent.Cause.UNKNOWN : this.arclight$weatherCause.getSecond()));
@@ -57,7 +57,7 @@ public abstract class WeatherDataMixin implements WeatherDataBridge {
             ci.cancel();
             return;
         }
-        var world = this.arclight$weatherCause == null ? this.arclight$world : this.arclight$weatherCause.getFirst();
+        var world = this.arclight$weatherCause == null ? this.level : this.arclight$weatherCause.getFirst();
         if (world != null && world.bridge$getWorld() != null) {
             var event = new ThunderChangeEvent(world.bridge$getWorld(), value,
                 ThunderChangeEvent.Cause.valueOf((this.arclight$weatherCause == null ? WeatherChangeEvent.Cause.UNKNOWN : this.arclight$weatherCause.getSecond()).name()));

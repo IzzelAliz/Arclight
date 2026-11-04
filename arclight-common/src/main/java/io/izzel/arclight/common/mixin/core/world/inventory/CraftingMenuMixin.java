@@ -41,7 +41,7 @@ public abstract class CraftingMenuMixin extends AbstractCraftingMenuMixin implem
     @Accessor("access") public abstract ContainerLevelAccess bridge$getWorldPos();
     // @formatter:on
 
-    private CraftInventoryView<CraftingMenu, ?> bukkitEntity;
+    private CraftInventoryView<CraftingMenu, ?> view; // Paper added
     private Inventory playerInventory;
 
     @Inject(method = "stillValid", cancellable = true, at = @At("HEAD"))
@@ -77,12 +77,12 @@ public abstract class CraftingMenuMixin extends AbstractCraftingMenuMixin implem
 
     @Override
     public CraftInventoryView<CraftingMenu, ?> getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
+        if (this.view != null) {
+            return this.view;
         }
 
         CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftSlots, this.resultSlots);
-        bukkitEntity = new CraftInventoryView<>(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (CraftingMenu) (Object) this);
-        return bukkitEntity;
+        this.view = new CraftInventoryView<>(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (CraftingMenu) (Object) this);
+        return this.view;
     }
 }

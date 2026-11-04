@@ -22,12 +22,12 @@ public abstract class DispenserMenuMixin extends AbstractContainerMenuMixin {
     @Shadow @Final public Container dispenser;
     // @formatter:on
 
-    private CraftInventoryView<DispenserMenu, ?> bukkitEntity;
-    private Inventory playerInventory;
+    private CraftInventoryView<DispenserMenu, ?> view; // Paper added
+    private Inventory inventory; // Paper added
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;)V", at = @At("RETURN"))
     public void arclight$init(int p_i50088_1_, Inventory playerInventory, Container p_i50088_3_, CallbackInfo ci) {
-        this.playerInventory = playerInventory;
+        this.inventory = playerInventory;
     }
 
     @Inject(method = "stillValid", cancellable = true, at = @At("HEAD"))
@@ -37,12 +37,12 @@ public abstract class DispenserMenuMixin extends AbstractContainerMenuMixin {
 
     @Override
     public CraftInventoryView<DispenserMenu, ?> getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
+        if (this.view != null) {
+            return this.view;
         }
 
         CraftInventory inventory = new CraftInventory(this.dispenser);
-        bukkitEntity = new CraftInventoryView<>(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (DispenserMenu) (Object) this);
-        return bukkitEntity;
+        this.view = new CraftInventoryView<>(((PlayerBridge) this.inventory.player).bridge$getBukkitEntity(), inventory, (DispenserMenu) (Object) this);
+        return this.view;
     }
 }

@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(InventoryMenu.class)
 public abstract class InventoryMenuMixin extends AbstractCraftingMenuMixin {
 
-    private CraftInventoryView<InventoryMenu, ?> bukkitEntity;
+    private CraftInventoryView<InventoryMenu, ?> view; // Paper added
     private Inventory playerInventory;
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -37,12 +37,12 @@ public abstract class InventoryMenuMixin extends AbstractCraftingMenuMixin {
 
     @Override
     public CraftInventoryView<InventoryMenu, ?> getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
+        if (this.view != null) {
+            return this.view;
         }
 
         CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftSlots, this.resultSlots);
-        bukkitEntity = new CraftInventoryView<>(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (InventoryMenu) (Object) this);
-        return bukkitEntity;
+        this.view = new CraftInventoryView<>(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (InventoryMenu) (Object) this);
+        return this.view;
     }
 }

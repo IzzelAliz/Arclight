@@ -43,7 +43,7 @@ public abstract class PortalShapeMixin implements PortalShapeBridge {
     // @formatter:on
 
     @Unique private static Deque<Optional<BlockStateListPopulator>> arclight$portalScanScopes;
-    @Unique private @Nullable BlockStateListPopulator arclight$portalBlocks;
+    @Unique private @Nullable BlockStateListPopulator blocks; // Paper added
 
     @WrapMethod(method = "findAnyShape(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Direction$Axis;)Lnet/minecraft/world/level/portal/PortalShape;")
     private static PortalShape arclight$capturePortalShape(BlockGetter level, BlockPos pos, Direction.Axis axis, Operation<PortalShape> original) {
@@ -92,7 +92,7 @@ public abstract class PortalShapeMixin implements PortalShapeBridge {
             original.call(level);
             return;
         }
-        BlockStateListPopulator blocks = this.arclight$portalBlocks == null ? new BlockStateListPopulator(level) : this.arclight$portalBlocks;
+        BlockStateListPopulator blocks = this.blocks == null ? new BlockStateListPopulator(level) : this.blocks;
         World world = bridge.bridge$getMinecraftWorld().bridge$getWorld();
         BlockState portal = Blocks.NETHER_PORTAL.defaultBlockState().setValue(NetherPortalBlock.AXIS, this.axis);
         BlockPos.betweenClosed(this.bottomLeft, this.bottomLeft.relative(Direction.UP, this.height - 1).relative(this.rightDir, this.width - 1))
@@ -106,7 +106,7 @@ public abstract class PortalShapeMixin implements PortalShapeBridge {
 
     @Override
     public void bridge$setPortalBlocks(BlockStateListPopulator blocks) {
-        this.arclight$portalBlocks = blocks;
+        this.blocks = blocks;
     }
 
 }

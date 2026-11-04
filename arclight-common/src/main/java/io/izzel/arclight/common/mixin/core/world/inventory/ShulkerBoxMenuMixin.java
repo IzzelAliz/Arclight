@@ -21,12 +21,12 @@ public abstract class ShulkerBoxMenuMixin extends AbstractContainerMenuMixin {
     @Shadow @Final private Container container;
     // @formatter:on
 
-    private CraftInventoryView<ShulkerBoxMenu, ?> bukkitEntity;
-    private Inventory playerInventory;
+    private CraftInventoryView<ShulkerBoxMenu, ?> view; // Paper added
+    private Inventory inventory; // Paper added
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;)V", at = @At("RETURN"))
     public void arclight$init(int id, Inventory playerInventory, Container inventory, CallbackInfo ci) {
-        this.playerInventory = playerInventory;
+        this.inventory = playerInventory;
     }
 
     @Inject(method = "stillValid", cancellable = true, at = @At("HEAD"))
@@ -36,11 +36,11 @@ public abstract class ShulkerBoxMenuMixin extends AbstractContainerMenuMixin {
 
     @Override
     public CraftInventoryView<ShulkerBoxMenu, ?> getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
+        if (this.view != null) {
+            return this.view;
         }
 
-        bukkitEntity = new CraftInventoryView<>(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), new CraftInventory(this.container), (ShulkerBoxMenu) (Object) this);
-        return bukkitEntity;
+        this.view = new CraftInventoryView<>(((PlayerBridge) this.inventory.player).bridge$getBukkitEntity(), new CraftInventory(this.container), (ShulkerBoxMenu) (Object) this);
+        return this.view;
     }
 }

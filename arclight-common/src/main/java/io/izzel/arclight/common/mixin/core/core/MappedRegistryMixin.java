@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MappedRegistryMixin<T> implements MappedRegistryBridge<T> {
     @Shadow private Map<T, Holder.Reference<T>> unregisteredIntrusiveHolders;
     @Shadow private boolean frozen;
-    @Unique private final Map<ResourceKey<T>, T> arclight$unfrozenValues = new HashMap<>();
+    @Unique private final Map<ResourceKey<T>, T> temporaryUnfrozenMap = new HashMap<>(); // Paper added
 
     @Override
     @Invoker("validateWrite")
@@ -34,17 +34,17 @@ public abstract class MappedRegistryMixin<T> implements MappedRegistryBridge<T> 
     @Override
     public Optional<T> bridge$valueForCopying(ResourceKey<T> key) {
         return this.frozen ? ((MappedRegistry<T>) (Object) this).getOptional(key)
-            : Optional.ofNullable(this.arclight$unfrozenValues.get(key));
+            : Optional.ofNullable(this.temporaryUnfrozenMap.get(key));
     }
 
     @Inject(method = "register", at = @At("RETURN"))
     private void arclight$copyValue(ResourceKey<T> key, T value, RegistrationInfo info, CallbackInfoReturnable<Holder.Reference<T>> cir) {
-        this.arclight$unfrozenValues.put(key, value);
+        this.temporaryUnfrozenMap.put(key, value);
     }
 
     @Inject(method = "freeze", at = @At("RETURN"))
     private void arclight$clearCopyValues(CallbackInfoReturnable<?> cir) {
-        this.arclight$unfrozenValues.clear();
+        this.temporaryUnfrozenMap.clear();
     }
 
     public void clearIntrusiveHolder(T value) {

@@ -10,8 +10,7 @@ import org.spongepowered.asm.mixin.Mixin;
 @Mixin(Ticket.class)
 public abstract class TicketMixin implements TicketBridge {
 
-    // CraftBukkit reads this field directly when listing/removing plugin tickets.
-    public Object key;
+    public Object identifier; // Paper added
 
     @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
     private static Ticket of(TicketType type, int ticketLevel, Object key) {
@@ -22,11 +21,11 @@ public abstract class TicketMixin implements TicketBridge {
 
     @Override
     public Object bridge$getKey() {
-        return this.key;
+        return this.identifier;
     }
 
     @Override
     public void bridge$setKey(Object key) {
-        this.key = key;
+        this.identifier = key;
     }
 }

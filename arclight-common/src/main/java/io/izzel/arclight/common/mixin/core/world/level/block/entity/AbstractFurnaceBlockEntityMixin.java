@@ -58,18 +58,18 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
 
     public List<HumanEntity> transaction = new ArrayList<>();
     private int maxStack = MAX_STACK;
-    private net.minecraft.world.item.crafting.RecipeType<? extends net.minecraft.world.item.crafting.AbstractCookingRecipe> arclight$recipeType;
+    private net.minecraft.world.item.crafting.RecipeType<? extends net.minecraft.world.item.crafting.AbstractCookingRecipe> recipeType; // Paper added
 
     @org.spongepowered.asm.mixin.injection.Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$captureRecipeType(net.minecraft.world.level.block.entity.BlockEntityType<?> type, BlockPos pos, BlockState state,
             net.minecraft.world.item.crafting.RecipeType<? extends net.minecraft.world.item.crafting.AbstractCookingRecipe> recipeType,
             org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
-        this.arclight$recipeType = recipeType;
+        this.recipeType = recipeType;
     }
 
     @Override
     public net.minecraft.world.item.crafting.RecipeType<? extends net.minecraft.world.item.crafting.AbstractCookingRecipe> bridge$getRecipeType() {
-        return this.arclight$recipeType;
+        return this.recipeType;
     }
 
     @Decorate(method = "serverTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;getBurnDuration(Lnet/minecraft/world/level/block/entity/FuelValues;Lnet/minecraft/world/item/ItemStack;)I"))

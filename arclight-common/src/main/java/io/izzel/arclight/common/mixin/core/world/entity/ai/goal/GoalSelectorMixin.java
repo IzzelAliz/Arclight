@@ -11,10 +11,10 @@ import java.util.Set;
 @Mixin(GoalSelector.class)
 public abstract class GoalSelectorMixin implements GoalSelectorBridge {
     @Shadow @Final private Set<WrappedGoal> availableGoals;
-    private int arclight$inactiveRate;
+    private int curRate; // Paper added
 
     @Override public boolean bridge$inactiveTick() {
-        return ++this.arclight$inactiveRate % 3 == 0;
+        return ++this.curRate % 3 == 0;
     }
 
     @Override public boolean bridge$hasTasks() {

@@ -32,12 +32,12 @@ public abstract class AbstractFurnaceMenuMixin extends AbstractContainerMenuMixi
     @Shadow @Final private Container container;
     // @formatter:on
 
-    private CraftFurnaceView bukkitEntity = null;
-    private Inventory playerInventory;
+    private CraftFurnaceView view = null; // Paper added
+    private Inventory inventory; // Paper added
 
     @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;Lnet/minecraft/world/item/crafting/RecipeType;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/inventory/RecipeBookType;ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;Lnet/minecraft/world/inventory/ContainerData;)V", at = @At("RETURN"))
     public void arclight$init(MenuType<?> menuType, RecipeType<? extends AbstractCookingRecipe> recipeType, ResourceKey<RecipePropertySet> recipePropertySet, RecipeBookType recipeBookType, int containerId, Inventory playerInventoryIn, Container container, ContainerData data, CallbackInfo ci) {
-        this.playerInventory = playerInventoryIn;
+        this.inventory = playerInventoryIn;
     }
 
     @Inject(method = "stillValid", cancellable = true, at = @At("HEAD"))
@@ -47,12 +47,12 @@ public abstract class AbstractFurnaceMenuMixin extends AbstractContainerMenuMixi
 
     @Override
     public CraftFurnaceView getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
+        if (this.view != null) {
+            return this.view;
         }
 
         CraftInventoryFurnace inventory = new CraftInventoryFurnace((AbstractFurnaceBlockEntity) this.container);
-        bukkitEntity = new CraftFurnaceView(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (AbstractFurnaceMenu) (Object) this);
-        return bukkitEntity;
+        this.view = new CraftFurnaceView(((PlayerBridge) this.inventory.player).bridge$getBukkitEntity(), inventory, (AbstractFurnaceMenu) (Object) this);
+        return this.view;
     }
 }

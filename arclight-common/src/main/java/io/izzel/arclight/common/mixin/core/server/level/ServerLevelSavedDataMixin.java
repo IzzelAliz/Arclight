@@ -45,8 +45,8 @@ public abstract class ServerLevelSavedDataMixin implements ServerLevelSavedDataB
     @Shadow public abstract MinecraftServer getServer();
     @Shadow public abstract SavedDataStorage getDataStorage();
 
-    private ServerClockManager arclight$clockManager;
-    private GameRules arclight$gameRules;
+    private ServerClockManager clockManager; // Paper added
+    private GameRules gameRules; // Paper added
     private RandomSequences arclight$randomSequences;
     private CustomBossEvents arclight$customBossEvents;
 
@@ -130,34 +130,34 @@ public abstract class ServerLevelSavedDataMixin implements ServerLevelSavedDataB
         if (io.papermc.paper.configuration.GlobalConfiguration.get().time.affectsAllWorlds) {
             return this.getServer().clockManager();
         }
-        if (this.arclight$clockManager == null) {
+        if (this.clockManager == null) {
             ServerClockManager manager = this.getDataStorage().computeIfAbsent(ServerClockManager.TYPE);
             ((ServerClockOwnerBridge) manager).init((ServerLevel) (Object) this);
-            this.arclight$clockManager = manager;
+            this.clockManager = manager;
         }
-        return this.arclight$clockManager;
+        return this.clockManager;
     }
 
     @Inject(method = "clockManager", at = @At("HEAD"), cancellable = true)
     private void arclight$worldClock(CallbackInfoReturnable<ServerClockManager> cir) {
         if (this.chunkSource != null) {
             cir.setReturnValue(io.papermc.paper.configuration.GlobalConfiguration.get().time.affectsAllWorlds
-                ? this.getServer().clockManager() : this.arclight$clockManager);
+                ? this.getServer().clockManager() : this.clockManager);
         }
     }
 
     @Override
     public GameRules bridge$getGameRules() {
-        if (this.arclight$gameRules == null) {
+        if (this.gameRules == null) {
             if (this.chunkSource == null) {
                 return this.getServer().getGameRules();
             }
             GameRuleMap rules = this.getDataStorage().computeIfAbsent(GameRuleMap.TYPE);
             // The map is the level's own persisted object: copying it would break dirty
             // tracking, and importing the global map would replace existing world values.
-            this.arclight$gameRules = new GameRules(((ServerLevelBridge) this).bridge$getPrimaryLevelData().enabledFeatures(), rules);
+            this.gameRules = new GameRules(((ServerLevelBridge) this).bridge$getPrimaryLevelData().enabledFeatures(), rules);
         }
-        return this.arclight$gameRules;
+        return this.gameRules;
     }
 
     @Inject(method = "getGameRules", at = @At("HEAD"), cancellable = true)

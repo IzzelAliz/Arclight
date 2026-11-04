@@ -18,16 +18,16 @@ import java.util.Optional;
 @Mixin(SmithingTransformRecipe.class)
 public class SmithingTransformRecipeMixin implements RecipeBridge, io.izzel.arclight.common.bridge.core.world.item.crafting.SmithingTransformRecipeBridge {
 
-    private boolean arclight$copyDataComponents = true;
+    private boolean copyDataComponents = true; // Paper added
 
     @Override
     public void bridge$setCopyDataComponents(boolean copy) {
-        this.arclight$copyDataComponents = copy;
+        this.copyDataComponents = copy;
     }
 
     @org.spongepowered.asm.mixin.injection.Inject(method = "assemble(Lnet/minecraft/world/item/crafting/SmithingRecipeInput;)Lnet/minecraft/world/item/ItemStack;", at = @org.spongepowered.asm.mixin.injection.At("HEAD"), cancellable = true)
     private void arclight$copyComponents(net.minecraft.world.item.crafting.SmithingRecipeInput input, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<net.minecraft.world.item.ItemStack> cir) {
-        if (!this.arclight$copyDataComponents) {
+        if (!this.copyDataComponents) {
             cir.setReturnValue(this.result.create());
         }
     }
@@ -42,6 +42,6 @@ public class SmithingTransformRecipeMixin implements RecipeBridge, io.izzel.arcl
     @Override
     public Recipe bridge$toBukkitRecipe(NamespacedKey id) {
         return new CraftSmithingTransformRecipe(id, CraftItemStack.asCraftMirror(this.result.create()),
-            CraftRecipe.toChoice(this.template), CraftRecipe.toChoice(this.base), CraftRecipe.toChoice(this.addition), this.arclight$copyDataComponents);
+            CraftRecipe.toChoice(this.template), CraftRecipe.toChoice(this.base), CraftRecipe.toChoice(this.addition), this.copyDataComponents);
     }
 }

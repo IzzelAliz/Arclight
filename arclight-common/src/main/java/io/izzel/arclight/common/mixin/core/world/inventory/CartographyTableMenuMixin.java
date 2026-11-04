@@ -29,7 +29,7 @@ public abstract class CartographyTableMenuMixin extends AbstractContainerMenuMix
     @Shadow @Final private ResultContainer resultContainer;
     // @formatter:on
 
-    private CraftInventoryView<CartographyTableMenu, ?> bukkitEntity = null;
+    private CraftInventoryView<CartographyTableMenu, ?> view = null; // Paper added
     private Player player;
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/inventory/ContainerLevelAccess;)V", at = @At("RETURN"))
@@ -54,13 +54,13 @@ public abstract class CartographyTableMenuMixin extends AbstractContainerMenuMix
 
     @Override
     public CraftInventoryView<CartographyTableMenu, ?> getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
+        if (this.view != null) {
+            return this.view;
         }
 
         CraftInventoryCartography inventory = new CraftInventoryCartography(this.container, this.resultContainer);
-        bukkitEntity = new CraftInventoryView<>(this.player, inventory, (CartographyTableMenu) (Object) this);
-        return bukkitEntity;
+        this.view = new CraftInventoryView<>(this.player, inventory, (CartographyTableMenu) (Object) this);
+        return this.view;
     }
 
     @Override

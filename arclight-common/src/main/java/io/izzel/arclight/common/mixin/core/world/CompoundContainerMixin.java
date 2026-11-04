@@ -21,7 +21,7 @@ public abstract class CompoundContainerMixin implements IInventoryBridge, Contai
 
     @Shadow @Final public Container container1;
     @Shadow @Final public Container container2;
-    private List<HumanEntity> transactions = new ArrayList<>();
+    private List<HumanEntity> transaction = new ArrayList<>(); // Paper added
 
     @Override
     public List<ItemStack> getContents() {
@@ -37,19 +37,19 @@ public abstract class CompoundContainerMixin implements IInventoryBridge, Contai
     public void onOpen(CraftHumanEntity who) {
         ((IInventoryBridge) this.container1).onOpen(who);
         ((IInventoryBridge) this.container2).onOpen(who);
-        this.transactions.add(who);
+        this.transaction.add(who);
     }
 
     @Override
     public void onClose(CraftHumanEntity who) {
         ((IInventoryBridge) this.container1).onClose(who);
         ((IInventoryBridge) this.container2).onClose(who);
-        this.transactions.remove(who);
+        this.transaction.remove(who);
     }
 
     @Override
     public List<HumanEntity> getViewers() {
-        return transactions;
+        return this.transaction;
     }
 
     @Override

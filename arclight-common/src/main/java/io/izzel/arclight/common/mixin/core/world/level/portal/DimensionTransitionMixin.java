@@ -21,7 +21,7 @@ public class DimensionTransitionMixin implements DimensionTransitionBridge {
     @CreateConstructor
     public void arclight$constructor(ServerLevel newLevel, Vec3 pos, Vec3 speed, float yRot, float xRot, boolean missingRespawnBlock, TeleportTransition.PostTeleportTransition postTeleportTransition, PlayerTeleportEvent.TeleportCause cause) {
         arclight$constructor(newLevel, pos, speed, yRot, xRot, missingRespawnBlock, false, java.util.Set.of(), postTeleportTransition);
-        this.arclight$cause = cause;
+        this.cause = cause;
     }
 
     @ShadowConstructor
@@ -32,18 +32,18 @@ public class DimensionTransitionMixin implements DimensionTransitionBridge {
     @CreateConstructor
     public void arclight$constructor(ServerLevel serverLevel, Vec3 vec3, Vec3 vec32, float f, float g, TeleportTransition.PostTeleportTransition postTeleportTransition, PlayerTeleportEvent.TeleportCause cause) {
         arclight$constructor(serverLevel, vec3, vec32, f, g, postTeleportTransition);
-        this.arclight$cause = cause;
+        this.cause = cause;
     }
 
-    @Unique private PlayerTeleportEvent.TeleportCause arclight$cause;
+    @Unique private PlayerTeleportEvent.TeleportCause cause; // Paper added
 
     @Override
     public void bridge$setTeleportCause(PlayerTeleportEvent.TeleportCause cause) {
-        arclight$cause = cause;
+        this.cause = cause;
     }
 
     @Override
     public PlayerTeleportEvent.TeleportCause bridge$getTeleportCause() {
-        return arclight$cause == null ? PlayerTeleportEvent.TeleportCause.UNKNOWN : arclight$cause;
+        return this.cause == null ? PlayerTeleportEvent.TeleportCause.UNKNOWN : this.cause;
     }
 }

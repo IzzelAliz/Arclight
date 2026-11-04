@@ -82,7 +82,7 @@ public abstract class StonecutterMenuMixin extends AbstractContainerMenuMixin im
         }
     }
 
-    private CraftStonecutterView bukkitEntity = null;
+    private CraftStonecutterView view = null; // Paper added
     private Inventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/inventory/ContainerLevelAccess;)V", at = @At("RETURN"))
@@ -92,13 +92,13 @@ public abstract class StonecutterMenuMixin extends AbstractContainerMenuMixin im
 
     @Override
     public CraftStonecutterView getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
+        if (this.view != null) {
+            return this.view;
         }
 
         CraftInventoryStonecutter inventory = new CraftInventoryStonecutter(this.container, this.resultContainer);
-        bukkitEntity = new CraftStonecutterView(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (StonecutterMenu) (Object) this);
-        return bukkitEntity;
+        this.view = new CraftStonecutterView(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (StonecutterMenu) (Object) this);
+        return this.view;
     }
 
     @Override

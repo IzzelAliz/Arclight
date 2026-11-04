@@ -104,7 +104,7 @@ public abstract class ServerClockManagerMixin implements ServerClockOwnerBridge 
         original.call(instance, ticks);
     }
 
-    @Unique private ServerLevel arclight$owner;
+    @Unique private ServerLevel level; // Paper added
     @Unique private static final TagKey<WorldClock> arclight$ignoresPause = TagKey.create(
         Registries.WORLD_CLOCK, Identifier.fromNamespaceAndPath("neoforge", "ignores/pause_command"));
     @Unique private static final TagKey<WorldClock> arclight$ignoresAdvance = TagKey.create(
@@ -123,31 +123,31 @@ public abstract class ServerClockManagerMixin implements ServerClockOwnerBridge 
 
     @Override
     public void init(ServerLevel level) {
-        if (this.arclight$owner != null) {
-            if (this.arclight$owner != level) {
+        if (this.level != null) {
+            if (this.level != level) {
                 throw new IllegalStateException("Clock manager cannot belong to two worlds");
             }
             return; // Native init recreates all instances: never overwrite previously loaded values.
         }
         this.init(level.getServer()); // Native registry/markers + packed state load; Neo holder tags retained.
-        this.arclight$owner = level;
+        this.level = level;
     }
 
     @Override
     public ServerLevel arclight$owner() {
-        return this.arclight$owner;
+        return this.level;
     }
 
     @Inject(method = "getGameTime", at = @At("HEAD"), cancellable = true)
     private void arclight$worldGameTime(CallbackInfoReturnable<Long> cir) {
-        if (this.arclight$owner != null) {
-            cir.setReturnValue(this.arclight$owner.getGameTime());
+        if (this.level != null) {
+            cir.setReturnValue(this.level.getGameTime());
         }
     }
 
     @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;getGlobalGameRules()Lnet/minecraft/world/level/gamerules/GameRules;"))
     private GameRules arclight$worldAdvanceRule(MinecraftServer server) {
-        return this.arclight$owner == null ? server.getGlobalGameRules() : this.arclight$owner.getGameRules();
+        return this.level == null ? server.getGlobalGameRules() : this.level.getGameRules();
     }
 
     // Native modifyClock still performs mutation, dirty marking and cache invalidation exactly once.
@@ -158,7 +158,7 @@ public abstract class ServerClockManagerMixin implements ServerClockOwnerBridge 
             list.broadcastAll(packet);
             return;
         }
-        for (ServerPlayer player : this.arclight$owner == null ? list.getPlayers() : this.arclight$owner.players()) {
+        for (ServerPlayer player : this.level == null ? list.getPlayers() : this.level.players()) {
             Map<Holder<WorldClock>, ClockNetworkState> updates = new HashMap<>();
             for (Holder<WorldClock> clock : time.clockUpdates().keySet()) {
                 ClockState state = this.packState().clocks().get(clock);
@@ -172,12 +172,12 @@ public abstract class ServerClockManagerMixin implements ServerClockOwnerBridge 
 
     @Redirect(method = "modifyClock", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;getAllLevels()Ljava/lang/Iterable;"))
     private Iterable<ServerLevel> arclight$worldCacheScope(MinecraftServer server) {
-        return this.arclight$owner == null ? server.getAllLevels() : java.util.List.of(this.arclight$owner);
+        return this.level == null ? server.getAllLevels() : java.util.List.of(this.level);
     }
 
     @Override
     public ClientboundSetTimePacket createFullSyncPacket(ServerPlayer player) {
-        if (this.arclight$owner != null && player.level() != this.arclight$owner) {
+        if (this.level != null && player.level() != this.level) {
             throw new IllegalArgumentException("Clock sync player belongs to a different world");
         }
         Map<Holder<WorldClock>, ClockNetworkState> clockUpdates = new HashMap<>();
@@ -201,7 +201,7 @@ public abstract class ServerClockManagerMixin implements ServerClockOwnerBridge 
 
     @Unique
     private long arclight$gameTime() {
-        return this.arclight$owner == null ? this.server.overworld().getGameTime() : this.arclight$owner.getGameTime();
+        return this.level == null ? this.server.overworld().getGameTime() : this.level.getGameTime();
     }
 
     @Unique

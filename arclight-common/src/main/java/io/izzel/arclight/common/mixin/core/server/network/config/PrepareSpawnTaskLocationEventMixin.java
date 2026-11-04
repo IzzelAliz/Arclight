@@ -24,7 +24,7 @@ public abstract class PrepareSpawnTaskLocationEventMixin implements PrepareSpawn
     @Unique private PlayerConfigurationConnection arclight$spawnLocationConnection;
     @Unique private @Nullable ServerPlayer arclight$spawnLocationPlayer;
     @Unique private Connection arclight$spawnLocationNetwork;
-    @Unique private boolean arclight$newSpawnPlayer;
+    @Unique private boolean newPlayer; // Paper added
 
     @Override
     public void bridge$bindSpawnLocationConnection(PlayerConfigurationConnection connection, Connection network, @Nullable ServerPlayer player) {
@@ -50,14 +50,14 @@ public abstract class PrepareSpawnTaskLocationEventMixin implements PrepareSpawn
 
     @Override
     public boolean bridge$isNewSpawnPlayer() {
-        return this.arclight$newSpawnPlayer;
+        return this.newPlayer;
     }
 
     @Decorate(method = "start(Ljava/util/function/Consumer;)V", require = 1, expect = 1, allow = 1,
         at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;loadPlayerData(Lnet/minecraft/server/players/NameAndId;)Ljava/util/Optional;"))
     private Optional<CompoundTag> arclight$captureNewSpawnPlayer(PlayerList list, NameAndId profile) throws Throwable {
         var data = (Optional<CompoundTag>) DecorationOps.callsite().invoke(list, profile);
-        this.arclight$newSpawnPlayer = data.isEmpty();
+        this.newPlayer = data.isEmpty();
         return data;
     }
 }

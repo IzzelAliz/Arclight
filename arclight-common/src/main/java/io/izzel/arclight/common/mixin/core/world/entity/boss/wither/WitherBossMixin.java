@@ -30,16 +30,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(WitherBoss.class)
 public abstract class WitherBossMixin extends PathfinderMobMixin implements WitherBossBridge {
 
-    @Unique private boolean arclight$canPortal;
+    @Unique private boolean canPortal; // Paper added
 
     @Override
     public void setCanTravelThroughPortals(boolean value) {
-        this.arclight$canPortal = value;
+        this.canPortal = value;
     }
 
     @ModifyReturnValue(method = "canUsePortal", at = @At("RETURN"))
     private boolean arclight$canUsePortal(boolean original) {
-        return this.arclight$canPortal;
+        return this.canPortal;
     }
 
     @Inject(method = "checkDespawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/boss/wither/WitherBoss;discard()V"))

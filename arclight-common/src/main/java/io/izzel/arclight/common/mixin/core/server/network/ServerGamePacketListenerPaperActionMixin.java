@@ -25,18 +25,18 @@ public abstract class ServerGamePacketListenerPaperActionMixin {
 
     @Shadow public ServerPlayer player;
 
-    @Unique private ClientTickEndEvent arclight$clientTickEndEvent;
+    @Unique private ClientTickEndEvent tickEndEvent; // Paper added
 
     // Paper reuses one notification object for the lifetime of this connection.
     @Decorate(method = "<init>(Lnet/minecraft/server/MinecraftServer;Lnet/minecraft/network/Connection;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/server/network/CommonListenerCookie;)V", inject = true, at = @At("RETURN"), require = 1, allow = 1)
     private void arclight$initClientTickEndEvent() {
-        this.arclight$clientTickEndEvent = new ClientTickEndEvent(((ServerPlayerBridge) this.player).bridge$getBukkitEntity());
+        this.tickEndEvent = new ClientTickEndEvent(((ServerPlayerBridge) this.player).bridge$getBukkitEntity());
     }
 
     @Decorate(method = "handleClientTickEnd(Lnet/minecraft/network/protocol/game/ServerboundClientTickEndPacket;)V", inject = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/server/level/ServerLevel;)V"), require = 1, allow = 1)
     private void arclight$clientTickEnd() {
         // Dispatch before native movement bookkeeping, and never on the network thread.
-        this.arclight$clientTickEndEvent.callEvent();
+        this.tickEndEvent.callEvent();
     }
 
     // The retained listener supplies ray trace/LEFT_CLICK_AIR before this call.

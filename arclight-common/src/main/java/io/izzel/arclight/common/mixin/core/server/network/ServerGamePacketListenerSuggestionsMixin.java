@@ -33,11 +33,11 @@ import java.util.function.Consumer;
 public abstract class ServerGamePacketListenerSuggestionsMixin {
 
     @Unique
-    private static final ExecutorService arclight$tabCompleteExecutor = Executors.newFixedThreadPool(4,
-        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Arclight Async Tab Complete - %d").build());
+    private static final ExecutorService TAB_COMPLETE_EXECUTOR = Executors.newFixedThreadPool(4,
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Arclight Async Tab Complete - %d").build()); // Paper added
 
     @Unique
-    private final net.minecraft.util.TickThrottler arclight$tabSpamThrottler = arclight$createTabSpamThrottler();
+    private final net.minecraft.util.TickThrottler tabSpamThrottler = arclight$createTabSpamThrottler(); // Paper added
 
     @Unique
     private static net.minecraft.util.TickThrottler arclight$createTabSpamThrottler() {
@@ -51,8 +51,8 @@ public abstract class ServerGamePacketListenerSuggestionsMixin {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/util/TickThrottler;tick()V", ordinal = 1, shift = At.Shift.AFTER),
         require = 1, allow = 1)
     private void arclight$decayTabSpam() {
-        synchronized (this.arclight$tabSpamThrottler) {
-            this.arclight$tabSpamThrottler.tick();
+        synchronized (this.tabSpamThrottler) {
+            this.tabSpamThrottler.tick();
         }
     }
 
@@ -63,9 +63,9 @@ public abstract class ServerGamePacketListenerSuggestionsMixin {
         MinecraftServer server = listener.bridge$getCraftServer().getServer();
         var player = listener.bridge$getPlayer();
         boolean underThreshold;
-        synchronized (this.arclight$tabSpamThrottler) {
-            this.arclight$tabSpamThrottler.increment();
-            underThreshold = this.arclight$tabSpamThrottler.isUnderThreshold();
+        synchronized (this.tabSpamThrottler) {
+            this.tabSpamThrottler.increment();
+            underThreshold = this.tabSpamThrottler.isUnderThreshold();
         }
         if (!underThreshold && !server.getPlayerList().isOp(player.nameAndId()) && !server.isSingleplayerOwner(player.nameAndId())) {
             arclight$disconnectTabSpam(server, listener);
@@ -81,7 +81,7 @@ public abstract class ServerGamePacketListenerSuggestionsMixin {
         }
         // Only the async event runs on this pool. Unhandled requests resume the actual
         // native/mod body on main, including its thread check, parser and permissions.
-        arclight$tabCompleteExecutor.execute(() -> {
+        TAB_COMPLETE_EXECUTOR.execute(() -> {
             if (listener.bridge$processedDisconnect()) {
                 return;
             }

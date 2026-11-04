@@ -57,7 +57,7 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
     @Shadow @Final public int[] levelClue;
     // @formatter:on
 
-    private CraftEnchantmentView bukkitEntity = null;
+    private CraftEnchantmentView view = null; // Paper added
     private Inventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/inventory/ContainerLevelAccess;)V", at = @At("RETURN"))
@@ -162,13 +162,13 @@ public abstract class EnchantmentContainerMixin extends AbstractContainerMenuMix
 
     @Override
     public CraftEnchantmentView getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
+        if (this.view != null) {
+            return this.view;
         }
 
         CraftInventoryEnchanting inventory = new CraftInventoryEnchanting(this.enchantSlots);
-        bukkitEntity = new CraftEnchantmentView(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (EnchantmentMenu) (Object) this);
-        return bukkitEntity;
+        this.view = new CraftEnchantmentView(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (EnchantmentMenu) (Object) this);
+        return this.view;
     }
 
     @Override

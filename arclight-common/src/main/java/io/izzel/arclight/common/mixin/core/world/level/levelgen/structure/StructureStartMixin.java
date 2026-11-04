@@ -37,11 +37,11 @@ public class StructureStartMixin implements StructureStartBridge {
     @Shadow @Final private PiecesContainer pieceContainer;
     @Shadow @Final private Structure structure;
 
-    @Unique private AsyncStructureGenerateEvent.Cause arclight$cause = AsyncStructureGenerateEvent.Cause.WORLD_GENERATION;
+    @Unique private AsyncStructureGenerateEvent.Cause generationEventCause = AsyncStructureGenerateEvent.Cause.WORLD_GENERATION; // Paper added
 
     @Override
     public void bridge$setGenerateCause(AsyncStructureGenerateEvent.Cause cause) {
-        this.arclight$cause = cause;
+        this.generationEventCause = cause;
     }
 
     /**
@@ -66,7 +66,7 @@ public class StructureStartMixin implements StructureStartBridge {
             if (!pieces.isEmpty()) {
                 var transformerAccess = new TransformerLevelAccessor();
                 transformerAccess.setDelegate(p_226851_);
-                transformerAccess.setStructureTransformer(new CraftStructureTransformer(arclight$cause, p_226851_, p_226852_, structure, p_226855_, p_226856_));
+                transformerAccess.setStructureTransformer(new CraftStructureTransformer(this.generationEventCause, p_226851_, p_226852_, structure, p_226855_, p_226856_));
                 for (StructurePiece piece : pieces) {
                     piece.postProcess(transformerAccess, p_226852_, p_226853_, p_226854_, p_226855_, p_226856_, blockpos1);
                 }

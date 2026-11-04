@@ -26,30 +26,30 @@ public abstract class PackRepositoryMixin implements PackRepositoryBridge {
 
     @Shadow public abstract void setSelected(Collection<String> packs);
 
-    @Unique private DirectoryValidator arclight$datapackValidator;
+    @Unique private DirectoryValidator validator; // Paper added
     @Unique private Set<Pack> arclight$automaticallyEnabledPacks = Collections.emptySet();
     @Unique private boolean arclight$pendingReload;
 
     @Override
     public void bridge$setDatapackValidator(DirectoryValidator validator) {
         Objects.requireNonNull(validator, "validator");
-        if (this.arclight$datapackValidator != null) {
+        if (this.validator != null) {
             throw new IllegalStateException("The datapack repository validator is already bound");
         }
-        this.arclight$datapackValidator = validator;
+        this.validator = validator;
     }
 
     @ModifyArg(method = "discoverAvailable()Ljava/util/Map;", at = @At(value = "INVOKE",
         target = "Lcom/google/common/collect/ImmutableMap;copyOf(Ljava/util/Map;)Lcom/google/common/collect/ImmutableMap;", remap = false),
         index = 0, require = 1, expect = 1, allow = 1)
     private Map<String, Pack> arclight$discoverPluginPacks(Map<String, Pack> discovered) {
-        if (this.arclight$datapackValidator == null) {
+        if (this.validator == null) {
             // Client/resource repositories have no server datapack validator.
             return discovered;
         }
         // Every native/mod source has succeeded; only this successful transaction
         // reaches the immutable snapshot subsequently adopted by native reload().
-        PaperDatapackDiscovery.Result result = PaperDatapackDiscovery.discover(this.arclight$datapackValidator, discovered);
+        PaperDatapackDiscovery.Result result = PaperDatapackDiscovery.discover(this.validator, discovered);
         this.arclight$automaticallyEnabledPacks = result.automaticallyEnabled();
         return result.packs();
     }

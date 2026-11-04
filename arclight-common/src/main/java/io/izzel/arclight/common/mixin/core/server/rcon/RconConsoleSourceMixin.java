@@ -31,13 +31,13 @@ public class RconConsoleSourceMixin implements CommandSourceBridge, RconConsoleS
     }
 
     @Unique
-    private CraftRemoteConsoleCommandSender arclight$remoteConsole;
+    private CraftRemoteConsoleCommandSender remoteConsole; // Paper added
 
     public CommandSender getBukkitSender() {
-        if (this.arclight$remoteConsole == null) {
-            this.arclight$remoteConsole = new CraftRemoteConsoleCommandSender((RconConsoleSource) (Object) this);
+        if (this.remoteConsole == null) {
+            this.remoteConsole = new CraftRemoteConsoleCommandSender((RconConsoleSource) (Object) this);
         }
-        return this.arclight$remoteConsole;
+        return this.remoteConsole;
     }
 
     public void sendMessage(String message) {

@@ -33,7 +33,7 @@ public abstract class LecternMenuMixin extends AbstractContainerMenuMixin implem
     @Shadow @Final private Container lectern;
     // @formatter:on
 
-    private CraftLecternView bukkitEntity;
+    private CraftLecternView view; // Paper added
     private Inventory playerInventory;
 
     @ShadowConstructor
@@ -99,12 +99,12 @@ public abstract class LecternMenuMixin extends AbstractContainerMenuMixin implem
 
     @Override
     public CraftLecternView getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
+        if (this.view != null) {
+            return this.view;
         }
         CraftInventoryLectern inventory = new CraftInventoryLectern(this.lectern);
-        bukkitEntity = new CraftLecternView(((ServerPlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (LecternMenu) (Object) this);
-        return bukkitEntity;
+        this.view = new CraftLecternView(((ServerPlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (LecternMenu) (Object) this);
+        return this.view;
     }
 
     @Override

@@ -32,7 +32,7 @@ public abstract class LivingEntityDeathMixin implements DeathEventBridge {
     protected abstract void arclight$playSecondaryHurtSound(DamageSource source);
     @Shadow protected abstract void dropAllDeathLoot(ServerLevel level, DamageSource source);
     @Unique private EntityDeathEvent arclight$deathEvent;
-    @Unique private boolean arclight$silentDeath;
+    @Unique private boolean silentDeath; // Paper added
     @Unique private boolean arclight$fullDeathSound;
     @Unique private boolean arclight$deathLootMoved;
     @Unique private final List<Runnable> arclight$deathChanges = new ArrayList<>();
@@ -50,7 +50,7 @@ public abstract class LivingEntityDeathMixin implements DeathEventBridge {
 
     @Override
     public void bridge$setSilentDeath(boolean silent) {
-        this.arclight$silentDeath = silent;
+        this.silentDeath = silent;
     }
 
     @Override
@@ -62,7 +62,7 @@ public abstract class LivingEntityDeathMixin implements DeathEventBridge {
     public void bridge$prepareDeathEvent(EntityDeathEvent event) {
         LivingEntity self = (LivingEntity) (Object) this;
         event.setReviveHealth(event.getEntity().getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue());
-        event.setShouldPlayDeathSound(!this.arclight$silentDeath && !self.isSilent());
+        event.setShouldPlayDeathSound(!this.silentDeath && !self.isSilent());
         SoundEvent sound = this.getDeathSound();
         event.setDeathSound(sound == null ? null : CraftSound.minecraftToBukkit(sound));
         event.setDeathSoundCategory(org.bukkit.SoundCategory.valueOf(self.getSoundSource().name()));
@@ -113,11 +113,11 @@ public abstract class LivingEntityDeathMixin implements DeathEventBridge {
 
     @Decorate(method = "hurtServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;die(Lnet/minecraft/world/damagesource/DamageSource;)V"))
     private void arclight$deathSoundScope(LivingEntity entity, DamageSource source) throws Throwable {
-        this.arclight$silentDeath = !this.arclight$fullDeathSound;
+        this.silentDeath = !this.arclight$fullDeathSound;
         try {
             DecorationOps.callsite().invoke(entity, source);
         } finally {
-            this.arclight$silentDeath = false;
+            this.silentDeath = false;
         }
     }
 

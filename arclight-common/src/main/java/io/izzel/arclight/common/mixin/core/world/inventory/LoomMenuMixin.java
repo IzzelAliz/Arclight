@@ -80,7 +80,7 @@ public abstract class LoomMenuMixin extends AbstractContainerMenuMixin implement
             ? new BannerPatternLayers(List.copyOf(layers.layers().subList(0, 20))) : layers;
     }
 
-    private CraftLoomView bukkitEntity;
+    private CraftLoomView view; // Paper added
     private Inventory playerInventory;
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/inventory/ContainerLevelAccess;)V", at = @At("RETURN"))
@@ -97,13 +97,13 @@ public abstract class LoomMenuMixin extends AbstractContainerMenuMixin implement
 
     @Override
     public CraftLoomView getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
+        if (this.view != null) {
+            return this.view;
         }
 
         CraftInventoryLoom inventory = new CraftInventoryLoom(this.inputContainer, this.outputContainer);
-        bukkitEntity = new CraftLoomView(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (LoomMenu) (Object) this);
-        return bukkitEntity;
+        this.view = new CraftLoomView(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (LoomMenu) (Object) this);
+        return this.view;
     }
 
     @Override

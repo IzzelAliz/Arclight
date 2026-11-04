@@ -13,7 +13,7 @@ import java.util.EnumSet;
 public abstract class GoalMixin implements GoalBridge {
     @Shadow public abstract EnumSet<Goal.Flag> getFlags();
 
-    @Unique private PaperGoal<?> arclight$paperGoal;
+    @Unique private PaperGoal<?> paperGoal; // Paper added
 
     @Override
     public boolean hasFlag(Goal.Flag flag) {
@@ -33,9 +33,9 @@ public abstract class GoalMixin implements GoalBridge {
     @Override
     @SuppressWarnings("unchecked")
     public <T extends org.bukkit.entity.Mob> com.destroystokyo.paper.entity.ai.Goal<T> bridge$asPaperGoal() {
-        if (this.arclight$paperGoal == null) {
-            this.arclight$paperGoal = new PaperGoal<>((Goal) (Object) this);
+        if (this.paperGoal == null) {
+            this.paperGoal = new PaperGoal<>((Goal) (Object) this);
         }
-        return (com.destroystokyo.paper.entity.ai.Goal<T>) this.arclight$paperGoal;
+        return (com.destroystokyo.paper.entity.ai.Goal<T>) this.paperGoal;
     }
 }

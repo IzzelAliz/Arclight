@@ -41,7 +41,7 @@ public abstract class CombatTrackerMixin implements CombatTrackerBridge {
     public abstract @Nullable CombatEntry bridge$getMostSignificantFall();
 
     @Unique
-    private PaperCombatTrackerWrapper arclight$paperCombatTracker;
+    private PaperCombatTrackerWrapper paperCombatTracker; // Paper added
 
     @Unique
     private Component arclight$emptyComnent;
@@ -73,10 +73,10 @@ public abstract class CombatTrackerMixin implements CombatTrackerBridge {
 
     @Override
     public PaperCombatTrackerWrapper bridge$getPaperCombatTracker() {
-        if (this.arclight$paperCombatTracker == null) {
-            this.arclight$paperCombatTracker = new PaperCombatTrackerWrapper((CombatTracker) (Object) this);
+        if (this.paperCombatTracker == null) {
+            this.paperCombatTracker = new PaperCombatTrackerWrapper((CombatTracker) (Object) this);
         }
-        return this.arclight$paperCombatTracker;
+        return this.paperCombatTracker;
     }
 
     @Override

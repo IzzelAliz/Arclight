@@ -35,17 +35,17 @@ public abstract class CrafterMenuMixin extends AbstractContainerMenuMixin {
     @Shadow @Final private Player player;
     @Shadow private void refreshRecipeResult() {}
 
-    private CraftCrafterView bukkitEntity;
+    private CraftCrafterView view; // Paper added
 
     @Override
     public CraftCrafterView getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
+        if (this.view != null) {
+            return this.view;
         }
 
         CraftInventoryCrafter inventory = new CraftInventoryCrafter(this.container, this.resultContainer);
-        bukkitEntity = new CraftCrafterView(((ServerPlayerBridge) this.player).bridge$getBukkitEntity(), inventory, (CrafterMenu) (Object) this);
-        return bukkitEntity;
+        this.view = new CraftCrafterView(((ServerPlayerBridge) this.player).bridge$getBukkitEntity(), inventory, (CrafterMenu) (Object) this);
+        return this.view;
     }
 
     @Override

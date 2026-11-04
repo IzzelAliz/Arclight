@@ -25,12 +25,12 @@ public abstract class BrewingStandMenuMixin extends AbstractContainerMenuMixin {
     @Shadow @Final private Container brewingStand;
     // @formatter:on
 
-    private CraftBrewingStandView bukkitEntity = null;
-    private Inventory playerInventory;
+    private CraftBrewingStandView view = null; // Paper added
+    private Inventory inventory; // Paper added
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;Lnet/minecraft/world/inventory/ContainerData;)V", at = @At("RETURN"))
     public void arclight$init(int id, Inventory playerInventory, Container inventory, ContainerData p_i50096_4_, CallbackInfo ci) {
-        this.playerInventory = playerInventory;
+        this.inventory = playerInventory;
     }
 
     @Inject(method = "stillValid", cancellable = true, at = @At("HEAD"))
@@ -40,12 +40,12 @@ public abstract class BrewingStandMenuMixin extends AbstractContainerMenuMixin {
 
     @Override
     public CraftBrewingStandView getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
+        if (this.view != null) {
+            return this.view;
         }
 
         CraftInventoryBrewer inventory = new CraftInventoryBrewer(this.brewingStand);
-        bukkitEntity = new CraftBrewingStandView(((PlayerBridge) this.playerInventory.player).bridge$getBukkitEntity(), inventory, (BrewingStandMenu) (Object) this);
-        return bukkitEntity;
+        this.view = new CraftBrewingStandView(((PlayerBridge) this.inventory.player).bridge$getBukkitEntity(), inventory, (BrewingStandMenu) (Object) this);
+        return this.view;
     }
 }

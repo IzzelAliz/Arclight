@@ -91,7 +91,7 @@ public abstract class MerchantMenuMixin extends AbstractContainerMenuMixin {
         return changed;
     }
 
-    private CraftMerchantView bukkitEntity;
+    private CraftMerchantView view; // Paper added
     private Inventory inventory;
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/item/trading/Merchant;)V", at = @At("RETURN"))
@@ -115,9 +115,9 @@ public abstract class MerchantMenuMixin extends AbstractContainerMenuMixin {
 
     @Override
     public CraftMerchantView getBukkitView() {
-        if (bukkitEntity == null) {
-            bukkitEntity = new CraftMerchantView(((PlayerBridge) this.inventory.player).bridge$getBukkitEntity(), new CraftInventoryMerchant(this.trader, this.tradeContainer), (MerchantMenu) (Object) this, trader);
+        if (this.view == null) {
+            this.view = new CraftMerchantView(((PlayerBridge) this.inventory.player).bridge$getBukkitEntity(), new CraftInventoryMerchant(this.trader, this.tradeContainer), (MerchantMenu) (Object) this, trader);
         }
-        return bukkitEntity;
+        return this.view;
     }
 }
