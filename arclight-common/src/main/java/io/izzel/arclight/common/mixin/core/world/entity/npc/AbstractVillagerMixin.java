@@ -55,7 +55,10 @@ public abstract class AbstractVillagerMixin extends PathfinderMobMixin implement
             LootContext lootContext, MerchantOffers offers, HolderSet<VillagerTrade> potentialOffers, int numberOfOffers) {
         MerchantOffer offer = (MerchantOffer) e;
         EntityBridge villager = (EntityBridge) lootContext.getParameter(LootContextParams.THIS_ENTITY);
-        VillagerAcquireTradeEvent event = new VillagerAcquireTradeEvent((AbstractVillager) villager.bridge$getBukkitEntity(), ((MerchantOfferBridge) offer).bridge$asBukkit());
+        if (!(villager.bridge$getBukkitEntity() instanceof AbstractVillager bukkitVillager)) {
+            return original.call(merchantOffers, e);
+        }
+        VillagerAcquireTradeEvent event = new VillagerAcquireTradeEvent(bukkitVillager, ((MerchantOfferBridge) offer).bridge$asBukkit());
         if (villager.bridge$isValid()) {
             Bukkit.getPluginManager().callEvent(event);
         }
