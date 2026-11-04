@@ -3,7 +3,6 @@ package io.izzel.arclight.common.mixin.core.network.protocol.game;
 import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
 import io.izzel.arclight.common.mod.mixins.annotation.ShadowConstructor;
 import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.chat.ComponentSerializer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import org.bukkit.craftbukkit.util.CraftChatMessage;
@@ -19,6 +18,6 @@ public class ClientboundSystemChatPacketMixin {
 
     @CreateConstructor
     public void arclight$constructor(BaseComponent[] content, boolean overlay) {
-        arclight$constructor(CraftChatMessage.fromJSON(ComponentSerializer.toString(content)), overlay);
+        arclight$constructor(CraftChatMessage.bungeeToVanilla(content), overlay);
     }
 }
