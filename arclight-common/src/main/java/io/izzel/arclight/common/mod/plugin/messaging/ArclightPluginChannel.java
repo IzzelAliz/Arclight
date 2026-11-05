@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.plugin.messaging.PluginMessageListenerRegistration;
+import org.bukkit.plugin.messaging.StandardMessenger;
 
 import java.util.Collections;
 import java.util.List;
@@ -92,8 +93,9 @@ public class ArclightPluginChannel<T extends PluginChannelHandler> {
             ArclightServer.LOGGER.warn("Plugin channel {} has an incoming packet that has nowhere to dispatch.", type.id());
             return;
         }
+        var channel = StandardMessenger.validateAndCorrectChannel(type.id().toString());
         for (var listener : fire) {
-            listener.getListener().onPluginMessageReceived(type.id().toString(), src, message);
+            listener.getListener().onPluginMessageReceived(channel, src, message);
         }
     }
 
