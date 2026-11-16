@@ -24,8 +24,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
+import net.minecraft.world.level.block.entity.SignTextSlot;
 import org.bukkit.Bukkit;
-import org.bukkit.block.sign.Side;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.block.CraftBlock;
 import org.bukkit.craftbukkit.block.CraftSign;
@@ -57,7 +57,7 @@ public abstract class SignBlockEntityMixin extends BlockEntityMixin implements S
     @Shadow public abstract ClientboundBlockEntityDataPacket getUpdatePacket();
     @Shadow public abstract boolean isWaxed();
     @Shadow @javax.annotation.Nullable public abstract UUID getPlayerWhoMayEdit();
-    @Shadow public abstract boolean updateText(UnaryOperator<SignText> p_277877_, boolean p_277426_);
+    @Shadow public abstract boolean updateText(UnaryOperator<SignText> p_277877_, SignTextSlot p_277426_);
     @Shadow public abstract void setAllowedPlayerEditor(@Nullable UUID p_155714_);
     @Shadow @Final private static Logger LOGGER;
     // @formatter:on
@@ -67,7 +67,7 @@ public abstract class SignBlockEntityMixin extends BlockEntityMixin implements S
      * @reason
      */
     @Overwrite
-    public void updateSignText(Player p_278048_, boolean p_278103_, List<FilteredText> p_277990_) {
+    public void updateSignText(Player p_278048_, SignTextSlot p_278103_, List<FilteredText> p_277990_) {
         if (!this.isWaxed() && p_278048_.getUUID().equals(this.getPlayerWhoMayEdit()) && this.level != null) {
             this.updateText((p_277776_) -> {
                 return this.setMessages(p_278048_, p_277990_, p_277776_, p_278103_);
@@ -80,28 +80,31 @@ public abstract class SignBlockEntityMixin extends BlockEntityMixin implements S
         }
     }
 
-    private SignText setMessages(net.minecraft.world.entity.player.Player entityhuman, List<FilteredText> list, SignText signtext, boolean front) {
+    private SignText setMessages(net.minecraft.world.entity.player.Player entityhuman, List<FilteredText> list, SignText signtext, SignTextSlot slot) {
         SignText orig = signtext;
+        SignText.Mutable mutable = signtext.asMutable();
         for (int i = 0; i < list.size(); ++i) {
             FilteredText filteredtext = list.get(i);
-            Style chatmodifier = signtext.getMessage(i, entityhuman.isTextFilteringEnabled()).getStyle();
+            Style chatmodifier = orig.getMessages(entityhuman.isTextFilteringEnabled()).get(i).getStyle();
 
             if (entityhuman.isTextFilteringEnabled()) {
-                signtext = signtext.setMessage(i, Component.literal(filteredtext.filteredOrEmpty()).setStyle(chatmodifier));
+                mutable.setLine(i, Component.literal(filteredtext.filteredOrEmpty()).setStyle(chatmodifier));
             } else {
-                signtext = signtext.setMessage(i, Component.literal(filteredtext.raw()).setStyle(chatmodifier), Component.literal(filteredtext.filteredOrEmpty()).setStyle(chatmodifier));
+                mutable.setLine(i, Component.literal(filteredtext.raw()).setStyle(chatmodifier), Component.literal(filteredtext.filteredOrEmpty()).setStyle(chatmodifier));
             }
         }
+
+        signtext = mutable.asImmutable();
 
         // CraftBukkit start
         org.bukkit.entity.Player player = ((ServerPlayerBridge) entityhuman).bridge$getBukkitEntity();
         List<net.kyori.adventure.text.Component> lines = new ArrayList<>();
 
         for (int j = 0; j < list.size(); ++j) {
-            lines.add(PaperAdventure.asAdventure(signtext.getMessage(j, entityhuman.isTextFilteringEnabled())));
+            lines.add(PaperAdventure.asAdventure(signtext.getMessages(entityhuman.isTextFilteringEnabled()).get(j)));
         }
 
-        SignChangeEvent event = new SignChangeEvent(CraftBlock.at(this.level, this.worldPosition), player, new ArrayList<>(lines), front ? Side.FRONT : Side.BACK);
+        SignChangeEvent event = new SignChangeEvent(CraftBlock.at(this.level, this.worldPosition), player, new ArrayList<>(lines), org.bukkit.craftbukkit.block.sign.CraftSignSide.fromVanilla(slot));
         Bukkit.getPluginManager().callEvent(event);
 
         if (event.isCancelled()) {
@@ -111,18 +114,18 @@ public abstract class SignBlockEntityMixin extends BlockEntityMixin implements S
         Component[] components = CraftSign.sanitizeLines(event.lines());
         for (int j = 0; j < components.length; j++) {
             if (!Objects.equals(lines.get(j), event.line(j))) {
-                signtext = signtext.setMessage(j, components[j]);
+                mutable.setLine(j, components[j]);
             }
         }
         // CraftBukkit end
 
-        return signtext;
+        return mutable.asImmutable();
     }
 
-    @Decorate(method = "executeClickCommandsIfPresent(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/core/BlockPos;Z)Z",
+    @Decorate(method = "executeClickCommandsIfPresent(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/entity/SignTextSlot;)Z",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/SignBlockEntity;createCommandSourceStack(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/commands/CommandSourceStack;"))
     private CommandSourceStack arclight$signCommand(Player player, ServerLevel level, BlockPos pos,
-                                                   @Local(ordinal = 0) boolean front,
+                                                   @Local(ordinal = 0) SignTextSlot slot,
                                                    @Local(ordinal = 0) ClickEvent.RunCommand command) throws Throwable {
         String commandLine = command.command().startsWith("/") ? command.command() : "/" + command.command();
         if (org.spigotmc.SpigotConfig.logCommands) {
@@ -132,7 +135,7 @@ public abstract class SignBlockEntityMixin extends BlockEntityMixin implements S
             (org.bukkit.entity.Player) ((EntityBridge) player).bridge$getBukkitEntity(), commandLine,
             new LazyPlayerSet(level.getServer()),
             (org.bukkit.block.Sign) CraftBlock.at(this.level, this.worldPosition).getState(),
-            front ? Side.FRONT : Side.BACK);
+            org.bukkit.craftbukkit.block.sign.CraftSignSide.fromVanilla(slot));
         if (!event.callEvent()) {
             // The enclosing boolean host must stop the remaining sign lines as well.
             return (CommandSourceStack) DecorationOps.cancel().invoke(false);

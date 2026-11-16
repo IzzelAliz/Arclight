@@ -23,7 +23,7 @@ public abstract class NaturalSpawnerExceptionEventMixin {
         }
     }
 
-    @Decorate(method = "spawnMobsForChunkGeneration(Lnet/minecraft/world/level/ServerLevelAccessor;Lnet/minecraft/core/Holder;Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/util/RandomSource;)V",
+    @Decorate(method = "spawnMobsForChunkGeneration(Lnet/minecraft/world/level/ServerLevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/util/RandomSource;)V",
         require = 1, allow = 1,
         at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Throwable;)V", remap = false))
     private static void arclight$generationSpawnException(Logger logger, String message, Throwable cause) throws Throwable {

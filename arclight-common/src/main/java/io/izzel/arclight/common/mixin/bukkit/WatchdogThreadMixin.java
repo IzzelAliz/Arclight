@@ -14,6 +14,6 @@ public class WatchdogThreadMixin {
 
     @Inject(method = "tick", at = @At("RETURN"))
     private static void arclight$tick(CallbackInfo ci) {
-        ((MinecraftServerBridge) ArclightServer.getMinecraftServer()).arclight$extendNextTickTimeTo(Util.timeSource);
+        ((MinecraftServerBridge) ArclightServer.getMinecraftServer()).arclight$extendNextTickTimeTo(Util.timeSource());
     }
 }

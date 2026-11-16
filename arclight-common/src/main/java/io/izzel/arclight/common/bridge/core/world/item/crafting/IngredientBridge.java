@@ -12,6 +12,10 @@ public interface IngredientBridge {
 
     boolean bridge$isExact();
 
+    void bridge$setStackPredicate(java.util.function.Predicate<ItemStack> predicate);
+
+    java.util.function.Predicate<ItemStack> bridge$getStackPredicate();
+
     // Vanilla/Fabric have no native custom predicate; NeoForge overrides this bridge.
     default boolean bridge$isCustom() {
         return false;

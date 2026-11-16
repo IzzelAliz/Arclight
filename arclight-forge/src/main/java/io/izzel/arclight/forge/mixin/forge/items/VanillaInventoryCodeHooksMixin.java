@@ -38,8 +38,8 @@ import java.util.Optional;
 @Mixin(VanillaInventoryCodeHooks.class)
 public abstract class VanillaInventoryCodeHooksMixin {
 
-    @Inject(method = "getItemHandler(Lnet/minecraft/world/level/Level;DDDLnet/minecraft/core/Direction;)Ljava/util/Optional;", at = @At("RETURN"), remap = false)
-    private static void arclight$recordResult(Level worldIn, double x, double y, double z, Direction side, CallbackInfoReturnable<Optional<Pair<IItemHandler, Object>>> cir) {
+    @Inject(method = "getItemHandlerPair(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Direction;)Ljava/util/Optional;", at = @At("RETURN"), remap = false)
+    private static void arclight$recordResult(Level worldIn, BlockPos pos, Direction side, CallbackInfoReturnable<Optional<Pair<IItemHandler, Object>>> cir) {
         if (cir.getReturnValue().isPresent()) {
             DelegatedContainer.recordLastHandler();
         }

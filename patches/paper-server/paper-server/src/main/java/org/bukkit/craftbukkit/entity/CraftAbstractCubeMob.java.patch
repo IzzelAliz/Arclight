@@ -1,0 +1,17 @@
+diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractCubeMob.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractCubeMob.java
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractCubeMob.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractCubeMob.java
+@@ -25,11 +25,11 @@
+ 
+     @Override
+     public boolean canWander() {
+-        return this.getHandle().canWander();
++        throw new UnsupportedOperationException("Independent slime wandering control is not supported by Arclight");
+     }
+ 
+     @Override
+     public void setWander(boolean canWander) {
+-        this.getHandle().setWander(canWander);
++        throw new UnsupportedOperationException("Independent slime wandering control is not supported by Arclight");
+     }
+ }

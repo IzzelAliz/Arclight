@@ -80,7 +80,7 @@ public class ArclightDummyCommandSender extends ArclightDummyPermissible impleme
     }
 
     @Override
-    public void sendMessage(net.kyori.adventure.identity.Identity identity, net.kyori.adventure.text.Component message, net.kyori.adventure.audience.MessageType type) {
+    public void sendMessage(net.kyori.adventure.text.Component message) {
         stack.sendSystemMessage(io.papermc.paper.adventure.PaperAdventure.asVanilla(message));
     }
 

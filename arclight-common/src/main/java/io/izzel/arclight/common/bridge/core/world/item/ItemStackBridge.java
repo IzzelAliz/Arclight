@@ -48,7 +48,7 @@ public interface ItemStackBridge {
 
     void bridge$hurtAndBreak(int amount, LivingEntity owner, @Nullable EquipmentSlot slot, boolean force);
 
-    default void bridge$platform$hurtAndBreak(int amount, ServerLevel level, LivingEntity owner, Consumer<Item> onBreak) {
+    default void bridge$platform$hurtAndBreak(int amount, ServerLevel level, LivingEntity owner, Consumer<ItemStack> onBreak) {
         ((ItemStack) this).hurtAndBreak(amount, level, owner instanceof ServerPlayer player ? player : null, onBreak);
     }
 

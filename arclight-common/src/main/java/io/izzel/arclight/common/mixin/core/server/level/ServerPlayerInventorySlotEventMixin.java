@@ -6,7 +6,7 @@ import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
 import io.papermc.paper.event.player.PlayerInventorySlotChangeEvent;
-import net.minecraft.advancements.criterion.InventoryChangeTrigger;
+import net.minecraft.advancements.triggers.InventoryChangeTrigger;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -34,7 +34,7 @@ public abstract class ServerPlayerInventorySlotEventMixin implements ContainerLi
 
     @Decorate(method = "slotChanged(Lnet/minecraft/world/inventory/AbstractContainerMenu;ILnet/minecraft/world/item/ItemStack;)V",
         require = 1, allow = 1,
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/criterion/InventoryChangeTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/item/ItemStack;)V"))
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/triggers/InventoryChangeTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/item/ItemStack;)V"))
     private void arclight$inventorySlotEvent(InventoryChangeTrigger trigger, ServerPlayer player, Inventory inventory, ItemStack stack,
                                             @Local(ordinal = 0) AbstractContainerMenu container,
                                             @Local(ordinal = 0) int rawSlot) throws Throwable {

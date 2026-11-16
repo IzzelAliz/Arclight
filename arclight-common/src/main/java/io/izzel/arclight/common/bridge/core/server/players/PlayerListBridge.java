@@ -21,6 +21,14 @@ public interface PlayerListBridge {
 
     void bridge$setPlayers(List<ServerPlayer> players);
 
+    default void bridge$reloadAdvancementData() {
+        var manager = ((net.minecraft.server.players.PlayerList) (Object) this).getServer().getAdvancements();
+        for (ServerPlayer player : this.bridge$getPlayers()) {
+            player.getAdvancements().reload(manager);
+            player.getAdvancements().flushDirty(player, false);
+        }
+    }
+
     List<ServerPlayer> bridge$getPlayers();
 
     CraftServer bridge$getCraftServer();

@@ -39,7 +39,7 @@ public class ArclightImplementer implements ClassProcessor {
     public Set<ProcessorName> runsAfter() {
         // COMPUTING_FRAMES is a hierarchy-query boundary, not a final writer pass.
         // FML only permits COMPUTE_FRAMES results from processors after this marker.
-        // Mixin's bytecode queries stop before MIXIN, so they cannot re-enter us.
+        // Mixin's bytecode queries stop before MIXIN_FRAME_CONTEXT, so they cannot re-enter us.
         return Set.of(ClassProcessorIds.MIXIN, ClassProcessorIds.COMPUTING_FRAMES);
     }
 

@@ -1,0 +1,16 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/command/brigadier/PaperCommandSourceStack.java b/paper-server/src/main/java/io/papermc/paper/command/brigadier/PaperCommandSourceStack.java
+--- a/paper-server/src/main/java/io/papermc/paper/command/brigadier/PaperCommandSourceStack.java
++++ b/paper-server/src/main/java/io/papermc/paper/command/brigadier/PaperCommandSourceStack.java
+@@ -66,7 +66,11 @@
+     @Override
+     default void sendFailure(final ComponentLike message) {
+         Preconditions.checkArgument(message != null, "message cannot be null.");
+-        this.getHandle().sendFailure(PaperAdventure.asVanilla(message.asComponent()), false);
++        final net.minecraft.commands.CommandSourceStack handle = this.getHandle();
++        final net.minecraft.network.chat.Component vanillaMessage = PaperAdventure.asVanilla(message.asComponent());
++        if (handle.source.acceptsFailure() && !handle.isSilent()) {
++            handle.source.sendSystemMessage(vanillaMessage);
++        }
+     }
+ 
+     @Override

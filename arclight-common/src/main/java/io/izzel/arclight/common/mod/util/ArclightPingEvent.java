@@ -13,7 +13,6 @@ import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.util.CachedServerIcon;
 import org.jetbrains.annotations.NotNull;
 
-import java.net.InetSocketAddress;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -23,7 +22,7 @@ public class ArclightPingEvent extends ServerListPingEvent {
     private final Object[] players;
 
     public ArclightPingEvent(Connection networkManager, MinecraftServer server) {
-        super(((ConnectionBridge) networkManager).bridge$getHostname(), ((InetSocketAddress) networkManager.getRemoteAddress()).getAddress(), server.getMotd(), server.getPlayerList().getMaxPlayers());
+        super(((ConnectionBridge) networkManager).bridge$getHostname(), networkManager.getRemoteAddress(), server.getMotd(), server.getPlayerList().getMaxPlayers());
         this.icon = ((CraftServer) Bukkit.getServer()).getServerIcon();
         this.players = server.getPlayerList().players.toArray();
     }

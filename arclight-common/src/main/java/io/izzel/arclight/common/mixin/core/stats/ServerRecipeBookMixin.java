@@ -1,7 +1,7 @@
 package io.izzel.arclight.common.mixin.core.stats;
 
 import com.google.common.collect.Lists;
-import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.advancements.triggers.CriteriaTriggers;
 import net.minecraft.network.protocol.game.ClientboundRecipeBookAddPacket;
 import net.minecraft.network.protocol.game.ClientboundRecipeBookRemovePacket;
 import net.minecraft.resources.ResourceKey;

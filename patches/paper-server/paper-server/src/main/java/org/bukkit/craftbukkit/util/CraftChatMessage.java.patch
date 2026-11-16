@@ -1,8 +1,7 @@
 diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/util/CraftChatMessage.java b/paper-server/src/main/java/org/bukkit/craftbukkit/util/CraftChatMessage.java
-index 3f115c561f34a8b11e4baa47a76e6fb03cc6637b..d93713298c0738ad1639e39557c098f5d5d9ae49 100644
 --- a/paper-server/src/main/java/org/bukkit/craftbukkit/util/CraftChatMessage.java
 +++ b/paper-server/src/main/java/org/bukkit/craftbukkit/util/CraftChatMessage.java
-@@ -299,19 +299,27 @@ public final class CraftChatMessage {
+@@ -300,13 +300,20 @@
          }
      }
  
@@ -24,12 +23,3 @@ index 3f115c561f34a8b11e4baa47a76e6fb03cc6637b..d93713298c0738ad1639e39557c098f5
              Style modi = c.getStyle();
              TextColor color = modi.getColor();
              if (c.getContents() != PlainTextContents.EMPTY || color != null) {
-                 if (color != null) {
--                    if (color.format != null) {
--                        out.append(color.format);
-+                    ChatFormatting format = ChatFormatting.getByName(color.serialize());
-+                    if (format != null && format.isColor()) {
-+                        out.append(format);
-                     } else {
-                         out.append(ChatColor.COLOR_CHAR).append("x");
-                         for (char magic : color.serialize().substring(1).toCharArray()) {

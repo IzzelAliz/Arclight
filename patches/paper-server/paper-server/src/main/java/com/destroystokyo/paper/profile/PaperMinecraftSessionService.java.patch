@@ -1,44 +1,41 @@
 diff --git a/paper-server/src/main/java/com/destroystokyo/paper/profile/PaperMinecraftSessionService.java b/paper-server/src/main/java/com/destroystokyo/paper/profile/PaperMinecraftSessionService.java
-index a108682bfa34878abbcc3b4f34dc8b868cf2eec8..c8f39ae15937cbee9078906d13dea56224f89eb0 100644
 --- a/paper-server/src/main/java/com/destroystokyo/paper/profile/PaperMinecraftSessionService.java
 +++ b/paper-server/src/main/java/com/destroystokyo/paper/profile/PaperMinecraftSessionService.java
-@@ -2,21 +2,35 @@ package com.destroystokyo.paper.profile;
- 
+@@ -3,18 +3,34 @@
  import com.destroystokyo.paper.event.profile.FillProfileEvent;
  import com.destroystokyo.paper.event.profile.PreFillProfileEvent;
--import com.mojang.authlib.Environment;
  import com.mojang.authlib.GameProfile;
+-import com.mojang.authlib.services.MinecraftServicesSessionService;
 +import com.mojang.authlib.exceptions.AuthenticationException;
 +import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
 +import com.mojang.authlib.minecraft.InsecurePublicKeyException;
 +import com.mojang.authlib.minecraft.MinecraftProfileTextures;
-+import com.mojang.authlib.minecraft.MinecraftSessionService;
++import com.mojang.authlib.minecraft.SessionService;
 +import com.mojang.authlib.properties.Property;
- import com.mojang.authlib.yggdrasil.ProfileResult;
--import com.mojang.authlib.yggdrasil.ServicesKeySet;
--import com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService;
--
+ import com.mojang.authlib.services.ProfileResult;
+-import com.mojang.authlib.services.ServicesKeySet;
 -import java.net.Proxy;
 +import java.net.InetAddress;
  import java.util.Collections;
 +import java.util.Objects;
  import java.util.UUID;
- import org.jetbrains.annotations.Nullable;
+-import org.jspecify.annotations.Nullable;
++import org.jetbrains.annotations.Nullable;
  
--public class PaperMinecraftSessionService extends YggdrasilMinecraftSessionService {
-+public class PaperMinecraftSessionService implements MinecraftSessionService {
+-public class PaperMinecraftSessionService extends MinecraftServicesSessionService {
++public class PaperMinecraftSessionService implements SessionService {
+ 
+-    protected PaperMinecraftSessionService(ServicesKeySet servicesKeySet, Proxy proxy, PaperServicesDiscoveryService discoveryService) {
+-        super(servicesKeySet, proxy, discoveryService);
++    private final SessionService delegate;
 +
-+    private final MinecraftSessionService delegate;
- 
--    protected PaperMinecraftSessionService(ServicesKeySet servicesKeySet, Proxy proxy, Environment environment) {
--        super(servicesKeySet, proxy, environment);
-+    public PaperMinecraftSessionService(MinecraftSessionService delegate) {
++    public PaperMinecraftSessionService(SessionService delegate) {
 +        this.delegate = Objects.requireNonNull(delegate, "session service");
 +    }
 +
 +    // Callers that already own the real profile must retain it for PreFill.
 +    // A UUID-only request has no genuine name/properties to expose before I/O.
-+    public static @Nullable ProfileResult fetchProfile(MinecraftSessionService service, GameProfile profile, boolean requireSecure) {
++    public static @Nullable ProfileResult fetchProfile(SessionService service, GameProfile profile, boolean requireSecure) {
 +        if (service instanceof PaperMinecraftSessionService paper) {
 +            return paper.fetchProfile(profile, requireSecure);
 +        }
@@ -46,7 +43,7 @@ index a108682bfa34878abbcc3b4f34dc8b868cf2eec8..c8f39ae15937cbee9078906d13dea562
      }
  
      public @Nullable ProfileResult fetchProfile(GameProfile profile, final boolean requireSecure) {
-@@ -26,7 +40,10 @@ public class PaperMinecraftSessionService extends YggdrasilMinecraftSessionServi
+@@ -24,7 +40,10 @@
          if (profile.properties().containsKey("textures")) {
              return new ProfileResult(profile, Collections.emptySet());
          }
@@ -58,7 +55,7 @@ index a108682bfa34878abbcc3b4f34dc8b868cf2eec8..c8f39ae15937cbee9078906d13dea562
          if (result != null) {
              final FillProfileEvent event = new FillProfileEvent(CraftPlayerProfile.asBukkitCopy(result.profile()));
              event.callEvent();
-@@ -37,6 +54,38 @@ public class PaperMinecraftSessionService extends YggdrasilMinecraftSessionServi
+@@ -35,6 +54,38 @@
  
      @Override @Deprecated
      public @Nullable ProfileResult fetchProfile(final UUID profileId, final boolean requireSecure) {

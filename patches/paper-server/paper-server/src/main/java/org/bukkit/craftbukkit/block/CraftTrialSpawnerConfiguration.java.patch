@@ -5,8 +5,8 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftTrialS
  
      @Override
      public void setRequiredPlayerRange(int requiredPlayerRange) {
--        this.snapshot.trialSpawner.config = this.snapshot.trialSpawner.config.overrideRequiredPlayerRange(requiredPlayerRange);
-+        var spawner = this.snapshot.trialSpawner;
+-        this.snapshot.getTrialSpawner().config = this.snapshot.getTrialSpawner().config.overrideRequiredPlayerRange(requiredPlayerRange);
++        var spawner = this.snapshot.getTrialSpawner();
 +        var config = spawner.config;
 +        spawner.config = new net.minecraft.world.level.block.entity.trialspawner.TrialSpawner.FullConfig(config.normal(), config.ominous(), config.targetCooldownLength(), requiredPlayerRange);
      }

@@ -16,6 +16,7 @@ import net.minecraft.util.SpawnUtil;
 import net.minecraft.world.entity.ConversionParams;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.sensing.GolemSensor;
@@ -98,7 +99,7 @@ public abstract class VillagerMixin extends AbstractVillagerMixin implements Vil
         try {
             // Keep preparation inside native convertTo's callback: Bukkit transform/spawn
             // observers must see the finalized zombie and the copied villager data.
-            return villager.convertTo(EntityType.ZOMBIE_VILLAGER, ConversionParams.single(villager, true, true), zombie -> {
+            return villager.convertTo(EntityTypes.ZOMBIE_VILLAGER, ConversionParams.single(villager, true, true), zombie -> {
                 this.bridge$forge$finalizeZombifySpawn(level, zombie);
                 zombie.setVillagerData(villager.getVillagerData());
                 zombie.setGossips(villager.getGossips().copy());
@@ -126,7 +127,7 @@ public abstract class VillagerMixin extends AbstractVillagerMixin implements Vil
         DecorationOps.callsite().invoke(instance, s, o1, o2);
     }
 
-    @Inject(method = "customServerAiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/npc/villager/Villager;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;)Z"))
+    @Inject(method = "rewardTradeXp(Lnet/minecraft/world/item/trading/MerchantOffer;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/npc/villager/Villager;addEffect(Lnet/minecraft/world/effect/MobEffectInstance;)Z"))
     private void arclight$reason(CallbackInfo ci) {
         bridge$pushEffectCause(EntityPotionEffectEvent.Cause.VILLAGER_TRADE);
     }

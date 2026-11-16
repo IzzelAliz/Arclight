@@ -1,15 +1,21 @@
 diff --git a/paper-server/src/main/java/io/papermc/paper/command/PaperVersionCommand.java b/paper-server/src/main/java/io/papermc/paper/command/PaperVersionCommand.java
-index bfacb856623b5cb6af4f1b65ee89200cdfb1ef13..ebc15575a6776c1c700ff7b89715a8a39467a35d 100644
 --- a/paper-server/src/main/java/io/papermc/paper/command/PaperVersionCommand.java
 +++ b/paper-server/src/main/java/io/papermc/paper/command/PaperVersionCommand.java
-@@ -1,6 +1,5 @@
+@@ -1,13 +1,11 @@
  package io.papermc.paper.command;
  
 -import com.destroystokyo.paper.util.VersionFetcher;
  import com.mojang.brigadier.Command;
  import com.mojang.brigadier.arguments.StringArgumentType;
  import com.mojang.brigadier.context.CommandContext;
-@@ -19,12 +18,9 @@ import net.kyori.adventure.text.JoinConfiguration;
+ import com.mojang.brigadier.suggestion.Suggestions;
+ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+ import com.mojang.brigadier.tree.LiteralCommandNode;
+-import io.papermc.paper.InternalAPIBridge;
+ import io.papermc.paper.command.brigadier.CommandSourceStack;
+ import io.papermc.paper.command.brigadier.Commands;
+ import io.papermc.paper.plugin.configuration.PluginMeta;
+@@ -20,9 +18,7 @@
  import net.kyori.adventure.text.TextComponent;
  import net.kyori.adventure.text.event.ClickEvent;
  import net.kyori.adventure.text.format.NamedTextColor;
@@ -18,24 +24,21 @@ index bfacb856623b5cb6af4f1b65ee89200cdfb1ef13..ebc15575a6776c1c700ff7b89715a8a3
 -import net.minecraft.server.MinecraftServer;
  import org.bukkit.Bukkit;
  import org.bukkit.command.CommandSender;
--import org.bukkit.craftbukkit.util.CraftMagicNumbers;
  import org.bukkit.plugin.Plugin;
- import org.bukkit.util.StringUtil;
- import org.jspecify.annotations.NullMarked;
-@@ -42,12 +38,6 @@ public class PaperVersionCommand {
+@@ -42,12 +38,6 @@
          Component.text(", ", NamedTextColor.WHITE),
          Component.text(", and ", NamedTextColor.WHITE)
      );
 -    private static final Component FAILED_TO_FETCH = Component.text("Could not fetch version information!", NamedTextColor.RED);
 -    private static final Component FETCHING = Component.text("Checking version, please wait...", NamedTextColor.WHITE, TextDecoration.ITALIC);
 -
--    private final VersionFetcher versionFetcher = CraftMagicNumbers.INSTANCE.getVersionFetcher();
+-    private final VersionFetcher versionFetcher = InternalAPIBridge.get().getVersionFetcher();
 -    private CompletableFuture<ComputedVersion> computedVersion = CompletableFuture.completedFuture(new ComputedVersion(Component.empty(), -1)); // Precompute-- someday move that stuff out of bukkit
 -
      public static LiteralCommandNode<CommandSourceStack> create() {
          final PaperVersionCommand command = new PaperVersionCommand();
  
-@@ -135,50 +125,14 @@ public class PaperVersionCommand {
+@@ -135,50 +125,14 @@
      }
  
      private void sendVersion(final CommandSender sender) {

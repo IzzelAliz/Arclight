@@ -101,12 +101,12 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
         }
     }
 
-    @Redirect(method = "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;J)V", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/level/gamerules/GameRules;get(Lnet/minecraft/world/level/gamerules/GameRule;)Ljava/lang/Object;"))
+    @Redirect(method = "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;)V", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/level/gamerules/GameRules;get(Lnet/minecraft/world/level/gamerules/GameRule;)Ljava/lang/Object;"))
     private Object arclight$noPlayer(GameRules gameRules, GameRule<Boolean> key) {
         return gameRules.get(key) && !this.level.players().isEmpty();
     }
 
-    @Redirect(method = "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;J)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;getGameTime()J"))
+    @Redirect(method = "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;getGameTime()J"))
     private long arclight$ticksPer(ServerLevel level) {
         long gameTime = level.getGameTime();
         long ticksPer = ((WorldBridge) level).bridge$ticksPerSpawnCategory().getLong(SpawnCategory.ANIMAL);
@@ -125,8 +125,8 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
         this.spawnFriendlies = spawnFriendlies;
     }
 
-    @Redirect(method = "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;J)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/NaturalSpawner;getFilteredSpawningCategories(Lnet/minecraft/world/level/NaturalSpawner$SpawnState;ZZZ)Ljava/util/List;"))
-    private List<MobCategory> arclight$filteredSpawningCategories(NaturalSpawner.SpawnState state, boolean spawnFriendlies, boolean spawnEnemies, boolean spawnPersistent) {
+    @Redirect(method = "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/NaturalSpawner;getFilteredSpawningCategories(Lnet/minecraft/world/level/NaturalSpawner$SpawnState;ZZ)Ljava/util/List;"))
+    private List<MobCategory> arclight$filteredSpawningCategories(NaturalSpawner.SpawnState state, boolean spawnEnemies, boolean spawnPersistent) {
         LevelData levelData = this.level.getLevelData();
         List<MobCategory> list = new ArrayList<>();
         for (MobCategory mobCategory : MobCategory.values()) {
@@ -144,7 +144,7 @@ public abstract class ServerChunkCacheMixin implements ServerChunkProviderBridge
             if (!spawnThisTick || limit == 0) {
                 continue;
             }
-            if (((spawnFriendlies && this.spawnFriendlies) || !mobCategory.isFriendly()) && (spawnEnemies || mobCategory.isFriendly()) && (spawnPersistent || !mobCategory.isPersistent())
+            if ((this.spawnFriendlies || !mobCategory.isFriendly()) && (spawnEnemies || mobCategory.isFriendly()) && (spawnPersistent || !mobCategory.isPersistent())
                 && ((WorldEntitySpawnerBridge.EntityDensityManagerBridge) state).bridge$canSpawn(mobCategory, null, limit)) {
                 list.add(mobCategory);
             }

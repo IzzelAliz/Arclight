@@ -16,7 +16,7 @@ public abstract class BedRuleMixin {
         BedSleepingProblemBridge bridge = (BedSleepingProblemBridge) (Object) problem;
         bridge.bridge$setBedRule(bedRule);
         PlayerBedEnterEvent.BedEnterResult result = PlayerBedEnterEvent.BedEnterResult.OTHER_PROBLEM;
-        if (bedRule.explodes()) result = PlayerBedEnterEvent.BedEnterResult.EXPLOSION;
+        if (bedRule.destroyOnUse()) result = PlayerBedEnterEvent.BedEnterResult.EXPLOSION;
         else if (bedRule.canSleep() == BedRule.Rule.NEVER) result = PlayerBedEnterEvent.BedEnterResult.NOT_POSSIBLE_HERE;
         else if (bedRule.canSleep() == BedRule.Rule.WHEN_DARK) result = PlayerBedEnterEvent.BedEnterResult.NOT_POSSIBLE_NOW;
         bridge.bridge$setBedResult(result);

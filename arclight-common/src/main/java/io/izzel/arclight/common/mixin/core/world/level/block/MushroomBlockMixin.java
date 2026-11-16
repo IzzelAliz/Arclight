@@ -34,7 +34,7 @@ public class MushroomBlockMixin {
     }
 
     @SuppressWarnings("ConstantConditions")
-    @Inject(method = "growMushroom", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/feature/ConfiguredFeature;place(Lnet/minecraft/world/level/WorldGenLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/util/RandomSource;Lnet/minecraft/core/BlockPos;)Z"))
+    @Inject(method = "growMushroom", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/feature/Feature;place(Lnet/minecraft/world/level/WorldGenLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/util/RandomSource;Lnet/minecraft/core/BlockPos;)Z"))
     private void arclight$captureTree(ServerLevel world, BlockPos pos, BlockState state, RandomSource rand, CallbackInfoReturnable<Boolean> cir) {
         if ((Object) this == Blocks.BROWN_MUSHROOM) {
             ArclightCaptures.captureTreeType(TreeType.BROWN_MUSHROOM);
@@ -52,8 +52,6 @@ public class MushroomBlockMixin {
             com.llamalad7.mixinextras.injector.wrapoperation.Operation<Object> original,
             @com.llamalad7.mixinextras.sugar.Local(argsOnly = true) ServerLevel level) {
         // Record the actual eligible holder, but do not select block-vs-feature event policy.
-        @SuppressWarnings("unchecked")
-        var featureHolder = (net.minecraft.core.Holder<net.minecraft.world.level.levelgen.feature.ConfiguredFeature<?, ?>>) holder;
         io.izzel.arclight.common.mod.util.TreeCapture.observeMushroom(this);
         return original.call(holder);
     }

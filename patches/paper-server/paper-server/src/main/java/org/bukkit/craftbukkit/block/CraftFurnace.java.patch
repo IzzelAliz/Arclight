@@ -1,8 +1,8 @@
 diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftFurnace.java b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftFurnace.java
 --- a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftFurnace.java
 +++ b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftFurnace.java
-@@ -92,16 +92,14 @@
-     // Paper start - cook speed multiplier API
+@@ -93,16 +93,14 @@
+ 
      @Override
      public double getCookSpeedMultiplier() {
 -        return this.getSnapshot().cookSpeedMultiplier;
@@ -15,7 +15,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftFurnac
          com.google.common.base.Preconditions.checkArgument(multiplier <= 200, "Furnace speed multiplier cannot more than 200");
 -        T snapshot = this.getSnapshot();
 -        snapshot.cookSpeedMultiplier = multiplier;
--        snapshot.cookingTotalTime = AbstractFurnaceBlockEntity.getTotalCookTime(this.isPlaced() ? this.world.getHandle() : null, snapshot, snapshot.recipeType, snapshot.cookSpeedMultiplier); // Update the snapshot's current total cook time to scale with the newly set multiplier
+-        snapshot.cookingTotalTime = AbstractFurnaceBlockEntity.getTotalCookTime(this.isPlaced() ? this.world.getHandle() : null, snapshot); // Update the snapshot's current total cook time to scale with the newly set multiplier
 +        throw new UnsupportedOperationException("Furnace cook speed multipliers are not supported");
      }
  

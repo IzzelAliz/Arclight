@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
 import com.google.common.collect.Iterators;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.izzel.arclight.common.bridge.core.world.entity.LivingEntityBridge;
 import io.izzel.arclight.common.mod.util.ArclightCaptures.WaterPotionSplashContext;
 import io.izzel.arclight.mixin.Decorate;
@@ -8,6 +10,13 @@ import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
 import io.papermc.paper.event.entity.WaterBottleSplashEvent;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.tags.PotionTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.alchemy.Potion;
+import net.minecraft.world.phys.BlockHitResult;
+import org.spongepowered.asm.mixin.Shadow;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -16,7 +25,6 @@ import net.minecraft.world.entity.projectile.throwableitemprojectile.AbstractThr
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AbstractCandleBlock;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -47,6 +55,9 @@ public abstract class ThrownPotionMixin extends ThrowableItemProjectileMixin {
 
     @Unique protected transient HitResult arclight$hitResult;
     @Unique private transient WaterPotionSplashContext arclight$waterSplash;
+    @Unique protected boolean arclight$potionSplashAccepted;
+
+    @Shadow protected abstract void douseFire(BlockPos pos);
 
 
     @Decorate(method = "onHit(Lnet/minecraft/world/phys/HitResult;)V", inject = true,
@@ -57,14 +68,14 @@ public abstract class ThrownPotionMixin extends ThrowableItemProjectileMixin {
     }
 
     @Decorate(method = "onHit(Lnet/minecraft/world/phys/HitResult;)V", at = @At(value = "INVOKE",
-        target = "Lnet/minecraft/world/entity/projectile/throwableitemprojectile/AbstractThrownPotion;onHitAsWater(Lnet/minecraft/server/level/ServerLevel;)V"), require = 1, allow = 1)
-    private void arclight$waterSplash(AbstractThrownPotion potion, ServerLevel level, HitResult hitResult,
+        target = "Lnet/minecraft/world/entity/projectile/throwableitemprojectile/AbstractThrownPotion;affectEntitiesAround(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/alchemy/PotionContents;)V"), require = 1, allow = 1)
+    private void arclight$waterSplash(AbstractThrownPotion potion, ServerLevel level, PotionContents contents, HitResult hitResult,
                                       @Local(allocate = "arclightWaterSplashAllowed") boolean allowed) throws Throwable {
         WaterPotionSplashContext previous = this.arclight$waterSplash;
         WaterPotionSplashContext context = new WaterPotionSplashContext(hitResult);
         this.arclight$waterSplash = context;
         try {
-            DecorationOps.callsite().invoke(potion, level);
+            DecorationOps.callsite().invoke(potion, level, contents);
             allowed = context.event == null || !context.event.isCancelled();
         } finally {
             this.arclight$waterSplash = previous;
@@ -72,10 +83,10 @@ public abstract class ThrownPotionMixin extends ThrowableItemProjectileMixin {
         DecorationOps.blackhole().invoke(allowed);
     }
 
-    @Decorate(method = "onHitAsWater(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "INVOKE",
+    @Decorate(method = "affectEntitiesAround(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/alchemy/PotionContents;)V", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/world/level/Level;getEntitiesOfClass(Ljava/lang/Class;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;)Ljava/util/List;"), require = 1, allow = 1)
     private List<LivingEntity> arclight$waterSplashEntities(Level world, Class<LivingEntity> type, AABB box,
-                                                          Predicate<LivingEntity> predicate) throws Throwable {
+                                                          Predicate<LivingEntity> predicate, ServerLevel level, PotionContents contents) throws Throwable {
         WaterPotionSplashContext context = this.arclight$waterSplash;
         if (context != null) {
             predicate = predicate.or(Axolotl.class::isInstance);
@@ -90,14 +101,14 @@ public abstract class ThrownPotionMixin extends ThrowableItemProjectileMixin {
         for (LivingEntity entity : entities) {
             org.bukkit.entity.LivingEntity bukkitEntity = ((LivingEntityBridge) entity).bridge$getBukkitEntity();
             // Axolotl rehydration uses the whole search box, not the damage radius.
-            if (entity instanceof Axolotl) {
+            if (contents.is(PotionTags.REHYDRATES_AXOLOTLS) && entity instanceof Axolotl) {
                 rehydrate.add(bukkitEntity);
             }
             if (this.distanceToSqr(entity) < 16.0) {
-                if (entity.isSensitiveToWater()) {
+                if (contents.is(PotionTags.HURTS_WATER_SENSITIVE_ENTITIES) && entity.isSensitiveToWater()) {
                     affected.put(bukkitEntity, 1.0);
                 }
-                if (entity.isOnFire() && entity.isAlive()) {
+                if (contents.is(PotionTags.EXTINGUISHES_ENTITIES) && entity.isOnFire() && entity.isAlive()) {
                     extinguish.add(bukkitEntity);
                 }
             }
@@ -109,6 +120,9 @@ public abstract class ThrownPotionMixin extends ThrowableItemProjectileMixin {
         if (!context.accepted) {
             return List.of();
         }
+        if (context.hitResult instanceof BlockHitResult blockHit) {
+            this.arclight$extinguishFires(blockHit);
+        }
         // Keep the native damage/extinguish callsites, in Paper's damage-then-extinguish order.
         List<LivingEntity> selected = new ArrayList<>();
         for (org.bukkit.entity.LivingEntity entity : event.getToDamage()) {
@@ -118,7 +132,7 @@ public abstract class ThrownPotionMixin extends ThrowableItemProjectileMixin {
         return selected;
     }
 
-    @Decorate(method = "onHitAsWater(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "INVOKE",
+    @Decorate(method = "affectEntitiesAround(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/alchemy/PotionContents;)V", at = @At(value = "INVOKE",
         target = "Ljava/util/List;iterator()Ljava/util/Iterator;", ordinal = 0), require = 1, allow = 1)
     private Iterator<LivingEntity> arclight$waterSplashPhases(List<LivingEntity> entities) throws Throwable {
         Iterator<LivingEntity> damage = (Iterator<LivingEntity>) DecorationOps.callsite().invoke(entities);
@@ -134,7 +148,7 @@ public abstract class ThrownPotionMixin extends ThrowableItemProjectileMixin {
         ).iterator(), Supplier::get));
     }
 
-    @Decorate(method = "onHitAsWater(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "INVOKE",
+    @Decorate(method = "affectEntitiesAround(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/alchemy/PotionContents;)V", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/world/entity/projectile/throwableitemprojectile/AbstractThrownPotion;distanceToSqr(Lnet/minecraft/world/entity/Entity;)D"), require = 1, allow = 1)
     private double arclight$waterSplashDistance(AbstractThrownPotion potion, Entity entity) throws Throwable {
         double distance = (double) DecorationOps.callsite().invoke(potion, entity);
@@ -147,7 +161,7 @@ public abstract class ThrownPotionMixin extends ThrowableItemProjectileMixin {
         return distance;
     }
 
-    @Decorate(method = "onHitAsWater(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "INVOKE",
+    @Decorate(method = "affectEntitiesAround(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/alchemy/PotionContents;)V", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/world/entity/LivingEntity;isSensitiveToWater()Z"), require = 1, allow = 1)
     private boolean arclight$waterSplashDamage(LivingEntity entity) throws Throwable {
         boolean sensitive = (boolean) DecorationOps.callsite().invoke(entity);
@@ -155,26 +169,26 @@ public abstract class ThrownPotionMixin extends ThrowableItemProjectileMixin {
         return context != null && context.event != null ? context.cursor < context.damageCount : sensitive;
     }
 
-    @Decorate(method = "onHitAsWater(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "INVOKE",
+    @WrapOperation(method = "affectEntitiesAround(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/alchemy/PotionContents;)V", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/world/entity/LivingEntity;isOnFire()Z"), require = 1, allow = 1)
-    private boolean arclight$waterSplashExtinguish(LivingEntity entity) throws Throwable {
-        boolean onFire = (boolean) DecorationOps.callsite().invoke(entity);
+    private boolean arclight$waterSplashExtinguish(LivingEntity entity, Operation<Boolean> original) {
+        boolean onFire = original.call(entity);
         WaterPotionSplashContext context = this.arclight$waterSplash;
         return context != null && context.event != null ? context.cursor >= context.damageCount : onFire;
     }
 
-    @Decorate(method = "onHitAsWater(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "INVOKE",
+    @WrapOperation(method = "affectEntitiesAround(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/alchemy/PotionContents;)V", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/world/entity/LivingEntity;isAlive()Z"), require = 1, allow = 1)
-    private boolean arclight$waterSplashAlive(LivingEntity entity) throws Throwable {
-        boolean alive = (boolean) DecorationOps.callsite().invoke(entity);
+    private boolean arclight$waterSplashAlive(LivingEntity entity, Operation<Boolean> original) {
+        boolean alive = original.call(entity);
         WaterPotionSplashContext context = this.arclight$waterSplash;
         return (context != null && context.event != null) || alive;
     }
 
-    @Decorate(method = "onHitAsWater(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "INVOKE",
+    @WrapOperation(method = "affectEntitiesAround(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/alchemy/PotionContents;)V", at = @At(value = "INVOKE",
         target = "Ljava/util/List;iterator()Ljava/util/Iterator;", ordinal = 1), require = 1, allow = 1)
-    private Iterator<Axolotl> arclight$waterSplashRehydrate(List<Axolotl> entities) throws Throwable {
-        Iterator<Axolotl> rehydrate = (Iterator<Axolotl>) DecorationOps.callsite().invoke(entities);
+    private Iterator<Axolotl> arclight$waterSplashRehydrate(List<Axolotl> entities, Operation<Iterator<Axolotl>> original) {
+        Iterator<Axolotl> rehydrate = original.call(entities);
         WaterPotionSplashContext context = this.arclight$waterSplash;
         if (context == null || context.event == null) {
             return rehydrate;
@@ -187,8 +201,51 @@ public abstract class ThrownPotionMixin extends ThrowableItemProjectileMixin {
             entity -> ((CraftLivingEntity) entity).getHandle()), Axolotl.class);
     }
 
+    @WrapOperation(method = "affectEntitiesAround(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/alchemy/PotionContents;)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/alchemy/PotionContents;is(Lnet/minecraft/tags/TagKey;)Z"), require = 3, allow = 3)
+    private boolean arclight$waterEventPhases(PotionContents contents, TagKey<Potion> tag, Operation<Boolean> original) {
+        boolean matches = original.call(contents, tag);
+        return this.arclight$waterSplash != null || matches;
+    }
+
+    @Inject(method = "onHitBlock", cancellable = true, at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/entity/projectile/throwableitemprojectile/ThrowableItemProjectile;onHitBlock(Lnet/minecraft/world/phys/BlockHitResult;)V", shift = At.Shift.AFTER))
+    private void arclight$deferExtinguish(BlockHitResult hitResult, CallbackInfo ci) {
+        ci.cancel();
+    }
+
+    @Unique
+    private void arclight$extinguishFires(BlockHitResult hitResult) {
+        PotionContents contents = ((AbstractThrownPotion) (Object) this).getItem().getOrDefault(net.minecraft.core.component.DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
+        if (!contents.is(PotionTags.DOUSES_FIRE)) {
+            return;
+        }
+        Direction direction = hitResult.getDirection();
+        BlockPos pos = hitResult.getBlockPos().relative(direction);
+        this.douseFire(pos);
+        this.douseFire(pos.relative(direction.getOpposite()));
+        for (Direction horizontal : Direction.Plane.HORIZONTAL) {
+            this.douseFire(pos.relative(horizontal));
+        }
+    }
+
     @Decorate(method = "onHit(Lnet/minecraft/world/phys/HitResult;)V", at = @At(value = "INVOKE",
-        target = "Lnet/minecraft/server/level/ServerLevel;levelEvent(ILnet/minecraft/core/BlockPos;I)V"), require = 1, allow = 1)
+        target = "Lnet/minecraft/world/entity/projectile/throwableitemprojectile/AbstractThrownPotion;onHitAsPotion(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/phys/HitResult;)V"), require = 1, allow = 1)
+    private void arclight$potionSplashResult(AbstractThrownPotion potion, ServerLevel level, ItemStack stack, HitResult hitResult,
+                                             @Local(allocate = "arclightWaterSplashAllowed") boolean allowed) throws Throwable {
+        boolean previous = this.arclight$potionSplashAccepted;
+        this.arclight$potionSplashAccepted = false;
+        try {
+            DecorationOps.callsite().invoke(potion, level, stack, hitResult);
+            allowed |= this.arclight$potionSplashAccepted;
+        } finally {
+            this.arclight$potionSplashAccepted = previous;
+        }
+        DecorationOps.blackhole().invoke(allowed);
+    }
+
+    @Decorate(method = "onHit(Lnet/minecraft/world/phys/HitResult;)V", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/server/level/ServerLevel;levelEvent(ILnet/minecraft/core/BlockPos;I)V"), require = 4, allow = 4)
     private void arclight$waterSplashParticles(ServerLevel level, int event, BlockPos pos, int data,
                                               @Local(allocate = "arclightWaterSplashAllowed") boolean allowed) throws Throwable {
         if (allowed) {
@@ -212,21 +269,21 @@ public abstract class ThrownPotionMixin extends ThrowableItemProjectileMixin {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.HIT);
     }
 
-    @Inject(method = "dowseFire", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;destroyBlock(Lnet/minecraft/core/BlockPos;ZLnet/minecraft/world/entity/Entity;)Z"))
+    @Inject(method = "douseFire", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;destroyBlock(Lnet/minecraft/core/BlockPos;ZLnet/minecraft/world/entity/Entity;)Z"))
     private void arclight$entityChangeBlock(BlockPos pos, CallbackInfo ci) {
-        if (!CraftEventFactory.callEntityChangeBlockEvent((AbstractThrownPotion) (Object) this, pos, Blocks.AIR.defaultBlockState())) {
+        if (!CraftEventFactory.callEntityChangeBlockEvent((AbstractThrownPotion) (Object) this, pos, this.level().getBlockState(pos).getFluidState().createLegacyBlock())) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "dowseFire", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;levelEvent(Lnet/minecraft/world/entity/Entity;ILnet/minecraft/core/BlockPos;I)V"))
+    @Inject(method = "douseFire", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;levelEvent(Lnet/minecraft/world/entity/Entity;ILnet/minecraft/core/BlockPos;I)V"))
     private void arclight$entityChangeBlock2(BlockPos pos, CallbackInfo ci, BlockState state) {
         if (!CraftEventFactory.callEntityChangeBlockEvent((AbstractThrownPotion) (Object) this, pos, state.setValue(CampfireBlock.LIT, false))) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "dowseFire", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/AbstractCandleBlock;extinguish(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;)V"))
+    @Inject(method = "douseFire", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/AbstractCandleBlock;extinguish(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;)V"))
     private void arclight$entityChangeBlock3(BlockPos pos, CallbackInfo ci, BlockState state) {
         if (!CraftEventFactory.callEntityChangeBlockEvent((AbstractThrownPotion) (Object) this, pos, state.setValue(AbstractCandleBlock.LIT, false))) {
             ci.cancel();

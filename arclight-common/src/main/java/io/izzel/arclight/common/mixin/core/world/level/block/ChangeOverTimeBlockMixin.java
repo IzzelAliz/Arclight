@@ -43,7 +43,7 @@ public interface ChangeOverTimeBlockMixin<T extends Enum<T>> {
         int j = 0;
         int k = 0;
 
-        for (BlockPos blockpos1 : BlockPos.withinManhattan(pos, 4, 4, 4)) {
+        for (BlockPos blockpos1 : BlockPos.withinBoxByManhattanDistance(pos, 4, 4, 4)) {
             int l = blockpos1.distManhattan(pos);
 
             if (l > 4) {

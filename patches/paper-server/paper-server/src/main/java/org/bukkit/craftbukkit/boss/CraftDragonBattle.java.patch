@@ -1,12 +1,10 @@
 diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/boss/CraftDragonBattle.java b/paper-server/src/main/java/org/bukkit/craftbukkit/boss/CraftDragonBattle.java
 --- a/paper-server/src/main/java/org/bukkit/craftbukkit/boss/CraftDragonBattle.java
 +++ b/paper-server/src/main/java/org/bukkit/craftbukkit/boss/CraftDragonBattle.java
-@@ -76,27 +76,30 @@
-     }
+@@ -77,32 +77,29 @@
  
      @Override
--    public boolean initiateRespawn(Collection<EnderCrystal> crystals) { // todo doesn't seems to work without crystals
-+    public boolean initiateRespawn(Collection<EnderCrystal> crystals) {
+     public boolean initiateRespawn(Collection<EnderCrystal> crystals) {
 +        List<EndCrystal> filteredCrystals = new ArrayList<>();
 +        if (crystals != null) {
 +            for (EnderCrystal crystal : crystals) {
@@ -38,15 +36,21 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/boss/CraftDragonB
 -                return !((CraftWorld) crystal.getWorld()).getHandle().equals(this.handle.level);
 -            });
 -
--            return this.handle.respawnDragon(
+-            boolean started = this.handle.respawnDragon(
 -                Lists.transform(filteredCrystals, crystal -> ((CraftEnderCrystal) crystal).getHandle())
 -            );
+-
+-            if (started) {
+-                this.handle.emptyCrystalRespawnAllowed = filteredCrystals.isEmpty();
+-            }
+-
+-            return started;
 +            io.izzel.arclight.common.bridge.core.world.level.dimension.end.EnderDragonFightBridge bridge = this.handle;
 +            return bridge.bridge$respawnDragon(filteredCrystals);
          }
          return false;
      }
-@@ -148,7 +151,9 @@
+@@ -154,7 +151,9 @@
  
      @Override
      public boolean spawnNewGateway() {
@@ -57,7 +61,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/boss/CraftDragonB
      }
  
      @Override
-@@ -158,7 +163,7 @@
+@@ -164,7 +163,7 @@
  
      @Override
      public List<EnderCrystal> getRespawnCrystals() {
@@ -66,7 +70,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/boss/CraftDragonB
              return Collections.emptyList();
          }
  
-@@ -175,9 +180,11 @@
+@@ -181,9 +180,11 @@
      @Override
      public List<EnderCrystal> getHealingCrystals() {
          final List<EnderCrystal> enderCrystals = new ArrayList<>();

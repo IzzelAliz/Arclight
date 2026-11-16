@@ -23,12 +23,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin_Vanilla extends EntityMixin_Vanilla implements LivingEntityBridge, LivingEntityBridge_Vanilla {
 
-    @Decorate(method = "drop(Lnet/minecraft/world/item/ItemStack;ZZ)Lnet/minecraft/world/entity/item/ItemEntity;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
-    private boolean arclight$capturePlayerDrop(Level instance, Entity entity) throws Throwable {
-        if ((Object) this instanceof ServerPlayer && !bridge$isForceDrops() && this.arclight$captureDrop((ItemEntity) entity)) {
-            return true;
-        }
-        return (boolean) DecorationOps.callsite().invoke(instance, entity);
+    @Override
+    public boolean bridge$capturePlayerDrop(ItemEntity item) {
+        return (Object) this instanceof ServerPlayer && !bridge$isForceDrops() && this.arclight$captureDrop(item);
     }
 
     @Inject(method = "dropAllDeathLoot", at = @At("HEAD"))

@@ -15,11 +15,11 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(targets = "net.minecraft.world.effect.HealOrHarmMobEffect")
 public abstract class HealOrHarmMobEffectTickEventMixin {
 
-    @Decorate(method = "applyInstantenousEffect(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/LivingEntity;ID)V",
+    @Decorate(method = "applyInstantaneousEffect(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/LivingEntity;ID)V",
         require = 1, allow = 1, inject = true, at = @At("HEAD"))
     private void arclight$healOrHarmEffectTickEvent(ServerLevel level, Entity source, Entity owner,
                                                   LivingEntity target, int amplification, double scale) throws Throwable {
-        // This override never calls MobEffect.applyInstantenousEffect, so it has
+        // This override never calls MobEffect.applyInstantaneousEffect, so it has
         // its own producer, before either healing or damage and their Bukkit hooks.
         if (!new EntityEffectTickEvent(
             ((LivingEntityBridge) target).bridge$getBukkitEntity(),

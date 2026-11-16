@@ -169,8 +169,10 @@ public abstract class CommandsMixin implements CommandsBridge {
 
             @Override
             public boolean isRestricted(CommandNode<CommandSourceStack> node) {
-                return node.getRequirement() instanceof io.izzel.arclight.common.bridge.core.commands.CommandsBridge.RestrictedMarker
-                    || node.getRequirement() != null && !node.getRequirement().test(noPermissionSource);
+                if (node.getRequirement() instanceof io.izzel.arclight.common.bridge.core.commands.CommandsBridge.RestrictedMarker marker) {
+                    return marker.restricted();
+                }
+                return node.getRequirement() != null && !node.getRequirement().test(noPermissionSource);
             }
         };
     }

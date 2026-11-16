@@ -1,6 +1,6 @@
 diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftModdedBlockEntityState.java b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftModdedBlockEntityState.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..6e86cbe0a06cc99af25697cb6c2ced452fb85c37
+index 0000000000000000000000000000000000000000..845c62a4e9cdbdcebff24f28cc3dd9acae8579c8
 --- /dev/null
 +++ b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftModdedBlockEntityState.java
 @@ -0,0 +1,28 @@
@@ -13,8 +13,8 @@ index 0000000000000000000000000000000000000000..6e86cbe0a06cc99af25697cb6c2ced45
 +
 +public final class CraftModdedBlockEntityState extends CraftBlockEntityState<BlockEntity> {
 +
-+    public CraftModdedBlockEntityState(World world, BlockEntity blockEntity) {
-+        super(world, blockEntity);
++    public CraftModdedBlockEntityState(World world, BlockEntity blockEntity, boolean useSnapshot) {
++        super(world, blockEntity, useSnapshot);
 +        Preconditions.checkState(this.getSnapshot() != null, "Failed to create snapshot for modded block entity %s", blockEntity.getType());
 +    }
 +

@@ -27,7 +27,7 @@ import net.minecraft.util.Unit;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -149,7 +149,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     @Shadow protected FoodData foodData;
     @Shadow protected boolean isImmobile() { return false; }
     @Shadow protected PlayerEnderChestContainer enderChestInventory;
-    @Shadow public abstract Either<net.minecraft.world.entity.player.Player.BedSleepingProblem, Unit> startSleepInBed(BlockPos at);
+    @Shadow public abstract Either<net.minecraft.world.entity.player.Player.BedSleepingProblem, Unit> startSleepInBed(net.minecraft.world.level.block.AbstractBedBlock bedBlock, net.minecraft.world.level.block.state.BlockState bedState, net.minecraft.world.attribute.BedRule rule, BlockPos at);
     @Shadow public int sleepCounter;
     @Shadow public abstract GameProfile getGameProfile();
     @Shadow public abstract Inventory getInventory();
@@ -159,7 +159,6 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     @Shadow public abstract void setRemainingFireTicks(int p_36353_);
     @Shadow public abstract boolean isCreative();
     @Shadow public abstract FoodData getFoodData();
-    @Shadow @Nullable public abstract ItemEntity drop(ItemStack arg, boolean bl);
     @Shadow public abstract boolean tryToStartFallFlying();
     // @formatter:on
 
@@ -258,65 +257,57 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     }
 
     @Unique private java.util.function.Consumer<org.bukkit.entity.Item> arclight$dropOperation;
-    @Unique private boolean arclight$inventoryDropEvent;
+    @Unique private Boolean arclight$apiDropRandomly;
 
     @Override
     public ItemEntity bridge$dropProvidedItem(ItemStack stack, boolean randomly, java.util.function.Consumer<org.bukkit.entity.Item> operation) {
-        return this.arclight$dropApiItem(stack, randomly, operation, false);
+        return this.arclight$dropApiItem(stack, randomly, true, operation, false);
     }
 
     @Override
     public ItemEntity bridge$dropInventoryItem(ItemStack stack, boolean randomly, java.util.function.Consumer<org.bukkit.entity.Item> operation) {
-        return this.arclight$dropApiItem(stack, randomly, operation, true);
+        return this.arclight$dropApiItem(stack, randomly, true, operation, true);
     }
 
     @Unique
-    private ItemEntity arclight$dropApiItem(ItemStack stack, boolean randomly, java.util.function.Consumer<org.bukkit.entity.Item> operation, boolean callEvent) {
+    private ItemEntity arclight$dropApiItem(ItemStack stack, boolean randomly, boolean thrownFromHand, java.util.function.Consumer<org.bukkit.entity.Item> operation, boolean callEvent) {
         var previousOperation = this.arclight$dropOperation;
-        boolean previousEvent = this.arclight$inventoryDropEvent;
+        boolean previousSkipDropItemEvent = this.arclight$skipDropItemEvent;
+        Boolean previousRandomly = this.arclight$apiDropRandomly;
         this.arclight$dropOperation = operation;
-        this.arclight$inventoryDropEvent = callEvent;
+        this.arclight$skipDropItemEvent = !callEvent;
+        this.arclight$apiDropRandomly = randomly;
         try {
-            return ((net.minecraft.world.entity.player.Player) (Object) this).drop(stack, randomly, true);
+            return ((net.minecraft.world.entity.player.Player) (Object) this).drop(stack, thrownFromHand, net.minecraft.util.Prediction.SERVER_ONLY);
         } finally {
             this.arclight$dropOperation = previousOperation;
-            this.arclight$inventoryDropEvent = previousEvent;
+            this.arclight$skipDropItemEvent = previousSkipDropItemEvent;
+            this.arclight$apiDropRandomly = previousRandomly;
         }
+    }
+
+    @Override
+    public boolean bridge$takeApiDropRandomly(boolean randomly) {
+        Boolean apiRandomly = this.arclight$apiDropRandomly;
+        this.arclight$apiDropRandomly = null;
+        return apiRandomly == null ? randomly : apiRandomly;
     }
 
     @Override
     public ItemEntity bridge$prepareApiDrop(ItemEntity entity) {
         var operation = this.arclight$dropOperation;
-        boolean callEvent = this.arclight$inventoryDropEvent;
         this.arclight$dropOperation = null;
-        this.arclight$inventoryDropEvent = false;
         if (entity == null) return null;
         if (operation != null) {
             operation.accept((org.bukkit.entity.Item) ((io.izzel.arclight.common.bridge.core.entity.EntityBridge) entity).bridge$getBukkitEntity());
         }
-        if (callEvent && !this.bridge$callDropItemEvent(entity, true)) return null;
         return entity;
     }
 
     private transient boolean arclight$skipDropItemEvent;
 
     public ItemEntity drop(ItemStack itemstack, boolean flag, boolean flag1, boolean callEvent) {
-        boolean previousSkipDropItemEvent = arclight$skipDropItemEvent;
-        try {
-            arclight$skipDropItemEvent = !callEvent;
-            return this.drop(itemstack, flag1);
-        } finally {
-            arclight$skipDropItemEvent = previousSkipDropItemEvent;
-        }
-    }
-
-    @Inject(method = "drop(Lnet/minecraft/world/item/ItemStack;Z)Lnet/minecraft/world/entity/item/ItemEntity;",
-        cancellable = true, at = @At("RETURN"))
-    private void arclight$playerDropItem(ItemStack droppedItem, boolean traceItem, CallbackInfoReturnable<ItemEntity> cir) {
-        if (this.bridge$platform$dropEventAtReturn()
-            && !this.bridge$callDropItemEvent(cir.getReturnValue(), traceItem)) {
-            cir.setReturnValue(null);
-        }
+        return this.arclight$dropApiItem(itemstack, flag, flag1, null, callEvent);
     }
 
     @Override
@@ -428,9 +419,9 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
         DecorationOps.blackhole().invoke(damageSource);
     }
 
-    @Redirect(method = "doSweepAttack*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDD)V"),
+    @Redirect(method = "doSweepAttack*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDDLnet/minecraft/world/damagesource/DamageSource;F)V"),
         slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z")))
-    private void arclight$skipKnockback(LivingEntity instance, double d, double e, double f) {
+    private void arclight$skipKnockback(LivingEntity instance, double d, double e, double f, DamageSource damageSource, float damage) {
     }
 
     @Decorate(method = "doSweepAttack*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
@@ -440,11 +431,11 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
             throw DecorationOps.jumpToLoopStart();
         }
         ((LivingEntityBridge) instance).bridge$pushKnockbackCause((Entity) (Object) this, EntityKnockbackEvent.KnockbackCause.SWEEP_ATTACK);
-        instance.knockback(0.4f, Mth.sin(this.getYRot() * 0.017453292f), -Mth.cos(this.getYRot() * 0.017453292f));
+        instance.knockback(0.4f, Mth.sin(this.getYRot() * 0.017453292f), -Mth.cos(this.getYRot() * 0.017453292f), damageSource, f);
         return result;
     }
 
-    @Decorate(method = "causeExtraKnockback", at = @At(value = "FIELD", opcode = Opcodes.GETFIELD, target = "Lnet/minecraft/world/entity/Entity;hurtMarked:Z"))
+    @Decorate(method = "causeExtraKnockback(Lnet/minecraft/world/entity/Entity;FLnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/damagesource/DamageSource;FZ)V", at = @At(value = "FIELD", opcode = Opcodes.GETFIELD, target = "Lnet/minecraft/world/entity/Entity;syncVelocity:Z"))
     private boolean arclight$velocityEvent(Entity entity, @Local(ordinal = -1) Vec3 deltaMovement) throws Throwable {
         boolean result = (boolean) DecorationOps.callsite().invoke(entity);
         if (result) {
@@ -479,9 +470,14 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
     protected transient boolean arclight$forceSleep;
 
     public Either<net.minecraft.world.entity.player.Player.BedSleepingProblem, Unit> startSleepInBed(BlockPos at, boolean force) {
+        var state = this.level().getBlockState(at);
+        if (!(state.getBlock() instanceof net.minecraft.world.level.block.AbstractBedBlock bedBlock)) {
+            return Either.left(net.minecraft.world.entity.player.Player.BedSleepingProblem.OTHER_PROBLEM);
+        }
+        var rule = bedBlock.getBedRule(this.level(), at);
         this.arclight$forceSleep = force;
         try {
-            return this.startSleepInBed(at);
+            return this.startSleepInBed(bedBlock, state, rule, at);
         } finally {
             this.arclight$forceSleep = false;
         }
@@ -535,7 +531,7 @@ public abstract class PlayerMixin extends LivingEntityMixin implements PlayerBri
         if (this.level().isClientSide() || parrotVariant.isEmpty()) {
             return true;
         }
-        var parrot = new net.minecraft.world.entity.animal.parrot.Parrot(EntityType.PARROT, this.level());
+        var parrot = new net.minecraft.world.entity.animal.parrot.Parrot(EntityTypes.PARROT, this.level());
         parrot.setComponent(net.minecraft.core.component.DataComponents.PARROT_VARIANT, parrotVariant.get());
         parrot.setOwner((net.minecraft.world.entity.player.Player) (Object) this);
         parrot.setPos(this.getX(), this.getY() + 0.699999988079071, this.getZ());

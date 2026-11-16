@@ -45,11 +45,11 @@ public abstract class BlockItemMixin {
     }
 
     @WrapOperation(method = "place(Lnet/minecraft/world/item/context/BlockPlaceContext;)Lnet/minecraft/world/InteractionResult;",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/BlockItem;updateCustomBlockEntityTag(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
-    private boolean arclight$signTag(BlockItem item, BlockPos pos, Level level,
-                                     net.minecraft.world.entity.player.Player player,
-                                     net.minecraft.world.item.ItemStack stack, BlockState state, Operation<Boolean> original) {
-        return ArclightEventFactory.tagSign(pos, level, player, stack, original, item, state);
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;setPlacedBy(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;)V"))
+    private void arclight$signTag(net.minecraft.world.level.block.Block block, Level level, BlockPos pos,
+                                     BlockState state, net.minecraft.world.entity.LivingEntity placer,
+                                     net.minecraft.world.item.ItemStack stack, Operation<Void> original) {
+        ArclightEventFactory.tagSign(block, level, pos, state, placer, stack, original);
     }
 
     @Inject(method = "place", locals = LocalCapture.CAPTURE_FAILHARD,

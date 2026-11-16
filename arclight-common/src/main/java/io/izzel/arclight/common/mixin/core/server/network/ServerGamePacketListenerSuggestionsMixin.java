@@ -74,8 +74,8 @@ public abstract class ServerGamePacketListenerSuggestionsMixin {
         if (SpigotConfig.tabComplete < 0) {
             return;
         }
-        int space = packet.getCommand().indexOf(' ');
-        if (packet.getCommand().length() > 64 && (space == -1 || space >= 64)) {
+        int space = packet.command().indexOf(' ');
+        if (packet.command().length() > 64 && (space == -1 || space >= 64)) {
             arclight$disconnectTabSpam(server, listener);
             return;
         }
@@ -85,7 +85,7 @@ public abstract class ServerGamePacketListenerSuggestionsMixin {
             if (listener.bridge$processedDisconnect()) {
                 return;
             }
-            var event = new AsyncTabCompleteEvent(listener.bridge$getCraftPlayer(), packet.getCommand(), true, null);
+            var event = new AsyncTabCompleteEvent(listener.bridge$getCraftPlayer(), packet.command(), true, null);
             event.callEvent();
             if (event.isCancelled()) {
                 return;
@@ -103,7 +103,7 @@ public abstract class ServerGamePacketListenerSuggestionsMixin {
             if (event.completions().isEmpty()) {
                 return;
             }
-            String input = packet.getCommand();
+            String input = packet.command();
             var builder = new SuggestionsBuilder(input, input.length()).createOffset(input.lastIndexOf(' ') + 1);
             for (var completion : event.completions()) {
                 Integer integer = Ints.tryParse(completion.suggestion());
@@ -116,7 +116,7 @@ public abstract class ServerGamePacketListenerSuggestionsMixin {
             // build() is immediate; never block the pool/main thread waiting on a future.
             Suggestions suggestions = arclight$sendSuggestionsEvent(packet, builder.build());
             if (suggestions != null && !listener.bridge$processedDisconnect()) {
-                ((ServerGamePacketListenerImpl) (Object) this).send(new ClientboundCommandSuggestionsPacket(packet.getId(), arclight$limitSuggestions(suggestions)));
+                ((ServerGamePacketListenerImpl) (Object) this).send(new ClientboundCommandSuggestionsPacket(packet.id(), arclight$limitSuggestions(suggestions)));
             }
         });
     }
@@ -145,7 +145,7 @@ public abstract class ServerGamePacketListenerSuggestionsMixin {
     @Unique
     private Suggestions arclight$sendSuggestionsEvent(ServerboundCommandSuggestionPacket packet, Suggestions suggestions) {
         var listener = (ServerCommonPacketListenerImplBridge) this;
-        var event = new AsyncPlayerSendSuggestionsEvent(listener.bridge$getCraftPlayer(), suggestions, packet.getCommand());
+        var event = new AsyncPlayerSendSuggestionsEvent(listener.bridge$getCraftPlayer(), suggestions, packet.command());
         event.setCancelled(suggestions.isEmpty());
         return event.callEvent() ? event.getSuggestions() : null;
     }

@@ -57,7 +57,7 @@ public abstract class EntityPushEventMixin {
     @Mixin(Player.class)
     public abstract static class PlayerPush {
 
-        @Decorate(method = "causeExtraKnockback(Lnet/minecraft/world/entity/Entity;FLnet/minecraft/world/phys/Vec3;)V",
+        @Decorate(method = "causeExtraKnockback(Lnet/minecraft/world/entity/Entity;FLnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/damagesource/DamageSource;FZ)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;push(DDD)V"),
             require = 1, allow = 1)
         private void arclight$playerAttackPush(Entity receiver, double x, double y, double z) throws Throwable {

@@ -94,10 +94,10 @@ public abstract class ServerClockManagerMixin implements ServerClockOwnerBridge 
     // The original marker resolver/add clamp computes the value. No synthetic algorithm or replay.
     // Strict three-site requirement: one totalTicks PUTFIELD in each actual mutation lambda.
     @WrapOperation(method = {
-        "lambda$moveToTimeMarker$0(Lnet/minecraft/resources/ResourceKey;Lorg/apache/commons/lang3/mutable/MutableBoolean;Lnet/minecraft/world/clock/ServerClockManager$ClockInstance;)V",
-        "lambda$setTotalTicks$0(JLnet/minecraft/world/clock/ServerClockManager$ClockInstance;)V",
-        "lambda$addTicks$0(ILnet/minecraft/world/clock/ServerClockManager$ClockInstance;)V"
-    }, at = @At(value = "FIELD", target = "Lnet/minecraft/world/clock/ServerClockManager$ClockInstance;totalTicks:J", opcode = Opcodes.PUTFIELD), require = 3, expect = 3, allow = 3)
+        "lambda$moveToTimeMarker$0(Lnet/minecraft/resources/ResourceKey;Lorg/apache/commons/lang3/mutable/MutableObject;Lnet/minecraft/world/clock/ServerClockManager$ServerClockInstance;)V",
+        "lambda$setTotalTicks$0(JLnet/minecraft/world/clock/ServerClockManager$ServerClockInstance;)V",
+        "lambda$addTicks$0(ILnet/minecraft/world/clock/ServerClockManager$ServerClockInstance;)V"
+    }, at = @At(value = "FIELD", target = "Lnet/minecraft/world/clock/ServerClockManager$ServerClockInstance;totalTicks:J", opcode = Opcodes.PUTFIELD), require = 3, expect = 3, allow = 3)
     private static void arclight$nightWrite(@Coerce Object instance, long proposed, Operation<Void> original) {
         long ticks = ArclightCaptures.nightProposal == null ? proposed
             : ArclightCaptures.nightProposal.applyAsLong(((ClockInstanceBridge) instance).bridge$totalTicks(), proposed);

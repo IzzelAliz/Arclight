@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(MobEffect.class)
 public abstract class MobEffectTickEventMixin {
 
-    @Decorate(method = "applyInstantenousEffect(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/LivingEntity;ID)V",
+    @Decorate(method = "applyInstantaneousEffect(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/LivingEntity;ID)V",
         require = 1, allow = 1, inject = true, at = @At("HEAD"))
     private void arclight$instantEffectTickEvent(ServerLevel level, Entity source, Entity owner,
                                                 LivingEntity target, int amplification, double scale) throws Throwable {

@@ -41,7 +41,7 @@ public interface CaveVinesMixin {
 
                 if (sourceEntity instanceof Player player) {
                     List<ItemStack> dropped = new LinkedList<>();
-                    Block.dropFromBlockInteractLootTable(serverLevel, BuiltInLootTables.HARVEST_CAVE_VINE, state, level.getBlockEntity(pos), null, sourceEntity, (serverLevel1, itemStack) -> {
+                    Block.dropFromBlockInteractLootTable(serverLevel, BuiltInLootTables.HARVEST_CAVE_VINE, pos, state, level.getBlockEntity(pos), null, sourceEntity, (serverLevel1, itemStack) -> {
                         dropped.add(itemStack);
                     });
                     PlayerHarvestBlockEvent event = CraftEventFactory.callPlayerHarvestBlockEvent(level, pos, player, net.minecraft.world.InteractionHand.MAIN_HAND, dropped);
@@ -52,7 +52,7 @@ public interface CaveVinesMixin {
                         Block.popResource(level, pos, CraftItemStack.asNMSCopy(itemStack));
                     }
                 } else {
-                    Block.dropFromBlockInteractLootTable(serverLevel, BuiltInLootTables.HARVEST_CAVE_VINE, state, level.getBlockEntity(pos), null, sourceEntity, (serverLevel1, itemStack) -> {
+                    Block.dropFromBlockInteractLootTable(serverLevel, BuiltInLootTables.HARVEST_CAVE_VINE, pos, state, level.getBlockEntity(pos), null, sourceEntity, (serverLevel1, itemStack) -> {
                         Block.popResource(serverLevel1, pos, itemStack);
                     });
                 }

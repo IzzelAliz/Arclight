@@ -15,6 +15,17 @@ import java.util.List;
 public abstract class IngredientMixin implements IngredientBridge {
 
     private List<ItemStack> exactChoices;
+    private java.util.function.Predicate<ItemStack> stackPredicate;
+
+    @Override
+    public void bridge$setStackPredicate(java.util.function.Predicate<ItemStack> predicate) {
+        this.stackPredicate = predicate;
+    }
+
+    @Override
+    public java.util.function.Predicate<ItemStack> bridge$getStackPredicate() {
+        return this.stackPredicate;
+    }
 
     @io.izzel.arclight.common.mod.mixins.annotation.TransformAccess(org.objectweb.asm.Opcodes.ACC_PUBLIC | org.objectweb.asm.Opcodes.ACC_STATIC)
     private static Ingredient ofStacks(List<ItemStack> stacks) {
@@ -25,6 +36,10 @@ public abstract class IngredientMixin implements IngredientBridge {
 
     @Inject(method = "test(Lnet/minecraft/world/item/ItemStack;)Z", cancellable = true, at = @At("HEAD"))
     private void arclight$exactMatch(@Nullable ItemStack itemStack, CallbackInfoReturnable<Boolean> cir) {
+        if (this.stackPredicate != null) {
+            cir.setReturnValue(this.stackPredicate.test(itemStack));
+            return;
+        }
         if (this.exactChoices != null) {
             if (itemStack == null) {
                 cir.setReturnValue(false);

@@ -5,6 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.VineBlock;
@@ -21,7 +22,7 @@ public abstract class VineBlockMixin extends BlockMixin {
 
     // @formatter:off
     @Shadow public static BooleanProperty getPropertyForFace(Direction side) { return null; }
-    @Shadow protected abstract boolean canSpread(BlockGetter blockReader, BlockPos pos);
+    @Shadow protected abstract boolean canSpread(LevelReader blockReader, BlockPos pos);
     @Shadow public static boolean isAcceptableNeighbour(BlockGetter blockReader, BlockPos worldIn, Direction neighborPos) { return false; }
     @Shadow @Final public static BooleanProperty UP;
     @Shadow protected abstract boolean canSupportAtFace(BlockGetter blockReader, BlockPos pos, Direction direction);

@@ -7,7 +7,6 @@ import io.izzel.arclight.mixin.Local;
 import io.papermc.paper.event.block.DragonEggFormEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.dimension.end.DragonRespawnStage;
@@ -82,17 +81,6 @@ public abstract class EnderDragonFightMixin extends SavedData implements EnderDr
         }
         // Native setBlockAndUpdate uses UPDATE_ALL, as Paper's CraftBlockState.place does.
         return (boolean) DecorationOps.callsite().invoke(level, pos, ((CraftBlockState) event.getNewState()).getHandle());
-    }
-
-    @Decorate(method = "onCrystalDestroyed(Lnet/minecraft/world/entity/boss/enderdragon/EndCrystal;Lnet/minecraft/world/damagesource/DamageSource;)V",
-        at = @At(value = "INVOKE", target = "Ljava/util/List;contains(Ljava/lang/Object;)Z"))
-    private boolean arclight$matchesRespawnCrystal(List<EntityReference<EndCrystal>> references, Object candidate) throws Throwable {
-        boolean contained = (boolean) DecorationOps.callsite().invoke(references, candidate);
-        // Native stores EntityReference values, while the destruction callback passes an EndCrystal.
-        if (contained || !(candidate instanceof EndCrystal crystal)) {
-            return contained;
-        }
-        return references.stream().anyMatch(reference -> reference.matches(crystal));
     }
 
     @Override

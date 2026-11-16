@@ -94,7 +94,7 @@ public final class TreeCapture {
         public Object mushroom;
     }
 
-    public static void selectGrowth(net.minecraft.core.Holder<net.minecraft.world.level.levelgen.feature.ConfiguredFeature<?, ?>> holder, boolean mega) {
+    public static void selectGrowth(net.minecraft.core.Holder<net.minecraft.world.level.levelgen.feature.Feature> holder, boolean mega) {
         if (growth == null || mega && growth.megaSeen) return;
         if (mega) growth.megaSeen = true;
         growth.selected = true;
@@ -104,7 +104,7 @@ public final class TreeCapture {
     public static void observeMushroom(Object block) {
         if (growth != null) growth.mushroom = block;
     }
-    public static org.bukkit.@org.jspecify.annotations.Nullable TreeType knownType(net.minecraft.resources.@org.jspecify.annotations.Nullable ResourceKey<net.minecraft.world.level.levelgen.feature.ConfiguredFeature<?, ?>> worldgentreeabstract) {
+    public static org.bukkit.@org.jspecify.annotations.Nullable TreeType knownType(net.minecraft.resources.@org.jspecify.annotations.Nullable ResourceKey<net.minecraft.world.level.levelgen.feature.Feature> worldgentreeabstract) {
         if (worldgentreeabstract == net.minecraft.data.worldgen.features.TreeFeatures.WARPED_FUNGUS || worldgentreeabstract == net.minecraft.data.worldgen.features.TreeFeatures.WARPED_FUNGUS_PLANTED) {
             return org.bukkit.TreeType.WARPED_FUNGUS;
         } else if (worldgentreeabstract == net.minecraft.data.worldgen.features.TreeFeatures.CRIMSON_FUNGUS || worldgentreeabstract == net.minecraft.data.worldgen.features.TreeFeatures.CRIMSON_FUNGUS_PLANTED) {

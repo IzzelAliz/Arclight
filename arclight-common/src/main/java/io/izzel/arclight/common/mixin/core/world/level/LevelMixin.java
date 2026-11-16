@@ -297,7 +297,7 @@ public abstract class LevelMixin implements WorldBridge, io.izzel.arclight.commo
                 newBlock.updateIndirectNeighbourShapes(this, pos, i, k - 1);
             }
 
-            if (!this.preventPoiUpdated) {
+            if (!this.preventPoiUpdated && (j & io.izzel.arclight.common.mod.ArclightConstants.UPDATE_SKIP_POI) == 0) {
                 this.updatePOIOnBlockStateChange(pos, oldBlock, blockstate1);
             }
         }

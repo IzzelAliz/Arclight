@@ -10,7 +10,9 @@ import org.spongepowered.asm.mixin.Mixin;
 public abstract class MaterialMixin_Forge implements MaterialBridge {
 
     @Override
-    public int bridge$forge$getBurnTime(Item item) {
-        return new ItemStack(item).getBurnTime(null);
+    public boolean bridge$forge$isFuel(Item item) {
+        var stack = new ItemStack(item);
+        return stack.has(net.minecraft.core.component.DataComponents.COOKING_FUEL)
+            || net.minecraftforge.event.ForgeEventFactory.getItemBurnTime(stack, 0, null) > 0;
     }
 }

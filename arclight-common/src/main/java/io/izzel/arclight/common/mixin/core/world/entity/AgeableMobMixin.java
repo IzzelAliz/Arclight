@@ -11,13 +11,11 @@ import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
 
 import javax.annotation.Nullable;
 import java.util.function.Consumer;
@@ -56,11 +54,6 @@ public abstract class AgeableMobMixin extends PathfinderMobMixin implements Agea
             DecorationOps.callsite().invoke(mob, ageLocked, player, item, setAgeLockData);
         }
         // Both outcomes retain the native SUCCESS return; a veto skips all toggle side effects.
-    }
-
-    @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;isClientSide()Z"))
-    private boolean arclight$tickIfNotLocked(Level world) {
-        return world.isClientSide() || this.isAgeLocked();
     }
 
     @Override

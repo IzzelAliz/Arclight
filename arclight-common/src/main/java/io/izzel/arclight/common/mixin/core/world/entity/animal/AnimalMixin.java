@@ -7,7 +7,7 @@ import io.izzel.arclight.common.bridge.core.world.entity.animal.AnimalBridge;
 import io.izzel.arclight.common.bridge.core.world.entity.animal.AnimalFertilizeEggBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mixin.core.world.entity.AgeableMobMixin;
-import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.advancements.triggers.CriteriaTriggers;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;

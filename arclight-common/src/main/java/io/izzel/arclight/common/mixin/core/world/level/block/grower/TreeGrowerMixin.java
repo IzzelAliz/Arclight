@@ -12,7 +12,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.grower.TreeGrower;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
+import net.minecraft.world.level.levelgen.feature.Feature;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -21,26 +21,26 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(TreeGrower.class)
 public abstract class TreeGrowerMixin {
     @ModifyExpressionValue(method = "growTree", at = @At(value = "INVOKE", target = "Lnet/neoforged/neoforge/event/level/BlockGrowFeatureEvent;isCanceled()Z", ordinal = 0), require = 0)
-    private boolean arclight$megaGuard(boolean cancelled, @Local Holder<ConfiguredFeature<?, ?>> holder) {
+    private boolean arclight$megaGuard(boolean cancelled, @Local Holder<Feature> holder) {
         return cancelled;
     }
     @ModifyExpressionValue(method = "growTree", at = @At(value = "INVOKE", target = "Lnet/neoforged/neoforge/event/level/BlockGrowFeatureEvent;isCanceled()Z", ordinal = 1), require = 0)
-    private boolean arclight$ordinaryGuard(boolean cancelled, @Local Holder<ConfiguredFeature<?, ?>> holder) {
+    private boolean arclight$ordinaryGuard(boolean cancelled, @Local Holder<Feature> holder) {
         return cancelled;
     }
 
     // First scan call is after nonnull mega Holder and, on Neo, replacement/cancel/null guards.
     // Record once before native scan reads; retain the fixed caller's mega value if ordinary has no Holder.
-    @Inject(method = "growTree", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/grower/TreeGrower;isTwoByTwoSapling(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;II)Z"))
+    @Inject(method = "growTree", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/grower/TreeGrower;findTwoByTwoSaplingPos(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;)Ljava/util/Optional;"))
     private void arclight$megaType(ServerLevel level, ChunkGenerator generator, BlockPos pos,
         BlockState state, RandomSource random, CallbackInfoReturnable<Boolean> cir,
-        @Local Holder<ConfiguredFeature<?, ?>> holder) {
+        @Local Holder<Feature> holder) {
         TreeCapture.selectGrowth(holder, true);
     }
     @Inject(method = "growTree", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/Holder;value()Ljava/lang/Object;", ordinal = 1))
     private void arclight$ordinaryType(ServerLevel level, ChunkGenerator generator, BlockPos pos,
         BlockState state, RandomSource random, CallbackInfoReturnable<Boolean> cir,
-        @Local Holder<ConfiguredFeature<?, ?>> holder) {
+        @Local Holder<Feature> holder) {
         TreeCapture.selectGrowth(holder, false);
     }
 }

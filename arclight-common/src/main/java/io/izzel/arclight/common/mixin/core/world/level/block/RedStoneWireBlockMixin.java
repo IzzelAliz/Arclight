@@ -5,7 +5,7 @@ import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.RedStoneWireBlock;
+import net.minecraft.world.level.block.RedstoneWireBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.redstone.DefaultRedstoneWireEvaluator;
 import org.bukkit.Bukkit;
@@ -21,7 +21,7 @@ public abstract class RedStoneWireBlockMixin {
     private int arclight$blockRedstone(DefaultRedstoneWireEvaluator evaluator, Level world, BlockPos pos,
             @Local(ordinal = 0) BlockState oldState) throws Throwable {
         int i = (int) DecorationOps.callsite().invoke(evaluator, world, pos);
-        int oldPower = oldState.getValue(RedStoneWireBlock.POWER);
+        int oldPower = oldState.getValue(RedstoneWireBlock.POWER);
         if (oldPower != i) {
             BlockRedstoneEvent event = new BlockRedstoneEvent(CraftBlock.at(world, pos), oldPower, i);
             Bukkit.getPluginManager().callEvent(event);

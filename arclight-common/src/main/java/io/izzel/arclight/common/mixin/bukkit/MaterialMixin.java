@@ -410,7 +410,7 @@ public abstract class MaterialMixin implements MaterialBridge {
             arclight$spec.record = false;
         }
         if (arclight$spec.fuel == null) {
-            arclight$spec.fuel = bridge$forge$getBurnTime(item) > 0;
+            arclight$spec.fuel = bridge$forge$isFuel(item);
         }
         if (arclight$spec.occluding == null) {
             arclight$spec.occluding = arclight$spec.solid;

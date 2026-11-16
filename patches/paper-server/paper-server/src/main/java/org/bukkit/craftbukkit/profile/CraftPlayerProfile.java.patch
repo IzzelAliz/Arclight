@@ -1,16 +1,24 @@
 diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java b/paper-server/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java
-index 30a11ae7e872d0aeaa61da8a8ddddee512e34721..caf2b341560e3d4cf4206aa5d3a906d0686f1b4d 100644
 --- a/paper-server/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java
 +++ b/paper-server/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java
-@@ -7,6 +7,7 @@ import com.mojang.authlib.properties.Property;
+@@ -6,6 +6,8 @@
+ import com.mojang.authlib.properties.Property;
  import com.mojang.authlib.properties.PropertyMap;
- import com.mojang.authlib.yggdrasil.ProfileResult;
- import com.mojang.datafixers.util.Either;
+ import com.mojang.authlib.services.ProfileResult;
++import com.mojang.datafixers.util.Either;
 +import com.mojang.serialization.JavaOps;
  import io.papermc.paper.profile.MutablePropertyMap;
  import java.util.ArrayList;
  import java.util.Iterator;
-@@ -46,6 +47,9 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+@@ -19,6 +21,7 @@
+ import net.minecraft.server.dedicated.DedicatedServer;
+ import net.minecraft.server.players.NameAndId;
+ import net.minecraft.util.Util;
++import net.minecraft.world.entity.player.PlayerSkin;
+ import net.minecraft.world.item.component.ResolvableProfile;
+ import org.apache.commons.lang3.StringUtils;
+ import org.bukkit.Bukkit;
+@@ -44,6 +47,9 @@
  
      private final PropertyMap properties = new MutablePropertyMap();
      private final CraftPlayerTextures textures = new CraftPlayerTextures(this);
@@ -20,7 +28,7 @@ index 30a11ae7e872d0aeaa61da8a8ddddee512e34721..caf2b341560e3d4cf4206aa5d3a906d0
  
      private CraftPlayerProfile(@Nullable UUID uniqueId, @Nullable String name, boolean applyPreconditions) {
          if (applyPreconditions) {
-@@ -70,6 +74,7 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+@@ -68,6 +74,7 @@
              false
          );
          this.properties.putAll(resolvableProfile.partialProfile().properties());
@@ -28,7 +36,7 @@ index 30a11ae7e872d0aeaa61da8a8ddddee512e34721..caf2b341560e3d4cf4206aa5d3a906d0
      }
  
      // The Map of properties of the given GameProfile is not immutable. This captures a snapshot of the properties of
-@@ -80,9 +85,10 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+@@ -78,9 +85,10 @@
      }
  
      private CraftPlayerProfile(CraftPlayerProfile other) {
@@ -40,7 +48,7 @@ index 30a11ae7e872d0aeaa61da8a8ddddee512e34721..caf2b341560e3d4cf4206aa5d3a906d0
      }
  
      @Override
-@@ -148,19 +154,21 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+@@ -146,19 +154,21 @@
          // If missing, look up the uuid by name:
          if (profile.id().equals(Util.NIL_UUID)) {
              profile = server.services().nameToIdCache().get(profile.name())
@@ -65,18 +73,25 @@ index 30a11ae7e872d0aeaa61da8a8ddddee512e34721..caf2b341560e3d4cf4206aa5d3a906d0
      }
  
      // This always returns a new GameProfile instance to ensure that property changes to the original or previously
-@@ -169,8 +177,8 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+@@ -166,14 +176,9 @@
+     @Override
      public ResolvableProfile buildResolvableProfile() {
          this.rebuildDirtyProperties();
-         return this.properties.isEmpty() && (name == null) != (uniqueId == null) // Heuristic copied from net.minecraft.world.item.component.ResolvableProfile.create
--            ? new ResolvableProfile.Dynamic(name == null ? Either.right(uniqueId) : Either.left(name), PlayerSkin.Patch.EMPTY)
--            : ResolvableProfile.createResolved(this.buildGameProfile());
+-        if (this.properties.isEmpty() && (this.name == null) != (this.uniqueId == null)) { // Heuristic copied from ResolvableProfile.create
+-            if (this.name == null) {
+-                return ResolvableProfile.createUnresolved(this.uniqueId);
+-            } else {
+-                return ResolvableProfile.createUnresolved(this.name);
+-            }
+-        }
+-        return ResolvableProfile.createResolved(this.buildGameProfile());
++        return this.properties.isEmpty() && (name == null) != (uniqueId == null) // Heuristic copied from net.minecraft.world.item.component.ResolvableProfile.create
 +            ? new ResolvableProfile.Dynamic(name == null ? Either.right(uniqueId) : Either.left(name), this.skinPatch)
 +            : new ResolvableProfile.Static(Either.left(this.buildGameProfile()), this.skinPatch);
      }
  
      // This always returns a new GameProfile instance to ensure that property changes to the original or previously
-@@ -195,6 +203,8 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+@@ -198,6 +203,8 @@
          builder.append(this.getName());
          builder.append(", properties=");
          builder.append(this.properties);
@@ -85,7 +100,7 @@ index 30a11ae7e872d0aeaa61da8a8ddddee512e34721..caf2b341560e3d4cf4206aa5d3a906d0
          builder.append("]");
          return builder.toString();
      }
-@@ -209,6 +219,7 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+@@ -212,6 +219,7 @@
          this.rebuildDirtyProperties();
          other.rebuildDirtyProperties();
          if (!CraftPlayerProfile.equals(this.properties, other.properties)) return false;
@@ -93,7 +108,7 @@ index 30a11ae7e872d0aeaa61da8a8ddddee512e34721..caf2b341560e3d4cf4206aa5d3a906d0
          return true;
      }
  
-@@ -236,6 +247,7 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+@@ -239,6 +247,7 @@
          result = 31 * result + Objects.hashCode(this.uniqueId);
          result = 31 * result + Objects.hashCode(this.name);
          result = 31 * result + CraftPlayerProfile.hashCode(this.properties);
@@ -101,7 +116,7 @@ index 30a11ae7e872d0aeaa61da8a8ddddee512e34721..caf2b341560e3d4cf4206aa5d3a906d0
          return result;
      }
  
-@@ -267,6 +279,11 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+@@ -270,6 +279,11 @@
              this.properties.forEach((propertyName, property) -> propertiesData.add(CraftProfileProperty.serialize(property)));
              map.put("properties", propertiesData);
          }
@@ -113,7 +128,7 @@ index 30a11ae7e872d0aeaa61da8a8ddddee512e34721..caf2b341560e3d4cf4206aa5d3a906d0
          return map;
      }
  
-@@ -274,8 +291,18 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+@@ -277,8 +291,18 @@
          UUID uniqueId = ConfigSerializationUtil.getUuid(map, "uniqueId", true);
          String name = ConfigSerializationUtil.getString(map, "name", true);
  

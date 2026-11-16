@@ -30,6 +30,8 @@ public class ArclightConstants {
 
     public static final int ANVIL_DEFAULT_DENIED_COST = -1;
 
+    public static final int UPDATE_SKIP_POI = 4096;
+
     public static int currentTick;
 
 }

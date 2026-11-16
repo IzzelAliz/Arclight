@@ -55,6 +55,17 @@ import javax.annotation.Nullable;
 @Mixin(Mob.class)
 public abstract class MobMixin extends LivingEntityMixin implements MobBridge {
 
+    @WrapOperation(method = "shearItem(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/EquipmentSlot;Lnet/minecraft/world/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;spawnAtLocation(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/entity/item/ItemEntity;"))
+    private ItemEntity arclight$forcedEquipmentDrop(Mob entity, ServerLevel level, ItemStack stack, Vec3 offset, Operation<ItemEntity> original) {
+        boolean previous = this.forceDrops;
+        this.forceDrops = true;
+        try {
+            return original.call(entity, level, stack, offset);
+        } finally {
+            this.forceDrops = previous;
+        }
+    }
+
     // @formatter:off
     @Shadow public boolean persistenceRequired;
     @Shadow public abstract boolean removeWhenFarAway(double distanceToClosestPlayer);
@@ -408,7 +419,7 @@ public abstract class MobMixin extends LivingEntityMixin implements MobBridge {
         this.arclight$transform = transformReason;
     }
 
-    @Inject(method = "doHurtTarget(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;causeExtraKnockback(Lnet/minecraft/world/entity/Entity;FLnet/minecraft/world/phys/Vec3;)V"))
+    @Inject(method = "doHurtTarget(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;causeExtraKnockback(Lnet/minecraft/world/entity/Entity;FLnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/damagesource/DamageSource;FZ)V"))
     private void arclight$attackKnockback(ServerLevel level, Entity entity, CallbackInfoReturnable<Boolean> cir) {
         ((LivingEntityBridge) entity).bridge$pushKnockbackCause((Entity) (Object) this, EntityKnockbackEvent.KnockbackCause.ENTITY_ATTACK);
     }

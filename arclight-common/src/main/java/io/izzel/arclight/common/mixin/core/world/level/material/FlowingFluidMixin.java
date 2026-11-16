@@ -51,8 +51,8 @@ public abstract class FlowingFluidMixin {
         return (BlockState) DecorationOps.callsite().invoke(level, toPos);
     }
 
-    @Decorate(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
-    private boolean arclight$fluidLevelChange(ServerLevel world, BlockPos pos, BlockState newState, int flags,
+    @Decorate(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
+    private boolean arclight$fluidLevelChange(ServerLevel world, BlockPos pos, BlockState newState,
                                                @Local(ordinal = 0) BlockState blockState) throws Throwable {
         if (DistValidate.isValid(world)) {
             FluidLevelChangeEvent event = CraftEventFactory.callFluidLevelChangeEvent(world, pos, newState);
@@ -63,6 +63,6 @@ public abstract class FlowingFluidMixin {
                 newState = blockState;
             }
         }
-        return (boolean) DecorationOps.callsite().invoke(world, pos, newState, flags);
+        return (boolean) DecorationOps.callsite().invoke(world, pos, newState);
     }
 }

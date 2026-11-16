@@ -3,7 +3,6 @@ package io.izzel.arclight.common.mixin.bukkit;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.world.item.ItemStack;
-import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import io.izzel.arclight.common.bridge.bukkit.MaterialBridge;
 import io.izzel.arclight.i18n.conf.MaterialPropertySpec;
 import org.bukkit.Material;
@@ -20,9 +19,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class CraftItemFactoryMixin {
 
     @WrapOperation(method = "createItemStack(Ljava/lang/String;)Lorg/bukkit/inventory/ItemStack;",
-        at = @At(value = "INVOKE", target = "Lorg/bukkit/craftbukkit/inventory/CraftItemStack;asCraftMirror(Lnet/minecraft/world/item/ItemStack;)Lorg/bukkit/craftbukkit/inventory/CraftItemStack;"),
+        at = @At(value = "INVOKE", target = "Lorg/bukkit/craftbukkit/inventory/CraftItemStack;asBukkitMirror(Lnet/minecraft/world/item/ItemStack;)Lorg/bukkit/inventory/ItemStack;"),
         require = 1, expect = 1, allow = 1)
-    private CraftItemStack arclight$validateParsedItem(ItemStack stack, Operation<CraftItemStack> original) {
+    private org.bukkit.inventory.ItemStack arclight$validateParsedItem(ItemStack stack, Operation<org.bukkit.inventory.ItemStack> original) {
         // New ItemParser no longer validates the composed item before returning.
         // Preserve the factory's construction path, but reject invalid /give components.
         ItemStack.validateStrict(stack).getOrThrow(IllegalArgumentException::new);

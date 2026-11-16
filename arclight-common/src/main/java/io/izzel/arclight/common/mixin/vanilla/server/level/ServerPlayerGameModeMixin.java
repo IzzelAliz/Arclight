@@ -3,7 +3,6 @@ package io.izzel.arclight.common.mixin.vanilla.server.level;
 import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
 import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import io.izzel.arclight.mixin.Decorate;
@@ -33,8 +32,8 @@ public abstract class ServerPlayerGameModeMixin {
         return ArclightEventFactory.onBlockBreak((ServerPlayerGameMode) (Object) this, this.level, this.player, pos, state, !canDestroyBlock);
     }
 
-    @Decorate(method = "destroyBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;playerDestroy(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/entity/BlockEntity;Lnet/minecraft/world/item/ItemStack;)V"))
-    private void arclight$blockBreakDrops(Block block, Level level, Player player, BlockPos pos, BlockState state, BlockEntity blockEntity, ItemStack tool) throws Throwable {
+    @Decorate(method = "destroyBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;playerDestroy(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/entity/BlockEntity;Lnet/minecraft/world/item/ItemStack;)V"))
+    private void arclight$blockBreakDrops(Block block, ServerLevel level, ServerPlayer player, BlockPos pos, BlockState state, BlockEntity blockEntity, ItemStack tool) throws Throwable {
         if (!ArclightCaptures.getBlockBreakDropItems()) {
             return;
         }

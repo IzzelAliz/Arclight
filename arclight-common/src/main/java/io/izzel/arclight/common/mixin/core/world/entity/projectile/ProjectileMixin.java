@@ -8,7 +8,6 @@ import io.izzel.arclight.common.mixin.core.world.entity.EntityMixin;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ProjectileDeflection;
 import net.minecraft.world.phys.BlockHitResult;
@@ -60,7 +59,6 @@ public abstract class ProjectileMixin extends EntityMixin implements io.izzel.ar
     @Shadow @Nullable public abstract Entity getOwner();
     @Shadow protected void onHit(HitResult result) { }
     @Shadow protected abstract ProjectileDeflection hitTargetOrDeflectSelf(HitResult hitResult);
-    @Shadow public abstract boolean deflect(ProjectileDeflection projectileDeflection, @org.jetbrains.annotations.Nullable Entity entity, EntityReference<Entity> entityReference, boolean bl);
     // @formatter:on
 
     @WrapOperation(method = "spawnProjectile(Lnet/minecraft/world/entity/projectile/Projectile;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Ljava/util/function/Consumer;)Lnet/minecraft/world/entity/projectile/Projectile;",

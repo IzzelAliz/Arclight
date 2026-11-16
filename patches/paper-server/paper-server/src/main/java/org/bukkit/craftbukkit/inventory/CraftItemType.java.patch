@@ -1,0 +1,14 @@
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemType.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemType.java
+@@ -190,9 +190,8 @@
+             }
+ 
+             Holder.Reference<ContextIntProvider> provider = MinecraftServer.getServer().reloadableRegistries().lookup().getOrThrow(burnTime.key());
+-            LootContext fakeContext = new LootContext.Builder(new LootParams.Builder(null).create(LootContextParamSets.EMPTY))
+-                .withOptionalRandomSeed(42L)
+-                .createWithoutLevel();
++            LootContext fakeContext = new LootContext(new LootParams.Builder(null).create(LootContextParamSets.EMPTY),
++                net.minecraft.util.RandomSource.create(42L), MinecraftServer.getServer().reloadableRegistries().lookup());
+             return provider.value().getInt(fakeContext);
+         }
+         return 0;

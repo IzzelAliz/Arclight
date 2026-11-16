@@ -5,12 +5,8 @@ import io.izzel.tools.product.Product;
 import io.izzel.tools.product.Product3;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.CommonHooks;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,10 +20,5 @@ public abstract class ServerGamePacketListenerImplMixin_NeoForge extends ServerC
     public Product3<Boolean, ItemStack, ItemStack> bridge$platform$canSwapHandItems(LivingEntity entity) {
         var event = CommonHooks.onLivingSwapHandItems(this.player);
         return Product.of(event.isCanceled(), event.getItemSwappedToMainHand(), event.getItemSwappedToOffHand());
-    }
-
-    @Override
-    public InteractionResult bridge$platform$onInteractEntityAt(ServerPlayer player, Entity entity, Vec3 vec, InteractionHand interactionHand) {
-        return CommonHooks.onInteractEntityAt(player, entity, vec, interactionHand);
     }
 }

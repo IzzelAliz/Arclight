@@ -48,7 +48,7 @@ public class ButtonBlockMixin {
     }
 
     @Inject(method = "checkPressed", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
     public void arclight$blockRedstone3(BlockState state, Level worldIn, BlockPos pos, CallbackInfo ci,
                                         AbstractArrow abstractarrow, boolean flag, boolean flag1) {
         Block block = CraftBlock.at(worldIn, pos);

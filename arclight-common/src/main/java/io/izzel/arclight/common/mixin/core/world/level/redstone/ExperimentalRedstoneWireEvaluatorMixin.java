@@ -8,7 +8,7 @@ import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalIntRef;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.RedStoneWireBlock;
+import net.minecraft.world.level.block.RedstoneWireBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.redstone.ExperimentalRedstoneWireEvaluator;
@@ -27,7 +27,7 @@ public class ExperimentalRedstoneWireEvaluatorMixin {
     private BlockState arclight$event(BlockState state, Level level, BlockPos initialPos, BlockState ignored,
             Orientation orientation, boolean shapeUpdates, @Local(index = 10) BlockPos pos,
             @Local(index = 12) LocalIntRef newPower, @Share("arclight$entryPower") LocalIntRef oldPower) {
-        int before = ignored.getValue(RedStoneWireBlock.POWER);
+        int before = ignored.getValue(RedstoneWireBlock.POWER);
         oldPower.set(before);
         if (before != newPower.get()) {
             BlockRedstoneEvent event = new BlockRedstoneEvent(CraftBlock.at(level, pos), before, newPower.get());

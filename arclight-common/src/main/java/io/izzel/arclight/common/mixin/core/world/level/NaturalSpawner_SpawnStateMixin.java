@@ -8,6 +8,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LocalMobCapCalculator;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.NaturalSpawner;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import org.spongepowered.asm.mixin.Final;
@@ -21,13 +22,13 @@ public abstract class NaturalSpawner_SpawnStateMixin implements WorldEntitySpawn
     @Shadow protected abstract void afterSpawn(Mob p_234990_1_, ChunkAccess p_234990_2_);
     @Shadow @Final private int spawnableChunkCount;
     @Shadow @Final private Object2IntOpenHashMap<MobCategory> mobCategoryCounts;
-    @Shadow protected abstract boolean canSpawn(EntityType<?> p_234989_1_, BlockPos p_234989_2_, ChunkAccess p_234989_3_);
+    @Shadow protected abstract boolean canSpawn(EntityType<?> p_234989_1_, Level level, BlockPos p_234989_2_, ChunkAccess p_234989_3_);
     @Shadow protected abstract boolean canSpawnForCategoryLocal(MobCategory category, ChunkPos pos);
     // @formatter:on
 
     @Override
-    public boolean bridge$canSpawn(EntityType<?> entityType, BlockPos pos, ChunkAccess chunk) {
-        return this.canSpawn(entityType, pos, chunk);
+    public boolean bridge$canSpawn(EntityType<?> entityType, Level level, BlockPos pos, ChunkAccess chunk) {
+        return this.canSpawn(entityType, level, pos, chunk);
     }
 
     @Override

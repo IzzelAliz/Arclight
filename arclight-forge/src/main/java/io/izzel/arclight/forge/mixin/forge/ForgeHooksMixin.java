@@ -15,6 +15,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ForgeHooks.class)
 public class ForgeHooksMixin {
 
+    @io.izzel.arclight.mixin.Decorate(
+        method = "onPlayerTossEvent(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/item/ItemEntity;)Lnet/minecraft/world/entity/item/ItemEntity;",
+        remap = false, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"),
+        require = 1, allow = 1)
+    private static boolean arclight$playerTossBeforeAdd(net.minecraft.world.level.Level level,
+            net.minecraft.world.entity.Entity entity, net.minecraft.world.entity.player.Player player,
+            net.minecraft.world.entity.item.ItemEntity originalItem) throws Throwable {
+        var bridge = (io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge) player;
+        if (!bridge.bridge$callDropItemEvent((net.minecraft.world.entity.item.ItemEntity) entity, bridge.bridge$dropFromHand())) {
+            return (boolean) io.izzel.arclight.mixin.DecorationOps.cancel().invoke((net.minecraft.world.entity.item.ItemEntity) null);
+        }
+        return (boolean) io.izzel.arclight.mixin.DecorationOps.callsite().invoke(level, entity);
+    }
+
     @Inject(method = "onPlaceItemIntoWorld", remap = false, at = @At("HEAD"))
     private static void arclight$captureHand(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
         ArclightCaptures.capturePlaceEventHand(context.getHand());

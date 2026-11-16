@@ -17,9 +17,9 @@ import org.spongepowered.asm.mixin.injection.At;
 @OnlyInPlatform(ArclightPlatform.FABRIC)
 @Mixin(ServerLevel.class)
 public abstract class ServerLevelNightSkipMixin {
-    @WrapOperation(method = "tick(Ljava/util/function/BooleanSupplier;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/clock/ServerClockManager;moveToTimeMarker(Lnet/minecraft/core/Holder;Lnet/minecraft/resources/ResourceKey;)Z"), require = 1, expect = 1, allow = 1)
-    private boolean arclight$nightMarker(ServerClockManager manager, Holder<WorldClock> clock,
-                                         ResourceKey<ClockTimeMarker> marker, Operation<Boolean> original) {
+    @WrapOperation(method = "tick(Ljava/util/function/BooleanSupplier;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/clock/ServerClockManager;moveToTimeMarker(Lnet/minecraft/core/Holder;Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/world/clock/ServerClockManager$MoveResult;"), require = 1, expect = 1, allow = 1)
+    private ServerClockManager.MoveResult arclight$nightMarker(ServerClockManager manager, Holder<WorldClock> clock,
+                                         ResourceKey<ClockTimeMarker> marker, Operation<ServerClockManager.MoveResult> original) {
         ArclightCaptures.nightManager = manager;
         ArclightCaptures.nightClock = clock;
         try {

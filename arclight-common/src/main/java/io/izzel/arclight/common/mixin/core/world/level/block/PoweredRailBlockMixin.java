@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 public class PoweredRailBlockMixin {
 
     @Inject(method = "updateState", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
     public void arclight$blockRedstone(BlockState state, Level worldIn, BlockPos pos, Block blockIn, CallbackInfo ci, boolean flag) {
         int power = flag ? 15 : 0;
         int newPower = CraftEventFactory.callRedstoneChange(worldIn, pos, power, 15 - power).getNewCurrent();

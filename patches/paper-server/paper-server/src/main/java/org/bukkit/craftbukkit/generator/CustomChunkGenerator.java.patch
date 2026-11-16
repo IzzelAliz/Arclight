@@ -2,15 +2,24 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/generator/CustomC
 --- a/paper-server/src/main/java/org/bukkit/craftbukkit/generator/CustomChunkGenerator.java
 +++ b/paper-server/src/main/java/org/bukkit/craftbukkit/generator/CustomChunkGenerator.java
 @@ -272,7 +272,7 @@
-             return chunk;
+         final Set<Holder<net.minecraft.world.level.biome.Biome>> possibleBiomes
+     ) {
+         if (this.delegate instanceof NoiseBasedChunkGenerator noiseBasedChunkGenerator) {
+-            return noiseBasedChunkGenerator.buildTerrain(chunk, blender, randomState, structureManager, biomeManager, carverBiomeRegion, possibleBiomes, this);
++            return ((io.izzel.arclight.common.bridge.core.world.level.levelgen.NoiseBasedChunkGeneratorBridge) (Object) noiseBasedChunkGenerator).bridge$buildTerrain(chunk, blender, randomState, structureManager, biomeManager, carverBiomeRegion, possibleBiomes, this);
+         }
+ 
+         CompletableFuture<ChunkAccess> future = null;
+@@ -287,7 +287,7 @@
+             return c;
          };
  
--        return future == null ? CompletableFuture.supplyAsync(() -> work.apply(centerChunk), io.papermc.paper.FeatureHooks.getWorldgenExecutor()) : future.thenApply(work); // Paper - chunk system
-+        return future == null ? CompletableFuture.supplyAsync(() -> work.apply(centerChunk), net.minecraft.util.Util.backgroundExecutor()) : future.thenApply(work); // Paper - chunk system
+-        return future == null ? CompletableFuture.supplyAsync(() -> work.apply(chunk), io.papermc.paper.FeatureHooks.getWorldgenExecutor()) : future.thenApply(work); // Paper - chunk system
++        return future == null ? CompletableFuture.supplyAsync(() -> work.apply(chunk), net.minecraft.util.Util.backgroundExecutor()) : future.thenApply(work); // Paper - chunk system
      }
  
-     @Override
-@@ -303,7 +303,7 @@
+     public boolean shouldGenerateNoise(ChunkAccess chunk) {
+@@ -339,7 +339,7 @@
          int z = chunk.getPos().z();
  
          random.setSeed(Mth.getSeed(x, "should-decoration".hashCode(), z) ^ level.getSeed());

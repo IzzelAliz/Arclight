@@ -56,8 +56,8 @@ public interface MaterialBridge {
         return item.components().getOrDefault(DataComponents.MAX_DAMAGE, 0);
     }
 
-    default int bridge$forge$getBurnTime(Item item) {
+    default boolean bridge$forge$isFuel(Item item) {
         MinecraftServer server = io.izzel.arclight.common.mod.server.ArclightServer.getMinecraftServer();
-        return server == null ? 0 : server.fuelValues().burnDuration(new ItemStack(item));
+        return server != null && new ItemStack(item).has(DataComponents.COOKING_FUEL);
     }
 }

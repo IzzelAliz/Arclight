@@ -1,18 +1,29 @@
 diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java
 --- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java
 +++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java
-@@ -497,9 +497,7 @@
-             return new net.minecraft.nbt.CompoundTag();
+@@ -164,6 +164,10 @@
+         return new CraftItemStack((original == null || original.isEmpty()) ? null : original);
+     }
+ 
++    public static CraftItemStack asCraftMirror(net.minecraft.world.item.ItemStack original) {
++        return getCraftStack(asBukkitMirror(original));
++    }
++
+     public static ItemPredicate asCriterionConditionItem(ItemStack key) {
+         net.minecraft.world.item.ItemStack item = CraftItemStack.unwrap(key);
+ 
+@@ -575,9 +579,7 @@
+             return new CompoundTag();
          }
-         final net.minecraft.world.item.component.CustomData customData = this.handle.getOrDefault(DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY);
+         final CustomData customData = this.handle.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
 -        // getUnsafe is OK here because we are only ever *reading* the data so immutability is preserved
 -        //noinspection deprecation
 -        return customData.getUnsafe().getCompoundOrEmpty(PDC_CUSTOM_DATA_KEY);
 +        return customData.copyTag().getCompoundOrEmpty(PDC_CUSTOM_DATA_KEY);
      }
  
-     private static final org.bukkit.craftbukkit.persistence.CraftPersistentDataTypeRegistry REGISTRY = new org.bukkit.craftbukkit.persistence.CraftPersistentDataTypeRegistry();
-@@ -531,15 +529,15 @@
+     private static final CraftPersistentDataTypeRegistry REGISTRY = new CraftPersistentDataTypeRegistry();
+@@ -609,15 +611,15 @@
  
          final CraftPersistentDataContainer container = new CraftPersistentDataContainer(REGISTRY);
          CustomData customData = this.handle.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);

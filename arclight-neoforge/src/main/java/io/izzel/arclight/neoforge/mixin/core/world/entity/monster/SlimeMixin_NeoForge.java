@@ -7,7 +7,7 @@ import io.izzel.arclight.common.mod.server.event.ArclightEventFactory.SlimeSplit
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.monster.Slime;
+import net.minecraft.world.entity.monster.cubemob.AbstractCubeMob;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import io.izzel.arclight.common.bridge.core.world.entity.MobBridge;
@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 
-@Mixin(Slime.class)
+@Mixin(AbstractCubeMob.class)
 public class SlimeMixin_NeoForge {
     @WrapMethod(method = "remove(Lnet/minecraft/world/entity/Entity$RemovalReason;)V")
     private void arclight$restoreConversionFlag(Entity.RemovalReason reason, Operation<Void> original) {

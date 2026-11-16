@@ -5,7 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalFloatRef;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
-import net.minecraft.advancements.criterion.PlayerHurtEntityTrigger;
+import net.minecraft.advancements.triggers.PlayerHurtEntityTrigger;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -34,7 +34,7 @@ public class InteractionMixin {
         }
     }
 
-    @WrapOperation(method = "skipAttackInteraction", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/criterion/PlayerHurtEntityTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;FFZ)V"))
+    @WrapOperation(method = "skipAttackInteraction", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/triggers/PlayerHurtEntityTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;FFZ)V"))
     private void arclight$criterionDamage(PlayerHurtEntityTrigger trigger, ServerPlayer player, Entity target,
             DamageSource nativeSource, float dealt, float taken, boolean blocked, Operation<Void> original,
             @Share("arclight$source") LocalRef<DamageSource> source,

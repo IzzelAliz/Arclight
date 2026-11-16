@@ -19,6 +19,8 @@ public interface PlayerBridge extends LivingEntityBridge {
 
     net.minecraft.world.entity.item.ItemEntity bridge$prepareApiDrop(net.minecraft.world.entity.item.ItemEntity entity);
 
+    boolean bridge$takeApiDropRandomly(boolean randomly);
+
     boolean bridge$isFauxSleeping();
 
     void bridge$setFauxSleeping(boolean sleeping);
@@ -30,8 +32,7 @@ public interface PlayerBridge extends LivingEntityBridge {
     /** Dispatch/refund only; false means Bukkit vetoed this exact item entity. */
     boolean bridge$callDropItemEvent(net.minecraft.world.entity.item.ItemEntity item, boolean traceItem);
 
-    /** NeoForge dispatches at its toss helper's admission call, not Player.drop RETURN. */
-    default boolean bridge$platform$dropEventAtReturn() {
+    default boolean bridge$dropFromHand() {
         return true;
     }
 

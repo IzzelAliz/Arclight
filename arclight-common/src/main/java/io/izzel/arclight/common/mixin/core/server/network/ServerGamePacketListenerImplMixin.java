@@ -27,6 +27,7 @@ import net.minecraft.commands.CommandSigningContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.PositionAndRotation;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.Connection;
 import net.minecraft.network.DisconnectionDetails;
@@ -61,7 +62,7 @@ import net.minecraft.network.protocol.game.ServerboundSelectTradePacket;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket;
 import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket;
-import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.network.protocol.game.ServerboundPunchPacket;
 import net.minecraft.network.protocol.game.ServerboundTeleportToEntityPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
@@ -241,7 +242,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
     @Shadow private static boolean isChatMessageIllegal(String p_215215_) { return false; }
     @Shadow protected abstract CompletableFuture<FilteredText> filterTextPacket(String p_243213_);
     @Shadow protected abstract ParseResults<CommandSourceStack> parseCommand(String p_242938_);
-    @Shadow protected abstract void detectRateSpam();
+    @Shadow protected abstract void detectChatRateSpam();
     @Shadow protected abstract PlayerChatMessage getSignedMessage(ServerboundChatPacket p_251061_, LastSeenMessages p_250566_) throws SignedMessageChain.DecodeException;
     @Shadow protected abstract void handleMessageDecodeFailure(SignedMessageChain.DecodeException p_252068_);
     @Shadow protected abstract boolean isEntityCollidingWithAnythingNew(LevelReader p_289008_, Entity p_289009_, AABB p_288986_, double p_288990_, double p_288991_, double p_288967_);
@@ -323,7 +324,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
     @Overwrite
     public void handleMoveVehicle(final ServerboundMoveVehiclePacket packetplayinvehiclemove) {
         PacketUtils.ensureRunningOnSameThread(packetplayinvehiclemove, (ServerGamePacketListenerImpl) (Object) this, this.player.level());
-        if (containsInvalidValues(packetplayinvehiclemove.position().x, packetplayinvehiclemove.position().y, packetplayinvehiclemove.position().z, packetplayinvehiclemove.yRot(), packetplayinvehiclemove.xRot())) {
+        if (containsInvalidValues(packetplayinvehiclemove.movingTo().position().x, packetplayinvehiclemove.movingTo().position().y, packetplayinvehiclemove.movingTo().position().z, packetplayinvehiclemove.movingTo().yRot(), packetplayinvehiclemove.movingTo().xRot())) {
             this.disconnect(Component.translatable("multiplayer.disconnect.invalid_vehicle_movement"));
         } else if (!this.updateAwaitingTeleport()) {
             Entity entity = this.player.getRootVehicle();
@@ -333,11 +334,11 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                 double d0 = entity.getX();
                 double d2 = entity.getY();
                 double d3 = entity.getZ();
-                double d4 = packetplayinvehiclemove.position().x;
-                double d5 = packetplayinvehiclemove.position().y;
-                double d6 = packetplayinvehiclemove.position().z;
-                float f = packetplayinvehiclemove.yRot();
-                float f2 = packetplayinvehiclemove.xRot();
+                double d4 = packetplayinvehiclemove.movingTo().position().x;
+                double d5 = packetplayinvehiclemove.movingTo().position().y;
+                double d6 = packetplayinvehiclemove.movingTo().position().z;
+                float f = packetplayinvehiclemove.movingTo().yRot();
+                float f2 = packetplayinvehiclemove.movingTo().xRot();
                 double d7 = d4 - this.vehicleFirstGoodX;
                 double d8 = d5 - this.vehicleFirstGoodY;
                 double d9 = d6 - this.vehicleFirstGoodZ;
@@ -380,7 +381,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                 speed *= 2.0;
                 if (d11 - d10 > Math.max(100.0, Math.pow(10.0f * i * speed, 2.0)) && !this.isSingleplayerOwner()) {
                     LOGGER.warn("{} (vehicle of {}) moved too quickly! {},{},{}", entity.getName().getString(), this.player.getName().getString(), d7, d8, d9);
-                    this.send(new ClientboundMoveVehiclePacket(entity.position(), entity.getYRot(), entity.getXRot()));
+                    this.send(new ClientboundMoveVehiclePacket(PositionAndRotation.of(entity.position(), entity.getYRot(), entity.getXRot())));
                     return;
                 }
                 boolean flag = worldserver.noCollision(entity, entity.getBoundingBox().deflate(0.0625));
@@ -416,7 +417,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                 if (flag && (flag2 || !flag3)) {
                     entity.snapTo(d0, d2, d3, f, f2);
                     this.player.snapTo(d0, d2, d3, this.player.getYRot(), this.player.getXRot());
-                    this.send(new ClientboundMoveVehiclePacket(entity.position(), entity.getYRot(), entity.getXRot()));
+                    this.send(new ClientboundMoveVehiclePacket(PositionAndRotation.of(entity.position(), entity.getYRot(), entity.getXRot())));
                     return;
                 }
                 Player player = this.getCraftPlayer();
@@ -430,11 +431,11 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                 }
                 Location from = new Location(player.getWorld(), this.lastPosX, this.lastPosY, this.lastPosZ, this.lastYaw, this.lastPitch);
                 Location to = player.getLocation().clone();
-                to.setX(packetplayinvehiclemove.position().x);
-                to.setY(packetplayinvehiclemove.position().y);
-                to.setZ(packetplayinvehiclemove.position().z);
-                to.setYaw(packetplayinvehiclemove.yRot());
-                to.setPitch(packetplayinvehiclemove.xRot());
+                to.setX(packetplayinvehiclemove.movingTo().position().x);
+                to.setY(packetplayinvehiclemove.movingTo().position().y);
+                to.setZ(packetplayinvehiclemove.movingTo().position().z);
+                to.setYaw(packetplayinvehiclemove.movingTo().yRot());
+                to.setPitch(packetplayinvehiclemove.movingTo().xRot());
                 double delta = Math.pow(this.lastPosX - to.getX(), 2.0) + Math.pow(this.lastPosY - to.getY(), 2.0) + Math.pow(this.lastPosZ - to.getZ(), 2.0);
                 float deltaAngle = Math.abs(this.lastYaw - to.getYaw()) + Math.abs(this.lastPitch - to.getPitch());
                 if ((delta > 0.00390625 || deltaAngle > 10.0f) && !((ServerPlayerBridge) this.player).bridge$isMovementBlocked()) {
@@ -473,8 +474,8 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
     }
 
     @Inject(method = "handleAcceptTeleportPacket",
-        at = @At(value = "FIELD", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;awaitingPositionFromClient:Lnet/minecraft/world/phys/Vec3;"),
-        slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;isChangingDimension()Z")))
+        at = @At(value = "FIELD", opcode = org.objectweb.asm.Opcodes.PUTFIELD, shift = At.Shift.AFTER, target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;awaitingPositionFromClient:Lnet/minecraft/world/phys/Vec3;"),
+        slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;hasChangedDimension()V")))
     private void arclight$updateLoc(ServerboundAcceptTeleportationPacket packetIn, CallbackInfo ci) {
         if (((ServerPlayerBridge) this.player).bridge$isValid()) {
             this.player.level().getChunkSource().move(this.player);
@@ -895,7 +896,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         if (((ServerPlayerBridge) this.player).bridge$isMovementBlocked()) {
             ci.cancel();
         }
-        if (!this.checkLimit(((TimestampedPacket) packetIn).bridge$timestamp())) {
+        if (!this.checkLimit(((TimestampedPacket) (Object) packetIn).bridge$timestamp())) {
             ci.cancel();
         }
     }
@@ -929,7 +930,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             ci.cancel();
             return;
         }
-        if (!this.checkLimit(((TimestampedPacket) packet).bridge$timestamp())) {
+        if (!this.checkLimit(((TimestampedPacket) (Object) packet).bridge$timestamp())) {
             ci.cancel();
             return;
         }
@@ -937,8 +938,8 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
 
     @Decorate(method = "handleUseItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayerGameMode;useItem(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"))
     private InteractionResult arclight$playerInteractEvent(ServerPlayerGameMode instance, ServerPlayer serverPlayer, net.minecraft.world.level.Level level, ItemStack itemStack, InteractionHand interactionHand, ServerboundUseItemPacket packet) throws Throwable {
-        float f2 = Mth.wrapDegrees(packet.getYRot());
-        float f1 = Mth.wrapDegrees(packet.getXRot());
+        float f2 = Mth.wrapDegrees(packet.yRot());
+        float f1 = Mth.wrapDegrees(packet.xRot());
         double d0 = this.player.getX();
         double d2 = this.player.getY() + this.player.getEyeHeight();
         double d3 = this.player.getZ();
@@ -1158,7 +1159,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
             this.chat(s, playerchatmessage, true);
         }
         // this.server.getPlayerList().broadcastChatMessage(playerchatmessage, this.player, ChatMessageType.bind(ChatMessageType.CHAT, (Entity) this.player));
-        this.detectRateSpam();
+        this.detectChatRateSpam();
     }
 
     @Inject(method = "sendPlayerChatMessage", cancellable = true, at = @At("HEAD"))
@@ -1174,15 +1175,15 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         }
     }
 
-    @Inject(method = "handleAnimate", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/server/level/ServerLevel;)V"))
-    private void arclight$interactCheck(ServerboundSwingPacket packet, CallbackInfo ci) {
+    @Inject(method = "handlePunch(Lnet/minecraft/network/protocol/game/ServerboundPunchPacket;)V", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/server/level/ServerLevel;)V"))
+    private void arclight$interactCheck(ServerboundPunchPacket packet, CallbackInfo ci) {
         if (((ServerPlayerBridge) this.player).bridge$isMovementBlocked()) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "handleAnimate", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;swing(Lnet/minecraft/world/InteractionHand;)V"))
-    private void arclight$animateEvents(ServerboundSwingPacket packet, CallbackInfo ci) {
+    @Inject(method = "handlePunch(Lnet/minecraft/network/protocol/game/ServerboundPunchPacket;)V", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;swing(Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/item/component/SwingAnimation;Z)Z"))
+    private void arclight$animateEvents(ServerboundPunchPacket packet, CallbackInfo ci) {
         float f1 = this.player.getXRot();
         float f2 = this.player.getYRot();
         double d0 = this.player.getX();
@@ -1683,7 +1684,7 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
                 this.player.inventoryMenu.broadcastChanges();
             } else if (flag && flag3 && this.dropSpamThrottler.isUnderThreshold()) {
                 this.dropSpamThrottler.increment();
-                this.player.drop(itemstack, true);
+                this.player.drop(itemstack, true, net.minecraft.util.Prediction.PREDICTED);
             } else if (flag && flag3) {
                 LOGGER.warn("Player {} tried to drop an item too quickly", this.player.getScoreboardName());
             }

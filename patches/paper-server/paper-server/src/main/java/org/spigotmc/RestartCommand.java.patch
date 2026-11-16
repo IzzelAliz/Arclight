@@ -11,6 +11,15 @@ diff --git a/paper-server/src/main/java/org/spigotmc/RestartCommand.java b/paper
  import net.minecraft.server.level.ServerPlayer;
  import org.bukkit.command.Command;
  import org.bukkit.command.CommandSender;
+@@ -73,7 +73,7 @@
+             System.exit(0);
+         } else {
+             // Mark the server to shutdown at the end of the tick
+-            MinecraftServer.getServer().halt(false, isRestarting);
++            ((io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge) MinecraftServer.getServer()).bridge$safeShutdown(false, isRestarting);
+ 
+             // wait 10 seconds to see if we're actually going to try shutdown
+             try {
 @@ -82,7 +82,7 @@
  
              // Check if we've actually hit a state where the server is going to safely shutdown

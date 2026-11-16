@@ -109,6 +109,8 @@ public interface EntityBridge extends CommandSourceBridge {
 
     void bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause cause);
 
+    EntityRemoveEvent.Cause bridge$getRemoveEventCause();
+
     PortalEventResult bridge$callPortalEvent(Entity entity, Location exit, PlayerTeleportEvent.TeleportCause cause, int searchRadius, int creationRadius);
 
     boolean bridge$pluginRemoved();

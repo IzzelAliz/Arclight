@@ -16,13 +16,6 @@
       "mixin": "io/izzel/arclight/common/mixin/core/world/level/storage/TagValueOutputMixin"
     }
   ],
-    "net/minecraft/world/entity/Entity": [
-      {
-        "name": "nextEntityId",
-        "descriptor": "()I",
-        "mixin": "io/izzel/arclight/common/mixin/core/world/entity/EntityMixin"
-      }
-    ],
     "net/minecraft/ChatFormatting": [
       {
         "name": "getByHexValue",
@@ -162,7 +155,7 @@
     "net/minecraft/world/level/portal/TeleportTransition": ["io/izzel/arclight/common/bridge/core/world/level/portal/DimensionTransitionBridge"],
     "net/minecraft/world/entity/monster/zombie/ZombieVillager": ["io/izzel/arclight/common/bridge/core/world/entity/monster/ZombieVillagerBridge"],
     "net/minecraft/world/entity/Mob": ["io/izzel/arclight/common/bridge/core/world/entity/MobBridge"],
-    "net/minecraft/world/entity/monster/EnderMan": ["io/izzel/arclight/common/bridge/core/world/entity/monster/EnderManBridge"],
+    "net/minecraft/world/entity/monster/Enderman": ["io/izzel/arclight/common/bridge/core/world/entity/monster/EnderManBridge"],
     "net/minecraft/world/entity/monster/piglin/Piglin": ["io/izzel/arclight/common/bridge/core/world/entity/monster/piglin/PiglinBridge"],
     "net/minecraft/world/entity/animal/allay/Allay": ["io/izzel/arclight/common/bridge/core/world/entity/animal/AllayBridge"],
     "net/minecraft/world/entity/monster/Creeper": ["io/izzel/arclight/common/bridge/core/world/entity/monster/CreeperBridge"],

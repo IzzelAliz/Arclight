@@ -22,6 +22,29 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Player.class)
 public abstract class PlayerMixin_Forge extends LivingEntityMixin_Forge implements PlayerBridge, IForgePlayer {
 
+    @org.spongepowered.asm.mixin.Unique private boolean arclight$dropFromHand;
+
+    @Override
+    public boolean bridge$dropFromHand() {
+        return this.arclight$dropFromHand;
+    }
+
+    @Decorate(
+        method = "drop(Lnet/minecraft/world/item/ItemStack;ZLnet/minecraft/util/Prediction;)Lnet/minecraft/world/entity/item/ItemEntity;",
+        at = @At(value = "INVOKE", target = "Lnet/minecraftforge/common/ForgeHooks;onPlayerTossEvent(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/item/ItemEntity;)Lnet/minecraft/world/entity/item/ItemEntity;", remap = false),
+        require = 1, allow = 1)
+    private net.minecraft.world.entity.item.ItemEntity arclight$dropFromHand(Player player,
+            net.minecraft.world.entity.item.ItemEntity item,
+            net.minecraft.world.item.ItemStack stack, boolean thrownFromHand, net.minecraft.util.Prediction prediction) throws Throwable {
+        boolean previous = this.arclight$dropFromHand;
+        this.arclight$dropFromHand = thrownFromHand;
+        try {
+            return (net.minecraft.world.entity.item.ItemEntity) DecorationOps.callsite().invoke(player, item);
+        } finally {
+            this.arclight$dropFromHand = previous;
+        }
+    }
+
     @Inject(method = "hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z", at = @At("HEAD"), cancellable = true)
     private void arclight$forge$onPlayerAttack(ServerLevel level, DamageSource source, float damage, CallbackInfoReturnable<Boolean> cir) {
         // The common Player.hurtServer overwrite replaces Forge's original entry hook.

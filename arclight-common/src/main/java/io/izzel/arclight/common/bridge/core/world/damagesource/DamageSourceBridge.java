@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.bridge.core.world.damagesource;
 
+import net.kyori.adventure.pointer.Pointers;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
@@ -7,6 +8,10 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import javax.annotation.Nullable;
 
 public interface DamageSourceBridge {
+
+    Pointers bridge$getDamageContext();
+
+    DamageSource bridge$setDamageContext(Pointers damageContext);
 
     @Nullable DamageCause bridge$knownCause();
 

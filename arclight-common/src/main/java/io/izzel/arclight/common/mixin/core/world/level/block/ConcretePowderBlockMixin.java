@@ -31,10 +31,10 @@ public abstract class ConcretePowderBlockMixin extends FallingBlockMixin {
     @Shadow @Final private Block concrete;
     // @formatter:on
 
-    @Decorate(method = "onLand", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
-    public boolean arclight$blockForm(Level world, BlockPos pos, BlockState newState, int flags) throws Throwable {
+    @Decorate(method = "onLand", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
+    public boolean arclight$blockForm(Level world, BlockPos pos, BlockState newState) throws Throwable {
         if (LevelAccessorBridge.from(world) instanceof LevelAccessorBridge bridge) {
-            final var event = ArclightEventFactory.callBlockFormEvent(bridge.bridge$getMinecraftWorld(), pos, newState, flags, null);
+            final var event = ArclightEventFactory.callBlockFormEvent(bridge.bridge$getMinecraftWorld(), pos, newState, Block.UPDATE_ALL, null);
             if (event != null) {
                 if (event.isCancelled()) {
                     return false;
@@ -42,7 +42,7 @@ public abstract class ConcretePowderBlockMixin extends FallingBlockMixin {
                 newState = ((CraftBlockState) event.getNewState()).getHandle();
             }
         }
-        return (boolean) DecorationOps.callsite().invoke(world, pos, newState, flags);
+        return (boolean) DecorationOps.callsite().invoke(world, pos, newState);
     }
 
     @Redirect(method = "getStateForPlacement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;defaultBlockState()Lnet/minecraft/world/level/block/state/BlockState;"))

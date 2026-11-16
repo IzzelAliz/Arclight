@@ -1,5 +1,3 @@
-diff --git a/paper-server/src/main/java/org/spigotmc/WatchdogThread.java b/paper-server/src/main/java/org/spigotmc/WatchdogThread.java
-index 5c1306ac6eb620a38ed5ef3632b611214e1d5dcd..f3e95fec1eb290fd9b7f3c3315921bc2b47c3efe 100644
 --- a/paper-server/src/main/java/org/spigotmc/WatchdogThread.java
 +++ b/paper-server/src/main/java/org/spigotmc/WatchdogThread.java
 @@ -1,35 +1,21 @@
@@ -41,7 +39,7 @@ index 5c1306ac6eb620a38ed5ef3632b611214e1d5dcd..f3e95fec1eb290fd9b7f3c3315921bc2
      }
  
      private static long monotonicMillis() {
-@@ -48,132 +34,23 @@ public class WatchdogThread extends ca.spottedleaf.moonrise.common.util.TickThre
+@@ -48,132 +34,23 @@
      }
  
      public static void tick() {
@@ -110,7 +108,7 @@ index 5c1306ac6eb620a38ed5ef3632b611214e1d5dcd..f3e95fec1eb290fd9b7f3c3315921bc2
 -                logger.log(Level.SEVERE, "------------------------------");
 -                logger.log(Level.SEVERE, "Server thread dump (Look for plugins here before reporting to Paper!):"); // Paper
 -                FeatureHooks.dumpAllChunkLoadInfo(MinecraftServer.getServer(), isLongTimeout); // Paper - log detailed tick information
--                WatchdogThread.dumpThread(ManagementFactory.getThreadMXBean().getThreadInfo(MinecraftServer.getServer().serverThread.threadId(), Integer.MAX_VALUE), logger);
+-                WatchdogThread.dumpThread(ManagementFactory.getThreadMXBean().getThreadInfo(MinecraftServer.getServer().getRunningThread().threadId(), Integer.MAX_VALUE), logger);
 -                logger.log(Level.SEVERE, "------------------------------");
 -
 -                // Paper start - Only print full dump on long timeouts
@@ -134,7 +132,7 @@ index 5c1306ac6eb620a38ed5ef3632b611214e1d5dcd..f3e95fec1eb290fd9b7f3c3315921bc2
 -                        }
 -                        // try one last chance to safe shutdown on main in case it 'comes back'
 -                        server.abnormalExit = true;
--                        server.safeShutdown(false, this.restart);
+-                        server.halt(false, this.restart);
 -                        try {
 -                            Thread.sleep(1000);
 -                        } catch (InterruptedException e) {

@@ -13,6 +13,10 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket;
 import net.minecraft.server.network.ConfigurationTask;
 import net.minecraft.server.network.config.PrepareSpawnTask;
+import net.minecraft.server.network.config.ServerCodeOfConductConfigurationTask;
+import io.papermc.paper.event.connection.configuration.PlayerCodeOfConductSendEvent;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Queue;
 import java.util.function.Consumer;
 import io.izzel.arclight.common.mod.mixins.annotation.CreateConstructor;
@@ -35,6 +39,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -72,6 +77,34 @@ public abstract class ServerConfigurationPacketListenerImplMixin extends ServerC
     @Override
     public PlayerConfigurationConnection bridge$getConfigurationConnection() {
         return this.paperConnection;
+    }
+
+    @Invoker("finishCurrentTask")
+    public abstract void arclight$finishCurrentTask(ConfigurationTask.Type type);
+
+    @Decorate(method = "addOptionalTasks()V", require = 1, expect = 1, allow = 1,
+        at = @At(value = "INVOKE", target = "Ljava/util/Map;isEmpty()Z"))
+    private boolean arclight$queueCodeOfConduct(Map<?, ?> codeOfConducts) throws Throwable {
+        boolean empty = (boolean) DecorationOps.callsite().invoke(codeOfConducts);
+        return empty && PlayerCodeOfConductSendEvent.getHandlerList().getRegisteredListeners().length == 0;
+    }
+
+    @Decorate(method = "lambda$addOptionalTasks$0(Ljava/util/Map;)Ljava/lang/String;", require = 1, expect = 1, allow = 1,
+        at = @At(value = "INVOKE", target = "Ljava/util/Iterator;next()Ljava/lang/Object;"))
+    private Object arclight$emptyCodeOfConduct(Iterator<?> iterator, Map<String, String> codeOfConducts) throws Throwable {
+        return codeOfConducts.isEmpty() ? null : DecorationOps.callsite().invoke(iterator);
+    }
+
+    @Decorate(method = "lambda$addOptionalTasks$0(Ljava/util/Map;)Ljava/lang/String;", require = 1, expect = 1, allow = 1,
+        at = @At("RETURN"))
+    private void arclight$sendCodeOfConductEvent(String codeOfConduct) throws Throwable {
+        var event = new PlayerCodeOfConductSendEvent(this.bridge$getConfigurationConnection(), codeOfConduct);
+        event.callEvent();
+        codeOfConduct = event.getCodeOfConduct();
+        if (codeOfConduct == null) {
+            this.arclight$finishCurrentTask(ServerCodeOfConductConfigurationTask.TYPE);
+        }
+        DecorationOps.callsite().invoke(codeOfConduct);
     }
 
     @Inject(method = "addOptionalTasks()V", at = @At("RETURN"), require = 1, expect = 1, allow = 1)

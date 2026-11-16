@@ -21,12 +21,12 @@ public class CraftSpawnCategoryMixin {
         return spawnCategory != null && spawnCategory.ordinal() < SpawnCategory.MISC.ordinal();
     }
 
-    @Inject(method = "toBukkit", cancellable = true, at = @At(value = "NEW", target = "java/lang/UnsupportedOperationException"))
+    @Inject(method = "toBukkit", cancellable = true, at = @At(value = "NEW", target = "java/lang/MatchException"))
     private static void arclight$modToBukkit(MobCategory mobCategory, CallbackInfoReturnable<SpawnCategory> cir) {
         cir.setReturnValue(SpawnCategory.valueOf(mobCategory.name()));
     }
 
-    @Inject(method = "toNMS", cancellable = true, at = @At(value = "NEW", target = "java/lang/UnsupportedOperationException"))
+    @Inject(method = "toNMS", cancellable = true, at = @At(value = "NEW", target = "java/lang/MatchException"))
     private static void arclight$bukkitToMod(SpawnCategory spawnCategory, CallbackInfoReturnable<MobCategory> cir) {
         cir.setReturnValue(MobCategory.valueOf(spawnCategory.name()));
     }

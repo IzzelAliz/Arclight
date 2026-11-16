@@ -23,7 +23,7 @@ import java.util.Map;
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityEquipmentEventMixin {
 
-    @Decorate(method = "collectEquipmentChanges()Ljava/util/Map;", require = 1, allow = 1, inject = true, at = @At("HEAD"))
+    @Decorate(method = "collectEquipmentChanges(Ljava/util/Map;)Ljava/util/Map;", require = 1, allow = 1, inject = true, at = @At("HEAD"))
     private void arclight$beginEquipmentChanges(
         @Local(allocate = "arclightEquipmentChanges") Map<org.bukkit.inventory.EquipmentSlot, Pair<org.bukkit.inventory.ItemStack, org.bukkit.inventory.ItemStack>> equipmentChanges
     ) throws Throwable {
@@ -31,7 +31,7 @@ public abstract class LivingEntityEquipmentEventMixin {
         DecorationOps.blackhole().invoke(equipmentChanges);
     }
 
-    @Decorate(method = "collectEquipmentChanges()Ljava/util/Map;", require = 1, allow = 1, at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", remap = false))
+    @Decorate(method = "collectEquipmentChanges(Ljava/util/Map;)Ljava/util/Map;", require = 1, allow = 1, at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", remap = false))
     private Object arclight$collectEquipmentChange(
         Map<EquipmentSlot, ItemStack> changedItems, Object key, Object value,
         @Local(ordinal = 0) ItemStack previous,
@@ -58,7 +58,7 @@ public abstract class LivingEntityEquipmentEventMixin {
         return result;
     }
 
-    @Decorate(method = "collectEquipmentChanges()Ljava/util/Map;", require = 1, allow = 1, at = @At("RETURN"))
+    @Decorate(method = "collectEquipmentChanges(Ljava/util/Map;)Ljava/util/Map;", require = 1, allow = 1, at = @At("RETURN"))
     private void arclight$notifyEquipmentChanges(
         Map<EquipmentSlot, ItemStack> changedItems,
         @Local(allocate = "arclightEquipmentChanges") Map<org.bukkit.inventory.EquipmentSlot, Pair<org.bukkit.inventory.ItemStack, org.bukkit.inventory.ItemStack>> equipmentChanges

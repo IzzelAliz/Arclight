@@ -16,15 +16,15 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/command/CraftRemo
      }
  
      @Override
-+    public void sendMessage(final net.kyori.adventure.identity.Identity identity, final net.kyori.adventure.text.Component message, final net.kyori.adventure.audience.MessageType type) {
++    public void sendMessage(final net.kyori.adventure.text.Component message) {
 +        // RCON is a plain-text response, not another console logger. Keep this listener's buffer as the only sink.
 +        this.sendMessage(PLAIN_TEXT.serialize(net.kyori.adventure.translation.GlobalTranslator.render(message, java.util.Locale.US)));
 +    }
 +
 +    @Override
 +    public void sendMessage(final net.kyori.adventure.text.Component message, final net.kyori.adventure.chat.ChatType.Bound boundChatType) {
-+        this.sendMessage(net.kyori.adventure.identity.Identity.nil(), CraftConsoleCommandSender.decorateMessage(message, boundChatType,
-+            this.listener.createCommandSourceStack().registryAccess()), net.kyori.adventure.audience.MessageType.CHAT);
++        this.sendMessage(CraftConsoleCommandSender.decorateMessage(message, boundChatType,
++            this.listener.createCommandSourceStack().registryAccess()));
 +    }
 +
 +    @Override

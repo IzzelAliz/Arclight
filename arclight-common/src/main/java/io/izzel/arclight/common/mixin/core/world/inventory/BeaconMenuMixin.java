@@ -11,7 +11,6 @@ import java.util.Optional;
 import net.minecraft.core.Holder;
 import net.minecraft.world.Container;
 import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.BeaconMenu;
@@ -51,32 +50,24 @@ public abstract class BeaconMenuMixin extends AbstractContainerMenuMixin {
         if (!bridge$isCheckReachable()) cir.setReturnValue(true);
     }
 
-    // PaymentSlot is private, so these calls use WrapOperation's coerced receiver support.
-    @WrapOperation(method = "updateEffects(Ljava/util/Optional;Ljava/util/Optional;)V",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/BeaconMenu$PaymentSlot;hasItem()Z"),
-        require = 1, allow = 1)
-    private boolean arclight$changeBeaconEffects(@Coerce Object paymentSlot, Operation<Boolean> original,
-                                                Optional<Holder<MobEffect>> primary, Optional<Holder<MobEffect>> secondary,
-                                                @Share("arclightBeaconSelection") LocalRef<PlayerChangeBeaconEffectEvent> selection) {
-        if (!original.call(paymentSlot)) {
-            return false;
-        }
-        // Paper validates the packet's secondary before dispatch, not plugin replacements.
-        if (secondary.isPresent() && secondary.get() != MobEffects.REGENERATION
-            && primary.isPresent() && secondary.get() != primary.get()) {
-            secondary = Optional.empty();
-        }
+    @Inject(method = "updateEffects(Ljava/util/Optional;Ljava/util/Optional;)Z",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/BeaconMenu;encodeEffect(Lnet/minecraft/core/Holder;)I", ordinal = 0),
+        cancellable = true, require = 1, allow = 1)
+    private void arclight$changeBeaconEffects(Optional<Holder<MobEffect>> primary, Optional<Holder<MobEffect>> secondary,
+                                              CallbackInfoReturnable<Boolean> cir,
+                                              @Share("arclightBeaconSelection") LocalRef<PlayerChangeBeaconEffectEvent> selection) {
         var event = new PlayerChangeBeaconEffectEvent(
             (org.bukkit.entity.Player) ((PlayerBridge) this.inventory.player).bridge$getBukkitEntity(),
             primary.map(CraftPotionEffectType::minecraftHolderToBukkit).orElse(null),
             secondary.map(CraftPotionEffectType::minecraftHolderToBukkit).orElse(null),
             ((ContainerLevelAccessBridge) this.access).bridge$getLocation().getBlock());
         selection.set(event);
-        // The native if owns both data writes, payment removal and block-entity notification.
-        return event.callEvent();
+        if (!event.callEvent()) {
+            cir.setReturnValue(true);
+        }
     }
 
-    @WrapOperation(method = "updateEffects(Ljava/util/Optional;Ljava/util/Optional;)V",
+    @WrapOperation(method = "updateEffects(Ljava/util/Optional;Ljava/util/Optional;)Z",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/BeaconMenu;encodeEffect(Lnet/minecraft/core/Holder;)I", ordinal = 0),
         require = 1, allow = 1)
     private int arclight$selectedPrimaryEffect(Holder<MobEffect> effect, Operation<Integer> original,
@@ -86,7 +77,7 @@ public abstract class BeaconMenuMixin extends AbstractContainerMenuMixin {
             : CraftPotionEffectType.bukkitToMinecraftHolder(event.getPrimary()));
     }
 
-    @WrapOperation(method = "updateEffects(Ljava/util/Optional;Ljava/util/Optional;)V",
+    @WrapOperation(method = "updateEffects(Ljava/util/Optional;Ljava/util/Optional;)Z",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/BeaconMenu;encodeEffect(Lnet/minecraft/core/Holder;)I", ordinal = 1),
         require = 1, allow = 1)
     private int arclight$selectedSecondaryEffect(Holder<MobEffect> effect, Operation<Integer> original,
@@ -98,7 +89,7 @@ public abstract class BeaconMenuMixin extends AbstractContainerMenuMixin {
     }
 
     // PaymentSlot is private. WrapOperation supports a coerced receiver without widening it.
-    @WrapOperation(method = "updateEffects(Ljava/util/Optional;Ljava/util/Optional;)V",
+    @WrapOperation(method = "updateEffects(Ljava/util/Optional;Ljava/util/Optional;)Z",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/BeaconMenu$PaymentSlot;remove(I)Lnet/minecraft/world/item/ItemStack;"),
         require = 1, allow = 1)
     private ItemStack arclight$consumeBeaconPayment(@Coerce Object paymentSlot, int amount, Operation<ItemStack> original,

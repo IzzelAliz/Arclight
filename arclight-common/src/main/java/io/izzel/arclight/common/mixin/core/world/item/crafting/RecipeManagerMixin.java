@@ -30,7 +30,8 @@ import java.util.Optional;
 public abstract class RecipeManagerMixin implements RecipeManagerBridge {
 
     // @formatter:off
-    @Shadow private RecipeMap recipes;
+    @Shadow @org.spongepowered.asm.mixin.Final @org.spongepowered.asm.mixin.Mutable private RecipeMap recipes;
+    @Shadow @org.spongepowered.asm.mixin.Final @org.spongepowered.asm.mixin.Mutable private java.util.Collection<RecipeHolder<?>> learnableRecipes;
     // @formatter:on
 
     @Unique private FeatureFlagSet enabledFlags; // Paper added
@@ -69,14 +70,62 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
         // CraftBukkit end
     }
 
+    @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(
+        method = "getRecipeFor(Lnet/minecraft/world/item/crafting/RecipeType;Lnet/minecraft/world/item/crafting/RecipeInput;Lnet/minecraft/world/level/Level;)Ljava/util/Optional;",
+        at = @At(value = "INVOKE", target = "Ljava/util/stream/Stream;findFirst()Ljava/util/Optional;"))
+    private Optional<RecipeHolder<?>> arclight$preferRuntimeRecipe(java.util.stream.Stream<RecipeHolder<?>> recipes,
+            com.llamalad7.mixinextras.injector.wrapoperation.Operation<Optional<RecipeHolder<?>>> original) {
+        return recipes.reduce((first, second) -> ((io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeHolderBridge) (Object) second).bridge$isRuntimeAddedRecipe() ? second : first);
+    }
+
+    @Unique
+    private void arclight$replaceRecipes(List<RecipeHolder<?>> recipes) {
+        arclight$publishRecipes(recipes);
+        bridge$finalizeRecipeChanges();
+    }
+
+    @Unique
+    private void arclight$publishRecipes(List<RecipeHolder<?>> recipes) {
+        com.google.common.collect.ImmutableMultimap.Builder<RecipeType<?>, RecipeHolder<?>> byType = com.google.common.collect.ImmutableMultimap.builder();
+        com.google.common.collect.ImmutableMap.Builder<ResourceKey<Recipe<?>>, RecipeHolder<?>> byKey = com.google.common.collect.ImmutableMap.builder();
+        for (RecipeHolder<?> recipe : recipes) {
+            byType.put(recipe.value().getType(), recipe);
+            byKey.put(recipe.id(), recipe);
+        }
+        this.recipes = new RecipeMap(byType.build(), byKey.build());
+    }
+
+    @Override
+    public void bridge$finalizeRecipeChanges() {
+        this.learnableRecipes = this.recipes.values().stream().filter(recipe -> !recipe.value().isSpecial()).toList();
+        arclight$refreshRecipes();
+    }
+
+    @Override
+    public void bridge$resetBrewingRecipes(net.minecraft.core.RegistryAccess registryAccess) {
+        List<RecipeHolder<?>> recipes = new ArrayList<>(this.recipes.values());
+        recipes.removeIf(recipe -> recipe.value().getType() == RecipeType.BREWING);
+        registryAccess.lookupOrThrow(net.minecraft.core.registries.Registries.RECIPE).listElements()
+            .filter(recipe -> recipe.value().getType() == RecipeType.BREWING)
+            .forEach(recipe -> recipes.add(new RecipeHolder<>(recipe.key(), recipe.value())));
+        arclight$replaceRecipes(recipes);
+    }
+
     public void addRecipe(RecipeHolder<?> recipe) {
+        bridge$addRecipeWithoutRefresh(recipe);
+        bridge$finalizeRecipeChanges();
+    }
+
+    @Override
+    public void bridge$addRecipeWithoutRefresh(RecipeHolder<?> recipe) {
+        recipe = ((io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeHolderBridge) (Object) recipe).bridge$asRuntimeAddedRecipe();
+        final var key = recipe.id().identifier();
         List<RecipeHolder<?>> list = new ArrayList<>(this.recipes.values());
-        if (list.stream().anyMatch(holder -> holder.id().identifier().equals(recipe.id().identifier()))) {
+        if (list.stream().anyMatch(holder -> holder.id().identifier().equals(key))) {
             throw new IllegalStateException("Duplicate recipe ignored with ID " + recipe.id());
         } else {
             list.add(recipe);
-            this.recipes = RecipeMap.create(list);
-            arclight$refreshRecipes();
+            arclight$publishRecipes(list);
         }
     }
 
@@ -90,18 +139,30 @@ public abstract class RecipeManagerMixin implements RecipeManagerBridge {
     }
 
     public boolean removeRecipe(Identifier mcKey) {
+        boolean removed = arclight$removeRecipeWithoutRefresh(mcKey);
+        if (removed) {
+            bridge$finalizeRecipeChanges();
+        }
+        return removed;
+    }
+
+    @Override
+    public boolean bridge$removeRecipeWithoutRefresh(ResourceKey<Recipe<?>> key) {
+        return arclight$removeRecipeWithoutRefresh(key.identifier());
+    }
+
+    @Unique
+    private boolean arclight$removeRecipeWithoutRefresh(Identifier mcKey) {
         List<RecipeHolder<?>> list = new ArrayList<>(this.recipes.values());
         boolean removed = list.removeIf(recipe -> recipe.id().identifier().equals(mcKey));
         if (removed) {
-            this.recipes = RecipeMap.create(list);
-            arclight$refreshRecipes();
+            arclight$publishRecipes(list);
         }
         return removed;
     }
 
     public void clearRecipes() {
-        this.recipes = RecipeMap.create(List.of());
-        arclight$refreshRecipes();
+        arclight$replaceRecipes(List.of());
     }
 
     @Override

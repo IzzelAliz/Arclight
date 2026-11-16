@@ -17,7 +17,7 @@ public abstract class PlayerShieldDisableEventMixin {
 
     // Scope only the original component call, after the native super.blockUsingItem
     // callback. Do not replace the attack, disable calculation or loader callbacks.
-    @Decorate(method = "blockUsingItem(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;)V",
+    @Decorate(method = "blockUsingItem(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/damagesource/DamageSource;FZ)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/BlocksAttacks;disable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;FLnet/minecraft/world/item/ItemStack;)V"),
         require = 1, allow = 1)
     private void arclight$shieldDisableAttacker(BlocksAttacks component, ServerLevel level, LivingEntity user,

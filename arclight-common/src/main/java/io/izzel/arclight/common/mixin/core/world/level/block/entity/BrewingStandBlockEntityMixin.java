@@ -1,15 +1,12 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
 import io.izzel.arclight.common.bridge.core.world.level.block.entity.BlockEntityBridge;
-import io.izzel.arclight.common.mod.util.ArclightCaptures;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.alchemy.PotionBrewing;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.Bukkit;
@@ -41,62 +38,79 @@ public abstract class BrewingStandBlockEntityMixin extends BaseContainerBlockEnt
     public List<HumanEntity> transaction = new ArrayList<>();
     private int maxStack = MAX_STACK;
 
-    @Decorate(method = "serverTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;shrink(I)V"))
-    private static void arclight$brewFuel(ItemStack stack, int count, Level level, BlockPos pos, BlockState state, BrewingStandBlockEntity entity) throws Throwable {
-        BrewingStandFuelEvent event = new BrewingStandFuelEvent(CraftBlock.at(level, pos), CraftItemStack.asCraftMirror(stack), 20);
+    @Decorate(method = "serverTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/BrewingStandBlockEntity;getUses(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/component/BrewingFuel;)I"))
+    private static int arclight$brewFuel(BrewingStandBlockEntity entity, net.minecraft.server.level.ServerLevel level, net.minecraft.world.item.component.BrewingFuel brewingFuel,
+                                         @Local(ordinal = 0) BlockPos pos, @Local(ordinal = 0) ItemStack fuel,
+                                         @Local(allocate = "arclightBrewingFuel") BrewingStandFuelEvent event) throws Throwable {
+        int uses = (int) DecorationOps.callsite().invoke(entity, level, brewingFuel);
+        event = new BrewingStandFuelEvent(CraftBlock.at(level, pos), CraftItemStack.asCraftMirror(fuel), uses);
         Bukkit.getServer().getPluginManager().callEvent(event);
 
         if (event.isCancelled()) {
-            DecorationOps.cancel().invoke();
-            return;
-        } else {
-            entity.fuel = event.getFuelPower();
-            if (entity.fuel > 0 && event.isConsuming()) {
-                DecorationOps.callsite().invoke(stack, count);
-            }
+            return (int) DecorationOps.cancel().invoke();
         }
-        DecorationOps.blackhole().invoke();
+        DecorationOps.blackhole().invoke(event);
+        return event.getFuelPower();
+    }
+
+    @Decorate(method = "serverTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/Item;getCraftingRemainder()Lnet/minecraft/world/item/ItemStackTemplate;"))
+    private static net.minecraft.world.item.ItemStackTemplate arclight$fuelRemainder(net.minecraft.world.item.Item item,
+                                                                                 @Local(ordinal = 0) BrewingStandBlockEntity entity,
+                                                                                 @Local(allocate = "arclightBrewingFuel") BrewingStandFuelEvent event,
+                                                                                 @Local(allocate = "arclightConsumeBrewingFuel") boolean consume) throws Throwable {
+        var remainder = (net.minecraft.world.item.ItemStackTemplate) DecorationOps.callsite().invoke(item);
+        consume = entity.fuel > 0 && event.isConsuming();
+        DecorationOps.blackhole().invoke(consume);
+        return consume ? remainder : null;
+    }
+
+    @Decorate(method = "serverTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;shrink(I)V"))
+    private static void arclight$consumeFuel(ItemStack fuel, int count,
+                                            @Local(allocate = "arclightConsumeBrewingFuel") boolean consume) throws Throwable {
+        if (consume) {
+            DecorationOps.callsite().invoke(fuel, count);
+        }
     }
 
     @Inject(method = "serverTick", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/world/level/block/entity/BrewingStandBlockEntity;ingredient:Lnet/minecraft/world/item/Item;"))
-    private static void arclight$brewBegin(Level level, BlockPos pos, BlockState p_155288_, BrewingStandBlockEntity entity, CallbackInfo ci) {
+    private static void arclight$brewBegin(net.minecraft.server.level.ServerLevel level, BlockPos pos, BlockState p_155288_, BrewingStandBlockEntity entity, CallbackInfo ci) {
         var event = new BrewingStartEvent(CraftBlock.at(level, pos), CraftItemStack.asCraftMirror(entity.getItem(3)), entity.brewTime);
         Bukkit.getPluginManager().callEvent(event);
-        entity.brewTime = event.getTotalBrewTime();
+        entity.brewTime = event.getBrewingTime();
+        entity.totalBrewTime = event.getRecipeBrewTime();
     }
 
-    @Decorate(method = "doBrew", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;potionBrewing()Lnet/minecraft/world/item/alchemy/PotionBrewing;"))
-    private static PotionBrewing arclight$brewEvent(Level instance, Level level, BlockPos pos, NonNullList<ItemStack> stacks,
-                                                    @Local(allocate = "brewResults") List<org.bukkit.inventory.ItemStack> brewResults) throws Throwable {
-        var potionBrewing = (PotionBrewing) DecorationOps.callsite().invoke(instance);
-        BrewingStandBlockEntity entity = ArclightCaptures.getTickingBlockEntity();
-        InventoryHolder owner = entity == null ? null : ((BlockEntityBridge) entity).bridge$getOwner();
-        ItemStack ing = stacks.get(3);
+    @Decorate(method = "doBrew", inject = true, at = @At("HEAD"))
+    private static void arclight$prepareBrewResults(@Local(allocate = "brewResults") List<org.bukkit.inventory.ItemStack> brewResults) throws Throwable {
         brewResults = new ArrayList<>(3);
-        for (int i = 0; i < 3; ++i) {
-            brewResults.add(i, CraftItemStack.asCraftMirror(potionBrewing.mix(ing, stacks.get(i))));
-        }
-
-        if (owner != null) {
-            BrewEvent event = new BrewEvent(CraftBlock.at(level, pos), (org.bukkit.inventory.BrewerInventory) owner.getInventory(), brewResults, entity.fuel);
-            org.bukkit.Bukkit.getPluginManager().callEvent(event);
-            if (event.isCancelled()) {
-                return (PotionBrewing) DecorationOps.cancel().invoke();
-            }
-        }
-        return potionBrewing;
+        DecorationOps.blackhole().invoke(brewResults);
     }
 
     @SuppressWarnings("unchecked")
     @Decorate(method = "doBrew", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/core/NonNullList;set(ILjava/lang/Object;)Ljava/lang/Object;"))
     private static <E> E arclight$applyResults(NonNullList<E> instance, int i, E object,
+                                               @Local(ordinal = 0) net.minecraft.server.level.ServerLevel level,
+                                               @Local(ordinal = 0) BlockPos pos,
+                                               @Local(ordinal = 0) BrewingStandBlockEntity entity,
                                                @Local(allocate = "brewResults") List<org.bukkit.inventory.ItemStack> brewResults) throws Throwable {
-        if (i < brewResults.size()) {
-            object = (E) CraftItemStack.asNMSCopy(brewResults.get(i));
-        } else {
-            object = (E) ItemStack.EMPTY;
+        E previous = instance.get(i);
+        brewResults.add(CraftItemStack.asCraftMirror((ItemStack) object));
+        if (i != 2) {
+            return previous;
         }
-        return (E) DecorationOps.callsite().invoke(instance, i, object);
+        InventoryHolder owner = ((BlockEntityBridge) entity).bridge$getOwner();
+        if (owner != null) {
+            BrewEvent event = new BrewEvent(CraftBlock.at(level, pos), (org.bukkit.inventory.BrewerInventory) owner.getInventory(), brewResults, entity.fuel);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                return (E) DecorationOps.cancel().invoke();
+            }
+        }
+        for (int slot = 0; slot < 3; ++slot) {
+            E result = (E) (slot < brewResults.size() ? CraftItemStack.asNMSCopy(brewResults.get(slot)) : ItemStack.EMPTY);
+            E replaced = (E) DecorationOps.callsite().invoke(instance, slot, result);
+        }
+        return previous;
     }
 
     @Override

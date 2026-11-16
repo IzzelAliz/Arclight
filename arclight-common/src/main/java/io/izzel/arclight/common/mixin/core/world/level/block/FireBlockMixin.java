@@ -31,12 +31,12 @@ public abstract class FireBlockMixin extends BaseFireBlockMixin implements FireB
     @Shadow @Final private Object2IntMap<net.minecraft.world.level.block.Block> burnOdds;
     // @formatter:on
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
-    public boolean arclight$fireSpread(ServerLevel world, BlockPos mutablePos, BlockState newState, int flags,
-                                       BlockState state, ServerLevel worldIn, BlockPos pos) {
+    @Redirect(method = "tick(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/util/RandomSource;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
+    public boolean arclight$fireSpread(ServerLevel world, BlockPos mutablePos, BlockState newState,
+                                       BlockState state, ServerLevel worldIn, BlockPos pos, RandomSource random) {
         if (world.getBlockState(mutablePos).getBlock() != Blocks.FIRE) {
             if (!CraftEventFactory.callBlockIgniteEvent(world, mutablePos, pos).isCancelled()) {
-                return CraftEventFactory.handleBlockSpreadEvent(world, pos, mutablePos, newState, flags);
+                return CraftEventFactory.handleBlockSpreadEvent(world, pos, mutablePos, newState, 3);
             }
         }
         return false;

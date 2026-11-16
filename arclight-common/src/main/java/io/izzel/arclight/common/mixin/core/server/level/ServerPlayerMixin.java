@@ -509,7 +509,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     }
 
     @Inject(method = "findRespawnAndUseSpawnBlock", at = @At(value = "RETURN", ordinal = 0),
-        slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/BedBlock;findStandUpPosition(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/level/CollisionGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Direction;F)Ljava/util/Optional;")))
+        slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/AbstractBedBlock;findStandUpPosition(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/level/CollisionGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Direction;F)Ljava/util/Optional;")))
     private static void arclight$setBedSpawn(ServerLevel serverLevel, ServerPlayer.RespawnConfig respawnConfig, boolean bl, CallbackInfoReturnable<Optional<ServerPlayer.RespawnPosAngle>> cir) {
         cir.getReturnValue().ifPresent(respawnPosAngle -> ((RespawnPosAngleBridge) (Object) respawnPosAngle).bridge$setBedSpawn(true));
     }
@@ -568,7 +568,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         if (player.portalProcess != null
             && player.portalProcess.isSamePortal((net.minecraft.world.level.block.EndGatewayBlock) net.minecraft.world.level.block.Blocks.END_GATEWAY)
             && this.level().getBlockEntity(player.portalProcess.getEntryPosition()) instanceof net.minecraft.world.level.block.entity.TheEndGatewayBlockEntity gateway) {
-            tpEvent = new com.destroystokyo.paper.event.player.PlayerTeleportEndGatewayEvent(this.getBukkitEntity(), enter, exit.clone(), new org.bukkit.craftbukkit.block.CraftEndGateway(this.level().bridge$getWorld(), gateway));
+            tpEvent = new com.destroystokyo.paper.event.player.PlayerTeleportEndGatewayEvent(this.getBukkitEntity(), enter, exit.clone(), new org.bukkit.craftbukkit.block.CraftEndGateway(this.level().bridge$getWorld(), gateway, true));
         } else {
             tpEvent = new PlayerTeleportEvent(this.getBukkitEntity(), enter, exit == null ? null : exit.clone(), ((DimensionTransitionBridge) (Object) dimensionTransition).bridge$getTeleportCause());
         }
@@ -597,7 +597,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
 
     private Either<Player.BedSleepingProblem, Unit> getBedResult(BlockPos blockposition, Direction enumdirection) {
         if (!this.isSleeping() && this.isAlive()) {
-            if (!this.level().dimensionType().hasSkyLight() || this.level().dimensionType().attributes().applyModifier(EnvironmentAttributes.BED_RULE, net.minecraft.world.attribute.BedRule.CAN_SLEEP_WHEN_DARK).explodes()) {
+            if (!this.level().dimensionType().hasSkyLight() || this.level().dimensionType().attributes().applyModifier(EnvironmentAttributes.BED_RULE, net.minecraft.world.attribute.BedRule.CAN_SLEEP_WHEN_DARK).destroyOnUse()) {
                 return Either.left(Player.BedSleepingProblem.OTHER_PROBLEM);
             }
             if (!this.bedInRange(blockposition, enumdirection)) {
@@ -627,12 +627,12 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     private transient boolean arclight$bedEnterEventFired;
 
     @com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod(method = "startSleepInBed")
-    private Either<Player.BedSleepingProblem, Unit> arclight$withBedEventScope(BlockPos pos,
+    private Either<Player.BedSleepingProblem, Unit> arclight$withBedEventScope(net.minecraft.world.level.block.AbstractBedBlock bedBlock, net.minecraft.world.level.block.state.BlockState bedState, net.minecraft.world.attribute.BedRule rule, BlockPos pos,
             com.llamalad7.mixinextras.injector.wrapoperation.Operation<Either<Player.BedSleepingProblem, Unit>> original) {
         boolean previous = this.arclight$bedEnterEventFired;
         this.arclight$bedEnterEventFired = false;
         try {
-            return original.call(pos);
+            return original.call(bedBlock, bedState, rule, pos);
         } finally {
             this.arclight$bedEnterEventFired = previous;
         }
@@ -651,7 +651,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
     }
 
     @Redirect(method = "startSleepInBed", at = @At(value = "INVOKE", remap = false, target = "Lcom/mojang/datafixers/util/Either;ifRight(Ljava/util/function/Consumer;)Lcom/mojang/datafixers/util/Either;"))
-    private <L, R> Either<L, R> arclight$successSleep(Either<L, R> either, Consumer<? super R> consumer, BlockPos pos) {
+    private <L, R> Either<L, R> arclight$successSleep(Either<L, R> either, Consumer<? super R> consumer, net.minecraft.world.level.block.AbstractBedBlock bedBlock, net.minecraft.world.level.block.state.BlockState bedState, net.minecraft.world.attribute.BedRule rule, BlockPos pos) {
         if (this.bridge$consumeBedEnterEventFired()) {
             return either.ifRight(consumer);
         }
@@ -668,7 +668,12 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
             if (arclight$forceSleep) {
                 either = Either.right(Unit.INSTANCE);
             }
-            return (Either<L, R>) CraftEventFactory.callPlayerBedEnterEvent((ServerPlayer) (Object) this, pos, either);
+            var state = this.level().getBlockState(pos);
+            if (!(state.getBlock() instanceof net.minecraft.world.level.block.AbstractBedBlock bedBlock)) {
+                return (Either<L, R>) Either.<Player.BedSleepingProblem, Unit>left(Player.BedSleepingProblem.OTHER_PROBLEM);
+            }
+            var rule = bedBlock.getBedRule(this.level(), pos);
+            return (Either<L, R>) CraftEventFactory.callPlayerBedEnterEvent((ServerPlayer) (Object) this, pos, rule, either);
         }
     }
 
@@ -1224,6 +1229,25 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         } finally {
             this.arclight$dropSucceeded = previous;
         }
+    }
+
+    @Shadow private boolean postEffectsDirty;
+
+    @Override
+    public boolean bridge$setPostEffects(java.util.Collection<net.minecraft.resources.Identifier> effects) {
+        var current = ((ServerPlayer) (Object) this).getPostEffects();
+        if (com.google.common.collect.Iterables.elementsEqual(current, effects)) {
+            return false;
+        }
+        current.clear();
+        current.addAll(effects);
+        this.postEffectsDirty = true;
+        return true;
+    }
+
+    @Decorate(method = "sendPostEffects()V", at = @At(value = "NEW", target = "net/minecraft/network/protocol/common/ClientboundPostEffectsPacket"))
+    private net.minecraft.network.protocol.common.ClientboundPostEffectsPacket arclight$postEffectsSnapshot(java.util.List<net.minecraft.resources.Identifier> effects) throws Throwable {
+        return (net.minecraft.network.protocol.common.ClientboundPostEffectsPacket) DecorationOps.callsite().invoke(java.util.List.copyOf(effects));
     }
 
     @Override

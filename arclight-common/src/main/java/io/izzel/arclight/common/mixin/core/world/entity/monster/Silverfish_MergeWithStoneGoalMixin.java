@@ -21,7 +21,7 @@ public abstract class Silverfish_MergeWithStoneGoalMixin extends RandomStrollGoa
         super(creatureIn, speedIn);
     }
 
-    @Inject(method = "start", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelAccessor;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
+    @Inject(method = "start", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelAccessor;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
     private void arclight$entityChangeBlock(CallbackInfo ci, LevelAccessor world, BlockPos blockPos, BlockState blockState) {
         if (!CraftEventFactory.callEntityChangeBlockEvent(this.mob, blockPos, InfestedBlock.infestedStateByHost(blockState))) {
             ci.cancel();

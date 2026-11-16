@@ -10,6 +10,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.bukkit.Bukkit;
@@ -43,7 +44,7 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
         return this.getYRot();
     }
 
-    @Inject(method = "hurtServer", cancellable = true, at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/decoration/ArmorStand;kill(Lnet/minecraft/server/level/ServerLevel;)V"))
+    @Inject(method = "hurtServer", cancellable = true, at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/decoration/ArmorStand;kill(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;)V"))
     public void arclight$damageDropOut(ServerLevel serverLevel, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (CraftEventFactory.handleNonLivingEntityDamageEvent((net.minecraft.world.entity.decoration.ArmorStand) (Object) this, source, amount)) {
             cir.setReturnValue(false);
@@ -72,8 +73,8 @@ public abstract class ArmorStandMixin extends LivingEntityMixin {
         ((io.izzel.arclight.common.bridge.core.world.entity.DeathEventBridge) this).bridge$resetDeathEvent();
     }
 
-    @Inject(method = "kill", at = @At("HEAD"), cancellable = true)
-    private void arclight$pushRemoveCause(ServerLevel level, CallbackInfo ci) {
+    @Inject(method = "kill(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;)V", at = @At("HEAD"), cancellable = true)
+    private void arclight$pushRemoveCause(ServerLevel level, Entity attributedTo, CallbackInfo ci) {
         var death = (io.izzel.arclight.common.bridge.core.world.entity.DeathEventBridge) this;
         if (!this.arclight$preparedDeath) {
             death.bridge$resetDeathEvent();

@@ -31,9 +31,9 @@ public abstract class TripWireBlockMixin {
     // @formatter:on
 
     @Decorate(method = "checkPressed(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Ljava/util/List;)V",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"),
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"),
         require = 1, allow = 1)
-    private boolean arclight$entityInteract(Level worldIn, BlockPos pos, BlockState blockstate, int flags,
+    private boolean arclight$entityInteract(Level worldIn, BlockPos pos, BlockState blockstate,
                                            Level originalLevel, BlockPos originalPos, List<? extends Entity> entities) throws Throwable {
         // This write is reached only for a changed signal. Keep the native
         // candidate list: entityInside passes List.of(entity), tick queries it.
@@ -68,6 +68,6 @@ public abstract class TripWireBlockMixin {
             }
         }
 
-        return (boolean) DecorationOps.callsite().invoke(worldIn, pos, blockstate, flags);
+        return (boolean) DecorationOps.callsite().invoke(worldIn, pos, blockstate);
     }
 }

@@ -17,7 +17,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Objects;
 
@@ -58,6 +57,6 @@ public abstract class ConnectionCloseEventMixin {
         } else {
             return;
         }
-        new PlayerConnectionCloseEvent(profile.id(), profile.name(), ((InetSocketAddress) this.address).getAddress(), false).callEvent();
+        new PlayerConnectionCloseEvent(profile.id(), profile.name(), this.address, false).callEvent();
     }
 }

@@ -224,7 +224,7 @@ public abstract class AbstractContainerMenuMixin implements AbstractContainerMen
         return hasNext;
     }
 
-    @Inject(method = "doClick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/player/Player;drop(Lnet/minecraft/world/item/ItemStack;Z)Lnet/minecraft/world/entity/item/ItemEntity;"),
+    @Inject(method = "doClick", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/player/Player;drop(Lnet/minecraft/world/item/ItemStack;ZLnet/minecraft/util/Prediction;)Lnet/minecraft/world/entity/item/ItemEntity;"),
         slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/inventory/ClickAction;PRIMARY:Lnet/minecraft/world/inventory/ClickAction;")))
     private void arclight$clearBeforeDrop(int i, int j, ContainerInput containerInput, Player player, CallbackInfo ci) {
         this.setCarried(ItemStack.EMPTY);

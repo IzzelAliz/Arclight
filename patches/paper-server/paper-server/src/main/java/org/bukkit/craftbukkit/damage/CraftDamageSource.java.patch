@@ -1,0 +1,21 @@
+--- a/paper-server/src/main/java/org/bukkit/craftbukkit/damage/CraftDamageSource.java
++++ b/paper-server/src/main/java/org/bukkit/craftbukkit/damage/CraftDamageSource.java
+@@ -72,7 +72,7 @@
+ 
+     @Override
+     public Pointers getDamageContext() {
+-        return this.getHandle().getDamageContext();
++        return ((io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge) this.getHandle()).bridge$getDamageContext();
+     }
+ 
+     @Override
+@@ -119,6 +119,8 @@
+ 
+         Vec3 sourcePos = (damageLocation == null) ? null : CraftLocation.toVec3(damageLocation);
+ 
+-        return new CraftDamageSource(new net.minecraft.world.damagesource.DamageSource(holderDamageType, nmsDirectEntity, nmsCausingEntity, sourcePos, damageContext));
++        net.minecraft.world.damagesource.DamageSource handle = new net.minecraft.world.damagesource.DamageSource(holderDamageType, nmsDirectEntity, nmsCausingEntity, sourcePos);
++        ((io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge) handle).bridge$setDamageContext(damageContext);
++        return new CraftDamageSource(handle);
+     }
+ }

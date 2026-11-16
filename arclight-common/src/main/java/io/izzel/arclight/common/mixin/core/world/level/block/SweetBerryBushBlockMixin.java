@@ -48,11 +48,11 @@ public class SweetBerryBushBlockMixin {
         return ((DamageSourceBridge) instance.sweetBerryBush()).bridge$directBlock(CraftBlock.at(level, blockPos));
     }
 
-    @Decorate(method = "useWithoutItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;dropFromBlockInteractLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/entity/BlockEntity;Lnet/minecraft/world/item/ItemInstance;Lnet/minecraft/world/entity/Entity;Ljava/util/function/BiConsumer;)Z"))
-    private boolean arclight$playerHarvest(ServerLevel serverLevel, ResourceKey<LootTable> lootTable, BlockState lootState, BlockEntity blockEntity, ItemInstance tool, Entity entity, BiConsumer<ServerLevel, ItemStack> dropper,
+    @Decorate(method = "useWithoutItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;dropFromBlockInteractLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/entity/BlockEntity;Lnet/minecraft/world/item/ItemInstance;Lnet/minecraft/world/entity/Entity;Ljava/util/function/BiConsumer;)Z"))
+    private boolean arclight$playerHarvest(ServerLevel serverLevel, ResourceKey<LootTable> lootTable, BlockPos lootPos, BlockState lootState, BlockEntity blockEntity, ItemInstance tool, Entity entity, BiConsumer<ServerLevel, ItemStack> dropper,
                                            BlockState state, Level level, BlockPos pos, Player player) throws Throwable {
         var drops = new ArrayList<ItemStack>();
-        boolean result = (boolean) DecorationOps.callsite().invoke(serverLevel, lootTable, lootState, blockEntity, tool, entity, (BiConsumer<ServerLevel, ItemStack>) (dropLevel, stack) -> drops.add(stack));
+        boolean result = (boolean) DecorationOps.callsite().invoke(serverLevel, lootTable, lootPos, lootState, blockEntity, tool, entity, (BiConsumer<ServerLevel, ItemStack>) (dropLevel, stack) -> drops.add(stack));
         PlayerHarvestBlockEvent event = CraftEventFactory.callPlayerHarvestBlockEvent(level, pos, player, InteractionHand.MAIN_HAND, drops);
         if (!event.isCancelled()) {
             for (org.bukkit.inventory.ItemStack itemStack : event.getItemsHarvested()) {

@@ -3,11 +3,9 @@ package io.izzel.arclight.common.mixin.core.server;
 import io.izzel.arclight.common.bridge.core.server.ReloadableServerResourcesBridge;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.Commands;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.core.LayeredRegistryAccess;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentInitializers;
-import net.minecraft.server.RegistryLayer;
+import net.minecraft.server.ReloadableServerRegistries;
 import net.minecraft.server.ReloadableServerResources;
 import net.minecraft.server.permissions.PermissionSet;
 import net.minecraft.world.flag.FeatureFlagSet;
@@ -25,14 +23,14 @@ public abstract class ReloadableServerResourcesMixin implements ReloadableServer
     @Unique private CommandBuildContext arclight$commandBuildContext;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void arclight$rememberCommandBuildContext(LayeredRegistryAccess<RegistryLayer> fullLayers,
-            HolderLookup.Provider loadingContext, FeatureFlagSet enabledFeatures,
+    private void arclight$rememberCommandBuildContext(ReloadableServerRegistries.LoadResult loadingContext,
+            FeatureFlagSet enabledFeatures,
             Commands.CommandSelection commandSelection, List<Registry.PendingTags<?>> postponedTags,
             PermissionSet functionCompilationPermissions,
             List<DataComponentInitializers.PendingComponents<?>> newComponents, CallbackInfo ci) {
         // A completed constructor is still only a reload candidate. Keep its lookup
         // with the candidate, without publishing it through Paper's live registrar.
-        this.arclight$commandBuildContext = CommandBuildContext.simple(loadingContext, enabledFeatures);
+        this.arclight$commandBuildContext = CommandBuildContext.simple(loadingContext.lookupWithUpdatedTags(), enabledFeatures);
     }
 
     @Override

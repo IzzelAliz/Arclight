@@ -37,6 +37,8 @@ public class DimensionTransitionMixin implements DimensionTransitionBridge {
 
     @Unique private PlayerTeleportEvent.TeleportCause cause; // Paper added
 
+    @Unique private boolean arclight$positionRider;
+
     @Override
     public void bridge$setTeleportCause(PlayerTeleportEvent.TeleportCause cause) {
         this.cause = cause;
@@ -45,5 +47,27 @@ public class DimensionTransitionMixin implements DimensionTransitionBridge {
     @Override
     public PlayerTeleportEvent.TeleportCause bridge$getTeleportCause() {
         return this.cause == null ? PlayerTeleportEvent.TeleportCause.UNKNOWN : this.cause;
+    }
+
+    @Override
+    public void bridge$setPositionRider(boolean value) {
+        this.arclight$positionRider = value;
+    }
+
+    @Override
+    public boolean bridge$isPositionRider() {
+        return this.arclight$positionRider;
+    }
+
+    @com.llamalad7.mixinextras.injector.ModifyReturnValue(method = {
+        "withRotation(FF)Lnet/minecraft/world/level/portal/TeleportTransition;",
+        "withPosition(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/level/portal/TeleportTransition;",
+        "transitionAsPassenger()Lnet/minecraft/world/level/portal/TeleportTransition;"
+    }, at = @org.spongepowered.asm.mixin.injection.At("RETURN"))
+    private TeleportTransition arclight$copyMetadata(TeleportTransition result) {
+        var bridge = (DimensionTransitionBridge) (Object) result;
+        bridge.bridge$setTeleportCause(this.cause);
+        bridge.bridge$setPositionRider(this.arclight$positionRider);
+        return result;
     }
 }

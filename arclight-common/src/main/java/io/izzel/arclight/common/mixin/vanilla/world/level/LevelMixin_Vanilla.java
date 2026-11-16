@@ -127,7 +127,9 @@ public abstract class LevelMixin_Vanilla implements LevelAccessor, WorldBridge {
                         blockState.updateIndirectNeighbourShapes(this, blockPos, k, j - 1);
                     }
 
-                    this.updatePOIOnBlockStateChange(blockPos, blockState2, blockState3);
+                    if (!this.bridge$preventPoiUpdated() && (i & io.izzel.arclight.common.mod.ArclightConstants.UPDATE_SKIP_POI) == 0) {
+                        this.updatePOIOnBlockStateChange(blockPos, blockState2, blockState3);
+                    }
                 }
 
                 return true;
@@ -147,13 +149,6 @@ public abstract class LevelMixin_Vanilla implements LevelAccessor, WorldBridge {
             }
         } catch (StackOverflowError e) {
             bridge$setLastPhysicsProblem(pos);
-        }
-    }
-
-    @Inject(method = "setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;II)Z", require = 0, cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;updatePOIOnBlockStateChange(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;)V"))
-    private void arclight$preventPoiUpdate(BlockPos blockPos, BlockState blockState, int i, int j, CallbackInfoReturnable<Boolean> cir) {
-        if (bridge$preventPoiUpdated()) {
-            cir.setReturnValue(true);
         }
     }
 }

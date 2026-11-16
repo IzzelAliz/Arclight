@@ -13,14 +13,14 @@ import org.spongepowered.asm.mixin.injection.At;
 @OnlyInPlatform({ArclightPlatform.VANILLA, ArclightPlatform.FABRIC})
 @Mixin(TeleportRandomlyConsumeEffect.class)
 public class ChorusFruitItemMixin {
-    @Decorate(method = "apply", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;randomTeleport(DDDZ)Z"))
-    private boolean arclight$randomTeleport(LivingEntity user, double x, double y, double z, boolean showParticles) throws Throwable {
+    @Decorate(method = "apply", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;randomTeleport(DDDZLnet/minecraft/tags/TagKey;)Z"))
+    private boolean arclight$randomTeleport(LivingEntity user, double x, double y, double z, boolean showParticles, net.minecraft.tags.TagKey<net.minecraft.world.level.block.Block> avoidanceTag) throws Throwable {
         var previous = ArclightCaptures.chorusPending;
         var chorus = com.mojang.datafixers.util.Pair.of(user, new org.apache.commons.lang3.mutable.MutableBoolean());
         ArclightCaptures.chorusPending = chorus;
         boolean result;
         try {
-            result = (boolean) DecorationOps.callsite().invoke(user, x, y, z, showParticles);
+            result = (boolean) DecorationOps.callsite().invoke(user, x, y, z, showParticles, avoidanceTag);
         } finally {
             ArclightCaptures.chorusPending = previous;
         }

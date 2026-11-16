@@ -51,9 +51,9 @@ public abstract class PiglinMixin extends PathfinderMobMixin implements PiglinBr
         this.interestItems = input.listOrEmpty("Bukkit.InterestList", Codec.STRING).stream().map(Identifier::tryParse).map(id -> BuiltInRegistries.ITEM.getValue(id)).collect(Collectors.toCollection(HashSet::new));
     }
 
-    @Redirect(method = "holdInOffHand", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;is(Lnet/minecraft/world/item/Item;)Z"))
-    private boolean arclight$customBarter(ItemStack itemStack, Item item) {
-        return itemStack.is(item) || allowedBarterItems.contains(itemStack.getItem());
+    @Redirect(method = "holdInOffHand", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;is(Ljava/lang/Object;)Z"))
+    private boolean arclight$customBarter(ItemStack itemStack, Object item) {
+        return itemStack.is((Item) item) || allowedBarterItems.contains(itemStack.getItem());
     }
 
     @Redirect(method = "canReplaceCurrentItem(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/EquipmentSlot;)Z",

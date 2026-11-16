@@ -1,8 +1,7 @@
 diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftVillager.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftVillager.java
-index d37de00e5b9acd1db9b2f7418aaee517b54518d5..8953e797698c09bf6fbec5043e032e528eab005e 100644
 --- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftVillager.java
 +++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftVillager.java
-@@ -3,7 +3,9 @@ package org.bukkit.craftbukkit.entity;
+@@ -3,7 +3,9 @@
  import com.destroystokyo.paper.entity.villager.Reputation;
  import com.destroystokyo.paper.entity.villager.ReputationType;
  import com.google.common.base.Preconditions;
@@ -12,7 +11,7 @@ index d37de00e5b9acd1db9b2f7418aaee517b54518d5..8953e797698c09bf6fbec5043e032e52
  import java.util.EnumMap;
  import java.util.Map;
  import java.util.UUID;
-@@ -12,8 +14,7 @@ import net.minecraft.core.BlockPos;
+@@ -12,8 +14,7 @@
  import net.minecraft.core.Holder;
  import net.minecraft.core.registries.Registries;
  import net.minecraft.server.level.ServerLevel;
@@ -22,7 +21,7 @@ index d37de00e5b9acd1db9b2f7418aaee517b54518d5..8953e797698c09bf6fbec5043e032e52
  import net.minecraft.world.entity.npc.villager.VillagerData;
  import net.minecraft.world.entity.npc.villager.VillagerProfession;
  import net.minecraft.world.entity.npc.villager.VillagerType;
-@@ -26,7 +27,6 @@ import org.bukkit.craftbukkit.util.CraftLocation;
+@@ -26,7 +27,6 @@
  import org.bukkit.entity.Villager;
  import org.bukkit.entity.ZombieVillager;
  import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -30,7 +29,7 @@ index d37de00e5b9acd1db9b2f7418aaee517b54518d5..8953e797698c09bf6fbec5043e032e52
  
  public class CraftVillager extends CraftAbstractVillager implements Villager {
  
-@@ -116,7 +116,7 @@ public class CraftVillager extends CraftAbstractVillager implements Villager {
+@@ -116,7 +116,7 @@
      @Override
      public boolean addTrades(int amount) {
          Preconditions.checkArgument(amount > 0, "Number of trades unlocked must be positive");
@@ -39,7 +38,7 @@ index d37de00e5b9acd1db9b2f7418aaee517b54518d5..8953e797698c09bf6fbec5043e032e52
      }
  
      @Override
-@@ -161,7 +161,7 @@ public class CraftVillager extends CraftAbstractVillager implements Villager {
+@@ -161,7 +161,7 @@
  
      @Override
      public ZombieVillager zombify() {
@@ -48,15 +47,10 @@ index d37de00e5b9acd1db9b2f7418aaee517b54518d5..8953e797698c09bf6fbec5043e032e52
          return (zombie != null) ? (ZombieVillager) zombie.getBukkitEntity() : null;
      }
  
-@@ -197,29 +197,52 @@ public class CraftVillager extends CraftAbstractVillager implements Villager {
+@@ -197,29 +197,52 @@
          }
      }
  
--    @Override
--    public Reputation getReputation(UUID uniqueId) {
--        GossipContainer.EntityGossips gossips = this.getHandle().getGossips().gossips.get(uniqueId);
--        if (gossips == null) {
--            return new Reputation(new EnumMap<>(ReputationType.class));
 +    private static ReputationType toReputationType(GossipType type) {
 +        return switch (type) {
 +            case MAJOR_NEGATIVE -> ReputationType.MAJOR_NEGATIVE;
@@ -73,13 +67,18 @@ index d37de00e5b9acd1db9b2f7418aaee517b54518d5..8953e797698c09bf6fbec5043e032e52
 +            for (Object2IntMap.Entry<GossipType> entry : entries.object2IntEntrySet()) {
 +                values.put(toReputationType(entry.getKey()), entry.getIntValue());
 +            }
-         }
++        }
 +        return new Reputation(values);
 +    }
- 
++
+     @Override
+     public Reputation getReputation(UUID uniqueId) {
+-        GossipContainer.EntityGossips gossips = this.getHandle().getGossips().gossips.get(uniqueId);
+-        if (gossips == null) {
+-            return new Reputation(new EnumMap<>(ReputationType.class));
+-        }
+-
 -        return gossips.asReputation();
-+    @Override
-+    public Reputation getReputation(UUID uniqueId) {
 +        return asReputation(this.getHandle().getGossips().getGossipEntries().get(uniqueId));
      }
  
@@ -110,15 +109,6 @@ index d37de00e5b9acd1db9b2f7418aaee517b54518d5..8953e797698c09bf6fbec5043e032e52
 +                }
 +            }
 +        }
-     }
- 
-     @Override
-@@ -231,7 +254,7 @@ public class CraftVillager extends CraftAbstractVillager implements Villager {
- 
-     @Override
-     public void clearReputations() {
--        this.getHandle().getGossips().gossips.clear();
-+        this.getHandle().getGossips().clear();
      }
  
      @Override

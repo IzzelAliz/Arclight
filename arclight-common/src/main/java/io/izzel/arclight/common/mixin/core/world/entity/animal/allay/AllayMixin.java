@@ -13,7 +13,7 @@ import net.minecraft.world.level.Level;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.spongepowered.asm.mixin.injection.At;
 import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.animal.allay.Allay;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -80,7 +80,7 @@ public abstract class AllayMixin extends MobMixin implements AllayBridge {
 
     @Override
     public Allay bridge$duplicateAllay() {
-        Allay allay = EntityType.ALLAY.create(this.level(), EntitySpawnReason.BREEDING);
+        Allay allay = EntityTypes.ALLAY.create(this.level(), EntitySpawnReason.BREEDING);
         if (allay != null) {
             allay.snapTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
             allay.resetFallDistance();

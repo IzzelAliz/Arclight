@@ -76,11 +76,6 @@ public abstract class PlayerMixin_NeoForge extends LivingEntityMixin_NeoForge im
 
 
     @Override
-    public boolean bridge$platform$dropEventAtReturn() {
-        return false;
-    }
-
-    @Override
     public boolean bridge$platform$mayfly() {
         return this.mayFly();
     }

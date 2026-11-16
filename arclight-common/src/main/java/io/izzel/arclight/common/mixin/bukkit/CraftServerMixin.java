@@ -279,7 +279,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
                     // FileFixer at version 4772 migrates legacy level.dat WorldGenSettings
                     // into data/minecraft/world_gen_settings.dat before this check. Missing after
                     // that upgrade means recovery is not proven safe: never accept random fallback.
-                    var savedWorldgen = LevelStorageSource.readExistingSavedData(worldSession, context.datapackWorldgen(), WorldGenSettings.TYPE);
+                    var savedWorldgen = LevelStorageSource.readExistingSavedData(worldSession, context.datapackWorldRegistries(), WorldGenSettings.TYPE);
                     if (savedWorldgen.result().isEmpty()) {
                         throw new IllegalStateException("Missing or invalid world generation settings for " + name
                             + " (data/minecraft/world_gen_settings.dat); refusing to substitute a random seed: " + savedWorldgen.error());
@@ -295,7 +295,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
                 PrimaryLevelData levelData;
                 LevelDataAndDimensions.WorldDataAndGenSettings dataAndSettings;
                 if (dynamic != null) {
-                    LevelDataAndDimensions levelDataAndDimensions = LevelStorageSource.getLevelDataAndDimensions(worldSession, dynamic, context.dataConfiguration(), datapackStems, context.datapackWorldgen());
+                    LevelDataAndDimensions levelDataAndDimensions = LevelStorageSource.getLevelDataAndDimensions(worldSession, dynamic, context.dataConfiguration(), datapackStems, context.datapackWorldRegistries());
                     dataAndSettings = levelDataAndDimensions.worldDataAndGenSettings();
                     levelData = (PrimaryLevelData) dataAndSettings.data();
                     // For CUSTOM, the server's experimental stem registry supplies the stem;
@@ -308,9 +308,9 @@ public abstract class CraftServerMixin implements CraftServerBridge {
                     WorldDimensions worldDimensions;
                     if (isCustom) {
                         DedicatedServerProperties.WorldDimensionData properties = new DedicatedServerProperties.WorldDimensionData(GsonHelper.parse(creator.generatorSettings().isEmpty() ? "{}" : creator.generatorSettings()), creator.type().name().toLowerCase(Locale.ROOT));
-                        worldDimensions = properties.create(context.datapackWorldgen());
+                        worldDimensions = properties.create(context.datapackWorldRegistries());
                         WorldDimensions.Complete baked = worldDimensions.bake(datapackStems);
-                        Lifecycle lifecycle = baked.lifecycle().add(context.datapackWorldgen().allRegistriesLifecycle());
+                        Lifecycle lifecycle = baked.lifecycle().add(context.datapackWorldRegistries().allRegistriesLifecycle());
                         levelData = new PrimaryLevelData(settings, baked.specialWorldProperty(), lifecycle);
                         dimensions = baked.dimensionsRegistryAccess();
                     } else {

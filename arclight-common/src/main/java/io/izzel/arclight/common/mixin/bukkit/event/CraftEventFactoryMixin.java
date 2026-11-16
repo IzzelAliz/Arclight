@@ -19,6 +19,8 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.entity.SignTextSlot;
+import org.bukkit.craftbukkit.block.sign.CraftSignSide;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
@@ -252,15 +254,15 @@ public abstract class CraftEventFactoryMixin {
      * @reason
      */
     @Overwrite
-    public static boolean callPlayerSignOpenEvent(net.minecraft.world.entity.player.Player player, SignBlockEntity tileEntitySign, boolean front, PlayerSignOpenEvent.Cause cause) {
+    public static boolean callPlayerSignOpenEvent(net.minecraft.world.entity.player.Player player, SignBlockEntity tileEntitySign, SignTextSlot slot, PlayerSignOpenEvent.Cause cause) {
         Block block = CraftBlock.at(tileEntitySign.getLevel(), tileEntitySign.getBlockPos());
         Sign sign;
         if (CraftBlockStates.getBlockState(block) instanceof Sign sign1) {
             sign = sign1;
         } else {
-            sign = new CraftSign<>(((WorldBridge) tileEntitySign.getLevel()).bridge$getWorld(), tileEntitySign);
+            sign = new CraftSign<>(((WorldBridge) tileEntitySign.getLevel()).bridge$getWorld(), tileEntitySign, true);
         }
-        Side side = front ? Side.FRONT : Side.BACK;
+        Side side = CraftSignSide.fromVanilla(slot);
         return callPlayerSignOpenEvent(((ServerPlayerBridge) player).bridge$getBukkitEntity(), sign, side, cause);
     }
 

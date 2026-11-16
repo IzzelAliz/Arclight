@@ -4,7 +4,7 @@ import io.izzel.arclight.common.bridge.core.entity.EntityBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.CarvedPumpkinBlock;
 import net.minecraft.world.level.block.state.pattern.BlockPattern;
@@ -20,7 +20,7 @@ public class CarvedPumpkinBlockMixin {
 
     @Redirect(method = "spawnGolemInWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/CarvedPumpkinBlock;clearPatternBlocks(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/block/state/pattern/BlockPattern$BlockPatternMatch;)V"))
     private static void arclight$clearLater(Level level, BlockPattern.BlockPatternMatch match, Level p_249110_, BlockPattern.BlockPatternMatch p_251293_, Entity entity) {
-        ((WorldBridge) level).bridge$pushAddEntityReason((entity.getType() == EntityType.SNOW_GOLEM) ? CreatureSpawnEvent.SpawnReason.BUILD_SNOWMAN : CreatureSpawnEvent.SpawnReason.BUILD_IRONGOLEM);
+        ((WorldBridge) level).bridge$pushAddEntityReason((entity.getType() == EntityTypes.SNOW_GOLEM) ? CreatureSpawnEvent.SpawnReason.BUILD_SNOWMAN : CreatureSpawnEvent.SpawnReason.BUILD_IRONGOLEM);
     }
 
     @Inject(method = "spawnGolemInWorld", cancellable = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))

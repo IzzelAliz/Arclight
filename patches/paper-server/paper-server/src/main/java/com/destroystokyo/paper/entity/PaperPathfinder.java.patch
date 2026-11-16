@@ -1,8 +1,6 @@
-diff --git a/paper-server/src/main/java/com/destroystokyo/paper/entity/PaperPathfinder.java b/paper-server/src/main/java/com/destroystokyo/paper/entity/PaperPathfinder.java
-index 0a9da3d25d7f5eb992c45e370c379746692369b4..b80c422b330a06543edb02665851d6caab3e857b 100644
 --- a/paper-server/src/main/java/com/destroystokyo/paper/entity/PaperPathfinder.java
 +++ b/paper-server/src/main/java/com/destroystokyo/paper/entity/PaperPathfinder.java
-@@ -72,32 +72,32 @@ public class PaperPathfinder implements com.destroystokyo.paper.entity.Pathfinde
+@@ -74,32 +74,32 @@
  
      @Override
      public boolean canOpenDoors() {
@@ -41,7 +39,7 @@ index 0a9da3d25d7f5eb992c45e370c379746692369b4..b80c422b330a06543edb02665851d6ca
      }
  
      public class PaperPathResult implements com.destroystokyo.paper.entity.PaperPathfinder.PathResult {
-@@ -123,7 +123,8 @@ public class PaperPathfinder implements com.destroystokyo.paper.entity.Pathfinde
+@@ -125,7 +125,8 @@
          @Override
          public List<Location> getPoints() {
              List<Location> points = new ArrayList<>();
@@ -51,12 +49,3 @@ index 0a9da3d25d7f5eb992c45e370c379746692369b4..b80c422b330a06543edb02665851d6ca
                  points.add(CraftLocation.toBukkit(point, PaperPathfinder.this.entity.level()));
              }
              return points;
-@@ -140,7 +141,7 @@ public class PaperPathfinder implements com.destroystokyo.paper.entity.Pathfinde
-             if (this.path.isDone()) {
-                 return null;
-             }
--            return CraftLocation.toBukkit(this.path.nodes.get(this.path.getNextNodeIndex()), PaperPathfinder.this.entity.level());
-+            return CraftLocation.toBukkit(this.path.getNode(this.path.getNextNodeIndex()), PaperPathfinder.this.entity.level());
-         }
-     }
- }

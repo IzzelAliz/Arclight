@@ -95,7 +95,7 @@ public class VelocitySupport {
     }
 
     public static ProfilePublicKey.Data readForwardedKey(FriendlyByteBuf buf) {
-        return new ProfilePublicKey.Data(buf);
+        return ProfilePublicKey.Data.STREAM_CODEC.decode(buf);
     }
 
     public static UUID readSignerUuidOrElse(FriendlyByteBuf buf, UUID orElse) {

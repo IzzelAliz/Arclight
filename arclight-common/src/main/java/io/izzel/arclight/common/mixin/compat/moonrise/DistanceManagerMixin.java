@@ -23,15 +23,15 @@ public abstract class DistanceManagerMixin {
 
     @WrapMethod(method = "removeAllTicketsFor", remap = false)
     private void arclight$removeTickets(TicketType ticketType, int ticketLevel, Object ticketIdentifier, Operation<Void> original) {
-        List<net.minecraft.util.Tuple<ChunkPos, Ticket>> matches = new ArrayList<>();
+        List<com.mojang.datafixers.util.Pair<ChunkPos, Ticket>> matches = new ArrayList<>();
         ((io.izzel.arclight.common.mixin.compat.moonrise.TicketStorageAccessor) this.ticketStorage).arclight$forEachTicket((pos, ticket) -> {
             if (ticket.getType() == ticketType && ticket.getTicketLevel() == ticketLevel
                 && Objects.equals(((TicketBridge) (Object) ticket).bridge$getKey(), ticketIdentifier)) {
-                matches.add(new net.minecraft.util.Tuple<>(pos, ticket));
+                matches.add(com.mojang.datafixers.util.Pair.of(pos, ticket));
             }
         });
         for (var match : matches) {
-            this.ticketStorage.removeTicket(match.getA().pack(), match.getB());
+            this.ticketStorage.removeTicket(match.getFirst().pack(), match.getSecond());
         }
     }
 

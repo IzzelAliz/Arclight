@@ -22,10 +22,11 @@ public abstract class AbstractFurnaceBlockEntityMixin_Vanilla {
     @WrapOperation(method = "serverTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;burn(Lnet/minecraft/core/NonNullList;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;)V"))
     private static void arclight$furnaceSmelt(NonNullList<ItemStack> items, ItemStack input, ItemStack result, Operation<Void> original,
                                              @Local(argsOnly = true) AbstractFurnaceBlockEntity furnace,
+                                             @Local(ordinal = 0) net.minecraft.world.item.crafting.RecipeHolder<?> recipe,
                                              @Share(value = "smelted", namespace = "arclight:furnace") LocalBooleanRef smelted) {
         smelted.set(false);
         ItemStack replacement = ArclightEventFactory.smeltResult((net.minecraft.server.level.ServerLevel) furnace.getLevel(),
-            furnace.getBlockPos(), items, input, result);
+            furnace.getBlockPos(), items, input, result, recipe);
         if (replacement == null) {
             return;
         }
@@ -33,5 +34,14 @@ public abstract class AbstractFurnaceBlockEntityMixin_Vanilla {
         // previous/next third-party wrappers still receive the accepted event result.
         original.call(items, input, replacement);
         smelted.set(true);
+    }
+
+    @io.izzel.arclight.mixin.Decorate(method = "serverTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;consumeFuel(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/NonNullList;Lnet/minecraft/world/item/ItemStack;)V"))
+    private static void arclight$consumeFuel(net.minecraft.server.level.ServerLevel level, net.minecraft.core.BlockPos pos,
+                                             NonNullList<ItemStack> items, ItemStack fuel,
+                                             @io.izzel.arclight.mixin.Local(allocate = "arclightFurnaceBurn") org.bukkit.event.inventory.FurnaceBurnEvent event) throws Throwable {
+        if (event.willConsumeFuel()) {
+            io.izzel.arclight.mixin.DecorationOps.callsite().invoke(level, pos, items, fuel);
+        }
     }
 }

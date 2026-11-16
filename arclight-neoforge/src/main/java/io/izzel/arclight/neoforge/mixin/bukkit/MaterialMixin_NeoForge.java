@@ -18,10 +18,4 @@ public abstract class MaterialMixin_NeoForge implements MaterialBridge {
     public int bridge$forge$getDurability(Item item) {
         return item.getMaxDamage(new ItemStack(item));
     }
-
-    @Override
-    public int bridge$forge$getBurnTime(Item item) {
-        var server = io.izzel.arclight.common.mod.server.ArclightServer.getMinecraftServer();
-        return server == null ? 0 : new ItemStack(item).getBurnTime(null, server.fuelValues());
-    }
 }

@@ -57,7 +57,7 @@ diff --git a/paper-server/src/main/java/io/papermc/paper/command/subcommands/Mob
 -
 -        sender.sendMessage(Component.join(JoinConfiguration.noSeparators(), Component.text("Mobcaps for player: "), Component.text(player.getName(), NamedTextColor.GREEN)));
 -        sender.sendMessage(createMobcapsComponent(
--            category -> level.chunkSource.chunkMap.getMobCountNear(serverPlayer, category),
+-            category -> level.getChunkSource().chunkMap.getMobCountNear(serverPlayer, category),
 -            category -> level.getWorld().getSpawnLimitUnsafe(org.bukkit.craftbukkit.util.CraftSpawnCategory.toBukkit(category))
 -        ));
 +        sender.sendMessage(Component.text("Per-player mobcaps are not supported on Arclight. Use '/paper mobcaps' for global mobcaps.", NamedTextColor.RED));

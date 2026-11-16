@@ -27,5 +27,9 @@ public interface ChunkMapBridge {
 
     java.util.concurrent.CompletableFuture<java.util.Optional<net.minecraft.nbt.CompoundTag>> bridge$readChunk(ChunkPos pos);
 
+    io.papermc.paper.world.chunk.ChunkGenerationState bridge$getChunkGenerationState(int x, int z);
+
+    java.util.concurrent.CompletableFuture<io.papermc.paper.world.chunk.ChunkGenerationState> bridge$getChunkGenerationStateAsync(int x, int z);
+
     void bridge$setChunkGenerator(ChunkGenerator generator);
 }

@@ -39,9 +39,9 @@ public class EndPlatformFeatureMixin {
         return (boolean) DecorationOps.callsite().invoke((ServerLevelAccessor) blockList, pos, b, entity);
     }
 
-    @Decorate(method = "createEndPlatform", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ServerLevelAccessor;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
-    private static boolean arclight$useBlockList3(ServerLevelAccessor instance, BlockPos pos, BlockState blockState, int i, @Local(allocate = "blockList") BlockStateListPopulator blockList) throws Throwable {
-        return (boolean) DecorationOps.callsite().invoke((ServerLevelAccessor) blockList, pos, blockState, i);
+    @Decorate(method = "createEndPlatform", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ServerLevelAccessor;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
+    private static boolean arclight$useBlockList3(ServerLevelAccessor instance, BlockPos pos, BlockState blockState, @Local(allocate = "blockList") BlockStateListPopulator blockList) throws Throwable {
+        return (boolean) DecorationOps.callsite().invoke((ServerLevelAccessor) blockList, pos, blockState);
     }
 
     @Decorate(method = "createEndPlatform", inject = true, at = @At("RETURN"))

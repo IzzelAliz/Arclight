@@ -9,16 +9,16 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/block/data/CraftB
  import org.bukkit.craftbukkit.util.CraftVoxelShape;
  import org.bukkit.inventory.ItemStack;
  import org.jetbrains.annotations.Unmodifiable;
-@@ -453,7 +454,7 @@
+@@ -454,7 +455,7 @@
      public static void reloadCache() {
          ENCODER_CACHE.clear();
          Block.BLOCK_STATE_REGISTRY.forEach(state -> {
 -            CraftBlockData data = state.asBlockData();
 +            CraftBlockData data = createData(state);
+             data.parsedStates = state.getValues().toList();
              ENCODER_CACHE.put(data.getAsString(), data);
          });
-     }
-@@ -484,7 +485,7 @@
+@@ -486,7 +487,7 @@
              throw new IllegalArgumentException("Could not parse data: " + serializedData, ex);
          }
  
@@ -28,14 +28,14 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/block/data/CraftB
          result.properties().forEach((property, value) -> {
              parsed.add(StateHolder.createValue(property, value));
 @@ -494,11 +495,6 @@
-         return data;
-     }
  
+         data.parsedStates = parsed;
+         return data;
+-    }
+-
 -    static {
 -        // Initialize cached data for all BlockState instances after registration
 -        Block.BLOCK_STATE_REGISTRY.forEach(BlockState::asBlockData);
--    }
--
-     public static CraftBlockData createData(BlockState state) {
-         return INSTANCE_CREATOR.getOrDefault(state.getBlock().getClass(), CraftBlockData::new).apply(state);
      }
+ 
+     public static CraftBlockData createData(BlockState state) {

@@ -13,7 +13,6 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.entity.animal.feline.Ocelot;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Mob;
@@ -21,7 +20,6 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.NaturalSpawner;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.bukkit.craftbukkit.entity.CraftEntityType;
@@ -121,7 +119,7 @@ public abstract class NaturalSpawnerMixin {
     }
 
     @Inject(method = "spawnMobsForChunkGeneration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ServerLevelAccessor;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V"))
-    private static void arclight$worldGenSpawn(ServerLevelAccessor accessor, Holder<Biome> p_151618_, ChunkPos p_151619_, RandomSource p_151620_, CallbackInfo ci) {
+    private static void arclight$worldGenSpawn(ServerLevelAccessor accessor, BlockPos sourcePos, ChunkPos p_151619_, RandomSource p_151620_, CallbackInfo ci) {
         ((IWorldWriterBridge) accessor).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.CHUNK_GEN);
     }
 }

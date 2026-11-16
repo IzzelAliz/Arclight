@@ -7,7 +7,7 @@ index f5caff5c2644418c74c10d7c4697ad0019c0d97d..32f1213f894fd93f7524dec1dc577e53
      @Override
      public org.bukkit.Location getPodium() {
 -        return CraftLocation.toBukkit(this.getHandle().getPodium(), this.getWorld());
-+        return CraftLocation.toBukkit(net.minecraft.world.level.levelgen.feature.EndPodiumFeature.getLocation(this.getHandle().getFightOrigin()), this.getWorld());
++        return CraftLocation.toBukkit(net.minecraft.world.level.dimension.end.EnderDragonFight.getPodiumLocation(this.getHandle().getFightOrigin()), this.getWorld());
      }
  
      @Override

@@ -52,7 +52,7 @@ public abstract class ItemStackMixin_NeoForge implements ItemStackBridge, IItemS
     }
 
     @Override
-    public void bridge$platform$hurtAndBreak(int amount, ServerLevel level, LivingEntity owner, Consumer<Item> onBreak) {
+    public void bridge$platform$hurtAndBreak(int amount, ServerLevel level, LivingEntity owner, Consumer<ItemStack> onBreak) {
         ((ItemStack) (Object) this).hurtAndBreak(amount, level, owner, onBreak);
     }
 

@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerEntity;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerPlayerConnection;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.UpdateInterval;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -32,7 +33,7 @@ public abstract class ChunkMap_TrackedEntityMixin implements ChunkMap_TrackedEnt
     // @formatter:on
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void arclight$setTrackedPlayers(ChunkMap outer, Entity entity, int range, int updateFrequency, boolean sendVelocityUpdates, CallbackInfo ci) {
+    private void arclight$setTrackedPlayers(ChunkMap outer, Entity entity, int range, UpdateInterval updateFrequency, boolean sendVelocityUpdates, CallbackInfo ci) {
         ((ServerEntityBridge) this.serverEntity).bridge$setTrackedPlayers(this.seenBy);
     }
 

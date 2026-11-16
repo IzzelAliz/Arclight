@@ -10,9 +10,9 @@ public final class PaperRegistryHooks {
     private static final class StaticConversions {
         private static final Conversions INSTANCE = new Conversions(new RegistryOps.RegistryInfoLookup() {
             @Override
-            public <T> java.util.Optional<RegistryOps.RegistryInfo<T>> lookup(net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<? extends T>> key) {
+            public <T> java.util.Optional<net.minecraft.core.HolderGetter<T>> lookup(net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<? extends T>> key) {
                 return io.izzel.arclight.common.mixin.core.server.RegistryLayerAccessor.arclight$staticAccess()
-                    .lookup(key).map(RegistryOps.RegistryInfo::fromRegistryLookup);
+                    .lookup(key).map(registry -> registry);
             }
         });
     }

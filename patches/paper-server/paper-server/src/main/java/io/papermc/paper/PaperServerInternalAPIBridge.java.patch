@@ -1,13 +1,20 @@
-diff --git a/paper-server/src/main/java/io/papermc/paper/PaperServerInternalAPIBridge.java b/paper-server/src/main/java/io/papermc/paper/PaperServerInternalAPIBridge.java
-index 737c51819110daa139d6ab014257ea1fa4838fd3..b46b12b82f798c8cc3e6a4a9c9b235fe3cc0aa27 100644
 --- a/paper-server/src/main/java/io/papermc/paper/PaperServerInternalAPIBridge.java
 +++ b/paper-server/src/main/java/io/papermc/paper/PaperServerInternalAPIBridge.java
-@@ -98,7 +98,7 @@ public class PaperServerInternalAPIBridge implements InternalAPIBridge {
+@@ -141,7 +141,7 @@
  
      @Override
-     public Predicate<CommandSourceStack> restricted(final Predicate<CommandSourceStack> predicate) {
--        record RestrictedPredicate(Predicate<CommandSourceStack> predicate) implements Predicate<CommandSourceStack>, Commands.RestrictedMarker {
-+        record RestrictedPredicate(Predicate<CommandSourceStack> predicate) implements Predicate<CommandSourceStack>, io.izzel.arclight.common.bridge.core.commands.CommandsBridge.RestrictedMarker {
+     public Predicate<CommandSourceStack> restricted(final Predicate<CommandSourceStack> predicate, final boolean restricted) {
+-        record RestrictedPredicate(Predicate<CommandSourceStack> predicate, @Override boolean restricted) implements Predicate<CommandSourceStack>, Commands.RestrictedMarker {
++        record RestrictedPredicate(Predicate<CommandSourceStack> predicate, @Override boolean restricted) implements Predicate<CommandSourceStack>, io.izzel.arclight.common.bridge.core.commands.CommandsBridge.RestrictedMarker {
              @Override
              public boolean test(final CommandSourceStack commandSourceStack) {
                  return this.predicate.test(commandSourceStack);
+@@ -288,7 +288,7 @@
+         final int[] levelClue = new int[offerAmount];
+ 
+         final RandomSource randomSource = new RandomSourceWrapper(new Random());
+-        EnchantmentMenu.fillEnchantmentOffers(randomSource, seed, bookshelfCount, CraftItemStack.unwrap(targetStack), CraftRegistry.getMinecraftRegistry(), costs, enchantClue, levelClue);
++        io.izzel.arclight.common.bridge.core.world.inventory.EnchantmentMenuBridge.bridge$fillEnchantmentOffers(randomSource, seed, bookshelfCount, CraftItemStack.unwrap(targetStack), CraftRegistry.getMinecraftRegistry(), costs, enchantClue, levelClue);
+ 
+         final IdMap<Holder<Enchantment>> holderIdMap = CraftRegistry.getMinecraftRegistry()
+             .lookupOrThrow(Registries.ENCHANTMENT)

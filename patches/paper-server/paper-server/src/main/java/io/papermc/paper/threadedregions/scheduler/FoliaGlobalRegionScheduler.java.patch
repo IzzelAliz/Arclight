@@ -1,5 +1,3 @@
-diff --git a/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaGlobalRegionScheduler.java b/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaGlobalRegionScheduler.java
-index 14ffbcb66006878eacf310547dad53718f8308eb..ec26fad2556351bc37b8563e85849f8e70a15d25 100644
 --- a/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaGlobalRegionScheduler.java
 +++ b/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaGlobalRegionScheduler.java
 @@ -1,6 +1,6 @@
@@ -10,7 +8,7 @@ index 14ffbcb66006878eacf310547dad53718f8308eb..ec26fad2556351bc37b8563e85849f8e
  import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
  import org.bukkit.plugin.IllegalPluginAccessException;
  import org.bukkit.plugin.Plugin;
-@@ -13,6 +13,7 @@ import java.util.logging.Level;
+@@ -13,6 +13,7 @@
  
  public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
  
@@ -18,7 +16,7 @@ index 14ffbcb66006878eacf310547dad53718f8308eb..ec26fad2556351bc37b8563e85849f8e
      private long tickCount = 0L;
      private final Object stateLock = new Object();
      private final Long2ObjectOpenHashMap<List<GlobalScheduledTask>> tasksByDeadline = new Long2ObjectOpenHashMap<>();
-@@ -66,6 +67,7 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+@@ -66,6 +67,7 @@
  
          final GlobalScheduledTask ret = new GlobalScheduledTask(plugin, -1, task);
  
@@ -26,7 +24,7 @@ index 14ffbcb66006878eacf310547dad53718f8308eb..ec26fad2556351bc37b8563e85849f8e
          this.scheduleInternal(ret, delayTicks);
  
          if (!plugin.isEnabled()) {
-@@ -93,6 +95,7 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+@@ -93,6 +95,7 @@
  
          final GlobalScheduledTask ret = new GlobalScheduledTask(plugin, periodTicks, task);
  
@@ -34,7 +32,7 @@ index 14ffbcb66006878eacf310547dad53718f8308eb..ec26fad2556351bc37b8563e85849f8e
          this.scheduleInternal(ret, initialDelayTicks);
  
          if (!plugin.isEnabled()) {
-@@ -107,32 +110,33 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+@@ -107,29 +110,30 @@
      public void cancelTasks(final Plugin plugin) {
          Objects.requireNonNull(plugin, "Plugin may not be null");
  
@@ -68,22 +66,19 @@ index 14ffbcb66006878eacf310547dad53718f8308eb..ec26fad2556351bc37b8563e85849f8e
 +            this.tasksByDeadline.computeIfAbsent(task.scheduledTick, (final long keyInMap) -> {
                  return new ArrayList<>();
              }).add(task);
-         }
-     }
- 
++        }
++    }
++
 +    private void removeFromSchedule(final GlobalScheduledTask task) {
 +        synchronized (this.stateLock) {
 +            final List<GlobalScheduledTask> tasks = this.tasksByDeadline.get(task.scheduledTick);
 +            if (tasks != null && tasks.remove(task) && tasks.isEmpty()) {
 +                this.tasksByDeadline.remove(task.scheduledTick);
 +            }
-+        }
-+    }
-+
-     private final class GlobalScheduledTask implements ScheduledTask, Runnable {
+         }
+     }
  
-         private static final int STATE_IDLE                = 0;
-@@ -143,10 +147,19 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+@@ -143,10 +147,19 @@
  
          private final Plugin plugin;
          private final long repeatDelay; // in ticks
@@ -104,7 +99,7 @@ index 14ffbcb66006878eacf310547dad53718f8308eb..ec26fad2556351bc37b8563e85849f8e
  
          private GlobalScheduledTask(final Plugin plugin, final long repeatDelay, final Consumer<ScheduledTask> run) {
              this.plugin = plugin;
-@@ -155,7 +168,7 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+@@ -155,7 +168,7 @@
          }
  
          private final int getStateVolatile() {
@@ -113,7 +108,7 @@ index 14ffbcb66006878eacf310547dad53718f8308eb..ec26fad2556351bc37b8563e85849f8e
          }
  
          private final int compareAndExchangeStateVolatile(final int expect, final int update) {
-@@ -168,6 +181,10 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+@@ -168,6 +181,10 @@
  
          @Override
          public void run() {
@@ -124,7 +119,7 @@ index 14ffbcb66006878eacf310547dad53718f8308eb..ec26fad2556351bc37b8563e85849f8e
              final boolean repeating = this.isRepeatingTask();
              if (STATE_IDLE != this.compareAndExchangeStateVolatile(STATE_IDLE, STATE_EXECUTING)) {
                  // cancelled
-@@ -177,17 +194,23 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+@@ -177,22 +194,23 @@
              try {
                  this.run.accept(this);
              } catch (final Throwable throwable) {
@@ -136,13 +131,18 @@ index 14ffbcb66006878eacf310547dad53718f8308eb..ec26fad2556351bc37b8563e85849f8e
                      this.setStateVolatile(STATE_FINISHED);
 +                } else if (!this.plugin.isEnabled()) {
 +                    this.setStateVolatile(STATE_CANCELLED);
-                 } else if (STATE_EXECUTING == this.compareAndExchangeStateVolatile(STATE_EXECUTING, STATE_IDLE)) {
-                     reschedule = true;
--                } // else: cancelled repeating task
-+                } else {
++                } else if (STATE_EXECUTING == this.compareAndExchangeStateVolatile(STATE_EXECUTING, STATE_IDLE)) {
++                    reschedule = true;
+                 } else {
+-                    final int previousState = this.compareAndExchangeStateVolatile(STATE_EXECUTING, STATE_IDLE);
+-                    if (previousState == STATE_EXECUTING) {
+-                        reschedule = true;
+-                    } else if (previousState == STATE_EXECUTING_CANCELLED) {
+-                        this.setStateVolatile(STATE_CANCELLED);
+-                    }
 +                    // The cancelled repeating callback is no longer executing.
 +                    this.setStateVolatile(STATE_CANCELLED);
-+                }
+                 }
  
                  if (!reschedule) {
                      this.run = null;
@@ -150,7 +150,7 @@ index 14ffbcb66006878eacf310547dad53718f8308eb..ec26fad2556351bc37b8563e85849f8e
                  } else {
                      FoliaGlobalRegionScheduler.this.scheduleInternal(this, this.repeatDelay);
                  }
-@@ -210,8 +233,9 @@ public class FoliaGlobalRegionScheduler implements GlobalRegionScheduler {
+@@ -215,8 +233,9 @@
                  switch (curr) {
                      case STATE_IDLE: {
                          if (STATE_IDLE == (curr = this.compareAndExchangeStateVolatile(STATE_IDLE, STATE_CANCELLED))) {

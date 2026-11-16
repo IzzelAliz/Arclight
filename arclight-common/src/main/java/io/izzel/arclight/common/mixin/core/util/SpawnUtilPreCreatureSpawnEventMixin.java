@@ -17,15 +17,15 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.Optional;
-import java.util.function.Consumer;
+import net.minecraft.world.entity.PostSpawnProcessor;
 
 @Mixin(SpawnUtil.class)
 public abstract class SpawnUtilPreCreatureSpawnEventMixin {
 
     @Decorate(method = "trySpawnMob(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/entity/EntitySpawnReason;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;IIILnet/minecraft/util/SpawnUtil$Strategy;Z)Ljava/util/Optional;",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/EntityType;create(Lnet/minecraft/server/level/ServerLevel;Ljava/util/function/Consumer;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/EntitySpawnReason;ZZ)Lnet/minecraft/world/entity/Entity;"),
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/EntityType;create(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/PostSpawnProcessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/EntitySpawnReason;ZZ)Lnet/minecraft/world/entity/Entity;"),
         require = 1, allow = 1)
-    private static Entity arclight$preCreatureSpawn(EntityType<?> type, ServerLevel level, Consumer<?> config,
+    private static Entity arclight$preCreatureSpawn(EntityType<?> type, ServerLevel level, PostSpawnProcessor<?> config,
             BlockPos searchPos, EntitySpawnReason spawnReason, boolean tryMoveDown, boolean movedUp,
             EntityType<?> entityType, EntitySpawnReason reason, ServerLevel world, BlockPos start) throws Throwable {
         var context = ArclightCaptures.preCreatureSpawn;

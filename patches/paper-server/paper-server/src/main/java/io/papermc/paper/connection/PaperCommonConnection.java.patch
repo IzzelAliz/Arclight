@@ -1,7 +1,12 @@
-diff --git a/paper-server/src/main/java/io/papermc/paper/connection/PaperCommonConnection.java b/paper-server/src/main/java/io/papermc/paper/connection/PaperCommonConnection.java
 --- a/paper-server/src/main/java/io/papermc/paper/connection/PaperCommonConnection.java
 +++ b/paper-server/src/main/java/io/papermc/paper/connection/PaperCommonConnection.java
-@@ -72,12 +72,12 @@
+@@ -72,17 +72,17 @@
+ 
+     @Override
+     public @Nullable String getClientBrandName() {
+-        return this.packetListener.clientBrand;
++        return ((io.izzel.arclight.common.bridge.core.network.ConnectionBridge) ((io.izzel.arclight.common.bridge.core.server.network.ServerCommonPacketListenerImplBridge) this.packetListener).bridge$getConnection()).bridge$getClientBrandName();
+     }
  
      @Override
      public void disconnect(final Component component) {
@@ -16,7 +21,7 @@ diff --git a/paper-server/src/main/java/io/papermc/paper/connection/PaperCommonC
      }
  
      @Override
-@@ -97,7 +97,8 @@
+@@ -102,7 +102,8 @@
  
      @Override
      public @Nullable InetSocketAddress getHAProxyAddress() {

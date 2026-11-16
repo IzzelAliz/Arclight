@@ -10,7 +10,7 @@ import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ExperienceOrb;
-import net.minecraft.world.entity.animal.FlyingAnimal;
+
 import net.minecraft.world.entity.animal.squid.GlowSquid;
 import net.minecraft.world.entity.Interaction;
 import net.minecraft.world.entity.LightningBolt;
@@ -96,7 +96,7 @@ import net.minecraft.world.entity.monster.spider.CaveSpider;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.zombie.Drowned;
 import net.minecraft.world.entity.monster.ElderGuardian;
-import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Enderman;
 import net.minecraft.world.entity.monster.Endermite;
 import net.minecraft.world.entity.monster.illager.Evoker;
 import net.minecraft.world.entity.monster.Ghast;
@@ -104,7 +104,7 @@ import net.minecraft.world.entity.monster.Giant;
 import net.minecraft.world.entity.monster.Guardian;
 import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.entity.monster.illager.Illusioner;
-import net.minecraft.world.entity.monster.MagmaCube;
+import net.minecraft.world.entity.monster.cubemob.MagmaCube;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.entity.monster.illager.Pillager;
@@ -113,7 +113,7 @@ import net.minecraft.world.entity.monster.Shulker;
 import net.minecraft.world.entity.monster.Silverfish;
 import net.minecraft.world.entity.monster.skeleton.Skeleton;
 import net.minecraft.world.entity.monster.skeleton.Parched;
-import net.minecraft.world.entity.monster.Slime;
+import net.minecraft.world.entity.monster.cubemob.Slime;
 import net.minecraft.world.entity.monster.illager.SpellcasterIllager;
 import net.minecraft.world.entity.monster.spider.Spider;
 import net.minecraft.world.entity.monster.skeleton.Stray;
@@ -255,6 +255,7 @@ public class EntityClassLookup {
             }
         }
         Set<Class<?>> ignored = Set.of(
+            org.bukkit.entity.Flying.class,
             org.bukkit.entity.Explosive.class,
             org.bukkit.entity.Damageable.class,
             org.bukkit.entity.NPC.class,
@@ -281,6 +282,7 @@ public class EntityClassLookup {
             org.bukkit.entity.boat.MangroveBoat.class,
             org.bukkit.entity.boat.CherryBoat.class,
             org.bukkit.entity.boat.PaleOakBoat.class,
+            org.bukkit.entity.boat.PoplarBoat.class,
             org.bukkit.entity.boat.BambooRaft.class,
             org.bukkit.entity.boat.OakChestBoat.class,
             org.bukkit.entity.boat.SpruceChestBoat.class,
@@ -291,6 +293,7 @@ public class EntityClassLookup {
             org.bukkit.entity.boat.MangroveChestBoat.class,
             org.bukkit.entity.boat.CherryChestBoat.class,
             org.bukkit.entity.boat.PaleOakChestBoat.class,
+            org.bukkit.entity.boat.PoplarChestBoat.class,
             org.bukkit.entity.boat.BambooChestRaft.class,
             org.bukkit.entity.SplashPotion.class,
             org.bukkit.entity.LingeringPotion.class
@@ -402,13 +405,17 @@ public class EntityClassLookup {
         add(AmbientCreature.class, new EntityClass<>(org.bukkit.entity.Ambient.class, org.bukkit.craftbukkit.entity.CraftAmbient.class, org.bukkit.craftbukkit.entity.CraftAmbient::new));
         add(TamableAnimal.class, new EntityClass<>(org.bukkit.entity.Tameable.class, org.bukkit.craftbukkit.entity.CraftTameableAnimal.class, org.bukkit.craftbukkit.entity.CraftTameableAnimal::new));
         add(AbstractPiglin.class, new EntityClass<>(org.bukkit.entity.PiglinAbstract.class, org.bukkit.craftbukkit.entity.CraftPiglinAbstract.class, org.bukkit.craftbukkit.entity.CraftPiglinAbstract::new));
-        add(FlyingAnimal.class, new EntityClass<>(org.bukkit.entity.Flying.class, ArclightModFlying.class, ArclightModFlying::new));
+
         add(WaterAnimal.class, new EntityClass<>(org.bukkit.entity.WaterMob.class, org.bukkit.craftbukkit.entity.CraftWaterMob.class, org.bukkit.craftbukkit.entity.CraftWaterMob::new));
         add(AbstractGolem.class, new EntityClass<>(org.bukkit.entity.Golem.class, org.bukkit.craftbukkit.entity.CraftGolem.class, org.bukkit.craftbukkit.entity.CraftGolem::new));
         add(Player.class, new EntityClass<>(org.bukkit.entity.HumanEntity.class, org.bukkit.craftbukkit.entity.CraftHumanEntity.class, org.bukkit.craftbukkit.entity.CraftHumanEntity::new));
         add(AbstractFish.class, new EntityClass<>(org.bukkit.entity.Fish.class, org.bukkit.craftbukkit.entity.CraftFish.class, org.bukkit.craftbukkit.entity.CraftFish::new));
         add(AbstractSchoolingFish.class, new EntityClass<>(io.papermc.paper.entity.SchoolableFish.class, io.papermc.paper.entity.PaperSchoolableFish.class, io.papermc.paper.entity.PaperSchoolableFish::new));
         add(EnderDragonPart.class, new EntityClass<>(org.bukkit.entity.EnderDragonPart.class, org.bukkit.craftbukkit.entity.CraftEnderDragonPart.class, org.bukkit.craftbukkit.entity.CraftEnderDragonPart::new));
+
+        add(net.minecraft.world.entity.monster.cubemob.AbstractCubeMob.class, new EntityClass<net.minecraft.world.entity.monster.cubemob.AbstractCubeMob>(org.bukkit.entity.AbstractCubeMob.class, org.bukkit.craftbukkit.entity.CraftAbstractCubeMob.class, (server, entity) -> new org.bukkit.craftbukkit.entity.CraftAbstractCubeMob(server, entity) {}));
+        add(net.minecraft.world.entity.monster.cubemob.SulfurCube.class, new EntityClass<>(org.bukkit.entity.SulfurCube.class, org.bukkit.craftbukkit.entity.CraftSulfurCube.class, org.bukkit.craftbukkit.entity.CraftSulfurCube::new));
+        add(net.minecraft.world.entity.decoration.Cushion.class, new EntityClass<>(org.bukkit.entity.Cushion.class, org.bukkit.craftbukkit.entity.CraftCushion.class, org.bukkit.craftbukkit.entity.CraftCushion::new));
 
         // vanilla mob types
         add(ElderGuardian.class, new EntityClass<>(org.bukkit.entity.ElderGuardian.class, org.bukkit.craftbukkit.entity.CraftElderGuardian.class, org.bukkit.craftbukkit.entity.CraftElderGuardian::new));
@@ -433,7 +440,7 @@ public class EntityClassLookup {
         add(Slime.class, new EntityClass<>(org.bukkit.entity.Slime.class, org.bukkit.craftbukkit.entity.CraftSlime.class, org.bukkit.craftbukkit.entity.CraftSlime::new));
         add(Ghast.class, new EntityClass<>(org.bukkit.entity.Ghast.class, org.bukkit.craftbukkit.entity.CraftGhast.class, org.bukkit.craftbukkit.entity.CraftGhast::new));
         add(ZombifiedPiglin.class, new EntityClass<>(org.bukkit.entity.PigZombie.class, org.bukkit.craftbukkit.entity.CraftPigZombie.class, org.bukkit.craftbukkit.entity.CraftPigZombie::new));
-        add(EnderMan.class, new EntityClass<>(org.bukkit.entity.Enderman.class, org.bukkit.craftbukkit.entity.CraftEnderman.class, org.bukkit.craftbukkit.entity.CraftEnderman::new));
+        add(Enderman.class, new EntityClass<>(org.bukkit.entity.Enderman.class, org.bukkit.craftbukkit.entity.CraftEnderman.class, org.bukkit.craftbukkit.entity.CraftEnderman::new));
         add(CaveSpider.class, new EntityClass<>(org.bukkit.entity.CaveSpider.class, org.bukkit.craftbukkit.entity.CraftCaveSpider.class, org.bukkit.craftbukkit.entity.CraftCaveSpider::new));
         add(Silverfish.class, new EntityClass<>(org.bukkit.entity.Silverfish.class, org.bukkit.craftbukkit.entity.CraftSilverfish.class, org.bukkit.craftbukkit.entity.CraftSilverfish::new));
         add(Blaze.class, new EntityClass<>(org.bukkit.entity.Blaze.class, org.bukkit.craftbukkit.entity.CraftBlaze.class, org.bukkit.craftbukkit.entity.CraftBlaze::new));

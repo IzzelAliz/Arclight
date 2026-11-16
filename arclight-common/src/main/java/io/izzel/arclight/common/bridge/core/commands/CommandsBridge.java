@@ -8,7 +8,9 @@ import java.util.Map;
 import java.util.function.Function;
 
 public interface CommandsBridge {
-    interface RestrictedMarker {}
+    interface RestrictedMarker {
+        boolean restricted();
+    }
 
     default com.mojang.brigadier.tree.RootCommandNode<net.minecraft.commands.CommandSourceStack> bridge$forge$filterCommandTree(
             net.minecraft.server.level.ServerPlayer player,

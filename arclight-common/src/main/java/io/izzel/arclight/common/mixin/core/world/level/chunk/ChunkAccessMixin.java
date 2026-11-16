@@ -13,7 +13,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.BiomeManager;
+import net.minecraft.world.level.biome.BiomeResolver;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.bukkit.craftbukkit.persistence.CraftPersistentDataTypeRegistry;
@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Map;
 
 @Mixin(ChunkAccess.class)
-public abstract class ChunkAccessMixin implements BlockGetter, BiomeManager.NoiseBiomeSource, ChunkAccessBridge {
+public abstract class ChunkAccessMixin implements BlockGetter, BiomeResolver, ChunkAccessBridge {
 
     // @formatter:off
     @Shadow public abstract int getMinY();

@@ -15,7 +15,6 @@
   "mixinPriority": 555,
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "core.server.ReloadableServerRegistriesMixin_NeoForge",
     "core.world.level.block.FireBlockLegacyTntPrimeEventMixin_NeoForge",
     "core.world.item.ItemStackNaturalDamageEventMixin_NeoForge",
     "core.world.level.block.BlockDestructionExperienceMixin_NeoForge",
@@ -31,7 +30,6 @@
     "compat.connector.CommandNodeMixin",
     "core.commands.CommandsMixin_NeoForge",
     "core.world.level.material.LavaFluidMixin_NeoForge",
-    "core.world.level.storage.DelegateWorldInfoMixin_NeoForge",
     "core.server.network.ServerCommonPacketListenerImplMixin_NeoForge",
     "core.server.network.ServerConfigurationPacketListenerImplMixin_NeoForge",
     "core.server.network.ServerGamePacketListenerImplMixin_NeoForge",
@@ -102,9 +100,6 @@
     "neoforge.NetworkRegistryMixin",
     "neoforge.PacketDistributorMixin",
     "neoforge.PermissionAPIMixin",
-    "neoforge.items.CombinedInvWrapperAccessor",
-    "neoforge.items.RangedWrapperAccessor",
-    "neoforge.items.SidedInvWrapperAccessor",
     "neoforge.items.VanillaInventoryCodeHooksMixin"
   ]
 }

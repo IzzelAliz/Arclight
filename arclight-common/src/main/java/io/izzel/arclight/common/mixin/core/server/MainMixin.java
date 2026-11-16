@@ -26,6 +26,17 @@ public class MainMixin {
         return (OptionSet) DecorationOps.callsite().invoke(parser, BukkitOptionParser.filterNativeArguments(parser, ArclightCaptures.getBukkitOptions(), args));
     }
 
+    @Decorate(method = "main([Ljava/lang/String;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/packs/repository/ServerPacksSource;createPackRepository(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;)Lnet/minecraft/server/packs/repository/PackRepository;"), remap = false, require = 1, expect = 1, allow = 1)
+    private static net.minecraft.server.packs.repository.PackRepository arclight$refreshBuiltinPacks(
+        net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess access,
+        @io.izzel.arclight.mixin.Local(ordinal = -1) boolean safeModeEnabled) throws Throwable {
+        var repository = (net.minecraft.server.packs.repository.PackRepository) DecorationOps.callsite().invoke(access);
+        if (!safeModeEnabled) {
+            io.papermc.paper.datapack.DynamicBuiltinPacks.refreshAllMetadata(access);
+        }
+        return repository;
+    }
+
     @Inject(method = "main([Ljava/lang/String;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/Bootstrap;bootStrap()V"), remap = false)
     private static void arclight$loadPluginProviders(String[] args, CallbackInfo ci) throws Exception {
         PluginInitializerManager.load(ArclightCaptures.getBukkitOptions());

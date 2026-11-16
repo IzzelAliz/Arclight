@@ -36,7 +36,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import javax.annotation.Nullable;
 import java.util.concurrent.Executor;
 import java.util.function.BooleanSupplier;
-import java.util.function.Supplier;
 
 @Mixin(ChunkMap.class)
 public abstract class ChunkMapMixin implements ChunkMapBridge {
@@ -56,7 +55,7 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
     // @formatter:on
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void arclight$updateRandom(ServerLevel p_214836_, LevelStorageSource.LevelStorageAccess p_214837_, DataFixer p_214838_, StructureTemplateManager p_214839_, Executor p_214840_, BlockableEventLoop p_214841_, LightChunkGetter p_214842_, ChunkGenerator chunkGenerator, ChunkStatusUpdateListener p_214845_, Supplier p_214846_, net.minecraft.world.level.TicketStorage ticketStorage, int p_214847_, boolean p_214848_, CallbackInfo ci) {
+    private void arclight$updateRandom(ServerLevel p_214836_, LevelStorageSource.LevelStorageAccess p_214837_, DataFixer p_214838_, StructureTemplateManager p_214839_, Executor p_214840_, BlockableEventLoop p_214841_, LightChunkGetter p_214842_, ChunkGenerator chunkGenerator, ChunkStatusUpdateListener p_214845_, net.minecraft.world.level.TicketStorage ticketStorage, int p_214847_, boolean p_214848_, CallbackInfo ci) {
         this.bridge$setChunkGenerator(chunkGenerator);
     }
 
@@ -128,15 +127,91 @@ public abstract class ChunkMapMixin implements ChunkMapBridge {
     }
 
     @Override
+    public io.papermc.paper.world.chunk.ChunkGenerationState bridge$getChunkGenerationState(int x, int z) {
+        var server = this.level.getServer();
+        var loaded = server.isSameThread() ? this.arclight$loadedGenerationState(x, z)
+            : server.submit(() -> this.arclight$loadedGenerationState(x, z)).join();
+        if (loaded != null) {
+            return loaded;
+        }
+        final net.minecraft.nbt.CompoundTag data;
+        try {
+            data = ((ChunkMap) (Object) this).read(new net.minecraft.world.level.ChunkPos(x, z)).join().orElse(null);
+        } catch (java.util.concurrent.CompletionException ex) {
+            throw new RuntimeException("Failed to read chunk data at (" + x + ", " + z + ")", ex.getCause());
+        }
+        return arclight$classifyGenerationState(data, x, z);
+    }
+
+    @Override
+    public java.util.concurrent.CompletableFuture<io.papermc.paper.world.chunk.ChunkGenerationState> bridge$getChunkGenerationStateAsync(int x, int z) {
+        return this.level.getServer().submit(() -> {
+            var loaded = this.arclight$loadedGenerationState(x, z);
+            if (loaded != null) {
+                return java.util.concurrent.CompletableFuture.completedFuture(loaded);
+            }
+            return ((ChunkMap) (Object) this).read(new net.minecraft.world.level.ChunkPos(x, z))
+                .handleAsync((data, failure) -> {
+                    if (failure != null) {
+                        throw new java.util.concurrent.CompletionException(failure);
+                    }
+                    return arclight$classifyGenerationState(data.orElse(null), x, z);
+                }, net.minecraft.util.Util.backgroundExecutor());
+        }).thenCompose(future -> future);
+    }
+
+    @org.spongepowered.asm.mixin.Unique
+    private io.papermc.paper.world.chunk.ChunkGenerationState arclight$loadedGenerationState(int x, int z) {
+        var holder = this.getUpdatingChunkIfPresent(new net.minecraft.world.level.ChunkPos(x, z).pack());
+        if (holder == null) {
+            return null;
+        }
+        var chunk = holder.getChunkIfPresentUnchecked(net.minecraft.world.level.chunk.status.ChunkStatus.EMPTY);
+        if (chunk == null) {
+            return null;
+        }
+        return chunk.getPersistedStatus().isOrAfter(net.minecraft.world.level.chunk.status.ChunkStatus.FULL)
+            ? io.papermc.paper.world.chunk.ChunkGenerationState.GENERATED
+            : io.papermc.paper.world.chunk.ChunkGenerationState.PARTIAL;
+    }
+
+    @org.spongepowered.asm.mixin.Unique
+    private static io.papermc.paper.world.chunk.ChunkGenerationState arclight$classifyGenerationState(net.minecraft.nbt.CompoundTag data, int x, int z) {
+        if (data == null) {
+            return io.papermc.paper.world.chunk.ChunkGenerationState.NOT_GENERATED;
+        }
+        int version = net.minecraft.nbt.NbtUtils.getDataVersion(data, -1);
+        int current = net.minecraft.SharedConstants.getCurrentVersion().dataVersion().version();
+        if (version > current) {
+            throw new IllegalStateException("Chunk (" + x + ", " + z + ") was saved by a newer version (data version " + version + ", current " + current + ")");
+        }
+        if (version < current || data.getIntOr("xPos", 0) != x || data.getIntOr("zPos", 0) != z) {
+            return io.papermc.paper.world.chunk.ChunkGenerationState.OUTDATED;
+        }
+        var status = data.read("Status", net.minecraft.world.level.chunk.status.ChunkStatus.CODEC)
+            .orElse(net.minecraft.world.level.chunk.status.ChunkStatus.EMPTY);
+        var retrogen = data.read("below_zero_retrogen", net.minecraft.world.level.levelgen.BelowZeroRetrogen.CODEC).orElse(null);
+        if (retrogen == null) {
+            return status.isOrAfter(net.minecraft.world.level.chunk.status.ChunkStatus.FULL)
+                ? io.papermc.paper.world.chunk.ChunkGenerationState.GENERATED
+                : io.papermc.paper.world.chunk.ChunkGenerationState.PARTIAL;
+        }
+        return status.isOrAfter(net.minecraft.world.level.chunk.status.ChunkStatus.FULL)
+            || retrogen.targetStatus().isOrAfter(net.minecraft.world.level.chunk.status.ChunkStatus.SPAWN)
+            ? io.papermc.paper.world.chunk.ChunkGenerationState.OUTDATED
+            : io.papermc.paper.world.chunk.ChunkGenerationState.PARTIAL;
+    }
+
+    @Override
     public void bridge$setChunkGenerator(ChunkGenerator generator) {
         var rg = generator;
         if (rg instanceof CustomChunkGenerator custom) {
             rg = custom.getDelegate();
         }
         if (rg instanceof NoiseBasedChunkGenerator noise) {
-            this.randomState = RandomState.create(noise.generatorSettings().value(), this.level.registryAccess().lookupOrThrow(Registries.NOISE), this.level.getSeed());
+            this.randomState = RandomState.create(this.level.registryAccess().lookupOrThrow(Registries.NOISE), this.level.getSeed(), noise.generatorSettings().value());
         } else {
-            this.randomState = RandomState.create(NoiseGeneratorSettings.dummy(), this.level.registryAccess().lookupOrThrow(Registries.NOISE), this.level.getSeed());
+            this.randomState = RandomState.create(this.level.registryAccess().lookupOrThrow(Registries.NOISE), this.level.getSeed(), false, net.minecraft.world.level.block.Blocks.STONE.defaultBlockState(), 63, net.minecraft.world.level.levelgen.NoiseRouterData.none());
         }
         this.chunkGeneratorState = generator.createState(level.registryAccess().lookupOrThrow(Registries.STRUCTURE_SET), this.randomState, level.getSeed());
         var old = this.worldGenContext;

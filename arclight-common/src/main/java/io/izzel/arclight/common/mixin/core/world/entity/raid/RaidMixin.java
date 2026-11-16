@@ -89,7 +89,7 @@ public class RaidMixin implements RaidBridge {
 
     // Capture the original iteration's player only after both stat and criterion.
     // Do not requery heroes, filter again, or include living non-player heroes.
-    @Inject(method = "tick(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/criterion/PlayerTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;)V", shift = At.Shift.AFTER))
+    @Inject(method = "tick(Lnet/minecraft/server/level/ServerLevel;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancements/triggers/PlayerTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;)V", shift = At.Shift.AFTER))
     private void arclight$victoryPlayer(ServerLevel level, CallbackInfo ci, @Local ServerPlayer player, @Share("raidWinners") LocalRef<List<Player>> winners) {
         winners.get().add((Player) ((io.izzel.arclight.common.bridge.core.entity.EntityBridge) player).bridge$getBukkitEntity());
     }

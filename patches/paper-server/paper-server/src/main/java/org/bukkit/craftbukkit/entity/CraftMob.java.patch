@@ -1,15 +1,7 @@
 diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftMob.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftMob.java
-index d30f9b4a8896f125761bf64000a8de734598177d..1ba3e71f7cfdb1436b1bdf09ef05b49acd17a350 100644
 --- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftMob.java
 +++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftMob.java
-@@ -36,18 +36,18 @@ public abstract class CraftMob extends CraftLivingEntity implements Mob, io.pape
- 
-     @Override
-     public boolean shouldDespawnInPeaceful() {
--        return this.getHandle().shouldDespawnInPeaceful();
-+        return !this.getHandle().getType().isAllowedInPeaceful();
-     }
- 
+@@ -42,12 +42,12 @@
      @Override
      public void setDespawnInPeacefulOverride(final TriState state) {
          Preconditions.checkArgument(state != null, "TriState cannot be null");
@@ -24,7 +16,7 @@ index d30f9b4a8896f125761bf64000a8de734598177d..1ba3e71f7cfdb1436b1bdf09ef05b49a
      }
  
      @Override
-@@ -60,10 +60,11 @@ public abstract class CraftMob extends CraftLivingEntity implements Mob, io.pape
+@@ -60,10 +60,11 @@
          Preconditions.checkState(!this.getHandle().generation, "Cannot set target during world generation");
  
          net.minecraft.world.entity.Mob entity = this.getHandle();

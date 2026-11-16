@@ -1,12 +1,11 @@
 diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftSign.java b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftSign.java
-index 8e52c0f4dc65bfe013c21ad139b2378c024bcc37..bf6a3b3744c17b44025ebe968dbc9955a4a9c995 100644
 --- a/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftSign.java
 +++ b/paper-server/src/main/java/org/bukkit/craftbukkit/block/CraftSign.java
-@@ -218,7 +218,17 @@ public class CraftSign<T extends SignBlockEntity> extends CraftBlockEntityState<
+@@ -152,7 +152,17 @@
      @Override
      public Side getInteractableSideFor(final double x, final double z) {
          this.requirePlaced();
--        return this.getSnapshot().isFacingFrontText(x, z) ? Side.FRONT : Side.BACK;
+-        return CraftSignSide.fromVanilla(this.getSnapshot().getSlotPlayerIsFacing(x, z));
 +        var snapshot = this.getSnapshot();
 +        var state = snapshot.getBlockState();
 +        if (!(state.getBlock() instanceof net.minecraft.world.level.block.SignBlock sign)) {
@@ -19,5 +18,5 @@ index 8e52c0f4dc65bfe013c21ad139b2378c024bcc37..bf6a3b3744c17b44025ebe968dbc9955
 +        float playerYRot = (float) (net.minecraft.util.Mth.atan2(zd, xd) * 180.0F / (float) Math.PI) - 90.0F;
 +        return net.minecraft.util.Mth.degreesDifferenceAbs(signYRot, playerYRot) <= 90.0F ? Side.FRONT : Side.BACK;
      }
-     // Paper end - More Sign Block API
  
+     @Override

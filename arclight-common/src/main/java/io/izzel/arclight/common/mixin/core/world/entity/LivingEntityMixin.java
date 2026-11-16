@@ -18,7 +18,7 @@ import io.izzel.arclight.common.mod.server.event.ArclightEventFactory;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
-import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.advancements.triggers.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
@@ -137,7 +137,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public abstract int getArrowCount();
     @Shadow @Final public static EntityDataAccessor<Integer> DATA_ARROW_COUNT_ID;
     @Shadow public abstract void setItemSlot(EquipmentSlot slotIn, ItemStack stack);
-    @Shadow public abstract void knockback(double p_147241_, double p_147242_, double p_147243_);
+    @Shadow public abstract void knockback(double power, double xd, double zd, DamageSource source, float damage);
     @Shadow public abstract void stopUsingItem();
     @Shadow protected abstract boolean doesEmitEquipEvent(EquipmentSlot p_217035_);
     @Shadow public abstract boolean wasExperienceConsumed();
@@ -163,6 +163,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Shadow public abstract ItemStack getItemBlockingWith();
 
     @Shadow public float lastHurt;
+    @Shadow public int damageCooldownTime;
 
     @Shadow public abstract boolean hasEffect(Holder<MobEffect> arg);
 
@@ -366,7 +367,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     @Decorate(method = "addEffect(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)Z", inject = true,
         at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
     private void arclight$effectAdd(MobEffectInstance mobEffectInstance, Entity entity, @Local(allocate = "cause") EntityPotionEffectEvent.Cause cause) throws Throwable {
-        var event = CraftEventFactory.callEntityPotionEffectChangeEvent((LivingEntity) (Object) this, null, mobEffectInstance, cause, false);
+        var event = CraftEventFactory.callEntityPotionEffectChangeEvent((LivingEntity) (Object) this, null, mobEffectInstance, entity, cause, null, false);
         if (event.isCancelled()) {
             DecorationOps.cancel().invoke(false);
             return;
@@ -379,7 +380,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     private boolean arclight$effectReplace(MobEffectInstance oldEffect, MobEffectInstance newEffect,
                                            MobEffectInstance mobEffectInstance, Entity entity, @Local(allocate = "cause") EntityPotionEffectEvent.Cause cause) throws Throwable {
         var override = new MobEffectInstance(oldEffect).update(newEffect);
-        var event = CraftEventFactory.callEntityPotionEffectChangeEvent((LivingEntity) (Object) this, oldEffect, newEffect, cause, override);
+        var event = CraftEventFactory.callEntityPotionEffectChangeEvent((LivingEntity) (Object) this, oldEffect, newEffect, entity, cause, null, override);
         if (event.isCancelled()) {
             return (boolean) DecorationOps.cancel().invoke(false);
         }
@@ -543,9 +544,9 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         }
     }
 
-    @Inject(method = "blockedByItem", at = @At("HEAD"))
-    private void arclight$shieldKnockback(LivingEntity livingEntity, CallbackInfo ci) {
-        this.bridge$pushKnockbackCause(null, EntityKnockbackEvent.KnockbackCause.SHIELD_BLOCK);
+    @Inject(method = "blockedByItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/damagesource/DamageSource;FZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDDLnet/minecraft/world/damagesource/DamageSource;F)V"))
+    private void arclight$shieldKnockback(LivingEntity defender, DamageSource source, float damage, boolean fullyBlocked, CallbackInfo ci) {
+        ((LivingEntityBridge) defender).bridge$pushKnockbackCause((Entity) (Object) this, EntityKnockbackEvent.KnockbackCause.SHIELD_BLOCK);
     }
 
     private transient Entity arclight$knockbackAttacker;
@@ -559,11 +560,11 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
 
     public void knockback(double d, double e, double f, Entity attacker, EntityKnockbackEvent.KnockbackCause cause) {
         this.bridge$pushKnockbackCause(attacker, cause);
-        this.knockback(d, e, f);
+        this.knockback(d, e, f, this.damageSources().generic(), 0.0F);
     }
 
-    @Decorate(method = "knockback", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;setDeltaMovement(DDD)V"))
-    private void arclight$knockbackEvent(LivingEntity instance, double x, double y, double z, double d, double e, double f) throws Throwable {
+    @Decorate(method = "knockback(DDDLnet/minecraft/world/damagesource/DamageSource;FZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;setDeltaMovement(DDD)V"))
+    private void arclight$knockbackEvent(LivingEntity instance, double x, double y, double z, double d, double e, double f, DamageSource source, float damage, boolean comesFromEffect) throws Throwable {
         var attacker = arclight$knockbackAttacker;
         var cause = arclight$knockbackCause == null ? EntityKnockbackEvent.KnockbackCause.UNKNOWN : arclight$knockbackCause;
         arclight$knockbackAttacker = null;
@@ -605,7 +606,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         arclight$damageResult = false;
     }
 
-    @Decorate(method = "hurtServer", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/LivingEntity;invulnerableTime:I"),
+    @Decorate(method = "hurtServer", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/LivingEntity;damageCooldownTime:I"),
         slice = @Slice(to = @At(value = "FIELD", target = "Lnet/minecraft/tags/DamageTypeTags;BYPASSES_COOLDOWN:Lnet/minecraft/tags/TagKey;")))
     private int arclight$useInvulnerableDuration(LivingEntity instance) throws Throwable {
         int result = (int) DecorationOps.callsite().invoke(instance);
@@ -638,7 +639,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         float hardHatModifier = hardHat.apply((double) damage).floatValue();
         damage += hardHatModifier;
 
-        if ((float) this.invulnerableTime > (float) invulnerableDuration / 2.0F && !source.is(DamageTypeTags.BYPASSES_COOLDOWN)) {
+        if ((float) this.damageCooldownTime > (float) invulnerableDuration / 2.0F && !source.is(DamageTypeTags.BYPASSES_COOLDOWN)) {
             if (damage <= this.lastHurt) {
                 return null;
             }
@@ -693,8 +694,8 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         arclight$damageResult = true;
     }
 
-    @Inject(method = "hurtServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDD)V"))
-    private void arclight$knockbackCause(ServerLevel serverLevel, DamageSource damageSource, float f, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "dealDefaultKnockback(Lnet/minecraft/world/damagesource/DamageSource;FZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDDLnet/minecraft/world/damagesource/DamageSource;F)V"))
+    private void arclight$knockbackCause(DamageSource damageSource, float damage, boolean sendAnimation, CallbackInfo ci) {
         this.bridge$pushKnockbackCause(damageSource.getEntity(), damageSource.getEntity() == null ? EntityKnockbackEvent.KnockbackCause.DAMAGE : EntityKnockbackEvent.KnockbackCause.ENTITY_ATTACK);
     }
 
@@ -821,10 +822,10 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
         player.causeFoodExhaustion(exhaustion);
     }
 
-    @Decorate(method = "createWitherRose", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
-    private boolean arclight$fireWitherRoseForm(Level level, BlockPos pos, BlockState newState, int flags) throws Throwable {
+    @Decorate(method = "createWitherRose(Lnet/minecraft/world/entity/LivingEntity;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
+    private boolean arclight$fireWitherRoseForm(Level level, BlockPos pos, BlockState newState) throws Throwable {
         if (LevelAccessorBridge.from(level) instanceof LevelAccessorBridge bridge) {
-            final var event = ArclightEventFactory.callBlockFormEvent(bridge.bridge$getMinecraftWorld(), pos, newState, flags, null);
+            final var event = ArclightEventFactory.callBlockFormEvent(bridge.bridge$getMinecraftWorld(), pos, newState, 3, null);
             if (event != null) {
                 if (event.isCancelled()) {
                     return false;
@@ -832,7 +833,7 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
                 newState = ((CraftBlockState) event.getNewState()).getHandle();
             }
         }
-        return (boolean) DecorationOps.callsite().invoke(level, pos, newState, flags);
+        return (boolean) DecorationOps.callsite().invoke(level, pos, newState);
     }
 
     @Decorate(method = "travelFallFlying", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;stopFallFlying()V"))
@@ -877,10 +878,10 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     }
 
     // Chorus scope wraps the physical body in the loader-specific LivingEntity mixin.
-    // Do not wrap NeoForge's four-argument delegator: a second enter would shadow its claimed scope.
+    // Do not wrap NeoForge's delegator: a second enter would shadow its claimed scope.
 
-    // Vanilla has the callsite in the four-argument method; NeoForge delegates to the ItemStack overload.
-    @Decorate(method = {"randomTeleport(DDDZ)Z", "randomTeleport(DDDZLnet/minecraft/world/item/ItemStack;)Z"}, at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/LivingEntity;teleportTo(DDD)V"))
+    // The physical teleport lives in the position-check helper; NeoForge adds the consumed stack.
+    @Decorate(method = {"checkPositionAndTeleport(DDDZLjava/util/function/Predicate;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;)Z", "checkPositionAndTeleport(DDDZLjava/util/function/Predicate;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;)Z"}, at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/world/entity/LivingEntity;teleportTo(DDD)V"))
     private void arclight$entityTeleport(LivingEntity entity, double x, double y, double z,
                                          @Local(ordinal = 0) boolean showParticles) throws Throwable {
         if ((Object) this instanceof ServerPlayer player) {
@@ -1032,13 +1033,29 @@ public abstract class LivingEntityMixin extends EntityMixin implements LivingEnt
     private void arclight$killedCause(CallbackInfo ci) {
         this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DEATH);
     }
-    @Decorate(method = "drop(Lnet/minecraft/world/item/ItemStack;ZZ)Lnet/minecraft/world/entity/item/ItemEntity;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;createItemStackToDrop(Lnet/minecraft/world/item/ItemStack;ZZ)Lnet/minecraft/world/entity/item/ItemEntity;"))
+    @Decorate(method = "drop(Lnet/minecraft/world/item/ItemStack;ZLnet/minecraft/util/Prediction;)Lnet/minecraft/world/entity/item/ItemEntity;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;createItemStackToDrop(Lnet/minecraft/world/item/ItemStack;ZZ)Lnet/minecraft/world/entity/item/ItemEntity;"))
     private ItemEntity arclight$prepareApiDrop(LivingEntity living, ItemStack stack, boolean randomly, boolean thrownFromHand) throws Throwable {
+        if (living instanceof io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge bridge) {
+            randomly = bridge.bridge$takeApiDropRandomly(randomly);
+        }
         ItemEntity entity = (ItemEntity) DecorationOps.callsite().invoke(living, stack, randomly, thrownFromHand);
         if (living instanceof io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge bridge) {
             return bridge.bridge$prepareApiDrop(entity);
         }
         return entity;
+    }
+
+    @Decorate(method = "drop(Lnet/minecraft/world/item/ItemStack;ZLnet/minecraft/util/Prediction;)Lnet/minecraft/world/entity/item/ItemEntity;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
+    private boolean arclight$dropBeforeAdd(net.minecraft.world.level.Level level, Entity entity,
+            ItemStack stack, boolean thrownFromHand, net.minecraft.util.Prediction prediction) throws Throwable {
+        if (this instanceof io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge bridge
+            && !bridge.bridge$callDropItemEvent((ItemEntity) entity, thrownFromHand)) {
+            return (boolean) DecorationOps.cancel().invoke((ItemEntity) null);
+        }
+        if (this.bridge$capturePlayerDrop((ItemEntity) entity)) {
+            return true;
+        }
+        return (boolean) DecorationOps.callsite().invoke(level, entity);
     }
 
     public org.bukkit.craftbukkit.entity.CraftLivingEntity getBukkitLivingEntity() {

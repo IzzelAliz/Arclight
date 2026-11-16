@@ -203,8 +203,8 @@ public abstract class ServerPlayerGameModeMixin implements ServerPlayerGameModeB
         DecorationOps.blackhole().invoke(f);
     }
 
-    @Inject(method = "handleBlockBreakAction", at = @At(value = "CONSTANT", args = "stringValue=aborted destroying"))
-    private void arclight$abortBlockBreak(BlockPos blockPos, ServerboundPlayerActionPacket.Action action, Direction direction, int i, int j, CallbackInfo ci) {
+    @Inject(method = "abortDestroyBlock(Lnet/minecraft/core/BlockPos;I)V", at = @At("RETURN"))
+    private void arclight$abortBlockBreak(BlockPos blockPos, int sequence, CallbackInfo ci) {
         CraftEventFactory.callBlockDamageAbortEvent(this.player, blockPos, this.player.getInventory().getSelectedItem());
     }
 

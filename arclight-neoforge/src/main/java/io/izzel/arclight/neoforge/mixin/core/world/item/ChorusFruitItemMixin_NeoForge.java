@@ -11,15 +11,15 @@ import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(TeleportRandomlyConsumeEffect.class)
 public class ChorusFruitItemMixin_NeoForge {
-    @Decorate(method = "apply", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;randomTeleport(DDDZLnet/minecraft/world/item/ItemStack;)Z"))
+    @Decorate(method = "apply", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;randomTeleport(DDDZLnet/minecraft/tags/TagKey;Lnet/minecraft/world/item/ItemStack;)Z"))
     private boolean arclight$randomTeleport(LivingEntity user, double x, double y, double z, boolean showParticles,
-                                             ItemStack consumedStack) throws Throwable {
+                                             net.minecraft.tags.TagKey<net.minecraft.world.level.block.Block> avoidanceTag, ItemStack consumedStack) throws Throwable {
         var previous = ArclightCaptures.chorusPending;
         var chorus = com.mojang.datafixers.util.Pair.of(user, new org.apache.commons.lang3.mutable.MutableBoolean());
         ArclightCaptures.chorusPending = chorus;
         boolean result;
         try {
-            result = (boolean) DecorationOps.callsite().invoke(user, x, y, z, showParticles, consumedStack);
+            result = (boolean) DecorationOps.callsite().invoke(user, x, y, z, showParticles, avoidanceTag, consumedStack);
         } finally {
             ArclightCaptures.chorusPending = previous;
         }

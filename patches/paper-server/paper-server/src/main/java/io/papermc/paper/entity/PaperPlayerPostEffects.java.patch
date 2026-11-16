@@ -1,0 +1,12 @@
+diff --git a/paper-server/src/main/java/io/papermc/paper/entity/PaperPlayerPostEffects.java b/paper-server/src/main/java/io/papermc/paper/entity/PaperPlayerPostEffects.java
+--- a/paper-server/src/main/java/io/papermc/paper/entity/PaperPlayerPostEffects.java
++++ b/paper-server/src/main/java/io/papermc/paper/entity/PaperPlayerPostEffects.java
+@@ -36,7 +36,7 @@
+             Preconditions.checkArgument(effect != null, "effects cannot be null");
+             Preconditions.checkArgument(ids.add(PaperAdventure.asVanilla(effect)), "effects cannot be duplicate [%s]", effect);
+         }
+-        return this.getHandle().setPostEffects(ids);
++        return ((io.izzel.arclight.common.bridge.core.server.level.ServerPlayerBridge) this.getHandle()).bridge$setPostEffects(ids);
+     }
+ 
+     @Override

@@ -32,7 +32,7 @@ index 0000000000000000000000000000000000000000..35231ed3ba965c6b796300e94425b403
 +    @Override
 +    public @Nullable Signature signature() {
 +        var signature = this.playerChatMessage.signature();
-+        return signature == null ? null : signature::bytes;
++        return signature == null ? null : SignedMessage.signature(signature.bytes());
 +    }
 +
 +    @Override

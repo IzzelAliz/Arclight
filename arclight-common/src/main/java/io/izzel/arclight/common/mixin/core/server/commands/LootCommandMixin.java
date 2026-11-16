@@ -11,7 +11,7 @@ import java.util.List;
 @Mixin(LootCommand.class)
 public abstract class LootCommandMixin {
 
-    @ModifyVariable(method = "dropInWorld(Lnet/minecraft/commands/CommandSourceStack;Lnet/minecraft/world/phys/Vec3;Ljava/util/List;Lnet/minecraft/server/commands/LootCommand$Callback;)I",
+    @ModifyVariable(method = "dropInWorld(Lnet/minecraft/commands/CommandSourceStack;Lnet/minecraft/world/phys/Vec3;Ljava/util/List;Lnet/minecraft/server/commands/CommandResponseTracker;)V",
         at = @At("HEAD"), argsOnly = true, ordinal = 0)
     private static List<ItemStack> arclight$filterEmpty(List<ItemStack> drops) {
         drops.removeIf(ItemStack::isEmpty);

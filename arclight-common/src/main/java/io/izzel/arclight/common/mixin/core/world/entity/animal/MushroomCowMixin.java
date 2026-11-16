@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-@io.izzel.arclight.common.mod.mixins.annotation.OnlyInPlatform({io.izzel.arclight.api.ArclightPlatform.VANILLA, io.izzel.arclight.api.ArclightPlatform.FABRIC, io.izzel.arclight.api.ArclightPlatform.NEOFORGE})
 @Mixin(MushroomCow.class)
 public abstract class MushroomCowMixin extends AnimalMixin {
 

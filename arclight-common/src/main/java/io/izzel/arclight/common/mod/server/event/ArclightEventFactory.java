@@ -21,10 +21,10 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.item.BedItem;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.AbstractBedBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.Bukkit;
@@ -228,11 +228,11 @@ public abstract class ArclightEventFactory {
             }
 
             // SPIGOT-7315: Moved from BlockBed#setPlacedBy
-            if (placeEvent != null && currentStack.getItem() instanceof BedItem) {
+            if (placeEvent != null && currentStack.getItem() instanceof BlockItem blockItem && blockItem.getBlock() instanceof AbstractBedBlock) {
                 var position = ((CraftBlock) placeEvent.getBlock()).getPosition();
                 var blockData = world.getBlockState(position);
 
-                if (blockData.getBlock() instanceof BedBlock) {
+                if (blockData.getBlock() instanceof AbstractBedBlock) {
                     world.updateNeighborsAt(position, Blocks.AIR);
                     blockData.updateNeighbourShapes(world, position, 3);
                 }
@@ -383,7 +383,7 @@ public abstract class ArclightEventFactory {
                 if (entity == null) {
                     // Match Block.popResource for newly added Bukkit stacks; native entities are reused.
                     double x = pos.getX() + 0.5 + net.minecraft.util.Mth.nextDouble(level.getRandom(), -0.25, 0.25);
-                    double y = pos.getY() + 0.5 + net.minecraft.util.Mth.nextDouble(level.getRandom(), -0.25, 0.25) - net.minecraft.world.entity.EntityType.ITEM.getHeight() / 2.0;
+                    double y = pos.getY() + 0.5 + net.minecraft.util.Mth.nextDouble(level.getRandom(), -0.25, 0.25) - net.minecraft.world.entity.EntityTypes.ITEM.getHeight() / 2.0;
                     double z = pos.getZ() + 0.5 + net.minecraft.util.Mth.nextDouble(level.getRandom(), -0.25, 0.25);
                     entity = new ItemEntity(level, x, y, z, item);
                     entity.setDefaultPickUpDelay();
@@ -405,9 +405,12 @@ public abstract class ArclightEventFactory {
 
     }
     public static net.minecraft.world.item.ItemStack smeltResult(ServerLevel level, BlockPos pos, net.minecraft.core.NonNullList<net.minecraft.world.item.ItemStack> items,
-                                        net.minecraft.world.item.ItemStack input, net.minecraft.world.item.ItemStack result) {
+                                        net.minecraft.world.item.ItemStack input, net.minecraft.world.item.ItemStack result,
+                                        net.minecraft.world.item.crafting.RecipeHolder<?> recipe) {
+        var bukkitRecipe = recipe == null ? null : ((io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeHolderBridge) (Object) recipe).bridge$toBukkitRecipe();
         org.bukkit.event.inventory.FurnaceSmeltEvent event = new org.bukkit.event.inventory.FurnaceSmeltEvent(CraftBlock.at(level, pos),
-            org.bukkit.craftbukkit.inventory.CraftItemStack.asCraftMirror(input), org.bukkit.craftbukkit.inventory.CraftItemStack.asBukkitCopy(result));
+            org.bukkit.craftbukkit.inventory.CraftItemStack.asCraftMirror(input), org.bukkit.craftbukkit.inventory.CraftItemStack.asBukkitCopy(result),
+            bukkitRecipe instanceof org.bukkit.inventory.CookingRecipe<?> cookingRecipe ? cookingRecipe : null);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             return null;
@@ -446,7 +449,7 @@ public abstract class ArclightEventFactory {
 
 
     public static InteractionResult useSignItem(UseOnContext context, com.llamalad7.mixinextras.injector.wrapoperation.Operation<InteractionResult> original) {
-        if (!(context.getItemInHand().getItem() instanceof net.minecraft.world.item.SignItem)) return original.call(context);
+        if (!(context.getItemInHand().getItem() instanceof BlockItem blockItem && blockItem.getBlock() instanceof net.minecraft.world.level.block.SignBlock)) return original.call(context);
         usingSignItem = true;
         pendingSignEditor = null;
         try {
@@ -460,7 +463,7 @@ public abstract class ArclightEventFactory {
     }
 
     public static InteractionResult placeSign(net.minecraft.world.item.context.BlockPlaceContext context, com.llamalad7.mixinextras.injector.wrapoperation.Operation<InteractionResult> original) {
-        if (!(context.getItemInHand().getItem() instanceof net.minecraft.world.item.SignItem)) return original.call(context);
+        if (!(context.getItemInHand().getItem() instanceof BlockItem blockItem && blockItem.getBlock() instanceof net.minecraft.world.level.block.SignBlock)) return original.call(context);
         placingSign = true;
         try {
             InteractionResult result = original.call(context);
@@ -473,22 +476,23 @@ public abstract class ArclightEventFactory {
         }
     }
 
-    public static boolean tagSign(BlockPos pos, Level level, net.minecraft.world.entity.player.Player player, net.minecraft.world.item.ItemStack stack,
-                              com.llamalad7.mixinextras.injector.wrapoperation.Operation<Boolean> original, net.minecraft.world.item.BlockItem item, BlockState state) {
+    public static void tagSign(net.minecraft.world.level.block.Block block, Level level, BlockPos pos, BlockState state,
+                              LivingEntity placer, net.minecraft.world.item.ItemStack stack,
+                              com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original) {
         placedSignPos = pos.immutable();
         try {
-            return original.call(item, pos, level, player, stack, state);
+            original.call(block, level, pos, state, placer, stack);
         } finally {
             placedSignPos = null;
         }
     }
 
-    public static void deferSignEditor(net.minecraft.world.level.block.SignBlock block, net.minecraft.world.entity.player.Player player, net.minecraft.world.level.block.entity.SignBlockEntity sign, boolean front,
+    public static void deferSignEditor(net.minecraft.world.level.block.SignBlock block, net.minecraft.world.entity.player.Player player, net.minecraft.world.level.block.entity.SignBlockEntity sign, net.minecraft.world.level.block.entity.SignTextSlot slot,
                              com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original, BlockPos pos, Level level, net.minecraft.world.item.ItemStack stack) {
         if (placingSign && pos.equals(placedSignPos)) {
-            pendingSignEditor = new PendingSignEditor(level, pos.immutable(), player, front, original);
+            pendingSignEditor = new PendingSignEditor(level, pos.immutable(), player, slot, original);
         } else {
-            original.call(block, player, sign, front);
+            original.call(block, player, sign, slot);
         }
     }
 
@@ -500,12 +504,12 @@ public abstract class ArclightEventFactory {
         }
     }
 
-    private record PendingSignEditor(Level level, BlockPos pos, net.minecraft.world.entity.player.Player player, boolean front, com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original) {
+    private record PendingSignEditor(Level level, BlockPos pos, net.minecraft.world.entity.player.Player player, net.minecraft.world.level.block.entity.SignTextSlot slot, com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original) {
         private void open() {
             if (!level.isClientSide() && player != null
                 && level.getBlockEntity(pos) instanceof net.minecraft.world.level.block.entity.SignBlockEntity sign
                 && level.getBlockState(pos).getBlock() instanceof net.minecraft.world.level.block.SignBlock block) {
-                ((io.izzel.arclight.common.bridge.core.world.level.block.SignBlockEditBridge) block).bridge$openTextEdit(player, sign, front,
+                ((io.izzel.arclight.common.bridge.core.world.level.block.SignBlockEditBridge) block).bridge$openTextEdit(player, sign, slot,
                     org.bukkit.event.player.PlayerSignOpenEvent.Cause.PLACE, original);
             }
         }

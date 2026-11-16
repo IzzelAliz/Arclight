@@ -8,6 +8,7 @@ import org.bukkit.craftbukkit.util.CraftNamespacedKey;
 import org.bukkit.inventory.Recipe;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(RecipeHolder.class)
 public class RecipeHolderMixin<T extends net.minecraft.world.item.crafting.Recipe<?>> implements RecipeHolderBridge {
@@ -15,6 +16,20 @@ public class RecipeHolderMixin<T extends net.minecraft.world.item.crafting.Recip
     @Shadow public native T value();
 
     @Shadow public native ResourceKey<net.minecraft.world.item.crafting.Recipe<?>> id();
+
+    @Unique private boolean arclight$runtimeAddedRecipe;
+
+    @Override
+    public boolean bridge$isRuntimeAddedRecipe() {
+        return this.arclight$runtimeAddedRecipe;
+    }
+
+    @Override
+    public RecipeHolder<?> bridge$asRuntimeAddedRecipe() {
+        var copy = new RecipeHolder<>(this.id(), this.value());
+        ((RecipeHolderMixin<T>) (Object) copy).arclight$runtimeAddedRecipe = true;
+        return copy;
+    }
 
     @Override
     public Recipe bridge$toBukkitRecipe() {

@@ -9,9 +9,11 @@ import io.izzel.arclight.mixin.DecorationOps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
@@ -21,6 +23,8 @@ import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(LavaFluid.class)
@@ -59,7 +63,7 @@ public abstract class LavaFluidMixin implements LavaFluidBridge {
                             world.setBlockAndUpdate(blockpos, bridge$forge$fireFluidPlaceBlockEvent(world, blockpos, pos, net.minecraft.world.level.block.BaseFireBlock.getState(world, blockpos)));
                             return;
                         }
-                    } else if (blockstate.blocksMotion()) {
+                    } else if (blockstate.is(BlockTags.BLOCKS_LAVA_FIRE_SPREAD)) {
                         return;
                     }
                 }
@@ -85,19 +89,39 @@ public abstract class LavaFluidMixin implements LavaFluidBridge {
         }
     }
 
-    @Decorate(method = "spreadTo", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelAccessor;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
+    @Group(name = "arclight$blockForm", min = 1, max = 1)
+    @Decorate(method = "spreadTo", require = 0, allow = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelAccessor;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     private boolean arclight$blockFromTo(LevelAccessor world, BlockPos pos, BlockState newState, int flags) throws Throwable {
+        newState = arclight$blockFormState(world, pos, newState, flags);
+        if (newState == null) {
+            return (boolean) DecorationOps.cancel().invoke();
+        }
+        return (boolean) DecorationOps.callsite().invoke(world, pos, newState, flags);
+    }
+
+    @Group(name = "arclight$blockForm", min = 1, max = 1)
+    @Decorate(method = "spreadTo", require = 0, allow = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelAccessor;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
+    private boolean arclight$blockFromToUpdate(LevelAccessor world, BlockPos pos, BlockState newState) throws Throwable {
+        newState = arclight$blockFormState(world, pos, newState, Block.UPDATE_ALL);
+        if (newState == null) {
+            return (boolean) DecorationOps.cancel().invoke();
+        }
+        return (boolean) DecorationOps.callsite().invoke(world, pos, newState);
+    }
+
+    @Unique
+    private BlockState arclight$blockFormState(LevelAccessor world, BlockPos pos, BlockState newState, int flags) {
         if (LevelAccessorBridge.from(world) instanceof LevelAccessorBridge bridge) {
             // Already checked in callBlockFormEvent
             final var event = ArclightEventFactory.callBlockFormEvent(bridge.bridge$getMinecraftWorld(), pos, newState, flags, null);
             if (event != null) {
                 if (event.isCancelled()) {
-                    return (boolean) DecorationOps.cancel().invoke();
+                    return null;
                 }
                 newState = ((CraftBlockState) event.getNewState()).getHandle();
             }
         }
-        return (boolean) DecorationOps.callsite().invoke(world, pos, newState, flags);
+        return newState;
     }
 
     @Override

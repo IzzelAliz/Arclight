@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.component.SwingAnimation;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.CraftEquipmentSlot;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
@@ -41,15 +42,14 @@ public abstract class ServerGamePacketListenerPaperActionMixin {
 
     // The retained listener supplies ray trace/LEFT_CLICK_AIR before this call.
     // This subtype is the sole animation dispatch and also notifies legacy listeners.
-    @Decorate(method = "handleAnimate(Lnet/minecraft/network/protocol/game/ServerboundSwingPacket;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;swing(Lnet/minecraft/world/InteractionHand;)V"), require = 1, allow = 1)
-    private void arclight$playerArmSwing(ServerPlayer player, InteractionHand hand) throws Throwable {
+    @Decorate(method = "handlePunch(Lnet/minecraft/network/protocol/game/ServerboundPunchPacket;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;swing(Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/item/component/SwingAnimation;Z)Z"), require = 1, allow = 1)
+    private boolean arclight$playerArmSwing(ServerPlayer player, InteractionHand hand, SwingAnimation animation, boolean force) throws Throwable {
         PlayerArmSwingEvent event = new PlayerArmSwingEvent(((ServerPlayerBridge) player).bridge$getBukkitEntity(), CraftEquipmentSlot.getHand(hand));
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
-            DecorationOps.cancel().invoke();
-            return;
+            return (boolean) DecorationOps.cancel().invoke();
         }
-        DecorationOps.callsite().invoke(player, hand);
+        return (boolean) DecorationOps.callsite().invoke(player, hand, animation, force);
     }
 
     @Decorate(method = "handleAttack(Lnet/minecraft/network/protocol/game/ServerboundAttackPacket;)V", inject = true, at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/level/ServerPlayer;resetLastActionTime()V"), require = 1, allow = 1)

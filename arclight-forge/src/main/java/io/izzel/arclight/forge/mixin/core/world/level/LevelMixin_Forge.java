@@ -1,5 +1,7 @@
 package io.izzel.arclight.forge.mixin.core.world.level;
 
+import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.llamalad7.mixinextras.sugar.Local;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -49,11 +51,9 @@ public abstract class LevelMixin_Forge implements WorldBridge {
         }
     }
 
-    @Inject(method = "markAndNotifyBlock", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;updatePOIOnBlockStateChange(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;)V"))
-    private void arclight$preventPoiUpdate(BlockPos p_46605_, LevelChunk levelchunk, BlockState blockstate, BlockState p_46606_, int p_46607_, int p_46608_, CallbackInfo ci) {
-        if (this.bridge$preventPoiUpdated()) {
-            ci.cancel();
-        }
+    @WrapWithCondition(method = "markAndNotifyBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;updatePOIOnBlockStateChange(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;)V"))
+    private boolean arclight$preventPoiUpdate(Level receiver, BlockPos pos, BlockState oldState, BlockState newState, @Local(argsOnly = true, ordinal = 0) int flags) {
+        return !this.bridge$preventPoiUpdated() && (flags & io.izzel.arclight.common.mod.ArclightConstants.UPDATE_SKIP_POI) == 0;
     }
 
     @Override

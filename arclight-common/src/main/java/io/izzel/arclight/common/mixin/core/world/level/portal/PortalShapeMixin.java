@@ -6,6 +6,7 @@ import io.izzel.arclight.common.bridge.core.world.level.LevelAccessorBridge;
 import io.izzel.arclight.common.bridge.core.world.level.portal.PortalShapeBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
+import io.izzel.arclight.mixin.Local;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
@@ -24,11 +25,13 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Group;
 
 import javax.annotation.Nullable;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 @Mixin(PortalShape.class)
 public abstract class PortalShapeMixin implements PortalShapeBridge {
@@ -74,16 +77,32 @@ public abstract class PortalShapeMixin implements PortalShapeBridge {
         }
     }
 
-    /** Preserve the actual FRAME predicate, including NeoForge custom frames. */
-    @Decorate(method = {"getDistanceUntilEdgeAboveFrame", "hasTopFrame", "getDistanceUntilTop"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockBehaviour$StatePredicate;test(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Z"))
+    /** Preserve each platform's actual frame predicate. */
+    @Group(name = "arclight$portalFrame", min = 5, max = 5)
+    @Decorate(method = {"getDistanceUntilEdgeAboveFrame", "hasTopFrame", "getDistanceUntilTop"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockBehaviour$StatePredicate;test(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Z"), require = 0, allow = 5)
     private static boolean arclight$capturePortalFrame(BlockBehaviour.StatePredicate frame, BlockState state, BlockGetter level, BlockPos pos) throws Throwable {
         boolean matches = (boolean) DecorationOps.callsite().invoke(frame, state, level, pos);
+        arclight$recordPortalFrame(matches, state, pos);
+        return matches;
+    }
+
+    @Group(name = "arclight$portalFrame", min = 5, max = 5)
+    @Decorate(method = {"getDistanceUntilEdgeAboveFrame", "hasTopFrame", "getDistanceUntilTop"},
+        at = @At(value = "INVOKE", target = "Ljava/util/function/Predicate;test(Ljava/lang/Object;)Z"), require = 0, allow = 5)
+    private static boolean arclight$captureTaggedPortalFrame(Predicate<Object> frame, Object state,
+                                                            @Local(ordinal = 0) BlockPos.MutableBlockPos pos) throws Throwable {
+        boolean matches = (boolean) DecorationOps.callsite().invoke(frame, state);
+        arclight$recordPortalFrame(matches, (BlockState) state, pos);
+        return matches;
+    }
+
+    @Unique
+    private static void arclight$recordPortalFrame(boolean matches, BlockState state, BlockPos pos) {
         Deque<Optional<BlockStateListPopulator>> scopes = arclight$portalScanScopes;
         BlockStateListPopulator blocks = scopes == null || scopes.isEmpty() ? null : scopes.peek().orElse(null);
         if (matches && blocks != null) {
             blocks.setBlock(pos, state, 18);
         }
-        return matches;
     }
 
     @WrapMethod(method = "createPortalBlocks(Lnet/minecraft/world/level/LevelAccessor;)V")

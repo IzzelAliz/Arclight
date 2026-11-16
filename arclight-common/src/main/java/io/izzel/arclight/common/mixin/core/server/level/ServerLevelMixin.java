@@ -337,12 +337,12 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
         return this.storageSource;
     }
 
-    @Inject(method = "tickNonPassenger(Lnet/minecraft/world/entity/Entity;)V", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/Entity;tickCount:I", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER), require = 1, allow = 1)
+    @Inject(method = "tickNonPassenger(Lnet/minecraft/world/entity/Entity;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;commonTick()V", shift = At.Shift.AFTER), require = 1, allow = 1)
     private void arclight$tickTotalAge(Entity entity, CallbackInfo ci) {
         entity.totalEntityAge++;
     }
 
-    @Inject(method = "tickPassenger(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity;)V", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/Entity;tickCount:I", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER), require = 1, allow = 1)
+    @Inject(method = "tickPassenger(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;commonTick()V", shift = At.Shift.AFTER), require = 1, allow = 1)
     private void arclight$tickPassengerTotalAge(Entity ridingEntity, Entity passengerEntity, CallbackInfo ci) {
         passengerEntity.totalEntityAge++;
     }
@@ -491,10 +491,10 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerLevel
 
     private transient boolean arclight$force = false;
 
-    @Decorate(method = "sendParticles(Lnet/minecraft/core/particles/ParticleOptions;DDDIDDDD)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;sendParticles(Lnet/minecraft/core/particles/ParticleOptions;ZZDDDIDDDD)I"))
-    public int arclight$particleVisible(ServerLevel serverWorld, ParticleOptions type, boolean longDistance, boolean alwaysShow, double posX, double posY, double posZ, int particleCount, double xOffset, double yOffset, double zOffset, double speed) throws Throwable {
+    @Decorate(method = "sendParticles(Lnet/minecraft/core/particles/ParticleOptions;DDDIDDDD)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;sendParticles(Lnet/minecraft/core/particles/ParticleOptions;ZZDDDIDDDDLnet/minecraft/network/protocol/game/ClientboundLevelParticlesPacket$RandomizationType;)I"))
+    public int arclight$particleVisible(ServerLevel serverWorld, ParticleOptions type, boolean longDistance, boolean alwaysShow, double posX, double posY, double posZ, int particleCount, double xOffset, double yOffset, double zOffset, double speed, net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket.RandomizationType randomizationType) throws Throwable {
         try {
-            return (int) DecorationOps.callsite().invoke(serverWorld, type, arclight$force, alwaysShow, posX, posY, posZ, particleCount, xOffset, yOffset, zOffset, speed);
+            return (int) DecorationOps.callsite().invoke(serverWorld, type, arclight$force, alwaysShow, posX, posY, posZ, particleCount, xOffset, yOffset, zOffset, speed, randomizationType);
         } finally {
             arclight$force = false;
         }

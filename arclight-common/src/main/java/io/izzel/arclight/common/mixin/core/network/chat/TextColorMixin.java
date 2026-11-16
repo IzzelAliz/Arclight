@@ -37,6 +37,15 @@ public class TextColorMixin {
 
     @Inject(method = "<init>(ILjava/lang/String;)V", at = @At("RETURN"))
     private void arclight$withFormat(int color, String name, CallbackInfo ci) {
-        this.format = ChatFormatting.getByName(name);
+        this.format = null;
+        if (name != null) {
+            String normalized = name.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z]", "");
+            for (ChatFormatting candidate : ChatFormatting.values()) {
+                if (candidate.name().toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z]", "").equals(normalized)) {
+                    this.format = candidate;
+                    break;
+                }
+            }
+        }
     }
 }

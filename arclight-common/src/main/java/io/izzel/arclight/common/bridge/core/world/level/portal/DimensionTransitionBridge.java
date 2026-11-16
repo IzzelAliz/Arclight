@@ -7,4 +7,8 @@ public interface DimensionTransitionBridge {
     void bridge$setTeleportCause(PlayerTeleportEvent.TeleportCause cause);
 
     PlayerTeleportEvent.TeleportCause bridge$getTeleportCause();
+
+    void bridge$setPositionRider(boolean value);
+
+    boolean bridge$isPositionRider();
 }

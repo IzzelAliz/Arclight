@@ -14,6 +14,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerPlayerConnection;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.UpdateInterval;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -34,7 +35,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 @Mixin(ServerEntity.class)
 public abstract class ServerEntityMixin implements ServerEntityBridge {
@@ -51,18 +51,18 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
     @Unique private int lastTick;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void arclight$init(ServerLevel level, Entity entity, int updateInterval, boolean trackDelta, ServerEntity.Synchronizer synchronizer, CallbackInfo ci) {
+    private void arclight$init(ServerLevel level, Entity entity, UpdateInterval updateInterval, boolean trackDelta, ServerEntity.Synchronizer synchronizer, CallbackInfo ci) {
         this.trackedPlayers = new HashSet<>();
         this.lastTick = ArclightConstants.currentTick - 1;
     }
 
     @ShadowConstructor
-    public void arclight$constructor(ServerLevel level, Entity entity, int updateInterval, boolean trackDelta, ServerEntity.Synchronizer synchronizer) {
+    public void arclight$constructor(ServerLevel level, Entity entity, UpdateInterval updateInterval, boolean trackDelta, ServerEntity.Synchronizer synchronizer) {
         throw new NullPointerException();
     }
 
     @CreateConstructor
-    public void arclight$constructor(ServerLevel level, Entity entity, int updateInterval, boolean trackDelta, ServerEntity.Synchronizer synchronizer, Set<ServerPlayerConnection> trackedPlayers) {
+    public void arclight$constructor(ServerLevel level, Entity entity, UpdateInterval updateInterval, boolean trackDelta, ServerEntity.Synchronizer synchronizer, Set<ServerPlayerConnection> trackedPlayers) {
         arclight$constructor(level, entity, updateInterval, trackDelta, synchronizer);
         this.trackedPlayers = trackedPlayers;
     }
@@ -106,15 +106,10 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
         return tracked;
     }
 
-    /**
-     * Spigot's passenger packet path is filtered-and-self: the predicate still limits
-     * tracking viewers, but a player that is the tracked entity must receive its own
-     * packet even when that predicate rejects it. Vanilla exposes only the filtered
-     * Synchronizer call, so preserve that exact callsite and append the self delivery.
-     */
-    @Decorate(method = "sendChanges", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerEntity$Synchronizer;sendToTrackingPlayersFiltered(Lnet/minecraft/network/protocol/Packet;Ljava/util/function/Predicate;)V"))
-    private void arclight$passengerPacket(ServerEntity.Synchronizer synchronizer, Packet<? super ClientGamePacketListener> packet, Predicate<ServerPlayer> predicate) throws Throwable {
-        DecorationOps.callsite().invoke(synchronizer, packet, predicate);
+    /** Preserve native tracking delivery and append Paper's riding-player self delivery. */
+    @Decorate(method = "sendChanges", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/server/level/ServerEntity$Synchronizer;sendToTrackingPlayers(Lnet/minecraft/network/protocol/Packet;)V"))
+    private void arclight$passengerPacket(ServerEntity.Synchronizer synchronizer, Packet<? super ClientGamePacketListener> packet) throws Throwable {
+        DecorationOps.callsite().invoke(synchronizer, packet);
         if (this.entity instanceof ServerPlayer player) {
             player.connection.send(packet);
         }
@@ -122,7 +117,7 @@ public abstract class ServerEntityMixin implements ServerEntityBridge {
 
     /** Dispatch before clearing the pending motion flag, matching CraftBukkit. */
     @Decorate(method = "sendChanges", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD,
-        target = "Lnet/minecraft/world/entity/Entity;hurtMarked:Z"))
+        target = "Lnet/minecraft/world/entity/Entity;syncVelocity:Z"))
     private void arclight$velocityEvent(Entity entity, boolean hurtMarked) throws Throwable {
         if (entity instanceof ServerPlayer player) {
             Player bukkitPlayer = ((ServerPlayerBridge) player).bridge$getBukkitEntity();

@@ -54,7 +54,10 @@ public abstract class AbstractVillagerMixin extends PathfinderMobMixin implement
     private static boolean arclight$gainOffer(MerchantOffers merchantOffers, Object e, Operation<Boolean> original,
             LootContext lootContext, MerchantOffers offers, HolderSet<VillagerTrade> potentialOffers, int numberOfOffers) {
         MerchantOffer offer = (MerchantOffer) e;
-        EntityBridge villager = (EntityBridge) lootContext.getParameter(LootContextParams.THIS_ENTITY);
+        EntityBridge villager = (EntityBridge) lootContext.getOptional(LootContextParams.THIS_ENTITY);
+        if (villager == null) {
+            throw new java.util.NoSuchElementException(LootContextParams.THIS_ENTITY.name().toString());
+        }
         if (!(villager.bridge$getBukkitEntity() instanceof AbstractVillager bukkitVillager)) {
             return original.call(merchantOffers, e);
         }

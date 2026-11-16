@@ -23,6 +23,8 @@ import java.util.Optional;
 
 public interface ServerPlayerBridge extends PlayerBridge {
 
+    boolean bridge$setPostEffects(java.util.Collection<net.minecraft.resources.Identifier> postEffects);
+
     boolean bridge$dropSelectedItem(boolean dropAll);
 
     void bridge$recordSelectedDrop(net.minecraft.world.entity.item.ItemEntity dropped);

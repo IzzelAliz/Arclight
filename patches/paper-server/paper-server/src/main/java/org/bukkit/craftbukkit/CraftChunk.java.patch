@@ -9,7 +9,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftChunk.java b
  import java.util.ArrayList;
  import java.util.Arrays;
  import java.util.Collection;
-@@ -48,12 +47,12 @@
+@@ -46,7 +45,7 @@
      private final ServerLevel level;
      private final int x;
      private final int z;
@@ -18,13 +18,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftChunk.java b
      private static final byte[] FULL_LIGHT = new byte[2048];
      private static final byte[] EMPTY_LIGHT = new byte[2048];
  
-     public CraftChunk(net.minecraft.world.level.chunk.LevelChunk chunk) {
--        this.level = chunk.level;
-+        this.level = (ServerLevel) chunk.level;
-         this.x = chunk.getPos().x();
-         this.z = chunk.getPos().z();
-     }
-@@ -75,7 +74,7 @@
+@@ -73,7 +72,7 @@
  
      public ChunkAccess getHandle(ChunkStatus chunkStatus) {
          // Paper start - chunk system
@@ -33,7 +27,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftChunk.java b
          if (full != null) {
              return full;
          }
-@@ -114,12 +113,38 @@
+@@ -112,12 +111,38 @@
  
      @Override
      public boolean isEntitiesLoaded() {
@@ -74,7 +68,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftChunk.java b
      }
  
      @Override
-@@ -192,8 +217,7 @@
+@@ -190,8 +215,7 @@
  
      @Override
      public boolean isSlimeChunk() {
@@ -84,7 +78,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/CraftChunk.java b
      }
  
      @Override
-@@ -331,7 +355,8 @@
+@@ -329,7 +353,8 @@
  
      @Override
      public LoadLevel getLoadLevel() {

@@ -8,14 +8,14 @@ import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityChorusTeleportMixin_Vanilla {
-    @WrapMethod(method = "randomTeleport(DDDZ)Z")
-    private boolean arclight$chorusTeleportScope(double x, double y, double z, boolean showParticles, Operation<Boolean> original) {
+    @WrapMethod(method = "randomTeleport(DDDZLjava/util/function/Predicate;)Z")
+    private boolean arclight$chorusTeleportScope(double x, double y, double z, boolean showParticles, java.util.function.Predicate<net.minecraft.world.level.block.state.BlockState> isInvalidPosition, Operation<Boolean> original) {
         var previous = ArclightCaptures.chorusActive;
         var pending = ArclightCaptures.chorusPending;
         ArclightCaptures.chorusActive = pending != null && pending.getFirst() == (Object) this ? pending : null;
         if (ArclightCaptures.chorusActive != null) ArclightCaptures.chorusPending = null;
         try {
-            return original.call(x, y, z, showParticles);
+            return original.call(x, y, z, showParticles, isInvalidPosition);
         } finally {
             ArclightCaptures.chorusActive = previous;
         }

@@ -10,9 +10,7 @@ import net.minecraft.world.inventory.AbstractFurnaceMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.RecipeBookType;
-import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.RecipePropertySet;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import org.bukkit.craftbukkit.inventory.CraftInventoryFurnace;
 import org.bukkit.craftbukkit.inventory.CraftInventoryView;
@@ -35,8 +33,8 @@ public abstract class AbstractFurnaceMenuMixin extends AbstractContainerMenuMixi
     private CraftFurnaceView view = null; // Paper added
     private Inventory inventory; // Paper added
 
-    @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;Lnet/minecraft/world/item/crafting/RecipeType;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/inventory/RecipeBookType;ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;Lnet/minecraft/world/inventory/ContainerData;)V", at = @At("RETURN"))
-    public void arclight$init(MenuType<?> menuType, RecipeType<? extends AbstractCookingRecipe> recipeType, ResourceKey<RecipePropertySet> recipePropertySet, RecipeBookType recipeBookType, int containerId, Inventory playerInventoryIn, Container container, ContainerData data, CallbackInfo ci) {
+    @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/inventory/RecipeBookType;ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;Lnet/minecraft/world/inventory/ContainerData;)V", at = @At("RETURN"))
+    public void arclight$init(MenuType<?> menuType, ResourceKey<RecipePropertySet> recipePropertySet, RecipeBookType recipeBookType, int containerId, Inventory playerInventoryIn, Container container, ContainerData data, CallbackInfo ci) {
         this.inventory = playerInventoryIn;
     }
 

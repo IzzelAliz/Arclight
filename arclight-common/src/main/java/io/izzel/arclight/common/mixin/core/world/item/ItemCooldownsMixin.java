@@ -1,5 +1,6 @@
 package io.izzel.arclight.common.mixin.core.world.item;
 
+import io.izzel.arclight.common.bridge.core.world.item.ItemCooldownsBridge;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.papermc.paper.event.player.PlayerItemGroupCooldownEvent;
@@ -15,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import java.util.Map;
 
 @Mixin(ItemCooldowns.class)
-public abstract class ItemCooldownsMixin {
+public abstract class ItemCooldownsMixin implements ItemCooldownsBridge {
 
     @Shadow @Final private Map<Identifier, ItemCooldowns.CooldownInstance> cooldowns;
     @Shadow private int tickCount;
@@ -55,6 +56,11 @@ public abstract class ItemCooldownsMixin {
     }
 
     protected void arclight$resyncCooldown(Identifier group) {
+    }
+
+    @Override
+    public int bridge$getRemainingCooldown(Identifier cooldownGroup) {
+        return this.arclight$currentCooldown(cooldownGroup);
     }
 
     protected int arclight$currentCooldown(Identifier group) {

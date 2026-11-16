@@ -67,7 +67,7 @@ dependencies {
     forgeImplementation 'net.minecraftforge:bootstrap:2.1.8'
     forgeImplementation 'net.minecraftforge:bootstrap-api:2.1.8'
 
-    neoforgeImplementation 'net.neoforged.fancymodloader:loader:11.0.15'
+    neoforgeImplementation 'net.neoforged.fancymodloader:loader:12.0.12'
 
     fabricImplementation "net.fabricmc:fabric-loader:${libs.versions.fabric.loader.get()}"
 
@@ -84,6 +84,7 @@ dependencies {
     installer libs.configurate.yaml
     installer platform(libs.adventure.bom)
     installer libs.adventure.ansi
+    installer libs.jetbrains.annotations
 
     gson libs.gson
 

@@ -10,6 +10,14 @@ public interface RecipeManagerBridge {
 
     void bridge$clearRecipes();
 
+    void bridge$addRecipeWithoutRefresh(RecipeHolder<?> recipe);
+
+    boolean bridge$removeRecipeWithoutRefresh(net.minecraft.resources.ResourceKey<net.minecraft.world.item.crafting.Recipe<?>> key);
+
+    void bridge$finalizeRecipeChanges();
+
+    void bridge$resetBrewingRecipes(net.minecraft.core.RegistryAccess registryAccess);
+
     boolean removeRecipe(net.minecraft.resources.ResourceKey<net.minecraft.world.item.crafting.Recipe<?>> key);
 
     default void bridge$syncModRecipeContent(net.minecraft.server.level.ServerPlayer player) {

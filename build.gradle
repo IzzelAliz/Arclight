@@ -20,7 +20,7 @@ allprojects {
     }
 
     ext {
-        versionName = 'dipper'
+        versionName = 'celestialspring'
         gitHash = getGitHash()
         supportedPlatforms = ['forge', 'neoforge', 'fabric']
         commonProject = project(':arclight-common')

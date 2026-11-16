@@ -1,5 +1,10 @@
 package io.izzel.arclight.common.mixin.core.world.level.block.entity;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalLongRef;
 import io.izzel.arclight.common.bridge.core.world.IInventoryBridge;
 import io.izzel.arclight.common.bridge.core.world.level.WorldBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
@@ -62,6 +67,52 @@ public abstract class HopperBlockEntityMixin extends BaseContainerBlockEntityMix
             hopper.setCooldown(((WorldBridge) level).bridge$spigotConfig().hopperCheck);
         }
         return result;
+    }
+
+    @WrapOperation(method = "ejectItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/HopperBlockEntity;isFullContainer(Lnet/minecraft/world/Container;Lnet/minecraft/core/Direction;)Z"))
+    private static boolean arclight$preparePush(Container destination, Direction direction, Operation<Boolean> original,
+                                               @Local(argsOnly = true) Level level,
+                                               @Local(argsOnly = true) HopperBlockEntity source,
+                                               @Share("arclightDisallowedSlots") LocalLongRef disallowedSlots) {
+        boolean full = original.call(destination, direction);
+        disallowedSlots.set(full ? 0L : arclight$prepareTransfer(level, source, destination, true));
+        return full;
+    }
+
+    @WrapOperation(method = "ejectItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/HopperBlockEntity;getItem(I)Lnet/minecraft/world/item/ItemStack;"))
+    private static ItemStack arclight$filterPush(HopperBlockEntity source, int slot, Operation<ItemStack> original,
+                                               @Share("arclightDisallowedSlots") LocalLongRef disallowedSlots) {
+        if ((disallowedSlots.get() & (1L << slot)) != 0) {
+            return ItemStack.EMPTY;
+        }
+        return original.call(source, slot);
+    }
+
+    @Decorate(method = "suckInItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/HopperBlockEntity;getSlots(Lnet/minecraft/world/Container;Lnet/minecraft/core/Direction;)[I"))
+    private static int[] arclight$preparePull(Container source, Direction direction,
+                                            @io.izzel.arclight.mixin.Local(ordinal = 0) Level level,
+                                            @io.izzel.arclight.mixin.Local(ordinal = 0) Hopper destination) throws Throwable {
+        long disallowedSlots = arclight$prepareTransfer(level, source, destination, false);
+        int[] slots = (int[]) DecorationOps.callsite().invoke(source, direction);
+        return disallowedSlots == 0L ? slots : java.util.Arrays.stream(slots)
+            .filter(slot -> (disallowedSlots & (1L << slot)) == 0).toArray();
+    }
+
+    private static long arclight$prepareTransfer(Level level, Container source, Container destination, boolean didSourceInitiate) {
+        if (io.papermc.paper.event.inventory.PrepareHopperTransferEvent.getHandlerList().getRegisteredListeners().length == 0
+            || ((WorldBridge) level).bridge$paperConfig().hopper.disableMoveEvent || source.isEmpty()) {
+            return 0L;
+        }
+        var event = new io.papermc.paper.event.inventory.PaperPrepareHopperTransferEvent(
+            arclight$transferInventory(source), arclight$transferInventory(destination), didSourceInitiate);
+        event.callEvent();
+        return event.getDisallowedSlots();
+    }
+
+    private static Inventory arclight$transferInventory(Container container) {
+        return container instanceof CompoundContainer compoundContainer
+            ? new CraftInventoryDoubleChest(compoundContainer)
+            : ((IInventoryBridge) container).getOwnerInventory();
     }
 
     // Somehow this works for Forge again.

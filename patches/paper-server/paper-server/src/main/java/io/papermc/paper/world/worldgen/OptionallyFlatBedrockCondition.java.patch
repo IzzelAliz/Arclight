@@ -1,0 +1,20 @@
+--- a/paper-server/src/main/java/io/papermc/paper/world/worldgen/OptionallyFlatBedrockCondition.java
++++ b/paper-server/src/main/java/io/papermc/paper/world/worldgen/OptionallyFlatBedrockCondition.java
+@@ -25,7 +25,7 @@
+ 
+     private static final ResourceKey<MapCodec<? extends MaterialCondition>> CODEC_RESOURCE_KEY = ResourceKey.create(
+         Registries.MATERIAL_CONDITION_TYPE,
+-        Identifier.fromNamespaceAndPath(Identifier.PAPER_NAMESPACE, "optionally_flat_bedrock_material_condition")
++        Identifier.fromNamespaceAndPath("paper", "optionally_flat_bedrock_material_condition")
+     );
+     private static final MapCodec<OptionallyFlatBedrockCondition> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
+         Identifier.CODEC.fieldOf("random_name").forGetter(OptionallyFlatBedrockCondition::randomName),
+@@ -45,7 +45,7 @@
+ 
+     @Override
+     public ConditionEvaluator compile(final MaterialRuleContext ruleContext) {
+-        final boolean hasFlatBedrock = ruleContext.context.level().paperConfig().environment.generateFlatBedrock;
++        final boolean hasFlatBedrock = ((io.izzel.arclight.common.bridge.core.world.level.levelgen.WorldGenerationContextBridge) (Object) ruleContext.context).bridge$getLevel().paperConfig().environment.generateFlatBedrock;
+         final int tempTrueAtAndBelowY = ruleContext.resolveAnchorY(this.trueAtAndBelow);
+         final int tempFalseAtAndAboveY = ruleContext.resolveAnchorY(this.falseAtAndAbove);
+ 

@@ -74,9 +74,9 @@ public class BeehiveBlockMixin {
     }
 
     @Decorate(method = "dropHoneycomb(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/entity/BlockEntity;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/core/BlockPos;)V",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/BeehiveBlock;dropFromBlockInteractLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/entity/BlockEntity;Lnet/minecraft/world/item/ItemInstance;Lnet/minecraft/world/entity/Entity;Ljava/util/function/BiConsumer;)Z"),
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/BeehiveBlock;dropFromBlockInteractLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/entity/BlockEntity;Lnet/minecraft/world/item/ItemInstance;Lnet/minecraft/world/entity/Entity;Ljava/util/function/BiConsumer;)Z"),
         require = 1, allow = 1)
-    private static boolean arclight$collectShearDrops(ServerLevel level, ResourceKey<LootTable> lootTable, BlockState state,
+    private static boolean arclight$collectShearDrops(ServerLevel level, ResourceKey<LootTable> lootTable, BlockPos lootPos, BlockState state,
                                                      BlockEntity blockEntity, ItemInstance tool, Entity entity,
                                                      BiConsumer<ServerLevel, ItemStack> dropper,
                                                      ServerLevel sourceLevel, ItemStack sourceTool, BlockState sourceState,
@@ -89,7 +89,7 @@ public class BeehiveBlockMixin {
             current.dropper = dropper;
             dropper = (dropLevel, stack) -> current.drops.add(CraftItemStack.asCraftMirror(stack));
         }
-        return (boolean) DecorationOps.callsite().invoke(level, lootTable, state, blockEntity, tool, entity, dropper);
+        return (boolean) DecorationOps.callsite().invoke(level, lootTable, lootPos, state, blockEntity, tool, entity, dropper);
     }
 
     @Redirect(method = "angerNearbyBees", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/bee/Bee;setTarget(Lnet/minecraft/world/entity/LivingEntity;)V"))

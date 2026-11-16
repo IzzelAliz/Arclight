@@ -1,5 +1,3 @@
-diff --git a/paper-server/src/main/java/io/papermc/paper/configuration/transformation/world/FeatureSeedsGeneration.java b/paper-server/src/main/java/io/papermc/paper/configuration/transformation/world/FeatureSeedsGeneration.java
-index 7345db4342ead9a075393928d469966dc60d2d54..e725a0b9d8dc12a7f9fcfea9b02a36cc30551483 100644
 --- a/paper-server/src/main/java/io/papermc/paper/configuration/transformation/world/FeatureSeedsGeneration.java
 +++ b/paper-server/src/main/java/io/papermc/paper/configuration/transformation/world/FeatureSeedsGeneration.java
 @@ -1,6 +1,5 @@
@@ -9,16 +7,16 @@ index 7345db4342ead9a075393928d469966dc60d2d54..e725a0b9d8dc12a7f9fcfea9b02a36cc
  import io.leangen.geantyref.TypeToken;
  import io.papermc.paper.configuration.Configurations;
  import it.unimi.dsi.fastutil.objects.Reference2LongMap;
-@@ -8,7 +7,7 @@ import it.unimi.dsi.fastutil.objects.Reference2LongOpenHashMap;
+@@ -8,7 +7,7 @@
  import net.minecraft.core.Holder;
  import net.minecraft.core.registries.Registries;
  import net.minecraft.resources.Identifier;
 -import net.minecraft.server.MinecraftServer;
 +import net.minecraft.core.RegistryAccess;
- import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
+ import net.minecraft.world.level.levelgen.feature.Feature;
  import org.jspecify.annotations.Nullable;
  import org.slf4j.Logger;
-@@ -31,12 +30,14 @@ public final class FeatureSeedsGeneration implements TransformAction {
+@@ -31,12 +30,14 @@
      public static final String GENERATE_KEY = "generate-random-seeds-for-all";
      public static final String FEATURES_KEY = "features";
  
@@ -35,16 +33,16 @@ index 7345db4342ead9a075393928d469966dc60d2d54..e725a0b9d8dc12a7f9fcfea9b02a36cc
      }
  
      @Override
-@@ -45,7 +46,7 @@ public final class FeatureSeedsGeneration implements TransformAction {
-         final Reference2LongMap<Holder<ConfiguredFeature<?, ?>>> features = Objects.requireNonNullElseGet(featureNode.get(new TypeToken<Reference2LongMap<Holder<ConfiguredFeature<?, ?>>>>() {}), Reference2LongOpenHashMap::new);
+@@ -45,7 +46,7 @@
+         final Reference2LongMap<Holder<Feature>> features = Objects.requireNonNullElseGet(featureNode.get(new TypeToken<Reference2LongMap<Holder<Feature>>>() {}), Reference2LongOpenHashMap::new);
          final Random random = new SecureRandom();
          AtomicInteger counter = new AtomicInteger(0);
--        MinecraftServer.getServer().registryAccess().lookupOrThrow(Registries.CONFIGURED_FEATURE).listElements().forEach(holder -> {
-+        this.registryAccess.lookupOrThrow(Registries.CONFIGURED_FEATURE).listElements().forEach(holder -> {
+-        MinecraftServer.getServer().registryAccess().lookupOrThrow(Registries.FEATURE).listElements().forEach(holder -> {
++        this.registryAccess.lookupOrThrow(Registries.FEATURE).listElements().forEach(holder -> {
              if (features.containsKey(holder)) {
                  return;
              }
-@@ -65,7 +66,7 @@ public final class FeatureSeedsGeneration implements TransformAction {
+@@ -65,7 +66,7 @@
  
      public static void apply(final ConfigurationTransformation.Builder builder, final Configurations.ContextMap contextMap, final ConfigurationNode defaultsNode) {
          if (defaultsNode.node(FEATURE_SEEDS_KEY, GENERATE_KEY).getBoolean(false)) {

@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.core.world.damagesource;
 
 import io.izzel.arclight.common.bridge.core.world.damagesource.DamageSourceBridge;
+import net.kyori.adventure.pointer.Pointers;
 import net.minecraft.core.Holder;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
@@ -37,6 +38,18 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
 
     @Unique @Nullable private DamageCause knownCause; // Paper added
     @Unique private boolean critical; // Paper added
+    @Unique private Pointers arclight$damageContext = Pointers.empty();
+
+    @Override
+    public Pointers bridge$getDamageContext() {
+        return this.arclight$damageContext;
+    }
+
+    @Override
+    public DamageSource bridge$setDamageContext(Pointers damageContext) {
+        this.arclight$damageContext = damageContext;
+        return (DamageSource) (Object) this;
+    }
 
     @Override
     @Nullable
@@ -232,6 +245,7 @@ public abstract class DamageSourceMixin implements DamageSourceBridge {
     private DamageSource cloneInstance() {
         var damageSource = new DamageSource(this.type, this.directEntity, this.causingEntity, this.damageSourcePosition);
         var br = (DamageSourceBridge) damageSource;
+        br.bridge$setDamageContext(this.bridge$getDamageContext());
         br.bridge$setDirectBlock(this.bridge$directBlock());
         br.bridge$setDirectBlockState(this.bridge$directBlockState());
         br.bridge$setCustomCausingEntity(this.eventEntityDamager);

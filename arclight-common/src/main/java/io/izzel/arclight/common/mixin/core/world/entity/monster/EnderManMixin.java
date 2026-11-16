@@ -18,10 +18,9 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Enderman;
 import net.minecraft.world.entity.player.Player;
 import org.bukkit.event.entity.EntityTargetEvent;
-import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -29,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(EnderMan.class)
+@Mixin(Enderman.class)
 public abstract class EnderManMixin extends PathfinderMobMixin implements EnderManBridge {
 
     // @formatter:off
@@ -93,9 +92,9 @@ public abstract class EnderManMixin extends PathfinderMobMixin implements EnderM
     }
 
     @Decorate(method = "customServerAiStep(Lnet/minecraft/server/level/ServerLevel;)V",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/EnderMan;setTarget(Lnet/minecraft/world/entity/LivingEntity;)V"),
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/Enderman;setTarget(Lnet/minecraft/world/entity/LivingEntity;)V"),
         require = 1, allow = 1)
-    private void arclight$runaway(EnderMan enderman, LivingEntity target,
+    private void arclight$runaway(Enderman enderman, LivingEntity target,
                                 @Local(allocate = "arclightRunawayAllowed") boolean allowed) throws Throwable {
         allowed = new EndermanEscapeEvent((org.bukkit.entity.Enderman) this.getBukkitEntity(), EndermanEscapeEvent.Reason.RUNAWAY).callEvent();
         DecorationOps.blackhole().invoke(allowed);
@@ -105,8 +104,8 @@ public abstract class EnderManMixin extends PathfinderMobMixin implements EnderM
     }
 
     @Decorate(method = "customServerAiStep(Lnet/minecraft/server/level/ServerLevel;)V",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/EnderMan;teleport()Z"), require = 1, allow = 1)
-    private boolean arclight$runawayTeleport(EnderMan enderman,
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/Enderman;teleport()Z"), require = 1, allow = 1)
+    private boolean arclight$runawayTeleport(Enderman enderman,
                                            @Local(allocate = "arclightRunawayAllowed") boolean allowed) throws Throwable {
         // Veto skips both runaway effects, not the native super.customServerAiStep tail.
         return allowed && (boolean) DecorationOps.callsite().invoke(enderman);
@@ -125,14 +124,11 @@ public abstract class EnderManMixin extends PathfinderMobMixin implements EnderM
         return roll;
     }
 
-    @Decorate(method = "hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z", inject = true,
-        at = @At(value = "JUMP", opcode = Opcodes.IF_ICMPGE), require = 1, allow = 1)
-    private void arclight$indirectEscape(@Local(ordinal = 0) boolean hurtWithCleanWater, @Local(ordinal = 0) int attempt) throws Throwable {
-        // This is the unique 64-attempt loop check on both loaders; dispatch only at its first entry.
-        // Water damage has already run. Veto returns that exact result without adding projectile damage.
-        if (attempt == 0 && !new EndermanEscapeEvent((org.bukkit.entity.Enderman) this.getBukkitEntity(), EndermanEscapeEvent.Reason.INDIRECT).callEvent()) {
-            DecorationOps.cancel().invoke(hurtWithCleanWater);
-            return;
+    @Decorate(method = "hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/Enderman;repeatedlyTryToTeleport()V"), require = 2, allow = 2)
+    private void arclight$indirectEscape(Enderman enderman) throws Throwable {
+        if (new EndermanEscapeEvent((org.bukkit.entity.Enderman) this.getBukkitEntity(), EndermanEscapeEvent.Reason.INDIRECT).callEvent()) {
+            DecorationOps.callsite().invoke(enderman);
         }
     }
 

@@ -22,7 +22,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
-import net.minecraft.world.level.block.entity.FuelValues;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
@@ -48,7 +47,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
 
     // @formatter:off
     @Shadow protected NonNullList<ItemStack> items;
-    @Shadow protected abstract int getBurnDuration(FuelValues fuelValues, ItemStack stack);
+    @Shadow protected abstract int getBurnDuration(ServerLevel level, ItemStack stack);
     @Shadow int litTimeRemaining;
     @Shadow int cookingTimer;
     @Shadow int cookingTotalTime;
@@ -72,10 +71,10 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
         return this.recipeType;
     }
 
-    @Decorate(method = "serverTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;getBurnDuration(Lnet/minecraft/world/level/block/entity/FuelValues;Lnet/minecraft/world/item/ItemStack;)I"))
-    private static int arclight$setBurnTime(AbstractFurnaceBlockEntity furnace, FuelValues fuelValues, ItemStack fuel,
+    @Decorate(method = "serverTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;getBurnDuration(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;)I"))
+    private static int arclight$setBurnTime(AbstractFurnaceBlockEntity furnace, ServerLevel level, ItemStack fuel,
                                            @Local(allocate = "arclightFurnaceBurn") FurnaceBurnEvent event) throws Throwable {
-        int duration = (int) DecorationOps.callsite().invoke(furnace, fuelValues, fuel);
+        int duration = (int) DecorationOps.callsite().invoke(furnace, level, fuel);
         event = new FurnaceBurnEvent(CraftBlock.at(furnace.getLevel(), furnace.getBlockPos()), CraftItemStack.asCraftMirror(fuel), duration);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
@@ -106,14 +105,14 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
         }
     }
 
-    @Decorate(method = "serverTick", inject = true, at = @At(value = "FIELD", opcode = Opcodes.GETFIELD, ordinal = 0, target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;cookingTimer:I"))
+    @Decorate(method = "serverTick", inject = true, at = @At(value = "FIELD", opcode = Opcodes.GETFIELD, ordinal = 2, target = "Lnet/minecraft/world/level/block/entity/AbstractFurnaceBlockEntity;cookingTimer:I"))
     private static void arclight$startSmelt(ServerLevel level, BlockPos pos, BlockState state, AbstractFurnaceBlockEntity furnace,
                                             @Local(ordinal = -1) RecipeHolder<?> recipe) {
         AbstractFurnaceBlockEntityMixin furnaceMixin = (AbstractFurnaceBlockEntityMixin) (Object) furnace;
         if (recipe != null && furnaceMixin.cookingTimer == 0) {
             CraftItemStack source = CraftItemStack.asCraftMirror(furnace.getItem(0));
             if (((RecipeHolderBridge) (Object) recipe).bridge$toBukkitRecipe() instanceof CookingRecipe<?> cookingRecipe) {
-                FurnaceStartSmeltEvent event = new FurnaceStartSmeltEvent(CraftBlock.at(level, pos), source, cookingRecipe);
+                FurnaceStartSmeltEvent event = new FurnaceStartSmeltEvent(CraftBlock.at(level, pos), source, cookingRecipe, furnaceMixin.cookingTotalTime);
                 Bukkit.getPluginManager().callEvent(event);
                 furnaceMixin.cookingTotalTime = event.getTotalCookTime();
             }
@@ -205,7 +204,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BaseContainerBlock
     @Override
     public int bridge$getBurnDuration(ItemStack stack) {
         if (this.level instanceof ServerLevel serverLevel) {
-            return this.getBurnDuration(serverLevel.fuelValues(), stack);
+            return this.getBurnDuration(serverLevel, stack);
         }
         return 0;
     }

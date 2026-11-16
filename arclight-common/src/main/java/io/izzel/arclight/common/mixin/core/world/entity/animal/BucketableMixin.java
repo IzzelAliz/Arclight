@@ -1,16 +1,16 @@
 package io.izzel.arclight.common.mixin.core.world.entity.animal;
 
 import io.izzel.arclight.common.bridge.core.network.syncher.SynchedEntityDataBridge;
-import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.advancements.triggers.CriteriaTriggers;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.animal.Bucketable;
+import net.minecraft.world.entity.Bucketable;
+import net.minecraft.world.entity.Leashable;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUtils;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
@@ -33,7 +33,7 @@ public interface BucketableMixin {
         @SuppressWarnings("unchecked")
         T entity = (T) livingEntity;
         ItemStack itemstack = player.getItemInHand(hand);
-        if (itemstack.getItem() == Items.WATER_BUCKET && entity.isAlive()) {
+        if (entity.canBePickedUpWithBucket(itemstack) && entity.isAlive()) {
             // entity.playSound(entity.getPickupSound(), 1.0F, 1.0F);
             ItemStack itemstack1 = entity.getBucketItemStack();
             entity.saveToBucketTag(itemstack1);
@@ -49,8 +49,12 @@ public interface BucketableMixin {
             ItemStack itemstack2 = ItemUtils.createFilledResult(itemstack, player, itemstack1, false);
             player.setItemInHand(hand, itemstack2);
             Level level = entity.level();
-            if (!level.isClientSide()) {
-                CriteriaTriggers.FILLED_BUCKET.trigger((ServerPlayer) player, itemstack1);
+            if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
+                CriteriaTriggers.FILLED_BUCKET.trigger(serverPlayer, itemstack1);
+            }
+
+            if (entity instanceof Leashable leashable) {
+                leashable.dropLeash();
             }
 
             entity.bridge().bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.PICKUP);

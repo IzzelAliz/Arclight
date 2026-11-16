@@ -27,14 +27,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(CopperGolem.class)
-public abstract class CopperGolemMixin {
+public abstract class CopperGolemMixin implements io.izzel.arclight.common.bridge.core.world.entity.ShearableBridge {
 
-    @Decorate(method = "turnToStatue", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
-    private boolean arclight$statueChangeBlock(ServerLevel level, BlockPos pos, BlockState state, int flags) throws Throwable {
+    @Decorate(method = "turnToStatue", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
+    private boolean arclight$statueChangeBlock(ServerLevel level, BlockPos pos, BlockState state) throws Throwable {
         if (!CraftEventFactory.callEntityChangeBlockEvent((CopperGolem) (Object) this, pos, state)) {
             return (boolean) DecorationOps.cancel().invoke();
         }
-        return (boolean) DecorationOps.callsite().invoke(level, pos, state, flags);
+        return (boolean) DecorationOps.callsite().invoke(level, pos, state);
     }
 
     @Decorate(method = "turnToStatue", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/golem/CopperGolem;dropPreservedEquipment(Lnet/minecraft/server/level/ServerLevel;)V"))
@@ -56,6 +56,13 @@ public abstract class CopperGolemMixin {
     }
 
     @Unique private List<ItemStack> arclight$shearDrops;
+
+    @Override
+    public List<ItemStack> bridge$swapShearDrops(List<ItemStack> drops) {
+        List<ItemStack> previous = this.arclight$shearDrops;
+        this.arclight$shearDrops = drops;
+        return previous;
+    }
 
     @Decorate(method = "mobInteract", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/golem/CopperGolem;shear(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/sounds/SoundSource;Lnet/minecraft/world/item/ItemStack;)V"))
     private void arclight$onShear(CopperGolem golem, ServerLevel level, SoundSource source, ItemStack tool, Player player, InteractionHand hand) throws Throwable {

@@ -38,7 +38,7 @@ public abstract class ThrownSplashPotionMixin extends ThrownPotionMixin {
         PotionContents potionContents = stack.getOrDefault(net.minecraft.core.component.DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
         float scale = stack.getOrDefault(net.minecraft.core.component.DataComponents.POTION_DURATION_SCALE, 1.0F);
         Iterable<MobEffectInstance> effects = potionContents.getAllEffects();
-        AABB hitBox = this.getBoundingBox().move(hitResult.getLocation().subtract(this.position()));
+        AABB hitBox = hitResult == null ? this.getBoundingBox() : this.getBoundingBox().move(hitResult.getLocation().subtract(this.position()));
         AABB searchBox = hitBox.inflate(4.0, 2.0, 4.0);
         List<LivingEntity> entities = this.level().getEntitiesOfClass(LivingEntity.class, searchBox);
         float margin = ProjectileUtil.computeMargin((ThrownSplashPotion) (Object) this);
@@ -57,6 +57,7 @@ public abstract class ThrownSplashPotionMixin extends ThrownPotionMixin {
             }
         }
         PotionSplashEvent event = CraftEventFactory.callPotionSplashEvent((ThrownSplashPotion) (Object) this, hitResult, affected);
+        this.arclight$potionSplashAccepted = !event.isCancelled();
         if (!event.isCancelled() && !entities.isEmpty()) {
             Entity owner = this.getOwner();
             Entity effectSource = ((ThrownSplashPotion) (Object) this).getEffectSource();
@@ -70,13 +71,13 @@ public abstract class ThrownSplashPotionMixin extends ThrownPotionMixin {
                     var holder = effect.getEffect();
                     if (!((WorldBridge) this.level()).bridge$isPvpMode() && owner instanceof ServerPlayer && entityLiving instanceof ServerPlayer && entityLiving != owner) {
                         var mobEffect = holder.value();
-                        if (mobEffect == MobEffects.SLOWNESS || mobEffect == MobEffects.MINING_FATIGUE || mobEffect == MobEffects.INSTANT_DAMAGE || mobEffect == MobEffects.BLINDNESS
-                            || mobEffect == MobEffects.HUNGER || mobEffect == MobEffects.WEAKNESS || mobEffect == MobEffects.POISON) {
+                        if (mobEffect == MobEffects.SLOWNESS.value() || mobEffect == MobEffects.MINING_FATIGUE.value() || mobEffect == MobEffects.INSTANT_DAMAGE.value() || mobEffect == MobEffects.BLINDNESS.value()
+                            || mobEffect == MobEffects.HUNGER.value() || mobEffect == MobEffects.WEAKNESS.value() || mobEffect == MobEffects.POISON.value()) {
                             continue;
                         }
                     }
-                    if (holder.value().isInstantenous()) {
-                        holder.value().applyInstantenousEffect(level, (ThrownSplashPotion) (Object) this, owner, entityLiving, effect.getAmplifier(), intensity);
+                    if (holder.value().isInstantaneous()) {
+                        holder.value().applyInstantaneousEffect(level, (ThrownSplashPotion) (Object) this, owner, entityLiving, effect.getAmplifier(), intensity);
                     } else {
                         int duration = effect.mapDuration(i -> (int) (intensity * (double) i * (double) scale + 0.5));
                         MobEffectInstance scaledEffect = new MobEffectInstance(holder, duration, effect.getAmplifier(), effect.isAmbient(), effect.isVisible());

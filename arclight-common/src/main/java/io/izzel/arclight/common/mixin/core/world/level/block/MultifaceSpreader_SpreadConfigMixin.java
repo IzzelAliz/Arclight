@@ -31,7 +31,7 @@ public interface MultifaceSpreader_SpreadConfigMixin {
         BlockState blockstate = this.getStateForPlacement(state, level, spreadPos.pos(), spreadPos.face());
         if (blockstate != null) {
             if (p_221705_) {
-                level.getChunk(spreadPos.pos()).markPosForPostprocessing(spreadPos.pos());
+                level.getChunk(spreadPos.pos()).markPosForPostProcessing(spreadPos.pos());
             }
             BlockPos source = ((MultifaceSpreaderSpreadPosBridge)(Object) spreadPos).source();
             if (source != null) {

@@ -1,27 +1,26 @@
 diff --git a/paper-server/src/main/java/com/destroystokyo/paper/profile/PaperGameProfileRepository.java b/paper-server/src/main/java/com/destroystokyo/paper/profile/PaperGameProfileRepository.java
-index 58c1ff58e58e969a88b929663dfff785843dc1b2..99d61c6acf4a81ab7bd61912f3f46734aa08e059 100644
 --- a/paper-server/src/main/java/com/destroystokyo/paper/profile/PaperGameProfileRepository.java
 +++ b/paper-server/src/main/java/com/destroystokyo/paper/profile/PaperGameProfileRepository.java
-@@ -3,18 +3,20 @@ package com.destroystokyo.paper.profile;
+@@ -3,19 +3,20 @@
  import com.destroystokyo.paper.event.profile.LookupProfileEvent;
  import com.destroystokyo.paper.event.profile.PreLookupProfileEvent;
  import com.google.common.collect.Sets;
--import com.mojang.authlib.Environment;
 +import com.mojang.authlib.GameProfileRepository;
  import com.mojang.authlib.ProfileLookupCallback;
--import com.mojang.authlib.yggdrasil.YggdrasilGameProfileRepository;
- import com.mojang.authlib.yggdrasil.response.NameAndId;
+-import com.mojang.authlib.services.MinecraftServicesDiscoveryService;
+-import com.mojang.authlib.services.MinecraftServicesProfileRepository;
+ import com.mojang.authlib.services.response.NameAndId;
 -import java.net.Proxy;
 +import java.util.Objects;
  import java.util.Optional;
  import java.util.Set;
  import java.util.UUID;
  
--public class PaperGameProfileRepository extends YggdrasilGameProfileRepository {
--    public PaperGameProfileRepository(Proxy proxy, Environment environment) {
--        super(proxy, environment);
+-public class PaperGameProfileRepository extends MinecraftServicesProfileRepository {
 +public class PaperGameProfileRepository implements GameProfileRepository {
-+
+ 
+-    public PaperGameProfileRepository(final Proxy proxy, final MinecraftServicesDiscoveryService discoveryService) {
+-        super(proxy, discoveryService);
 +    private final GameProfileRepository delegate;
 +
 +    public PaperGameProfileRepository(GameProfileRepository delegate) {
@@ -29,7 +28,7 @@ index 58c1ff58e58e969a88b929663dfff785843dc1b2..99d61c6acf4a81ab7bd61912f3f46734
      }
  
      @Override
-@@ -34,7 +36,7 @@ public class PaperGameProfileRepository extends YggdrasilGameProfileRepository {
+@@ -35,7 +36,7 @@
          // Some things were not found.... Proceed to look up.
          if (!unfoundNames.isEmpty()) {
              String[] namesArr = unfoundNames.toArray(new String[unfoundNames.size()]);
@@ -38,7 +37,7 @@ index 58c1ff58e58e969a88b929663dfff785843dc1b2..99d61c6acf4a81ab7bd61912f3f46734
          }
      }
  
-@@ -46,12 +48,14 @@ public class PaperGameProfileRepository extends YggdrasilGameProfileRepository {
+@@ -47,12 +48,14 @@
              // Plugin provided UUID, we can skip network call.
              return Optional.of(new NameAndId(event.getUUID(), name));
          }

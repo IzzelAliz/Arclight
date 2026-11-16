@@ -12,10 +12,8 @@ import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.eventbus.internal.Event;
 import net.minecraftforge.eventbus.api.bus.CancellableEventBus;
 import io.izzel.arclight.forge.mod.event.BlockPlaceEventDispatcher;
-import io.izzel.arclight.forge.mod.event.EntityTeleportEventDispatcher;
 import io.izzel.arclight.forge.mod.event.ItemEntityEventDispatcher;
 import net.minecraftforge.event.level.BlockEvent;
-import net.minecraftforge.event.entity.EntityTeleportEvent;
 import net.minecraftforge.event.entity.item.ItemExpireEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -45,7 +43,7 @@ public class ForgeEventFactoryMixin {
         return EntityEventHandler.monitorLivingDrops(event.getEntity(), event.getSource(), (List<ItemEntity>) event.getDrops(), result);
     }
 
-    @Decorate(method = {"onBlockPlace", "onMultiBlockPlace", "onItemExpire", "onEnderManTeleport"}, remap = false,
+    @Decorate(method = {"onBlockPlace", "onMultiBlockPlace", "onItemExpire"}, remap = false,
         at = @At(value = "INVOKE", target = "Lnet/minecraftforge/eventbus/api/bus/CancellableEventBus;post(Lnet/minecraftforge/eventbus/internal/Event;)Z"))
     private static boolean arclight$dispatchAfterForge(CancellableEventBus<?> bus, Event event) throws Throwable {
         boolean cancelled = (boolean) DecorationOps.callsite().invoke(bus, event);
@@ -57,9 +55,6 @@ public class ForgeEventFactoryMixin {
         }
         if (event instanceof ItemExpireEvent expire) {
             return ItemEntityEventDispatcher.onExpire(expire, cancelled);
-        }
-        if (event instanceof EntityTeleportEvent.EnderEntity teleport) {
-            return EntityTeleportEventDispatcher.onTeleport(teleport, cancelled);
         }
         return cancelled;
     }

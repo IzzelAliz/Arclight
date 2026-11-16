@@ -20,6 +20,10 @@ public abstract class PrepareSpawnTask_ReadyMixin {
     @Decorate(method = "spawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;loadPlayerData(Lnet/minecraft/server/players/NameAndId;)Ljava/util/Optional;"))
     private Optional<CompoundTag> arclight$preparePlayerData(PlayerList list, NameAndId profile,
             @Local(ordinal = 0) Connection connection, @Local(ordinal = -1) ServerPlayer player) throws Throwable {
+        if (connection.getPacketListener() instanceof net.minecraft.server.network.ServerConfigurationPacketListenerImpl listener) {
+            var configuration = ((io.izzel.arclight.common.bridge.core.server.network.ServerConfigurationPacketListenerImplBridge) listener).bridge$getConfigurationConnection();
+            ((io.papermc.paper.connection.PaperPlayerConfigurationConnection) configuration).applyPendingEntityId(player);
+        }
         var result = (Optional<CompoundTag>) DecorationOps.callsite().invoke(list, profile);
         ((PlayerListBridge) list).bridge$preparePlayerData(connection, player, result);
         return result;

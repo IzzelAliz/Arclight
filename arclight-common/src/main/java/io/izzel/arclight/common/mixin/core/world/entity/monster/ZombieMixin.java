@@ -38,21 +38,6 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 @Mixin(net.minecraft.world.entity.monster.zombie.Zombie.class)
 public abstract class ZombieMixin extends PathfinderMobMixin {
 
-    @Inject(method = "convertToZombieType", at = @At("HEAD"))
-    private void arclight$transformReason(ServerLevel level, EntityType<? extends net.minecraft.world.entity.monster.zombie.Zombie> entityType, CallbackInfo ci) {
-        this.bridge$pushTransformReason(EntityTransformEvent.TransformReason.DROWNED);
-        ((WorldBridge) this.level()).bridge$pushAddEntityReason(CreatureSpawnEvent.SpawnReason.DROWNED);
-    }
-
-    @Decorate(method = "convertToZombieType", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/zombie/Zombie;convertTo(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/entity/ConversionParams;Lnet/minecraft/world/entity/ConversionParams$AfterConversion;)Lnet/minecraft/world/entity/Mob;"))
-    private Mob arclight$stopConversion(net.minecraft.world.entity.monster.zombie.Zombie zombie, EntityType<? extends net.minecraft.world.entity.monster.zombie.Zombie> entityType, ConversionParams conversionParams, ConversionParams.AfterConversion afterConversion) throws Throwable {
-        Mob converted = (Mob) DecorationOps.callsite().invoke(zombie, entityType, conversionParams, afterConversion);
-        if (converted == null) {
-            ((Zombie) this.bridge$getBukkitEntity()).setConversionTime(-1);
-        }
-        return converted;
-    }
-
     @Decorate(method = "doHurtTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;igniteForSeconds(F)V"))
     private void arclight$entityCombust(Entity entity, float seconds) throws Throwable {
         EntityCombustByEntityEvent event = new EntityCombustByEntityEvent(this.getBukkitEntity(), entity.bridge$getBukkitEntity(), seconds);

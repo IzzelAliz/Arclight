@@ -59,6 +59,16 @@ public class ArclightCaptures {
         }
     }
 
+    private static net.minecraft.world.item.ItemStack compostStack;
+
+    public static net.minecraft.world.item.ItemStack getCompostStack() {
+        return compostStack;
+    }
+
+    public static void setCompostStack(net.minecraft.world.item.ItemStack stack) {
+        compostStack = stack;
+    }
+
     private static OptionSet bukkitOptions;
 
     public static void captureBukkitOptions(OptionSet options) {

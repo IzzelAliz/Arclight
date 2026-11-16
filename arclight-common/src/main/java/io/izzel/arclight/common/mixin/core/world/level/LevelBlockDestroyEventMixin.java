@@ -25,11 +25,12 @@ import org.spongepowered.asm.mixin.injection.At;
 public abstract class LevelBlockDestroyEventMixin {
 
     @Decorate(method = "destroyBlock(Lnet/minecraft/core/BlockPos;ZLnet/minecraft/world/entity/Entity;I)Z", inject = true,
-        at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/world/level/Level;getFluidState(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/material/FluidState;"), require = 1, allow = 1)
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;getBlock()Lnet/minecraft/world/level/block/Block;"), require = 1, allow = 1)
     private void arclight$blockDestroy(BlockPos pos, boolean dropResources, Entity breaker, int updateLimit,
-                                       @Local(ordinal = 0) BlockState state, @Local(ordinal = 0) FluidState fluid,
+                                       @Local(ordinal = 0) BlockState state,
                                        @Local(allocate = "arclightBlockDestroyEvent") BlockDestroyEvent event,
                                        @Local(allocate = "arclightBlockDestroyExperience") int experience) throws Throwable {
+        FluidState fluid = ((Level) (Object) this).getFluidState(pos);
         event = null;
         experience = 0;
         if ((Object) this instanceof ServerLevel level && DistValidate.isValid(level)) {
@@ -49,17 +50,17 @@ public abstract class LevelBlockDestroyEventMixin {
     }
 
     @Decorate(method = "destroyBlock(Lnet/minecraft/core/BlockPos;ZLnet/minecraft/world/entity/Entity;I)Z",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;levelEvent(ILnet/minecraft/core/BlockPos;I)V"), require = 1, allow = 1)
-    private void arclight$blockDestroyEffect(Level level, int effect, BlockPos pos, int data,
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;spawnDestroyParticles(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V"), require = 1, allow = 1)
+    private void arclight$blockDestroyEffect(Block block, Level level, BlockPos pos, BlockState effectState,
                                              @Local(allocate = "arclightBlockDestroyEvent") BlockDestroyEvent event) throws Throwable {
         if (event != null) {
             if (!event.playEffect()) {
                 return;
             }
-            data = Block.getId(((CraftBlockData) event.getEffectBlock()).getState());
+            effectState = ((CraftBlockData) event.getEffectBlock()).getState();
+            block = effectState.getBlock();
         }
-        // The original BaseFireBlock exclusion remains outside this callsite.
-        DecorationOps.callsite().invoke(level, effect, pos, data);
+        DecorationOps.callsite().invoke(block, level, pos, effectState);
     }
 
     @Decorate(method = "destroyBlock(Lnet/minecraft/core/BlockPos;ZLnet/minecraft/world/entity/Entity;I)Z",

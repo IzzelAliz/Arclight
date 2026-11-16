@@ -65,7 +65,7 @@ public abstract class VaultBlockEntity_ServerMixin {
     }
 
     @Decorate(method = "setVaultState(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/entity/vault/VaultConfig;Lnet/minecraft/world/level/block/entity/vault/VaultSharedData;)V",
-        inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"), require = 1, allow = 1)
+        inject = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"), require = 1, allow = 1)
     private static void arclight$changeState(ServerLevel level, BlockPos pos, BlockState currentBlockState,
                                             BlockState newBlockState, VaultConfig config, VaultSharedData sharedData,
                                             @Local(ordinal = 0) VaultState currentState,

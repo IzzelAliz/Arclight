@@ -1,5 +1,3 @@
-diff --git a/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaEntityScheduler.java b/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaEntityScheduler.java
-index 811b8efd155540beac19b70afa1885bff570cd3e..9964dc4ccbc11cb72ced26c5b6a9f68f14039161 100644
 --- a/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaEntityScheduler.java
 +++ b/paper-server/src/main/java/io/papermc/paper/threadedregions/scheduler/FoliaEntityScheduler.java
 @@ -1,6 +1,6 @@
@@ -10,26 +8,28 @@ index 811b8efd155540beac19b70afa1885bff570cd3e..9964dc4ccbc11cb72ced26c5b6a9f68f
  import net.minecraft.world.entity.Entity;
  import org.bukkit.craftbukkit.entity.CraftEntity;
  import org.bukkit.plugin.IllegalPluginAccessException;
-@@ -14,35 +14,25 @@ import java.util.logging.Level;
+@@ -14,35 +14,25 @@
  public final class FoliaEntityScheduler implements EntityScheduler {
  
      private final CraftEntity entity;
 +    private final java.util.Set<EntityScheduledTask> tasks = java.util.concurrent.ConcurrentHashMap.newKeySet();
- 
--    public FoliaEntityScheduler(final CraftEntity entity) {
--        this.entity = entity;
--    }
--
--    private static Consumer<? extends Entity> wrap(final Plugin plugin, final Runnable runnable) {
++
 +    public void cancelTasks(final Plugin plugin) {
-         Objects.requireNonNull(plugin, "Plugin may not be null");
--        Objects.requireNonNull(runnable, "Runnable may not be null");
++        Objects.requireNonNull(plugin, "Plugin may not be null");
 +        for (var task : this.tasks) {
 +            if (task.plugin == plugin) task.cancel();
 +        }
 +        this.entity.taskScheduler.cancelTasks(plugin);
 +    }
  
+     public FoliaEntityScheduler(final CraftEntity entity) {
+         this.entity = entity;
+     }
+ 
+-    private static Consumer<? extends Entity> wrap(final Plugin plugin, final Runnable runnable) {
+-        Objects.requireNonNull(plugin, "Plugin may not be null");
+-        Objects.requireNonNull(runnable, "Runnable may not be null");
+-
 -        return (final Entity nmsEntity) -> {
 -            if (!plugin.isEnabled()) {
 -                // don't execute if the plugin is disabled
@@ -41,10 +41,8 @@ index 811b8efd155540beac19b70afa1885bff570cd3e..9964dc4ccbc11cb72ced26c5b6a9f68f
 -                plugin.getLogger().log(Level.WARNING, "Entity task for " + plugin.getDescription().getFullName() + " generated an exception", throwable);
 -            }
 -        };
-+    public FoliaEntityScheduler(final CraftEntity entity) {
-+        this.entity = entity;
-     }
- 
+-    }
+-
      @Override
      public boolean execute(final Plugin plugin, final Runnable run, final Runnable retired,
                             final long delay) {
@@ -57,7 +55,7 @@ index 811b8efd155540beac19b70afa1885bff570cd3e..9964dc4ccbc11cb72ced26c5b6a9f68f
      }
  
      @Override
-@@ -65,7 +55,9 @@ public final class FoliaEntityScheduler implements EntityScheduler {
+@@ -65,7 +55,9 @@
  
          final EntityScheduledTask ret = new EntityScheduledTask(plugin, -1, task, retired);
  
@@ -67,7 +65,7 @@ index 811b8efd155540beac19b70afa1885bff570cd3e..9964dc4ccbc11cb72ced26c5b6a9f68f
              return null;
          }
  
-@@ -95,7 +87,9 @@ public final class FoliaEntityScheduler implements EntityScheduler {
+@@ -95,7 +87,9 @@
  
          final EntityScheduledTask ret = new EntityScheduledTask(plugin, periodTicks, task, retired);
  
@@ -77,7 +75,7 @@ index 811b8efd155540beac19b70afa1885bff570cd3e..9964dc4ccbc11cb72ced26c5b6a9f68f
              return null;
          }
  
-@@ -125,7 +119,15 @@ public final class FoliaEntityScheduler implements EntityScheduler {
+@@ -125,7 +119,15 @@
          private Runnable retired;
          private volatile int state;
  
@@ -94,7 +92,7 @@ index 811b8efd155540beac19b70afa1885bff570cd3e..9964dc4ccbc11cb72ced26c5b6a9f68f
  
          private EntityScheduledTask(final Plugin plugin, final long repeatDelay, final Consumer<ScheduledTask> run, final Runnable retired) {
              this.plugin = plugin;
-@@ -135,7 +137,7 @@ public final class FoliaEntityScheduler implements EntityScheduler {
+@@ -135,7 +137,7 @@
          }
  
          private final int getStateVolatile() {
@@ -103,7 +101,7 @@ index 811b8efd155540beac19b70afa1885bff570cd3e..9964dc4ccbc11cb72ced26c5b6a9f68f
          }
  
          private final int compareAndExchangeStateVolatile(final int expect, final int update) {
-@@ -150,7 +152,7 @@ public final class FoliaEntityScheduler implements EntityScheduler {
+@@ -150,7 +152,7 @@
          public void accept(final Entity entity) {
              if (!this.plugin.isEnabled()) {
                  // don't execute if the plugin is disabled
@@ -112,7 +110,7 @@ index 811b8efd155540beac19b70afa1885bff570cd3e..9964dc4ccbc11cb72ced26c5b6a9f68f
                  return;
              }
  
-@@ -160,7 +162,7 @@ public final class FoliaEntityScheduler implements EntityScheduler {
+@@ -160,7 +162,7 @@
                  return;
              }
  
@@ -121,7 +119,7 @@ index 811b8efd155540beac19b70afa1885bff570cd3e..9964dc4ccbc11cb72ced26c5b6a9f68f
  
              try {
                  if (!retired) {
-@@ -171,24 +173,31 @@ public final class FoliaEntityScheduler implements EntityScheduler {
+@@ -171,29 +173,31 @@
                      }
                  }
              } catch (final Throwable throwable) {
@@ -129,19 +127,22 @@ index 811b8efd155540beac19b70afa1885bff570cd3e..9964dc4ccbc11cb72ced26c5b6a9f68f
 +                this.plugin.getLogger().log(Level.WARNING, "Entity task for " + this.plugin.getPluginMeta().getDisplayName() + " generated an exception", throwable);
              } finally {
                  boolean reschedule = false;
--                 if (!repeating && !retired) {
-+                if (!repeating && !retired) {
+                 if (!repeating && !retired) {
                      this.setStateVolatile(STATE_FINISHED);
                  } else if (retired || !this.plugin.isEnabled()) {
--                     this.setStateVolatile(STATE_CANCELLED);
-+                    this.setStateVolatile(STATE_CANCELLED);
-                 } else if (STATE_EXECUTING == this.compareAndExchangeStateVolatile(STATE_EXECUTING, STATE_IDLE)) {
-                     reschedule = true;
--                } // else: cancelled repeating task
-+                } else {
+                     this.setStateVolatile(STATE_CANCELLED);
++                } else if (STATE_EXECUTING == this.compareAndExchangeStateVolatile(STATE_EXECUTING, STATE_IDLE)) {
++                    reschedule = true;
+                 } else {
+-                    final int previousState = this.compareAndExchangeStateVolatile(STATE_EXECUTING, STATE_IDLE);
+-                    if (previousState == STATE_EXECUTING) {
+-                        reschedule = true;
+-                    } else if (previousState == STATE_EXECUTING_CANCELLED) {
+-                        this.setStateVolatile(STATE_CANCELLED);
+-                    }
 +                    // Cancellation stopped future executions; the current invocation has now returned.
 +                    this.setStateVolatile(STATE_CANCELLED);
-+                }
+                 }
  
                  if (!reschedule) {
                      this.run = null;
@@ -157,7 +158,7 @@ index 811b8efd155540beac19b70afa1885bff570cd3e..9964dc4ccbc11cb72ced26c5b6a9f68f
                      }
                  }
              }
-@@ -210,9 +219,10 @@ public final class FoliaEntityScheduler implements EntityScheduler {
+@@ -215,9 +219,10 @@
                  switch (curr) {
                      case STATE_IDLE: {
                          if (STATE_IDLE == (curr = this.compareAndExchangeStateVolatile(STATE_IDLE, STATE_CANCELLED))) {

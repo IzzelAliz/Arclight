@@ -21,7 +21,7 @@ public class TimeCommandMixin {
     private static void arclight$setTime(CommandSourceStack source, Holder<WorldClock> clock, int ticks,
             org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Integer> cir) {
         ServerClockManager manager = source.getLevel().clockManager();
-        long current = manager.getTotalTicks(clock);
+        long current = manager.getInstance(clock).totalTicks();
         var event = org.bukkit.craftbukkit.event.CraftEventFactory.createTimeSkipEvent(source, ticks - current);
         final long result;
         if (event.callEvent()) {
@@ -51,20 +51,21 @@ public class TimeCommandMixin {
     }
 
     @WrapOperation(method = "setTimeToTimeMarker", at = @At(value = "INVOKE",
-        target = "Lnet/minecraft/world/clock/ServerClockManager;moveToTimeMarker(Lnet/minecraft/core/Holder;Lnet/minecraft/resources/ResourceKey;)Z"), require = 1)
-    private static boolean arclight$commandMarker(ServerClockManager manager, Holder<WorldClock> clock,
+        target = "Lnet/minecraft/world/clock/ServerClockManager;moveToTimeMarker(Lnet/minecraft/core/Holder;Lnet/minecraft/resources/ResourceKey;)Lnet/minecraft/world/clock/ServerClockManager$MoveResult;"), require = 1)
+    private static ServerClockManager.MoveResult arclight$commandMarker(ServerClockManager manager, Holder<WorldClock> clock,
             net.minecraft.resources.ResourceKey<net.minecraft.world.clock.ClockTimeMarker> marker,
-            Operation<Boolean> original, CommandSourceStack source) {
+            Operation<ServerClockManager.MoveResult> original, CommandSourceStack source) {
         var target = ((ServerClockOwnerBridge) manager).bridge$timeMarker(clock, marker);
         if (target.isEmpty()) {
-            return false;
+            return ServerClockManager.MoveResult.NO_TIME_MARKER_FOUND;
         }
-        long current = manager.getTotalTicks(clock);
+        long current = manager.getInstance(clock).totalTicks();
         var event = org.bukkit.craftbukkit.event.CraftEventFactory.createTimeSkipEvent(source, target.getAsLong() - current);
-        if (event.callEvent()) {
-            manager.setTotalTicks(clock, current + event.getSkipAmount());
+        if (!event.callEvent() || event.getSkipAmount() == 0) {
+            return ServerClockManager.MoveResult.NOT_MOVED;
         }
-        return true;
+        manager.setTotalTicks(clock, current + event.getSkipAmount());
+        return ServerClockManager.MoveResult.MOVED;
     }
 
 

@@ -23,18 +23,18 @@ public abstract class ServerChunkCacheNaturalSpawnEventMixin {
     @Shadow @Final public ChunkMap chunkMap;
     @Shadow public boolean spawnEnemies;
 
-    @WrapMethod(method = "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;J)V", require = 1, allow = 1)
-    private void arclight$naturalSpawnEventLifetime(ProfilerFiller profiler, long timeDiff, Operation<Void> original) {
+    @WrapMethod(method = "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;)V", require = 1, allow = 1)
+    private void arclight$naturalSpawnEventLifetime(ProfilerFiller profiler, Operation<Void> original) {
         var selection = (NaturalSpawnSelectionBridge) this.chunkMap;
         selection.bridge$clearNaturalSpawnEvents();
         try {
-            original.call(profiler, timeDiff);
+            original.call(profiler);
         } finally {
             selection.bridge$clearNaturalSpawnEvents();
         }
     }
 
-    @Decorate(method = "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;J)V",
+    @Decorate(method = "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/gamerules/GameRules;get(Lnet/minecraft/world/level/gamerules/GameRule;)Ljava/lang/Object;", ordinal = 1),
         require = 1, allow = 1)
     private Object arclight$prepareNaturalSpawnEvents(GameRules rules, GameRule<?> rule,

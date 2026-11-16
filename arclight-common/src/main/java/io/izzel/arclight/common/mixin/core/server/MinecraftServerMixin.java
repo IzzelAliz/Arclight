@@ -44,6 +44,7 @@ import net.minecraft.server.WorldStem;
 import net.minecraft.server.level.ChunkLoadCounter;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.progress.LevelLoadListener;
+import net.minecraft.server.notifications.NotificationManager;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.util.TimeSource;
@@ -257,7 +258,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    public void arclight$loadOptions(Thread p_236723_, LevelStorageSource.LevelStorageAccess p_236724_, PackRepository p_236725_, WorldStem worldStem, Optional<GameRules> gameRules, Proxy p_236727_, DataFixer p_236728_, Services p_236729_, LevelLoadListener p_236730_, boolean propagatesCrashes, CallbackInfo ci) {
+    public void arclight$loadOptions(Thread p_236723_, LevelStorageSource.LevelStorageAccess p_236724_, PackRepository p_236725_, WorldStem worldStem, Optional<GameRules> gameRules, Proxy p_236727_, DataFixer p_236728_, Services p_236729_, LevelLoadListener p_236730_, boolean propagatesCrashes, NotificationManager notificationManager, CallbackInfo ci) {
         this.options = ArclightCaptures.getBukkitOptions();
         this.vanillaCommandDispatcher = worldStem.dataPackResources().getCommands();
         this.worldLoaderContext = ArclightCaptures.getDataLoadContext();

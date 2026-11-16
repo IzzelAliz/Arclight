@@ -1,17 +1,17 @@
 diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
 --- a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
 +++ b/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
-@@ -201,7 +201,8 @@
-             return false;
+@@ -205,7 +205,8 @@
          }
  
--        if (this.getHandle().startSleepInBed(pos, force).left().isPresent()) {
+         final BedRule bedRule = bedBlock.getBedRule(level, pos);
+-        if (this.getHandle().startSleepInBed(bedBlock, state, bedRule, pos, force).left().isPresent()) {
 +        io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge player = this.getHandle();
 +        if (player.bridge$trySleep(pos, force).left().isPresent()) {
              return false;
          }
  
-@@ -320,7 +321,13 @@
+@@ -330,7 +331,13 @@
  
      @Override
      public InventoryView getOpenInventory() {
@@ -26,7 +26,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHuman
      }
  
      @Override
-@@ -351,9 +358,9 @@
+@@ -361,9 +368,9 @@
  
          if (menuProvider != null) {
              this.getHandle().openMenu(menuProvider);
@@ -38,7 +38,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHuman
              this.getHandle().openNautilusInventory(nautilus.getHandle(), craft.getInventory());
          } else {
              MenuType<?> container = CraftContainer.getNotchInventoryType(inventory);
-@@ -364,13 +371,13 @@
+@@ -374,13 +381,13 @@
              return null;
          }
          this.getHandle().containerMenu.checkReachable = false;
@@ -54,7 +54,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHuman
  
          // Paper start - Add titleOverride to InventoryOpenEvent
          final com.mojang.datafixers.util.Pair<net.kyori.adventure.text.Component, AbstractContainerMenu> result = CraftEventFactory.callInventoryOpenEventWithTitle(player, container);
-@@ -378,13 +385,13 @@
+@@ -388,13 +395,13 @@
          // Paper end - Add titleOverride to InventoryOpenEvent
          if (container == null) return;
  
@@ -72,7 +72,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHuman
          player.containerMenu = container;
          player.initMenu(container);
      }
-@@ -404,7 +411,7 @@
+@@ -414,7 +421,7 @@
          if (force) {
              this.getHandle().containerMenu.checkReachable = false;
          }
@@ -81,7 +81,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHuman
      }
  
      @Override
-@@ -437,7 +444,7 @@
+@@ -447,7 +454,7 @@
          if (force) {
              this.getHandle().containerMenu.checkReachable = false;
          }
@@ -90,7 +90,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHuman
      }
  
      @Override
-@@ -455,7 +462,7 @@
+@@ -465,7 +472,7 @@
              container = ((CraftInventoryView) inventory).getHandle();
              Preconditions.checkArgument(!(container instanceof InventoryMenu), "Can not open player's InventoryView");
          } else {
@@ -99,7 +99,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHuman
          }
  
          // Trigger an INVENTORY_OPEN event
-@@ -478,7 +485,7 @@
+@@ -488,7 +495,7 @@
          net.kyori.adventure.text.Component adventure$title = inventory.title(); // Paper
          if (adventure$title == null) adventure$title = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(inventory.getTitle()); // Paper
          if (result.getFirst() != null) adventure$title = result.getFirst(); // Paper - Add titleOverride to InventoryOpenEvent
@@ -108,7 +108,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHuman
              if (container instanceof AbstractMountInventoryMenu mountMenu) {
                  player.connection.send(new ClientboundMountScreenOpenPacket(mountMenu.containerId, getMountInventoryColumns(mountMenu), mountMenu.mount.getId()));
              } else {
-@@ -528,7 +535,7 @@
+@@ -539,7 +546,7 @@
          mcMerchant.setTradingPlayer(this.getHandle());
          mcMerchant.openTradingScreen(this.getHandle(), name, level);
  
@@ -117,7 +117,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHuman
      }
  
      @Override
-@@ -588,9 +595,11 @@
+@@ -599,9 +606,11 @@
          } else {
              throw new IllegalArgumentException("Unsupported inventory type: " + material);
          }
@@ -131,7 +131,25 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHuman
      }
  
      @Override
-@@ -773,7 +782,7 @@
+@@ -672,7 +681,7 @@
+         Preconditions.checkArgument(item != null, "Item cannot be null");
+ 
+         Identifier cooldownGroup = this.getHandle().getCooldowns().getCooldownGroup(CraftItemStack.asNMSCopy(item));
+-        return this.getHandle().getCooldowns().getRemainingCooldown(cooldownGroup);
++        return ((io.izzel.arclight.common.bridge.core.world.item.ItemCooldownsBridge) (Object) this.getHandle().getCooldowns()).bridge$getRemainingCooldown(cooldownGroup);
+     }
+ 
+     @Override
+@@ -687,7 +696,7 @@
+     public int getCooldown(Key cooldownGroup) {
+         Preconditions.checkArgument(cooldownGroup != null, "cooldownGroup cannot be null");
+ 
+-        return this.getHandle().getCooldowns().getRemainingCooldown(PaperAdventure.asVanilla(cooldownGroup));
++        return ((io.izzel.arclight.common.bridge.core.world.item.ItemCooldownsBridge) (Object) this.getHandle().getCooldowns()).bridge$getRemainingCooldown(PaperAdventure.asVanilla(cooldownGroup));
+     }
+ 
+     @Override
+@@ -778,7 +787,7 @@
      @Override
      public boolean dropItem(boolean dropAll) {
          if (!(this.getHandle() instanceof ServerPlayer player)) return false;
@@ -140,25 +158,25 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftHuman
          if (!success) {
              return false;
          }
-@@ -806,7 +815,7 @@
+@@ -810,7 +819,7 @@
          final net.minecraft.world.item.ItemStack dropContent = nmsItemStack.split(amount);
  
          // This will return the itemstack back to its original amount in case events fail
--        final ItemEntity droppedEntity = this.getHandle().drop(dropContent, throwRandomly, true, true, entityOperation);
+-        final ItemEntity droppedEntity = this.getHandle().drop(dropContent, true, Prediction.PREDICTED, throwRandomly, true, entityOperation);
 +        final ItemEntity droppedEntity = ((io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge) this.getHandle()).bridge$dropInventoryItem(dropContent, throwRandomly, entityOperation);
          return droppedEntity == null ? null : (Item) droppedEntity.getBukkitEntity();
      }
  
-@@ -821,7 +830,7 @@
+@@ -824,7 +833,7 @@
          final net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
  
          // Do *not* call the event here, the item is not in the player inventory, they are not dropping it / do not need recovering logic (which would be a dupe).
--        final ItemEntity droppedEntity = this.getHandle().drop(nmsItemStack, throwRandomly, true, false, entityOperation);
+-        final ItemEntity droppedEntity = this.getHandle().drop(nmsItemStack, true, Prediction.PREDICTED, throwRandomly, false, entityOperation);
 +        final ItemEntity droppedEntity = ((io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge) this.getHandle()).bridge$dropProvidedItem(nmsItemStack, throwRandomly, entityOperation);
          return droppedEntity == null ? null : (Item) droppedEntity.getBukkitEntity();
      }
  
-@@ -900,7 +909,8 @@
+@@ -903,7 +912,8 @@
          Preconditions.checkArgument(boosterItem != null, "boosterItem cannot be null");
  
          FireworkRocketEntity fireworks = new FireworkRocketEntity(this.getHandle().level(), CraftItemStack.asNMSCopy(boosterItem), this.getHandle());

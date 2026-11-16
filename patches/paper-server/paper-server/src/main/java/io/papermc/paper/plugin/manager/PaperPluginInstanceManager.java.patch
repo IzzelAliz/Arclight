@@ -1,21 +1,15 @@
 diff --git a/paper-server/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java b/paper-server/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
-index 4dd7c6c0d7f54f5cc5879b9c60c60c455f00c9f8..681727f03372ea9ef986fc1b5b1ab064e02c69f8 100644
 --- a/paper-server/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
 +++ b/paper-server/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
-@@ -41,12 +41,7 @@ import java.util.ArrayList;
- import java.util.HashMap;
- import java.util.List;
- import java.util.Map;
--import java.util.concurrent.TimeUnit;
- import java.util.logging.Level;
--import org.apache.logging.log4j.LogManager;
--import org.apache.logging.log4j.core.Appender;
--import org.apache.logging.log4j.core.LoggerContext;
--import org.apache.logging.log4j.core.appender.AsyncAppender;
- 
- @SuppressWarnings("UnstableApiUsage")
- class PaperPluginInstanceManager {
-@@ -54,6 +49,7 @@ class PaperPluginInstanceManager {
+@@ -3,7 +3,6 @@
+ import com.google.common.base.Preconditions;
+ import com.google.common.graph.GraphBuilder;
+ import com.google.common.graph.MutableGraph;
+-import io.papermc.paper.FeatureHooks;
+ import io.papermc.paper.plugin.configuration.PluginMeta;
+ import io.papermc.paper.plugin.entrypoint.Entrypoint;
+ import io.papermc.paper.plugin.entrypoint.dependency.MetaDependencyTree;
+@@ -48,6 +47,7 @@
      private static final FileProviderSource FILE_PROVIDER_SOURCE = new FileProviderSource("File '%s'"::formatted);
  
      private final List<Plugin> plugins = new ArrayList<>();
@@ -23,7 +17,7 @@ index 4dd7c6c0d7f54f5cc5879b9c60c60c455f00c9f8..681727f03372ea9ef986fc1b5b1ab064
      private final Map<String, Plugin> lookupNames = new HashMap<>();
  
      private final PluginManager pluginManager;
-@@ -164,6 +160,7 @@ class PaperPluginInstanceManager {
+@@ -158,6 +158,7 @@
          Plugin[] plugins = this.getPlugins();
          for (int i = plugins.length - 1; i >= 0; i--) {
              this.disablePlugin(plugins[i]);
@@ -31,7 +25,7 @@ index 4dd7c6c0d7f54f5cc5879b9c60c60c455f00c9f8..681727f03372ea9ef986fc1b5b1ab064
          }
      }
  
-@@ -171,6 +168,7 @@ class PaperPluginInstanceManager {
+@@ -165,6 +166,7 @@
          synchronized (this) {
              this.disablePlugins();
              this.plugins.clear();
@@ -39,7 +33,7 @@ index 4dd7c6c0d7f54f5cc5879b9c60c60c455f00c9f8..681727f03372ea9ef986fc1b5b1ab064
              this.lookupNames.clear();
          }
      }
-@@ -204,6 +202,7 @@ class PaperPluginInstanceManager {
+@@ -198,6 +200,7 @@
              } // Paper
  
              try {
@@ -47,13 +41,14 @@ index 4dd7c6c0d7f54f5cc5879b9c60c60c455f00c9f8..681727f03372ea9ef986fc1b5b1ab064
                  jPlugin.setEnabled(true);
              } catch (Throwable ex) {
                  this.server.getLogger().log(Level.SEVERE, "Error occurred while enabling " + plugin.getPluginMeta().getDisplayName() + " (Is it up to date?)", ex);
-@@ -244,10 +243,20 @@ class PaperPluginInstanceManager {
+@@ -238,10 +241,20 @@
                  this.server.getLogger().log(Level.SEVERE, "Error occurred while disabling " + pluginName, ex);
              }
  
 -            // Flush async appender before unloading, avoids issues when a log message with class context
--            // tries to print after it's source has unloaded (i.e., Guice enhanced errors)
--            this.flushAsyncAppenders();
+-            // tries to print after its source has unloaded (i.e., Guice enhanced errors)
+-            FeatureHooks.flushAsyncAppenders();
+-
 +        } catch (Throwable ex) {
 +            this.handlePluginException("Error occurred (in the plugin loader) while disabling "
 +                + pluginName + " (Is it up to date?)", ex, plugin);
@@ -61,7 +56,7 @@ index 4dd7c6c0d7f54f5cc5879b9c60c60c455f00c9f8..681727f03372ea9ef986fc1b5b1ab064
 +            this.releasePluginResources(plugin);
 +        }
 +    }
- 
++
 +    private void releasePluginResources(Plugin plugin) {
 +        if (!this.releasedPlugins.add(plugin)) {
 +            return;
@@ -71,7 +66,7 @@ index 4dd7c6c0d7f54f5cc5879b9c60c60c455f00c9f8..681727f03372ea9ef986fc1b5b1ab064
              ClassLoader classLoader = plugin.getClass().getClassLoader();
              if (classLoader instanceof ConfiguredPluginClassLoader configuredPluginClassLoader) {
                  try {
-@@ -286,6 +295,11 @@ class PaperPluginInstanceManager {
+@@ -280,6 +293,11 @@
              this.handlePluginException("Error occurred (in the plugin loader) while cancelling async tasks for "
                  + pluginName + " (Is it up to date?)", ex, plugin); // Paper
          }
@@ -83,25 +78,3 @@ index 4dd7c6c0d7f54f5cc5879b9c60c60c455f00c9f8..681727f03372ea9ef986fc1b5b1ab064
          // Paper end - Folia schedulers
  
          try {
-@@ -336,21 +350,6 @@ class PaperPluginInstanceManager {
-         this.pluginManager.callEvent(new com.destroystokyo.paper.event.server.ServerExceptionEvent(new com.destroystokyo.paper.exception.ServerPluginEnableDisableException(msg, ex, plugin)));
-     }
- 
--    private void flushAsyncAppenders() {
--        if (!(LogManager.getContext(false) instanceof LoggerContext context)) {
--            return;
--        }
--
--        for (final Appender appender : context.getConfiguration().getAppenders().values()) {
--            if (appender instanceof AsyncAppender asyncAppender) {
--                final boolean flushed = asyncAppender.flush(100, TimeUnit.MILLISECONDS);
--                if (!flushed) {
--                    this.server.getLogger().log(Level.WARNING, "Failed to flush log messages before plugin unload.");
--                }
--            }
--        }
--    }
--
-     public boolean isTransitiveDepend(@NotNull PluginMeta plugin, @NotNull PluginMeta depend) {
-         return this.dependencyTree.isTransitiveDependency(plugin, depend);
-     }

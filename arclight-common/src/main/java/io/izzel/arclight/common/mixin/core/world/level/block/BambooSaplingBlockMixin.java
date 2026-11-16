@@ -6,6 +6,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BambooSaplingBlock;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,8 +21,8 @@ public class BambooSaplingBlockMixin {
         return receiver.nextFloat() < ((WorldBridge) level).bridge$spigotConfig().bambooModifier / (100.0f * 3) ? 0 : 1;
     }
 
-    @Redirect(method = "growBamboo", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
-    public boolean arclight$blockSpread(Level world, BlockPos pos, BlockState newState, int flags) {
-        return CraftEventFactory.handleBlockSpreadEvent(world, pos.below(), pos, newState, flags);
+    @Redirect(method = "growBamboo", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
+    public boolean arclight$blockSpread(Level world, BlockPos pos, BlockState newState) {
+        return CraftEventFactory.handleBlockSpreadEvent(world, pos.below(), pos, newState, Block.UPDATE_ALL);
     }
 }

@@ -1,7 +1,25 @@
 diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftRecipe.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftRecipe.java
 --- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftRecipe.java
 +++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftRecipe.java
-@@ -40,6 +40,8 @@
+@@ -38,7 +38,7 @@
+     RecipeHolder<?> toMinecraftRecipe();
+ 
+     default void addToRecipeManager() {
+-        MinecraftServer.getServer().getRecipeManager().addRecipe(this.toMinecraftRecipe());
++        ((io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeManagerBridge) MinecraftServer.getServer().getRecipeManager()).bridge$addRecipe(this.toMinecraftRecipe());
+     }
+ 
+     static Optional<Ingredient> toPossibleIngredient(@Nullable RecipeChoice bukkit, boolean requireNotEmpty) {
+@@ -54,7 +54,7 @@
+             stack = Ingredient.of(PaperRegistrySets.convertToNms(Registries.ITEM, Conversions.global().lookup(), itemTypeChoice.itemTypes()));
+         } else if (bukkit instanceof final RecipeChoice.PredicateChoice predicateChoice) {
+             stack = Ingredient.ofStacks(Collections.singletonList(CraftItemStack.asNMSCopy(predicateChoice.getItemStack())));
+-            stack.stackPredicate = nmsStack -> predicateChoice.test(CraftItemStack.asBukkitCopy(nmsStack));
++            stack.bridge$setStackPredicate(nmsStack -> predicateChoice.test(CraftItemStack.asBukkitCopy(nmsStack)));
+         } else if (bukkit instanceof RecipeChoice.MaterialChoice) {
+             stack = Ingredient.of(((RecipeChoice.MaterialChoice) bukkit).getChoices().stream().map(CraftItemType::bukkitToMinecraft));
+         } else if (bukkit instanceof RecipeChoice.ExactChoice) {
+@@ -63,6 +63,8 @@
              // Their impl of Ingredient.of() will error, ingredients need at least one entry.
              // Callers running into this exception may have passed an incorrect empty() recipe choice to a non-empty slot or
              // spigot calls this method in a wrong place.
@@ -10,7 +28,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftRe
          } else if (bukkit == RecipeChoice.empty()) {
              throw new IllegalArgumentException("This ingredient cannot be empty");
              // Paper end - support "empty" choices
-@@ -47,7 +49,7 @@
+@@ -70,7 +72,7 @@
              throw new IllegalArgumentException("Unknown recipe stack instance " + bukkit);
          }
  
@@ -19,7 +37,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftRe
              Preconditions.checkArgument(!stack.isEmpty(), "Recipe requires at least one non-air choice");
          }
  
-@@ -59,13 +61,16 @@
+@@ -82,19 +84,22 @@
      }
  
      static RecipeChoice toChoice(Ingredient ingredient) {
@@ -28,6 +46,15 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftRe
 +        }
          if (ingredient.isEmpty()) {
              return RecipeChoice.empty(); // Paper - null breaks API contracts
+         }
+ 
+-        if (ingredient.stackPredicate != null) {
+-            net.minecraft.world.item.ItemStack stack = ingredient.itemStacks().iterator().next();
+-            Predicate<org.bukkit.inventory.ItemStack> predicate = bukkitStack -> ingredient.stackPredicate.test(CraftItemStack.asNMSCopy(bukkitStack));
++        if (ingredient.bridge$getStackPredicate() != null) {
++            net.minecraft.world.item.ItemStack stack = ingredient.bridge$getExactChoices().iterator().next();
++            Predicate<org.bukkit.inventory.ItemStack> predicate = bukkitStack -> ingredient.bridge$getStackPredicate().test(CraftItemStack.asNMSCopy(bukkitStack));
+             return RecipeChoice.predicateChoice(predicate, CraftItemStack.asBukkitCopy(stack));
          }
  
 -        if (ingredient.isExact()) {

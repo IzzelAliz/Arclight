@@ -24,13 +24,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
-import java.util.function.Consumer;
+import net.minecraft.world.entity.PostSpawnProcessor;
 
 @Mixin(EntityType.class)
 public abstract class EntityTypeMixin<T extends Entity> implements EntityTypeBridge<T> {
 
     // @formatter:off
-    @Shadow @Nullable public abstract T create(ServerLevel p_262637_, @org.jetbrains.annotations.Nullable Consumer<T> p_262629_, BlockPos p_262595_, EntitySpawnReason p_262666_, boolean p_262685_, boolean p_262588_);
+    @Shadow @Nullable public abstract T create(ServerLevel p_262637_, @org.jetbrains.annotations.Nullable PostSpawnProcessor<T> p_262629_, BlockPos p_262595_, EntitySpawnReason p_262666_, boolean p_262685_, boolean p_262588_);
     // @formatter:on
 
     @com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod(method = "spawn(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/EntitySpawnReason;ZZ)Lnet/minecraft/world/entity/Entity;")
@@ -51,9 +51,9 @@ public abstract class EntityTypeMixin<T extends Entity> implements EntityTypeBri
         }
     }
 
-    @Inject(method = "spawn(Lnet/minecraft/server/level/ServerLevel;Ljava/util/function/Consumer;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/EntitySpawnReason;ZZ)Lnet/minecraft/world/entity/Entity;",
+    @Inject(method = "spawn(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/PostSpawnProcessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/EntitySpawnReason;ZZ)Lnet/minecraft/world/entity/Entity;",
         at = @At("HEAD"), cancellable = true, require = 1, expect = 1, allow = 1)
-    private void arclight$preCreatureSpawn(ServerLevel level, Consumer<T> consumer, BlockPos pos, EntitySpawnReason reason, boolean tryMoveDown, boolean movedUp, CallbackInfoReturnable<T> cir) {
+    private void arclight$preCreatureSpawn(ServerLevel level, PostSpawnProcessor<T> consumer, BlockPos pos, EntitySpawnReason reason, boolean tryMoveDown, boolean movedUp, CallbackInfoReturnable<T> cir) {
         CreatureSpawnEvent.SpawnReason spawnReason = ((IWorldWriterBridge) level).bridge$getAddEntityReason();
         if (!arclight$callPreCreatureSpawn(level, pos, spawnReason == null ? CreatureSpawnEvent.SpawnReason.DEFAULT : spawnReason)) {
             cir.setReturnValue(null);
@@ -67,16 +67,16 @@ public abstract class EntityTypeMixin<T extends Entity> implements EntityTypeBri
             CraftEntityType.minecraftToBukkit((EntityType<?>) (Object) this), spawnReason).callEvent();
     }
 
-    @Inject(method = "spawn(Lnet/minecraft/server/level/ServerLevel;Ljava/util/function/Consumer;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/EntitySpawnReason;ZZ)Lnet/minecraft/world/entity/Entity;",
+    @Inject(method = "spawn(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/PostSpawnProcessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/EntitySpawnReason;ZZ)Lnet/minecraft/world/entity/Entity;",
         cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD, at = @At("RETURN"),
         slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)V")))
-    private void arclight$returnIfSuccess(ServerLevel serverLevel, Consumer<T> consumer, BlockPos blockPos, EntitySpawnReason mobSpawnType, boolean bl, boolean bl2, CallbackInfoReturnable<T> cir, T t) {
+    private void arclight$returnIfSuccess(ServerLevel serverLevel, PostSpawnProcessor<T> consumer, BlockPos blockPos, EntitySpawnReason mobSpawnType, boolean bl, boolean bl2, CallbackInfoReturnable<T> cir, T t) {
         if (t != null) {
             cir.setReturnValue(t.isRemoved() ? null : t);
         }
     }
 
-    @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(method = "spawn(Lnet/minecraft/server/level/ServerLevel;Ljava/util/function/Consumer;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/EntitySpawnReason;ZZ)Lnet/minecraft/world/entity/Entity;",
+    @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(method = "spawn(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/PostSpawnProcessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/EntitySpawnReason;ZZ)Lnet/minecraft/world/entity/Entity;",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;playAmbientSound()V"), require = 1, expect = 1, allow = 1)
     private void arclight$ambientUnlessRemoved(net.minecraft.world.entity.Mob mob, com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original) {
         if (!mob.isRemoved()) {
@@ -88,7 +88,7 @@ public abstract class EntityTypeMixin<T extends Entity> implements EntityTypeBri
         return this.spawn(p_262634_, null, p_262707_, p_262597_, false, false, spawnReason);
     }
 
-    public T spawn(ServerLevel p_262704_, @Nullable Consumer<T> p_262621_, BlockPos p_262672_, EntitySpawnReason p_262644_, boolean p_262690_, boolean p_262590_, CreatureSpawnEvent.SpawnReason spawnReason) {
+    public T spawn(ServerLevel p_262704_, @Nullable PostSpawnProcessor<T> p_262621_, BlockPos p_262672_, EntitySpawnReason p_262644_, boolean p_262690_, boolean p_262590_, CreatureSpawnEvent.SpawnReason spawnReason) {
         if (!arclight$callPreCreatureSpawn(p_262704_, p_262672_, spawnReason)) {
             return null;
         }

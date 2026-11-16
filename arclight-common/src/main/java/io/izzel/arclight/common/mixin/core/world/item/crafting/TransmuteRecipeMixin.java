@@ -3,7 +3,7 @@ package io.izzel.arclight.common.mixin.core.world.item.crafting;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import io.izzel.arclight.common.bridge.core.world.item.crafting.RecipeBridge;
-import net.minecraft.world.item.ItemStackTemplate;
+import net.minecraft.world.item.crafting.TransmuteResult;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.TransmuteRecipe;
 import net.minecraft.world.item.crafting.display.SlotDisplay;
@@ -24,8 +24,8 @@ public class TransmuteRecipeMixin implements RecipeBridge {
     // @formatter:off
     @Shadow @Final private Ingredient input;
     @Shadow @Final private Ingredient material;
-    @Shadow @Final private ItemStackTemplate result;
-    @Shadow @Final private net.minecraft.advancements.criterion.MinMaxBounds.Ints materialCount;
+    @Shadow @Final private TransmuteResult result;
+    @Shadow @Final private net.minecraft.advancements.predicates.MinMaxBounds.Ints materialCount;
     @Shadow @Final private boolean addMaterialCountToResult;
     @Shadow private int minMaterialCount() { throw new AssertionError(); }
     @Shadow private int maxMaterialCount() { throw new AssertionError(); }
@@ -44,7 +44,8 @@ public class TransmuteRecipeMixin implements RecipeBridge {
 
     @Override
     public Recipe bridge$toBukkitRecipe(NamespacedKey id) {
-        CraftTransmuteRecipe recipe = new CraftTransmuteRecipe(id, this.result,
+        var displayResult = this.result.resolve(this.result.item().orElseGet(() -> this.input.values.iterator().next()));
+        CraftTransmuteRecipe recipe = new CraftTransmuteRecipe(id, this.result, displayResult,
             CraftRecipe.toChoice(this.input), CraftRecipe.toChoice(this.material),
             this.materialCount, this.addMaterialCountToResult);
         recipe.setGroup(((TransmuteRecipe) (Object) this).group());

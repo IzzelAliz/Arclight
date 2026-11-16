@@ -69,7 +69,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftLivin
              if (rayTraceBlocks != null) {
                  net.minecraft.world.phys.Vec3 eye = getHandle().getEyePosition(1.0F);
                  if (eye.distanceToSqr(rayTraceBlocks.getLocation()) <= eye.distanceToSqr(rayTrace.getLocation())) {
-@@ -690,7 +733,7 @@
+@@ -688,7 +731,7 @@
              return false; // Return early if the distance is greater than 128 blocks
          }
  
@@ -78,16 +78,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftLivin
      }
  
      @Override
-@@ -962,7 +1005,7 @@
- 
-     @Override
-     public ItemStack getActiveItem() {
--        return this.getHandle().getUseItem().asBukkitMirror();
-+        return CraftItemStack.asCraftMirror(this.getHandle().getUseItem());
-     }
- 
-     @Override
-@@ -1077,13 +1120,13 @@
+@@ -1104,13 +1147,13 @@
      @org.jetbrains.annotations.NotNull
      @Override
      public net.kyori.adventure.util.TriState getFrictionState() {
@@ -103,7 +94,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftLivin
      }
  
      @Override
-@@ -1103,7 +1146,7 @@
+@@ -1130,7 +1173,7 @@
  
      @Override
      public CombatTracker getCombatTracker() {

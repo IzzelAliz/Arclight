@@ -1,16 +1,6 @@
-diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/advancement/CraftAdvancement.java b/paper-server/src/main/java/org/bukkit/craftbukkit/advancement/CraftAdvancement.java
 --- a/paper-server/src/main/java/org/bukkit/craftbukkit/advancement/CraftAdvancement.java
 +++ b/paper-server/src/main/java/org/bukkit/craftbukkit/advancement/CraftAdvancement.java
-@@ -37,7 +37,7 @@
- 
-     @Override
-     public io.papermc.paper.advancement.AdvancementDisplay getDisplay() {
--        return this.handle.value().display().map(d -> d.paper).orElse(null);
-+        return this.handle.value().display().map(io.papermc.paper.advancement.PaperAdvancementDisplay::new).orElse(null);
-     }
- 
-     @Deprecated
-@@ -54,7 +54,7 @@
+@@ -55,7 +55,7 @@
      public org.bukkit.advancement.Advancement getParent() {
          return this.handle.value().parent()
              .map(net.minecraft.server.MinecraftServer.getServer().getAdvancements()::get)
@@ -19,7 +9,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/advancement/Craft
              .orElse(null);
      }
  
-@@ -64,7 +64,7 @@
+@@ -65,7 +65,7 @@
          final net.minecraft.advancements.AdvancementNode advancementNode = net.minecraft.server.MinecraftServer.getServer().getAdvancements().tree().get(this.handle);
          if (advancementNode != null) {
              for (final net.minecraft.advancements.AdvancementNode child : advancementNode.children()) {
@@ -28,7 +18,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/advancement/Craft
              }
          }
          return children.build();
-@@ -73,6 +73,6 @@
+@@ -74,6 +74,6 @@
      @Override
      public org.bukkit.advancement.Advancement getRoot() {
          final net.minecraft.advancements.AdvancementNode advancementNode = net.minecraft.server.MinecraftServer.getServer().getAdvancements().tree().get(this.handle);

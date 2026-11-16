@@ -24,6 +24,10 @@ import java.util.Optional;
 
 public interface LivingEntityBridge extends EntityBridge {
 
+    default boolean bridge$capturePlayerDrop(net.minecraft.world.entity.item.ItemEntity item) {
+        return false;
+    }
+
     org.bukkit.craftbukkit.attribute.CraftAttributeMap bridge$getCraftAttributes();
 
     void bridge$setSlot(EquipmentSlot slotIn, ItemStack stack, boolean silent);

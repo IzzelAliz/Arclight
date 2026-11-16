@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class TntBlockMixin extends BlockMixin {
 
     // @formatter:off
-    @Shadow private static boolean prime(Level arg, BlockPos arg2, @Nullable LivingEntity arg3) { return false; }
+    @Shadow private static boolean prime(Level arg, BlockPos arg2, @Nullable LivingEntity arg3, ItemStack ignitionItem) { return false; }
     // @formatter:on
 
     @Redirect(method = "onPlace", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;hasNeighborSignal(Lnet/minecraft/core/BlockPos;)Z"))
@@ -45,6 +45,6 @@ public abstract class TntBlockMixin extends BlockMixin {
 
     @Override
     public void bridge$forge$onCaughtFire(BlockState state, Level level, BlockPos pos, @Nullable Direction direction, @Nullable LivingEntity igniter) {
-        prime(level, pos, igniter);
+        prime(level, pos, igniter, ItemStack.EMPTY);
     }
 }

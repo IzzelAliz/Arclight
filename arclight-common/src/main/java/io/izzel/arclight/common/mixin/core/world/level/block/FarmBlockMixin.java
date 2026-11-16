@@ -6,7 +6,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.FarmlandBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.Bukkit;
@@ -16,6 +16,8 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -24,8 +26,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(FarmlandBlock.class)
 public abstract class FarmBlockMixin extends BlockMixin {
 
-    @Inject(method = "turnToDirt", cancellable = true, at = @At("HEAD"))
-    private static void arclight$blockFade(Entity entity, BlockState state, Level worldIn, BlockPos pos, CallbackInfo ci) {
+    @Shadow @Final private Block baseBlock;
+
+    @Inject(method = "turnToBaseBlock(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)V", cancellable = true, at = @At("HEAD"))
+    private void arclight$blockFade(Entity entity, BlockState state, Level worldIn, BlockPos pos, CallbackInfo ci) {
         if (!DistValidate.isValid(worldIn)) return;
         if (entity != null) {
             Cancellable cancellable;
@@ -41,12 +45,12 @@ public abstract class FarmBlockMixin extends BlockMixin {
                 return;
             }
 
-            if (!CraftEventFactory.callEntityChangeBlockEvent(entity, pos, Blocks.DIRT.defaultBlockState())) {
+            if (!CraftEventFactory.callEntityChangeBlockEvent(entity, pos, this.baseBlock.defaultBlockState())) {
                 ci.cancel();
                 return;
             }
         }
-        if (CraftEventFactory.callBlockFadeEvent(worldIn, pos, Blocks.DIRT.defaultBlockState()).isCancelled()) {
+        if (CraftEventFactory.callBlockFadeEvent(worldIn, pos, this.baseBlock.defaultBlockState()).isCancelled()) {
             ci.cancel();
         }
     }

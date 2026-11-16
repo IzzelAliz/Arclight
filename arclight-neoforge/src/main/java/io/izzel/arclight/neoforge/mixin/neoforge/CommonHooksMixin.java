@@ -42,13 +42,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(CommonHooks.class)
 public abstract class CommonHooksMixin {
 
-    // Neo has already accepted the toss and restored captureDrops before this callsite.
+    // Neo has already accepted the toss and cleared captureDrops before this callsite.
     @Decorate(method = "onPlayerTossEvent", remap = false, at = @At(value = "INVOKE",
         target = "Lnet/minecraft/world/level/Level;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private static boolean arclight$playerTossBeforeAdd(net.minecraft.world.level.Level level, Entity entity,
-            net.minecraft.world.entity.player.Player player, ItemStack stack, boolean dropAround, boolean includeName) throws Throwable {
+            net.minecraft.world.entity.player.Player player, ItemStack stack, boolean thrownFromHand, net.minecraft.util.Prediction prediction) throws Throwable {
         if (!((io.izzel.arclight.common.bridge.core.world.entity.player.PlayerBridge) player)
-            .bridge$callDropItemEvent((ItemEntity) entity, includeName)) {
+            .bridge$callDropItemEvent((ItemEntity) entity, thrownFromHand)) {
             // Returning false alone would be discarded by the native helper; return null from it.
             return (boolean) DecorationOps.cancel().invoke((ItemEntity) null);
         }

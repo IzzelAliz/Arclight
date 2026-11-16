@@ -92,6 +92,7 @@ import org.bukkit.projectiles.ProjectileSource;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -150,13 +151,6 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             (Entity) (Object) this, ((WorldBridge) level).bridge$spigotConfig());
     }
 
-    @Shadow @Final private static java.util.concurrent.atomic.AtomicInteger ENTITY_COUNTER;
-
-    @io.izzel.arclight.common.mod.mixins.annotation.TransformAccess(org.objectweb.asm.Opcodes.ACC_PUBLIC | org.objectweb.asm.Opcodes.ACC_STATIC)
-    private static int nextEntityId() {
-        return ENTITY_COUNTER.incrementAndGet();
-    }
-
 
     // @formatter:off
     @Shadow protected abstract void applyEffectsFromBlocks();
@@ -203,7 +197,6 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     }
 
     @Shadow protected final boolean isInvulnerableToBase(DamageSource source) { throw new AssertionError(); }
-    @Shadow public int invulnerableTime;
     @Shadow public abstract void playSound(SoundEvent soundIn, float volume, float pitch);
     @Shadow public abstract void teleportTo(double x, double y, double z);
 
@@ -333,6 +326,11 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         return internal$getBukkitEntity();
     }
 
+    @com.llamalad7.mixinextras.injector.ModifyReturnValue(method = "considersEntityAsAlly(Lnet/minecraft/world/entity/Entity;)Z", at = @At("RETURN"))
+    private boolean arclight$additionalAlliedRules(boolean original, Entity other) {
+        return original || this.getBukkitEntity().considersEntityAsAlly0(((io.izzel.arclight.common.bridge.core.entity.EntityBridge) other).bridge$getBukkitEntity());
+    }
+
     @Override
     public CommandSender bridge$getBukkitSender(CommandSourceStack wrapper) {
         return internal$getBukkitEntity();
@@ -458,6 +456,12 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     }
 
     @Unique private transient EntityRemoveEvent.Cause arclight$removeCause;
+    @Unique private transient EntityRemoveEvent.Cause arclight$retainedRemoveCause;
+
+    @Override
+    public EntityRemoveEvent.Cause bridge$getRemoveEventCause() {
+        return this.arclight$retainedRemoveCause;
+    }
 
     @Override
     public void bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause cause) {
@@ -512,13 +516,26 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
     }
 
     @Inject(method = "setRemoved", at = @At("HEAD"))
-    private void arclight$removeEvent(Entity.RemovalReason removalReason, CallbackInfo ci) {
+    private void arclight$removeEvent(Entity.RemovalReason removalReason, CallbackInfo ci,
+            @Share("arclight$removalCause") com.llamalad7.mixinextras.sugar.ref.LocalRef<EntityRemoveEvent.Cause> cause) {
+        cause.set(this.arclight$removeCause);
         // InitAuther97: fix #2038, see implementation for explanation
         if (!arclight$addedEventCalled) {
             return;
         }
         CraftEventFactory.callEntityRemoveEvent((Entity) (Object) this, arclight$removeCause);
         arclight$removeCause = null;
+    }
+
+    @Inject(method = "setRemoved", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/Entity;removalReason:Lnet/minecraft/world/entity/Entity$RemovalReason;", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER))
+    private void arclight$retainRemoveCause(Entity.RemovalReason reason, CallbackInfo ci,
+            @Share("arclight$removalCause") com.llamalad7.mixinextras.sugar.ref.LocalRef<EntityRemoveEvent.Cause> cause) {
+        this.arclight$retainedRemoveCause = cause.get();
+    }
+
+    @Inject(method = "unsetRemoved", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/Entity;removalReason:Lnet/minecraft/world/entity/Entity$RemovalReason;", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER))
+    private void arclight$clearRetainedRemoveCause(CallbackInfo ci) {
+        this.arclight$retainedRemoveCause = null;
     }
 
     @Inject(method = "getMaxAirSupply", cancellable = true, at = @At("RETURN"))
@@ -712,24 +729,31 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         ArclightCaptures.captureDamageEventBlock(null);
     }
 
-    @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;onGround()Z"),
-        slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;updateEntityAfterFallOn(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/world/entity/Entity;)V")))
-    private void arclight$move$blockCollide(MoverType typeIn, Vec3 pos, CallbackInfo ci) {
+    @Inject(method = "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V", at = @At("HEAD"))
+    private void arclight$move$captureOriginal(MoverType type, Vec3 delta, CallbackInfo ci,
+                                              @Share("arclightOriginalMovement") com.llamalad7.mixinextras.sugar.ref.LocalRef<Vec3> original) {
+        original.set(delta);
+    }
+
+    @Inject(method = "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;isClientSide()Z"), require = 1, allow = 1)
+    private void arclight$move$blockCollide(MoverType typeIn, Vec3 pos, CallbackInfo ci,
+                                           @com.llamalad7.mixinextras.sugar.Local(index = 4) Vec3 movement,
+                                           @Share("arclightOriginalMovement") com.llamalad7.mixinextras.sugar.ref.LocalRef<Vec3> original) {
         if (horizontalCollision && this.bridge$getBukkitEntity() instanceof Vehicle vehicle) {
             org.bukkit.block.Block block = this.level().bridge$getWorld().getBlockAt(Mth.floor(this.getX()), Mth.floor(this.getY()), Mth.floor(this.getZ()));
-            Vec3 vec3d = this.collide(pos);
-            if (pos.x > vec3d.x) {
+            if (pos.x > movement.x) {
                 block = block.getRelative(BlockFace.EAST);
-            } else if (vec3d.x < vec3d.x) {
+            } else if (pos.x < movement.x) {
                 block = block.getRelative(BlockFace.WEST);
-            } else if (pos.z > vec3d.z) {
+            } else if (pos.z > movement.z) {
                 block = block.getRelative(BlockFace.SOUTH);
-            } else if (pos.z < vec3d.z) {
+            } else if (pos.z < movement.z) {
                 block = block.getRelative(BlockFace.NORTH);
             }
 
-            if (block.getType() != org.bukkit.Material.AIR) {
-                VehicleBlockCollisionEvent event = new VehicleBlockCollisionEvent(vehicle, block);
+            if (!block.getType().isAir()) {
+                VehicleBlockCollisionEvent event = new VehicleBlockCollisionEvent(vehicle, block, org.bukkit.craftbukkit.util.CraftVector.toBukkit(original.get()));
                 Bukkit.getPluginManager().callEvent(event);
             }
         }
@@ -1101,17 +1125,6 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         DecorationOps.callsite().invoke(leashable);
     }
 
-    @WrapOperation(method = "attemptToShearEquipment", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;spawnAtLocation(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/entity/item/ItemEntity;"))
-    private ItemEntity arclight$forcedEquipmentDrop(Entity entity, ServerLevel level, ItemStack stack, Vec3 offset, Operation<ItemEntity> original) {
-        boolean previous = this.forceDrops;
-        this.forceDrops = true;
-        try {
-            return original.call(entity, level, stack, offset);
-        } finally {
-            this.forceDrops = previous;
-        }
-    }
-
     @Decorate(method = "startRiding(Lnet/minecraft/world/entity/Entity;ZZ)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/EntityType;canSerialize()Z"))
     private boolean arclight$allowForcedVehicle(EntityType<?> type, @Local(ordinal = 0) boolean force) throws Throwable {
         boolean serializable = (boolean) DecorationOps.callsite().invoke(type);
@@ -1170,7 +1183,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
         return passengers;
     }
 
-    @Decorate(method = "handlePortal", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;canTeleport(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/Level;)Z"))
+    @Decorate(method = "teleportToPortalDestination(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/portal/TeleportTransition;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;canTeleport(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/Level;)Z"))
     private boolean arclight$changeDimension(Entity instance, Level level, Level level2) throws Throwable {
         return (boolean) DecorationOps.callsite().invoke(instance, level, level2) || this instanceof ServerPlayerBridge;
     }
@@ -1243,7 +1256,7 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
             if (entity.portalProcess != null
                 && entity.portalProcess.isSamePortal((net.minecraft.world.level.block.EndGatewayBlock) net.minecraft.world.level.block.Blocks.END_GATEWAY)
                 && this.level().getBlockEntity(entity.portalProcess.getEntryPosition()) instanceof net.minecraft.world.level.block.entity.TheEndGatewayBlockEntity gateway) {
-                teleEvent = new com.destroystokyo.paper.event.entity.EntityTeleportEndGatewayEvent(this.getBukkitEntity(), this.getBukkitEntity().getLocation(), to.clone(), new org.bukkit.craftbukkit.block.CraftEndGateway(to.getWorld(), gateway));
+                teleEvent = new com.destroystokyo.paper.event.entity.EntityTeleportEndGatewayEvent(this.getBukkitEntity(), this.getBukkitEntity().getLocation(), to.clone(), new org.bukkit.craftbukkit.block.CraftEndGateway(to.getWorld(), gateway, true));
                 Bukkit.getPluginManager().callEvent(teleEvent);
             } else {
                 teleEvent = CraftEventFactory.callEntityTeleportEvent(entity, to.clone());
@@ -1259,6 +1272,13 @@ public abstract class EntityMixin implements InternalEntityBridge, EntityBridge,
                 ((DimensionTransitionBridge) (Object) dimensionTransition).bridge$setTeleportCause(cause);
                 DecorationOps.blackhole().invoke(dimensionTransition);
             }
+        }
+    }
+
+    @Inject(method = "calculatePassengerTransition(Lnet/minecraft/world/level/portal/TeleportTransition;Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/world/level/portal/TeleportTransition;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;position()Lnet/minecraft/world/phys/Vec3;", ordinal = 0))
+    private void arclight$positionRiderBeforeOffset(TeleportTransition transition, Entity passenger, CallbackInfoReturnable<TeleportTransition> cir) {
+        if (((DimensionTransitionBridge) (Object) transition).bridge$isPositionRider()) {
+            ((Entity) (Object) this).positionRider(passenger);
         }
     }
 

@@ -44,7 +44,7 @@ public abstract class BlockAttachedEntityMixin extends EntityMixin {
             this.bridge$pushEntityRemoveCause(EntityRemoveEvent.Cause.DROP);
             return;
         }
-        var state = this.level().getBlockState(new BlockPos(this.blockPosition()));
+        var state = this.level().getBlockState(this.blockPosition().immutable());
         HangingBreakEvent.RemoveCause cause;
         if (!state.isAir()) {
             cause = HangingBreakEvent.RemoveCause.OBSTRUCTION;
@@ -60,7 +60,7 @@ public abstract class BlockAttachedEntityMixin extends EntityMixin {
         }
     }
 
-    @Inject(method = "hurtServer", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/BlockAttachedEntity;kill(Lnet/minecraft/server/level/ServerLevel;)V"))
+    @Inject(method = "hurtServer", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/decoration/BlockAttachedEntity;kill(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;)V"))
     private void arclight$hangingBreakByAttack(ServerLevel level, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         // Modded block-attached entities need not implement Bukkit Hanging.
         if (!(this.getBukkitEntity() instanceof Hanging hanging)) {

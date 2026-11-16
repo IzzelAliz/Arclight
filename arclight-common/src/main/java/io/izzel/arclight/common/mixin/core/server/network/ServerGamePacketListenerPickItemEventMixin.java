@@ -20,6 +20,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -72,9 +73,10 @@ public abstract class ServerGamePacketListenerPickItemEventMixin {
         if (context != null) {
             int targetSlot = Inventory.isHotbarSlot(sourceSlot) ? sourceSlot : inventory.getSuitableHotbarSlot();
             var bukkitPlayer = ((ServerPlayerBridge) this.player).bridge$getBukkitEntity();
+            var bukkitItem = CraftItemStack.asBukkitCopy(stack);
             event = context.getFirst() instanceof BlockPos
-                ? new PlayerPickBlockEvent(bukkitPlayer, CraftBlock.at(this.player.level(), (BlockPos) context.getFirst()), context.getSecond(), targetSlot, sourceSlot)
-                : new PlayerPickEntityEvent(bukkitPlayer, ((EntityBridge) context.getFirst()).bridge$getBukkitEntity(), context.getSecond(), targetSlot, sourceSlot);
+                ? new PlayerPickBlockEvent(bukkitPlayer, CraftBlock.at(this.player.level(), (BlockPos) context.getFirst()), bukkitItem, context.getSecond(), targetSlot, sourceSlot)
+                : new PlayerPickEntityEvent(bukkitPlayer, ((EntityBridge) context.getFirst()).bridge$getBukkitEntity(), bukkitItem, context.getSecond(), targetSlot, sourceSlot);
             if (!event.callEvent()) {
                 // Return from tryPickItem, not from the packet handler: the native avatar
                 // profile/permission tail remains independent of the inventory action.

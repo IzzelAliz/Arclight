@@ -1,16 +1,16 @@
 diff --git a/paper-server/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java b/paper-server/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
 --- a/paper-server/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
 +++ b/paper-server/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
-@@ -8,6 +8,8 @@
+@@ -7,6 +7,8 @@
  import com.mojang.authlib.GameProfile;
  import com.mojang.authlib.properties.Property;
  import com.mojang.authlib.properties.PropertyMap;
 +import io.izzel.arclight.common.bridge.core.server.players.CachedUserNameToIdResolverBridge;
 +import io.izzel.arclight.common.bridge.core.server.players.ProfileResolverCachedBridge;
  import io.papermc.paper.profile.MutablePropertyMap;
- import net.minecraft.util.ExtraCodecs;
- import net.minecraft.util.Util;
-@@ -225,16 +227,23 @@
+ import java.util.AbstractSet;
+ import java.util.ArrayList;
+@@ -235,16 +237,23 @@
      }
  
      public boolean completeFromCache(boolean lookupUUID, boolean onlineMode) {
@@ -37,7 +37,7 @@ diff --git a/paper-server/src/main/java/com/destroystokyo/paper/profile/CraftPla
                      }
                  }
              } else {
-@@ -252,11 +261,11 @@
+@@ -262,11 +271,11 @@
          }
  
          if ((profile.name().isEmpty() || !hasTextures()) && this.getId() != null) {
@@ -51,7 +51,7 @@ diff --git a/paper-server/src/main/java/com/destroystokyo/paper/profile/CraftPla
                  }
              }
              if (profile != null) {
-@@ -285,15 +294,15 @@
+@@ -295,15 +304,15 @@
          }
  
          MinecraftServer server = MinecraftServer.getServer();
@@ -70,7 +70,7 @@ diff --git a/paper-server/src/main/java/com/destroystokyo/paper/profile/CraftPla
              }
          }
          return this.isComplete() && (!onlineMode || !textures || hasTextures());
-@@ -314,9 +323,9 @@
+@@ -324,9 +333,9 @@
              return;
          }
  

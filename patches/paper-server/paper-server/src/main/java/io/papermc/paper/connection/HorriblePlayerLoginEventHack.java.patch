@@ -1,15 +1,16 @@
 diff --git a/paper-server/src/main/java/io/papermc/paper/connection/HorriblePlayerLoginEventHack.java b/paper-server/src/main/java/io/papermc/paper/connection/HorriblePlayerLoginEventHack.java
 deleted file mode 100644
-index e6511bddcdf1dc455d17d91d733aad055d2301dc..0000000000000000000000000000000000000000
+index e1215b7403fb90a51b810036ccc38faaa81d29b1..0000000000000000000000000000000000000000
 --- a/paper-server/src/main/java/io/papermc/paper/connection/HorriblePlayerLoginEventHack.java
 +++ /dev/null
-@@ -1,107 +0,0 @@
+@@ -1,108 +0,0 @@
 -package io.papermc.paper.connection;
 -
 -import com.mojang.authlib.GameProfile;
 -import com.mojang.logging.LogUtils;
 -import io.papermc.paper.adventure.PaperAdventure;
 -import io.papermc.paper.util.StackWalkerUtil;
+-import java.net.InetSocketAddress;
 -import java.util.HashSet;
 -import java.util.Optional;
 -import java.util.Set;
@@ -92,7 +93,7 @@ index e6511bddcdf1dc455d17d91d733aad055d2301dc..00000000000000000000000000000000
 -        connection.handledLegacyLoginEvent = true;
 -
 -        CraftPlayer horribleBukkitPlayer = player.getBukkitEntity();
--        PlayerLoginEvent event = new PlayerLoginEvent(horribleBukkitPlayer, connection.hostname, ((java.net.InetSocketAddress) connection.getRemoteAddress()).getAddress(), ((java.net.InetSocketAddress) connection.channel.remoteAddress()).getAddress());
+-        PlayerLoginEvent event = new PlayerLoginEvent(horribleBukkitPlayer, connection.hostname, ((java.net.InetSocketAddress) connection.getRemoteAddress()).getAddress(), connection.channel.remoteAddress());
 -        event.disallow(result.result(), PaperAdventure.asAdventure(result.message()));
 -        event.callEvent();
 -

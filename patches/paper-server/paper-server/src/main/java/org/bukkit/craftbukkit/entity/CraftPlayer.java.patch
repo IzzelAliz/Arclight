@@ -18,8 +18,8 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
  import io.papermc.paper.connection.PlayerGameConnection;
  import io.papermc.paper.connection.PluginMessageBridgeImpl;
  import io.papermc.paper.datacomponent.DataComponentTypes;
-@@ -20,8 +25,6 @@
- import io.papermc.paper.entity.PlayerGiveResult;
+@@ -23,8 +28,6 @@
+ import io.papermc.paper.math.Angle;
  import io.papermc.paper.math.Position;
  import io.papermc.paper.util.MCUtil;
 -import it.unimi.dsi.fastutil.shorts.ShortArraySet;
@@ -27,7 +27,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
  import java.io.ByteArrayOutputStream;
  import java.io.IOException;
  import java.lang.ref.WeakReference;
-@@ -64,11 +67,9 @@
+@@ -67,11 +70,9 @@
  import net.minecraft.network.chat.PlayerChatMessage;
  import net.minecraft.network.chat.ResolutionContext;
  import net.minecraft.network.protocol.common.ClientboundClearDialogPacket;
@@ -39,7 +39,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
  import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;
  import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
  import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
-@@ -224,7 +225,8 @@
+@@ -229,7 +230,8 @@
  
  @DelegateDeserialization(CraftOfflinePlayer.class)
  public class CraftPlayer extends CraftHumanEntity implements Player, PluginMessageBridgeImpl {
@@ -49,7 +49,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
      private static final PointersSupplier<Player> POINTERS_SUPPLIER = PointersSupplier.<Player>builder()
          .parent(CraftEntity.POINTERS_SUPPLIER)
          .resolving(Identity.NAME, Player::getName)
-@@ -336,27 +338,63 @@
+@@ -345,27 +347,63 @@
      public @Nullable InetSocketAddress getHAProxyAddress() {
          if (this.getHandle().connection == null) return null;
  
@@ -83,12 +83,15 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
      @Override
      public boolean isTransferred() {
 -        return this.getHandle().connection.playerGameConnection.isTransferred();
-+        return getHandle().bridge$getTransferCookieConnection().isTransferred();
-     }
- 
-     @Override
+-    }
+-
+-    @Override
 -    public CompletableFuture<byte @Nullable []> retrieveCookie(final NamespacedKey key) {
 -        return this.getHandle().connection.playerGameConnection.retrieveCookie(key);
++        return getHandle().bridge$getTransferCookieConnection().isTransferred();
++    }
++
++    @Override
 +    public CompletableFuture<byte[]> retrieveCookie(NamespacedKey key) {
 +        Preconditions.checkArgument(key != null, "Cookie key cannot be null");
 +
@@ -119,7 +122,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
      }
  
      // Paper start - Implement NetworkClient
-@@ -687,16 +725,28 @@
+@@ -696,16 +734,28 @@
          } else if (com.destroystokyo.paper.ClientOption.ALLOW_SERVER_LISTINGS == type) {
              return type.getType().cast(this.getHandle().allowsListing());
          } else if (com.destroystokyo.paper.ClientOption.PARTICLE_VISIBILITY == type) {
@@ -127,8 +130,8 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
 +            return type.getType().cast(com.destroystokyo.paper.ClientOption.ParticleVisibility.valueOf(this.getHandle().clientInformation().particleStatus().name()));
          }
          throw new RuntimeException("Unknown settings type");
-     }
- 
++    }
++
 +    private static void sendPermissionLevelPacket(ServerPlayer player, LevelBasedPermissionSet permissions) {
 +        if (player.connection == null) return;
 +        byte eventId = switch (permissions.level()) {
@@ -139,8 +142,8 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
 +            case OWNERS -> net.minecraft.world.entity.EntityEvent.PERMISSION_LEVEL_OWNERS;
 +        };
 +        player.connection.send(new net.minecraft.network.protocol.game.ClientboundEntityEventPacket(player, eventId));
-+    }
-+
+     }
+ 
      @Override
      public void sendOpLevel(byte level) {
          Preconditions.checkArgument(level >= PermissionLevel.ALL.id() && level <= PermissionLevel.OWNERS.id(), "Level must be within [%s, %s]", PermissionLevel.ALL.id(), PermissionLevel.OWNERS.id());
@@ -150,7 +153,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
      }
  
      @Override
-@@ -748,7 +798,8 @@
+@@ -757,7 +807,8 @@
              this.getHandle().connection.disconnect(Component.translatable("multiplayer.disconnect.illegal_characters"), org.bukkit.event.player.PlayerKickEvent.Cause.ILLEGAL_CHARACTERS); // Paper - kick event causes
          } else {
              if (msg.startsWith("/")) {
@@ -160,7 +163,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
              } else {
                  final PlayerChatMessage playerChatMessage = PlayerChatMessage.system(msg).withUnsignedContent(Component.literal(msg));
                  // TODO chat decorating
-@@ -943,7 +994,14 @@
+@@ -952,7 +1003,14 @@
              SectionPos sectionPos = entry.getKey();
              it.unimi.dsi.fastutil.shorts.Short2ObjectMap<net.minecraft.world.level.block.state.BlockState> blockData = entry.getValue();
  
@@ -176,7 +179,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
              this.getHandle().connection.send(packet);
          }
      }
-@@ -974,15 +1032,32 @@
+@@ -983,15 +1041,32 @@
          // Construct the packets using the data allocated above and send then to the players
          for (Map.Entry<SectionPos, ChunkSectionChanges> entry : changes.entrySet()) {
              ChunkSectionChanges chunkChanges = entry.getValue();
@@ -203,16 +206,16 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
 +            buffer.release();
 +        }
 +    }
- 
-+    private record ChunkSectionChanges(it.unimi.dsi.fastutil.shorts.ShortList positions, List<net.minecraft.world.level.block.state.BlockState> blockData) {
 +
++    private record ChunkSectionChanges(it.unimi.dsi.fastutil.shorts.ShortList positions, List<net.minecraft.world.level.block.state.BlockState> blockData) {
+ 
          public ChunkSectionChanges() {
 -            this(new ShortArraySet(), new ArrayList<>());
 +            this(new it.unimi.dsi.fastutil.shorts.ShortArrayList(), new ArrayList<>());
          }
      }
  
-@@ -1537,7 +1612,7 @@
+@@ -1545,7 +1620,7 @@
              return;
          }
  
@@ -221,15 +224,15 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
      }
  
      @Override
-@@ -1689,7 +1764,6 @@
-         if (!itemstack.isEmpty() && itemstack.getItem().components().has(net.minecraft.core.component.DataComponents.MAX_DAMAGE)) {
-             net.minecraft.world.entity.ExperienceOrb orb = net.minecraft.world.entity.EntityType.EXPERIENCE_ORB.create(handle.level(), net.minecraft.world.entity.EntitySpawnReason.COMMAND);
+@@ -1700,7 +1775,6 @@
+                 return amount;
+             }
              orb.setValue(amount);
 -            orb.spawnReason = org.bukkit.entity.ExperienceOrb.SpawnReason.CUSTOM;
              orb.setPosRaw(handle.getX(), handle.getY(), handle.getZ());
  
              final int toRepairFromXpAmount = net.minecraft.world.item.enchantment.EnchantmentHelper.modifyDurabilityToRepairFromXp(
-@@ -1699,7 +1773,9 @@
+@@ -1710,7 +1784,9 @@
              final int consumedExperience = repair > 0 ? repair * amount / toRepairFromXpAmount : toRepairFromXpAmount; // Paper - prevent division by 0
              org.bukkit.event.player.PlayerItemMendEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callPlayerItemMendEvent(handle, orb, itemstack, selected.get().inSlot(), repair, consumedExperience);
              repair = event.getRepairAmount();
@@ -240,7 +243,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
              if (!event.isCancelled()) {
                  amount -= consumedExperience; // Use previously computed variable to reduce diff on change.
                  itemstack.setDamageValue(itemstack.getDamageValue() - repair);
-@@ -2034,7 +2110,7 @@
+@@ -2044,7 +2120,7 @@
          handle.onUpdateAbilities();
          connection.internalTeleport(net.minecraft.world.entity.PositionMoveRotation.of(this.getHandle()), java.util.Collections.emptySet());
          net.minecraft.server.players.PlayerList playerList = this.server.getServer().getPlayerList();
@@ -249,7 +252,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
          playerList.sendLevelInfo(handle, level);
          playerList.sendAllPlayerInfo(handle);
  
-@@ -2220,8 +2296,8 @@
+@@ -2230,8 +2306,8 @@
      }
  
      private void sendCustomPayload(Identifier id, byte[] message) {
@@ -260,7 +263,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
      }
  
      @Override
-@@ -2291,7 +2367,8 @@
+@@ -2301,7 +2377,8 @@
              final net.kyori.adventure.resource.ResourcePackInfo pack = iter.next();
              packs.add(new ClientboundResourcePackPushPacket(pack.id(), pack.uri().toASCIIString(), pack.hash(), request.required(), iter.hasNext() ? Optional.empty() : Optional.ofNullable(prompt)));
              if (request.callback() != net.kyori.adventure.resource.ResourcePackCallback.noOp()) {
@@ -270,7 +273,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
              }
          }
          this.sendBundle(packs);
-@@ -2355,9 +2432,7 @@
+@@ -2365,9 +2442,7 @@
  
      @Override
      public Set<String> channels() {
@@ -281,7 +284,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
      }
  
      @Override
-@@ -2381,7 +2456,7 @@
+@@ -2391,7 +2466,7 @@
                  }
              }
  
@@ -290,7 +293,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
          }
      }
  
-@@ -2596,14 +2671,8 @@
+@@ -2616,14 +2691,8 @@
      @Override
      public void sendHealthUpdate() {
          FoodData foodData = this.getHandle().getFoodData();
@@ -306,7 +309,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
      }
  
      public void injectScaledMaxHealth(Collection<AttributeInstance> collection, boolean force) {
-@@ -2696,7 +2765,8 @@
+@@ -2725,7 +2794,8 @@
      // Paper start
      @Override
      public java.util.Locale locale() {
@@ -316,7 +319,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
      }
      // Paper end
  
-@@ -2716,12 +2786,12 @@
+@@ -2745,12 +2815,12 @@
  
      // Paper start
      public void setAffectsSpawning(boolean affects) {
@@ -331,7 +334,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
      }
      // Paper end
  
-@@ -2776,13 +2846,17 @@
+@@ -2805,13 +2875,17 @@
          this.getHandle().connection.send(new net.minecraft.network.protocol.game.ClientboundDeleteChatPacket(new net.minecraft.network.chat.MessageSignature.Packed(sig)));
      }
  
@@ -351,7 +354,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
          );
      }
  
-@@ -2790,7 +2864,7 @@
+@@ -2819,7 +2893,7 @@
      public void sendMessage(net.kyori.adventure.text.Component message, net.kyori.adventure.chat.ChatType.Bound boundChatType) {
          if (getHandle().connection == null) return;
  
@@ -360,7 +363,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
          this.getHandle().sendChatMessage(new net.minecraft.network.chat.OutgoingChatMessage.Disguised(component), this.getHandle().isTextFilteringEnabled(), this.toHandle(boundChatType));
      }
  
-@@ -2798,7 +2872,7 @@
+@@ -2827,7 +2901,7 @@
      public void sendMessage(net.kyori.adventure.chat.SignedMessage signedMessage, net.kyori.adventure.chat.ChatType.Bound boundChatType) {
          if (getHandle().connection == null) return;
  
@@ -369,10 +372,10 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
              this.getHandle().sendChatMessage(net.minecraft.network.chat.OutgoingChatMessage.create(view.playerChatMessage()), this.getHandle().isTextFilteringEnabled(), this.toHandle(boundChatType));
              return;
          }
-@@ -2824,12 +2898,12 @@
-     public void sendMessage(final net.kyori.adventure.identity.Identity identity, final net.kyori.adventure.text.Component message, final net.kyori.adventure.audience.MessageType type) {
+@@ -2851,12 +2925,12 @@
+     @Override
+     public void sendMessage(final net.kyori.adventure.text.Component message) {
          if (getHandle().connection == null) return;
-         final net.minecraft.core.Registry<net.minecraft.network.chat.ChatType> chatTypeRegistry = this.getHandle().level().registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.CHAT_TYPE);
 -        this.getHandle().connection.send(new net.minecraft.network.protocol.game.ClientboundSystemChatPacket(message, false));
 +        this.getHandle().connection.send(new net.minecraft.network.protocol.game.ClientboundSystemChatPacket(io.papermc.paper.adventure.PaperAdventure.asVanilla(this.adventure$render(message)), false));
      }
@@ -384,7 +387,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
          this.getHandle().connection.send(packet);
      }
  
-@@ -2869,9 +2943,9 @@
+@@ -2896,9 +2970,9 @@
          if (times != null) {
              connection.send(new ClientboundSetTitlesAnimationPacket(ticks(times.fadeIn()), ticks(times.stay()), ticks(times.fadeOut())));
          }
@@ -396,7 +399,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
          connection.send(tp);
      }
  
-@@ -2880,10 +2954,10 @@
+@@ -2907,10 +2981,10 @@
          Preconditions.checkArgument(part != null, "part cannot be null");
          Preconditions.checkArgument(value != null, "value cannot be null");
          if (part == net.kyori.adventure.title.TitlePart.TITLE) {
@@ -409,7 +412,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
              this.getHandle().connection.send(sp);
          } else if (part == net.kyori.adventure.title.TitlePart.TIMES) {
              final net.kyori.adventure.title.Title.Times times = (net.kyori.adventure.title.Title.Times) value;
-@@ -3024,14 +3098,17 @@
+@@ -3051,13 +3125,17 @@
  
          @Override
          public InetSocketAddress getRawAddress() {
@@ -421,7 +424,6 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
          public void respawn() {
              if (CraftPlayer.this.getHealth() <= 0 && CraftPlayer.this.isOnline()) {
 -                CraftPlayer.this.server.getServer().getPlayerList().respawn(CraftPlayer.this.getHandle(), false, Entity.RemovalReason.KILLED, org.bukkit.event.player.PlayerRespawnEvent.RespawnReason.PLUGIN);
--                CraftPlayer.this.getHandle().connection.restartClientLoadTimerAfterRespawn();
 +                var playerList = CraftPlayer.this.server.getServer().getPlayerList();
 +                ((io.izzel.arclight.common.bridge.core.server.players.PlayerListBridge) playerList).bridge$pushRespawnCause(org.bukkit.event.player.PlayerRespawnEvent.RespawnReason.PLUGIN);
 +                ServerPlayer player = playerList.respawn(CraftPlayer.this.getHandle(), false, Entity.RemovalReason.KILLED);
@@ -430,7 +432,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
              }
          }
  
-@@ -3086,7 +3163,7 @@
+@@ -3112,7 +3190,7 @@
          public void sendMessage(net.md_5.bungee.api.ChatMessageType position, UUID sender, BaseComponent... components) {
              if (CraftPlayer.this.getHandle().connection == null) return;
  
@@ -439,64 +441,82 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
          }
  
          // Paper start
-@@ -3100,7 +3177,10 @@
-     // Paper start - brand support
+@@ -3125,10 +3203,10 @@
+ 
      @Override
      public String getClientBrandName() {
--        return getHandle().connection.playerBrand;
+-        if (this.getHandle().connection == null) {
+-            return null;
+-        }
+-        return this.getHandle().connection.clientBrand;
 +        var listener = this.getHandle().connection;
 +        if (listener == null) return null;
 +        var connection = ((io.izzel.arclight.common.bridge.core.server.network.ServerCommonPacketListenerImplBridge) listener).bridge$getConnection();
 +        return ((io.izzel.arclight.common.bridge.core.network.ConnectionBridge) connection).bridge$getClientBrandName();
      }
-     // Paper end
  
-@@ -3112,37 +3192,37 @@
+     // Paper start
+@@ -3139,37 +3217,52 @@
  
      @Override
      public int getWardenWarningCooldown() {
 -        return this.getHandle().wardenSpawnTracker.cooldownTicks;
-+        return this.getHandle().getWardenSpawnTracker().map(tracker -> tracker.cooldownTicks).orElse(0);
++        final var tracker = this.getHandle().getWardenSpawnTracker();
++        return tracker == null ? 0 : tracker.cooldownTicks;
      }
  
      @Override
      public void setWardenWarningCooldown(int cooldown) {
 -        this.getHandle().wardenSpawnTracker.cooldownTicks = Math.max(cooldown, 0);
-+        this.getHandle().getWardenSpawnTracker().ifPresent(tracker -> tracker.cooldownTicks = Math.max(cooldown, 0));
++        final var tracker = this.getHandle().getWardenSpawnTracker();
++        if (tracker != null) {
++            tracker.cooldownTicks = Math.max(cooldown, 0);
++        }
      }
  
      @Override
      public int getWardenTimeSinceLastWarning() {
 -        return this.getHandle().wardenSpawnTracker.ticksSinceLastWarning;
-+        return this.getHandle().getWardenSpawnTracker().map(tracker -> tracker.ticksSinceLastWarning).orElse(0);
++        final var tracker = this.getHandle().getWardenSpawnTracker();
++        return tracker == null ? 0 : tracker.ticksSinceLastWarning;
      }
  
      @Override
      public void setWardenTimeSinceLastWarning(int time) {
 -        this.getHandle().wardenSpawnTracker.ticksSinceLastWarning = time;
-+        this.getHandle().getWardenSpawnTracker().ifPresent(tracker -> tracker.ticksSinceLastWarning = time);
++        final var tracker = this.getHandle().getWardenSpawnTracker();
++        if (tracker != null) {
++            tracker.ticksSinceLastWarning = time;
++        }
      }
  
      @Override
      public int getWardenWarningLevel() {
 -        return this.getHandle().wardenSpawnTracker.getWarningLevel();
-+        return this.getHandle().getWardenSpawnTracker().map(tracker -> tracker.getWarningLevel()).orElse(0);
++        final var tracker = this.getHandle().getWardenSpawnTracker();
++        return tracker == null ? 0 : tracker.getWarningLevel();
      }
  
      @Override
      public void setWardenWarningLevel(int warningLevel) {
 -        this.getHandle().wardenSpawnTracker.setWarningLevel(warningLevel);
-+        this.getHandle().getWardenSpawnTracker().ifPresent(tracker -> tracker.setWarningLevel(warningLevel));
++        final var tracker = this.getHandle().getWardenSpawnTracker();
++        if (tracker != null) {
++            tracker.setWarningLevel(warningLevel);
++        }
      }
  
      @Override
      public void increaseWardenWarningLevel() {
 -        this.getHandle().wardenSpawnTracker.increaseWarningLevel();
-+        this.getHandle().getWardenSpawnTracker().ifPresent(tracker -> tracker.increaseWarningLevel());
++        final var tracker = this.getHandle().getWardenSpawnTracker();
++        if (tracker != null) {
++            tracker.increaseWarningLevel();
++        }
      }
      // Paper end
  
-@@ -3162,19 +3242,36 @@
+@@ -3189,19 +3282,36 @@
      @Override
      public Set<java.lang.Long> getSentChunkKeys() {
          org.spigotmc.AsyncCatcher.catchOp("accessing sent chunks");
@@ -536,7 +556,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
      }
      // Paper end
  
-@@ -3185,32 +3282,37 @@
+@@ -3212,32 +3322,37 @@
  
      @Override
      public int getViewDistance() {
@@ -580,7 +600,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
      }
  
      // Paper start - entity effect API
-@@ -3288,26 +3390,44 @@
+@@ -3315,26 +3430,44 @@
  
      @Override
      public org.bukkit.entity.Entity releaseLeftShoulderEntity() {
@@ -588,19 +608,11 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
 -            Entity entity = getHandle().releaseLeftShoulderEntity();
 -            if (entity != null) {
 -                return entity.getBukkitEntity();
--            }
--        }
--
--        return null;
 +        return this.releaseShoulderEntity(true);
-     }
- 
-     @Override
-     public org.bukkit.entity.Entity releaseRightShoulderEntity() {
--        if (!getHandle().getShoulderEntityRight().isEmpty()) {
--            Entity entity = getHandle().releaseRightShoulderEntity();
--            if (entity != null) {
--                return entity.getBukkitEntity();
++    }
++
++    @Override
++    public org.bukkit.entity.Entity releaseRightShoulderEntity() {
 +        return this.releaseShoulderEntity(false);
 +    }
 +
@@ -613,14 +625,28 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
 +        try (var reporter = new ProblemReporter.ScopedCollector(player.problemPath(), LOGGER)) {
 +            var entity = net.minecraft.world.entity.EntityType.create(
 +                TagValueInput.create(reporter.forChild(() -> ".shoulder"), player.registryAccess(), tag.copy()),
-+                player.level(), EntitySpawnReason.LOAD
++                player.level(), new net.minecraft.world.entity.EntitySpawnRequest(EntitySpawnReason.LOAD, false)
 +            ).orElse(null);
 +            if (entity == null) {
 +                return null;
              }
+-        }
+-
+-        return null;
+-    }
+-
+-    @Override
+-    public org.bukkit.entity.Entity releaseRightShoulderEntity() {
+-        if (!getHandle().getShoulderEntityRight().isEmpty()) {
+-            Entity entity = getHandle().releaseRightShoulderEntity();
+-            if (entity != null) {
+-                return entity.getBukkitEntity();
 +            if (entity instanceof net.minecraft.world.entity.TamableAnimal animal) {
 +                animal.setOwner(player);
-+            }
+             }
+-        }
+-
+-        return null;
 +            entity.setPos(player.getX(), player.getY() + 0.7F, player.getZ());
 +            io.izzel.arclight.common.bridge.core.server.level.ServerLevelBridge level = player.level();
 +            if (!level.bridge$addEntitySerialized(entity, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.SHOULDER_ENTITY)) {
@@ -633,9 +659,7 @@ diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/entity/CraftPlaye
 +            }
 +            io.izzel.arclight.common.bridge.core.entity.EntityBridge bridge = entity;
 +            return bridge.bridge$getBukkitEntity();
-         }
--
--        return null;
++        }
      }
  
      @Override

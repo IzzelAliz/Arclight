@@ -32,14 +32,14 @@ import java.util.function.BiConsumer;
 public abstract class PumpkinBlockMixin {
 
     @Decorate(method = "useItemOn(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/BlockHitResult;)Lnet/minecraft/world/InteractionResult;",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/PumpkinBlock;dropFromBlockInteractLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/entity/BlockEntity;Lnet/minecraft/world/item/ItemInstance;Lnet/minecraft/world/entity/Entity;Ljava/util/function/BiConsumer;)Z"),
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/PumpkinBlock;dropFromBlockInteractLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/entity/BlockEntity;Lnet/minecraft/world/item/ItemInstance;Lnet/minecraft/world/entity/Entity;Ljava/util/function/BiConsumer;)Z"),
         require = 1, allow = 1)
-    private boolean arclight$playerShearBlock(ServerLevel serverLevel, ResourceKey<LootTable> lootTable, BlockState lootState,
+    private boolean arclight$playerShearBlock(ServerLevel serverLevel, ResourceKey<LootTable> lootTable, BlockPos lootPos, BlockState lootState,
                                              BlockEntity blockEntity, ItemInstance tool, Entity entity, BiConsumer<ServerLevel, ItemStack> dropper,
                                              ItemStack itemStack, BlockState state, Level level, BlockPos pos,
                                              Player player, InteractionHand hand, BlockHitResult hitResult) throws Throwable {
         var drops = new ArrayList<org.bukkit.inventory.ItemStack>();
-        boolean result = (boolean) DecorationOps.callsite().invoke(serverLevel, lootTable, lootState, blockEntity, tool, entity,
+        boolean result = (boolean) DecorationOps.callsite().invoke(serverLevel, lootTable, lootPos, lootState, blockEntity, tool, entity,
             (BiConsumer<ServerLevel, ItemStack>) (dropLevel, stack) -> drops.add(CraftItemStack.asCraftMirror(stack)));
         var event = new PlayerShearBlockEvent((org.bukkit.entity.Player) ((PlayerBridge) player).bridge$getBukkitEntity(),
             CraftBlock.at(level, pos), CraftItemStack.asCraftMirror(itemStack), CraftEquipmentSlot.getHand(hand), drops);

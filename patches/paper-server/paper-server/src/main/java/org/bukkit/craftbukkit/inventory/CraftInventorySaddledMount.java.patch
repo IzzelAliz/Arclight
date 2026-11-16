@@ -1,8 +1,6 @@
-diff --git a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventorySaddledMount.java b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventorySaddledMount.java
-index 261622a3124103cc1d743a6f37b129a3ea166ac4..c819f27355c40f330e41a9fa780cd219cbf2a8fb 100644
 --- a/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventorySaddledMount.java
 +++ b/paper-server/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventorySaddledMount.java
-@@ -2,13 +2,16 @@ package org.bukkit.craftbukkit.inventory;
+@@ -2,12 +2,15 @@
  
  import com.google.common.base.Preconditions;
  import net.minecraft.world.Container;
@@ -12,15 +10,14 @@ index 261622a3124103cc1d743a6f37b129a3ea166ac4..c819f27355c40f330e41a9fa780cd219
  import org.bukkit.inventory.SaddledMountInventory;
  
  public class CraftInventorySaddledMount extends CraftInventory implements SaddledMountInventory {
- 
++
 +    private static final int SLOT_SADDLE = 0;
 +    private static final int SLOT_BODY_ARMOR = 1;
 +    private static final int SLOT_INVENTORY_START = 2;
-+
+ 
      private final Container bodyArmorInventory;
      private final Container saddleInventory;
- 
-@@ -20,12 +23,12 @@ public class CraftInventorySaddledMount extends CraftInventory implements Saddle
+@@ -20,12 +23,12 @@
  
      @Override
      public ItemStack getSaddle() {
@@ -35,7 +32,7 @@ index 261622a3124103cc1d743a6f37b129a3ea166ac4..c819f27355c40f330e41a9fa780cd219
      }
  
      public Container getMainInventory() {
-@@ -41,11 +44,11 @@ public class CraftInventorySaddledMount extends CraftInventory implements Saddle
+@@ -41,11 +44,11 @@
      }
  
      public ItemStack getArmor() {
@@ -49,7 +46,7 @@ index 261622a3124103cc1d743a6f37b129a3ea166ac4..c819f27355c40f330e41a9fa780cd219
      }
  
      @Override
-@@ -62,11 +65,11 @@ public class CraftInventorySaddledMount extends CraftInventory implements Saddle
+@@ -62,11 +65,11 @@
      public ItemStack[] getContents() {
          ItemStack[] items = new ItemStack[this.getSize()];
  
@@ -62,10 +59,10 @@ index 261622a3124103cc1d743a6f37b129a3ea166ac4..c819f27355c40f330e41a9fa780cd219
 -            net.minecraft.world.item.ItemStack item = this.getMainInventory().getItem(i - AbstractMountInventoryMenu.SLOT_INVENTORY_START);
 +        for (int i = SLOT_INVENTORY_START; i < items.length; i++) {
 +            net.minecraft.world.item.ItemStack item = this.getMainInventory().getItem(i - SLOT_INVENTORY_START);
-             items[i] = item.isEmpty() ? null : CraftItemStack.asCraftMirror(item);
+             items[i] = item.isEmpty() ? null : CraftItemStack.asBukkitMirror(item);
          }
  
-@@ -77,29 +80,29 @@ public class CraftInventorySaddledMount extends CraftInventory implements Saddle
+@@ -77,29 +80,29 @@
      public void setContents(ItemStack[] items) {
          Preconditions.checkArgument(items.length <= this.getSize(), "Invalid inventory size (%s); expected %s or less", items.length, this.getSize());
  
@@ -87,11 +84,11 @@ index 261622a3124103cc1d743a6f37b129a3ea166ac4..c819f27355c40f330e41a9fa780cd219
 -        if (index == AbstractMountInventoryMenu.SLOT_SADDLE) {
 +        if (index == SLOT_SADDLE) {
              final net.minecraft.world.item.ItemStack item = this.getSaddleInventory().getItem(0);
-             return item.isEmpty() ? null : CraftItemStack.asCraftMirror(item);
+             return item.isEmpty() ? null : CraftItemStack.asBukkitMirror(item);
 -        } else if (index == AbstractMountInventoryMenu.SLOT_BODY_ARMOR) {
 +        } else if (index == SLOT_BODY_ARMOR) {
              final net.minecraft.world.item.ItemStack item = this.getArmorInventory().getItem(0);
-             return item.isEmpty() ? null : CraftItemStack.asCraftMirror(item);
+             return item.isEmpty() ? null : CraftItemStack.asBukkitMirror(item);
          } else {
              int shiftedIndex = index;
 -            if (index > AbstractMountInventoryMenu.SLOT_SADDLE) {
@@ -103,7 +100,7 @@ index 261622a3124103cc1d743a6f37b129a3ea166ac4..c819f27355c40f330e41a9fa780cd219
                  shiftedIndex--;
              }
  
-@@ -110,16 +113,16 @@ public class CraftInventorySaddledMount extends CraftInventory implements Saddle
+@@ -110,16 +113,16 @@
  
      @Override
      public void setItem(final int index, final ItemStack item) {

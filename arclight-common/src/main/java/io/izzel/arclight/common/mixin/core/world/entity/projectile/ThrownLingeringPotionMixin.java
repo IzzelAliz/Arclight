@@ -1,6 +1,8 @@
 package io.izzel.arclight.common.mixin.core.world.entity.projectile;
 
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.entity.AreaEffectCloud;
 import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownLingeringPotion;
 import net.minecraft.world.item.ItemStack;
@@ -19,8 +21,11 @@ public abstract class ThrownLingeringPotionMixin extends ThrownPotionMixin {
     @Inject(method = "onHitAsPotion", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD,
         at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"))
     private void arclight$makeCloud(ServerLevel level, ItemStack stack, HitResult hitResult, CallbackInfo ci, AreaEffectCloud entity) {
+        boolean noEffects = !((ThrownLingeringPotion) (Object) this).getItem().getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY).hasEffects();
         LingeringPotionSplashEvent event = CraftEventFactory.callLingeringPotionSplashEvent((ThrownLingeringPotion) (Object) this, hitResult, entity);
-        if (event.isCancelled() || entity.isRemoved()) {
+        this.arclight$potionSplashAccepted = !event.isCancelled();
+        if (event.isCancelled() || entity.isRemoved()
+            || (!event.allowsEmptyCreation() && noEffects && !entity.get(DataComponents.POTION_CONTENTS).hasEffects())) {
             ci.cancel();
             entity.discard();
         }
