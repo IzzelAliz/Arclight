@@ -59,6 +59,7 @@ public abstract class SpawnUtilPreCreatureSpawnEventMixin {
         }
         if (entity.isRemoved()) {
             DecorationOps.cancel().invoke(Optional.empty());
+            return;
         }
     }
 }
