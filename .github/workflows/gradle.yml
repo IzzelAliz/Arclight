@@ -1,40 +1,60 @@
-# This workflow will build a Java project with Gradle
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
-
-name: Build
+name: Build and Release
 
 on:
-  workflow_dispatch: 
   push:
     branches:
-      - '**'
-
+      - "patch-3"
+    # paths:
+    #   - "src/**/*.java"
+    #   - "gradle.properties"
+    #   - "build.gradle"
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up JDK 21
-      uses: actions/setup-java@v1
-      with:
-        java-version: '21'
-    - name: Cache Gradle User Files
-      uses: actions/cache@v4
-      with:
-        path: ~/.gradle
-        key: ${{ runner.os }}-gradle-user-home
-    - name: Cache Gradle Files
-      uses: actions/cache@v4
-      with:
-        path: ./.gradle
-        key: ${{ runner.os }}-gradle-file
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build
-      env:
-        ARCLIGHT_FILES_TOKEN: ${{ secrets.ARCLIGHT_FILES_TOKEN }}
-      run: |
-        ./gradlew cleanBuild build collect uploadFiles --no-daemon --stacktrace
+    permissions:
+      contents: write
 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Read Version
+        id: gradle_props
+        run: |
+          VERSION=$(grep '^mod_version=' gradle.properties | cut -d'=' -f2)
+          echo "mod_version=$VERSION" >> $GITHUB_OUTPUT
+          echo "release_version=${VERSION}-build.${{ github.run_number }}" >> $GITHUB_OUTPUT
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build
+        run: ./gradlew build
+
+      - name: Create Tag
+        run: |
+          git tag v${{ steps.gradle_props.outputs.release_version }}
+          git push origin v${{ steps.gradle_props.outputs.release_version }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.gradle_props.outputs.release_version }}
+          name: CraftOverhaul ${{ steps.gradle_props.outputs.release_version }}
+          generate_release_notes: true
+          files: |
+            build/libs/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
