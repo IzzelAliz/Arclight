@@ -22,11 +22,16 @@ public abstract class MinecraftServerMotdMixin implements MinecraftServerBridge 
 
     @Shadow private String motd;
 
-    @Unique private volatile Component arclight$motd = Component.empty();
+    // Null until a MOTD is set through Bukkit or MinecraftServer#setMotd; the vanilla MOTD is used until then.
+    // Since 26.3, DedicatedServer keeps the MOTD in its settings and overrides getMotd()/setMotd() without
+    // calling super, so the setMotd injection below never runs on dedicated servers.
+    @Unique private volatile Component arclight$motd;
 
     @Override
     public Component bridge$getMotd() {
-        return this.arclight$motd;
+        Component motd = this.arclight$motd;
+        if (motd != null) return motd;
+        return LegacyComponentSerializer.legacySection().deserializeOr(((MinecraftServer) (Object) this).getMotd(), Component.empty());
     }
 
     @Override
@@ -43,13 +48,14 @@ public abstract class MinecraftServerMotdMixin implements MinecraftServerBridge 
 
     @ModifyReturnValue(method = "getMotd()Ljava/lang/String;", at = @At("RETURN"), require = 1)
     private String arclight$legacyMotd(String original) {
-        return LegacyComponentSerializer.legacySection().serialize(this.arclight$motd);
+        Component motd = this.arclight$motd;
+        return motd == null ? original : LegacyComponentSerializer.legacySection().serialize(motd);
     }
 
     @WrapOperation(method = "buildServerStatus()Lnet/minecraft/network/protocol/status/ServerStatus;",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/network/chat/Component;nullToEmpty(Ljava/lang/String;)Lnet/minecraft/network/chat/Component;"),
         require = 1, expect = 1, allow = 1)
     private net.minecraft.network.chat.Component arclight$statusMotd(String legacy, Operation<net.minecraft.network.chat.Component> original) {
-        return PaperAdventure.asVanilla(this.arclight$motd);
+        return PaperAdventure.asVanilla(this.bridge$getMotd());
     }
 }
