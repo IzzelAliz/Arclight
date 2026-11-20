@@ -23,6 +23,7 @@ import org.gradle.api.tasks.TaskAction;
 import java.io.File;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -121,7 +122,12 @@ public abstract class PaperSourcesTask extends DefaultTask {
         }
     }
 
+    // Non-POSIX file systems (NTFS on Windows) have no execute bit: File#setExecutable(false, ...) always fails there
+    // and Files#isExecutable reports every file as executable, so execute bits are neither written nor recorded.
+    private static final boolean POSIX = FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
+
     private static void executable(Path path, boolean value) {
+        if (!POSIX) return;
         if (!path.toFile().setExecutable(value, false)) throw new GradleException("Cannot set source permissions: " + path);
     }
 
@@ -134,7 +140,7 @@ public abstract class PaperSourcesTask extends DefaultTask {
                 if (Files.isSymbolicLink(path)) throw new GradleException("Source symlink: " + path);
                 if (!Files.isRegularFile(path)) continue;
                 allowed(name, group);
-                result.put(name, new Content(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path))), Files.isExecutable(path)));
+                result.put(name, new Content(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path))), POSIX && Files.isExecutable(path)));
             }
         }
         return result;
@@ -185,6 +191,10 @@ public abstract class PaperSourcesTask extends DefaultTask {
                 var reports = ContextualPatch.create(normalized.toFile(), content.toFile()).patch(false);
                 if (reports.size() != 1 || reports.getFirst().getStatus() != ContextualPatch.PatchStatus.Patched || !reports.getFirst().getFile().equals(content.toFile())) {
                     throw new GradleException("Cannot apply " + patch.file, reports.isEmpty() ? null : reports.getFirst().getFailure());
+                }
+                // diff4j writes patched files with the platform line.separator; keep LF so Windows matches other platforms.
+                if (!"\n".equals(System.lineSeparator()) && Files.exists(content)) {
+                    Files.writeString(content, Files.readString(content, StandardCharsets.ISO_8859_1).replace(System.lineSeparator(), "\n"), StandardCharsets.ISO_8859_1);
                 }
             }
             if (delete) Files.delete(target);
@@ -275,7 +285,9 @@ public abstract class PaperSourcesTask extends DefaultTask {
                 if (added) header += "new file mode " + newMode + "\n";
                 else if (deleted) header += "deleted file mode " + oldMode + "\n";
                 else if (!oldMode.equals(newMode)) header += "old mode " + oldMode + "\nnew mode " + newMode + "\n";
-                String unified = diff.toUnifiedDiff(added ? "/dev/null" : "a/" + name, deleted ? "/dev/null" : "b/" + name, new StringReader(before), new StringReader(after), 3);
+                // diff4j ends lines with the platform line.separator (CRLF on Windows); patch files always use LF.
+                String unified = diff.toUnifiedDiff(added ? "/dev/null" : "a/" + name, deleted ? "/dev/null" : "b/" + name, new StringReader(before), new StringReader(after), 3)
+                    .replace(System.lineSeparator(), "\n");
                 Files.writeString(patch, header + unified, StandardCharsets.UTF_8);
             }
             check(upstream, manifest, group, generated, work);

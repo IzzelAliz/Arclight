@@ -1,0 +1,3 @@
+# Paper patches are parsed and applied byte for byte: keep them LF on every platform.
+# Git for Windows defaults to core.autocrlf=true, which would check them out as CRLF and break applyPaperPatches.
+/patches/** text eol=lf
